@@ -1,0 +1,19 @@
+import { defineConfig } from 'vitest/config'
+import swc from 'unplugin-swc'
+
+import tsconfigPaths from 'vite-tsconfig-paths'
+
+export default defineConfig({
+	test: {
+		hookTimeout: 240_000,
+		testTimeout: 240_000,
+		pool: 'forks',
+		passWithNoTests: true,
+		retry: process.env.CI ? 3 : 2,
+		reporters: process.env.GITHUB_ACTIONS ? ['basic', 'github-actions'] : ['basic'],
+	},
+	build: {
+		outDir: '../../dist',
+	},
+	plugins: [tsconfigPaths(), swc.vite()],
+})

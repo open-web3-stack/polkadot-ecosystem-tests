@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"emitDeclarationOnly": true,
+		"declarationDir": "dist/esm"
+	},
+	"include": ["src/**/*"],
+	"references": [{ "path": "../networks/tsconfig.json" }]
+}

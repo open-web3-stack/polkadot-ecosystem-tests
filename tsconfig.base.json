@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"lib": ["esnext", "dom", "dom.iterable"],
+		"isolatedModules": true,
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitAny": false,
+		"target": "esnext",
+		"skipLibCheck": true,
+		"strict": true,
+		"declaration": true,
+		"resolveJsonModule": true,
+		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
+		"composite": true,
+		"paths": {
+			"@e2e-test/networks": ["packages/networks/src/index.ts"],
+			"@e2e-test/networks/*": ["packages/networks/src/*"],
+			"@e2e-test/shared": ["packages/shared/src/index.ts"],
+			"@e2e-test/shared/*": ["packages/shared/src/*"]
+		}
+	}
+}

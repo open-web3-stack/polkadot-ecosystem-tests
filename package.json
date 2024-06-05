@@ -1,0 +1,39 @@
+{
+	"name": "e2e-tests",
+	"private": true,
+	"scripts": {
+		"lint": "tsc --noEmit && eslint . --ext .js,.ts",
+		"fix": "eslint . --ext .js,.ts --fix",
+		"test": "LOG_LEVEL=error vitest",
+		"test:ui": "LOG_LEVEL=error vitest --ui"
+	},
+	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
+	"packageManager": "yarn@4.2.2",
+	"dependencies": {
+		"@swc/core": "^1.5.7",
+		"lodash": "^4.17.21",
+		"typescript": "^5.4.5",
+		"vitest": "^1.6.0"
+	},
+	"devDependencies": {
+		"@types/lodash": "^4.17.4",
+		"@types/node": "^20.12.12",
+		"@types/prettier": "^3.0.0",
+		"@typescript-eslint/eslint-plugin": "^7.10.0",
+		"@typescript-eslint/parser": "^7.10.0",
+		"@vitest/ui": "^1.6.0",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-import-resolver-typescript": "^3.6.1",
+		"eslint-plugin-import": "^2.29.1",
+		"eslint-plugin-prettier": "^5.1.3",
+		"eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
+		"prettier": "^3.2.5",
+		"tsx": "^4.11.0",
+		"unplugin-swc": "^1.4.5",
+		"vite-tsconfig-paths": "^4.3.2"
+	}
+}

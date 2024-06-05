@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on from chain 1`] = `100000000000000000000`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on from chain 2`] = `100000000000000000000`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on from chain 3`] = `100000000000000000000`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on to chain 1`] = `
+{
+  "free": 100000000000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on to chain 2`] = `
+{
+  "free": 100000000000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > balance on to chain 3`] = `
+{
+  "free": 100000000000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > from chain hrmp messages 1`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > from chain hrmp messages 2`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > from chain hrmp messages 3`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > to chain xcm events 1`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > to chain xcm events 2`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > to chain xcm events 3`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > tx events 1`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > tx events 2`] = `[]`;
+
+exports[`'karura' <-> 'basilisk' xcm transfer 'DAI' > 'karura' -> 'basilisk' xcm transfer 'DAI' > tx events 3`] = `[]`;

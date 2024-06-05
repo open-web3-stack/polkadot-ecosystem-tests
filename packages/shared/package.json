@@ -1,0 +1,42 @@
+{
+	"name": "@e2e-test/shared",
+	"type": "module",
+	"dependencies": {
+		"@acala-network/chopsticks-testing": "^0.11.0",
+		"@polkadot/api": "^10.11.2"
+	},
+	"main": "./dist/cjs/index.js",
+	"module": "./dist/esm/index.js",
+	"files": [
+		"*",
+		"!tsconfig.json",
+		"!**/*.test.ts"
+	],
+	"exports": {
+		".": {
+			"require": "./dist/cjs/index.js",
+			"import": "./dist/esm/index.js",
+			"default": "./dist/esm/index.js"
+		},
+		"./api": {
+			"require": "./dist/cjs/api/index.js",
+			"import": "./dist/esm/api/index.js",
+			"default": "./dist/esm/api/index.js"
+		},
+		"./helpers": {
+			"require": "./dist/cjs/helpers/index.js",
+			"import": "./dist/esm/helpers/index.js",
+			"default": "./dist/esm/helpers/index.js"
+		},
+		"./xcm": {
+			"require": "./dist/cjs/xcm/index.js",
+			"import": "./dist/esm/xcm/index.js",
+			"default": "./dist/esm/xcm/index.js"
+		},
+		"./*": {
+			"require": "./dist/cjs/*.js",
+			"import": "./dist/esm/*.js",
+			"default": "./dist/esm/*.js"
+		}
+	}
+}
