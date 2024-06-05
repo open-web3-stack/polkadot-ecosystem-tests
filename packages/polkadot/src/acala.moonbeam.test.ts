@@ -46,7 +46,7 @@ describe(`'acala' <-> 'moonbeam' xcm transfer 'DOT'`, async () => {
   })
 
   runXtokenstHorizontal(`'moonbeam' -> 'acala' DOT`, async () => {
-    moonbeamClient.dev.setStorage({
+    await moonbeamClient.dev.setStorage({
       Assets: {
         account: [[[moonbeamDot, defaultAccount.alith.address], { balance: 10e12 }]],
       },
