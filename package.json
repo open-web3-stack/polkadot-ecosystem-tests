@@ -5,7 +5,8 @@
 		"lint": "tsc --noEmit && eslint . --ext .js,.ts",
 		"fix": "eslint . --ext .js,.ts --fix",
 		"test": "LOG_LEVEL=error vitest",
-		"test:ui": "LOG_LEVEL=error vitest --ui"
+		"test:ui": "LOG_LEVEL=error vitest --ui",
+		"postinstall": "husky install"
 	},
 	"type": "module",
 	"workspaces": [
@@ -31,9 +32,14 @@
 		"eslint-plugin-import": "^2.29.1",
 		"eslint-plugin-prettier": "^5.1.3",
 		"eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
+		"husky": ">=6",
+		"lint-staged": ">=10",
 		"prettier": "^3.2.5",
 		"tsx": "^4.11.0",
 		"unplugin-swc": "^1.4.5",
 		"vite-tsconfig-paths": "^4.3.2"
+	},
+	"lint-staged": {
+		"*.{js,ts}": "eslint --cache --fix"
 	}
 }
