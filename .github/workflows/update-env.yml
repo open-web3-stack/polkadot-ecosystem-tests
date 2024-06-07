@@ -1,4 +1,4 @@
-name: update KNOWN_GOOD_BLOCK_NUMBERS
+name: update env
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write # required for push commit
 
 jobs:
-  update:
+  update-env:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -30,20 +30,19 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test assetHubPolkadot.acala.test -u
     - name: Commit and Create PR
       uses: actions/github-script@v6
       with:
         script: |
-          const branchName = `update-KNOWN_GOOD_BLOCK_NUMBERS-${context.sha.slice(0, 7)}`
+          const branchName = `update-env-${context.sha.slice(0, 7)}`
           await exec.exec(`git checkout -b ${branchName}`)
-          await exec.exec(`git`, ['commit', '-am', 'update KNOWN_GOOD_BLOCK_NUMBERS'])
+          await exec.exec(`git`, ['commit', '-am', 'update env'])
           await exec.exec(`git push origin HEAD:${branchName}`)
           await github.rest.pulls.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            title: 'Update KNOWN_GOOD_BLOCK_NUMBERS',
+            title: 'Update env',
             head: branchName,
             base: 'add-env',
-            body: 'Update KNOWN_GOOD_BLOCK_NUMBERS',
+            body: 'Update env',
           })
