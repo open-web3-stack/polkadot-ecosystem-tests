@@ -38,8 +38,6 @@ const main = async () => {
 
   envFile = blockNumbersStr + '\n\n' + envFile
 
-  console.log(blockNumbersStr)
-
   fs.writeFileSync(envPath, envFile)
 }
 
