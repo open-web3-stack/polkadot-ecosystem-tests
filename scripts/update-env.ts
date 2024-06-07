@@ -37,7 +37,8 @@ const main = async () => {
   const blockNumbersStr = (await Promise.all(blockNumbers)).join('\n')
 
   envFile = blockNumbersStr + '\n\n' + envFile
-
+  console.log('KNOWN_GOOD_BLOCK_NUMBERS:')
+  console.log(envFile)
   fs.writeFileSync(envPath, envFile)
 }
 
