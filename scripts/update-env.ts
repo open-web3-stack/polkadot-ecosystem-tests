@@ -40,6 +40,7 @@ const main = async () => {
   console.log('KNOWN_GOOD_BLOCK_NUMBERS:')
   console.log(envFile)
   fs.writeFileSync(envPath, envFile)
+  console.log('read', fs.readFileSync(envFile).toString())
 }
 
 main()
