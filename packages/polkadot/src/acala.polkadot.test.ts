@@ -16,7 +16,6 @@ describe(`'acala' <-> 'polkadt' xcm transfer`, async () => {
   const polkadotDOT = polkadotClient.config.custom!.dot
 
   afterAll(async () => {
-    console.log('afterAll')
     await polkadotClient.teardown()
     await acalaClient.teardown()
   })

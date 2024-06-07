@@ -4,7 +4,8 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Client } from '@e2e-test/networks'
 import { GetBalance, Tx } from './types.js'
-import { check, checkEvents, checkSystemEvents, defaultAccount } from '../helpers/index.js'
+import { check, checkEvents, checkSystemEvents } from '../helpers/index.js'
+import { defaultAccount } from '../index.js'
 
 export const runXcmPalletDown = (
   name: string,

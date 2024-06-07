@@ -2548,6 +2548,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "e2e-tests@workspace:."
   dependencies:
+    "@e2e-test/networks": "workspace:*"
     "@swc/core": "npm:^1.5.7"
     "@types/lodash": "npm:^4.17.4"
     "@types/node": "npm:^20.12.12"
@@ -2555,6 +2556,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.10.0"
     "@typescript-eslint/parser": "npm:^7.10.0"
     "@vitest/ui": "npm:^1.6.0"
+    dotenv: "npm:^16.4.5"
     eslint: "npm:^8.57.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-import-resolver-typescript: "npm:^3.6.1"
@@ -2565,7 +2567,7 @@ __metadata:
     lint-staged: "npm:>=10"
     lodash: "npm:^4.17.21"
     prettier: "npm:^3.2.5"
-    tsx: "npm:^4.11.0"
+    tsx: "npm:^4.11.2"
     typescript: "npm:^5.4.5"
     unplugin-swc: "npm:^1.4.5"
     vite-tsconfig-paths: "npm:^4.3.2"
@@ -6326,9 +6328,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.11.0":
-  version: 4.11.0
-  resolution: "tsx@npm:4.11.0"
+"tsx@npm:^4.11.2":
+  version: 4.11.2
+  resolution: "tsx@npm:4.11.2"
   dependencies:
     esbuild: "npm:~0.20.2"
     fsevents: "npm:~2.3.3"
@@ -6338,7 +6340,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10c0/f8a714cd81c55c25c16b2fc4e879d517d37bedce8b74dee06c767d19b7e1a8b60e1eff3066b9fe8f66539eb8350dd4d16b51be4d1dd83af75bd8ddc8efcd0991
+  checksum: 10c0/e2ea22a1ec3133ebfc09a90cc94adb1623b880a56eed8296ab2ff04560aa724298a97510cadac86c2917f05df08d8cc7aae7aa0387c5a4861f7bd92de3daead4
   languageName: node
   linkType: hard
 

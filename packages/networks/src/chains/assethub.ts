@@ -1,4 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared/helpers'
+import { defaultAccount } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
 

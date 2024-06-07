@@ -17,7 +17,6 @@ describe(`'karura' <-> 'kusama' xcm transfer`, async () => {
   const kusamaKSM = kusamaClient.config.custom!.ksm
 
   afterAll(async () => {
-    console.log('afterAll')
     await kusamaClient.teardown()
     await karuraClient.teardown()
   })
