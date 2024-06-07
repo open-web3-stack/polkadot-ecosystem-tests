@@ -1,9 +1,8 @@
 name: update KNOWN_GOOD_BLOCK_NUMBERS
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'
+  push:
+    branches: [ add-env ]
 
 env:
   DB_PATH: ./db.sqlite
@@ -45,6 +44,6 @@ jobs:
             repo: context.repo.repo,
             title: 'Update KNOWN_GOOD_BLOCK_NUMBERS',
             head: branchName,
-            base: 'test',
+            base: 'add-env',
             body: 'Update KNOWN_GOOD_BLOCK_NUMBERS',
           })
