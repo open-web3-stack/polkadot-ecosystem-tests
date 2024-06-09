@@ -36,7 +36,7 @@ export const hydraDX = defineChain({
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: 'wss://basilisk-rpc.dwellir.com',
+  endpoint: ['wss://rpc.basilisk.cloud', 'wss://basilisk-rpc.dwellir.com'],
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
 })
