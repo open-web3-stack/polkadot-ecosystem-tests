@@ -2,8 +2,10 @@ name: update env
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'
+  # schedule:
+  #   - cron: '0 */6 * * *'
+  push:
+    branches: [ add-env ]
 
 env:
   DB_PATH: ./db.sqlite
