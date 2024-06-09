@@ -1,13 +1,9 @@
 name: update env
 
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     - cron: '0 */6 * * *'
-
 on:
-  push:
-    branches: [ add-env ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
 
 env:
   DB_PATH: ./db.sqlite
@@ -35,7 +31,7 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test -u
+    - run: yarn test -u --reporter verbose
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions[bot]'
