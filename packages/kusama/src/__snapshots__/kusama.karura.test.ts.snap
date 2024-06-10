@@ -192,7 +192,7 @@ exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limi
       {
         "subscribeVersion": {
           "maxResponseWeight": 0,
-          "queryId": 31,
+          "queryId": 32,
         },
       },
     ],
