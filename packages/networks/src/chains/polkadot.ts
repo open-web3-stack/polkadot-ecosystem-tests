@@ -34,7 +34,7 @@ export const polkadot = defineChain({
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: ['wss://kusama-rpc.dwellir.com', 'wss://rpc.ibp.network/kusama', 'wss://kusama-rpc.polkadot.io'],
+  endpoint: 'https:///kusama-rpc.dwellir.com',
   custom: custom.kusama,
   initStorages: getInitStorages(),
 })
