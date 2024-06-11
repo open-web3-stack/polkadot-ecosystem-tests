@@ -65,7 +65,7 @@ export const getInitStorages = (config: typeof custom.acala | typeof custom.karu
 
 export const acala = defineChain({
   name: 'acala',
-  endpoint: 'https://acala-rpc.aca-api.network',
+  endpoint: ['wss://acala-rpc.aca-api.network', 'wss://acala-rpc.dwellir.com'],
   paraId: 2000,
   custom: custom.acala,
   initStorages: getInitStorages(custom.acala),
@@ -73,7 +73,11 @@ export const acala = defineChain({
 
 export const karura = defineChain({
   name: 'karura',
-  endpoint: 'https://karura-rpc.aca-api.network',
+  endpoint: [
+    'wss://karura-rpc.aca-api.network',
+    'wss://rpc-karura.luckyfriday.io',
+    'wss://karura.api.onfinality.io/public-ws',
+  ],
   paraId: 2000,
   custom: custom.karura,
   initStorages: getInitStorages(custom.karura),
