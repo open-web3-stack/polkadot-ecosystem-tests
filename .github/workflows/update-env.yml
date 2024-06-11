@@ -12,6 +12,7 @@ env:
 
 permissions:
   contents: write # required for push commit
+  pull-requests: write # required for create pr
 
 jobs:
   update-env:

@@ -4,7 +4,7 @@ import path, { dirname } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 import * as chains from '@e2e-test/networks/chains'
-import { ApiPromise, WsProvider } from '@polkadot/api'
+import { ApiPromise, HttpProvider, WsProvider } from '@polkadot/api'
 
 const envPath = path.resolve(dirname(__filename), '../KNOWN_GOOD_BLOCK_NUMBERS.env')
 
@@ -26,7 +26,13 @@ const main = async () => {
   const blockNumbers: Promise<string>[] = []
   for (const [name, chain] of Object.entries(chains)) {
     const fn = async () => {
-      const api = await ApiPromise.create({ provider: new WsProvider(chain.endpoint), noInitWarn: true })
+      const api = await ApiPromise.create({
+        provider:
+          Array.isArray(chain.endpoint) || chain.endpoint.startsWith('ws')
+            ? new WsProvider(chain.endpoint)
+            : new HttpProvider(chain.endpoint),
+        noInitWarn: true,
+      })
       const header = await api.rpc.chain.getHeader()
       const blockNumber = header.number.toNumber()
       return `${name.toUpperCase()}_BLOCK_NUMBER=${blockNumber}`

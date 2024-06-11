@@ -21,7 +21,7 @@ const getInitStorages = () => ({
 export const moonbeam = defineChain({
   name: 'moonbeam',
   paraId: 2004,
-  endpoint: 'wss://wss.api.moonbeam.network',
+  endpoint: 'https://rpc.api.moonbeam.network',
   custom: custom.moonbeam,
   initStorages: getInitStorages(),
 })
@@ -29,6 +29,6 @@ export const moonbeam = defineChain({
 export const moonriver = defineChain({
   name: 'moonriver',
   paraId: 2023,
-  endpoint: 'wss://wss.api.moonriver.moonbeam.network',
+  endpoint: 'https://rpc.api.moonriver.moonbeam.network',
   initStorages: getInitStorages(),
 })
