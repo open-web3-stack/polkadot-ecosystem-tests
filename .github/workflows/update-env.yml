@@ -33,7 +33,7 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test --reporter verbose
+    - run: yarn test karura.assetHubKusama.test --reporter verbose
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions[bot]'

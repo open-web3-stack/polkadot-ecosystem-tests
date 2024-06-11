@@ -38,6 +38,7 @@ const main = async () => {
 
   envFile = blockNumbersStr + '\n\n' + envFile
 
+  console.log('KNOWN_GOOD_BLOCK_NUMBERS', envFile)
   fs.writeFileSync(envPath, envFile)
 }
 
