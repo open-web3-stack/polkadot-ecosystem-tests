@@ -15,11 +15,11 @@ export default defineConfig({
 		pool: 'forks',
 		passWithNoTests: true,
 		retry: process.env.CI ? 3 : 2,
-		reporters: process.env.GITHUB_ACTIONS ? ['basic', 'github-actions'] : ['basic'],
-		// setupFiles: ["./KNOWN_GOOD_BLOCK_NUMBERS.env"]
+		reporters: 'verbose',
 	},
 	build: {
 		outDir: '../../dist',
 	},
 	plugins: [tsconfigPaths(), swc.vite()],
 })
+
