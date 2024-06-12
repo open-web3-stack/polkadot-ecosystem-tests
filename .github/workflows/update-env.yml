@@ -7,8 +7,8 @@ on:
   push:
     branches: [ add-env ]
 
-env:
-  DB_PATH: ./db.sqlite
+# env:
+#   DB_PATH: ./db.sqlite
 
 permissions:
   contents: write # required for push commit
