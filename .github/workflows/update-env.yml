@@ -34,7 +34,7 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test kusama -u
+    - run: yarn test polkadot -u
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions[bot]'
