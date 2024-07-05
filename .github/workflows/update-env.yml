@@ -1,0 +1,50 @@
+name: update env
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 */6 * * *'
+  push:
+    branches: [ add-env ]
+
+# env:
+#   DB_PATH: ./db.sqlite
+
+permissions:
+  contents: write # required for push commit
+  pull-requests: write # required for create pr
+
+jobs:
+  update-env:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+    - name: Setup yarn
+      run: npm install -g yarn
+    - name: setup node env
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'yarn'
+    - run: yarn --immutable
+    - run: yarn update-env
+    - run: yarn test polkadot -u
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git add -A
+        if ! git diff --cached --quiet; then
+          git commit -m "[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
+          git push
+        else
+          echo "No changes to commit"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}

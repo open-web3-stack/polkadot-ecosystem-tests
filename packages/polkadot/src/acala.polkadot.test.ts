@@ -6,7 +6,7 @@ import { createNetwork } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
 
-describe(`'acala' <-> 'polkadt' xcm transfer`, async () => {
+describe(`'acala' <-> 'polkadot' xcm transfer`, async () => {
   const [polkadotClient, acalaClient] = await Promise.all([createNetwork(polkadot), createNetwork(acala)])
 
   await connectVertical(polkadotClient.chain, acalaClient.chain)
@@ -16,7 +16,6 @@ describe(`'acala' <-> 'polkadt' xcm transfer`, async () => {
   const polkadotDOT = polkadotClient.config.custom!.dot
 
   afterAll(async () => {
-    console.log('afterAll')
     await polkadotClient.teardown()
     await acalaClient.teardown()
   })

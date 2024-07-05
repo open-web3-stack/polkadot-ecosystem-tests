@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance on from chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance on from chain 1`] = `
 {
   "free": 9000000000000,
   "frozen": 0,
@@ -8,7 +8,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance 
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance on to chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -23,7 +23,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > balance 
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > from chain ump messages 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > from chain ump messages 1`] = `
 [
   {
     "v2": [
@@ -95,7 +95,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > from cha
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > to chain ump events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -117,7 +117,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > to chain
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > tx events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > tx events 1`] = `
 [
   {
     "data": {
@@ -162,7 +162,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM > tx event
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > balance on from chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > balance on from chain 1`] = `
 {
   "free": 8000000000000,
   "frozen": 0,
@@ -170,7 +170,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limit
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > balance on to chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -185,14 +185,14 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limit
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > from chain ump messages 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > from chain ump messages 1`] = `
 [
   {
     "v2": [
       {
         "subscribeVersion": {
           "maxResponseWeight": 0,
-          "queryId": 31,
+          "queryId": 32,
         },
       },
     ],
@@ -267,7 +267,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limit
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > to chain ump events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -306,7 +306,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limit
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > tx events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limited weight > tx events 1`] = `
 [
   {
     "data": {
@@ -351,7 +351,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'karura' -> 'kusama' KSM wiht limit
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance on from chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -366,7 +366,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance 
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance on to chain 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance on to chain 1`] = `
 {
   "free": "(rounded 9000000000000)",
   "frozen": 0,
@@ -374,7 +374,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > balance 
 }
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > to chain dmp events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -392,7 +392,7 @@ exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > to chain
 ]
 `;
 
-exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > tx events 1`] = `
+exports[`'karura' <-> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > tx events 1`] = `
 [
   {
     "data": {
@@ -519,519 +519,6 @@ exports[`'karura' -> 'kusama' xcm transfer > 'kusama' -> 'karura' KSM > tx event
     },
     "method": "Sent",
     "section": "xcmPallet",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > balance on from chain 1`] = `
-{
-  "free": 9000000000000,
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > balance on to chain 1`] = `
-{
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 11000000000000)",
-    "frozen": 0,
-    "reserved": 0,
-  },
-  "nonce": 0,
-  "providers": 1,
-  "sufficients": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > from chain ump messages 1`] = `
-[
-  {
-    "v2": [
-      {
-        "withdrawAsset": [
-          {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-        ],
-      },
-      {
-        "clearOrigin": null,
-      },
-      {
-        "buyExecution": {
-          "fees": {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-          "weightLimit": {
-            "unlimited": null,
-          },
-        },
-      },
-      {
-        "depositAsset": {
-          "assets": {
-            "wild": {
-              "all": null,
-            },
-          },
-          "beneficiary": {
-            "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-                  "network": {
-                    "any": null,
-                  },
-                },
-              },
-            },
-            "parents": 0,
-          },
-          "maxAssets": 1,
-        },
-      },
-    ],
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > to chain ump events 1`] = `
-[
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 2000,
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 300000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > tx events 1`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000000000,
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X1": [
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000000000,
-        },
-        "id": {
-          "interior": "Here",
-          "parents": 1,
-        },
-      },
-      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > xtokens transfer > balance on from chain 1`] = `
-{
-  "free": 9000000000000,
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > xtokens transfer > balance on to chain 1`] = `
-{
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 11000000000000)",
-    "frozen": 0,
-    "reserved": 0,
-  },
-  "nonce": 0,
-  "providers": 1,
-  "sufficients": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > xtokens transfer > from chain ump messages 1`] = `
-[
-  {
-    "v2": [
-      {
-        "withdrawAsset": [
-          {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-        ],
-      },
-      {
-        "clearOrigin": null,
-      },
-      {
-        "buyExecution": {
-          "fees": {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-          "weightLimit": {
-            "unlimited": null,
-          },
-        },
-      },
-      {
-        "depositAsset": {
-          "assets": {
-            "wild": {
-              "all": null,
-            },
-          },
-          "beneficiary": {
-            "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-                  "network": {
-                    "any": null,
-                  },
-                },
-              },
-            },
-            "parents": 0,
-          },
-          "maxAssets": 1,
-        },
-      },
-    ],
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > xtokens transfer > to chain ump events 1`] = `
-[
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 2000,
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 300000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM > xtokens transfer > tx events 1`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000000000,
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X1": [
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000000000,
-        },
-        "id": {
-          "interior": "Here",
-          "parents": 1,
-        },
-      },
-      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM wiht limited weight > balance on from chain 1`] = `
-{
-  "free": 8000000000000,
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM wiht limited weight > balance on to chain 1`] = `
-{
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 12000000000000)",
-    "frozen": 0,
-    "reserved": 0,
-  },
-  "nonce": 0,
-  "providers": 1,
-  "sufficients": 0,
-}
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM wiht limited weight > from chain ump messages 1`] = `
-[
-  {
-    "v2": [
-      {
-        "subscribeVersion": {
-          "maxResponseWeight": 0,
-          "queryId": 31,
-        },
-      },
-    ],
-  },
-  {
-    "v2": [
-      {
-        "withdrawAsset": [
-          {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-        ],
-      },
-      {
-        "clearOrigin": null,
-      },
-      {
-        "buyExecution": {
-          "fees": {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
-              },
-            },
-          },
-          "weightLimit": {
-            "limited": 5000000000,
-          },
-        },
-      },
-      {
-        "depositAsset": {
-          "assets": {
-            "wild": {
-              "all": null,
-            },
-          },
-          "beneficiary": {
-            "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-                  "network": {
-                    "any": null,
-                  },
-                },
-              },
-            },
-            "parents": 0,
-          },
-          "maxAssets": 1,
-        },
-      },
-    ],
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM wiht limited weight > to chain ump events 1`] = `
-[
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 2000,
-        },
-      },
-      "success": false,
-      "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 450000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 2000,
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 300000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
-
-exports[`'karura' -> 'kusama' xcm transfer > KSM wiht limited weight > tx events 1`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000000000,
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X1": [
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000000000,
-        },
-        "id": {
-          "interior": "Here",
-          "parents": 1,
-        },
-      },
-      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
   },
 ]
 `;

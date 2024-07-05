@@ -6,11 +6,12 @@ import { createNetwork } from './createNetwork.js'
 
 describe('createNetwork', () => {
   it('chain config', () => {
+    expect(acalaNext.blockNumber).toBeDefined()
     expect(acala.endpoint).toBeDefined()
     expect(acala.timeout).toBeDefined()
     expect(acala.initStorages).toBeDefined()
     expect(acala.custom).toBeDefined()
-    expect(moonbeam.custom).not.toBeDefined()
+    expect(moonbeam.custom).toBeDefined()
     expect(acalaNext.name).toBe('acalaNext')
   })
 

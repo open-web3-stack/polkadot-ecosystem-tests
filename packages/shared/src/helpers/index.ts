@@ -1,9 +1,5 @@
 import { expect } from 'vitest'
-import { testingPairs, withExpect } from '@acala-network/chopsticks-testing'
-
-export const defaultAccount = testingPairs()
-
-export type DefaultAccount = ReturnType<typeof testingPairs>
+import { withExpect } from '@acala-network/chopsticks-testing'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
   toMatchSnapshot(msg?: string): void {
@@ -20,4 +16,3 @@ const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpec
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
 
 export * from '@acala-network/chopsticks-testing'
-export * from './types.js'

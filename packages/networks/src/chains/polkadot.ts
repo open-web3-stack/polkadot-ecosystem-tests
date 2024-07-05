@@ -1,4 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared/helpers'
+import { defaultAccount } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
 
@@ -27,14 +27,14 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: ['wss://rpc.ibp.network/polkadot', 'wss://polkadot-rpc.dwellir.com', 'wss://rpc.polkadot.io'],
+  endpoint: 'https://polkadot-rpc.dwellir.com',
   custom: custom.polkadot,
   initStorages: getInitStorages(),
 })
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: ['wss://kusama-rpc.dwellir.com', 'wss://rpc.ibp.network/kusama', 'wss://kusama-rpc.polkadot.io'],
+  endpoint: 'https:///kusama-rpc.dwellir.com',
   custom: custom.kusama,
   initStorages: getInitStorages(),
 })

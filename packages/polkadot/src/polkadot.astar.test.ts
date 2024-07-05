@@ -16,7 +16,6 @@ describe(`'polkadot' <-> 'astar' xcm transfer`, async () => {
   const polkadotDOT = polkadotClient.config.custom!.dot
 
   afterAll(async () => {
-    console.log('afterAll')
     await polkadotClient.teardown()
     await astarClient.teardown()
   })

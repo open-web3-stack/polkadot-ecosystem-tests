@@ -1,6 +1,6 @@
 import { afterAll, describe } from 'vitest'
 import { connectParachains, connectVertical } from '@acala-network/chopsticks'
-import { defaultAccount } from '@e2e-test/shared/helpers'
+import { defaultAccount } from '@e2e-test/shared'
 
 import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
 import { createNetwork } from '@e2e-test/networks'

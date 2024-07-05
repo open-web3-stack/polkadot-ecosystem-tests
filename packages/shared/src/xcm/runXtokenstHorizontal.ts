@@ -4,7 +4,8 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Client } from '@e2e-test/networks'
 import { GetBalance, Tx } from './types.js'
-import { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp, defaultAccount } from '../helpers/index.js'
+import { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } from '../helpers/index.js'
+import { defaultAccount } from '../index.js'
 
 export const runXtokenstHorizontal = (
   name: string,

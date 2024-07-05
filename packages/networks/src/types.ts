@@ -1,4 +1,3 @@
-import { Prettify } from '@e2e-test/shared/helpers'
 import { SetupOption } from '@acala-network/chopsticks-testing'
 
 type ChainConfigBase = {
@@ -13,13 +12,11 @@ type ChainConfigBase = {
 export type ChainConfig<
   custom extends Record<string, unknown> | undefined,
   initStorages extends Record<string, Record<string, any>> | undefined,
-> = Prettify<
-  ChainConfigBase &
-    SetupOption & {
-      custom?: custom
-      initStorages?: initStorages
-    }
->
+> = ChainConfigBase &
+  SetupOption & {
+    custom?: custom
+    initStorages?: initStorages
+  }
 
 export type Chain<
   custom extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,

@@ -1,4 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared/helpers'
+import { defaultAccount } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
 
@@ -28,7 +28,7 @@ const getInitStorages = (config: typeof custom.hydraDX | typeof custom.basilisk)
 export const hydraDX = defineChain({
   name: 'hydraDX',
   paraId: 2034,
-  endpoint: 'wss://rpc.hydradx.cloud',
+  endpoint: 'https://rpc.hydradx.cloud',
   custom: custom.hydraDX,
   initStorages: getInitStorages(custom.hydraDX),
 })
@@ -36,7 +36,7 @@ export const hydraDX = defineChain({
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: 'wss://basilisk-rpc.dwellir.com',
+  endpoint: 'https://basilisk-rpc.dwellir.com',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
 })
