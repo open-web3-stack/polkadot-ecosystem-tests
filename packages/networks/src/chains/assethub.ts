@@ -29,7 +29,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
-  endpoint: 'https://statemint-rpc-tn.dwellir.com',
+  endpoint: 'wss://statemint-rpc-tn.dwellir.com',
   paraId: 1000,
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
@@ -37,7 +37,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'https://statemine-rpc-tn.dwellir.com',
+  endpoint: 'wss://statemine-rpc-tn.dwellir.com',
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),

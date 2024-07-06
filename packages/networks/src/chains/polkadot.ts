@@ -27,14 +27,14 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: 'https://polkadot-rpc.dwellir.com',
+  endpoint: 'wss://polkadot-rpc.dwellir.com',
   custom: custom.polkadot,
   initStorages: getInitStorages(),
 })
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: 'https:///kusama-rpc.dwellir.com',
+  endpoint: 'wss:///kusama-rpc.dwellir.com',
   custom: custom.kusama,
   initStorages: getInitStorages(),
 })

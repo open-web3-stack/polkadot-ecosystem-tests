@@ -107,7 +107,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
             },
           },
           {
-            "setTopic": "0xc2ee0fa85ed29cc1b89032ff7f0e97eda42e3371cdb9a22c0aae0a18290b06b4",
+            "setTopic": "0xd93aaaa2e91f8e6ad27a5b553bb56d4131af46fa8b709cb0a13450cba38234b7",
           },
         ],
       },

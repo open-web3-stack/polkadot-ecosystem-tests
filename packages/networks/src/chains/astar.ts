@@ -47,7 +47,7 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
 export const astar = defineChain({
   name: 'astar',
   paraId: 2006,
-  endpoint: 'https://rpc.astar.network',
+  endpoint: 'wss://astar-rpc.dwellir.com',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
 })
@@ -55,7 +55,7 @@ export const astar = defineChain({
 export const shiden = defineChain({
   name: 'shiden',
   paraId: 2007,
-  endpoint: 'https://rpc.shiden.astar.network',
+  endpoint: 'wss://shiden-rpc.dwellir.com',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
 })

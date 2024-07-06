@@ -192,7 +192,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
       {
         "subscribeVersion": {
           "maxResponseWeight": 0,
-          "queryId": 22,
+          "queryId": 24,
         },
       },
     ],
