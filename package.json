@@ -7,6 +7,7 @@
 		"test": "LOG_LEVEL=error vitest",
 		"test:ui": "LOG_LEVEL=error vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
+		"update-known-good": "tsx scripts/update-env.ts --update-known-good",
 		"postinstall": "husky install"
 	},
 	"type": "module",

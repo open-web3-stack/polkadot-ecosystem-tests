@@ -6,7 +6,9 @@ const __filename = fileURLToPath(import.meta.url)
 import * as chains from '@e2e-test/networks/chains'
 import { ApiPromise, HttpProvider, WsProvider } from '@polkadot/api'
 
-const envPath = path.resolve(dirname(__filename), '../KNOWN_GOOD_BLOCK_NUMBERS.env')
+const isUpdateKnownGood = process.argv.includes('--update-known-good')
+const envFile = isUpdateKnownGood ? 'KNOWN_GOOD_BLOCK_NUMBERS.env' : '.env'
+const envPath = path.resolve(dirname(__filename), '../', envFile)
 
 const readEnvFile = () => {
   try {
@@ -42,9 +44,13 @@ const main = async () => {
 
   const blockNumbersStr = (await Promise.all(blockNumbers)).join('\n')
 
-  envFile = blockNumbersStr + '\n\n' + envFile
+  if (isUpdateKnownGood) {
+    envFile = blockNumbersStr
+  } else {
+    envFile = blockNumbersStr + '\n\n' + envFile
+  }
 
-  console.log('KNOWN_GOOD_BLOCK_NUMBERS', envFile)
+  console.log(blockNumbersStr)
   fs.writeFileSync(envPath, envFile)
 }
 

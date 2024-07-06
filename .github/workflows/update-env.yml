@@ -33,7 +33,7 @@ jobs:
         node-version: 18.x
         cache: 'yarn'
     - run: yarn --immutable
-    - run: yarn update-env
+    - run: yarn update-known-good
     - run: yarn test polkadot -u
     - name: Commit and push changes
       run: |
