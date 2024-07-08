@@ -8,6 +8,8 @@ on:
 
 env:
   DB_PATH: ./db.sqlite
+  ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
+  KARURA_ENDPOINT: ${{ secrets.KARURA_ENDPOINT }}
 
 jobs:
   lint:
