@@ -48,4 +48,4 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test packages/${{ matrix.tests }}
+    - run: yarn vitest packages/${{ matrix.tests }}
