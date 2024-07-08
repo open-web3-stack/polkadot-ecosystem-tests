@@ -31,7 +31,7 @@ jobs:
       - name: Define Tests
         id: tests
         run: |
-          echo tests=$(ls packages/*/src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
   tests:
     needs: define-matrix
     timeout-minutes: 30
@@ -49,4 +49,4 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn test ${{ matrix.tests }}
+    - run: yarn test packages/${{ matrix.tests }}
