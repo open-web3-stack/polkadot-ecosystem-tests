@@ -51,9 +51,13 @@ export const runXcmPalletHorizontal = (
       await checkEvents(tx0, 'xTokens').toMatchSnapshot('tx events')
 
       if (isCheckUmp) {
-        await checkUmp(fromChain).toMatchSnapshot('from chain ump messages')
+        await checkUmp(fromChain)
+          .redact({ redactKeys: /setTopic/ })
+          .toMatchSnapshot('from chain ump messages')
       } else {
-        await checkHrmp(fromChain).toMatchSnapshot('from chain hrmp messages')
+        await checkHrmp(fromChain)
+          .redact({ redactKeys: /setTopic/ })
+          .toMatchSnapshot('from chain hrmp messages')
       }
 
       if (routeChain) {

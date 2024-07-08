@@ -8,8 +8,6 @@ on:
 
 env:
   DB_PATH: ./db.sqlite
-  ACALA_ENDPOINT: wss://acala-rpc.dwellir.com
-  KARURA_ENDPOINT: wss://karura-rpc.dwellir.com
 
 jobs:
   lint:
