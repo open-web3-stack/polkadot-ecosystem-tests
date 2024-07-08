@@ -33,7 +33,7 @@ const custom = {
   },
 }
 
-export const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => ({
+const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => ({
   System: {
     account: [[[defaultAccount.alice.address], { providers: 4, data: { free: 10 * 1e12 } }]],
   },
