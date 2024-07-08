@@ -12,7 +12,6 @@ concurrency:
 
 env:
   DB_PATH: ./db.sqlite
-  LOG_LEVEL: debug
 
 jobs:
   lint:
@@ -33,7 +32,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tests: [polkadot, kusama]
+        tests:
+          - polkadot/src/acala.moonbeam.test.ts
+          - polkadot/src/acala.polkadot.test.ts
+          - polkadot/src/assetHubPolkadot.acala.test.ts
+          - polkadot/src/polkadot.astar.test.ts
+          - kusama/src/basilisk.karura.test.ts
+          - kusama/src/karura.assetHubKusama.test.ts
+          - kusama/src/kusamakarura.test.ts
+          - kusama/src/karura.shiden.test.ts
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -52,4 +59,4 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-env
-    - run: yarn vitest packages/${{ matrix.tests }}
+    - run: yarn test packages/${{ matrix.tests }}
