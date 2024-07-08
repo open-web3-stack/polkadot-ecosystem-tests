@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
@@ -29,10 +27,11 @@ jobs:
     outputs:
       tests: ${{ steps.tests.outputs.tests }}
     steps:
+      - uses: actions/checkout@v4
       - name: Define Tests
         id: tests
         run: |
-          echo tests=$(ls packages/*/src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+          echo tests=$(ls packages/**/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
   tests:
     needs: define-matrix
     timeout-minutes: 30
@@ -43,8 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
     - name: setup node env
       uses: actions/setup-node@v4
       with:
