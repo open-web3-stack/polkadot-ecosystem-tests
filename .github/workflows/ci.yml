@@ -31,7 +31,7 @@ jobs:
       - name: Define Tests
         id: tests
         run: |
-          echo tests=$(ls packages/**/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+          echo tests=$(ls packages/*/src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
   tests:
     needs: define-matrix
     timeout-minutes: 30
