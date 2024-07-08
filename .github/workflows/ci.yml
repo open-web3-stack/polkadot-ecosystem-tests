@@ -10,8 +10,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DB_PATH: ./db.sqlite
+# env:
+#   DB_PATH: ./db.sqlite
 
 jobs:
   lint:
