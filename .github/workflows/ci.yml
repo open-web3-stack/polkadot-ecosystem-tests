@@ -10,9 +10,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# env:
-#   DB_PATH: ./db.sqlite
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -27,31 +24,27 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn lint
+  define-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.tests.outputs.tests }}
+    steps:
+      - name: Define Tests
+        id: tests
+        run: |
+          echo tests=$(ls packages/**/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
   tests:
-    timeout-minutes: 120
+    needs: define-matrix
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        tests:
-          - polkadot/src/acala.moonbeam.test.ts
-          - polkadot/src/acala.polkadot.test.ts
-          - polkadot/src/assetHubPolkadot.acala.test.ts
-          - polkadot/src/polkadot.astar.test.ts
-          - kusama/src/basilisk.karura.test.ts
-          - kusama/src/karura.assetHubKusama.test.ts
-          - kusama/src/kusamakarura.test.ts
-          - kusama/src/karura.shiden.test.ts
+        tests: ${{ fromJSON(needs.define-matrix.outputs.tests) }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: setup node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-    - name: Setup yarn
-      run: npm install -g yarn
     - name: setup node env
       uses: actions/setup-node@v4
       with:

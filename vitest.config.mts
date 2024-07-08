@@ -13,11 +13,6 @@ export default defineConfig({
 		hookTimeout: 240_000,
 		testTimeout: 240_000,
 		pool: 'forks',
-		poolOptions: {
-			forks: {
-				singleFork: process.env.CI ? true : false,
-			}
-		},
 		passWithNoTests: true,
 		retry: process.env.CI ? 3 : 2,
 		reporters: process.env.GITHUB_ACTIONS ? ['basic', 'github-actions'] : ['basic'],
