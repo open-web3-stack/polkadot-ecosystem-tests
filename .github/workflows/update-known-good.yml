@@ -58,7 +58,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: KNOWN_GOOD_BLOCK_NUMBERS.env
-    - run: echo $ACALA_BLOCK_NUMBER
     - run: yarn test packages/${{ matrix.tests }}
   save:
     needs: tests
