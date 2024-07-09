@@ -45,7 +45,7 @@ const main = async () => {
   const blockNumbersStr = (await Promise.all(blockNumbers)).join('\n')
 
   if (isUpdateKnownGood) {
-    envFile = blockNumbersStr
+    envFile = blockNumbersStr + '\n'
   } else {
     envFile = blockNumbersStr + '\n\n' + envFile
   }
