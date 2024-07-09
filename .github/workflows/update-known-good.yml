@@ -6,7 +6,6 @@ on:
   #   - cron: '0 */6 * * *'
 
 env:
-  DB_PATH: ./db.sqlite
   GH_TOKEN: ${{ github.token }}
 
 permissions:
