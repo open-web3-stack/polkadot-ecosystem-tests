@@ -32,7 +32,12 @@ jobs:
       - name: Update Known Good Block Numbers
         run: |
           yarn update-known-good
-          cat KNOWN_GOOD_BLOCK_NUMBERS.env >> $GITHUB_ENV
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KNOWN_GOOD_BLOCK_NUMBERS.env
+          path: KNOWN_GOOD_BLOCK_NUMBERS.env
+          retention-days: 1
   tests:
     needs: define-matrix
     timeout-minutes: 30
@@ -49,15 +54,23 @@ jobs:
         node-version: 18.x
         cache: 'yarn'
     - run: yarn --immutable
+    - name: Download a single artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: KNOWN_GOOD_BLOCK_NUMBERS.env
     - run: echo $ACALA_BLOCK_NUMBER
     - run: yarn test packages/${{ matrix.tests }}
   save:
     needs: tests
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
+    - name: Download a single artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: KNOWN_GOOD_BLOCK_NUMBERS.env
     - name: Commit and push changes
       run: |
-        export | grep BLOCK_NUMBER > KNOWN_GOOD_BLOCK_NUMBERS.env
         git config --global user.name 'github-actions[bot]'
         git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
         git add KNOWN_GOOD_BLOCK_NUMBERS.env
