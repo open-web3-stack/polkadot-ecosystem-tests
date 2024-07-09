@@ -48,5 +48,4 @@ jobs:
         node-version: 18.x
         cache: 'yarn'
     - run: yarn --immutable
-    - run: yarn update-env
     - run: yarn test packages/${{ matrix.tests }}

@@ -1,4 +1,4 @@
-name: Update KNOWN_GOOD_BLOCK_NUMBERS
+name: Update Known Good Block Numbers
 
 on:
   workflow_dispatch:
@@ -14,7 +14,27 @@ permissions:
   pull-requests: write # required for create pr
 
 jobs:
-  update:
+  define-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.tests.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Define Tests
+        id: tests
+        run: |
+          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+      - name: Update Known Good Block Numbers
+        run: |
+          yarn update-known-good
+          cat KNOWN_GOOD_BLOCK_NUMBERS.env >> $GITHUB_ENV
+  tests:
+    needs: define-matrix
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        tests: ${{ fromJSON(needs.define-matrix.outputs.tests) }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -24,10 +44,15 @@ jobs:
         node-version: 18.x
         cache: 'yarn'
     - run: yarn --immutable
-    - run: yarn update-known-good
-    - run: yarn test
+    - run: echo $ACALA_BLOCK_NUMBER
+    - run: yarn test packages/${{ matrix.tests }}
+  save:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
     - name: Commit and push changes
       run: |
+        export | grep BLOCK_NUMBER > KNOWN_GOOD_BLOCK_NUMBERS.env
         git config --global user.name 'github-actions[bot]'
         git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
         git add KNOWN_GOOD_BLOCK_NUMBERS.env
