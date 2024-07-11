@@ -12,7 +12,7 @@ const custom = {
     dot: { Token: 'DOT' },
     ldot: { Token: 'LDOT' },
     dai: { Erc20: '0x54a37a01cd75b616d63e0ab665bffdb0143c52ae' },
-    wbtc: { ForeignAsset: 5 },
+    usdt: { ForeignAsset: 12 },
     ausd: { Token: 'AUSD' },
     aca: { Token: 'ACA' },
     lcdot: { LiquidCrowdloan: 13 },
@@ -30,6 +30,7 @@ const custom = {
     dai: { Erc20: '0x4bb6afb5fa2b07a5d1c499e1c3ddb5a15e709a71' },
     ausd: { Token: 'KUSD' },
     kar: { Token: 'KAR' },
+    bsx: { ForeignAsset: 11 },
   },
 }
 

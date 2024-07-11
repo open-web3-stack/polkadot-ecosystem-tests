@@ -15,15 +15,14 @@ export const runXcmPalletDown = (
     tx: Tx
     balance: GetBalance
 
-    routeChain?: Client
     fromAccount?: KeyringPair
     toAccount?: KeyringPair
-    isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -32,7 +31,7 @@ export const runXcmPalletDown = (
         tx,
         balance,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         precision = 3,
       } = await setup()
 
@@ -43,7 +42,7 @@ export const runXcmPalletDown = (
       await check(fromChain.api.query.system.account(fromAccount.address))
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
-      await checkEvents(tx0, 'xcmPallet').redact({ number: precision }).toMatchSnapshot('tx events')
+      await checkEvents(tx0, 'polkadotXcm', 'xcmPallet').redact({ number: precision }).toMatchSnapshot('tx events')
 
       await toChain.chain.newBlock()
 
@@ -53,8 +52,6 @@ export const runXcmPalletDown = (
       await checkSystemEvents(toChain, 'parachainSystem', 'dmpQueue', 'messageQueue').toMatchSnapshot(
         'to chain dmp events',
       )
-
-      tearDown && (await tearDown())
     },
     240000,
   )

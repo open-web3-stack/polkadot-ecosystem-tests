@@ -1,19 +1,6 @@
 import { ApiPromise } from '@polkadot/api'
 
 export const xtokens = {
-  relaychainV2: (acc: any) => ({
-    V1: {
-      parents: 1,
-      interior: {
-        X1: {
-          AccountId32: {
-            network: 'Any',
-            id: acc,
-          },
-        },
-      },
-    },
-  }),
   relaychainV3: (acc: any) => ({
     V3: {
       parents: 1,
@@ -26,19 +13,15 @@ export const xtokens = {
       },
     },
   }),
-  parachainV2: (paraId: number) => (acc: any) => ({
-    V1: {
+  relaychainV4: (acc: any) => ({
+    V4: {
       parents: 1,
       interior: {
-        X2: [
-          { Parachain: paraId },
-          {
-            AccountId32: {
-              network: 'Any',
-              id: acc,
-            },
+        X1: {
+          AccountId32: {
+            id: acc,
           },
-        ],
+        },
       },
     },
   }),
@@ -72,6 +55,21 @@ export const xtokens = {
       },
     },
   }),
+  parachainV4: (paraId: number) => (acc: any) => ({
+    V4: {
+      parents: 1,
+      interior: {
+        X2: [
+          { Parachain: paraId },
+          {
+            AccountId32: {
+              id: acc,
+            },
+          },
+        ],
+      },
+    },
+  }),
   transfer:
     (token: any, amount: any, dest: (dest: any) => any, weight: any = 'Unlimited') =>
     ({ api }: { api: ApiPromise }, acc: any) =>
@@ -91,14 +89,6 @@ export const xtokens = {
 }
 
 export const xcmPallet = {
-  parachainV2: (parents: number, paraId: number) => ({
-    V1: {
-      parents,
-      interior: {
-        X1: { Parachain: paraId },
-      },
-    },
-  }),
   relaychainV3: (acc: any) => ({
     V3: {
       parents: 1,
@@ -112,8 +102,29 @@ export const xcmPallet = {
       },
     },
   }),
+  relaychainV4: (acc: any) => ({
+    V4: {
+      parents: 1,
+      interior: {
+        X1: {
+          AccountId32: {
+            network: 'Any',
+            id: acc,
+          },
+        },
+      },
+    },
+  }),
   parachainV3: (parents: number, paraId: any) => ({
     V3: {
+      parents,
+      interior: {
+        X1: { Parachain: paraId },
+      },
+    },
+  }),
+  parachainV4: (parents: number, paraId: any) => ({
+    V4: {
       parents,
       interior: {
         X1: { Parachain: paraId },
@@ -140,35 +151,6 @@ export const xcmPallet = {
         },
         {
           V3: [
-            {
-              id: token,
-              fun: { Fungible: amount },
-            },
-          ],
-        },
-        0,
-        'Unlimited',
-      ),
-  limitedReserveTransferAssetsV2:
-    (token: any, amount: any, dest: any) =>
-    ({ api }: { api: ApiPromise }, acc: any) =>
-      (api.tx.xcmPallet || api.tx.polkadotXcm).limitedReserveTransferAssets(
-        dest,
-        {
-          V1: {
-            parents: 0,
-            interior: {
-              X1: {
-                AccountId32: {
-                  network: 'Any',
-                  id: acc,
-                },
-              },
-            },
-          },
-        },
-        {
-          V1: [
             {
               id: token,
               fun: { Fungible: amount },

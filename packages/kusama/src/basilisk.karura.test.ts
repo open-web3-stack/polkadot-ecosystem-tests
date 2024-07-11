@@ -1,63 +1,73 @@
-import { afterAll, describe } from 'vitest'
-import { connectParachains } from '@acala-network/chopsticks'
+import { afterAll, beforeEach, describe } from 'vitest'
 
-import { basilisk, karura } from '@e2e-test/networks/chains'
-import { createNetwork } from '@e2e-test/networks'
+import { basilisk, karura, kusama } from '@e2e-test/networks/chains'
+import { captureSnapshot, createNetworks } from '@e2e-test/networks'
+import { defaultAccount } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
+import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
-// karura <=> basilisk
-describe(`'karura' <-> 'basilisk' xcm transfer 'DAI'`, async () => {
-  const [karuraClient, basiliskClient] = await Promise.all([createNetwork(karura), createNetwork(basilisk)])
+describe('basilisk & karura', async () => {
+  const [karuraClient, basiliskClient, kusamaClient] = await createNetworks(karura, basilisk, kusama)
 
-  await connectParachains([karuraClient.chain, basiliskClient.chain])
+  const restoreSnapshot = captureSnapshot(karuraClient, basiliskClient, kusamaClient)
 
-  const karuraDai = karuraClient.config.custom!.dai.Erc20
-  const basiliskDai = basiliskClient.config.custom!.dai
+  beforeEach(restoreSnapshot)
 
   afterAll(async () => {
     await karuraClient.teardown()
     await basiliskClient.teardown()
+    await kusamaClient.teardown()
   })
 
-  runXcmPalletHorizontal(`'karura' -> 'basilisk' xcm transfer 'DAI'`, async () => {
+  runXtokenstHorizontal('karura transfer KSM to basilisk', async () => {
+    return {
+      fromChain: karuraClient,
+      toChain: basiliskClient,
+      routeChain: kusamaClient,
+      isCheckUmp: true,
+      toAccount: defaultAccount.bob,
+      fromBalance: query.tokens(karura.custom.ksm),
+      toBalance: query.tokens(basilisk.custom.relayToken),
+      tx: tx.xtokens.transfer(karura.custom.ksm, 10n ** 12n, tx.xtokens.parachainV4(basilisk.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('basilisk transfer KSM to karura', async () => {
+    return {
+      fromChain: basiliskClient,
+      toChain: karuraClient,
+      routeChain: kusamaClient,
+      isCheckUmp: true,
+      toAccount: defaultAccount.bob,
+      fromBalance: query.tokens(basilisk.custom.relayToken),
+      toBalance: query.tokens(karura.custom.ksm),
+      tx: tx.xtokens.transfer(basilisk.custom.relayToken, 10n ** 12n, tx.xtokens.parachainV4(karura.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('basilisk transfer BSX to karura', async () => {
+    return {
+      fromChain: basiliskClient,
+      toChain: karuraClient,
+      fromBalance: query.balances,
+      toBalance: query.tokens(karura.custom.bsx),
+      tx: tx.xtokens.transfer(basilisk.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(karura.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('karura transfer BSX to basilisk', async () => {
     await karuraClient.dev.setStorage({
-      Evm: {
-        accountStorages: [
-          [
-            [
-              karuraDai,
-              '0x2aef47e62c966f0695d5af370ddc1bc7c56902063eee60853e2872fc0ff4f88c', // balanceOf(Alice)
-            ],
-            '0x0000000000000000000000000000000000000000000000056bc75e2d63100000', // 1e20
-          ],
-        ],
+      Tokens: {
+        Accounts: [[[defaultAccount.alice.address, karura.custom.bsx], { free: 10n * 10n ** 15n }]],
       },
     })
 
     return {
       fromChain: karuraClient,
       toChain: basiliskClient,
-      fromBalance: query.evm(karuraDai, '0x2aef47e62c966f0695d5af370ddc1bc7c56902063eee60853e2872fc0ff4f88c'),
-      toBalance: query.tokens(basiliskDai),
-      tx: tx.xtokens.transfer(karura.dai, 10n ** 18n, tx.xtokens.parachainV3(basiliskClient.config.paraId!)),
+      fromBalance: query.tokens(karura.custom.bsx),
+      toBalance: query.balances,
+      tx: tx.xtokens.transfer(karura.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(basilisk.paraId!)),
     }
   })
-
-  // TODO: restore this once Basilisk fixed the asset mapping issue
-  //   runXcmPalletHorizontal(`'basilisk' -> 'karura' xcm transfer 'DAI'`, async () => {
-  //     await basiliskClient.dev.setStorage({
-  //       Tokens: {
-  //         accounts: [[[defaultAccount.alice.address, basiliskDai], { free: 10n * 10n ** 18n }]],
-  //       },
-  //     })
-
-  //     return {
-  //       fromChain: basiliskClient,
-  //       toChain: karuraClient,
-  //       fromBalance: query.tokens(basiliskDai),
-  //       toBalance: query.evm(karuraDai, '0x2aef47e62c966f0695d5af370ddc1bc7c56902063eee60853e2872fc0ff4f88c'),
-  //       tx: tx.xtokens.transfer(basilisk.dai, 10n ** 18n, tx.xtokens.parachainV3(karuraClient.config.paraId!)),
-  //     }
-  //   })
 })

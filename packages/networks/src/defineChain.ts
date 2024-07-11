@@ -9,9 +9,9 @@ const toNumber = (value: string | undefined): number | undefined => {
 }
 
 export function defineChain<
-  custom extends Record<string, unknown> | undefined,
-  initStorages extends Record<string, Record<string, any>> | undefined,
->(config: ChainConfig<custom, initStorages>): Chain<custom, initStorages> {
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(config: ChainConfig<TCustom, TInitStorages>): Chain<TCustom, TInitStorages> {
   const upperName = config.name.toUpperCase()
   const { endpoint, ...rest } = config
   const chainConfig = {
@@ -24,9 +24,9 @@ export function defineChain<
     port: 0,
     allowUnresolvedImports: true,
     ...rest,
-  } as ChainConfig<custom, initStorages>
+  } as ChainConfig<TCustom, TInitStorages>
 
-  function extend<Base extends Chain<custom, initStorages, Record<string, unknown>>>(base: Base) {
+  function extend<Base extends Chain<TCustom, TInitStorages, Record<string, unknown>>>(base: Base) {
     return <config extends Record<string, unknown>>(extendFn: (base: Base) => config) => {
       const extended = extendFn(base)
       const combined = { ...base, ...extended }

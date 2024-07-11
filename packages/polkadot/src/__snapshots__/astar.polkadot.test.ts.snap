@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > balance on from chain 1`] = `
+exports[`astar & polkadot > polkadot transfer DOT to astar > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,18 +15,18 @@ exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > balan
 }
 `;
 
-exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > balance on to chain 1`] = `
+exports[`astar & polkadot > polkadot transfer DOT to astar > balance on to chain 1`] = `
 {
-  "balance": "(rounded 11000000000000)",
+  "balance": "(rounded 1000000000000)",
   "extra": null,
   "reason": {
-    "consumer": null,
+    "sufficient": null,
   },
   "status": "Liquid",
 }
 `;
 
-exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > to chain dmp events 1`] = `
+exports[`astar & polkadot > polkadot transfer DOT to astar > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -63,7 +63,7 @@ exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > to ch
 ]
 `;
 
-exports[`'polkadot' <-> 'astar' xcm transfer > 'polkadot' -> 'astar' DOT > tx events 1`] = `
+exports[`astar & polkadot > polkadot transfer DOT to astar > tx events 1`] = `
 [
   {
     "data": {

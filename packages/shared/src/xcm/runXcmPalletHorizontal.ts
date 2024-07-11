@@ -22,9 +22,10 @@ export const runXcmPalletHorizontal = (
     isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -35,7 +36,7 @@ export const runXcmPalletHorizontal = (
         toBalance,
         routeChain,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         isCheckUmp = false,
         precision = 3,
       } = await setup()
@@ -48,7 +49,7 @@ export const runXcmPalletHorizontal = (
       await check(fromBalance(fromChain, fromAccount.address))
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
-      await checkEvents(tx0, 'xTokens').toMatchSnapshot('tx events')
+      await checkEvents(tx0, 'polkadotXcm', 'xcmPallet').toMatchSnapshot('tx events')
 
       if (isCheckUmp) {
         await checkUmp(fromChain)
@@ -70,8 +71,6 @@ export const runXcmPalletHorizontal = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on to chain')
       await checkSystemEvents(toChain, 'xcmpQueue', 'dmpQueue', 'messageQueue').toMatchSnapshot('to chain xcm events')
-
-      tearDown && (await tearDown())
     },
     240000,
   )

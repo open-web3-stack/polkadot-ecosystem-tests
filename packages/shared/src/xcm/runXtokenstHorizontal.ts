@@ -22,9 +22,10 @@ export const runXtokenstHorizontal = (
     isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -35,7 +36,7 @@ export const runXtokenstHorizontal = (
         toBalance,
         routeChain,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         isCheckUmp = false,
         precision = 3,
       } = await setup()
@@ -58,6 +59,7 @@ export const runXtokenstHorizontal = (
 
       if (routeChain) {
         await routeChain.chain.newBlock()
+        await checkSystemEvents(routeChain, 'messageQueue').toMatchSnapshot('route chain xcm events')
       }
       await toChain.chain.newBlock()
 
@@ -65,8 +67,6 @@ export const runXtokenstHorizontal = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on to chain')
       await checkSystemEvents(toChain, 'xcmpQueue', 'dmpQueue', 'messageQueue').toMatchSnapshot('to chain xcm events')
-
-      tearDown && (await tearDown())
     },
     240000,
   )

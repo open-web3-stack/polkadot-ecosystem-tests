@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' -> 'karura' USDT > balance on from chain 1`] = `
+exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > balance on from chain 1`] = `
 {
   "balance": 999000000,
   "extra": null,
@@ -11,7 +11,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
 }
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' -> 'karura' USDT > balance on to chain 1`] = `
+exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > balance on to chain 1`] = `
 {
   "free": "(rounded 999000)",
   "frozen": 0,
@@ -19,7 +19,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
 }
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' -> 'karura' USDT > from chain hrmp messages 1`] = `
+exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from chain hrmp messages 1`] = `
 [
   {
     "data": [
@@ -97,7 +97,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
                 "interior": {
                   "x1": {
                     "accountId32": {
-                      "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                       "network": null,
                     },
                   },
@@ -117,7 +117,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
 ]
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' -> 'karura' USDT > to chain xcm events 1`] = `
+exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -137,9 +137,162 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' ->
 ]
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'assetHubKusama' -> 'karura' USDT > tx events 1`] = `[]`;
+exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 6200)",
+            "refTime": "(rounded 290000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 1000000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Kusama",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 2000,
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "message": [
+        {
+          "ReserveAssetDeposited": [
+            {
+              "fun": {
+                "Fungible": 1000000,
+              },
+              "id": {
+                "interior": {
+                  "X3": [
+                    {
+                      "Parachain": 1000,
+                    },
+                    {
+                      "PalletInstance": 50,
+                    },
+                    {
+                      "GeneralIndex": "(rounded 2000)",
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000,
+              },
+              "id": {
+                "interior": {
+                  "X3": [
+                    {
+                      "Parachain": 1000,
+                    },
+                    {
+                      "PalletInstance": 50,
+                    },
+                    {
+                      "GeneralIndex": "(rounded 2000)",
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Kusama",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetHubKusama' USDT > balance on from chain 1`] = `
+exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > balance on from chain 1`] = `
 {
   "free": 9000000,
   "frozen": 0,
@@ -147,18 +300,18 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetH
 }
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetHubKusama' USDT > balance on to chain 1`] = `
+exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > balance on to chain 1`] = `
 {
-  "balance": "(rounded 1000000000)",
+  "balance": "(rounded 991000)",
   "extra": null,
   "reason": {
-    "consumer": null,
+    "sufficient": null,
   },
   "status": "Liquid",
 }
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetHubKusama' USDT > from chain hrmp messages 1`] = `
+exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from chain hrmp messages 1`] = `
 [
   {
     "data": [
@@ -230,7 +383,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetH
                 "interior": {
                   "x1": {
                     "accountId32": {
-                      "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                       "network": {
                         "any": null,
                       },
@@ -250,7 +403,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetH
 ]
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetHubKusama' USDT > to chain xcm events 1`] = `
+exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -270,7 +423,7 @@ exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetH
 ]
 `;
 
-exports[`'assetHubKusama' <-> 'karura' xcm transfer 'USDT' > 'karura' -> 'assetHubKusama' USDT > tx events 1`] = `
+exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > tx events 1`] = `
 [
   {
     "data": {
