@@ -12,9 +12,8 @@ describe('karura & kusama', async () => {
 
   beforeEach(restoreSnapshot)
 
-  const karuraKSM = karuraClient.config.custom.ksm
-  const karuraParaId = karuraClient.config.paraId!
-  const kusamaKSM = kusamaClient.config.custom.ksm
+  const karuraKSM = karura.custom.ksm
+  const kusamaKSM = kusama.custom.ksm
 
   afterAll(async () => {
     await kusamaClient.teardown()
@@ -46,7 +45,7 @@ describe('karura & kusama', async () => {
       fromChain: kusamaClient,
       toChain: karuraClient,
       balance: query.tokens(karuraKSM),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, karuraParaId)),
+      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, karura.paraId!)),
     }
   })
 })

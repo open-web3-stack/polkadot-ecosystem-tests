@@ -5,8 +5,7 @@ import { defineChain } from '../defineChain.js'
 const custom = {
   assetHubPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
-    wbtc: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 21 }] } } },
-    wbtcIndex: 21,
+    usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
   },
   assetHubKusama: {

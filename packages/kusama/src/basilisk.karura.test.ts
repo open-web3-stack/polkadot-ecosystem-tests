@@ -28,7 +28,7 @@ describe('basilisk & karura', async () => {
       toAccount: defaultAccount.bob,
       fromBalance: query.tokens(karura.custom.ksm),
       toBalance: query.tokens(basilisk.custom.relayToken),
-      tx: tx.xtokens.transfer(karura.custom.ksm, 10n ** 12n, tx.xtokens.parachainV4(basiliskClient.config.paraId!)),
+      tx: tx.xtokens.transfer(karura.custom.ksm, 10n ** 12n, tx.xtokens.parachainV4(basilisk.paraId!)),
     }
   })
 
@@ -41,11 +41,7 @@ describe('basilisk & karura', async () => {
       toAccount: defaultAccount.bob,
       fromBalance: query.tokens(basilisk.custom.relayToken),
       toBalance: query.tokens(karura.custom.ksm),
-      tx: tx.xtokens.transfer(
-        basilisk.custom.relayToken,
-        10n ** 12n,
-        tx.xtokens.parachainV4(karuraClient.config.paraId!),
-      ),
+      tx: tx.xtokens.transfer(basilisk.custom.relayToken, 10n ** 12n, tx.xtokens.parachainV4(karura.paraId!)),
     }
   })
 
@@ -55,7 +51,7 @@ describe('basilisk & karura', async () => {
       toChain: karuraClient,
       fromBalance: query.balances,
       toBalance: query.tokens(karura.custom.bsx),
-      tx: tx.xtokens.transfer(basilisk.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(karuraClient.config.paraId!)),
+      tx: tx.xtokens.transfer(basilisk.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(karura.paraId!)),
     }
   })
 
@@ -71,7 +67,7 @@ describe('basilisk & karura', async () => {
       toChain: basiliskClient,
       fromBalance: query.tokens(karura.custom.bsx),
       toBalance: query.balances,
-      tx: tx.xtokens.transfer(karura.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(basiliskClient.config.paraId!)),
+      tx: tx.xtokens.transfer(karura.custom.bsx, 10n ** 15n, tx.xtokens.parachainV4(basilisk.paraId!)),
     }
   })
 })

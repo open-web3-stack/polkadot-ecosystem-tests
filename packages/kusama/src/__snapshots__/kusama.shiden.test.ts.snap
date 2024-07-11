@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance on from chain 1`] = `
+exports[`kusama & shiden > kusama transfer KSM to shiden > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,7 +15,7 @@ exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance
 }
 `;
 
-exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance on to chain 1`] = `
+exports[`kusama & shiden > kusama transfer KSM to shiden > balance on to chain 1`] = `
 {
   "balance": "(rounded 1000000000000)",
   "extra": null,
@@ -26,7 +26,7 @@ exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance
 }
 `;
 
-exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > to chain dmp events 1`] = `
+exports[`kusama & shiden > kusama transfer KSM to shiden > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -63,7 +63,7 @@ exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > to chai
 ]
 `;
 
-exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > tx events 1`] = `
+exports[`kusama & shiden > kusama transfer KSM to shiden > tx events 1`] = `
 [
   {
     "data": {

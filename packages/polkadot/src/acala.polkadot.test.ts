@@ -1,26 +1,26 @@
-import { afterAll, describe } from 'vitest'
-import { connectParachains, connectVertical } from '@acala-network/chopsticks'
+import { afterAll, beforeEach, describe } from 'vitest'
 
 import { acala, polkadot } from '@e2e-test/networks/chains'
-import { createNetwork } from '@e2e-test/networks'
+import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
 
-describe(`'acala' <-> 'polkadot' xcm transfer`, async () => {
-  const [polkadotClient, acalaClient] = await Promise.all([createNetwork(polkadot), createNetwork(acala)])
+describe('acala & polkadot', async () => {
+  const [polkadotClient, acalaClient] = await createNetworks(polkadot, acala)
 
-  await connectVertical(polkadotClient.chain, acalaClient.chain)
-  await connectParachains([acalaClient.chain])
+  const restoreSnapshot = captureSnapshot(polkadotClient, acalaClient)
 
-  const acalaDOT = acalaClient.config.custom!.dot
-  const polkadotDOT = polkadotClient.config.custom!.dot
+  beforeEach(restoreSnapshot)
+
+  const acalaDOT = acalaClient.config.custom.dot
+  const polkadotDOT = polkadotClient.config.custom.dot
 
   afterAll(async () => {
     await polkadotClient.teardown()
     await acalaClient.teardown()
   })
 
-  runXtokensUp(`'acala' -> 'polkadot' DOT`, async () => {
+  runXtokensUp('acala transfer DOT to polkadot', async () => {
     return {
       fromChain: acalaClient,
       toChain: polkadotClient,
@@ -29,16 +29,18 @@ describe(`'acala' <-> 'polkadot' xcm transfer`, async () => {
     }
   })
 
-  runXtokensUp(`'acala' -> 'polkadot' DOT wiht limited weight`, async () => {
+  runXtokensUp('acala transfer DOT wiht limited weight', async () => {
     return {
       fromChain: acalaClient,
       toChain: polkadotClient,
       balance: query.tokens(acalaDOT),
-      tx: tx.xtokens.transfer(acalaDOT, 1e12, tx.xtokens.relaychainV3, { Limited: { refTime: 5000000000 } }),
+      tx: tx.xtokens.transfer(acalaDOT, 1e12, tx.xtokens.relaychainV3, {
+        Limited: { refTime: 5000000000, proofSize: 10000 },
+      }),
     }
   })
 
-  runXcmPalletDown(`'polkadot' -> 'acala' DOT`, async () => {
+  runXcmPalletDown('polkadot transfer DOT to acala', async () => {
     return {
       fromChain: polkadotClient,
       toChain: acalaClient,

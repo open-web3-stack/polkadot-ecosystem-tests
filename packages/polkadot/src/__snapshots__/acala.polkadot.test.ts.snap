@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > balance on from chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT to polkadot > balance on from chain 1`] = `
 {
   "free": 9000000000000,
   "frozen": 0,
@@ -8,7 +8,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > balan
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > balance on to chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT to polkadot > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -23,7 +23,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > balan
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > from chain ump messages 1`] = `
+exports[`acala & polkadot > acala transfer DOT to polkadot > from chain ump messages 1`] = `
 [
   {
     "v2": [
@@ -95,7 +95,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > from 
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > to chain ump events 1`] = `
+exports[`acala & polkadot > acala transfer DOT to polkadot > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -117,7 +117,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > to ch
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > tx events 1`] = `
+exports[`acala & polkadot > acala transfer DOT to polkadot > tx events 1`] = `
 [
   {
     "data": {
@@ -162,20 +162,20 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > tx ev
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht limited weight > balance on from chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on from chain 1`] = `
 {
-  "free": 8000000000000,
+  "free": 9000000000000,
   "frozen": 0,
   "reserved": 0,
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht limited weight > balance on to chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 2000000000000)",
+    "free": "(rounded 1000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -185,18 +185,8 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht limited weight > from chain ump messages 1`] = `
+exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain ump messages 1`] = `
 [
-  {
-    "v2": [
-      {
-        "subscribeVersion": {
-          "maxResponseWeight": 0,
-          "queryId": 24,
-        },
-      },
-    ],
-  },
   {
     "v2": [
       {
@@ -267,25 +257,8 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht limited weight > to chain ump events 1`] = `
+exports[`acala & polkadot > acala transfer DOT wiht limited weight > to chain ump events 1`] = `
 [
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 2000,
-        },
-      },
-      "success": false,
-      "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 380000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
   {
     "data": {
       "id": "(hash)",
@@ -306,7 +279,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht limited weight > tx events 1`] = `
+exports[`acala & polkadot > acala transfer DOT wiht limited weight > tx events 1`] = `
 [
   {
     "data": {
@@ -351,7 +324,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balance on from chain 1`] = `
+exports[`acala & polkadot > polkadot transfer DOT to acala > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -366,7 +339,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balan
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balance on to chain 1`] = `
+exports[`acala & polkadot > polkadot transfer DOT to acala > balance on to chain 1`] = `
 {
   "free": "(rounded 1000000000000)",
   "frozen": 0,
@@ -374,7 +347,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balan
 }
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > to chain dmp events 1`] = `
+exports[`acala & polkadot > polkadot transfer DOT to acala > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -392,7 +365,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > to ch
 ]
 `;
 
-exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > tx events 1`] = `
+exports[`acala & polkadot > polkadot transfer DOT to acala > tx events 1`] = `
 [
   {
     "data": {

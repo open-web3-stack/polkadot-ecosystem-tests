@@ -11,8 +11,8 @@ describe('assetHubKusama & karura', async () => {
 
   const restoreSnapshot = captureSnapshot(assetHubKusamaClient, karuraClient)
 
-  const assetHubKusamaUsdt = assetHubKusamaClient.config.custom.usdtIndex
-  const karuraUsdt = karuraClient.config.custom.usdt
+  const assetHubKusamaUsdt = assetHubKusama.custom.usdtIndex
+  const karuraUsdt = karura.custom.usdt
 
   beforeEach(restoreSnapshot)
 
@@ -28,9 +28,9 @@ describe('assetHubKusama & karura', async () => {
       fromBalance: query.assets(assetHubKusamaUsdt),
       toBalance: query.tokens(karuraUsdt),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        assetHubKusamaClient.config.custom.usdt,
+        assetHubKusama.custom.usdt,
         1e6,
-        tx.xcmPallet.parachainV3(1, karuraClient.config.paraId!),
+        tx.xcmPallet.parachainV3(1, karura.paraId!),
       ),
     }
   })
@@ -45,11 +45,9 @@ describe('assetHubKusama & karura', async () => {
     return {
       fromChain: karuraClient,
       toChain: assetHubKusamaClient,
-      fromAccount: defaultAccount.alice,
-      toAccount: defaultAccount.alice,
       fromBalance: query.tokens(karuraUsdt),
       toBalance: query.assets(assetHubKusamaUsdt),
-      tx: tx.xtokens.transfer(karuraUsdt, 1e6, tx.xtokens.parachainV4(assetHubKusamaClient.config.paraId!)),
+      tx: tx.xtokens.transfer(karuraUsdt, 1e6, tx.xtokens.parachainV4(assetHubKusama.paraId!)),
     }
   })
 })

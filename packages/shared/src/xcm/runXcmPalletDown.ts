@@ -1,6 +1,5 @@
 import { type KeyringPair } from '@polkadot/keyring/types'
 import { it } from 'vitest'
-import { polkadot } from '@e2e-test/networks/chains'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Client } from '@e2e-test/networks'
@@ -16,15 +15,14 @@ export const runXcmPalletDown = (
     tx: Tx
     balance: GetBalance
 
-    routeChain?: Client
     fromAccount?: KeyringPair
     toAccount?: KeyringPair
-    isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -54,8 +52,6 @@ export const runXcmPalletDown = (
       await checkSystemEvents(toChain, 'parachainSystem', 'dmpQueue', 'messageQueue').toMatchSnapshot(
         'to chain dmp events',
       )
-
-      tearDown && (await tearDown())
     },
     240000,
   )

@@ -5,6 +5,8 @@ import { defineChain } from '../defineChain.js'
 const custom = {
   moonbeam: {
     dot: 42259045809535163221576417993425387648n,
+    aca: 224821240862170613278369189818311486111n,
+    ldot: 225719522181998468294117309041779353812n,
   },
   moonriver: {},
 }

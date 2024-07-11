@@ -22,9 +22,10 @@ export const runXcmPalletHorizontal = (
     isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -70,8 +71,6 @@ export const runXcmPalletHorizontal = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on to chain')
       await checkSystemEvents(toChain, 'xcmpQueue', 'dmpQueue', 'messageQueue').toMatchSnapshot('to chain xcm events')
-
-      tearDown && (await tearDown())
     },
     240000,
   )

@@ -1,32 +1,40 @@
-import { afterAll, describe } from 'vitest'
-import { connectParachains, connectVertical } from '@acala-network/chopsticks'
+import { afterAll, beforeEach, describe } from 'vitest'
 
-import { createNetwork } from '@e2e-test/networks'
+import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { kusama, shiden } from '@e2e-test/networks/chains'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXcmPalletDown } from '@e2e-test/shared/xcm'
+import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
 
-describe(`'kusama' <-> 'shiden' xcm transfer`, async () => {
-  const [kusamaClient, shidenClient] = await Promise.all([createNetwork(kusama), createNetwork(shiden)])
+describe('kusama & shiden', async () => {
+  const [kusamaClient, shidenClient] = await createNetworks(kusama, shiden)
 
-  await connectVertical(kusamaClient.chain, shidenClient.chain)
-  await connectParachains([shidenClient.chain])
+  const restoreSnapshot = captureSnapshot(kusamaClient, shidenClient)
 
-  const shidenKSM = shidenClient.config.custom!.ksm
-  const shidenParaId = shidenClient.config.paraId!
-  const kusamaKSM = kusamaClient.config.custom!.ksm
+  beforeEach(restoreSnapshot)
+
+  const shidenKSM = shiden.custom.ksm
+  const kusamaKSM = kusama.custom.ksm
 
   afterAll(async () => {
     await kusamaClient.teardown()
     await shidenClient.teardown()
   })
 
-  runXcmPalletDown(`'kusama' -> 'shiden' KSM`, async () => {
+  runXtokensUp('shiden transfer KSM to kusama', async () => {
+    return {
+      fromChain: shidenClient,
+      toChain: kusamaClient,
+      balance: query.tokens(kusamaKSM),
+      tx: tx.xtokens.transfer(shidenKSM, 1e12, tx.xtokens.relaychainV3),
+    }
+  })
+
+  runXcmPalletDown('kusama transfer KSM to shiden', async () => {
     return {
       fromChain: kusamaClient,
       toChain: shidenClient,
       balance: query.assets(shidenKSM),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, shidenParaId)),
+      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, shiden.paraId!)),
     }
   })
 })

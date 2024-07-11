@@ -279,7 +279,50 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > t
 ]
 `;
 
-exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > tx events 1`] = `[]`;
+exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
 
 exports[`karura & kusama > kusama transfer KSM to karura > balance on from chain 1`] = `
 {

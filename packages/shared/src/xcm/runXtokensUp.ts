@@ -15,15 +15,14 @@ export const runXtokensUp = (
     tx: Tx
     balance: GetBalance
 
-    routeChain?: Client
     fromAccount?: KeyringPair
     toAccount?: KeyringPair
-    isCheckUmp?: boolean
     precision?: number
   }>,
-  tearDown?: () => Promise<void>,
+  options: { only?: boolean } = {},
 ) => {
-  it(
+  const itfn = options.only ? it.only : it
+  itfn(
     name,
     async () => {
       const {
@@ -37,12 +36,7 @@ export const runXtokensUp = (
       } = await setup()
       const tx0 = await sendTransaction(tx(fromChain, toAccount.addressRaw).signAsync(fromAccount))
 
-      const block = await fromChain.chain.newBlock()
-
-      console.log({
-        hash: block.hash,
-        number: block.number,
-      })
+      await fromChain.chain.newBlock()
 
       await check(balance(fromChain, fromAccount.address))
         .redact({ number: precision })
@@ -56,8 +50,6 @@ export const runXtokensUp = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on to chain')
       await checkSystemEvents(toChain, 'ump', 'messageQueue').toMatchSnapshot('to chain ump events')
-
-      tearDown && (await tearDown())
     },
     240000,
   )
