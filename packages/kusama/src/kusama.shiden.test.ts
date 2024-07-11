@@ -24,7 +24,7 @@ describe('kusama & shiden', async () => {
     return {
       fromChain: shidenClient,
       toChain: kusamaClient,
-      balance: query.tokens(kusamaKSM),
+      balance: query.assets(shidenKSM),
       tx: tx.xtokens.transfer(shidenKSM, 1e12, tx.xtokens.relaychainV3),
     }
   })

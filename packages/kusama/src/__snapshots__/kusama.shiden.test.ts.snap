@@ -193,3 +193,170 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > tx events 1`] = `
   },
 ]
 `;
+
+exports[`kusama & shiden > shiden transfer KSM to kusama > balance on from chain 1`] = `
+{
+  "balance": 9000000000000,
+  "extra": null,
+  "reason": {
+    "consumer": null,
+  },
+  "status": "Liquid",
+}
+`;
+
+exports[`kusama & shiden > shiden transfer KSM to kusama > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 1000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`kusama & shiden > shiden transfer KSM to kusama > from chain ump messages 1`] = `
+[
+  {
+    "v2": [
+      {
+        "withdrawAsset": [
+          {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "concrete": {
+                "interior": {
+                  "here": null,
+                },
+                "parents": 0,
+              },
+            },
+          },
+        ],
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "concrete": {
+                "interior": {
+                  "here": null,
+                },
+                "parents": 0,
+              },
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositAsset": {
+          "assets": {
+            "wild": {
+              "all": null,
+            },
+          },
+          "beneficiary": {
+            "interior": {
+              "x1": {
+                "accountId32": {
+                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                  "network": {
+                    "any": null,
+                  },
+                },
+              },
+            },
+            "parents": 0,
+          },
+          "maxAssets": 1,
+        },
+      },
+    ],
+  },
+]
+`;
+
+exports[`kusama & shiden > shiden transfer KSM to kusama > to chain ump events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 2000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 300000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`kusama & shiden > shiden transfer KSM to kusama > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "Concrete": {
+              "interior": "Here",
+              "parents": 1,
+            },
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X1": {
+            "AccountId32": {
+              "id": "(hash)",
+              "network": null,
+            },
+          },
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "Concrete": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      },
+      "sender": "Z2kDhBaTFjDS4eyFK26rBVTsy5EQUfHxgcvsYeQ95N73hh9",
+    },
+    "method": "TransferredMultiAssets",
+    "section": "xTokens",
+  },
+]
+`;

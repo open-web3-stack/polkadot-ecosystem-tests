@@ -8,19 +8,14 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > ba
 }
 `;
 
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > balance on from chain 2`] = `
+exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > balance on to chain 1`] = `
 {
-  "free": 10000000,
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > balance on from chain 3`] = `
-{
-  "free": 10000000,
-  "frozen": 0,
-  "reserved": 0,
+  "balance": "(rounded 958000)",
+  "extra": null,
+  "reason": {
+    "sufficient": null,
+  },
+  "status": "Liquid",
 }
 `;
 
@@ -116,155 +111,27 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > fr
 ]
 `;
 
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > from chain hrmp messages 2`] = `[]`;
-
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > from chain hrmp messages 3`] = `[]`;
+exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 320000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
 
 exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > tx events 1`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000,
-          },
-          "id": {
-            "interior": {
-              "X3": [
-                {
-                  "Parachain": 1000,
-                },
-                {
-                  "PalletInstance": 50,
-                },
-                {
-                  "GeneralIndex": "(rounded 2000)",
-                },
-              ],
-            },
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X2": [
-            {
-              "Parachain": 1000,
-            },
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000,
-        },
-        "id": {
-          "interior": {
-            "X3": [
-              {
-                "Parachain": 1000,
-              },
-              {
-                "PalletInstance": 50,
-              },
-              {
-                "GeneralIndex": "(rounded 2000)",
-              },
-            ],
-          },
-          "parents": 1,
-        },
-      },
-      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
-  },
-]
-`;
-
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > tx events 2`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000,
-          },
-          "id": {
-            "interior": {
-              "X3": [
-                {
-                  "Parachain": 1000,
-                },
-                {
-                  "PalletInstance": 50,
-                },
-                {
-                  "GeneralIndex": "(rounded 2000)",
-                },
-              ],
-            },
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X2": [
-            {
-              "Parachain": 1000,
-            },
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000,
-        },
-        "id": {
-          "interior": {
-            "X3": [
-              {
-                "Parachain": 1000,
-              },
-              {
-                "PalletInstance": 50,
-              },
-              {
-                "GeneralIndex": "(rounded 2000)",
-              },
-            ],
-          },
-          "parents": 1,
-        },
-      },
-      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
-  },
-]
-`;
-
-exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > tx events 3`] = `
 [
   {
     "data": {

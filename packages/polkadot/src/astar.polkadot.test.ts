@@ -33,12 +33,12 @@ describe('astar & polkadot', async () => {
     }
   })
 
-  runXtokensUp('polkadot transfer DOT to astar', async () => {
+  runXtokensUp('astar transfer DOT to polkadot', async () => {
     return {
-      fromChain: polkadotClient,
-      toChain: astarClient,
-      balance: query.tokens(polkadotDOT),
-      tx: tx.xtokens.transfer(polkadotDOT, 1e12, tx.xtokens.relaychainV3),
+      fromChain: astarClient,
+      toChain: polkadotClient,
+      balance: query.assets(astarDOT),
+      tx: tx.xtokens.transfer(astarDOT, 1e12, tx.xtokens.relaychainV3),
     }
   })
 })
