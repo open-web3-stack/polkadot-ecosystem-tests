@@ -35,7 +35,7 @@ export const runXtokenstHorizontal = (
         toBalance,
         routeChain,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         isCheckUmp = false,
         precision = 3,
       } = await setup()
@@ -58,6 +58,7 @@ export const runXtokenstHorizontal = (
 
       if (routeChain) {
         await routeChain.chain.newBlock()
+        await checkSystemEvents(routeChain, 'messageQueue').toMatchSnapshot('route chain xcm events')
       }
       await toChain.chain.newBlock()
 

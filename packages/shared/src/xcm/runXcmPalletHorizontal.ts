@@ -35,7 +35,7 @@ export const runXcmPalletHorizontal = (
         toBalance,
         routeChain,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         isCheckUmp = false,
         precision = 3,
       } = await setup()
@@ -48,7 +48,7 @@ export const runXcmPalletHorizontal = (
       await check(fromBalance(fromChain, fromAccount.address))
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
-      await checkEvents(tx0, 'xTokens').toMatchSnapshot('tx events')
+      await checkEvents(tx0, 'polkadotXcm', 'xcmPallet').toMatchSnapshot('tx events')
 
       if (isCheckUmp) {
         await checkUmp(fromChain)

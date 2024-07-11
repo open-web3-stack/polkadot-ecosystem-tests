@@ -14,5 +14,3 @@ const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpec
 }))
 
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
-
-export * from '@acala-network/chopsticks-testing'

@@ -30,6 +30,7 @@ const custom = {
     dai: { Erc20: '0x4bb6afb5fa2b07a5d1c499e1c3ddb5a15e709a71' },
     ausd: { Token: 'KUSD' },
     kar: { Token: 'KAR' },
+    bsx: { ForeignAsset: 11 },
   },
 }
 

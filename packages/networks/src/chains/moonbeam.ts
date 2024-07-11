@@ -6,6 +6,7 @@ const custom = {
   moonbeam: {
     dot: 42259045809535163221576417993425387648n,
   },
+  moonriver: {},
 }
 
 const getInitStorages = () => ({
@@ -30,5 +31,6 @@ export const moonriver = defineChain({
   name: 'moonriver',
   paraId: 2023,
   endpoint: 'wss://moonriver-rpc.dwellir.com',
+  custom: custom.moonriver,
   initStorages: getInitStorages(),
 })

@@ -131,77 +131,7 @@ exports[`'assetHubPolkadot' <-> 'acala' xcm transfer 'WBTC' > 'acala' -> 'assetH
 ]
 `;
 
-exports[`'assetHubPolkadot' <-> 'acala' xcm transfer 'WBTC' > 'acala' -> 'assetHubPolkadot' WBTC > tx events 1`] = `
-[
-  {
-    "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": "(rounded 16000000000)",
-          },
-          "id": {
-            "interior": {
-              "X2": [
-                {
-                  "Parachain": 2000,
-                },
-                {
-                  "GeneralKey": {
-                    "data": 0,
-                    "length": 2,
-                  },
-                },
-              ],
-            },
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
-        "interior": {
-          "X2": [
-            {
-              "Parachain": 1000,
-            },
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
-      },
-      "fee": {
-        "fun": {
-          "Fungible": 16000000000,
-        },
-        "id": {
-          "interior": {
-            "X2": [
-              {
-                "Parachain": 2000,
-              },
-              {
-                "GeneralKey": {
-                  "data": 0,
-                  "length": 2,
-                },
-              },
-            ],
-          },
-          "parents": 1,
-        },
-      },
-      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
-    },
-    "method": "TransferredAssets",
-    "section": "xTokens",
-  },
-]
-`;
+exports[`'assetHubPolkadot' <-> 'acala' xcm transfer 'WBTC' > 'acala' -> 'assetHubPolkadot' WBTC > tx events 1`] = `[]`;
 
 exports[`'assetHubPolkadot' <-> 'acala' xcm transfer 'WBTC' > 'assetHubPolkadot' -> 'acala' WBTC > balance on from chain 1`] = `
 {

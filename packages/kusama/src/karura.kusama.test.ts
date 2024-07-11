@@ -1,27 +1,27 @@
-import { afterAll, describe } from 'vitest'
-import { connectParachains, connectVertical } from '@acala-network/chopsticks'
+import { afterAll, beforeEach, describe } from 'vitest'
 
-import { createNetwork } from '@e2e-test/networks'
+import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { karura, kusama } from '@e2e-test/networks/chains'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
 
-describe(`'karura' <-> 'kusama' xcm transfer`, async () => {
-  const [kusamaClient, karuraClient] = await Promise.all([createNetwork(kusama), createNetwork(karura)])
+describe('karura & kusama', async () => {
+  const [karuraClient, kusamaClient] = await createNetworks(karura, kusama)
 
-  await connectVertical(kusamaClient.chain, karuraClient.chain)
-  await connectParachains([karuraClient.chain])
+  const restoreSnapshot = captureSnapshot(karuraClient, kusamaClient)
 
-  const karuraKSM = karuraClient.config.custom!.ksm
+  beforeEach(restoreSnapshot)
+
+  const karuraKSM = karuraClient.config.custom.ksm
   const karuraParaId = karuraClient.config.paraId!
-  const kusamaKSM = kusamaClient.config.custom!.ksm
+  const kusamaKSM = kusamaClient.config.custom.ksm
 
   afterAll(async () => {
     await kusamaClient.teardown()
     await karuraClient.teardown()
   })
 
-  runXtokensUp(`'karura' -> 'kusama' KSM`, async () => {
+  runXtokensUp('karura transfer KSM to kusama', async () => {
     return {
       fromChain: karuraClient,
       toChain: kusamaClient,
@@ -30,18 +30,18 @@ describe(`'karura' <-> 'kusama' xcm transfer`, async () => {
     }
   })
 
-  runXtokensUp(`'karura' -> 'kusama' KSM wiht limited weight`, async () => {
+  runXtokensUp('karura transfer KSM to kusama wiht limited weight', async () => {
     return {
       fromChain: karuraClient,
       toChain: kusamaClient,
       balance: query.tokens(karuraKSM),
       tx: tx.xtokens.transfer(karuraKSM, 1e12, tx.xtokens.relaychainV3, {
-        Limited: { refTime: 5000000000 },
+        Limited: { refTime: 500000000, proofSize: 10000 },
       }),
     }
   })
 
-  runXcmPalletDown(`'kusama' -> 'karura' KSM`, async () => {
+  runXcmPalletDown('kusama transfer KSM to karura', async () => {
     return {
       fromChain: kusamaClient,
       toChain: karuraClient,

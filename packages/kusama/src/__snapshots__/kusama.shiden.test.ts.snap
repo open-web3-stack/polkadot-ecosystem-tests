@@ -17,10 +17,10 @@ exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance
 
 exports[`'kusama' <-> 'shiden' xcm transfer > 'kusama' -> 'shiden' KSM > balance on to chain 1`] = `
 {
-  "balance": "(rounded 11000000000000)",
+  "balance": "(rounded 1000000000000)",
   "extra": null,
   "reason": {
-    "consumer": null,
+    "sufficient": null,
   },
   "status": "Liquid",
 }

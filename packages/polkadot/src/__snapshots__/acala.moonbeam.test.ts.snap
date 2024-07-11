@@ -131,6 +131,28 @@ exports[`'acala' <-> 'moonbeam' xcm transfer 'DOT' > 'acala' -> 'moonbeam' DOT >
 ]
 `;
 
+exports[`'acala' <-> 'moonbeam' xcm transfer 'DOT' > 'acala' -> 'moonbeam' DOT > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": 2000,
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 540000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
 exports[`'acala' <-> 'moonbeam' xcm transfer 'DOT' > 'acala' -> 'moonbeam' DOT > to chain xcm events 1`] = `
 [
   {
@@ -320,6 +342,28 @@ exports[`'acala' <-> 'moonbeam' xcm transfer 'DOT' > 'moonbeam' -> 'acala' DOT >
         },
       },
     ],
+  },
+]
+`;
+
+exports[`'acala' <-> 'moonbeam' xcm transfer 'DOT' > 'moonbeam' -> 'acala' DOT > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 2000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 540000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
   },
 ]
 `;

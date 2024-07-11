@@ -1,13 +1,9 @@
-import { Chain } from './types.js'
+import { connectParachains, connectVertical } from '@acala-network/chopsticks'
 import { setupContext } from '@acala-network/chopsticks-testing'
 
-export async function createNetwork<
-  extended extends Record<string, unknown> | undefined,
-  custom extends Record<string, unknown> | undefined = Record<string, unknown> | undefined,
-  initStorages extends Record<string, Record<string, any>> | undefined =
-    | Record<string, Record<string, any>>
-    | undefined,
->(chainConfig: Chain<custom, initStorages, extended>) {
+import { Chain } from './types.js'
+
+export async function createNetwork<T extends Chain>(chainConfig: T) {
   const network = await setupContext(chainConfig)
 
   if (chainConfig.initStorages) {
@@ -20,4 +16,20 @@ export async function createNetwork<
   }
 }
 
-export type Client = Awaited<ReturnType<typeof createNetwork>>
+export type Client<T extends Chain = Chain> = Awaited<ReturnType<typeof createNetwork<T>>>
+
+export async function createNetworks<T extends Chain[]>(...configs: T) {
+  const networks = (await Promise.all(configs.map(createNetwork))) as { [I in keyof T]: Client<T[I]> }
+
+  const relaychain = networks.find(({ config }) => config.isRelayChain)
+  const parachains = networks.filter(({ config }) => !config.isRelayChain)
+
+  await connectParachains(parachains.map(({ chain }) => chain))
+  if (relaychain) {
+    for (const parachain of parachains) {
+      await connectVertical(relaychain.chain, parachain.chain)
+    }
+  }
+
+  return networks
+}

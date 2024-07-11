@@ -8,6 +8,7 @@ const custom = {
     relayToken: 5,
   },
   basilisk: {
+    bsx: 0,
     dai: 13,
     relayToken: 1,
   },
@@ -15,7 +16,7 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.hydraDX | typeof custom.basilisk) => ({
   System: {
-    Account: [[[defaultAccount.alice.address], { providers: 1, data: { free: 1000 * 1e12 } }]],
+    Account: [[[defaultAccount.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
   },
   Tokens: {
     Accounts: [

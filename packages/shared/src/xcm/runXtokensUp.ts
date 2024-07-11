@@ -32,12 +32,17 @@ export const runXtokensUp = (
         tx,
         balance,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         precision = 3,
       } = await setup()
       const tx0 = await sendTransaction(tx(fromChain, toAccount.addressRaw).signAsync(fromAccount))
 
-      await fromChain.chain.newBlock()
+      const block = await fromChain.chain.newBlock()
+
+      console.log({
+        hash: block.hash,
+        number: block.number,
+      })
 
       await check(balance(fromChain, fromAccount.address))
         .redact({ number: precision })

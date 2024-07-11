@@ -13,7 +13,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > balan
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 11000000000000)",
+    "free": "(rounded 1000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -78,7 +78,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT > from 
             "interior": {
               "x1": {
                 "accountId32": {
-                  "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                   "network": {
                     "any": null,
                   },
@@ -175,7 +175,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 12000000000000)",
+    "free": "(rounded 2000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -250,7 +250,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'acala' -> 'polkadot' DOT wiht li
             "interior": {
               "x1": {
                 "accountId32": {
-                  "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                   "network": {
                     "any": null,
                   },
@@ -356,7 +356,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balan
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 11000000000000)",
+    "free": "(rounded 9000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -368,7 +368,7 @@ exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balan
 
 exports[`'acala' <-> 'polkadot' xcm transfer > 'polkadot' -> 'acala' DOT > balance on to chain 1`] = `
 {
-  "free": "(rounded 9000000000000)",
+  "free": "(rounded 1000000000000)",
   "frozen": 0,
   "reserved": 0,
 }

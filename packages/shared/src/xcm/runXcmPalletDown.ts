@@ -1,5 +1,6 @@
 import { type KeyringPair } from '@polkadot/keyring/types'
 import { it } from 'vitest'
+import { polkadot } from '@e2e-test/networks/chains'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Client } from '@e2e-test/networks'
@@ -32,7 +33,7 @@ export const runXcmPalletDown = (
         tx,
         balance,
         fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.alice,
+        toAccount = defaultAccount.bob,
         precision = 3,
       } = await setup()
 
@@ -43,7 +44,7 @@ export const runXcmPalletDown = (
       await check(fromChain.api.query.system.account(fromAccount.address))
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
-      await checkEvents(tx0, 'xcmPallet').redact({ number: precision }).toMatchSnapshot('tx events')
+      await checkEvents(tx0, 'polkadotXcm', 'xcmPallet').redact({ number: precision }).toMatchSnapshot('tx events')
 
       await toChain.chain.newBlock()
 
