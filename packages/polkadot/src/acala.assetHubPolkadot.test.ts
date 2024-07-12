@@ -46,6 +46,7 @@ describe('acala & assetHubPolkadot', async () => {
       fromBalance: query.tokens(acala.custom.usdt),
       toBalance: query.assets(assetHubPolkadot.custom.usdtIndex),
       tx: tx.xtokens.transfer(acala.custom.usdt, 1e6, tx.xtokens.parachainV3(assetHubPolkadot.paraId!)),
+      precision: 2,
     }
   })
 })

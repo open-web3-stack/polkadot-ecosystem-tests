@@ -634,7 +634,7 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > tx events 1`] = `
 
 exports[`acala & moonbeam > moonbeam transfer ACA to acala > balance on from chain 1`] = `
 {
-  "balance": 10000000000000,
+  "balance": 9000000000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -648,12 +648,12 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > balance on to chain
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 994000000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
@@ -666,7 +666,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
       {
         "v3": [
           {
-            "reserveAssetDeposited": [
+            "withdrawAsset": [
               {
                 "fun": {
                   "fungible": 1000000000000,
@@ -674,16 +674,14 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                 "id": {
                   "concrete": {
                     "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2004,
+                      "x1": {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "palletInstance": 10,
-                        },
-                      ],
+                      },
                     },
-                    "parents": 1,
+                    "parents": 0,
                   },
                 },
               },
@@ -701,16 +699,14 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                 "id": {
                   "concrete": {
                     "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2004,
+                      "x1": {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "palletInstance": 10,
-                        },
-                      ],
+                      },
                     },
-                    "parents": 1,
+                    "parents": 0,
                   },
                 },
               },
@@ -755,10 +751,10 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > to chain xcm events
       "origin": {
         "Sibling": "(rounded 2000)",
       },
-      "success": false,
+      "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 600000000,
+        "refTime": 800000000,
       },
     },
     "method": "Processed",
@@ -778,13 +774,19 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > tx events 1`] = `
           },
           "id": {
             "interior": {
-              "X1": [
+              "X2": [
                 {
-                  "PalletInstance": 10,
+                  "Parachain": 2000,
+                },
+                {
+                  "GeneralKey": {
+                    "data": 0,
+                    "length": 2,
+                  },
                 },
               ],
             },
-            "parents": 0,
+            "parents": 1,
           },
         },
       ],
@@ -810,13 +812,19 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > tx events 1`] = `
         },
         "id": {
           "interior": {
-            "X1": [
+            "X2": [
               {
-                "PalletInstance": 10,
+                "Parachain": 2000,
+              },
+              {
+                "GeneralKey": {
+                  "data": 0,
+                  "length": 2,
+                },
               },
             ],
           },
-          "parents": 0,
+          "parents": 1,
         },
       },
       "sender": "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac",
@@ -829,7 +837,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > tx events 1`] = `
 
 exports[`acala & moonbeam > moonbeam transfer DOT to acala > balance on from chain 1`] = `
 {
-  "balance": 10000000000000,
+  "balance": 9000000000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -840,28 +848,152 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > balance on from cha
 
 exports[`acala & moonbeam > moonbeam transfer DOT to acala > balance on to chain 1`] = `
 {
-  "free": 10000000000000,
+  "free": "(rounded 11000000000000)",
   "frozen": 0,
   "reserved": 0,
 }
 `;
 
-exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump messages 1`] = `[]`;
+exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump messages 1`] = `
+[
+  {
+    "v3": [
+      {
+        "withdrawAsset": [
+          {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "concrete": {
+                "interior": {
+                  "here": null,
+                },
+                "parents": 0,
+              },
+            },
+          },
+        ],
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 500000000000,
+            },
+            "id": {
+              "concrete": {
+                "interior": {
+                  "here": null,
+                },
+                "parents": 0,
+              },
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositReserveAsset": {
+          "assets": {
+            "wild": {
+              "allCounted": 1,
+            },
+          },
+          "dest": {
+            "interior": {
+              "x1": {
+                "parachain": 2000,
+              },
+            },
+            "parents": 0,
+          },
+          "xcm": [
+            {
+              "buyExecution": {
+                "fees": {
+                  "fun": {
+                    "fungible": 500000000000,
+                  },
+                  "id": {
+                    "concrete": {
+                      "interior": {
+                        "here": null,
+                      },
+                      "parents": 1,
+                    },
+                  },
+                },
+                "weightLimit": {
+                  "unlimited": null,
+                },
+              },
+            },
+            {
+              "depositAsset": {
+                "assets": {
+                  "wild": {
+                    "allCounted": 1,
+                  },
+                },
+                "beneficiary": {
+                  "interior": {
+                    "x1": {
+                      "accountId32": {
+                        "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                        "network": null,
+                      },
+                    },
+                  },
+                  "parents": 0,
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  },
+]
+`;
 
-exports[`acala & moonbeam > moonbeam transfer DOT to acala > route chain xcm events 1`] = `[]`;
+exports[`acala & moonbeam > moonbeam transfer DOT to acala > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 2000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 540000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
 
 exports[`acala & moonbeam > moonbeam transfer DOT to acala > to chain xcm events 1`] = `
 [
   {
     "data": {
       "id": "(hash)",
-      "origin": {
-        "Sibling": "(rounded 2000)",
-      },
-      "success": false,
+      "origin": "Parent",
+      "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 600000000,
+        "refTime": 1000000000,
       },
     },
     "method": "Processed",
@@ -880,14 +1012,8 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > tx events 1`] = `
             "Fungible": 1000000000000,
           },
           "id": {
-            "interior": {
-              "X1": [
-                {
-                  "PalletInstance": 10,
-                },
-              ],
-            },
-            "parents": 0,
+            "interior": "Here",
+            "parents": 1,
           },
         },
       ],
@@ -912,14 +1038,8 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > tx events 1`] = `
           "Fungible": 1000000000000,
         },
         "id": {
-          "interior": {
-            "X1": [
-              {
-                "PalletInstance": 10,
-              },
-            ],
-          },
-          "parents": 0,
+          "interior": "Here",
+          "parents": 1,
         },
       },
       "sender": "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac",
@@ -932,7 +1052,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > tx events 1`] = `
 
 exports[`acala & moonbeam > moonbeam transfer LDOT to acala > balance on from chain 1`] = `
 {
-  "balance": 10000000000000,
+  "balance": 9000000000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -943,15 +1063,116 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > balance on from ch
 
 exports[`acala & moonbeam > moonbeam transfer LDOT to acala > balance on to chain 1`] = `
 {
-  "free": 0,
+  "free": "(rounded 1000000000000)",
   "frozen": 0,
   "reserved": 0,
 }
 `;
 
-exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp messages 1`] = `[]`;
+exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v3": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "x1": {
+                        "generalKey": {
+                          "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
+                      },
+                    },
+                    "parents": 0,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "x1": {
+                        "generalKey": {
+                          "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
+                      },
+                    },
+                    "parents": 0,
+                  },
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": {
+                    "accountId32": {
+                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                      "network": null,
+                    },
+                  },
+                },
+                "parents": 0,
+              },
+            },
+          },
+        ],
+      },
+    ],
+    "recipient": 2000,
+  },
+]
+`;
 
-exports[`acala & moonbeam > moonbeam transfer LDOT to acala > to chain xcm events 1`] = `[]`;
+exports[`acala & moonbeam > moonbeam transfer LDOT to acala > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 800000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
 
 exports[`acala & moonbeam > moonbeam transfer LDOT to acala > tx events 1`] = `
 [
@@ -964,13 +1185,19 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > tx events 1`] = `
           },
           "id": {
             "interior": {
-              "X1": [
+              "X2": [
                 {
-                  "PalletInstance": 10,
+                  "Parachain": 2000,
+                },
+                {
+                  "GeneralKey": {
+                    "data": "(hash)",
+                    "length": 2,
+                  },
                 },
               ],
             },
-            "parents": 0,
+            "parents": 1,
           },
         },
       ],
@@ -996,13 +1223,19 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > tx events 1`] = `
         },
         "id": {
           "interior": {
-            "X1": [
+            "X2": [
               {
-                "PalletInstance": 10,
+                "Parachain": 2000,
+              },
+              {
+                "GeneralKey": {
+                  "data": "(hash)",
+                  "length": 2,
+                },
               },
             ],
           },
-          "parents": 0,
+          "parents": 1,
         },
       },
       "sender": "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac",
