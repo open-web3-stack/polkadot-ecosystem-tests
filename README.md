@@ -29,4 +29,6 @@ The XCM tests are defined in [packages/kusama/src](packages/kusama/src) and [pac
 
 ### Add new kind of XCM tests
 
-The XCM tests are defined in [packages/shared/src/xcm](packages/shared/src/xcm). They are implemented in such a way that they are network agnostic and can be reused across different chains. The tests should also be tolerable to minor changes regards to onchain envoronment. For example, it should not be impacted by small change of transaction fees and should use `.reduct` to round the numbers or remove fields that are constantly changing.
+The XCM tests are defined in [packages/shared/src/xcm](packages/shared/src/xcm). They are implemented in such a way that they are network agnostic and can be reused across different chains. The tests should also be tolerable to minor changes regards to onchain envoronment. For example, it should not be impacted by small change of transaction fees and should use `.redact` to round the numbers or remove fields that are constantly changing.
+
+For network specific tests that cannot be reused, just add them as normal tests.
