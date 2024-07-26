@@ -3,7 +3,6 @@
 	"type": "module",
 	"dependencies": {
 		"@acala-network/chopsticks-testing": "^0.13.1",
-		"@e2e-test/networks": "workspace:*",
 		"@e2e-test/shared": "workspace:*"
 	}
 }

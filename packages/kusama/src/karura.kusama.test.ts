@@ -1,24 +1,15 @@
-import { afterAll, beforeEach, describe } from 'vitest'
+import { describe } from 'vitest'
 
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { karura, kusama } from '@e2e-test/networks/chains'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('karura & kusama', async () => {
-  const [karuraClient, kusamaClient] = await createNetworks(karura, kusama)
-
-  const restoreSnapshot = captureSnapshot(karuraClient, kusamaClient)
-
-  beforeEach(restoreSnapshot)
+  const [karuraClient, kusamaClient] = await setupNetworks(karura, kusama)
 
   const karuraKSM = karura.custom.ksm
   const kusamaKSM = kusama.custom.ksm
-
-  afterAll(async () => {
-    await kusamaClient.teardown()
-    await karuraClient.teardown()
-  })
 
   runXtokensUp('karura transfer KSM to kusama', async () => {
     return {

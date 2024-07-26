@@ -1,25 +1,15 @@
-import { afterAll, beforeEach, describe } from 'vitest'
-import { defaultAccount } from '@e2e-test/shared'
+import { describe } from 'vitest'
 
 import { assetHubKusama, karura } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
+import { defaultAccount, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 describe('assetHubKusama & karura', async () => {
-  const [assetHubKusamaClient, karuraClient] = await createNetworks(assetHubKusama, karura)
-
-  const restoreSnapshot = captureSnapshot(assetHubKusamaClient, karuraClient)
+  const [assetHubKusamaClient, karuraClient] = await setupNetworks(assetHubKusama, karura)
 
   const assetHubKusamaUsdt = assetHubKusama.custom.usdtIndex
   const karuraUsdt = karura.custom.usdt
-
-  beforeEach(restoreSnapshot)
-
-  afterAll(async () => {
-    await assetHubKusamaClient.teardown()
-    await karuraClient.teardown()
-  })
 
   runXcmPalletHorizontal('assetHubKusama transfer USDT to karura', async () => {
     return {

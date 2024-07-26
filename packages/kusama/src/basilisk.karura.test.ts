@@ -1,23 +1,12 @@
-import { afterAll, beforeEach, describe } from 'vitest'
+import { describe } from 'vitest'
 
 import { basilisk, karura, kusama } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
-import { defaultAccount } from '@e2e-test/shared'
+import { defaultAccount, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 describe('basilisk & karura', async () => {
-  const [karuraClient, basiliskClient, kusamaClient] = await createNetworks(karura, basilisk, kusama)
-
-  const restoreSnapshot = captureSnapshot(karuraClient, basiliskClient, kusamaClient)
-
-  beforeEach(restoreSnapshot)
-
-  afterAll(async () => {
-    await karuraClient.teardown()
-    await basiliskClient.teardown()
-    await kusamaClient.teardown()
-  })
+  const [karuraClient, basiliskClient, kusamaClient] = await setupNetworks(karura, basilisk, kusama)
 
   runXtokenstHorizontal('karura transfer KSM to basilisk', async () => {
     return {

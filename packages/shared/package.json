@@ -3,6 +3,7 @@
 	"type": "module",
 	"dependencies": {
 		"@acala-network/chopsticks-testing": "^0.13.1",
+		"@e2e-test/networks": "workspace:*",
 		"@polkadot/api": "^12.1.1"
 	},
 	"main": "./dist/cjs/index.js",

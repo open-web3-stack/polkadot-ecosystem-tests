@@ -1,24 +1,15 @@
-import { afterAll, beforeEach, describe } from 'vitest'
+import { describe } from 'vitest'
 
 import { acala, polkadot } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('acala & polkadot', async () => {
-  const [polkadotClient, acalaClient] = await createNetworks(polkadot, acala)
-
-  const restoreSnapshot = captureSnapshot(polkadotClient, acalaClient)
-
-  beforeEach(restoreSnapshot)
+  const [polkadotClient, acalaClient] = await setupNetworks(polkadot, acala)
 
   const acalaDOT = acalaClient.config.custom.dot
   const polkadotDOT = polkadotClient.config.custom.dot
-
-  afterAll(async () => {
-    await polkadotClient.teardown()
-    await acalaClient.teardown()
-  })
 
   runXtokensUp('acala transfer DOT to polkadot', async () => {
     return {

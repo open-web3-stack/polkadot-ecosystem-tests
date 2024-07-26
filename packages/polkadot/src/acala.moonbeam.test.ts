@@ -1,26 +1,15 @@
-import { afterAll, beforeEach, describe } from 'vitest'
-import { defaultAccount } from '@e2e-test/shared'
+import { describe } from 'vitest'
 
 import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
+import { defaultAccount, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 describe('acala & moonbeam', async () => {
-  const [acalaClient, moonbeamClient, polkadotClient] = await createNetworks(acala, moonbeam, polkadot)
-
-  const restoreSnapshot = captureSnapshot(acalaClient, moonbeamClient, polkadotClient)
-
-  beforeEach(restoreSnapshot)
+  const [acalaClient, moonbeamClient, polkadotClient] = await setupNetworks(acala, moonbeam, polkadot)
 
   const acalaDot = acala.custom.dot
   const moonbeamDot = moonbeam.custom.dot
-
-  afterAll(async () => {
-    await acalaClient.teardown()
-    await moonbeamClient.teardown()
-    await polkadotClient.teardown()
-  })
 
   runXtokenstHorizontal('acala transfer DOT to moonbeam', async () => {
     return {
