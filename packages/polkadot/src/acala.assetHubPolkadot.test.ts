@@ -1,23 +1,12 @@
-import { afterAll, beforeEach, describe } from 'vitest'
-import { defaultAccount } from '@e2e-test/shared'
+import { describe } from 'vitest'
 
-import { acala, assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
+import { acala, assetHubPolkadot } from '@e2e-test/networks/chains'
+import { defaultAccount, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 describe('acala & assetHubPolkadot', async () => {
-  const [assetHubPolkadotClient, acalaClient, polkadotClient] = await createNetworks(assetHubPolkadot, acala, polkadot)
-
-  const restoreSnapshot = captureSnapshot(assetHubPolkadotClient, acalaClient, polkadotClient)
-
-  beforeEach(restoreSnapshot)
-
-  afterAll(async () => {
-    await assetHubPolkadotClient.teardown()
-    await acalaClient.teardown()
-    await polkadotClient.teardown()
-  })
+  const [assetHubPolkadotClient, acalaClient] = await setupNetworks(assetHubPolkadot, acala)
 
   runXcmPalletHorizontal('assetHubPolkadot transfer USDT to acala', async () => {
     return {

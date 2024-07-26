@@ -1,24 +1,15 @@
-import { afterAll, beforeEach, describe } from 'vitest'
+import { describe } from 'vitest'
 
 import { astar, polkadot } from '@e2e-test/networks/chains'
-import { captureSnapshot, createNetworks } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXtokensUp } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('astar & polkadot', async () => {
-  const [polkadotClient, astarClient] = await createNetworks(polkadot, astar)
-
-  const restoreSnapshot = captureSnapshot(polkadotClient, astarClient)
-
-  beforeEach(restoreSnapshot)
+  const [polkadotClient, astarClient] = await setupNetworks(polkadot, astar)
 
   const astarDOT = astarClient.config.custom!.dot
   const polkadotDOT = polkadotClient.config.custom!.dot
-
-  afterAll(async () => {
-    await polkadotClient.teardown()
-    await astarClient.teardown()
-  })
 
   runXcmPalletDown('polkadot transfer DOT to astar', async () => {
     return {
