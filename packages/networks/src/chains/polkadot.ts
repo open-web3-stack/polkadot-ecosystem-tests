@@ -1,5 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared'
-
+import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -13,7 +12,7 @@ const custom = {
 
 const getInitStorages = () => ({
   System: {
-    Account: [[[defaultAccount.alice.address], { providers: 1, data: { free: 10 * 1e12 } }]],
+    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10 * 1e12 } }]],
   },
   ParasDisputes: {
     // those can makes block building super slow

@@ -1,9 +1,10 @@
 import { describe } from 'vitest'
 
 import { assetHubKusama, karura } from '@e2e-test/networks/chains'
-import { defaultAccount, setupNetworks } from '@e2e-test/shared'
+import { defaultAccounts } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('assetHubKusama & karura', async () => {
   const [assetHubKusamaClient, karuraClient] = await setupNetworks(assetHubKusama, karura)
@@ -28,7 +29,7 @@ describe('assetHubKusama & karura', async () => {
   runXtokenstHorizontal('karura transfer USDT to assetHubKusama', async () => {
     await karuraClient.dev.setStorage({
       Tokens: {
-        Accounts: [[[defaultAccount.alice.address, karuraUsdt], { free: 10e6 }]],
+        Accounts: [[[defaultAccounts.alice.address, karuraUsdt], { free: 10e6 }]],
       },
     })
 

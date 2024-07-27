@@ -1,5 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared'
-
+import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -36,21 +35,21 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => ({
   System: {
-    account: [[[defaultAccount.alice.address], { providers: 4, data: { free: 10 * 1e12 } }]],
+    account: [[[defaultAccounts.alice.address], { providers: 4, data: { free: 10 * 1e12 } }]],
   },
   Tokens: {
     accounts: [
-      [[defaultAccount.alice.address, { Token: config.relayToken }], { free: 10 * 1e12 }],
-      [[defaultAccount.alice.address, { Token: config.relayLiquidToken }], { free: 100 * 1e12 }],
-      [[defaultAccount.alice.address, { Token: config.stableToken }], { free: 1000 * 1e12 }],
+      [[defaultAccounts.alice.address, { Token: config.relayToken }], { free: 10 * 1e12 }],
+      [[defaultAccounts.alice.address, { Token: config.relayLiquidToken }], { free: 100 * 1e12 }],
+      [[defaultAccounts.alice.address, { Token: config.stableToken }], { free: 1000 * 1e12 }],
     ],
   },
   Sudo: {
-    key: defaultAccount.alice.address,
+    key: defaultAccounts.alice.address,
   },
   EvmAccounts: {
-    accounts: [[['0x82a258cb20e2adb4788153cd5eb5839615ece9a0'], defaultAccount.alice.address]],
-    evmAddresses: [[[defaultAccount.alice.address], '0x82a258cb20e2adb4788153cd5eb5839615ece9a0']],
+    accounts: [[['0x82a258cb20e2adb4788153cd5eb5839615ece9a0'], defaultAccounts.alice.address]],
+    evmAddresses: [[[defaultAccounts.alice.address], '0x82a258cb20e2adb4788153cd5eb5839615ece9a0']],
   },
   Homa: {
     // avoid impact test outcome

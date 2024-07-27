@@ -1,9 +1,10 @@
 import { describe } from 'vitest'
 
 import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
-import { defaultAccount, setupNetworks } from '@e2e-test/shared'
+import { defaultAccounts } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('acala & moonbeam', async () => {
   const [acalaClient, moonbeamClient, polkadotClient] = await setupNetworks(acala, moonbeam, polkadot)
@@ -15,11 +16,11 @@ describe('acala & moonbeam', async () => {
     return {
       fromChain: acalaClient,
       fromBalance: query.tokens(acalaDot),
-      fromAccount: defaultAccount.alice,
+      fromAccount: defaultAccounts.alice,
 
       toChain: moonbeamClient,
       toBalance: query.assets(moonbeamDot),
-      toAccount: defaultAccount.alith,
+      toAccount: defaultAccounts.alith,
 
       routeChain: polkadotClient,
       isCheckUmp: true,
@@ -31,18 +32,18 @@ describe('acala & moonbeam', async () => {
   runXtokenstHorizontal('moonbeam transfer DOT to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
-        account: [[[moonbeamDot, defaultAccount.alith.address], { balance: 10e12 }]],
+        account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
       },
     })
 
     return {
       fromChain: moonbeamClient,
       fromBalance: query.assets(moonbeamDot),
-      fromAccount: defaultAccount.alith,
+      fromAccount: defaultAccounts.alith,
 
       toChain: acalaClient,
       toBalance: query.tokens(acalaDot),
-      toAccount: defaultAccount.alice,
+      toAccount: defaultAccounts.alice,
 
       routeChain: polkadotClient,
       isCheckUmp: true,
@@ -55,11 +56,11 @@ describe('acala & moonbeam', async () => {
     return {
       fromChain: acalaClient,
       fromBalance: query.balances,
-      fromAccount: defaultAccount.alice,
+      fromAccount: defaultAccounts.alice,
 
       toChain: moonbeamClient,
       toBalance: query.assets(moonbeam.custom.aca),
-      toAccount: defaultAccount.baltathar,
+      toAccount: defaultAccounts.baltathar,
 
       tx: tx.xtokens.transfer(acala.custom.aca, 1e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
     }
@@ -68,18 +69,18 @@ describe('acala & moonbeam', async () => {
   runXtokenstHorizontal('moonbeam transfer ACA to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
-        account: [[[moonbeam.custom.aca, defaultAccount.alith.address], { balance: 10e12 }]],
+        account: [[[moonbeam.custom.aca, defaultAccounts.alith.address], { balance: 10e12 }]],
       },
     })
 
     return {
       fromChain: moonbeamClient,
       fromBalance: query.assets(moonbeam.custom.aca),
-      fromAccount: defaultAccount.alith,
+      fromAccount: defaultAccounts.alith,
 
       toChain: acalaClient,
       toBalance: query.balances,
-      toAccount: defaultAccount.bob,
+      toAccount: defaultAccounts.bob,
 
       tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.aca }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
     }
@@ -89,11 +90,11 @@ describe('acala & moonbeam', async () => {
     return {
       fromChain: acalaClient,
       fromBalance: query.tokens(acala.custom.ldot),
-      fromAccount: defaultAccount.alice,
+      fromAccount: defaultAccounts.alice,
 
       toChain: moonbeamClient,
       toBalance: query.assets(moonbeam.custom.ldot),
-      toAccount: defaultAccount.baltathar,
+      toAccount: defaultAccounts.baltathar,
 
       tx: tx.xtokens.transfer(acala.custom.ldot, 1e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
     }
@@ -102,18 +103,18 @@ describe('acala & moonbeam', async () => {
   runXtokenstHorizontal('moonbeam transfer LDOT to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
-        account: [[[moonbeam.custom.ldot, defaultAccount.alith.address], { balance: 10e12 }]],
+        account: [[[moonbeam.custom.ldot, defaultAccounts.alith.address], { balance: 10e12 }]],
       },
     })
 
     return {
       fromChain: moonbeamClient,
       fromBalance: query.assets(moonbeam.custom.ldot),
-      fromAccount: defaultAccount.alith,
+      fromAccount: defaultAccounts.alith,
 
       toChain: acalaClient,
       toBalance: query.tokens(acala.custom.ldot),
-      toAccount: defaultAccount.bob,
+      toAccount: defaultAccounts.bob,
 
       tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.ldot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
     }

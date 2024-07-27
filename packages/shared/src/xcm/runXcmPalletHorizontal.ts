@@ -2,10 +2,9 @@ import { type KeyringPair } from '@polkadot/keyring/types'
 import { it } from 'vitest'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { Client } from '@e2e-test/networks'
+import { Client, defaultAccounts } from '@e2e-test/networks'
 import { GetBalance, Tx } from './types.js'
 import { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } from '../helpers/index.js'
-import { defaultAccount } from '../index.js'
 
 export const runXcmPalletHorizontal = (
   name: string,
@@ -35,8 +34,8 @@ export const runXcmPalletHorizontal = (
         fromBalance,
         toBalance,
         routeChain,
-        fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.bob,
+        fromAccount = defaultAccounts.alice,
+        toAccount = defaultAccounts.bob,
         isCheckUmp = false,
         precision = 3,
       } = await setup()

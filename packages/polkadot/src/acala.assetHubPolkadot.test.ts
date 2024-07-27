@@ -1,9 +1,10 @@
 import { describe } from 'vitest'
 
 import { acala, assetHubPolkadot } from '@e2e-test/networks/chains'
-import { defaultAccount, setupNetworks } from '@e2e-test/shared'
+import { defaultAccounts } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
 
 describe('acala & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, acalaClient] = await setupNetworks(assetHubPolkadot, acala)
@@ -25,7 +26,7 @@ describe('acala & assetHubPolkadot', async () => {
   runXtokenstHorizontal('acala transfer USDT to assetHubPolkadot', async () => {
     await acalaClient.dev.setStorage({
       Tokens: {
-        Accounts: [[[defaultAccount.alice.address, acala.custom.usdt], { free: 10e6 }]],
+        Accounts: [[[defaultAccounts.alice.address, acala.custom.usdt], { free: 10e6 }]],
       },
     })
 

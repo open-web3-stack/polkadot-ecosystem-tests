@@ -2,10 +2,9 @@ import { type KeyringPair } from '@polkadot/keyring/types'
 import { it } from 'vitest'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { Client } from '@e2e-test/networks'
+import { Client, defaultAccounts } from '@e2e-test/networks'
 import { GetBalance, Tx } from './types.js'
 import { check, checkEvents, checkSystemEvents } from '../helpers/index.js'
-import { defaultAccount } from '../index.js'
 
 export const runXcmPalletDown = (
   name: string,
@@ -30,8 +29,8 @@ export const runXcmPalletDown = (
         toChain,
         tx,
         balance,
-        fromAccount = defaultAccount.alice,
-        toAccount = defaultAccount.bob,
+        fromAccount = defaultAccounts.alice,
+        toAccount = defaultAccounts.bob,
         precision = 3,
       } = await setup()
 

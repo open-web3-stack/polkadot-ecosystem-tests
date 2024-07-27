@@ -1,5 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared'
-
+import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -27,16 +26,16 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => ({
   System: {
-    account: [[[defaultAccount.alice.address], { providers: 1, data: { free: '100000000000000000000' } }]],
+    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: '100000000000000000000' } }]],
   },
   Assets: {
     account: [
-      [[config.relayToken, defaultAccount.alice.address], { balance: 10 * 1e12 }],
-      [[config.aUSDToken, defaultAccount.alice.address], { balance: 10 * 1e12 }],
+      [[config.relayToken, defaultAccounts.alice.address], { balance: 10 * 1e12 }],
+      [[config.aUSDToken, defaultAccounts.alice.address], { balance: 10 * 1e12 }],
     ],
   },
   Sudo: {
-    key: defaultAccount.alice.address,
+    key: defaultAccounts.alice.address,
   },
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster

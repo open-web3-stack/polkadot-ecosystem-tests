@@ -1,5 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared'
-
+import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -16,12 +15,12 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.hydraDX | typeof custom.basilisk) => ({
   System: {
-    Account: [[[defaultAccount.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
+    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
   },
   Tokens: {
     Accounts: [
-      [[defaultAccount.alice.address, config.relayToken], { free: 1000 * 1e12 }],
-      [[defaultAccount.alice.address, config.dai], { free: 100n * 10n ** 18n }],
+      [[defaultAccounts.alice.address, config.relayToken], { free: 1000 * 1e12 }],
+      [[defaultAccounts.alice.address, config.dai], { free: 100n * 10n ** 18n }],
     ],
   },
 })
