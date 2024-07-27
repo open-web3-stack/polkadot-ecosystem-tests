@@ -1,5 +1,4 @@
-import { defaultAccount } from '@e2e-test/shared'
-
+import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -17,11 +16,11 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => ({
   System: {
-    account: [[[defaultAccount.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
   },
   Assets: {
     account: [
-      [[config.usdtIndex, defaultAccount.alice.address], { balance: 1000e6 }], // USDT
+      [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
     ],
   },
 })

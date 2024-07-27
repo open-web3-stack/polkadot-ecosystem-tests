@@ -119,7 +119,6 @@ __metadata:
   resolution: "@e2e-test/networks@workspace:packages/networks"
   dependencies:
     "@acala-network/chopsticks-testing": "npm:^0.13.1"
-    "@e2e-test/shared": "workspace:*"
   languageName: unknown
   linkType: soft
 
