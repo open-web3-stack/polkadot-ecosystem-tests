@@ -7,6 +7,7 @@ Polkadot Ecosystem Tests powered by [Chopstick](http://github.com/AcalaNetwork/c
 - `yarn test` run all tests
 - `yarn test:ui` run all tests with Vitest UI
 - `yarn test <chain>` run tests for specific chain
+- `yarn update-known-good` update [KNOWN_GOOD_BLOCK_NUMBERS.env](./KNOWN_GOOD_BLOCK_NUMBERS.env) file
 - `yarn update-env` update block numbers for all chains
 - `yarn test -u` update snapshots
 
