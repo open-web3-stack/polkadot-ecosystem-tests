@@ -5,6 +5,7 @@ const custom = {
   hydraDX: {
     dai: 2,
     relayToken: 5,
+    glmr: 16,
   },
   basilisk: {
     bsx: 0,
