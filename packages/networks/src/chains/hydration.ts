@@ -2,7 +2,7 @@ import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
-  hydraDX: {
+  hydration: {
     dai: 2,
     relayToken: 5,
     glmr: 16,
@@ -14,7 +14,7 @@ const custom = {
   },
 }
 
-const getInitStorages = (config: typeof custom.hydraDX | typeof custom.basilisk) => ({
+const getInitStorages = (config: typeof custom.hydration | typeof custom.basilisk) => ({
   System: {
     Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
   },
@@ -26,12 +26,12 @@ const getInitStorages = (config: typeof custom.hydraDX | typeof custom.basilisk)
   },
 })
 
-export const hydraDX = defineChain({
-  name: 'hydraDX',
+export const hydration = defineChain({
+  name: 'hydration',
   paraId: 2034,
   endpoint: 'wss://rpc.hydradx.cloud',
-  custom: custom.hydraDX,
-  initStorages: getInitStorages(custom.hydraDX),
+  custom: custom.hydration,
+  initStorages: getInitStorages(custom.hydration),
 })
 
 export const basilisk = defineChain({
