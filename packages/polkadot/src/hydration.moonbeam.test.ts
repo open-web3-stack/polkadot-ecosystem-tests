@@ -6,14 +6,14 @@ import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 import { setupNetworks } from '@e2e-test/shared'
 
-describe('hydradation & moonbeam', async () => {
+describe('hydration & moonbeam', async () => {
   const [hydrationClient, moonbeamClient, polkadotClient] = await setupNetworks(hydration, moonbeam, polkadot)
 
   const hydrationDot = hydration.custom.relayToken
   const moonbeamDot = moonbeam.custom.dot
   const glmr = hydration.custom.glmr
 
-  runXtokenstHorizontal('hydradation transfer DOT to moonbeam', async () => {
+  runXtokenstHorizontal('hydration transfer DOT to moonbeam', async () => {
     return {
       fromChain: hydrationClient,
       fromBalance: query.tokens(hydrationDot),
