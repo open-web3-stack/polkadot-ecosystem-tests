@@ -145,7 +145,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 290000000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
