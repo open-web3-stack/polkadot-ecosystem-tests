@@ -56,7 +56,7 @@ describe('hydration & moonbeam', async () => {
   runXtokenstHorizontal('hydration transfer GLMR to moonbeam', async () => {
     await hydrationClient.dev.setStorage({
       Tokens: {
-        Accounts: [[[defaultAccounts.alice.address, glmr], { free: 10e12 }]],
+        Accounts: [[[defaultAccounts.alice.address, glmr], { free: '50000000000000000000000' }]],
       },
     })
 
@@ -64,12 +64,12 @@ describe('hydration & moonbeam', async () => {
       fromChain: hydrationClient,
       fromBalance: query.tokens(glmr),
       fromAccount: defaultAccounts.alice,
-
+      routeChain: polkadotClient,
       toChain: moonbeamClient,
       toBalance: query.balances,
       toAccount: defaultAccounts.baltathar,
 
-      tx: tx.xtokens.transfer(glmr, 1e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
+      tx: tx.xtokens.transfer(glmr, '100000000000000000000', tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
     }
   })
 })
