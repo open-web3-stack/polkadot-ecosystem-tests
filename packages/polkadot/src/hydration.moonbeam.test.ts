@@ -44,12 +44,12 @@ describe('hydration & moonbeam', async () => {
 
       toChain: hydrationClient,
       toBalance: query.tokens(hydrationDot),
-      toAccount: defaultAccounts.alice,
+      toAccount: defaultAccounts.bob,
 
       routeChain: polkadotClient,
       isCheckUmp: true,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 1e12, tx.xtokens.parachainV3(hydration.paraId!)),
+      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 2e10, tx.xtokens.parachainV3(hydration.paraId!)),
     }
   })
 

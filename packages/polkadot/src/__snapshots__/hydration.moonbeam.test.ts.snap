@@ -319,25 +319,7 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > from chain
 
 exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > route chain xcm events 1`] = `[]`;
 
-exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > to chain xcm events 1`] = `
-[
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Sibling": "(rounded 2000)",
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 34000)",
-        "refTime": "(rounded 690000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
+exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > to chain xcm events 1`] = `[]`;
 
 exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > tx events 1`] = `
 [
@@ -407,7 +389,7 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > tx events 
 
 exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > balance on from chain 1`] = `
 {
-  "balance": 9000000000000,
+  "balance": 9980000000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -418,7 +400,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > balance on 
 
 exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > balance on to chain 1`] = `
 {
-  "free": "(rounded 1000000000000000)",
+  "free": "(rounded 19600000000)",
   "frozen": 0,
   "reserved": 0,
 }
@@ -432,7 +414,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
         "withdrawAsset": [
           {
             "fun": {
-              "fungible": 1000000000000,
+              "fungible": 20000000000,
             },
             "id": {
               "concrete": {
@@ -452,7 +434,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
         "buyExecution": {
           "fees": {
             "fun": {
-              "fungible": 500000000000,
+              "fungible": 10000000000,
             },
             "id": {
               "concrete": {
@@ -488,7 +470,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
               "buyExecution": {
                 "fees": {
                   "fun": {
-                    "fungible": 500000000000,
+                    "fungible": 10000000000,
                   },
                   "id": {
                     "concrete": {
@@ -515,7 +497,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
                   "interior": {
                     "x1": {
                       "accountId32": {
-                        "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                         "network": null,
                       },
                     },
@@ -579,7 +561,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > tx events 1
       "assets": [
         {
           "fun": {
-            "Fungible": 1000000000000,
+            "Fungible": 20000000000,
           },
           "id": {
             "interior": "Here",
@@ -605,7 +587,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > tx events 1
       },
       "fee": {
         "fun": {
-          "Fungible": 1000000000000,
+          "Fungible": 20000000000,
         },
         "id": {
           "interior": "Here",
