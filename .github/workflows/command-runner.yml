@@ -1,0 +1,375 @@
+name: Command Runner Bot
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  command-runner:
+    outputs:
+      needBump: ${{ fromJson(steps.prepare_command.outputs.result).command == 'bump' && steps.prepare_command.outputs.skip != 'true' }}
+      tests: ${{ steps.tests.outputs.tests }}
+      commentId: ${{ fromJson(steps.prepare_command.outputs.result).commentId }}
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.event.comment.body, '/bot') }}
+
+    steps:
+      - name: Check Permission
+        id: check_permission
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const payload = context.payload
+            const content = payload.comment ? payload.comment.body : ''
+            console.log(`content: ${content}`)
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const [params, ...env] = lines;
+            const [, command, ...args] = params.split(/\s+/)
+
+            const currentBranch = context.ref.replace('refs/heads/', '')
+
+            const { data: file } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: '.github/command-runner-config.json',
+              ref: currentBranch
+            });
+
+            const config = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8'));
+
+            if (!Object.keys(config).includes(command)) {
+              return {
+                error: `Invalid command`
+              }
+            }
+
+            if (['merge', 'cancel-merge'].includes(command) && !payload.issue.pull_request) {
+              return {
+                error: `This command is only supported in pull requests`
+              }
+            }
+
+            if (config[command].allowed_users) {
+              const user = payload.comment.user.login
+              if (!config[command].allowed_users.includes(user)) {
+                return {
+                  error: `No permission to run this command`
+                }
+              }
+            }
+
+            if (config[command].allowed_issues) {
+              const issueNumber = payload.issue.number
+              if (!config[command].allowed_issues.includes(issueNumber)) {
+                return {
+                  error: `Need to run this command in the specified issue`
+                }
+              }
+            }
+            return { command, args, env };
+
+      - name: Prepare command
+        id: prepare_command
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { command, args, env, error } = ${{ steps.check_permission.outputs.result }};
+            console.log(`command: ${command}, args: ${args}, error: ${error}`)
+            if (error) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `    ${error}`
+              })
+              return
+            }
+
+            const data = await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `    Running...`
+            })
+            console.log(`commentId: commentId`)
+
+            return { command, args, env, commentId: data.data.id };
+
+      - name: Run Merge And Cancel Merge
+        if: ${{ fromJson(steps.prepare_command.outputs.result).command == 'merge' || fromJson(steps.prepare_command.outputs.result).command == 'cancel-merge' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { command, args } = ${{ steps.prepare_command.outputs.result }};
+
+            if (command === 'merge') {
+              console.log('Run merge')
+              const pull_number = context.issue.number;
+              const repo = context.repo;
+              await github.rest.pulls.update({
+                ...repo,
+                pull_number,
+                auto_merge: {
+                  merge_method: 'squash',
+                },
+              });
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `    Auto-merge enabled`
+              })
+              console.log('Finished')
+              return
+            }
+
+            if (command === 'cancel-merge') {
+              console.log('Run cancel-merge')
+              const pull_number = context.issue.number;
+              const repo = context.repo;
+              await github.rest.pulls.update({
+                ...repo,
+                pull_number,
+                auto_merge: null,
+              });
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `    Auto-merge disabled`
+              })
+              
+              console.log('Finished')
+              return
+            }
+      - uses: actions/github-script@v6
+        name: Get PR branch
+        if: ${{ github.event.issue.pull_request && (fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update' || fromJson(steps.prepare_command.outputs.result).command == 'bump') }}
+        id: issue
+        with:
+          script: |
+            const pr = context.payload.issue.number
+            const data = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr
+            })
+            console.log(`ref: ${data.data.head.ref}, sha: ${data.data.head.sha}`)
+            return {
+              ref: data.data.head.ref,
+              sha: data.data.head.sha,
+            }
+      - uses: actions/checkout@v4
+        name: Checkout Pull Branch
+        if: ${{ github.event.issue.pull_request && (fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update' || fromJson(steps.prepare_command.outputs.result).command == 'bump') }}
+        with:
+          ref: ${{ fromJson(steps.issue.outputs.result).sha }}
+      - uses: actions/checkout@v4
+        name: Checkout
+        if: ${{ !github.event.issue.pull_request && (fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update' || fromJson(steps.prepare_command.outputs.result).command == 'bump') }}
+      - name: setup node env
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+      - run: yarn --immutable
+      - name: Prepare Test Command
+        uses: actions/github-script@v6
+        if: ${{fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update'}}
+        id: run_command
+        with:
+          result-encoding: string
+          script: |
+            const { command, args } = ${{ steps.prepare_command.outputs.result }};
+            if(command === 'run') {
+              return `yarn test --reporter json ${args ? args.join(' ') : ''}`
+            }
+            if(command === 'update') {
+              return `yarn test --reporter json -u ${args ? args.join(' ') : ''}`
+            }
+
+      - name: Run Test Command
+        if: ${{fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update'}}
+        run: ${{steps.run_command.outputs.result}} > ${{runner.temp}}/out.txt
+      - name: Check for file changes
+        id: check_changes
+        if: ${{fromJson(steps.prepare_command.outputs.result).command == 'update'}}
+        run: |
+          git fetch origin
+          if git diff --exit-code; then
+            echo "No changes detected" > result.txt
+            echo "::set-output name=changes_detected::false"
+          else
+            echo "Changes detected" > result.txt
+            echo "::set-output name=changes_detected::true"
+          fi
+      - name: Commit and Create PR
+        uses: actions/github-script@v6
+        id: update
+        if: ${{steps.check_changes.outputs.changes_detected == 'true' && fromJson(steps.prepare_command.outputs.result).command == 'update'}}
+        with:
+          script: |
+            const branchName = `command-runner-update-snapshots-${context.sha.slice(0, 7)}`
+            await exec.exec(`git config --global user.name 'github-actions[bot]'`)
+            await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'"`)
+            await exec.exec(`git checkout -b ${branchName}`)
+            await exec.exec(`git`, ['commit', '-am', 'update snapshots'])
+            await exec.exec(`git push origin HEAD:${branchName}`)
+            await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Update Snapshots',
+              head: branchName,
+              base: 'master',
+              body: `Update Snapshots from #${context.issue.number}`,
+            })
+      - name: Update comment
+        uses: actions/github-script@v6
+        if: ${{fromJson(steps.prepare_command.outputs.result).command == 'run' || fromJson(steps.prepare_command.outputs.result).command == 'update'}}
+        with:
+          script: |
+            const fs = require('fs')
+            const { commentId } = ${{steps.prepare_command.outputs.result}}
+            const body = fs.readFileSync('${{runner.temp}}/out.txt').toString()
+            await github.rest.issues.updateComment({
+              comment_id: commentId,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `
+              **Request**: \`${context.payload.comment.body.trim()}\`
+              **Command**: \`${{steps.run_command.outputs.result}}\`
+
+              <details>
+              <summary>Results</summary>
+
+              \`\`\`
+              ${JSON.stringify(JSON.parse(body.trim()), null, 2)}
+              \`\`\`
+              </details>
+              `
+            })
+      - name: Prepare Bump Command
+        uses: actions/github-script@v6
+        id: prepare_bump_command
+        if: ${{fromJson(steps.prepare_command.outputs.result).command == 'bump'}}
+        with:
+          script: |
+            const fs = require('fs')
+            const getEnv = (lines) => {
+              const env = {}
+              for (const line of lines) {
+                  if (typeof line === 'string') {
+                      const [key, value] = line.split('=');
+                      if (key && !isNaN(value)) {
+                          env[key.trim()] = parseInt(value, 10);
+                      }
+                  }
+              }
+              return env
+            }
+
+            const { env } = ${{steps.prepare_command.outputs.result}}
+            console.log(`env: ${env}`)
+            const inputEnv = getEnv(env || [])
+
+            const envContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8')
+            const currentEnv = getEnv(envContent.toString().split('\n'))
+
+            const newEnv = {}
+            let updated = false
+            for (const [key, value] of Object.entries(currentEnv)) {
+                if (inputEnv[key] && inputEnv[value] !== value) {
+                    updated = true
+                    newEnv[key] = inputEnv[key]
+                } else {
+                    newEnv[key] = value
+                }
+            }
+
+            if(updated) {
+              let newEnvContent = ''
+              for (const [key, value] of Object.entries(newEnv)) {
+                  newEnvContent += `${key}=${value}\n`
+              }
+              console.log(newEnvContent)
+              fs.writeFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', newEnvContent)
+              console.log(fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8').toString())
+            } else {
+              core.setOutput('skip', true)
+              const { commentId } = ${{steps.prepare_command.outputs.result}}
+              await github.rest.issues.updateComment({
+                comment_id: commentId,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `    No changes to bump`
+              })
+            }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{steps.prepare_bump_command.outputs.skip != 'true' && fromJson(steps.prepare_command.outputs.result).command == 'bump'}}
+        with:
+          name: KNOWN_GOOD_BLOCK_NUMBERS.env
+          path: KNOWN_GOOD_BLOCK_NUMBERS.env
+          retention-days: 1
+
+      - name: Define Bump Tests
+        id: tests
+        if: ${{steps.prepare_bump_command.outputs.skip != 'true' && fromJson(steps.prepare_command.outputs.result).command == 'bump'}}
+        run: |
+          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"  
+  tests:
+    needs: command-runner
+    if: ${{needs.command-runner.outputs.needBump == 'true'}}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        tests: ${{ fromJSON(needs.command-runner.outputs.tests) }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: setup node env
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'yarn'
+    - run: yarn --immutable
+    - name: Download a single artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: KNOWN_GOOD_BLOCK_NUMBERS.env
+    - run: yarn test packages/${{ matrix.tests }}
+  save:
+    needs: command-runner
+    if: ${{needs.command-runner.outputs.needBump == 'true'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KNOWN_GOOD_BLOCK_NUMBERS.env
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add KNOWN_GOOD_BLOCK_NUMBERS.env
+          if ! git diff --cached --quiet; then
+            git commit -m "[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+      - name: Update comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs')
+            const commentId = `${{needs.command-runner.outputs.commentId}}`
+            await github.rest.issues.updateComment({
+              comment_id: commentId,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `    Updated`
+            })
