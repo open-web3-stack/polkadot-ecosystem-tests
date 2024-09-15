@@ -58,7 +58,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `    ${errorMsg}` + `\nWorkflow: ${actionUrl}`
+                body: `    ${errorMsg}`
               })
               return { error: errorMsg }
             }
@@ -193,7 +193,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS.env
-      - run: yarn test example.test          
+      - run: yarn test packages/${{ matrix.tests }}          
   post-bump:
     needs: [check, bump, matrix-tests]
     if: ${{ always() && needs.bump.result == 'success' }}

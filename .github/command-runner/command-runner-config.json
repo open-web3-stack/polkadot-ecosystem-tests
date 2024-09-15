@@ -1,18 +1,18 @@
 {
 	"run": {
-		"allowed_issues": [1, 2, 14]
+		"allowed_issues": []
 	},
 	"update": {
-		"allowed_issues": [1, 2, 14],
-		"allowed_users": ["ntduan"]
+		"allowed_issues": [],
+		"allowed_users": []
 	},
 	"merge": {
-		"allowed_users": ["ntduan"]
+		"allowed_users": []
 	},
 	"cancel-merge": {
-		"allowed_users": ["ntduan"]
+		"allowed_users": []
 	},
 	"bump": {
-		"allowed_issues": [1, 2, 14]
+		"allowed_issues": []
 	}
 }
