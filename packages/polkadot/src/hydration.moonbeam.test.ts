@@ -26,7 +26,7 @@ describe('hydration & moonbeam', async () => {
       routeChain: polkadotClient,
       isCheckUmp: true,
 
-      tx: tx.xtokens.transfer(hydrationDot, 1e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
+      tx: tx.xtokens.transfer(hydrationDot, 2e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
     }
   })
 
@@ -69,7 +69,7 @@ describe('hydration & moonbeam', async () => {
       toBalance: query.balances,
       toAccount: defaultAccounts.baltathar,
 
-      tx: tx.xtokens.transfer(glmr, '100000000000000000000', tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
+      tx: tx.xtokens.transfer(glmr, '200000000000000000000', tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
     }
   })
 })
