@@ -23,7 +23,7 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
   const runCommand = async (cmd) => {
     await comment.createOrUpdateComment(`Running: \`${cmd}\``)
 
-    return await exec.exec(execCommand, null, {
+    return await exec.exec(cmd, null, {
       ignoreReturnCode: true,
       listeners: {
         stdline: (data) => {
@@ -36,14 +36,16 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
     });
   }
 
-  let exitCode = await runCommand(`yarn update-known-good`)
+	let execCommand = `yarn update-known-good`
+  let exitCode = await runCommand(execCommand)
 
   if (errorOutput || exitCode) {
     core.info('Failed to update known good blocks')
     return comment.createOrUpdateComment(createResult({ command: execCommand, context, result: (errorOutput || output).replace(/\x1b\[[0-9;]*m/g, ''), extra: `**Test Result**: \`Failed to update known good blocks\`` }))
   }
 
-  exitCode = await runCommand(`yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`)
+	execCommand = `yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`
+  exitCode = await runCommand(execCommand)
 
   if (errorOutput || exitCode) {
     core.info('Tests failed')
