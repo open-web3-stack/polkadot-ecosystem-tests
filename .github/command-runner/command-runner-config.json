@@ -1,18 +1,18 @@
 {
 	"run": {
-		"allowed_issues": []
+		"allowed_issues": [45]
 	},
 	"update": {
-		"allowed_issues": [],
-		"allowed_users": []
+		"allowed_issues": [45],
+		"allowed_users": ["xlc", "ntduan"]
 	},
 	"merge": {
-		"allowed_users": []
+		"allowed_users": ["xlc", "ntduan"]
 	},
 	"cancel-merge": {
-		"allowed_users": []
+		"allowed_users": ["xlc", "ntduan"]
 	},
 	"bump": {
-		"allowed_issues": []
+		"allowed_issues": [45]
 	}
 }
