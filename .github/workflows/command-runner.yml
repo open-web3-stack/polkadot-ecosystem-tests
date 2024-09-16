@@ -95,7 +95,7 @@ jobs:
         with:
           script: |
             return !context.payload.issue.pull_request ?
-              'master' : 
+              'master' :
               (await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: context.payload.issue.number
@@ -111,7 +111,7 @@ jobs:
           cache: 'yarn'
       - run: yarn --immutable
       - uses: actions/github-script@v7
-        with: 
+        with:
           script: |
             const script = require('.github/command-runner/test.cjs')
             const { command, args, env, commentId } = ${{ needs.check.outputs.result }}
@@ -129,7 +129,7 @@ jobs:
         with:
           script: |
             return !context.payload.issue.pull_request ?
-              'master' : 
+              'master' :
               (await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: context.payload.issue.number
@@ -140,7 +140,7 @@ jobs:
           ref: ${{ steps.ref.outputs.result }}
       - uses: actions/github-script@v7
         id: check_env
-        with: 
+        with:
           result-encoding: string
           script: |
             const script = require('.github/command-runner/createEnv.cjs')
@@ -173,7 +173,7 @@ jobs:
         with:
           script: |
             return !context.payload.issue.pull_request ?
-              'master' : 
+              'master' :
               (await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: context.payload.issue.number
@@ -192,7 +192,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS.env
-      - run: yarn test packages/${{ matrix.tests }}          
+      - run: yarn test packages/${{ matrix.tests }}
   post-bump:
     needs: [check, bump, matrix-tests]
     if: ${{ always() && needs.bump.result == 'success' }}
@@ -203,7 +203,7 @@ jobs:
         with:
           script: |
             return !context.payload.issue.pull_request ?
-              'master' : 
+              'master' :
               (await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: context.payload.issue.number
@@ -217,7 +217,7 @@ jobs:
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS.env
       - uses: actions/github-script@v7
-        with: 
+        with:
           script: |
             const script = require('.github/command-runner/postBump.cjs')
             const { command, env, commentId } = ${{ needs.check.outputs.result }}

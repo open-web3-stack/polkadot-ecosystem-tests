@@ -22,7 +22,7 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
     return comment.createOrUpdateComment(`    Need to specify which tests to run`)
   }
 
-  const execCommand = `yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`
+  const execCommand = `yarn update-known-good && yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`
 
   await comment.createOrUpdateComment(`Running: \`${execCommand}\``)
 
