@@ -319,7 +319,25 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > from chain
 
 exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > route chain xcm events 1`] = `[]`;
 
-exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > to chain xcm events 1`] = `[]`;
+exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 34000)",
+        "refTime": "(rounded 690000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
 
 exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > tx events 1`] = `
 [
