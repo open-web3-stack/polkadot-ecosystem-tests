@@ -17,11 +17,6 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
 
-  if (!args) {
-    core.error('Need to specify which tests to run')
-    return comment.createOrUpdateComment(`    Need to specify which tests to run`)
-  }
-
   const execCommand = `yarn update-known-good && yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`
 
   await comment.createOrUpdateComment(`Running: \`${execCommand}\``)
