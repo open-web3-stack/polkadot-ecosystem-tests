@@ -1,0 +1,18 @@
+{
+	"run": {
+		"allowed_issues": []
+	},
+	"update": {
+		"allowed_issues": [],
+		"allowed_users": []
+	},
+	"merge": {
+		"allowed_users": []
+	},
+	"cancel-merge": {
+		"allowed_users": []
+	},
+	"bump": {
+		"allowed_issues": []
+	}
+}
