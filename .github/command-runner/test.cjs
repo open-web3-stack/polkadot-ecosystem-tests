@@ -17,31 +17,37 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
 
-  const execCommand = `yarn update-known-good && yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`
-
-  await comment.createOrUpdateComment(`Running: \`${execCommand}\``)
-
-
   let output = '';
   let errorOutput = '';
 
+  const runCommand = async (cmd) => {
+    await comment.createOrUpdateComment(`Running: \`${cmd}\``)
 
-  const exitCode = await exec.exec(execCommand, null, {
-    ignoreReturnCode: true,
-    listeners: {
-      stdline: (data) => {
-        output += `${data}\n`;
-      },
-      errline: (data) => {
-        errorOutput += `${data}\n`;
+    return await exec.exec(execCommand, null, {
+      ignoreReturnCode: true,
+      listeners: {
+        stdline: (data) => {
+          output += `${data}\n`;
+        },
+        errline: (data) => {
+          errorOutput += `${data}\n`;
+        }
       }
-    }
-  });
+    });
+  }
 
+  let exitCode = await runCommand(`yarn update-known-good`)
+
+  if (errorOutput || exitCode) {
+    core.info('Failed to update known good blocks')
+    return comment.createOrUpdateComment(createResult({ command: execCommand, context, result: (errorOutput || output).replace(/\x1b\[[0-9;]*m/g, ''), extra: `**Test Result**: \`Failed to update known good blocks\`` }))
+  }
+
+  exitCode = await runCommand(`yarn test --reporter tap-flat ${command === 'update' ? '-u' : ''} ${args.trim()}`)
 
   if (errorOutput || exitCode) {
     core.info('Tests failed')
-    return comment.createOrUpdateComment(createResult({ command: execCommand, context, result: (errorOutput || output).replace(/\x1b\[[0-9;]*m/g, ''), extra: `**Test Result**: \`false\`` }))
+    return comment.createOrUpdateComment(createResult({ command: execCommand, context, result: (errorOutput || output).replace(/\x1b\[[0-9;]*m/g, ''), extra: `**Test Result**: \`Failed\`` }))
   }
 
   const testResult = {
@@ -52,7 +58,7 @@ module.exports = async ({ github, core, context, commentId, exec, command, args 
 
   if (command === 'run') {
     core.info('Tests Passed')
-    return comment.createOrUpdateComment(createResult({ ...testResult, extra: `**Test Result**: \`true\`` }))
+    return comment.createOrUpdateComment(createResult({ ...testResult, extra: `**Test Result**: \`Passed\`` }))
   }
 
   const diffResult = await exec.exec('git diff --exit-code', null, { ignoreReturnCode: true })
