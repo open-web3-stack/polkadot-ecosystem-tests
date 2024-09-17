@@ -10,7 +10,7 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > ba
 
 exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > balance on to chain 1`] = `
 {
-  "balance": "(rounded 1000000)",
+  "balance": "(rounded 900000)",
   "extra": null,
   "reason": {
     "sufficient": null,
