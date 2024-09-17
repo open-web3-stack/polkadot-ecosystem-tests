@@ -68,7 +68,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `    Running...` + `\nWorkflow: ${actionUrl}`
+              body: `    Running...` + `\n[view details](${actionUrl})`
             })
 
             return { command, args: args.join(' '), env: env.join('\n'), commentId: result.data.id };
@@ -85,9 +85,9 @@ jobs:
             const script = require('.github/command-runner/merge.cjs')
             const { command, commentId } = ${{ needs.check.outputs.result }}
             await script({ github, context, core, command, commentId })
-  test:
+  run-or-bump:
     needs: check
-    if: ${{ needs.check.outputs.command == 'run' || needs.check.outputs.command == 'update' }}
+    if: ${{ needs.check.outputs.command == 'run' || needs.check.outputs.command == 'bump' }}
     runs-on: ubuntu-latest
     steps:
       - id: ref
@@ -113,112 +113,6 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const script = require('.github/command-runner/test.cjs')
+            const script = require('.github/command-runner/runOrBump.cjs')
             const { command, args, env, commentId } = ${{ needs.check.outputs.result }}
             await script({ github, core, context, io, exec, command, args, env, commentId })
-  bump:
-    needs: check
-    outputs:
-      result: ${{ steps.check_env.outputs.result }}
-      tests: ${{ steps.tests.outputs.tests }}
-    if: ${{ needs.check.outputs.command == 'bump' }}
-    runs-on: ubuntu-latest
-    steps:
-      - id: ref
-        uses: actions/github-script@v7
-        with:
-          script: |
-            return !context.payload.issue.pull_request ?
-              'master' :
-              (await github.rest.pulls.get({
-                ...context.repo,
-                pull_number: context.payload.issue.number
-              })).data.head.ref
-          result-encoding: string
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.ref.outputs.result }}
-      - uses: actions/github-script@v7
-        id: check_env
-        with:
-          result-encoding: string
-          script: |
-            const script = require('.github/command-runner/createEnv.cjs')
-            const { command, env, commentId } = ${{ needs.check.outputs.result }}
-            return script({ github, context, env, commentId })
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        if: ${{ steps.check_env.outputs.result == 'true' }}
-        with:
-          name: KNOWN_GOOD_BLOCK_NUMBERS.env
-          path: KNOWN_GOOD_BLOCK_NUMBERS.env
-          retention-days: 1
-      - name: Define Tests
-        id: tests
-        if: ${{ steps.check_env.outputs.result == 'true' }}
-        run: |
-          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
-  matrix-tests:
-    needs: bump
-    if: ${{ needs.bump.outputs.result == 'true' }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        tests: ${{ fromJSON(needs.bump.outputs.tests) }}
-    runs-on: ubuntu-latest
-    steps:
-      - id: ref
-        uses: actions/github-script@v7
-        with:
-          script: |
-            return !context.payload.issue.pull_request ?
-              'master' :
-              (await github.rest.pulls.get({
-                ...context.repo,
-                pull_number: context.payload.issue.number
-              })).data.head.ref
-          result-encoding: string
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.ref.outputs.result }}
-      - name: setup node env
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-          cache: 'yarn'
-      - run: yarn --immutable
-      - name: Download a single artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: KNOWN_GOOD_BLOCK_NUMBERS.env
-      - run: yarn test packages/${{ matrix.tests }}
-  post-bump:
-    needs: [check, bump, matrix-tests]
-    if: ${{ always() && needs.bump.result == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - id: ref
-        uses: actions/github-script@v7
-        with:
-          script: |
-            return !context.payload.issue.pull_request ?
-              'master' :
-              (await github.rest.pulls.get({
-                ...context.repo,
-                pull_number: context.payload.issue.number
-              })).data.head.ref
-          result-encoding: string
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.ref.outputs.result }}
-      - name: Download a single artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: KNOWN_GOOD_BLOCK_NUMBERS.env
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const script = require('.github/command-runner/postBump.cjs')
-            const { command, env, commentId } = ${{ needs.check.outputs.result }}
-            return script({ github, exec, context, env, core, commentId, testResult: `${{ needs.matrix-tests.result }}` })

@@ -6,15 +6,13 @@ module.exports = class Comment {
   }
 
   async createOrUpdateComment(body) {
-    const actionUrl = `https://github.com/${ this.context.payload.repository.full_name }/actions/runs/${ this.context.runId }`
+    const actionUrl = `https://github.com/${this.context.payload.repository.full_name}/actions/runs/${this.context.runId}`
     if (!this.commentId) {
       const result = await this.github.rest.issues.createComment({
         issue_number: this.context.issue.number,
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        body: `${body}
-
-Workflow: ${actionUrl}`
+        body: `${body}` + `\n[view details](${actionUrl})`
       })
       this.commentId = result.data.id
     }
@@ -23,9 +21,7 @@ Workflow: ${actionUrl}`
       issue_number: this.context.issue.number,
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
-      body: `${body}
-
-Workflow: ${actionUrl}`
+      body: `${body}` + `\n[view details](${actionUrl})`
     })
   }
 }
