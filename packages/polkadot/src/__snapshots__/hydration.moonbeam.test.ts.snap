@@ -140,7 +140,7 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > route chain
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 540000000)",
+        "refTime": "(rounded 560000000)",
       },
     },
     "method": "Processed",
@@ -545,7 +545,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > route chain
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 540000000)",
+        "refTime": "(rounded 560000000)",
       },
     },
     "method": "Processed",

@@ -354,7 +354,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 540000000)",
+        "refTime": "(rounded 560000000)",
       },
     },
     "method": "Processed",
@@ -975,7 +975,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 540000000)",
+        "refTime": "(rounded 560000000)",
       },
     },
     "method": "Processed",
