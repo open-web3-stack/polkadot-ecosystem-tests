@@ -232,7 +232,7 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > balance on
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 1,
+  "nonce": 2,
   "providers": 1,
   "sufficients": 0,
 }
