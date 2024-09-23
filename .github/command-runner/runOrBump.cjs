@@ -3,7 +3,7 @@ const { env } = require('process')
 module.exports = async ({ github, core, context, commentId, exec, env, command, args }) => {
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
-  const { runCommand, createResult, writeNewEnv } = require('./utils.cjs')
+  const { runCommand, createResult, writeNewEnv, parseEnv } = require('./utils.cjs')
 
   const excuteUpdateKnownGood = async () => {
     const execCommand = `yarn update-known-good`
@@ -25,7 +25,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
     return result
   }
 
-  const excuteTest = async (update) => {
+  const excuteTest = async ({ update, env }) => {
     const execCommand = update ?
       `yarn test --reporter tap-flat ${update ? '-u' : ''}` :
       `yarn test --reporter tap-flat ${args.trim()}`
@@ -37,7 +37,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       await comment.createOrUpdateComment(createResult({
         context,
         command: execCommand,
-        result: result.errorOutput || result.output,
+        result: (env ? `${env}\n` : '') + (result.errorOutput || result.output),
         extra: `**Test Result**: \`Failed\``
       }))
       process.exit(1)
@@ -48,9 +48,16 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
   if (command === 'run') {
     const updateKnownGoodResult = await excuteUpdateKnownGood();
-    const testResult = await excuteTest();
+
+    let newEnv = updateKnownGoodResult.output
+
+    if (env) {
+      newEnv = writeNewEnv({ env })
+    }
+
+    const testResult = await excuteTest({ update: false, env: newEnv });
     core.info('Tests Passed')
-    const output = updateKnownGoodResult.output + `\n${testResult.output}`
+    const output = newEnv + `\n${testResult.output}`
     return comment.createOrUpdateComment(createResult({
       context,
       command: testResult.cmd,
@@ -60,29 +67,29 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
   }
 
   if (command === 'bump') {
-    let newEnv = ''
-
     if (env) {
-      newEnv = writeNewEnv({ env })
+      const newEnvObj = parseEnv((env || '').split('\n'))
+      if (Object.keys(newEnvObj).length) {
+        core.setFailed('env is not supported in bump command')
+        return comment.createOrUpdateComment(`    ENV is not supported in bump command`)
+      }
     }
 
-    if (!newEnv) {
-      const updateKnownGoodResult = await excuteUpdateKnownGood();
-      newEnv = updateKnownGoodResult.output + '\n'
-    }
+    const updateKnownGoodResult = await excuteUpdateKnownGood();
 
     await exec.exec(`git config --global user.name 'github-actions[bot]'`)
     await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`)
     await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS.env`)
     const diffCachedResult = await exec.exec('git diff --cached --exit-code', null, { ignoreReturnCode: true })
+
     if (!diffCachedResult) {
       core.setFailed('KNOWN_GOOD_BLOCK_NUMBERS.env not updated')
-      await comment.createOrUpdateComment(createResult(`    **KNOWN_GOOD_BLOCK_NUMBERS.env not updated**`))
+      await comment.createOrUpdateComment(`    **KNOWN_GOOD_BLOCK_NUMBERS.env not updated**`)
       process.exit(1)
     }
 
-    const testResult = await excuteTest(true);
-    const output = newEnv + `\n${testResult?.output}`
+    const testResult = await excuteTest({ update: true, env: updateKnownGoodResult.output });
+    const output = updateKnownGoodResult.output + `\n${testResult.output}`
 
     const diffResult = await exec.exec('git diff --exit-code', null, { ignoreReturnCode: true })
 
