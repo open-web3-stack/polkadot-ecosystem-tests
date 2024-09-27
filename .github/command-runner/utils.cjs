@@ -6,7 +6,8 @@ ${extra}
 <details>
 <summary>Results</summary>
 
-\`\`\`${result}
+\`\`\`
+${result}
 \`\`\`
 </details>
 `
