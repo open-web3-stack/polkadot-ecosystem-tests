@@ -4,8 +4,8 @@
 	"scripts": {
 		"lint": "tsc --noEmit && eslint . --ext .js,.ts",
 		"fix": "eslint . --ext .js,.ts --fix",
-		"test": "LOG_LEVEL=error vitest",
-		"test:ui": "LOG_LEVEL=error vitest --ui",
+		"test": "vitest",
+		"test:ui": "vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
 		"update-known-good": "tsx scripts/update-env.ts --update-known-good",
 		"postinstall": "husky install"

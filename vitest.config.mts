@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS.env') });
+if (process.env.LOG_LEVEL === undefined) {
+	process.env.LOG_LEVEL = 'error'
+}
 
 export default defineConfig({
 	test: {
