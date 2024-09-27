@@ -40,60 +40,23 @@ async function runCommand({ cmd, comment, exec }) {
   }
 }
 
-function parseEnv(lines) {
-  const env = {}
-  for (const line of lines) {
-    if (typeof line === 'string') {
-      const [key, value] = line.split('=');
-      if (key && !isNaN(value)) {
-        env[key.trim()] = parseInt(value, 10);
-      }
-    }
-  }
-  return env
-}
-
-function readEnv() {
-  const fs = require('fs')
-  const envContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8')
-  return envContent.toString()
-}
-
 function writeNewEnv({ env }) {
   const fs = require('fs')
-  const inputEnv = parseEnv((env || '').split('\n'))
 
-  const currentEnv = parseEnv(readEnv().split('\n'))
-  const newEnv = {}
+	const envContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8').toString()
 
-  let updated = false
-  for (const [key, value] of Object.entries(currentEnv)) {
-    if (inputEnv[key] && inputEnv[value] !== value) {
-      updated = true
-      newEnv[key] = inputEnv[key]
-    } else {
-      newEnv[key] = value
-    }
-  }
+	fs.writeFileSync('.env', env)
+	return `
+# .env
+${env}
 
-  if (updated) {
-    let newEnvContent = ''
-    for (const [key, value] of Object.entries(newEnv)) {
-      newEnvContent += `${key}=${value}\n`
-    }
-
-    fs.writeFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', newEnvContent)
-    console.log(`Write new env, 'utf8')}`)
-    return readEnv()
-  } else {
-    console.log(`No env have changed`)
-    return ''
-  }
+# KNOWN_GOOD_BLOCK_NUMBERS.env
+${envContent}
+`
 }
 
 module.exports = {
   createResult,
   runCommand,
-  parseEnv,
   writeNewEnv
 }

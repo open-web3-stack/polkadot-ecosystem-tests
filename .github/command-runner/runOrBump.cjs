@@ -1,9 +1,7 @@
-const { env } = require('process')
-
 module.exports = async ({ github, core, context, commentId, exec, env, command, args }) => {
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
-  const { runCommand, createResult, writeNewEnv, parseEnv } = require('./utils.cjs')
+  const { runCommand, createResult, writeNewEnv } = require('./utils.cjs')
 
   const excuteUpdateKnownGood = async () => {
     const execCommand = `yarn update-known-good`
@@ -67,13 +65,10 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
   }
 
   if (command === 'bump') {
-    if (env) {
-      const newEnvObj = parseEnv((env || '').split('\n'))
-      if (Object.keys(newEnvObj).length) {
-        core.setFailed('env is not supported in bump command')
-        return comment.createOrUpdateComment(`    ENV is not supported in bump command`)
-      }
-    }
+		if (env.trim().length) {
+			core.setFailed('env is not supported in bump command')
+			return comment.createOrUpdateComment(`    ENV is not supported in bump command`)
+		}
 
     const updateKnownGoodResult = await excuteUpdateKnownGood();
 
