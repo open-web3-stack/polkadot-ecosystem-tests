@@ -40,7 +40,7 @@ Environment variables can be set in `.env` file. The following variables are sup
 
 - `DB_PATH`: path to the cache database.
 - `RUNTIME_LOG_LEVEL`: log level for the runtime. 5 for error, 4 for warn, 3 for info, 2 for debug, 1 for trace. Default is 0.
-- `LOG_LEVEL`: log level for Chopstick. Note, use `yarn vitest` instead of `yarn test` to see logs. Options are `error`, `warn`, `info`, `debug`, `trace`. Default is `info`.
+- `LOG_LEVEL`: log level for Chopstick. Note, use `yarn vitest` instead of `yarn test` to see logs. Options are `error`, `warn`, `info`, `debug`, `trace`. Default is `error`.
 - `$(NETWORK_NAME)_BLOCK_NUMBER`: set block number for the chain.
 - `$(NETWORK_NAME)_WASM`: path to the chain wasm file.
 - `$(NETWORK_NAME)_ENDPOINT`: endpoint of the chain.
