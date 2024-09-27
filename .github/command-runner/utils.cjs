@@ -6,8 +6,7 @@ ${extra}
 <details>
 <summary>Results</summary>
 
-\`\`\`
-${result}
+\`\`\`${result}
 \`\`\`
 </details>
 `
@@ -46,8 +45,7 @@ function writeNewEnv({ env }) {
 	const envContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8').toString()
 
 	fs.writeFileSync('.env', env)
-	return `
-# .env
+	return `# .env
 ${env}
 
 # KNOWN_GOOD_BLOCK_NUMBERS.env
