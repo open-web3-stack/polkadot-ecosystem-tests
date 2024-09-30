@@ -41,7 +41,9 @@ export const runXcmPalletUp = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
       await checkEvents(tx0, 'polkadotXcm', 'xcmPallet').redact({ number: precision }).toMatchSnapshot('tx events')
-      await checkUmp(fromChain).toMatchSnapshot('from chain ump messages')
+      await checkUmp(fromChain)
+        .redact({ redactKeys: /setTopic/ })
+        .toMatchSnapshot('from chain ump messages')
 
       await toChain.chain.newBlock()
 
