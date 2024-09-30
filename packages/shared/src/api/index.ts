@@ -89,42 +89,14 @@ export const xtokens = {
 }
 
 export const xcmPallet = {
-  relaychainV3: (acc: any) => ({
-    V3: {
-      parents: 1,
-      interior: {
-        X1: {
-          AccountId32: {
-            network: 'Any',
-            id: acc,
-          },
-        },
-      },
-    },
-  }),
-  relaychainV4: (acc: any) => ({
+  relaychainV4: {
     V4: {
       parents: 1,
-      interior: {
-        X1: {
-          AccountId32: {
-            network: 'Any',
-            id: acc,
-          },
-        },
-      },
+      interior: 'Here',
     },
-  }),
+  },
   parachainV3: (parents: number, paraId: any) => ({
     V3: {
-      parents,
-      interior: {
-        X1: { Parachain: paraId },
-      },
-    },
-  }),
-  parachainV4: (parents: number, paraId: any) => ({
-    V4: {
       parents,
       interior: {
         X1: { Parachain: paraId },
@@ -187,6 +159,33 @@ export const xcmPallet = {
         },
         0,
         'Unlimited',
+      ),
+  teleportAssetsV3:
+    (token: any, amount: any, dest: any) =>
+    ({ api }: { api: ApiPromise }, acc: any) =>
+      (api.tx.xcmPallet || api.tx.polkadotXcm).teleportAssets(
+        dest,
+        {
+          V3: {
+            parents: 0,
+            interior: {
+              X1: {
+                AccountId32: {
+                  id: acc,
+                },
+              },
+            },
+          },
+        },
+        {
+          V3: [
+            {
+              id: token,
+              fun: { Fungible: amount },
+            },
+          ],
+        },
+        0,
       ),
 }
 

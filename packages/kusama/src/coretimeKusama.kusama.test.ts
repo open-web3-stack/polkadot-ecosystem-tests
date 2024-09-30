@@ -1,0 +1,31 @@
+import { describe } from 'vitest'
+
+import { coretimeKusama, kusama } from '@e2e-test/networks/chains'
+import { query, tx } from '@e2e-test/shared/api'
+import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+import { setupNetworks } from '@e2e-test/shared'
+
+describe('kusama & coretimeKusama', async () => {
+  const [kusamaClient, coretimeClient] = await setupNetworks(kusama, coretimeKusama)
+
+  const coretimeKSM = coretimeKusama.custom.ksm
+  const kusamaKSM = kusama.custom.ksm
+
+  runXcmPalletDown('kusama transfer KSM to coretimeKusama', async () => {
+    return {
+      fromChain: kusamaClient,
+      toChain: coretimeClient,
+      balance: query.balances,
+      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, coretimeKusama.paraId!)),
+    }
+  })
+
+  runXcmPalletUp('coretimeKusama transfer KSM to kusama', async () => {
+    return {
+      fromChain: coretimeClient,
+      toChain: kusamaClient,
+      balance: query.balances,
+      tx: tx.xcmPallet.teleportAssetsV3(coretimeKSM, 1e12, tx.xcmPallet.relaychainV4),
+    }
+  })
+})

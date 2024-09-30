@@ -1,6 +1,7 @@
 export * from './acala.js'
 export * from './assethub.js'
 export * from './astar.js'
+export * from './coretime.js'
 export * from './hydration.js'
 export * from './moonbeam.js'
 export * from './polkadot.js'
