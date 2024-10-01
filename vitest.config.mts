@@ -17,7 +17,7 @@ export default defineConfig({
 		testTimeout: 240_000,
 		pool: 'forks',
 		passWithNoTests: true,
-		retry: process.env.CI ? 3 : 2,
+		retry: 1,
 		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['basic'],
 	},
 	build: {
