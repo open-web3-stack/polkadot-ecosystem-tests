@@ -22,11 +22,9 @@ async function runCommand({ cmd, comment, exec }) {
     ignoreReturnCode: true,
     listeners: {
       stdline: (data) => {
-        console.log(data.replace(/\x1b\[[0-9;]*m/g, '') + '\n')
         output += `${data}\n`;
       },
       errline: (data) => {
-        console.log(data.replace(/\x1b\[[0-9;]*m/g, '') + '\n')
         errorOutput += `${data}\n`;
       }
     }
