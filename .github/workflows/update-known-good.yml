@@ -2,6 +2,11 @@ name: Update Known Good Block Numbers
 
 on:
   workflow_dispatch:
+    inputs:
+      retry:
+        description: 'If this is a retry run'
+        required: false
+        type: boolean
   schedule:
     - cron: '0 */6 * * *'
 
@@ -9,8 +14,10 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 permissions:
-  contents: write # required for push commit
-  pull-requests: write # required for create pr
+  contents: write
+  pull-requests: write
+  actions: write
+  issues: write
 
 jobs:
   define-matrix:
@@ -79,3 +86,38 @@ jobs:
         else
           echo "No changes to commit"
         fi
+  schedule-retry:
+    needs: tests
+    if: failure() && github.event.inputs.retry != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: sleep
+        run: sleep 300
+      - name: Dispatch retry workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'update-known-good.yml',
+              ref: 'master',
+              inputs: {
+                retry: 'true'
+              }
+            })
+  create-issue:
+    needs: tests
+    if: failure() && github.event.inputs.retry == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Test Failed 🚨',
+              body: `Workflow: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            })
