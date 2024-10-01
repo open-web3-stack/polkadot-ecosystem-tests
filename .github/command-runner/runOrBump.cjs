@@ -25,8 +25,8 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
   const excuteTest = async ({ update, env }) => {
     const execCommand = update ?
-      `yarn test --reporter tap-flat ${update ? '-u' : ''}` :
-      `yarn test --reporter tap-flat ${args.trim()}`
+      `yarn test --reporter default ${update ? '-u' : ''}` :
+      `yarn test --reporter default ${args.trim()}`
 
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
