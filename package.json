@@ -27,7 +27,7 @@
 		"@types/node": "^22.5.3",
 		"@typescript-eslint/eslint-plugin": "^7.15.0",
 		"@typescript-eslint/parser": "^8.4.0",
-		"@vitest/ui": "^2.0.5",
+		"@vitest/ui": "^2.1.1",
 		"dotenv": "^16.4.5",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
