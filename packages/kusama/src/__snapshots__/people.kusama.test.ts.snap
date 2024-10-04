@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > balance on from chain 1`] = `
+exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,7 +15,7 @@ exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > balance
 }
 `;
 
-exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > balance on to chain 1`] = `
+exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -30,7 +30,7 @@ exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > balance
 }
 `;
 
-exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > to chain dmp events 1`] = `
+exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -66,7 +66,7 @@ exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > to chai
 ]
 `;
 
-exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > tx events 1`] = `
+exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -197,7 +197,7 @@ exports[`polkadot & peopleKusama > kusama transfer KSM to peopleKusama > tx even
 ]
 `;
 
-exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > balance on from chain 1`] = `
+exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -212,7 +212,7 @@ exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > balan
 }
 `;
 
-exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > balance on to chain 1`] = `
+exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -227,7 +227,7 @@ exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > balan
 }
 `;
 
-exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > from chain ump messages 1`] = `
+exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
     "v4": [
@@ -297,7 +297,7 @@ exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > from 
 ]
 `;
 
-exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > to chain ump events 1`] = `
+exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -319,7 +319,7 @@ exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > to ch
 ]
 `;
 
-exports[`polkadot & peopleKusama > peopleKusama transfer KSM to polkadot > tx events 1`] = `
+exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > tx events 1`] = `
 [
   {
     "data": {
