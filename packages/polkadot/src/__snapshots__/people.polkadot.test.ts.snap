@@ -1,0 +1,445 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 9000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 1000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > from chain ump messages 1`] = `
+[
+  {
+    "v4": [
+      {
+        "receiveTeleportedAsset": [
+          {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+        ],
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositAsset": {
+          "assets": {
+            "wild": {
+              "allCounted": 1,
+            },
+          },
+          "beneficiary": {
+            "interior": {
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      {
+        "setTopic": "(redacted)",
+      },
+    ],
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > to chain ump events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 270000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 3590)",
+            "refTime": "(rounded 159000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 310000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "ReceiveTeleportedAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 9000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 1000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > to chain dmp events 1`] = `
+[
+  {
+    "data": {
+      "count": 1,
+    },
+    "method": "DownwardMessagesReceived",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "dmqHead": "(hash)",
+      "weightUsed": {
+        "proofSize": "(rounded 3500)",
+        "refTime": "(rounded 760000000)",
+      },
+    },
+    "method": "DownwardMessagesProcessed",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": "(rounded 160000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 3590)",
+            "refTime": "(rounded 138000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "xcmPallet",
+  },
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": 397000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "xcmPallet",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": "(rounded 1000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "message": [
+        {
+          "ReceiveTeleportedAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 1,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 1,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "xcmPallet",
+  },
+]
+`;
