@@ -24,7 +24,10 @@ export async function createNetworks<T extends Chain[]>(...configs: T) {
   const relaychain = networks.find(({ config }) => config.isRelayChain)
   const parachains = networks.filter(({ config }) => !config.isRelayChain)
 
-  await connectParachains(parachains.map(({ chain }) => chain))
+  await connectParachains(
+    parachains.map(({ chain }) => chain),
+    true,
+  )
   if (relaychain) {
     for (const parachain of parachains) {
       await connectVertical(relaychain.chain, parachain.chain)
