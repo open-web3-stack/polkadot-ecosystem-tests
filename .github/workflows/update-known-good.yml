@@ -122,6 +122,6 @@ jobs:
               body: `
             Workflow: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
 
-            To rerun test, comment `/bot run` command in #45
+            To rerun test, comment \`/bot run\` command in #45
             `
             })
