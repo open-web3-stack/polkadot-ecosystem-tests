@@ -14,6 +14,16 @@ const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.p
   System: {
     account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
   },
+  // Registrar to be used in E2E tests - required to test `RegistrarOrigin`-lock extrinsics.
+  Identity: {
+    Registrars: [
+      {
+        account: defaultAccounts.bob.address,
+        fee: 0,
+        fields: 0,
+      },
+    ],
+  },
 })
 
 export const peoplePolkadot = defineChain({
