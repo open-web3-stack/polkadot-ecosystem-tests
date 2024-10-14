@@ -11,7 +11,7 @@ describe('Setting on-chain identity and requesting judgement should work', async
   const identity = {
     email: { raw: 'test_address@test.io' },
     legal: { raw: 'FirstName LastName' },
-    riot: { raw: '@test:test_server.io' },
+    matrix: { raw: '@test:test_server.io' },
     twitter: { Raw: '@test_twitter' },
     github: { Raw: 'test_github' },
     discord: { Raw: 'test_discord' },
@@ -30,14 +30,16 @@ describe('Setting on-chain identity and requesting judgement should work', async
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.alice)
+  await setIdTx.signAndSend(defaultAccounts.bob)
 
   await rpc('dev_newBlock', { count: 1 })
 
-  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.alice.address)
+  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
   const identityInfo = registrationInfo.info
+
+  console.log(identityInfo.hash.toString())
 
   console.log(identityInfo.toHuman())
   assert(
@@ -50,7 +52,7 @@ describe('Setting on-chain identity and requesting judgement should work', async
    */
 
   const reqJudgTx = txApi.identity.requestJudgement(0, 0)
-  await reqJudgTx.signAndSend(defaultAccounts.alice)
+  await reqJudgTx.signAndSend(defaultAccounts.bob)
 
   await rpc('dev_newBlock', { count: 1 })
 
@@ -58,7 +60,7 @@ describe('Setting on-chain identity and requesting judgement should work', async
    * Compare pre and post-request identity information
    */
 
-  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.alice.address)
+  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
   const provisionalIdentityInfo: PalletIdentityLegacyIdentityInfo = provisionalRegistrationInfo.info
@@ -73,9 +75,9 @@ describe('Setting on-chain identity and requesting judgement should work', async
 
   const provJudgTx = txApi.identity.provideJudgement(
     0,
-    defaultAccounts.alice.address,
+    defaultAccounts.bob.address,
     'Reasonable',
-    identityInfo.hash.toString(),
+    identityInfo.hash.toHex(),
   )
   await provJudgTx.signAndSend(defaultAccounts.alice)
 
@@ -85,7 +87,7 @@ describe('Setting on-chain identity and requesting judgement should work', async
    * Compare pre and post-judgement identity information.
    */
 
-  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.alice.address)
+  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info

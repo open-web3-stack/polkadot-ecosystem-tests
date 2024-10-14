@@ -12,11 +12,19 @@ const custom = {
 
 const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.peopleKusama) => ({
   System: {
-    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+    account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
+    ],
   },
-  // Registrar to be used in E2E tests - required to test `RegistrarOrigin`-lock extrinsics.
+  // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
   Identity: {
     Registrars: [
+      {
+        account: defaultAccounts.alice.address,
+        fee: 0,
+        fields: 0,
+      },
       {
         account: defaultAccounts.bob.address,
         fee: 0,
