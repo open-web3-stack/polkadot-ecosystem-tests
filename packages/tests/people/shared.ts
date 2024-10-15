@@ -31,7 +31,6 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
-  const rpc = peopleClient.api.rpc
 
   /**
    * Set Alice's on-chain identity
@@ -40,7 +39,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const setIdTx = txApi.identity.setIdentity(identity)
   await setIdTx.signAndSend(defaultAccounts.bob)
 
-  await rpc('dev_newBlock', { count: 1 })
+  await peopleClient.chain.newBlock()
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
@@ -60,7 +59,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
   await reqJudgTx.signAndSend(defaultAccounts.bob)
 
-  await rpc('dev_newBlock', { count: 1 })
+  await peopleClient.chain.newBlock()
 
   /**
    * Compare pre and post-request identity information
@@ -92,7 +91,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   )
   await provJudgTx.signAndSend(defaultAccounts.alice)
 
-  await rpc('dev_newBlock', { count: 1 })
+  await peopleClient.chain.newBlock()
 
   /**
    * Compare pre and post-judgement identity information.
