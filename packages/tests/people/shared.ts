@@ -1,18 +1,20 @@
-import { assert, describe } from 'vitest'
+import { assert } from 'vitest'
 
+import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { ITuple } from '@polkadot/types/types'
 import {
   PalletIdentityJudgement,
   PalletIdentityLegacyIdentityInfo,
   PalletIdentityRegistration,
 } from '@polkadot/types/lookup'
-import { defaultAccounts } from '@e2e-test/networks'
-import { peoplePolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { u32 } from '@polkadot/types'
 
-describe('Setting on-chain identity and requesting judgement should work', async () => {
-  const [peopleClient] = await setupNetworks(peoplePolkadot)
+export async function setIdentityThenRequestAndProvideJudgement<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(peopleChain: Chain<TCustom, TInitStorages>) {
+  const [peopleClient] = await setupNetworks(peopleChain)
 
   const identity = {
     email: { raw: 'test_address@test.io' },
@@ -111,4 +113,4 @@ describe('Setting on-chain identity and requesting judgement should work', async
   assert(identityInfo.eq(provisionalIdentityInfo), 'Identity information changed after judgement request')
   assert(judgement[0].eq('0'), 'Alice, from whom a judgement was received, should be the 0th registrar')
   assert(judgement[1].isReasonable, 'The judgement immediately after _this_ judgement should be "Reasonable"')
-})
+}
