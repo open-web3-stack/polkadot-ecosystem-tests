@@ -10,6 +10,18 @@ const custom = {
   },
 }
 
+export const aliceRegistrar = {
+  account: defaultAccounts.alice.address,
+  fee: 1,
+  fields: 0,
+}
+
+export const bobRegistrar = {
+  account: defaultAccounts.bob.address,
+  fee: 0,
+  fields: 0,
+}
+
 const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.peopleKusama) => ({
   System: {
     account: [
@@ -19,18 +31,7 @@ const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.p
   },
   // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
   Identity: {
-    Registrars: [
-      {
-        account: defaultAccounts.alice.address,
-        fee: 0,
-        fields: 0,
-      },
-      {
-        account: defaultAccounts.bob.address,
-        fee: 0,
-        fields: 0,
-      },
-    ],
+    Registrars: [aliceRegistrar, bobRegistrar],
   },
 })
 
