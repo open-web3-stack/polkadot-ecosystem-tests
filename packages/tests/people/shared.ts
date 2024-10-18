@@ -1,18 +1,20 @@
+import { BN } from 'bn.js'
 import { assert } from 'vitest'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { ITuple } from '@polkadot/types/types'
-import { Option, Vec, u32 } from '@polkadot/types'
+import { Option, Vec, u128, u32 } from '@polkadot/types'
 import {
   PalletIdentityJudgement,
   PalletIdentityLegacyIdentityInfo,
   PalletIdentityRegistrarInfo,
   PalletIdentityRegistration,
 } from '@polkadot/types/lookup'
+import { aliceRegistrar } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 
 /**
- * Test to the process of
+ * Test the process of
  * 1. setting an identity,
  * 2. requesting a judgement,
  * 3. providing it from the previously queried registrar
@@ -126,10 +128,10 @@ export async function setIdentityThenRequestAndProvideJudgement<
 }
 
 /**
- * Test to the process of
+ * Test the process of
  * 1. setting an identity,
  * 2. requesting a judgement,
- * 3. cancellingi the previous request, and
+ * 3. cancelling the previous request, and
  * 4. clearing the identity
  *
  * @param peopleChain People parachain where the entire process is run.
@@ -231,7 +233,134 @@ export async function setIdentityThenRequesThenCancelThenClear<
 }
 
 /**
- * Test to the process of adding a registrar to a people's parachain.
+ * Test the process of
+ * 1. setting an identity,
+ * 2. having 2 other identities become that identity's subidentities,
+ * 3. removing one identity through the supraidentity
+ * 4. having another subidentity remove itself
+ *
+ * @param peopleChain People parachain where the entire process is run.
+ */
+export async function setIdentityThenAddSubsThenRemove<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(peopleChain: Chain<TCustom, TInitStorages>) {
+  const [peopleClient] = await setupNetworks(peopleChain)
+
+  const identity = {
+    email: { raw: 'test_address@test.io' },
+    legal: { raw: 'FirstName LastName' },
+    matrix: { raw: '@test:test_server.io' },
+    twitter: { Raw: '@test_twitter' },
+    github: { Raw: 'test_github' },
+    discord: { Raw: 'test_discord' },
+    web: { Raw: 'http://test.te/me' },
+    image: { raw: 'test' },
+    display: { raw: 'Test Display' },
+    pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
+  }
+
+  const querier = peopleClient.api.query
+  const txApi = peopleClient.api.tx
+
+  /**
+   * Set Alice and Bob's on-chain identites
+   */
+
+  const setIdTx = txApi.identity.setIdentity(identity)
+  await setIdTx.signAndSend(defaultAccounts.alice)
+
+  await peopleClient.chain.newBlock()
+
+  /**
+   * Add Bob and Charlie as subidentities of Alice
+   */
+
+  const setSubsTx = txApi.identity.setSubs([
+    [defaultAccounts.bob.address, { Raw: 'bob' }],
+    [defaultAccounts.charlie.address, { Raw: 'charlie' }],
+  ])
+  setSubsTx.signAndSend(defaultAccounts.alice)
+
+  // Withouth a second block being mined, the `setSubs` extrinsic will not take effect.
+  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+
+  /**
+   * Check Alice, Bob and Charlie's statuses regarding sub/super identities
+   */
+
+  let aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  const doubleIdDepositAmnt: u128 = aliceSubData[0]
+  assert(aliceSubData[0].isEven, 'Alice added two subidentities, so the subaccount deposit should be even')
+  assert(
+    aliceSubData[1].eq([defaultAccounts.bob.address, defaultAccounts.charlie.address]),
+    'Alice should have 2 subidentities',
+  )
+
+  let bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
+  assert(bobSuperData.isSome)
+  assert(bobSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
+  assert(bobSuperData.unwrap()[1].eq({ Raw: 'bob' }))
+
+  let charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  assert(charlieSuperData.isSome)
+  assert(charlieSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
+  assert(charlieSuperData.unwrap()[1].eq({ Raw: 'charlie' }))
+
+  /**
+   * Rename Charles' subidentity (as Alice)
+   */
+
+  const renameSubTx = txApi.identity.renameSub(defaultAccounts.charlie.address, { Raw: 'carolus' })
+  renameSubTx.signAndSend(defaultAccounts.alice)
+
+  // Withouth a second block being mined, the `renameSub` extrinsic will not take effect.
+  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+
+  charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  assert(charlieSuperData.isSome)
+  assert(charlieSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
+  assert(charlieSuperData.unwrap()[1].eq({ Raw: 'carolus' }), "Subidentity's name remains unchanged")
+
+  /**
+   * As Alice, remove Charlie as a subidentity
+   */
+
+  const removeSubTx = txApi.identity.removeSub(defaultAccounts.charlie.address)
+  removeSubTx.signAndSend(defaultAccounts.alice)
+
+  // Withouth a second block being mined, the `removeSub` extrinsic will not take effect.
+  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+
+  aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
+  assert(aliceSubData[0].gt(new BN(0)), "After removing one subidentity, the other's deposit should remain")
+  assert(aliceSubData[1].eq([defaultAccounts.bob.address]), 'Alice should only have Bob as a subidentity')
+
+  charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  assert(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity')
+
+  /**
+   * As Bob, remove oneself from Alice's subidentities
+   */
+
+  const quitSubTx = txApi.identity.quitSub()
+  quitSubTx.signAndSend(defaultAccounts.bob)
+
+  // Withouth a second block being mined, the `quitSub` extrinsic will not take effect.
+  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+
+  aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+
+  assert(aliceSubData[0].isZero, 'After removal of the second subidentity, no deposits should remain')
+  assert(aliceSubData[1].isEmpty, 'Alice should now have no subidentities')
+
+  bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
+  assert(bobSuperData.isNone, 'Charlie should no longer have a supraidentity')
+}
+
+/**
+ * Test the process of adding a registrar to a people's parachain.
  *
  * It uses the parachain's relay to send an XCM message forcing execution of the normally gated
  * `addRegistrar` call as `SuperUser`.
