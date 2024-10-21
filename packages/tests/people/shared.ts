@@ -1,6 +1,17 @@
+/**
+ * Utilities for people chain tests - both Polkadot and Kusama.
+ *
+ * Tests are defined here, parametrized over relay/parachain datatypes, and each corresponding
+ * implementing module can then instantiates tests with the appropriate chains inside a `describe`.
+ *
+ * Also contains helpers used in those tests.
+ * @module
+ */
+
 import { BN } from 'bn.js'
 import { assert } from 'vitest'
 
+import { ApiPromise } from '@polkadot/api'
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { ITuple } from '@polkadot/types/types'
 import { Option, Vec, u128, u32 } from '@polkadot/types'
@@ -10,8 +21,23 @@ import {
   PalletIdentityRegistrarInfo,
   PalletIdentityRegistration,
 } from '@polkadot/types/lookup'
-import { aliceRegistrar } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
+
+/**
+ * Example identity to be used in tests.
+ */
+const identity = {
+  email: { Raw: 'test_address@test.io' },
+  legal: { Raw: 'FirstName LastName' },
+  matrix: { Raw: '@test:test_server.io' },
+  twitter: { Raw: '@test_twitter' },
+  github: { Raw: 'test_github' },
+  discord: { Raw: 'test_discord' },
+  web: { Raw: 'http://test.te/me' },
+  image: { Raw: 'test' },
+  display: { Raw: 'Test Display' },
+  pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
+}
 
 /**
  * Test the process of
@@ -27,19 +53,6 @@ export async function setIdentityThenRequestAndProvideJudgement<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(peopleChain: Chain<TCustom, TInitStorages>) {
   const [peopleClient] = await setupNetworks(peopleChain)
-
-  const identity = {
-    email: { raw: 'test_address@test.io' },
-    legal: { raw: 'FirstName LastName' },
-    matrix: { raw: '@test:test_server.io' },
-    twitter: { Raw: '@test_twitter' },
-    github: { Raw: 'test_github' },
-    discord: { Raw: 'test_discord' },
-    web: { Raw: 'http://test.te/me' },
-    image: { raw: 'test' },
-    display: { raw: 'Test Display' },
-    pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
-  }
 
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
@@ -58,6 +71,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
   const identityInfo = registrationInfo.info
 
+  assert(identityInfo.eq(identity))
   console.log(identityInfo.toHuman())
   assert(
     registrationInfo.judgements.isEmpty,
@@ -130,6 +144,126 @@ export async function setIdentityThenRequestAndProvideJudgement<
 /**
  * Test the process of
  * 1. setting an identity,
+ * 2. requesting a judgement to one registrar, and have it provided as Reasonable
+ * 3. requesting a judgement from another registrar, without it being provided
+ * 4. reset one's identity
+ * 5. check that the only the pending judgement remains
+ *
+ * @param peopleChain People parachain where the entire process is run.
+ */
+export async function setIdentityRequestJudgementTwiceThenResetIdentity<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(peopleChain: Chain<TCustom, TInitStorages>) {
+  const [peopleClient] = await setupNetworks(peopleChain)
+
+  const querier = peopleClient.api.query
+  const txApi = peopleClient.api.tx
+
+  /**
+   * Set Eve's on-chain identity
+   */
+
+  let setIdTx = txApi.identity.setIdentity(identity)
+  await setIdTx.signAndSend(defaultAccounts.eve)
+
+  await peopleClient.chain.newBlock()
+
+  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  assert(identityInfoReply.isSome, 'Failed to query set identity')
+  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
+  const identityInfo = registrationInfo.info
+  assert(identityInfo.eq(identity))
+
+  /**
+   * Request judgements on identity that was just set
+   */
+
+  // Recall that, in the people chain's test storage, Alice is the 0th registrar, and Bob is the
+  // 1st. Alice has a fee of 1 unit, Bob of 0.
+  const reqJudgAliceTx = txApi.identity.requestJudgement(0, 1)
+  const reqJudgBobTx = txApi.identity.requestJudgement(1, 0)
+
+  const batchedTx = peopleClient.api.tx.utility.batchAll([reqJudgAliceTx.method.toHex(), reqJudgBobTx.method.toHex()])
+
+  await batchedTx.signAndSend(defaultAccounts.eve)
+
+  await peopleClient.chain.newBlock()
+
+  /**
+   * Provide a judgement on Eve's request
+   */
+
+  const provJudgTx = txApi.identity.provideJudgement(
+    0,
+    defaultAccounts.eve.address,
+    'Reasonable',
+    identityInfo.hash.toHex(),
+  )
+  await provJudgTx.signAndSend(defaultAccounts.alice)
+
+  await peopleClient.chain.newBlock()
+
+  /**
+   * Compare pre and post-judgement identity information.
+   */
+
+  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
+  const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
+  assert(judgedRegistrationInfo.judgements.length === 2, 'There should only 2 judgements on the account.')
+
+  const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
+  assert(identityInfo.eq(judgedIdentityInfo), 'Identity information changed after judgement')
+
+  let aliceJudgement: ITuple<[u32, PalletIdentityJudgement]>
+  let bobJudgement: ITuple<[u32, PalletIdentityJudgement]>
+  if (judgedRegistrationInfo.judgements[0][0].eq(0)) {
+    aliceJudgement = judgedRegistrationInfo.judgements[0]
+    bobJudgement = judgedRegistrationInfo.judgements[1]
+  } else {
+    bobJudgement = judgedRegistrationInfo.judgements[0]
+    aliceJudgement = judgedRegistrationInfo.judgements[1]
+  }
+
+  assert(aliceJudgement[0].eq('0'), 'Alice, from whom a judgement was received, should be the 0th registrar')
+  assert(aliceJudgement[1].isReasonable, 'The judgement immediately after _this_ judgement should be "Reasonable"')
+
+  assert(bobJudgement[0].eq('1'), 'Bob should be the 1th registrar')
+  assert(bobJudgement[1].isFeePaid, "Bob's judgement should be pending.")
+  assert(bobJudgement[1].asFeePaid.eq(0), 'Bob charges no registrar fee.')
+
+  /**
+   * Reset Eve's identity
+   */
+
+  // It is acceptable to use the same identity as before - what matters is the submission of an
+  // `set_identity` extrinsic.
+  setIdTx = txApi.identity.setIdentity(identity)
+  await setIdTx.signAndSend(defaultAccounts.eve)
+
+  await peopleClient.chain.newBlock()
+
+  /**
+   * Requery judgement data
+   */
+
+  const resetIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  assert(resetIdentityInfoReply.isSome, 'Failed to query identity after new identity request')
+  const resetRegistrationInfo = resetIdentityInfoReply.unwrap()[0]
+
+  const resetIdentityInfo: PalletIdentityLegacyIdentityInfo = resetRegistrationInfo.info
+  assert(resetIdentityInfo.eq(identity), 'Identity information changed after judgement')
+
+  assert(resetRegistrationInfo.judgements.length === 1, 'There should now be only 1 judgement on Eve.')
+
+  const newBobJudgement = resetRegistrationInfo.judgements[0]
+  assert(newBobJudgement.eq(bobJudgement), "Bob's pending judgement shouldn't have changed.")
+}
+
+/**
+ * Test the process of
+ * 1. setting an identity,
  * 2. requesting a judgement,
  * 3. cancelling the previous request, and
  * 4. clearing the identity
@@ -141,19 +275,6 @@ export async function setIdentityThenRequesThenCancelThenClear<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(peopleChain: Chain<TCustom, TInitStorages>) {
   const [peopleClient] = await setupNetworks(peopleChain)
-
-  const identity = {
-    email: { raw: 'test_address@test.io' },
-    legal: { raw: 'FirstName LastName' },
-    matrix: { raw: '@test:test_server.io' },
-    twitter: { Raw: '@test_twitter' },
-    github: { Raw: 'test_github' },
-    discord: { Raw: 'test_discord' },
-    web: { Raw: 'http://test.te/me' },
-    image: { raw: 'test' },
-    display: { raw: 'Test Display' },
-    pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
-  }
 
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
@@ -247,19 +368,6 @@ export async function setIdentityThenAddSubsThenRemove<
 >(peopleChain: Chain<TCustom, TInitStorages>) {
   const [peopleClient] = await setupNetworks(peopleChain)
 
-  const identity = {
-    email: { raw: 'test_address@test.io' },
-    legal: { raw: 'FirstName LastName' },
-    matrix: { raw: '@test:test_server.io' },
-    twitter: { Raw: '@test_twitter' },
-    github: { Raw: 'test_github' },
-    discord: { Raw: 'test_discord' },
-    web: { Raw: 'http://test.te/me' },
-    image: { raw: 'test' },
-    display: { raw: 'Test Display' },
-    pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
-  }
-
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
 
@@ -291,7 +399,10 @@ export async function setIdentityThenAddSubsThenRemove<
 
   let aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
   const doubleIdDepositAmnt: u128 = aliceSubData[0]
-  assert(aliceSubData[0].isEven, 'Alice added two subidentities, so the subaccount deposit should be even')
+  assert(
+    aliceSubData[0].gt(new BN(0)) && aliceSubData[0].isEven,
+    'Alice added two subidentities, so the subaccount deposit should be even',
+  )
   assert(
     aliceSubData[1].eq([defaultAccounts.bob.address, defaultAccounts.charlie.address]),
     'Alice should have 2 subidentities',
@@ -383,76 +494,7 @@ export async function addRegistrarViaRelayAsRoot<
   const addRegistrarTx = peopleClient.api.tx.identity.addRegistrar(defaultAccounts.charlie.address)
   const encodedPeopleChainCalldata = addRegistrarTx.method.toHex()
 
-  // Destination of the XCM message sent from the relay chain to the parachain via `xcmPallet`
-  const dest = {
-    V4: {
-      parents: 0,
-      interior: {
-        X1: [
-          {
-            Parachain: 1004,
-          },
-        ],
-      },
-    },
-  }
-
-  // The message being sent to the parachain, containing a call to be executed in the parachain:
-  // an origin-restricted extrinsic from the `identity` pallet, to be executed as a `SuperUser`.
-  const message = {
-    V4: [
-      {
-        UnpaidExecution: {
-          weightLimit: 'Unlimited',
-          checkOrigin: null,
-        },
-      },
-      {
-        Transact: {
-          call: {
-            encoded: encodedPeopleChainCalldata,
-          },
-          originKind: 'SuperUser',
-          requireWeightAtMost: {
-            proofSize: '3000',
-            refTime: '1000000000',
-          },
-        },
-      },
-    ],
-  }
-
-  const addRegistrarXcm = relayClient.api.tx.xcmPallet.send(dest, message)
-
-  const encodedRelayCallData = addRegistrarXcm.method.toHex()
-
-  /**
-   * Execution of XCM call via RPC `dev_setStorage`
-   */
-
-  // Get the current block number, to be able to inform the relay chain's scheduler of the
-  // appropriate block to inject this call in.
-  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
-
-  await relayClient.api.rpc('dev_setStorage', {
-    scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: encodedRelayCallData,
-              },
-              origin: {
-                system: 'Root',
-              },
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  await sendXcmFromRelay(relayClient, encodedPeopleChainCalldata, { proofSize: '10000', refTime: '1000000000' })
 
   /**
    * Checks to people parachain's registrar list at several points of interest.
@@ -504,4 +546,82 @@ export async function addRegistrarViaRelayAsRoot<
 
   assert(registrarsAfterParaBlock.length === 3)
   assertionHelper(registrarsAfterParaBlock, 'Registrars after parachain block differ from expected')
+}
+
+/**
+ * Send an XCM message containing an extrinsic to be executed in the people chain, as `Root`
+ *
+ * @param relayClient Relay chain client form which to execute `xcmPallet.send`
+ * @param encodedChainCallData Hex-encoded identity pallet extrinsic
+ * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
+ */
+async function sendXcmFromRelay(
+  relayClient: { api: ApiPromise },
+  encodedChainCallData: `0x${string}`,
+  requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
+) {
+  // Destination of the XCM message sent from the relay chain to the parachain via `xcmPallet`
+  const dest = {
+    V4: {
+      parents: 0,
+      interior: {
+        X1: [
+          {
+            Parachain: 1004,
+          },
+        ],
+      },
+    },
+  }
+
+  // The message being sent to the parachain, containing a call to be executed in the parachain:
+  // an origin-restricted extrinsic from the `identity` pallet, to be executed as a `SuperUser`.
+  const message = {
+    V4: [
+      {
+        UnpaidExecution: {
+          weightLimit: 'Unlimited',
+          checkOrigin: null,
+        },
+      },
+      {
+        Transact: {
+          call: {
+            encoded: encodedChainCallData,
+          },
+          originKind: 'SuperUser',
+          requireWeightAtMost,
+        },
+      },
+    ],
+  }
+
+  const xcmTx = relayClient.api.tx.xcmPallet.send(dest, message)
+  const encodedRelayCallData = xcmTx.method.toHex()
+
+  /**
+   * Execution of XCM call via RPC `dev_setStorage`
+   */
+
+  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  await relayClient.api.rpc('dev_setStorage', {
+    scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: encodedRelayCallData,
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
 }
