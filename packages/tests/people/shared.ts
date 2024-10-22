@@ -72,7 +72,6 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const identityInfo = registrationInfo.info
 
   assert(identityInfo.eq(identity))
-  console.log(identityInfo.toHuman())
   assert(
     registrationInfo.judgements.isEmpty,
     'Error: immediately after `setIdentity`, there should be no judgments on the identity.',
