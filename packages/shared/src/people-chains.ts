@@ -9,10 +9,12 @@
  */
 
 import { BN } from 'bn.js'
-import { assert } from 'vitest'
+import { assert, describe, test } from 'vitest'
+
+import { Chain, defaultAccounts } from '@e2e-test/networks'
+import { setupNetworks } from './setup.js'
 
 import { ApiPromise } from '@polkadot/api'
-import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { ITuple } from '@polkadot/types/types'
 import { Option, Vec, u128, u32 } from '@polkadot/types'
 import {
@@ -21,7 +23,6 @@ import {
   PalletIdentityRegistrarInfo,
   PalletIdentityRegistration,
 } from '@polkadot/types/lookup'
-import { setupNetworks } from '@e2e-test/shared'
 
 /**
  * Example identity to be used in tests.
@@ -390,7 +391,7 @@ export async function setIdentityThenAddSubsThenRemove<
   setSubsTx.signAndSend(defaultAccounts.alice)
 
   // Withouth a second block being mined, the `setSubs` extrinsic will not take effect.
-  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+  await peopleClient.dev.newBlock({ count: 2 })
 
   /**
    * Check Alice, Bob and Charlie's statuses regarding sub/super identities
@@ -425,7 +426,7 @@ export async function setIdentityThenAddSubsThenRemove<
   renameSubTx.signAndSend(defaultAccounts.alice)
 
   // Withouth a second block being mined, the `renameSub` extrinsic will not take effect.
-  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+  await peopleClient.dev.newBlock({ count: 2 })
 
   charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
   assert(charlieSuperData.isSome)
@@ -440,7 +441,7 @@ export async function setIdentityThenAddSubsThenRemove<
   removeSubTx.signAndSend(defaultAccounts.alice)
 
   // Withouth a second block being mined, the `removeSub` extrinsic will not take effect.
-  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+  await peopleClient.dev.newBlock({ count: 2 })
 
   aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
   assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
@@ -458,7 +459,7 @@ export async function setIdentityThenAddSubsThenRemove<
   quitSubTx.signAndSend(defaultAccounts.bob)
 
   // Withouth a second block being mined, the `quitSub` extrinsic will not take effect.
-  await peopleClient.api.rpc('dev_newBlock', { count: 2 })
+  await peopleClient.dev.newBlock({ count: 2 })
 
   aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
 
@@ -555,7 +556,12 @@ export async function addRegistrarViaRelayAsRoot<
  * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
  */
 async function sendXcmFromRelay(
-  relayClient: { api: ApiPromise },
+  relayClient: {
+    api: ApiPromise
+    dev: {
+      newBlock: (param?: { count?: number; to?: number; unsafeBlockHeight?: number }) => Promise<string>
+    }
+  },
   encodedChainCallData: `0x${string}`,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
 ) {
@@ -622,5 +628,47 @@ async function sendXcmFromRelay(
         ],
       ],
     },
+  })
+}
+
+/**
+ * Test runner for people chains' E2E tests.
+ *
+ * Tests that are meant to be run in a people chain *must* be added to as a `vitest.test` to the
+ * `describe` runner this function creates.
+ *
+ * @param topLevelDescription A description of this test runner e.g. "Polkadot People E2E tests"
+ * @param relayChain The relay chain to be used by these tests
+ * @param peopleChain The people's chain associated to the previous `relayChain`
+ */
+export function peopleChainE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(
+  topLevelDescription: string,
+  relayChain: Chain<TCustom, TInitStoragesRelay>,
+  peopleChain: Chain<TCustom, TInitStoragesPara>,
+) {
+  describe(topLevelDescription, function () {
+    test('setting on-chain identity and requesting judgement should work', async () => {
+      await setIdentityThenRequestAndProvideJudgement(peopleChain)
+    })
+
+    test('setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work', async () => {
+      await setIdentityThenRequesThenCancelThenClear(peopleChain)
+    })
+
+    test('setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work', async () => {
+      await setIdentityRequestJudgementTwiceThenResetIdentity(peopleChain)
+    })
+
+    test('setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work', async () => {
+      await setIdentityThenAddSubsThenRemove(peopleChain)
+    })
+
+    test('adding a registrar as root from the relay chain works', async () => {
+      await addRegistrarViaRelayAsRoot(relayChain, peopleChain)
+    })
   })
 }
