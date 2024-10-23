@@ -9,6 +9,7 @@
  */
 
 import { BN } from 'bn.js'
+import { StorageValues } from '@acala-network/chopsticks'
 import { assert, describe, test } from 'vitest'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
@@ -559,7 +560,7 @@ async function sendXcmFromRelay(
   relayClient: {
     api: ApiPromise
     dev: {
-      newBlock: (param?: { count?: number; to?: number; unsafeBlockHeight?: number }) => Promise<string>
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
     }
   },
   encodedChainCallData: `0x${string}`,
@@ -610,8 +611,8 @@ async function sendXcmFromRelay(
 
   const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
 
-  await relayClient.api.rpc('dev_setStorage', {
-    scheduler: {
+  await relayClient.dev.setStorage({
+    Scheduler: {
       agenda: [
         [
           [number + 1],
