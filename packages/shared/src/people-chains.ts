@@ -9,11 +9,12 @@
  */
 
 import { BN } from 'bn.js'
-import { StorageValues } from '@acala-network/chopsticks'
 import { assert, describe, test } from 'vitest'
 
+import { StorageValues } from '@acala-network/chopsticks'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { Chain, defaultAccounts } from '@e2e-test/networks'
-import { setupNetworks } from './setup.js'
 
 import { ApiPromise } from '@polkadot/api'
 import { ITuple } from '@polkadot/types/types'
@@ -24,6 +25,9 @@ import {
   PalletIdentityRegistrarInfo,
   PalletIdentityRegistration,
 } from '@polkadot/types/lookup'
+
+import { check, checkEvents } from './helpers/index.js'
+import { setupNetworks } from './setup.js'
 
 /**
  * Example identity to be used in tests.
@@ -64,20 +68,23 @@ export async function setIdentityThenRequestAndProvideJudgement<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.bob)
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
-  const identityInfo = registrationInfo.info
+  const registrationIdentityInfo: PalletIdentityLegacyIdentityInfo = registrationInfo.info
 
-  assert(identityInfo.eq(identity))
-  assert(
-    registrationInfo.judgements.isEmpty,
-    'Error: immediately after `setIdentity`, there should be no judgments on the identity.',
-  )
+  check(registrationIdentityInfo).toMatchSnapshot('identity right after set identity')
+
+  // Quick sanity check - in the previous line, the fetched identity is compared versus the previous
+  // test run's snapshot, whereas now it is compared to the actual JS object defined above.
+  check(registrationIdentityInfo.toHuman()).toMatchObject(identity)
+  check(registrationInfo.judgements).toMatchObject([])
 
   /**
    * Request a judgement on identity that was just set
@@ -85,7 +92,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   // Recall that, in the people chain's test storage, Alice is the 0th registrar.
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
-  await reqJudgTx.signAndSend(defaultAccounts.bob)
+  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
 
@@ -93,19 +100,28 @@ export async function setIdentityThenRequestAndProvideJudgement<
    * Compare pre and post-request identity information
    */
 
+  await checkEvents(reqJudgEvents, 'identity').toMatchSnapshot('judgement request events')
+
   const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
 
   const provisionalIdentityInfo: PalletIdentityLegacyIdentityInfo = provisionalRegistrationInfo.info
-  assert(provisionalRegistrationInfo.judgements.length === 1, 'There should only be 1 judgement after requesting it.')
 
-  // Freely indexing into the `Vec` here, as it *should* have 1 element.
-  const provisionalJudgement: ITuple<[u32, PalletIdentityJudgement]> = provisionalRegistrationInfo.judgements[0]
-  assert(identityInfo.eq(provisionalIdentityInfo), 'Identity information changed after judgement request')
-  assert(provisionalJudgement[0].eq('0'), 'Alice, to whom a request was made, should be the 0th registrar')
-  assert(provisionalJudgement[1].isFeePaid, 'The judgement immediately after a request should be "FeePaid"')
-  assert(provisionalJudgement[1].asFeePaid.eq(1), "Alice's registrar fee should be set to `1`")
+  // The only identity object compared versus the origin `const identity` is the one queried
+  // after registration.
+  // That is also the only identity written to the test's snapshot.
+  // At the point of judgement request and beyond, the latest identity fetched from chain can be
+  // compared with the previously fetched identity, establishing a chain of equalities.
+  check(provisionalIdentityInfo.toJSON()).toMatchObject(registrationIdentityInfo.toJSON())
+  check(provisionalRegistrationInfo.judgements).toMatchObject([
+    [
+      0,
+      {
+        feePaid: 1,
+      },
+    ],
+  ])
 
   /**
    * Provide a judgement on the previous request
@@ -115,9 +131,9 @@ export async function setIdentityThenRequestAndProvideJudgement<
     0,
     defaultAccounts.bob.address,
     'Reasonable',
-    identityInfo.hash.toHex(),
+    registrationIdentityInfo.hash.toHex(),
   )
-  await provJudgTx.signAndSend(defaultAccounts.alice)
+  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccounts.alice))
 
   await peopleClient.chain.newBlock()
 
@@ -125,21 +141,22 @@ export async function setIdentityThenRequestAndProvideJudgement<
    * Compare pre and post-judgement identity information.
    */
 
+  await checkEvents(provJudgEvents, 'identity').toMatchSnapshot('judgement provision events')
+
   const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
-  assert(
-    judgedRegistrationInfo.judgements.length === 1,
-    'There should only be 1 judgement on the account after one was provided.',
-  )
 
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
-  assert(identityInfo.eq(judgedIdentityInfo), 'Identity information changed after judgement')
-
-  const judgement: ITuple<[u32, PalletIdentityJudgement]> = judgedRegistrationInfo.judgements[0]
-  assert(identityInfo.eq(provisionalIdentityInfo), 'Identity information changed after judgement request')
-  assert(judgement[0].eq('0'), 'Alice, from whom a judgement was received, should be the 0th registrar')
-  assert(judgement[1].isReasonable, 'The judgement immediately after _this_ judgement should be "Reasonable"')
+  await check(judgedIdentityInfo.toJSON()).toMatchObject(provisionalIdentityInfo.toJSON())
+  check(judgedRegistrationInfo.judgements).toMatchObject([
+    [
+      0,
+      {
+        reasonable: null,
+      },
+    ],
+  ])
 }
 
 /**
