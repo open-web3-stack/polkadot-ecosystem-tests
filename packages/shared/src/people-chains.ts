@@ -183,15 +183,18 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
    */
 
   let setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.eve)
+  let setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.eve))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
+
   const identityInfo = registrationInfo.info
-  assert(identityInfo.eq(identity))
+  await check(registrationInfo.info).toMatchSnapshot('identity right after set identity')
 
   /**
    * Request judgements on identity that was just set
@@ -202,11 +205,13 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   const reqJudgAliceTx = txApi.identity.requestJudgement(0, 1)
   const reqJudgBobTx = txApi.identity.requestJudgement(1, 0)
 
+  // Batch txs to request 2 judgements in 1 tx
   const batchedTx = peopleClient.api.tx.utility.batchAll([reqJudgAliceTx.method.toHex(), reqJudgBobTx.method.toHex()])
-
-  await batchedTx.signAndSend(defaultAccounts.eve)
+  const batchedEvents = await sendTransaction(batchedTx.signAsync(defaultAccounts.eve))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(batchedEvents, 'identity').toMatchSnapshot('double judgment request events')
 
   /**
    * Provide a judgement on Eve's request
@@ -218,9 +223,11 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
     'Reasonable',
     identityInfo.hash.toHex(),
   )
-  await provJudgTx.signAndSend(defaultAccounts.alice)
+  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccounts.alice))
 
   await peopleClient.chain.newBlock()
+
+  checkEvents(provJudgEvents, 'identity').toMatchSnapshot('judgement provision events')
 
   /**
    * Compare pre and post-judgement identity information.
@@ -229,27 +236,26 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
-  assert(judgedRegistrationInfo.judgements.length === 2, 'There should only 2 judgements on the account.')
-
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
+
+  await check(judgedIdentityInfo.toHuman()).toMatchObject(identity)
+
   assert(identityInfo.eq(judgedIdentityInfo), 'Identity information changed after judgement')
-
-  let aliceJudgement: ITuple<[u32, PalletIdentityJudgement]>
-  let bobJudgement: ITuple<[u32, PalletIdentityJudgement]>
-  if (judgedRegistrationInfo.judgements[0][0].eq(0)) {
-    aliceJudgement = judgedRegistrationInfo.judgements[0]
-    bobJudgement = judgedRegistrationInfo.judgements[1]
-  } else {
-    bobJudgement = judgedRegistrationInfo.judgements[0]
-    aliceJudgement = judgedRegistrationInfo.judgements[1]
-  }
-
-  assert(aliceJudgement[0].eq('0'), 'Alice, from whom a judgement was received, should be the 0th registrar')
-  assert(aliceJudgement[1].isReasonable, 'The judgement immediately after _this_ judgement should be "Reasonable"')
-
-  assert(bobJudgement[0].eq('1'), 'Bob should be the 1th registrar')
-  assert(bobJudgement[1].isFeePaid, "Bob's judgement should be pending.")
-  assert(bobJudgement[1].asFeePaid.eq(0), 'Bob charges no registrar fee.')
+  check(judgedRegistrationInfo.judgements).toMatchSnapshot("eve's judgements after one has been provided")
+  check(judgedRegistrationInfo.judgements.sort()).toMatchObject([
+    [
+      0,
+      {
+        reasonable: null,
+      },
+    ],
+    [
+      1,
+      {
+        feePaid: 0,
+      },
+    ],
+  ])
 
   /**
    * Reset Eve's identity
@@ -258,9 +264,11 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   // It is acceptable to use the same identity as before - what matters is the submission of an
   // `set_identity` extrinsic.
   setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.eve)
+  setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.eve))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity twice events')
 
   /**
    * Requery judgement data
@@ -269,14 +277,18 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   const resetIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
   assert(resetIdentityInfoReply.isSome, 'Failed to query identity after new identity request')
   const resetRegistrationInfo = resetIdentityInfoReply.unwrap()[0]
-
   const resetIdentityInfo: PalletIdentityLegacyIdentityInfo = resetRegistrationInfo.info
-  assert(resetIdentityInfo.eq(identity), 'Identity information changed after judgement')
 
-  assert(resetRegistrationInfo.judgements.length === 1, 'There should now be only 1 judgement on Eve.')
+  await check(resetIdentityInfo.toJSON()).toMatchObject(judgedIdentityInfo.toJSON())
 
-  const newBobJudgement = resetRegistrationInfo.judgements[0]
-  assert(newBobJudgement.eq(bobJudgement), "Bob's pending judgement shouldn't have changed.")
+  await check(resetRegistrationInfo.judgements).toMatchObject([
+    [
+      1,
+      {
+        feePaid: 0,
+      },
+    ],
+  ])
 }
 
 /**
@@ -673,12 +685,12 @@ export function peopleChainE2ETests<
       await setIdentityThenRequestAndProvideJudgement(peopleChain)
     })
 
-    test('setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work', async () => {
-      await setIdentityThenRequesThenCancelThenClear(peopleChain)
-    })
-
     test('setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work', async () => {
       await setIdentityRequestJudgementTwiceThenResetIdentity(peopleChain)
+    })
+
+    test('setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work', async () => {
+      await setIdentityThenRequesThenCancelThenClear(peopleChain)
     })
 
     test('setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work', async () => {

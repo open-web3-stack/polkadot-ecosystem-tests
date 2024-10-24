@@ -1,6 +1,44 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot People > setting on-chain identity and requesting judgement should work > identity right after set identity 1`] = `
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > double judgment request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+  {
+    "data": {
+      "registrarIndex": 1,
+      "who": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > eve's judgements after one has been provided 1`] = `
+[
+  [
+    0,
+    {
+      "reasonable": null,
+    },
+  ],
+  [
+    1,
+    {
+      "feePaid": 0,
+    },
+  ],
+]
+`;
+
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > identity right after set identity 1`] = `
 {
   "discord": {
     "raw": "0x746573745f646973636f7264",
@@ -33,12 +71,12 @@ exports[`Polkadot People > setting on-chain identity and requesting judgement sh
 }
 `;
 
-exports[`Polkadot People > setting on-chain identity and requesting judgement should work > judgement provision events 1`] = `
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > judgement provision events 1`] = `
 [
   {
     "data": {
       "registrarIndex": 0,
-      "target": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "target": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
     },
     "method": "JudgementGiven",
     "section": "identity",
@@ -46,24 +84,23 @@ exports[`Polkadot People > setting on-chain identity and requesting judgement sh
 ]
 `;
 
-exports[`Polkadot People > setting on-chain identity and requesting judgement should work > judgement request events 1`] = `
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > set identity events 1`] = `
 [
   {
     "data": {
-      "registrarIndex": 0,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
     },
-    "method": "JudgementRequested",
+    "method": "IdentitySet",
     "section": "identity",
   },
 ]
 `;
 
-exports[`Polkadot People > setting on-chain identity and requesting judgement should work > set identity events 1`] = `
+exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > set identity twice events 1`] = `
 [
   {
     "data": {
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
     },
     "method": "IdentitySet",
     "section": "identity",
