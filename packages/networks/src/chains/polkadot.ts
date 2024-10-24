@@ -15,11 +15,11 @@ const getInitStorages = () => ({
     Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10 * 1e12 } }]],
   },
   ParasDisputes: {
-    // those can makes block building super slow
+    // these can makes block building super slow
     $removePrefix: ['disputes'],
   },
   Dmp: {
-    // clear existing dmp to avoid impact test result
+    // clear existing dmp to avoid impacting test result
     $removePrefix: ['downwardMessageQueues'],
   },
 })

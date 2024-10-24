@@ -2,9 +2,12 @@
 	"name": "@e2e-test/shared",
 	"type": "module",
 	"dependencies": {
+		"@acala-network/chopsticks": "^0.16.0",
 		"@acala-network/chopsticks-testing": "^0.16.0",
 		"@e2e-test/networks": "workspace:*",
-		"@polkadot/api": "^12.4.2"
+		"@polkadot/api": "^12.4.2",
+		"@polkadot/types": "12.4.2",
+		"@polkadot/types-augment": "^12.4.2"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
