@@ -107,3 +107,125 @@ exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements
   },
 ]
 `;
+
+exports[`Polkadot People > setting on-chain identity and requesting judgement should work > identity right after set identity 1`] = `
+{
+  "discord": {
+    "raw": "0x746573745f646973636f7264",
+  },
+  "display": {
+    "raw": "0x5465737420446973706c6179",
+  },
+  "email": {
+    "raw": "0x746573745f6164647265737340746573742e696f",
+  },
+  "github": {
+    "raw": "0x746573745f676974687562",
+  },
+  "image": {
+    "raw": "0x74657374",
+  },
+  "legal": {
+    "raw": "0x46697273744e616d65204c6173744e616d65",
+  },
+  "matrix": {
+    "raw": "0x40746573743a746573745f7365727665722e696f",
+  },
+  "pgpFingerprint": "0x6131623263336434653566366737683869396a31",
+  "twitter": {
+    "raw": "0x40746573745f74776974746572",
+  },
+  "web": {
+    "raw": "0x687474703a2f2f746573742e74652f6d65",
+  },
+}
+`;
+
+exports[`Polkadot People > setting on-chain identity and requesting judgement should work > judgement provision events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "target": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "JudgementGiven",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity and requesting judgement should work > judgement request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity and requesting judgement should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > cancel judgement events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "JudgementUnrequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > clear identity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 2000000000)",
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "IdentityCleared",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > judgement request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;

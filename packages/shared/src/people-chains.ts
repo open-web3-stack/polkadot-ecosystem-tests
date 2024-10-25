@@ -314,27 +314,28 @@ export async function setIdentityThenRequesThenCancelThenClear<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.bob)
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
 
-  assert(
-    registrationInfo.judgements.isEmpty,
-    'Error: immediately after `setIdentity`, there should be no judgments on the identity.',
-  )
+  await check(registrationInfo.judgements).toMatchObject([])
 
   /**
    * Request a judgement on identity that was just set
    */
 
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
-  await reqJudgTx.signAndSend(defaultAccounts.bob)
+  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(reqJudgEvents, 'identity').toMatchSnapshot('judgement request events')
 
   /**
    * Check post-request identity state
@@ -344,40 +345,43 @@ export async function setIdentityThenRequesThenCancelThenClear<
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
 
-  assert(provisionalRegistrationInfo.judgements.length === 1, 'There should only be 1 judgement after requesting it.')
-
-  // Freely indexing into the `Vec` here, as it *should* have 1 element.
-  const provisionalJudgement: ITuple<[u32, PalletIdentityJudgement]> = provisionalRegistrationInfo.judgements[0]
-  assert(provisionalJudgement[0].eq('0'), 'Alice, to whom a request was made, should be the 0th registrar')
-  assert(provisionalJudgement[1].isFeePaid, 'The judgement immediately after a request should be "FeePaid"')
-  assert(provisionalJudgement[1].asFeePaid.eq(1), "Alice's registrar fee should be set to `1`")
+  // Recall that Alice is the 0th registrar, with a minimum fee of 1.
+  await check(provisionalRegistrationInfo.judgements.toJSON()).toMatchObject([
+    [
+      0,
+      {
+        feePaid: 1,
+      },
+    ],
+  ])
 
   /**
    * Cancel the previous judgement request
    */
 
   const cancelJudgTx = txApi.identity.cancelRequest(0)
-  await cancelJudgTx.signAndSend(defaultAccounts.bob)
+  const cancelJudgEvents = await sendTransaction(cancelJudgTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
 
+  await checkEvents(cancelJudgEvents, 'identity').toMatchSnapshot('cancel judgement events')
+
   const newIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
-  assert(newIdentityInfoReply.isSome, 'Failed to query set identity')
+  assert(newIdentityInfoReply.isSome, 'Failed to query identity after judgement cancellation')
   const newRegistrationInfo: PalletIdentityRegistration = newIdentityInfoReply.unwrap()[0]
 
-  assert(
-    newRegistrationInfo.judgements.isEmpty,
-    'Error: immediately after `cancelRequest`, there should be no judgments on the identity.',
-  )
+  await check(newRegistrationInfo.judgements.toJSON()).toMatchObject([])
 
   /**
    * Clear the tentatively set identity
    */
 
   const clearIdTx = txApi.identity.clearIdentity()
-  await clearIdTx.signAndSend(defaultAccounts.bob)
+  const clearIdEvents = await sendTransaction(clearIdTx.signAsync(defaultAccounts.bob))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(clearIdEvents, 'identity').toMatchSnapshot('clear identity events')
 
   const identityInfoNullReply = await querier.identity.identityOf(defaultAccounts.bob.address)
   assert(identityInfoNullReply.isNone, "Bob's identity should be empty after it is cleared")
