@@ -554,52 +554,60 @@ export async function addRegistrarViaRelayAsRoot<
    * Checks to people parachain's registrar list at several points of interest.
    */
 
-  const registrarAddresses = [
-    defaultAccounts.alice.address,
-    defaultAccounts.bob.address,
-    defaultAccounts.charlie.address,
+  // Required for address format conversions
+  const keyring = new Keyring()
+
+  // Recall that, in the people chain used for tests, 2 initial test registrars exist.
+  const registrars = [
+    {
+      account: keyring.encodeAddress(defaultAccounts.alice.address, 0),
+      fee: 1,
+      fields: 0,
+    },
+
+    {
+      account: keyring.encodeAddress(defaultAccounts.bob.address, 0),
+      fee: 0,
+      fields: 0,
+    },
   ]
 
   const registrarsBeforeRelayBlock = await peopleClient.api.query.identity.registrars()
 
-  /**
-   * Compare two sets of registrars
-   * 1. those defined above, taken from the statically defined test parachain's registrars
-   * 2. those obtained via `.api.query.identity.registrars()`
-   *
-   * @param registrarsAtGivenMoment Data obtained from querying parachain's registrars at a given block
-   * @param errMsg Message to be used by failed assertions on expected registrars
-   */
-  const assertionHelper = (registrarsAtGivenMoment: Vec<Option<PalletIdentityRegistrarInfo>>, errMsg: string) => {
-    for (let i = 0; i < registrarsAtGivenMoment.length; i++) {
-      const reg = registrarsAtGivenMoment[i].unwrap().account
+  await check(registrarsBeforeRelayBlock).toMatchSnapshot('registrars before relay block')
+  await check(registrarsBeforeRelayBlock).toMatchObject(
+    registrars,
+    'Registrars before relay chain block differ from expected',
+  )
 
-      const augmentedErrMsg = errMsg + ': ' + reg + 'and ' + registrarAddresses[i]
-
-      assert(reg.eq(registrarAddresses[i]), augmentedErrMsg)
-    }
-  }
-
-  // Recall that, in the people chain's definition, 2 test registrars exist.
-  assert(registrarsBeforeRelayBlock.length === 2)
-  assertionHelper(registrarsBeforeRelayBlock, 'Registrars before relay chain block differ from expected')
-
-  // Create a new block in the relay chain so that the above XCM call can be executed in the
-  // parachain
+  // Create a new block in the relay chain so that the previous XCM call can take effect in the
+  // parachain.
   await relayClient.chain.newBlock()
 
   const registrarsAfterRelayBlock = await peopleClient.api.query.identity.registrars()
 
-  assert(registrarsBeforeRelayBlock.length === 2)
-  assertionHelper(registrarsAfterRelayBlock, 'Registrars after relay chain block differ from expected')
+  await check(registrarsAfterRelayBlock).toMatchSnapshot('registrars after relay block')
+  await check(registrarsAfterRelayBlock).toMatchObject(
+    registrars,
+    'Registrars after relay chain block differ from expected',
+  )
 
-  // Also advance a block in the parachain - otherwise, the above call's effect would not be visible.
+  // Also advance a block in the parachain - otherwise, the XCM call's effect would not be visible.
   await peopleClient.chain.newBlock()
+
+  registrars.push({
+    account: keyring.encodeAddress(defaultAccounts.charlie.address, 0),
+    fee: 0,
+    fields: 0,
+  })
 
   const registrarsAfterParaBlock = await peopleClient.api.query.identity.registrars()
 
-  assert(registrarsAfterParaBlock.length === 3)
-  assertionHelper(registrarsAfterParaBlock, 'Registrars after parachain block differ from expected')
+  await check(registrarsAfterParaBlock).toMatchSnapshot('registrars after parachain block')
+  await check(registrarsAfterParaBlock).toMatchObject(
+    registrars,
+    'Registrars after parachain chain block differ from expected',
+  )
 }
 
 /**
@@ -618,7 +626,7 @@ async function sendXcmFromRelay(
   },
   encodedChainCallData: `0x${string}`,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
-) {
+): Promise<any> {
   // Destination of the XCM message sent from the relay chain to the parachain via `xcmPallet`
   const dest = {
     V4: {

@@ -1,5 +1,55 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot People > adding a registrar as root from the relay chain works > registrars after parachain block 1`] = `
+[
+  {
+    "account": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    "fee": 0,
+    "fields": 0,
+  },
+  {
+    "account": "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
+exports[`Polkadot People > adding a registrar as root from the relay chain works > registrars after relay block 1`] = `
+[
+  {
+    "account": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
+exports[`Polkadot People > adding a registrar as root from the relay chain works > registrars before relay block 1`] = `
+[
+  {
+    "account": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
 exports[`Polkadot People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > double judgment request events 1`] = `
 [
   {
