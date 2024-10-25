@@ -8,7 +8,6 @@
  * @module
  */
 
-import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
 import { StorageValues } from '@acala-network/chopsticks'
@@ -16,11 +15,9 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 
-import { ApiPromise } from '@polkadot/api'
-import { ITuple } from '@polkadot/types/types'
-import { Option, Vec, u128, u32 } from '@polkadot/types'
+import { ApiPromise, Keyring } from '@polkadot/api'
+import { Option, Vec, u128 } from '@polkadot/types'
 import {
-  PalletIdentityJudgement,
   PalletIdentityLegacyIdentityInfo,
   PalletIdentityRegistrarInfo,
   PalletIdentityRegistration,
@@ -410,9 +407,11 @@ export async function setIdentityThenAddSubsThenRemove<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  await setIdTx.signAndSend(defaultAccounts.alice)
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.alice))
 
   await peopleClient.chain.newBlock()
+
+  await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
   /**
    * Add Bob and Charlie as subidentities of Alice
@@ -422,65 +421,87 @@ export async function setIdentityThenAddSubsThenRemove<
     [defaultAccounts.bob.address, { Raw: 'bob' }],
     [defaultAccounts.charlie.address, { Raw: 'charlie' }],
   ])
-  setSubsTx.signAndSend(defaultAccounts.alice)
+  const setSubsEvents = await sendTransaction(setSubsTx.signAsync(defaultAccounts.alice))
 
   // Withouth a second block being mined, the `setSubs` extrinsic will not take effect.
-  await peopleClient.dev.newBlock({ count: 2 })
+  await peopleClient.dev.newBlock({ count: 1 })
+
+  // `pallet_identity::set_subs` does not emit any events at the moment (Oct 2024), so this will
+  // be empty in the snapshot.
+  await checkEvents(setSubsEvents).toMatchSnapshot('set subidentities events')
 
   /**
    * Check Alice, Bob and Charlie's statuses regarding sub/super identities
    */
 
+  // Required for address format conversions
+  const keyring = new Keyring()
+
   let aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
   const doubleIdDepositAmnt: u128 = aliceSubData[0]
-  assert(
-    aliceSubData[0].gt(new BN(0)) && aliceSubData[0].isEven,
-    'Alice added two subidentities, so the subaccount deposit should be even',
-  )
-  assert(
-    aliceSubData[1].eq([defaultAccounts.bob.address, defaultAccounts.charlie.address]),
-    'Alice should have 2 subidentities',
-  )
+
+  await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot("alice's two subidentities")
+  await check(aliceSubData[1]).toMatchObject([
+    keyring.encodeAddress(defaultAccounts.bob.address, 0),
+    keyring.encodeAddress(defaultAccounts.charlie.address, 0),
+  ])
 
   let bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
+  await check(bobSuperData).toMatchSnapshot("bob's superaccount data")
   assert(bobSuperData.isSome)
-  assert(bobSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
-  assert(bobSuperData.unwrap()[1].eq({ Raw: 'bob' }))
+  await check(bobSuperData.unwrap().toJSON()).toMatchObject([
+    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    // 'bob' in hex
+    { raw: '0x626f62' },
+  ])
 
   let charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  await check(charlieSuperData).toMatchSnapshot("charlie's superaccount data")
   assert(charlieSuperData.isSome)
-  assert(charlieSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
-  assert(charlieSuperData.unwrap()[1].eq({ Raw: 'charlie' }))
+  await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
+    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    // 'charlie' in hex
+    { raw: '0x636861726c6965' },
+  ])
 
   /**
    * Rename Charles' subidentity (as Alice)
    */
 
   const renameSubTx = txApi.identity.renameSub(defaultAccounts.charlie.address, { Raw: 'carolus' })
-  renameSubTx.signAndSend(defaultAccounts.alice)
+  const renameSubEvents = await sendTransaction(renameSubTx.signAsync(defaultAccounts.alice))
 
-  // Withouth a second block being mined, the `renameSub` extrinsic will not take effect.
-  await peopleClient.dev.newBlock({ count: 2 })
+  await peopleClient.dev.newBlock({ count: 1 })
+
+  await checkEvents(renameSubEvents, 'identity').toMatchSnapshot('rename subidentity events')
 
   charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  // `pallet_identity::rename_sub` does not emit any events at the moment (Oct 2024), so this will
+  // be empty in the snapshot.
+  await check(charlieSuperData).toMatchSnapshot("carolus' superaccount data")
+
   assert(charlieSuperData.isSome)
-  assert(charlieSuperData.unwrap()[0].eq(defaultAccounts.alice.address))
-  assert(charlieSuperData.unwrap()[1].eq({ Raw: 'carolus' }), "Subidentity's name remains unchanged")
+  await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
+    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    // 'carolus' in hex
+    { raw: '0x6361726f6c7573' },
+  ])
 
   /**
    * As Alice, remove Charlie as a subidentity
    */
 
   const removeSubTx = txApi.identity.removeSub(defaultAccounts.charlie.address)
-  removeSubTx.signAndSend(defaultAccounts.alice)
+  const removeSubEvents = await sendTransaction(removeSubTx.signAsync(defaultAccounts.alice))
 
-  // Withouth a second block being mined, the `removeSub` extrinsic will not take effect.
-  await peopleClient.dev.newBlock({ count: 2 })
+  await peopleClient.dev.newBlock({ count: 1 })
+
+  await checkEvents(removeSubEvents, 'identity').toMatchSnapshot('remove subidentity events')
 
   aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot('subidentity data after 1st subid removal')
   assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
-  assert(aliceSubData[0].gt(new BN(0)), "After removing one subidentity, the other's deposit should remain")
-  assert(aliceSubData[1].eq([defaultAccounts.bob.address]), 'Alice should only have Bob as a subidentity')
+  await check(aliceSubData[1]).toMatchObject([keyring.encodeAddress(defaultAccounts.bob.address, 0)])
 
   charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
   assert(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity')
@@ -490,18 +511,17 @@ export async function setIdentityThenAddSubsThenRemove<
    */
 
   const quitSubTx = txApi.identity.quitSub()
-  quitSubTx.signAndSend(defaultAccounts.bob)
+  const quitSubEvents = await sendTransaction(quitSubTx.signAsync(defaultAccounts.bob))
 
-  // Withouth a second block being mined, the `quitSub` extrinsic will not take effect.
-  await peopleClient.dev.newBlock({ count: 2 })
+  await peopleClient.dev.newBlock({ count: 1 })
+
+  await checkEvents(quitSubEvents, 'identity').toMatchSnapshot('quit subidentity events')
 
   aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
-
-  assert(aliceSubData[0].isZero, 'After removal of the second subidentity, no deposits should remain')
-  assert(aliceSubData[1].isEmpty, 'Alice should now have no subidentities')
+  await check(aliceSubData).toMatchObject([0, []])
 
   bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
-  assert(bobSuperData.isNone, 'Charlie should no longer have a supraidentity')
+  await check(bobSuperData.toJSON()).toMatchObject(null, 'Bob should no longer have a supraidentity')
 }
 
 /**

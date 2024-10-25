@@ -179,6 +179,146 @@ exports[`Polkadot People > setting on-chain identity and requesting judgement sh
 ]
 `;
 
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > alice's two subidentities 1`] = `
+[
+  4010600000,
+  [
+    "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
+  ],
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > bob's superaccount data 1`] = `
+[
+  "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+  {
+    "raw": "0x626f62",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > carolus' superaccount data 1`] = `
+[
+  "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+  {
+    "raw": "0x6361726f6c7573",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > charlie's superaccount data 1`] = `
+[
+  "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+  {
+    "raw": "0x636861726c6965",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > quit subidentity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 2000000000)",
+      "main": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "sub": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "SubIdentityRevoked",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > remove subidentity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 2000000000)",
+      "main": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "sub": "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
+    },
+    "method": "SubIdentityRemoved",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `[]`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 28000000)",
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 4000000000)",
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Reserved",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "actualFee": "(rounded 28000000)",
+      "tip": 0,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 720000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > subidentity data after 1st subid removal 1`] = `
+[
+  2005300000,
+  [
+    "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+  ],
+]
+`;
+
 exports[`Polkadot People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > cancel judgement events 1`] = `
 [
   {
