@@ -16,12 +16,8 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { Option, Vec, u128 } from '@polkadot/types'
-import {
-  PalletIdentityLegacyIdentityInfo,
-  PalletIdentityRegistrarInfo,
-  PalletIdentityRegistration,
-} from '@polkadot/types/lookup'
+import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
+import { u128 } from '@polkadot/types'
 
 import { check, checkEvents } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
@@ -545,7 +541,30 @@ export async function addRegistrarViaRelayAsRoot<
 
   const [relayClient, peopleClient] = await setupNetworks(relayChain, peopleChain)
 
+  /**
+   * Executing extrinsic with wrong origin
+   */
+
+  await peopleClient.dev.setStorage({
+    System: {
+      account: [[[defaultAccounts.charlie.address], { providers: 1, data: { free: 1e10 } }]],
+    },
+  })
+
   const addRegistrarTx = peopleClient.api.tx.identity.addRegistrar(defaultAccounts.charlie.address)
+  const addRegistrarEvents = await sendTransaction(addRegistrarTx.signAsync(defaultAccounts.charlie))
+
+  // First, try sending the `add_registrar` call without the proper origin: just as `Signed`,
+  // which is insufficient.
+  await peopleClient.dev.newBlock()
+
+  // The recorded event should be `ExtrinsicFailed` with a `BadOrigin`.
+  await checkEvents(addRegistrarEvents, 'system').toMatchSnapshot('call add registrar with wrong origin')
+
+  /**
+   * XCM from relay chain
+   */
+
   const encodedPeopleChainCalldata = addRegistrarTx.method.toHex()
 
   await sendXcmFromRelay(relayClient, encodedPeopleChainCalldata, { proofSize: '10000', refTime: '1000000000' })
@@ -582,7 +601,7 @@ export async function addRegistrarViaRelayAsRoot<
 
   // Create a new block in the relay chain so that the previous XCM call can take effect in the
   // parachain.
-  await relayClient.chain.newBlock()
+  await relayClient.dev.newBlock()
 
   const registrarsAfterRelayBlock = await peopleClient.api.query.identity.registrars()
 
@@ -593,7 +612,7 @@ export async function addRegistrarViaRelayAsRoot<
   )
 
   // Also advance a block in the parachain - otherwise, the XCM call's effect would not be visible.
-  await peopleClient.chain.newBlock()
+  await peopleClient.dev.newBlock()
 
   registrars.push({
     account: keyring.encodeAddress(defaultAccounts.charlie.address, 0),
