@@ -15,8 +15,9 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 
-import { ApiPromise, Keyring } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api'
 import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
+import { encodeAddress } from '@polkadot/util-crypto'
 import { u128 } from '@polkadot/types'
 
 import { check, checkEvents } from './helpers/index.js'
@@ -388,11 +389,12 @@ export async function setIdentityThenRequesThenCancelThenClear<
  * 4. having another subidentity remove itself
  *
  * @param peopleChain People parachain where the entire process is run.
+ * @param addressEncoding The network's required address encoding. See https://github.com/paritytech/ss58-registry/blob/main/ss58-registry.json
  */
 export async function setIdentityThenAddSubsThenRemove<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>) {
+>(peopleChain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
   const [peopleClient] = await setupNetworks(peopleChain)
 
   const querier = peopleClient.api.query
@@ -424,29 +426,26 @@ export async function setIdentityThenAddSubsThenRemove<
 
   // `pallet_identity::set_subs` does not emit any events at the moment (Oct 2024), so this will
   // be empty in the snapshot.
-  await checkEvents(setSubsEvents).toMatchSnapshot('set subidentities events')
+  await checkEvents(setSubsEvents, 'identity').toMatchSnapshot('set subidentities events')
 
   /**
    * Check Alice, Bob and Charlie's statuses regarding sub/super identities
    */
-
-  // Required for address format conversions
-  const keyring = new Keyring()
 
   let aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
   const doubleIdDepositAmnt: u128 = aliceSubData[0]
 
   await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot("alice's two subidentities")
   await check(aliceSubData[1]).toMatchObject([
-    keyring.encodeAddress(defaultAccounts.bob.address, 0),
-    keyring.encodeAddress(defaultAccounts.charlie.address, 0),
+    encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    encodeAddress(defaultAccounts.charlie.address, addressEncoding),
   ])
 
   let bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
   await check(bobSuperData).toMatchSnapshot("bob's superaccount data")
   assert(bobSuperData.isSome)
   await check(bobSuperData.unwrap().toJSON()).toMatchObject([
-    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
     // 'bob' in hex
     { raw: '0x626f62' },
   ])
@@ -455,7 +454,7 @@ export async function setIdentityThenAddSubsThenRemove<
   await check(charlieSuperData).toMatchSnapshot("charlie's superaccount data")
   assert(charlieSuperData.isSome)
   await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
-    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
     // 'charlie' in hex
     { raw: '0x636861726c6965' },
   ])
@@ -478,7 +477,7 @@ export async function setIdentityThenAddSubsThenRemove<
 
   assert(charlieSuperData.isSome)
   await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
-    keyring.encodeAddress(defaultAccounts.alice.publicKey, 0),
+    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
     // 'carolus' in hex
     { raw: '0x6361726f6c7573' },
   ])
@@ -497,7 +496,7 @@ export async function setIdentityThenAddSubsThenRemove<
   aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
   await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot('subidentity data after 1st subid removal')
   assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
-  await check(aliceSubData[1]).toMatchObject([keyring.encodeAddress(defaultAccounts.bob.address, 0)])
+  await check(aliceSubData[1]).toMatchObject([encodeAddress(defaultAccounts.bob.address, addressEncoding)])
 
   charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
   assert(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity')
@@ -534,7 +533,11 @@ export async function addRegistrarViaRelayAsRoot<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustom, TInitStoragesRelay>,
+  peopleChain: Chain<TCustom, TInitStoragesPara>,
+  addressEncoding: number,
+) {
   /**
    * Setup relay and parachain clients
    */
@@ -573,19 +576,16 @@ export async function addRegistrarViaRelayAsRoot<
    * Checks to people parachain's registrar list at several points of interest.
    */
 
-  // Required for address format conversions
-  const keyring = new Keyring()
-
   // Recall that, in the people chain used for tests, 2 initial test registrars exist.
   const registrars = [
     {
-      account: keyring.encodeAddress(defaultAccounts.alice.address, 0),
+      account: encodeAddress(defaultAccounts.alice.address, addressEncoding),
       fee: 1,
       fields: 0,
     },
 
     {
-      account: keyring.encodeAddress(defaultAccounts.bob.address, 0),
+      account: encodeAddress(defaultAccounts.bob.address, addressEncoding),
       fee: 0,
       fields: 0,
     },
@@ -615,7 +615,7 @@ export async function addRegistrarViaRelayAsRoot<
   await peopleClient.dev.newBlock()
 
   registrars.push({
-    account: keyring.encodeAddress(defaultAccounts.charlie.address, 0),
+    account: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
     fee: 0,
     fields: 0,
   })
@@ -712,6 +712,11 @@ async function sendXcmFromRelay(
   })
 }
 
+export enum PeopleChain {
+  Polkadot = 'Polkadot',
+  Kusama = 'Kusama',
+}
+
 /**
  * Test runner for people chains' E2E tests.
  *
@@ -726,11 +731,21 @@ export function peopleChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  topLevelDescription: string,
-  relayChain: Chain<TCustom, TInitStoragesRelay>,
-  peopleChain: Chain<TCustom, TInitStoragesPara>,
-) {
+>(pc: PeopleChain, relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
+  let topLevelDescription: string
+  let addressEncoding: number
+
+  switch (pc) {
+    case PeopleChain.Kusama:
+      topLevelDescription = 'Kusama People'
+      addressEncoding = 2
+      break
+    case PeopleChain.Polkadot:
+      topLevelDescription = 'Polkadot People'
+      addressEncoding = 0
+      break
+  }
+
   describe(topLevelDescription, function () {
     test('setting on-chain identity and requesting judgement should work', async () => {
       await setIdentityThenRequestAndProvideJudgement(peopleChain)
@@ -745,11 +760,11 @@ export function peopleChainE2ETests<
     })
 
     test('setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work', async () => {
-      await setIdentityThenAddSubsThenRemove(peopleChain)
+      await setIdentityThenAddSubsThenRemove(peopleChain, addressEncoding)
     })
 
     test('adding a registrar as root from the relay chain works', async () => {
-      await addRegistrarViaRelayAsRoot(relayChain, peopleChain)
+      await addRegistrarViaRelayAsRoot(relayChain, peopleChain, addressEncoding)
     })
   })
 }
