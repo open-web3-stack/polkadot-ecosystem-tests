@@ -17,7 +17,7 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > balance on from cha
 
 exports[`acala & moonbeam > acala transfer ACA to moonbeam > balance on to chain 1`] = `
 {
-  "balance": "(rounded 890000000000)",
+  "balance": "(rounded 328000000000)",
   "extra": null,
   "reason": {
     "sufficient": null,
@@ -128,8 +128,8 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > to chain xcm events
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 26000)",
-        "refTime": "(rounded 690000000)",
+        "proofSize": "(rounded 29000)",
+        "refTime": "(rounded 4200000000)",
       },
     },
     "method": "Processed",
@@ -220,7 +220,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > balance on from cha
 
 exports[`acala & moonbeam > acala transfer DOT to moonbeam > balance on to chain 1`] = `
 {
-  "balance": "(rounded 1000000000000)",
+  "balance": "(rounded 999000000000)",
   "extra": null,
   "reason": {
     "sufficient": null,
@@ -371,8 +371,8 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > to chain xcm events
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 26000)",
-        "refTime": "(rounded 690000000)",
+        "proofSize": "(rounded 29000)",
+        "refTime": "(rounded 4200000000)",
       },
     },
     "method": "Processed",
@@ -439,7 +439,7 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > balance on from ch
 
 exports[`acala & moonbeam > acala transfer LDOT to moonbeam > balance on to chain 1`] = `
 {
-  "balance": "(rounded 1000000000000)",
+  "balance": "(rounded 999000000000)",
   "extra": null,
   "reason": {
     "sufficient": null,
@@ -550,8 +550,8 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > to chain xcm event
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 26000)",
-        "refTime": "(rounded 690000000)",
+        "proofSize": "(rounded 29000)",
+        "refTime": "(rounded 4200000000)",
       },
     },
     "method": "Processed",
