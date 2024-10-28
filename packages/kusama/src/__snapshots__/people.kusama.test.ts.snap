@@ -279,7 +279,7 @@ exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > from chai
               "x1": [
                 {
                   "accountId32": {
-                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
                     "network": null,
                   },
                 },

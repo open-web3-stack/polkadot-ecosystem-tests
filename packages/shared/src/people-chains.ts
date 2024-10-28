@@ -176,6 +176,12 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
    * Set Eve's on-chain identity
    */
 
+  await peopleClient.dev.setStorage({
+    System: {
+      account: [[[defaultAccounts.eve.address], { providers: 1, data: { free: 1e10 } }]],
+    },
+  })
+
   let setIdTx = txApi.identity.setIdentity(identity)
   let setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.eve))
 
