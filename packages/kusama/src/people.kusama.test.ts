@@ -1,5 +1,6 @@
 import { describe } from 'vitest'
 
+import { defaultAccounts } from '@e2e-test/networks'
 import { kusama, peopleKusama } from '@e2e-test/networks/chains'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
@@ -16,6 +17,7 @@ describe('kusama & peopleKusama', async () => {
       fromChain: kusamaClient,
       toChain: peopleClient,
       balance: query.balances,
+      toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, peopleKusama.paraId!)),
     }
   })
@@ -25,6 +27,7 @@ describe('kusama & peopleKusama', async () => {
       fromChain: peopleClient,
       toChain: kusamaClient,
       balance: query.balances,
+      toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(peopleKSM, 1e12, tx.xcmPallet.relaychainV4),
     }
   })

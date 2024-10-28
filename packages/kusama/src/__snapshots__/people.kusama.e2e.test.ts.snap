@@ -1,0 +1,391 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama People > adding a registrar as root from the relay chain works > call add registrar with wrong origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 2600)",
+          "refTime": "(rounded 240000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama People > adding a registrar as root from the relay chain works > registrars after parachain block 1`] = `
+[
+  {
+    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "fee": 0,
+    "fields": 0,
+  },
+  {
+    "account": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
+exports[`Kusama People > adding a registrar as root from the relay chain works > registrars after relay block 1`] = `
+[
+  {
+    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
+exports[`Kusama People > adding a registrar as root from the relay chain works > registrars before relay block 1`] = `
+[
+  {
+    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "fee": 1,
+    "fields": 0,
+  },
+  {
+    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "fee": 0,
+    "fields": 0,
+  },
+]
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > double judgment request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+  {
+    "data": {
+      "registrarIndex": 1,
+      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > eve's judgements after one has been provided 1`] = `
+[
+  [
+    0,
+    {
+      "reasonable": null,
+    },
+  ],
+  [
+    1,
+    {
+      "feePaid": 0,
+    },
+  ],
+]
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > identity right after set identity 1`] = `
+{
+  "discord": {
+    "raw": "0x746573745f646973636f7264",
+  },
+  "display": {
+    "raw": "0x5465737420446973706c6179",
+  },
+  "email": {
+    "raw": "0x746573745f6164647265737340746573742e696f",
+  },
+  "github": {
+    "raw": "0x746573745f676974687562",
+  },
+  "image": {
+    "raw": "0x74657374",
+  },
+  "legal": {
+    "raw": "0x46697273744e616d65204c6173744e616d65",
+  },
+  "matrix": {
+    "raw": "0x40746573743a746573745f7365727665722e696f",
+  },
+  "pgpFingerprint": "0x6131623263336434653566366737683869396a31",
+  "twitter": {
+    "raw": "0x40746573745f74776974746572",
+  },
+  "web": {
+    "raw": "0x687474703a2f2f746573742e74652f6d65",
+  },
+}
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > judgement provision events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "target": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+    },
+    "method": "JudgementGiven",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work > set identity twice events 1`] = `
+[
+  {
+    "data": {
+      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity and requesting judgement should work > identity right after set identity 1`] = `
+{
+  "discord": {
+    "raw": "0x746573745f646973636f7264",
+  },
+  "display": {
+    "raw": "0x5465737420446973706c6179",
+  },
+  "email": {
+    "raw": "0x746573745f6164647265737340746573742e696f",
+  },
+  "github": {
+    "raw": "0x746573745f676974687562",
+  },
+  "image": {
+    "raw": "0x74657374",
+  },
+  "legal": {
+    "raw": "0x46697273744e616d65204c6173744e616d65",
+  },
+  "matrix": {
+    "raw": "0x40746573743a746573745f7365727665722e696f",
+  },
+  "pgpFingerprint": "0x6131623263336434653566366737683869396a31",
+  "twitter": {
+    "raw": "0x40746573745f74776974746572",
+  },
+  "web": {
+    "raw": "0x687474703a2f2f746573742e74652f6d65",
+  },
+}
+`;
+
+exports[`Kusama People > setting on-chain identity and requesting judgement should work > judgement provision events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "target": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "JudgementGiven",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity and requesting judgement should work > judgement request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity and requesting judgement should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > alice's two subidentities 1`] = `
+[
+  "(rounded 13368666620)",
+  [
+    "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+  ],
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > bob's superaccount data 1`] = `
+[
+  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  {
+    "raw": "0x626f62",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > carolus' superaccount data 1`] = `
+[
+  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  {
+    "raw": "0x6361726f6c7573",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > charlie's superaccount data 1`] = `
+[
+  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  {
+    "raw": "0x636861726c6965",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > quit subidentity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 6700000000)",
+      "main": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+      "sub": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "SubIdentityRevoked",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > remove subidentity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 6700000000)",
+      "main": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+      "sub": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+    },
+    "method": "SubIdentityRemoved",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `[]`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `[]`;
+
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > subidentity data after 1st subid removal 1`] = `
+[
+  6684333309,
+  [
+    "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+  ],
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > cancel judgement events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "JudgementUnrequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > clear identity events 1`] = `
+[
+  {
+    "data": {
+      "deposit": "(rounded 6700000000)",
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "IdentityCleared",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > judgement request events 1`] = `
+[
+  {
+    "data": {
+      "registrarIndex": 0,
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "JudgementRequested",
+    "section": "identity",
+  },
+]
+`;
+
+exports[`Kusama People > setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work > set identity events 1`] = `
+[
+  {
+    "data": {
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "IdentitySet",
+    "section": "identity",
+  },
+]
+`;
