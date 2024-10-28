@@ -10,13 +10,13 @@ const custom = {
   },
 }
 
-export const aliceRegistrar = {
+const aliceRegistrar = {
   account: defaultAccounts.alice.address,
   fee: 1,
   fields: 0,
 }
 
-export const bobRegistrar = {
+const bobRegistrar = {
   account: defaultAccounts.bob.address,
   fee: 0,
   fields: 0,
