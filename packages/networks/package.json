@@ -2,7 +2,7 @@
 	"name": "@e2e-test/networks",
 	"type": "module",
 	"dependencies": {
-		"@acala-network/chopsticks-testing": "^0.16.0"
+		"@acala-network/chopsticks-testing": "^1.0.0"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
