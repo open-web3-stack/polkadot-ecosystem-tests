@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "submitted": 23396908,
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 1300)",
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
