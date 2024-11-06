@@ -351,6 +351,24 @@ exports[`karura & kusama > kusama transfer KSM to karura > to chain dmp events 1
 [
   {
     "data": {
+      "count": 1,
+    },
+    "method": "DownwardMessagesReceived",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "dmqHead": "(hash)",
+      "weightUsed": {
+        "proofSize": "(rounded 8000)",
+        "refTime": "(rounded 530000000)",
+      },
+    },
+    "method": "DownwardMessagesProcessed",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
       "id": "(hash)",
       "origin": "Parent",
       "success": true,
