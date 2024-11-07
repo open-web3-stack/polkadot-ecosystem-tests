@@ -648,7 +648,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > balance on to chain
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 994000000000)",
+    "free": "(rounded 993000000000)",
     "frozen": 0,
     "reserved": 0,
   },
