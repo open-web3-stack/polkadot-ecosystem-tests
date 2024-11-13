@@ -49,7 +49,59 @@ exports[`polkadot & peoplePolkadot > Send dummy XCM > from chain ump messages 1`
         },
       },
       {
-        "clearOrigin": null,
+        "withdrawAsset": [
+          {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+        ],
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 1000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositAsset": {
+          "assets": {
+            "wild": {
+              "all": null,
+            },
+          },
+          "beneficiary": {
+            "interior": {
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
       },
       {
         "setTopic": "(redacted)",
@@ -63,15 +115,19 @@ exports[`polkadot & peoplePolkadot > Send dummy XCM > to chain ump events 1`] = 
 [
   {
     "data": {
-      "error": "Unsupported",
       "id": "(hash)",
       "origin": {
         "Ump": {
           "Para": "(rounded 1000)",
         },
       },
+      "success": false,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 140000000)",
+      },
     },
-    "method": "ProcessingFailed",
+    "method": "Processed",
     "section": "messageQueue",
   },
 ]
@@ -84,7 +140,7 @@ exports[`polkadot & peoplePolkadot > Send dummy XCM > tx events 1`] = `
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 307000000)",
+            "Fungible": 313000000,
           },
           "id": {
             "interior": "Here",
@@ -116,7 +172,53 @@ exports[`polkadot & peoplePolkadot > Send dummy XCM > tx events 1`] = `
         "parents": 1,
       },
       "message": [
-        "ClearOrigin",
+        {
+          "WithdrawAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+          ],
+        },
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": "All",
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
       ],
       "messageId": "(hash)",
       "origin": {

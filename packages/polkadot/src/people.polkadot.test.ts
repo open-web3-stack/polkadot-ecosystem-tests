@@ -40,15 +40,57 @@ describe('polkadot & peoplePolkadot', async () => {
       toAccount: defaultAccounts.charlie,
       tx: tx.xcmPallet.sendXCM(
         {
-          V3: {
+          V4: {
             parents: 1,
-            interior: 'here',
+            interior: 'Here',
           },
         },
         {
-          V3: [
+          V4: [
             {
-              ClearOrigin: {},
+              WithdrawAsset: [
+                {
+                  id: {
+                    parents: 0,
+                    interior: 'Here',
+                  },
+                  fun: { Fungible: 1e12 },
+                },
+              ],
+            },
+            {
+              BuyExecution: {
+                fees: {
+                  id: {
+                    parents: 0,
+                    interior: 'Here',
+                  },
+                  fun: {
+                    fungible: 1_000_000_000n,
+                  },
+                },
+                weight_limit: 'unlimited',
+              },
+            },
+            {
+              DepositAsset: {
+                assets: {
+                  wild: 'all',
+                },
+                beneficiary: {
+                  parents: 0,
+                  interior: {
+                    x1: [
+                      {
+                        accountId32: {
+                          id: '0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9',
+                          network: null,
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
             },
           ],
         },
