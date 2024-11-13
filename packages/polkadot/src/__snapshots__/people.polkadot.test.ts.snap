@@ -1,5 +1,144 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`polkadot & peoplePolkadot > Send dummy XCM > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 10000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > Send dummy XCM > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`polkadot & peoplePolkadot > Send dummy XCM > from chain ump messages 1`] = `
+[
+  {
+    "v4": [
+      {
+        "descendOrigin": {
+          "x1": [
+            {
+              "accountId32": {
+                "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                "network": {
+                  "polkadot": null,
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "setTopic": "(redacted)",
+      },
+    ],
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > Send dummy XCM > to chain ump events 1`] = `
+[
+  {
+    "data": {
+      "error": "Unsupported",
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+    },
+    "method": "ProcessingFailed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`polkadot & peoplePolkadot > Send dummy XCM > tx events 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 307000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        "ClearOrigin",
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
 exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > balance on from chain 1`] = `
 {
   "consumers": 0,

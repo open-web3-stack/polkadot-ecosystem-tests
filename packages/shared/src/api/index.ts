@@ -187,6 +187,11 @@ export const xcmPallet = {
         },
         0,
       ),
+  sendXCM:
+    (dest: any, xcm: any) =>
+    ({ api }: { api: ApiPromise }) => {
+      return api.tx.polkadotXcm.send(dest, xcm)
+    },
 }
 
 export const tx = {

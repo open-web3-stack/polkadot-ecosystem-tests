@@ -31,4 +31,28 @@ describe('polkadot & peoplePolkadot', async () => {
       tx: tx.xcmPallet.teleportAssetsV3(peopleDOT, 1e12, tx.xcmPallet.relaychainV4),
     }
   })
+
+  runXcmPalletUp('Send dummy XCM', async () => {
+    return {
+      fromChain: peopleClient,
+      toChain: polkadotClient,
+      balance: query.balances,
+      toAccount: defaultAccounts.charlie,
+      tx: tx.xcmPallet.sendXCM(
+        {
+          V3: {
+            parents: 1,
+            interior: 'here',
+          },
+        },
+        {
+          V3: [
+            {
+              ClearOrigin: {},
+            },
+          ],
+        },
+      ),
+    }
+  })
 })
