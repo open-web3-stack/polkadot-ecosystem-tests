@@ -1,8 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 1`] = `
+exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 1`] = `{}`;
+
+exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 2`] = `
 {
   "ongoing": {
+    "alarm": [
+      23598507,
+      [
+        23598507,
+        0,
+      ],
+    ],
     "deciding": null,
     "decisionDeposit": null,
     "enactment": {
@@ -19,7 +28,7 @@ exports[`Polkadot Governance > setting on-chain identity and requesting judgemen
       "amount": 10000000000,
       "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
     },
-    "submitted": 23396908,
+    "submitted": 23396907,
     "tally": {
       "ayes": 0,
       "nays": 0,
@@ -34,7 +43,21 @@ exports[`Polkadot Governance > setting on-chain identity and requesting judgemen
 [
   {
     "data": {
-      "index": "(rounded 1300)",
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum submission events 2`] = `
+[
+  {
+    "data": {
       "proposal": {
         "Inline": "(hash)",
       },
