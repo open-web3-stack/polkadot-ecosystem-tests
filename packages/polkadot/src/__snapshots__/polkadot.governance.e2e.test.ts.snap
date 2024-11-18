@@ -1,17 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 1`] = `{}`;
-
-exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum info 2`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info 1`] = `
 {
   "ongoing": {
-    "alarm": [
-      23598507,
-      [
-        23598507,
-        0,
-      ],
-    ],
     "deciding": null,
     "decisionDeposit": null,
     "enactment": {
@@ -28,7 +19,6 @@ exports[`Polkadot Governance > setting on-chain identity and requesting judgemen
       "amount": 10000000000,
       "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
     },
-    "submitted": 23396907,
     "tally": {
       "ayes": 0,
       "nays": 0,
@@ -39,7 +29,7 @@ exports[`Polkadot Governance > setting on-chain identity and requesting judgemen
 }
 `;
 
-exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum submission events 1`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum submission events 1`] = `
 [
   {
     "data": {
@@ -54,17 +44,86 @@ exports[`Polkadot Governance > setting on-chain identity and requesting judgemen
 ]
 `;
 
-exports[`Polkadot Governance > setting on-chain identity and requesting judgement should work > referendum submission events 2`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum vote events 1`] = `
 [
   {
     "data": {
-      "proposal": {
-        "Inline": "(hash)",
-      },
-      "track": 30,
+      "amount": "(rounded 150000000)",
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
     },
-    "method": "Submitted",
-    "section": "referenda",
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 50000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Locked",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 24000000)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 23000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 120000000)",
+      "who": "13UVJyLnbVp9RBZYFwFGyDvVd1y27Tt8tkntv6Q7JVPhFsTB",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 29000000)",
+      "who": "15MYgThgMfKf9Dz1TV1UC1RBiA8xDNYoGbKkkvXNtah8yACC",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "actualFee": "(rounded 150000000)",
+      "tip": 0,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;

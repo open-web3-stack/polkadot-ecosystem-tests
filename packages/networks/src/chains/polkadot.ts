@@ -12,10 +12,7 @@ const custom = {
 
 const getInitStorages = () => ({
   System: {
-    Account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 10 * 1e12 } }],
-      [['15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5'], { providers: 1, data: { free: 20 * 1e12 } }],
-    ],
+    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10000 * 1e10 } }]],
   },
   ParasDisputes: {
     // these can makes block building super slow

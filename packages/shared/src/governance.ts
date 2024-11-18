@@ -6,60 +6,18 @@ import { setupNetworks } from '@e2e-test/shared'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { BN } from 'bn.js'
-
-// `dot` is the name we gave to `npx papi add`
-import {
-  GovernanceOrigin,
-  MultiAddress,
-  PolkadotRuntimeOriginCaller,
-  PreimagesBounded,
-  TraitsScheduleDispatchTime,
-  dot,
-} from '@polkadot-api/descriptors'
-import { createClient } from 'polkadot-api'
-// import from "polkadot-api/ws-provider/node"
-// if you are running in a NodeJS environment
-import { DEV_PHRASE, entropyToMiniSecret, mnemonicToEntropy } from '@polkadot-labs/hdkd-helpers'
-import { getPolkadotSigner } from 'polkadot-api/signer'
-import { getWsProvider } from 'polkadot-api/ws-provider/node'
-import { sr25519CreateDerive } from '@polkadot-labs/hdkd'
-import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat'
-
-import { Keyring } from '@polkadot/api'
-import { Option, u32 } from '@polkadot/types'
+import { Option } from '@polkadot/types'
 import {
   PalletReferendaReferendumInfoConvictionVotingTally,
   PalletReferendaReferendumStatusConvictionVotingTally,
 } from '@polkadot/types/lookup'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-const entropy = mnemonicToEntropy(DEV_PHRASE)
-const miniSecret = entropyToMiniSecret(entropy)
-const derive = sr25519CreateDerive(miniSecret)
-const hdkdKeyPair = derive('//Alice')
-
-const aliceSigner = getPolkadotSigner(hdkdKeyPair.publicKey, 'Ed25519', hdkdKeyPair.sign)
-
-const keyring = new Keyring({
-  type: 'ed25519',
-})
-
-const alicePolkadotJs = keyring.addFromUri('//Alice')
-
-// Connect to the polkadot relay chain.
-const client = createClient(
-  // Polkadot-SDK Nodes have issues, we recommend adding this enhancer
-  // see Requirements page for more info
-  withPolkadotSdkCompat(getWsProvider('wss://rpc-polkadot.luckyfriday.io')),
-)
-
-const dotApi = client.getTypedApi(dot)
-
 /**
  * Test the process of
  * 1. creating a referendum for a treasury spend
- * 2. cancelling it
+ * 2. voting on it
+ * 3. cancelling it
  */
 export async function submitReferendumThenCancel<
   TCustom extends Record<string, unknown> | undefined,
@@ -114,15 +72,15 @@ export async function submitReferendumThenCancel<
    * Check the created referendum's data
    */
 
-  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+  let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
-  const referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
+  let referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
   // These fields must be excised from the queried referendum data before being put in the test
   // snapshot.
   // These fields contain epoch-sensitive data, which will cause spurious test failures
   // periodically.
-  unwantedFields = new RegExp('asdasdsadasdasd') //alarm|submitted")
+  unwantedFields = new RegExp('alarm|submitted')
   await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot('referendum info')
 
   assert(referendumData.isOngoing)
@@ -155,29 +113,53 @@ export async function submitReferendumThenCancel<
     support: 0,
   })
 
-  return
-
   /**
-   * Submit a referendum
+   * Vote on the referendum
    */
-  const transferTx = dotApi.tx.Balances.transfer_keep_alive({
-    dest: MultiAddress.Id(defaultAccounts.bob.address),
-    value: 10n ** 10n,
+
+  const aliceAyeVote = 5e10
+  const nayVote = 1e10
+
+  const voteTx = relayClient.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: {
+        aye: true,
+        conviction: 'Locked1x',
+      },
+      balance: aliceAyeVote,
+    },
   })
-
-  const proposalOrigin = PolkadotRuntimeOriginCaller.Origins(GovernanceOrigin.SmallTipper())
-  const enactMoment = TraitsScheduleDispatchTime.After(10)
-  const proposal = PreimagesBounded.Inline(encodedProposal)
-
-  const submitTx = dotApi.tx.Referenda.submit({
-    proposal_origin: proposalOrigin,
-    proposal,
-    enactment_moment: enactMoment,
-  })
-
-  const txFinalized = await submitTx.signAndSubmit(aliceSigner)
+  const voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
+
+  // Filtering for events only from the `convictionVoting` pallet would leave them empty.
+  // Voting events were only introduced in
+  // https://github.com/paritytech/polkadot-sdk/pull/4613
+  await checkEvents(voteEvents).toMatchSnapshot('referendum vote events')
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  referendumData = referendumDataOpt.unwrap()
+
+  assert(referendumData.isOngoing)
+  const ongoingRefWithVotes = referendumData.asOngoing
+
+  relayClient.api.tx.convictionVoting.unlock
+
+  // Remove `tally` property from ongoing referendum pre and post-voting data
+  const { tally: _tally1, ...ongoingRefNoTally } = ongoingRef
+  const { tally: _tally2, ...ongoingRefWithVotesNoTally } = ongoingRefWithVotes
+
+  // Check that, barring the recently introduced vote by alice, all else in the referendum's data
+  // remains the same.
+  await check(ongoingRefNoTally).toMatchObject(ongoingRefWithVotesNoTally)
+
+  await check(ongoingRefWithVotes.tally).toMatchObject({
+    ayes: 5e10,
+    nays: 0,
+    support: 5e10,
+  })
 
   /*   const events = dotApi.event.Referenda.Submitted.filter(txFinalized.events)
   check(events).toMatchSnapshot('submit referendum from system')
@@ -191,8 +173,12 @@ export function governanceE2ETests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
   describe('Polkadot Governance', function () {
-    test('setting on-chain identity and requesting judgement should work', { timeout: 1_000_000 }, async () => {
-      await submitReferendumThenCancel(relayChain, 0)
-    })
+    test(
+      'submitting referendum, voting on it, and then cancelling it should work',
+      { timeout: 1_000_000 },
+      async () => {
+        await submitReferendumThenCancel(relayChain, 0)
+      },
+    )
   })
 }
