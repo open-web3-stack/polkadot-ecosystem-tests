@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > balance on from chain 1`] = `
+exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,22 +15,22 @@ exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > bal
 }
 `;
 
-exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > balance on to chain 1`] = `
+exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 7000000000000)",
+    "free": 0,
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 1,
+  "providers": 0,
   "sufficients": 0,
 }
 `;
 
-exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > from chain ump messages 1`] = `
+exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > from chain ump messages 1`] = `
 [
   {
     "v4": [
@@ -100,7 +100,7 @@ exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > fro
 ]
 `;
 
-exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > to chain ump events 1`] = `
+exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -122,7 +122,7 @@ exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > to 
 ]
 `;
 
-exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > tx events 1`] = `
+exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx events 1`] = `
 [
   {
     "data": {
@@ -137,6 +137,91 @@ exports[`asset hub & polkadot > [XCM] Withdraw, Teleport, Receive, Deposit > tx 
     },
     "method": "Attempted",
     "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 3000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to chain dmp events 1`] = `
+[
+  {
+    "data": {
+      "count": 1,
+    },
+    "method": "DownwardMessagesReceived",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "dmqHead": "(hash)",
+      "weightUsed": {
+        "proofSize": "(rounded 3500)",
+        "refTime": "(rounded 770000000)",
+      },
+    },
+    "method": "DownwardMessagesProcessed",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 160000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 7190)",
+            "refTime": "(rounded 541000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "xcmPallet",
   },
 ]
 `;

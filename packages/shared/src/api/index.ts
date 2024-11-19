@@ -190,7 +190,7 @@ export const xcmPallet = {
   executeXCM:
     (xcm: any, max_weight: any) =>
     ({ api }: { api: ApiPromise }) => {
-      return api.tx.polkadotXcm.execute(xcm, max_weight)
+      return (api.tx.xcmPallet || api.tx.polkadotXcm).execute(xcm, max_weight)
     },
 }
 
