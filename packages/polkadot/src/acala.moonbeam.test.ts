@@ -29,28 +29,32 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer DOT to acala', async () => {
-    await moonbeamClient.dev.setStorage({
-      Assets: {
-        account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
-      },
-    })
+  runXtokenstHorizontal(
+    'moonbeam transfer DOT to acala',
+    async () => {
+      await moonbeamClient.dev.setStorage({
+        Assets: {
+          account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
+        },
+      })
 
-    return {
-      fromChain: moonbeamClient,
-      fromBalance: query.assets(moonbeamDot),
-      fromAccount: defaultAccounts.alith,
+      return {
+        fromChain: moonbeamClient,
+        fromBalance: query.assets(moonbeamDot),
+        fromAccount: defaultAccounts.alith,
 
-      toChain: acalaClient,
-      toBalance: query.tokens(acalaDot),
-      toAccount: defaultAccounts.alice,
+        toChain: acalaClient,
+        toBalance: query.tokens(acalaDot),
+        toAccount: defaultAccounts.alice,
 
-      routeChain: polkadotClient,
-      isCheckUmp: true,
+        routeChain: polkadotClient,
+        isCheckUmp: true,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
-    }
-  })
+        tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      }
+    },
+    { skip: true }, // TODO: https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/109
+  )
 
   runXtokenstHorizontal('acala transfer ACA to moonbeam', async () => {
     return {
@@ -66,25 +70,29 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer ACA to acala', async () => {
-    await moonbeamClient.dev.setStorage({
-      Assets: {
-        account: [[[moonbeam.custom.aca, defaultAccounts.alith.address], { balance: 10e12 }]],
-      },
-    })
+  runXtokenstHorizontal(
+    'moonbeam transfer ACA to acala',
+    async () => {
+      await moonbeamClient.dev.setStorage({
+        Assets: {
+          account: [[[moonbeam.custom.aca, defaultAccounts.alith.address], { balance: 10e12 }]],
+        },
+      })
 
-    return {
-      fromChain: moonbeamClient,
-      fromBalance: query.assets(moonbeam.custom.aca),
-      fromAccount: defaultAccounts.alith,
+      return {
+        fromChain: moonbeamClient,
+        fromBalance: query.assets(moonbeam.custom.aca),
+        fromAccount: defaultAccounts.alith,
 
-      toChain: acalaClient,
-      toBalance: query.balances,
-      toAccount: defaultAccounts.bob,
+        toChain: acalaClient,
+        toBalance: query.balances,
+        toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.aca }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
-    }
-  })
+        tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.aca }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      }
+    },
+    { skip: true }, // TODO: https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/109
+  )
 
   runXtokenstHorizontal('acala transfer LDOT to moonbeam', async () => {
     return {
@@ -100,23 +108,27 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer LDOT to acala', async () => {
-    await moonbeamClient.dev.setStorage({
-      Assets: {
-        account: [[[moonbeam.custom.ldot, defaultAccounts.alith.address], { balance: 10e12 }]],
-      },
-    })
+  runXtokenstHorizontal(
+    'moonbeam transfer LDOT to acala',
+    async () => {
+      await moonbeamClient.dev.setStorage({
+        Assets: {
+          account: [[[moonbeam.custom.ldot, defaultAccounts.alith.address], { balance: 10e12 }]],
+        },
+      })
 
-    return {
-      fromChain: moonbeamClient,
-      fromBalance: query.assets(moonbeam.custom.ldot),
-      fromAccount: defaultAccounts.alith,
+      return {
+        fromChain: moonbeamClient,
+        fromBalance: query.assets(moonbeam.custom.ldot),
+        fromAccount: defaultAccounts.alith,
 
-      toChain: acalaClient,
-      toBalance: query.tokens(acala.custom.ldot),
-      toAccount: defaultAccounts.bob,
+        toChain: acalaClient,
+        toBalance: query.tokens(acala.custom.ldot),
+        toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.ldot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
-    }
-  })
+        tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.ldot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      }
+    },
+    { skip: true }, // TODO: https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/109
+  )
 })

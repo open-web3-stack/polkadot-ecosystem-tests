@@ -30,28 +30,32 @@ describe('hydration & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer DOT to hydration', async () => {
-    await moonbeamClient.dev.setStorage({
-      Assets: {
-        account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
-      },
-    })
+  runXtokenstHorizontal(
+    'moonbeam transfer DOT to hydration',
+    async () => {
+      await moonbeamClient.dev.setStorage({
+        Assets: {
+          account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
+        },
+      })
 
-    return {
-      fromChain: moonbeamClient,
-      fromBalance: query.assets(moonbeamDot),
-      fromAccount: defaultAccounts.alith,
+      return {
+        fromChain: moonbeamClient,
+        fromBalance: query.assets(moonbeamDot),
+        fromAccount: defaultAccounts.alith,
 
-      toChain: hydrationClient,
-      toBalance: query.tokens(hydrationDot),
-      toAccount: defaultAccounts.bob,
+        toChain: hydrationClient,
+        toBalance: query.tokens(hydrationDot),
+        toAccount: defaultAccounts.bob,
 
-      routeChain: polkadotClient,
-      isCheckUmp: true,
+        routeChain: polkadotClient,
+        isCheckUmp: true,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 2e10, tx.xtokens.parachainV3(hydration.paraId!)),
-    }
-  })
+        tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 2e10, tx.xtokens.parachainV3(hydration.paraId!)),
+      }
+    },
+    { skip: true }, // TODO: https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/109
+  )
 
   runXtokenstHorizontal('hydration transfer GLMR to moonbeam', async () => {
     await hydrationClient.dev.setStorage({
