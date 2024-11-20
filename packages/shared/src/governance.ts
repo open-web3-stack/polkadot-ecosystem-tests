@@ -106,64 +106,103 @@ export async function submitReferendumThenCancel<
   assert(ongoingRef.submissionDeposit.who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding)))
   assert(ongoingRef.submissionDeposit.amount.eq(relayClient.api.consts.referenda.submissionDeposit))
 
-  // Check that voting data is empty
-  await check(ongoingRef.tally).toMatchObject({
+  // Current voting state of the referendum.
+  const votes = {
     ayes: 0,
     nays: 0,
     support: 0,
-  })
+  }
+
+  // Remove `tally` property from ongoing referendum pre and post-voting data
+  const { tally: tally1, ...ongoingRefNoVotes } = ongoingRef
+
+  // Check that voting data is empty
+  await check(tally1).toMatchObject(votes)
 
   /**
    * Vote on the referendum
    */
 
-  const aliceAyeVote = 5e10
-  const nayVote = 1e10
+  // Alice's vote
+  const ayeVote = 5e10
 
-  const voteTx = relayClient.api.tx.convictionVoting.vote(referendumIndex, {
+  let voteTx = relayClient.api.tx.convictionVoting.vote(referendumIndex, {
     Standard: {
       vote: {
         aye: true,
-        conviction: 'Locked1x',
+        conviction: 'Locked3x',
       },
-      balance: aliceAyeVote,
+      balance: ayeVote,
     },
   })
-  const voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.alice))
+  let voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
   // Filtering for events only from the `convictionVoting` pallet would leave them empty.
   // Voting events were only introduced in
   // https://github.com/paritytech/polkadot-sdk/pull/4613
-  await checkEvents(voteEvents).toMatchSnapshot('referendum vote events')
+  await checkEvents(voteEvents).toMatchSnapshot("events for alice's referendum vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
   assert(referendumData.isOngoing)
-  const ongoingRefWithVotes = referendumData.asOngoing
-
-  relayClient.api.tx.convictionVoting.unlock
-
-  // Remove `tally` property from ongoing referendum pre and post-voting data
-  const { tally: _tally1, ...ongoingRefNoTally } = ongoingRef
-  const { tally: _tally2, ...ongoingRefWithVotesNoTally } = ongoingRefWithVotes
+  const { tally: tally2, ...ongoingRefFirstVote } = referendumData.asOngoing
 
   // Check that, barring the recently introduced vote by alice, all else in the referendum's data
   // remains the same.
-  await check(ongoingRefNoTally).toMatchObject(ongoingRefWithVotesNoTally)
+  await check(ongoingRefFirstVote).toMatchObject(ongoingRefNoVotes)
 
-  await check(ongoingRefWithVotes.tally).toMatchObject({
-    ayes: 5e10,
-    nays: 0,
-    support: 5e10,
+  // Alice voted with 3x conviction
+  votes.ayes += ayeVote * 3
+  votes.support += ayeVote
+  await check(tally2).toMatchObject(votes)
+
+  // Fund test account's not already provisioned in the test chain spec.
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
+        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
+      ],
+    },
   })
 
-  /*   const events = dotApi.event.Referenda.Submitted.filter(txFinalized.events)
-  check(events).toMatchSnapshot('submit referendum from system')
- */
+  // Dave's vote
+
+  const nayVote = 1e10
+
+  voteTx = relayClient.api.tx.convictionVoting.vote(referendumIndex, {
+    Split: {
+      aye: ayeVote,
+      nay: nayVote,
+    },
+  })
+
+  voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.dave))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(voteEvents).toMatchSnapshot("events for dave's referendum vote")
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  referendumData = referendumDataOpt.unwrap()
+
+  assert(referendumData.isOngoing)
+  const { tally: tally3, ...ongoingRefSecondVote } = referendumData.asOngoing
+
+  await check(ongoingRefSecondVote).toMatchObject(ongoingRefFirstVote)
+
+  votes.ayes += ayeVote / 10
+  votes.nays += nayVote / 10
+  votes.support += ayeVote
+  await check(tally3).toMatchObject(votes)
+
+  // Eve's vote
+
   // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
   // check for events
 }
