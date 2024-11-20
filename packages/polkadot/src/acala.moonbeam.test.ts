@@ -48,7 +48,7 @@ describe('acala & moonbeam', async () => {
       routeChain: polkadotClient,
       isCheckUmp: true,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmDot, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 
@@ -82,7 +82,7 @@ describe('acala & moonbeam', async () => {
       toBalance: query.balances,
       toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.aca }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmAca, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 
@@ -116,7 +116,7 @@ describe('acala & moonbeam', async () => {
       toBalance: query.tokens(acala.custom.ldot),
       toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.ldot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmLdot, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 })
