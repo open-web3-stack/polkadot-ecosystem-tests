@@ -203,6 +203,36 @@ export async function submitReferendumThenCancel<
 
   // Eve's vote
 
+  const abstainVote = 2e10
+
+  voteTx = relayClient.api.tx.convictionVoting.vote(referendumIndex, {
+    SplitAbstain: {
+      aye: ayeVote,
+      nay: nayVote,
+      abstain: abstainVote,
+    },
+  })
+
+  voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.eve))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(voteEvents).toMatchSnapshot("events for eve's referendum vote")
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  referendumData = referendumDataOpt.unwrap()
+
+  assert(referendumData.isOngoing)
+  const { tally: tally4, ...ongoingRefThirdVote } = referendumData.asOngoing
+
+  await check(ongoingRefThirdVote).toMatchObject(ongoingRefSecondVote)
+
+  votes.ayes += ayeVote / 10
+  votes.nays += nayVote / 10
+  votes.support += ayeVote + abstainVote
+  await check(tally4).toMatchObject(votes)
+
   // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
   // check for events
 }
