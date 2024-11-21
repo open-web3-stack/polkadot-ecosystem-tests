@@ -70,7 +70,7 @@ describe('asset hub & polkadot', async () => {
                           x1: [
                             {
                               accountId32: {
-                                id: defaultAccounts.charlie.addressRaw,
+                                id: defaultAccounts.bob.addressRaw,
                                 network: null,
                               },
                             },
@@ -84,7 +84,7 @@ describe('asset hub & polkadot', async () => {
             },
           ],
         },
-        { ref_time: 55_791_617_000n, proof_size: 364_593n },
+        { ref_time: 100_000_000_000n, proof_size: 1_000_000n },
       ),
     }
   })
@@ -156,7 +156,7 @@ describe('asset hub & polkadot', async () => {
                           x1: [
                             {
                               accountId32: {
-                                id: defaultAccounts.charlie.addressRaw,
+                                id: defaultAccounts.bob.addressRaw,
                                 network: null,
                               },
                             },
@@ -170,7 +170,7 @@ describe('asset hub & polkadot', async () => {
             },
           ],
         },
-        { ref_time: 55_791_617_000n, proof_size: 364_593n },
+        { ref_time: 100_000_000_000n, proof_size: 1_000_000n },
       ),
     }
   })

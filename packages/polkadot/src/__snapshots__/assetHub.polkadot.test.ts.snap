@@ -20,12 +20,12 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balanc
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 7000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
@@ -82,7 +82,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > from c
               "x1": [
                 {
                   "accountId32": {
-                    "id": "0x439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f",
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
                     "network": null,
                   },
                 },
@@ -161,12 +161,12 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balanc
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 7000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
