@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for alice's referendum vote 1`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for alice's vote 1`] = `
 [
   {
     "data": {
@@ -84,7 +84,7 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
 ]
 `;
 
-exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for dave's referendum vote 1`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for dave's vote 1`] = `
 [
   {
     "data": {
@@ -175,7 +175,7 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
 ]
 `;
 
-exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for eve's referendum vote 1`] = `
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for eve's vote 1`] = `
 [
   {
     "data": {

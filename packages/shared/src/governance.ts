@@ -142,7 +142,7 @@ export async function submitReferendumThenCancel<
   // Filtering for events only from the `convictionVoting` pallet would leave them empty.
   // Voting events were only introduced in
   // https://github.com/paritytech/polkadot-sdk/pull/4613
-  await checkEvents(voteEvents).toMatchSnapshot("events for alice's referendum vote")
+  await checkEvents(voteEvents).toMatchSnapshot("events for alice's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
@@ -159,6 +159,10 @@ export async function submitReferendumThenCancel<
   votes.ayes += ayeVote * 3
   votes.support += ayeVote
   await check(tally2).toMatchObject(votes)
+
+  const aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
+
+  assert(aliceLockedFunds.eq([[smallTipper[0], ayeVote]]))
 
   // Fund test account's not already provisioned in the test chain spec.
   await relayClient.dev.setStorage({
@@ -185,7 +189,7 @@ export async function submitReferendumThenCancel<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents).toMatchSnapshot("events for dave's referendum vote")
+  await checkEvents(voteEvents).toMatchSnapshot("events for dave's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
@@ -200,6 +204,11 @@ export async function submitReferendumThenCancel<
   votes.nays += nayVote / 10
   votes.support += ayeVote
   await check(tally3).toMatchObject(votes)
+
+  // Dave voted with `split`, which does not allow expression of conviction in votes.
+  const daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+
+  assert(daveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote]]))
 
   // Eve's vote
 
@@ -217,7 +226,7 @@ export async function submitReferendumThenCancel<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents).toMatchSnapshot("events for eve's referendum vote")
+  await checkEvents(voteEvents).toMatchSnapshot("events for eve's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
@@ -232,6 +241,11 @@ export async function submitReferendumThenCancel<
   votes.nays += nayVote / 10
   votes.support += ayeVote + abstainVote
   await check(tally4).toMatchObject(votes)
+
+  // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
+  const eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+
+  assert(eveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote + abstainVote]]))
 
   // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
   // check for events
