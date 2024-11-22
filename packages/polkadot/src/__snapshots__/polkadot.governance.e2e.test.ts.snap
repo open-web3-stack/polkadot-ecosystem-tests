@@ -21,7 +21,7 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
   {
     "data": {
       "index": 0,
-      "when": "(rounded 24000000)",
+      "when": "(rounded 23000000)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -84,6 +84,20 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
 ]
 `;
 
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for bob's decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "index": "(rounded 1300)",
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > events for dave's vote 1`] = `
 [
   {
@@ -112,7 +126,7 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
   {
     "data": {
       "index": 0,
-      "when": "(rounded 24000000)",
+      "when": "(rounded 23000000)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -203,7 +217,7 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
   {
     "data": {
       "index": 0,
-      "when": "(rounded 24000000)",
+      "when": "(rounded 23000000)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -271,6 +285,163 @@ exports[`Polkadot Governance > submitting referendum, voting on it, and then can
   "ongoing": {
     "deciding": null,
     "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info after alice's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "tally": {
+      "ayes": 150000000000,
+      "nays": 0,
+      "support": 50000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info after dave's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "tally": {
+      "ayes": 155000000000,
+      "nays": 1000000000,
+      "support": 100000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info after eve's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "tally": {
+      "ayes": 160000000000,
+      "nays": 2000000000,
+      "support": 170000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info before decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > submitting referendum, voting on it, and then cancelling it should work > referendum info post decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
     "enactment": {
       "after": 1,
     },

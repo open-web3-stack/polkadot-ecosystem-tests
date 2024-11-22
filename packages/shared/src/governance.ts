@@ -28,6 +28,18 @@ export async function submitReferendumThenCancel<
    */
   const [relayClient] = await setupNetworks(relayChain)
 
+  // Fund test accounts not already provisioned in the test chain spec.
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
+        [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
+        [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
+        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
+      ],
+    },
+  })
+
   /*
   const preimageTx = relayClient.api.tx.preimage.notePreimage(encodedProposal)
   const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccounts.alice))
@@ -81,30 +93,37 @@ export async function submitReferendumThenCancel<
   // These fields contain epoch-sensitive data, which will cause spurious test failures
   // periodically.
   unwantedFields = new RegExp('alarm|submitted')
-  await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot('referendum info')
+  await check(referendumData)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('referendum info before decision deposit')
 
   assert(referendumData.isOngoing)
-  const ongoingRef: PalletReferendaReferendumStatusConvictionVotingTally = referendumData.asOngoing
+  // Ongoing referendum data, prior to the decision deposit.
+  const ongoingRefPreDecDep: PalletReferendaReferendumStatusConvictionVotingTally = referendumData.asOngoing
 
-  assert(ongoingRef.alarm.isSome)
-  const undecidingTimeoutAlarm = ongoingRef.alarm.unwrap()[0]
-  const blocksUntilAlarm = undecidingTimeoutAlarm.sub(ongoingRef.submitted)
+  assert(ongoingRefPreDecDep.alarm.isSome)
+  const undecidingTimeoutAlarm = ongoingRefPreDecDep.alarm.unwrap()[0]
+  const blocksUntilAlarm = undecidingTimeoutAlarm.sub(ongoingRefPreDecDep.submitted)
+  // Check that the set alarm, to ring
   assert(blocksUntilAlarm.eq(relayClient.api.consts.referenda.undecidingTimeout))
 
-  assert(ongoingRef.enactment.isAfter)
-  await check(ongoingRef.enactment.asAfter).toMatchObject(1)
+  assert(ongoingRefPreDecDep.enactment.isAfter)
+  await check(ongoingRefPreDecDep.enactment.asAfter).toMatchObject(1)
 
   const referendaTracks = relayClient.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
-  assert(ongoingRef.track.eq(smallTipper[0]))
-  await check(ongoingRef.origin).toMatchObject({
+  assert(ongoingRefPreDecDep.track.eq(smallTipper[0]))
+  await check(ongoingRefPreDecDep.origin).toMatchObject({
     origins: 'SmallTipper',
   })
-  assert(ongoingRef.deciding.isNone)
-  assert(ongoingRef.decisionDeposit.isNone)
 
-  assert(ongoingRef.submissionDeposit.who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding)))
-  assert(ongoingRef.submissionDeposit.amount.eq(relayClient.api.consts.referenda.submissionDeposit))
+  // Immediately after a referendum's submission, it will not have a decision deposit,
+  // which it needs to begin the decision period.
+  assert(ongoingRefPreDecDep.deciding.isNone)
+  assert(ongoingRefPreDecDep.decisionDeposit.isNone)
+
+  assert(ongoingRefPreDecDep.submissionDeposit.who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding)))
+  assert(ongoingRefPreDecDep.submissionDeposit.amount.eq(relayClient.api.consts.referenda.submissionDeposit))
 
   // Current voting state of the referendum.
   const votes = {
@@ -113,11 +132,43 @@ export async function submitReferendumThenCancel<
     support: 0,
   }
 
-  // Remove `tally` property from ongoing referendum pre and post-voting data
-  const { tally: tally1, ...ongoingRefNoVotes } = ongoingRef
-
   // Check that voting data is empty
-  await check(tally1).toMatchObject(votes)
+  await check(ongoingRefPreDecDep.tally).toMatchObject(votes)
+
+  /**
+   * Place decision deposit
+   */
+
+  const decisionDepTx = relayClient.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  const decisiondepEvents = await sendTransaction(decisionDepTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(decisiondepEvents, 'referenda').toMatchSnapshot("events for bob's decision deposit")
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt, "referendum's data cannot be `None`")
+  referendumData = referendumDataOpt.unwrap()
+
+  await check(referendumData)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('referendum info post decision deposit')
+
+  assert(referendumData.isOngoing)
+  const ongoingRefPostDecDep = referendumData.asOngoing
+
+  // The referendum can only begin deciding after its track's preparation period has elapsed, even though
+  // the decision deposit has been placed.
+  assert(ongoingRefPostDecDep.deciding.isNone)
+  assert(ongoingRefPostDecDep.decisionDeposit.isSome)
+
+  assert(
+    ongoingRefPostDecDep.decisionDeposit.unwrap().who.eq(encodeAddress(defaultAccounts.bob.address, addressEncoding)),
+  )
+  assert(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.eq(smallTipper[1].decisionDeposit))
+
+  // Placing a decision deposit should not impact voting vounts.
+  await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
 
   /**
    * Vote on the referendum
@@ -145,34 +196,24 @@ export async function submitReferendumThenCancel<
   await checkEvents(voteEvents).toMatchSnapshot("events for alice's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  assert(referendumDataOpt, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
-  assert(referendumData.isOngoing)
-  const { tally: tally2, ...ongoingRefFirstVote } = referendumData.asOngoing
+  await check(referendumData)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("referendum info after alice's vote")
 
-  // Check that, barring the recently introduced vote by alice, all else in the referendum's data
-  // remains the same.
-  await check(ongoingRefFirstVote).toMatchObject(ongoingRefNoVotes)
+  assert(referendumData.isOngoing)
+  const ongoingRefFirstVote = referendumData.asOngoing
 
   // Alice voted with 3x conviction
   votes.ayes += ayeVote * 3
   votes.support += ayeVote
-  await check(tally2).toMatchObject(votes)
+  await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
   const aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
 
   assert(aliceLockedFunds.eq([[smallTipper[0], ayeVote]]))
-
-  // Fund test account's not already provisioned in the test chain spec.
-  await relayClient.dev.setStorage({
-    System: {
-      account: [
-        [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
-      ],
-    },
-  })
 
   // Dave's vote
 
@@ -192,22 +233,23 @@ export async function submitReferendumThenCancel<
   await checkEvents(voteEvents).toMatchSnapshot("events for dave's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  assert(referendumDataOpt, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
-  assert(referendumData.isOngoing)
-  const { tally: tally3, ...ongoingRefSecondVote } = referendumData.asOngoing
+  await check(referendumData)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("referendum info after dave's vote")
 
-  await check(ongoingRefSecondVote).toMatchObject(ongoingRefFirstVote)
+  assert(referendumData.isOngoing)
+  const ongoingRefSecondVote = referendumData.asOngoing
 
   votes.ayes += ayeVote / 10
   votes.nays += nayVote / 10
   votes.support += ayeVote
-  await check(tally3).toMatchObject(votes)
+  await check(ongoingRefSecondVote.tally).toMatchObject(votes)
 
-  // Dave voted with `split`, which does not allow expression of conviction in votes.
   const daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
-
+  // Dave voted with `split`, which does not allow expression of conviction in votes.
   assert(daveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote]]))
 
   // Eve's vote
@@ -229,22 +271,21 @@ export async function submitReferendumThenCancel<
   await checkEvents(voteEvents).toMatchSnapshot("events for eve's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  assert(referendumDataOpt, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
-  assert(referendumData.isOngoing)
-  const { tally: tally4, ...ongoingRefThirdVote } = referendumData.asOngoing
+  await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot("referendum info after eve's vote")
 
-  await check(ongoingRefThirdVote).toMatchObject(ongoingRefSecondVote)
+  assert(referendumData.isOngoing)
+  const ongoingRefThirdVote = referendumData.asOngoing
 
   votes.ayes += ayeVote / 10
   votes.nays += nayVote / 10
   votes.support += ayeVote + abstainVote
-  await check(tally4).toMatchObject(votes)
+  await check(ongoingRefThirdVote.tally).toMatchObject(votes)
 
-  // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   const eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
-
+  // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   assert(eveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote + abstainVote]]))
 
   // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
