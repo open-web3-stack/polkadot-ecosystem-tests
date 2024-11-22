@@ -34,5 +34,5 @@ export function defineChain<
     }
   }
 
-  return Object.assign(chainConfig, { extend: extend(chainConfig as any) as any })
+  return Object.assign(chainConfig, { extend: extend(chainConfig as any) as any }) as Chain<TCustom, TInitStorages>
 }
