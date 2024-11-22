@@ -1,11 +1,11 @@
 import { SetupOption } from '@acala-network/chopsticks-testing'
 
-type ChainConfigRelaychain = {
+interface ChainConfigRelaychain {
   isRelayChain: true
   paraId?: undefined
 }
 
-type ChainConfigParachain = {
+interface ChainConfigParachain {
   isRelayChain?: false
   paraId: number
 }
