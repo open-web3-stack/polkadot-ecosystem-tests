@@ -62,6 +62,7 @@ export const runXcmPalletHorizontal = (
 
       if (routeChain) {
         await routeChain.chain.newBlock()
+        await checkSystemEvents(routeChain, 'messageQueue').toMatchSnapshot('route chain xcm events')
       }
 
       await toChain.chain.newBlock()
