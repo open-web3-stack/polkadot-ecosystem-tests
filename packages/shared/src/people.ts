@@ -20,8 +20,8 @@ import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@p
 import { encodeAddress } from '@polkadot/util-crypto'
 import { u128 } from '@polkadot/types'
 
+import { Network, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
-import { setupNetworks } from './setup.js'
 
 /**
  * Example identity to be used in tests.
@@ -718,11 +718,6 @@ async function sendXcmFromRelay(
   })
 }
 
-export enum PeopleChain {
-  Polkadot = 'Polkadot',
-  Kusama = 'Kusama',
-}
-
 /**
  * Test runner for people chains' E2E tests.
  *
@@ -737,16 +732,16 @@ export function peopleChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(pc: PeopleChain, relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
+>(network: Network, relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
   let topLevelDescription: string
   let addressEncoding: number
 
-  switch (pc) {
-    case PeopleChain.Kusama:
+  switch (network) {
+    case Network.Kusama:
       topLevelDescription = 'Kusama People'
       addressEncoding = 2
       break
-    case PeopleChain.Polkadot:
+    case Network.Polkadot:
       topLevelDescription = 'Polkadot People'
       addressEncoding = 0
       break

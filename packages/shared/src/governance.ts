@@ -2,7 +2,7 @@ import { assert, describe, test } from 'vitest'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { check, checkEvents } from '@e2e-test/shared/helpers'
-import { setupNetworks } from '@e2e-test/shared'
+import { Network, setupNetworks } from '@e2e-test/shared'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -57,7 +57,7 @@ function referendumCmp(
   ref2: PalletReferendaReferendumStatusConvictionVotingTally,
   propertiesToBeSkipped: string[],
 ) {
-  type ReferendumProperties = Array<keyof PalletReferendaReferendumStatusConvictionVotingTally>
+  type ReferendumProperties = (keyof PalletReferendaReferendumStatusConvictionVotingTally)[]
   const properties: ReferendumProperties = Object.keys(new OngoingReferendumStatus()) as ReferendumProperties
 
   properties
@@ -137,7 +137,7 @@ export async function referendumLifecycleTest<
   await relayClient.dev.newBlock()
 
   // Fields to be removed, check comment below.
-  let unwantedFields: RegExp = new RegExp('index')
+  let unwantedFields = new RegExp('index')
   await checkEvents(submitReferendumEvents, 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum submission events')
@@ -381,10 +381,24 @@ export async function referendumLifecycleTest<
 export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  describe('Polkadot Governance', function () {
+>(network: Network, relayChain: Chain<TCustom, TInitStoragesRelay>, ) {
+  let topLevelDescription: string
+  let addressEncoding: number
+
+  switch (network) {
+    case Network.Kusama:
+      topLevelDescription = 'Kusama Governance'
+      addressEncoding = 2
+      break
+    case Network.Polkadot:
+      topLevelDescription = 'Polkadot Governance'
+      addressEncoding = 0
+      break
+  }
+
+  describe(topLevelDescription, function () {
     test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(relayChain, 0)
+      await referendumLifecycleTest(relayChain, addressEncoding)
     })
   })
 }
