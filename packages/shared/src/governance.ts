@@ -6,12 +6,54 @@ import { setupNetworks } from '@e2e-test/shared'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { Option } from '@polkadot/types'
 import {
+  FrameSupportPreimagesBounded,
+  FrameSupportScheduleDispatchTime,
+  KitchensinkRuntimeOriginCaller,
+  PalletConvictionVotingTally,
+  PalletReferendaDecidingStatus,
+  PalletReferendaDeposit,
   PalletReferendaReferendumInfoConvictionVotingTally,
   PalletReferendaReferendumStatusConvictionVotingTally,
 } from '@polkadot/types/lookup'
+import { ITuple } from '@polkadot/types/types'
+import { Option, bool, u16, u32 } from '@polkadot/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
+class OngoingReferendumStatus {
+  readonly track!: u16
+  readonly origin!: KitchensinkRuntimeOriginCaller
+  readonly proposal!: FrameSupportPreimagesBounded
+  readonly enactment!: FrameSupportScheduleDispatchTime
+  readonly submitted!: u32
+  readonly submissionDeposit!: PalletReferendaDeposit
+  readonly decisionDeposit!: Option<PalletReferendaDeposit>
+  readonly deciding!: Option<PalletReferendaDecidingStatus>
+  readonly tally!: PalletConvictionVotingTally
+  readonly inQueue!: bool
+  readonly alarm!: Option<ITuple<[u32, ITuple<[u32, u32]>]>>
+}
+
+function referendumCmp(
+  ref1: PalletReferendaReferendumStatusConvictionVotingTally,
+  ref2: PalletReferendaReferendumStatusConvictionVotingTally,
+  propertiesToBeSkipped: string[],
+) {
+  type ReferendumProperties = Array<keyof PalletReferendaReferendumStatusConvictionVotingTally>
+  const properties: ReferendumProperties = Object.keys(new OngoingReferendumStatus()) as ReferendumProperties
+
+  properties
+    .filter((prop) => !propertiesToBeSkipped.includes(prop as string))
+    .forEach((prop) => {
+      if (ref1[(prop as string)!]!.eq(ref2[prop])) {
+        console.log(`${String(prop)} was eq`)
+      } else {
+        console.log(`${String(prop)} was NOT eq`)
+        console.log(`Left: ${ref1[prop]}`)
+        console.log(`Right: ${ref2[prop]}`)
+      }
+    })
+}
 
 /**
  * Test the process of
@@ -33,7 +75,6 @@ export async function submitReferendumThenCancel<
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
         [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
         [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
       ],
@@ -104,9 +145,11 @@ export async function submitReferendumThenCancel<
   assert(ongoingRefPreDecDep.alarm.isSome)
   const undecidingTimeoutAlarm = ongoingRefPreDecDep.alarm.unwrap()[0]
   const blocksUntilAlarm = undecidingTimeoutAlarm.sub(ongoingRefPreDecDep.submitted)
-  // Check that the set alarm, to ring
+  // Check that the referendum's alarm is set to ring after the (globally predetermined) timeout
+  // of 14 days, or 201600 blocks.
   assert(blocksUntilAlarm.eq(relayClient.api.consts.referenda.undecidingTimeout))
 
+  // The referendum was above set to be enacted 1 block after its passing.
   assert(ongoingRefPreDecDep.enactment.isAfter)
   await check(ongoingRefPreDecDep.enactment.asAfter).toMatchObject(1)
 
@@ -118,7 +161,7 @@ export async function submitReferendumThenCancel<
   })
 
   // Immediately after a referendum's submission, it will not have a decision deposit,
-  // which it needs to begin the decision period.
+  // which it will need to begin the decision period.
   assert(ongoingRefPreDecDep.deciding.isNone)
   assert(ongoingRefPreDecDep.decisionDeposit.isNone)
 
@@ -167,8 +210,18 @@ export async function submitReferendumThenCancel<
   )
   assert(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.eq(smallTipper[1].decisionDeposit))
 
-  // Placing a decision deposit should not impact voting vounts.
-  await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
+  // The block at which the referendum's preparation period will end, and its decision period will begin.
+  const preparePeriodWithOffset = smallTipper[1].preparePeriod.add(ongoingRefPostDecDep.submitted)
+
+  assert(ongoingRefPostDecDep.alarm.isSome)
+  // The decision deposit has been placed, so the referendum's alarm should point to that block, at the
+  // end of the decision period.
+  assert(ongoingRefPostDecDep.alarm.unwrap()[0].eq(preparePeriodWithOffset))
+
+  // Placing a decision deposit for a referendum should change nothing BUT the referendum's
+  // 1. deposit data and
+  // 2. alarm.
+  referendumCmp(ongoingRefPreDecDep, ongoingRefPostDecDep, ['decisionDeposit', 'alarm'])
 
   /**
    * Vote on the referendum
@@ -215,6 +268,11 @@ export async function submitReferendumThenCancel<
 
   assert(aliceLockedFunds.eq([[smallTipper[0], ayeVote]]))
 
+  // Placing a vote for a referendum should change nothing BUT:
+  // 1. the tally, and
+  // 2. its decision period, which at this point should still be counting down.
+  referendumCmp(ongoingRefPostDecDep, ongoingRefFirstVote, ['tally', 'alarm'])
+
   // Dave's vote
 
   const nayVote = 1e10
@@ -252,6 +310,11 @@ export async function submitReferendumThenCancel<
   // Dave voted with `split`, which does not allow expression of conviction in votes.
   assert(daveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote]]))
 
+  // Placing a split vote for a referendum should change nothing BUT:
+  // 1. the tally, and
+  // 2. its decision period, still counting down.
+  referendumCmp(ongoingRefFirstVote, ongoingRefSecondVote, ['tally', 'alarm'])
+
   // Eve's vote
 
   const abstainVote = 2e10
@@ -288,6 +351,11 @@ export async function submitReferendumThenCancel<
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   assert(eveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote + abstainVote]]))
 
+  // Placing a split abstain vote for a referendum should change nothing BUT:
+  // 1. the tally, and
+  // 2. its decision period, still counting down.
+  referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
+
   // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
   // check for events
 }
@@ -298,7 +366,7 @@ export function governanceE2ETests<
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
   describe('Polkadot Governance', function () {
     test(
-      'submitting referendum, voting on it, and then cancelling it should work',
+      'referendum lifecycle test - submission, decision deposit, various voting should all work',
       { timeout: 1_000_000 },
       async () => {
         await submitReferendumThenCancel(relayChain, 0)
