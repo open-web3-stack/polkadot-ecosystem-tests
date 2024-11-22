@@ -20,6 +20,15 @@ import { ITuple } from '@polkadot/types/types'
 import { Option, bool, u16, u32 } from '@polkadot/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
+/**
+ * Ongoing referenda are stored as `PalletReferendaReferendumStatusConvictionVotingTally`, an
+ * interface in PJS.
+ *
+ * In TypeScript, it is not possible to get a list of an interface's properties.
+ *
+ * In order to get properties to then granularly compare the same referenda in different
+ * stages, the below class is required, to then instantiate as as PJS's interface.
+ */
 class OngoingReferendumStatus {
   readonly track!: u16
   readonly origin!: KitchensinkRuntimeOriginCaller
@@ -34,6 +43,15 @@ class OngoingReferendumStatus {
   readonly alarm!: Option<ITuple<[u32, ITuple<[u32, u32]>]>>
 }
 
+/**
+ * Compare the selected properties of two referenda.
+ *
+ * Fails if any of the properties to be compared
+ * is different.
+ * @param ref1
+ * @param ref2
+ * @param propertiesToBeSkipped List of properties to be skipped in the comparison
+ */
 function referendumCmp(
   ref1: PalletReferendaReferendumStatusConvictionVotingTally,
   ref2: PalletReferendaReferendumStatusConvictionVotingTally,
@@ -45,23 +63,26 @@ function referendumCmp(
   properties
     .filter((prop) => !propertiesToBeSkipped.includes(prop as string))
     .forEach((prop) => {
-      if (ref1[(prop as string)!]!.eq(ref2[prop])) {
-        console.log(`${String(prop)} was eq`)
-      } else {
-        console.log(`${String(prop)} was NOT eq`)
-        console.log(`Left: ${ref1[prop]}`)
-        console.log(`Right: ${ref2[prop]}`)
+      const cmp = ref1[(prop as string)!]!.eq(ref2[prop])
+      if (!cmp) {
+        const msg = `Referenda differed on property ${String(prop)}
+          Left: ${ref1[prop]}
+          Right: ${ref2[prop]}`
+        assert(cmp, msg)
       }
     })
 }
 
 /**
  * Test the process of
- * 1. creating a referendum for a treasury spend
- * 2. voting on it
- * 3. cancelling it
+ * 1. submitting a referendum for a treasury spend
+ * 2. placing its decision deposit
+ * 3. voting on it
+ *   3.1. using `vote`
+ *   3.2. using a split vote
+ *   3.3. using a split-abstain vote
  */
-export async function submitReferendumThenCancel<
+export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
@@ -355,9 +376,6 @@ export async function submitReferendumThenCancel<
   // 1. the tally, and
   // 2. its decision period, still counting down.
   referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
-
-  // const [submittedEvent] = client.event.Referenda.Submitted.filter(tx.events)
-  // check for events
 }
 
 export function governanceE2ETests<
@@ -365,12 +383,8 @@ export function governanceE2ETests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
   describe('Polkadot Governance', function () {
-    test(
-      'referendum lifecycle test - submission, decision deposit, various voting should all work',
-      { timeout: 1_000_000 },
-      async () => {
-        await submitReferendumThenCancel(relayChain, 0)
-      },
-    )
+    test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
+      await referendumLifecycleTest(relayChain, 0)
+    })
   })
 }
