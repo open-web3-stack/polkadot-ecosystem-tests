@@ -187,11 +187,39 @@ export const xcmPallet = {
         },
         0,
       ),
-  sendXCM:
-    (dest: any, xcm: any) =>
+  executeXCM:
+    (xcm: any, max_weight: any) =>
     ({ api }: { api: ApiPromise }) => {
-      return api.tx.polkadotXcm.send(dest, xcm)
+      return (api.tx.xcmPallet || api.tx.polkadotXcm).execute(xcm, max_weight)
     },
+  transferAssetsV3:
+    (token: any, amount: any, dest: any) =>
+    ({ api }: { api: ApiPromise }, acc: any) =>
+      (api.tx.xcmPallet || api.tx.polkadotXcm).transferAssets(
+        dest,
+        {
+          V3: {
+            parents: 0,
+            interior: {
+              X1: {
+                AccountId32: {
+                  id: acc,
+                },
+              },
+            },
+          },
+        },
+        {
+          V3: [
+            {
+              id: token,
+              fun: { Fungible: amount },
+            },
+          ],
+        },
+        0,
+        'Unlimited',
+      ),
 }
 
 export const tx = {

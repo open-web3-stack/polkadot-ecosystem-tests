@@ -21,9 +21,9 @@ export const runXtokenstHorizontal = (
     isCheckUmp?: boolean
     precision?: number
   }>,
-  options: { only?: boolean } = {},
+  options: { only?: boolean; skip?: boolean } = {},
 ) => {
-  const itfn = options.only ? it.only : it
+  const itfn = options.only ? it.only : options.skip ? it.skip : it
   itfn(
     name,
     async () => {

@@ -3,7 +3,7 @@ import { describe } from 'vitest'
 import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
 import { defaultAccounts } from '@e2e-test/networks'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { runXtokenstHorizontal, runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 import { setupNetworks } from '@e2e-test/shared'
 
 describe('acala & moonbeam', async () => {
@@ -29,7 +29,7 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer DOT to acala', async () => {
+  runXcmPalletHorizontal('moonbeam transfer DOT to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
         account: [[[moonbeamDot, defaultAccounts.alith.address], { balance: 10e12 }]],
@@ -48,7 +48,7 @@ describe('acala & moonbeam', async () => {
       routeChain: polkadotClient,
       isCheckUmp: true,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmDot, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 
@@ -66,7 +66,7 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer ACA to acala', async () => {
+  runXcmPalletHorizontal('moonbeam transfer ACA to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
         account: [[[moonbeam.custom.aca, defaultAccounts.alith.address], { balance: 10e12 }]],
@@ -82,7 +82,7 @@ describe('acala & moonbeam', async () => {
       toBalance: query.balances,
       toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.aca }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmAca, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 
@@ -100,7 +100,7 @@ describe('acala & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal('moonbeam transfer LDOT to acala', async () => {
+  runXcmPalletHorizontal('moonbeam transfer LDOT to acala', async () => {
     await moonbeamClient.dev.setStorage({
       Assets: {
         account: [[[moonbeam.custom.ldot, defaultAccounts.alith.address], { balance: 10e12 }]],
@@ -116,7 +116,7 @@ describe('acala & moonbeam', async () => {
       toBalance: query.tokens(acala.custom.ldot),
       toAccount: defaultAccounts.bob,
 
-      tx: tx.xtokens.transfer({ ForeignAsset: moonbeam.custom.ldot }, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmLdot, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
     }
   })
 })
