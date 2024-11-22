@@ -3,7 +3,7 @@ import { describe } from 'vitest'
 import { defaultAccounts } from '@e2e-test/networks'
 import { hydration, moonbeam, polkadot } from '@e2e-test/networks/chains'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { runXtokenstHorizontal, runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 import { setupNetworks } from '@e2e-test/shared'
 
 describe('hydration & moonbeam', async () => {
@@ -30,7 +30,7 @@ describe('hydration & moonbeam', async () => {
     }
   })
 
-  runXtokenstHorizontal(
+  runXcmPalletHorizontal(
     'moonbeam transfer DOT to hydration',
     async () => {
       await moonbeamClient.dev.setStorage({
@@ -51,10 +51,9 @@ describe('hydration & moonbeam', async () => {
         routeChain: polkadotClient,
         isCheckUmp: true,
 
-        tx: tx.xtokens.transfer({ ForeignAsset: moonbeamDot }, 2e10, tx.xtokens.parachainV3(hydration.paraId!)),
+        tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmDot, 2e10, tx.xcmPallet.parachainV3(1, hydration.paraId!)),
       }
     },
-    { skip: true }, // TODO: https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/109
   )
 
   runXtokenstHorizontal('hydration transfer GLMR to moonbeam', async () => {

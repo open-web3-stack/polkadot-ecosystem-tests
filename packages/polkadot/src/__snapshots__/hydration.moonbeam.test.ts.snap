@@ -576,46 +576,17 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > tx events 1
 [
   {
     "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 20000000000,
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 20000)",
+            "refTime": "(rounded 4700000000)",
           },
         },
-      ],
-      "dest": {
-        "interior": {
-          "X2": [
-            {
-              "Parachain": "(rounded 2000)",
-            },
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
-            },
-          ],
-        },
-        "parents": 1,
       },
-      "fee": {
-        "fun": {
-          "Fungible": 20000000000,
-        },
-        "id": {
-          "interior": "Here",
-          "parents": 1,
-        },
-      },
-      "sender": "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac",
     },
-    "method": "TransferredAssets",
-    "section": "xTokens",
+    "method": "Attempted",
+    "section": "polkadotXcm",
   },
 ]
 `;
