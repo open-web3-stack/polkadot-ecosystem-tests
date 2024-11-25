@@ -1,0 +1,10 @@
+{
+  "version": 0,
+  "descriptorPath": ".papi/descriptors",
+  "entries": {
+    "polkadotPeople": {
+      "chain": "polkadot_people",
+      "metadata": ".papi/metadata/polkadotPeople.scale"
+    }
+  }
+}

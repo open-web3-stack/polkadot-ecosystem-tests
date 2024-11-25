@@ -1,6 +1,10 @@
 import { connectParachains, connectVertical } from '@acala-network/chopsticks'
 import { setupContext } from '@acala-network/chopsticks-testing'
 
+import { createClient, PolkadotClient } from "polkadot-api"
+import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
+
 import { Chain } from './types.js'
 
 export async function createNetwork<T extends Chain>(chainConfig: T) {
@@ -10,9 +14,21 @@ export async function createNetwork<T extends Chain>(chainConfig: T) {
     await network.dev.setStorage(chainConfig.initStorages)
   }
 
+  let papi: PolkadotClient | undefined
+
   return {
     ...network,
     config: chainConfig,
+    papi() {
+      if (!papi) {
+        papi = createClient(
+          withPolkadotSdkCompat(
+            getWsProvider(network.url)
+          )
+        )
+      }
+      return papi
+    }
   }
 }
 
