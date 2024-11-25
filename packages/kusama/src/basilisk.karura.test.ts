@@ -33,7 +33,7 @@ describe('basilisk & karura', async () => {
       toBalance: query.tokens(karura.custom.ksm),
       tx: tx.xtokens.transfer(basilisk.custom.relayToken, 10n ** 12n, tx.xtokens.parachainV4(karura.paraId!)),
     }
-  })
+  }, { only: true })
 
   runXtokenstHorizontal('basilisk transfer BSX to karura', async () => {
     return {

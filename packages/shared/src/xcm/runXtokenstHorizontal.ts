@@ -41,6 +41,9 @@ export const runXtokenstHorizontal = (
       } = await setup()
 
       const txx = tx(fromChain, toAccount.addressRaw)
+      const signed = await txx.signAsync(fromAccount)
+      console.log(signed.toHex())
+
       const tx0 = await sendTransaction(txx.signAsync(fromAccount))
 
       await fromChain.chain.newBlock()
