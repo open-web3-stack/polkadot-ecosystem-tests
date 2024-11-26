@@ -31,7 +31,7 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
   Assets: {
     account: [
       [[config.relayToken, defaultAccounts.alice.address], { balance: 10 * 1e12 }],
-      [[config.aUSDToken, defaultAccounts.alice.address], { balance: 10 * 1e12 }],
+      [[('aca' in config ? config.aca : config.kar), defaultAccounts.alice.address], { balance: 20 * 1e12 }],
     ],
   },
   Sudo: {
