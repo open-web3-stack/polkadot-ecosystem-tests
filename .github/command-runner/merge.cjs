@@ -4,6 +4,11 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 
   if (command === 'merge') {
     console.log('Run merge')
+		await github.rest.pulls.submitReview({
+			...context.repo,
+			pull_number: context.issue.number,
+			event: 'APPROVE',
+		})
     await github.rest.pulls.update({
       ...context.repo,
       pull_number: context.issue.number,
@@ -18,6 +23,12 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 
   if (command === 'cancel-merge') {
     console.log('Run cancel-merge')
+		await github.rest.pulls.submitReview({
+			...context.repo,
+			pull_number: context.issue.number,
+			event: 'REQUEST_CHANGES',
+			body: 'Dismissed'
+		})
     await github.rest.pulls.update({
       ...context.repo,
       pull_number: context.issue.number,
