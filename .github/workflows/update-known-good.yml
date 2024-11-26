@@ -96,7 +96,7 @@ jobs:
         git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
         git add KNOWN_GOOD_BLOCK_NUMBERS.env
         if ! git diff --cached --quiet; then
-          git commit -m "[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
+          git commit -m "[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
           git push
         else
           echo "No changes to commit"
