@@ -15,13 +15,19 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			event: 'APPROVE',
 			review_id: pendingReview.data.id
 		})
-    await github.rest.pulls.update({
-      ...context.repo,
-      pull_number: context.issue.number,
-      auto_merge: {
-        merge_method: 'squash',
-      },
-    });
+    await github.graphql(`
+      mutation($pullRequestId: ID!) {
+        enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId }) {
+          pullRequest {
+            autoMergeRequest {
+              enabledAt
+            }
+          }
+        }
+      }
+    `, {
+			pullRequestId: context.issue.number
+		})
     await comment.createOrUpdateComment(`    Auto-merge enabled`)
     core.info('Auto-merge enabled')
     return
@@ -35,11 +41,18 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			event: 'REQUEST_CHANGES',
 			body: 'Dismissed'
 		})
-    await github.rest.pulls.update({
-      ...context.repo,
-      pull_number: context.issue.number,
-      auto_merge: null,
-    });
+    await github.graphql(`
+      mutation($pullRequestId: ID!) {
+        disablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId }) {
+          pullRequest {
+            autoMergeRequest {
+              disabledAt
+            }
+          }
+        }
+    `, {
+			pullRequestId: context.issue.number
+		})
     await comment.createOrUpdateComment(`    Auto-merge disabled`)
 
     core.info('Auto-merge disabled')
