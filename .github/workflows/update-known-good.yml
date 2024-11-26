@@ -11,6 +11,8 @@ on:
         description: 'Failed tests to retry (JSON array)'
         required: false
         type: string
+  schedule:
+    - cron: '0 */6 * * *'
 
 env:
   GH_TOKEN: ${{ github.token }}
