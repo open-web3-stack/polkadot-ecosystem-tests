@@ -22,7 +22,7 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 
     await github.graphql(`
       mutation($pullRequestId: ID!) {
-        enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: 'SQUASH' }) {
+        enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }) {
           pullRequest {
             autoMergeRequest {
               enabledAt
