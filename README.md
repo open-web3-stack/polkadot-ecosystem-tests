@@ -18,6 +18,12 @@ Polkadot Ecosystem Tests powered by [Chopsticks](http://github.com/AcalaNetwork/
 - The tests are always running against the block numbers specified in environment variables, which are configured in both `.env` and `KNOWN_GOOD_BLOCK_NUMBERS.env`. This ensures everything is reproducible.
 - Snapshots are used to compare the actual results with the expected results. The tests will fail if the snapshots are different, but it doesn't necessarily mean something is wrong. It is possible, for example, that some data structure has changed due to a runtime upgrade. In such cases, you can run `yarn test -u` to update the snapshots. However, always manually inspect the diffs to ensure they are expected.
 
+## Merge PR
+
+Use `/bot merge` command in a comment to approve and enable auto-merge of a PR. Use `/bot cancel-merge` to cancel the auto-merge.
+
+The user have to be authorized in the [command-runner-config.json](./.github/command-runner/command-runner-config.json) file to use the commands.
+
 ## Develop new tests
 
 ### Add a new chain
@@ -34,6 +40,12 @@ Add a new file named of `<chain1>.<chain2>.test.ts` for tests between those two 
 The XCM tests are defined in [packages/shared/src/xcm](packages/shared/src/xcm). They are implemented in such a way that they are network agnostic and can be reused across different chains. The tests should also be tolerant to minor changes regarding onchain envoronment. For example, they should not be impacted by a small change in transaction fees, and should use `.redact` to round the numbers or remove fields that are constantly changing.
 
 For network specific tests that cannot be reused, just add them as normal tests.
+
+### Debug tests
+
+- Add `{ only: true }` as a testcase last parameter to run only that test
+- Modify the shared test to add more logs or add more info to the snapshots
+- Use `await chain.pause()` to pause the test. Check the logs for the RPC URL and use pjs apps to connect to it for debugging.
 
 ## Environment Variables
 
