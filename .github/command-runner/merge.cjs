@@ -4,17 +4,6 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 
   if (command === 'merge') {
     console.log('Run merge')
-		let pendingReview = await github.rest.pulls.createReview({
-			...context.repo,
-			pull_number: context.issue.number,
-		})
-
-		await github.rest.pulls.submitReview({
-			...context.repo,
-			pull_number: context.issue.number,
-			event: 'APPROVE',
-			review_id: pendingReview.data.id
-		})
 
 		const { repository } = await github.graphql(`
       query($owner: String!, $repo: String!, $pullNumber: Int!) {
@@ -44,6 +33,19 @@ module.exports = async ({ github, context, command, core, commentId }) => {
     `, {
 			pullRequestId: pullRequestId
 		})
+
+		let pendingReview = await github.rest.pulls.createReview({
+			...context.repo,
+			pull_number: context.issue.number,
+		})
+
+		await github.rest.pulls.submitReview({
+			...context.repo,
+			pull_number: context.issue.number,
+			event: 'APPROVE',
+			review_id: pendingReview.data.id
+		})
+
     await comment.createOrUpdateComment(`    Auto-merge enabled`)
     core.info('Auto-merge enabled')
     return
