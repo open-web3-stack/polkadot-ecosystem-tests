@@ -25,9 +25,8 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `, {
-      owner,
-      repo,
-      pullNumber,
+			...context.repo,
+      pullNumber: context.issue.number,
     })
 
 		const pullRequestId = repository.pullRequest.id
@@ -68,9 +67,8 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `, {
-      owner,
-      repo,
-      pullNumber,
+			...context.repo,
+      pullNumber: context.issue.number,
     })
 
 		const pullRequestId = repository.pullRequest.id
