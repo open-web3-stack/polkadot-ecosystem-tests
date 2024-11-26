@@ -16,7 +16,7 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			review_id: pendingReview.data.id
 		})
 
-		const { repository } = await graphqlWithAuth(`
+		const { repository } = await github.graphql(`
       query($owner: String!, $repo: String!, $pullNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $pullNumber) {
@@ -59,7 +59,7 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			body: 'Dismissed'
 		})
 
-		const { repository } = await graphqlWithAuth(`
+		const { repository } = await github.graphql(`
       query($owner: String!, $repo: String!, $pullNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $pullNumber) {
