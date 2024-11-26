@@ -15,6 +15,23 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			event: 'APPROVE',
 			review_id: pendingReview.data.id
 		})
+
+		const { repository } = await graphqlWithAuth(`
+      query($owner: String!, $repo: String!, $pullNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pullNumber) {
+            id
+          }
+        }
+      }
+    `, {
+      owner,
+      repo,
+      pullNumber,
+    })
+
+		const pullRequestId = repository.pullRequest.id
+
     await github.graphql(`
       mutation($pullRequestId: ID!) {
         enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId }) {
@@ -26,7 +43,7 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `, {
-			pullRequestId: context.issue.number
+			pullRequestId: pullRequestId
 		})
     await comment.createOrUpdateComment(`    Auto-merge enabled`)
     core.info('Auto-merge enabled')
@@ -41,6 +58,23 @@ module.exports = async ({ github, context, command, core, commentId }) => {
 			event: 'REQUEST_CHANGES',
 			body: 'Dismissed'
 		})
+
+		const { repository } = await graphqlWithAuth(`
+      query($owner: String!, $repo: String!, $pullNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pullNumber) {
+            id
+          }
+        }
+      }
+    `, {
+      owner,
+      repo,
+      pullNumber,
+    })
+
+		const pullRequestId = repository.pullRequest.id
+
     await github.graphql(`
       mutation($pullRequestId: ID!) {
         disablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId }) {
@@ -51,7 +85,7 @@ module.exports = async ({ github, context, command, core, commentId }) => {
           }
         }
     `, {
-			pullRequestId: context.issue.number
+			pullRequestId: pullRequestId
 		})
     await comment.createOrUpdateComment(`    Auto-merge disabled`)
 
