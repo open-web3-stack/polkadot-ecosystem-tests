@@ -167,12 +167,14 @@ jobs:
               .filter(Boolean);
 
             const impactedNetworks = new Set()
-            const regex = /(\w+)\.(\w+)(\.\w+)?\.test/
+            const regex = /(\w+)\.(\w+)?(\.\w+)?\.test/
             for (const test of failedTests) {
               const match = test.match(regex)
               if (match) {
                 impactedNetworks.add(match[1])
-                impactedNetworks.add(match[2])
+                if (match[2]) {
+                  impactedNetworks.add(match[2])
+                }
               } else {
                 impactedNetworks.add("unknown")
               }
