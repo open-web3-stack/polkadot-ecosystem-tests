@@ -18,6 +18,10 @@ Polkadot Ecosystem Tests powered by [Chopsticks](http://github.com/AcalaNetwork/
 - The tests are always running against the block numbers specified in environment variables, which are configured in both `.env` and `KNOWN_GOOD_BLOCK_NUMBERS.env`. This ensures everything is reproducible.
 - Snapshots are used to compare the actual results with the expected results. The tests will fail if the snapshots are different, but it doesn't necessarily mean something is wrong. It is possible, for example, that some data structure has changed due to a runtime upgrade. In such cases, you can run `yarn test -u` to update the snapshots. However, always manually inspect the diffs to ensure they are expected.
 
+## Trigger remote test runs
+
+Use the [bot trigger issue](https://github.com/open-web3-stack/polkadot-ecosystem-tests/issues/45) to trigger test runs on GH Actions.
+
 ## Merge PR
 
 Use `/bot merge` command in a comment to approve and enable auto-merge of a PR. Use `/bot cancel-merge` to cancel the auto-merge.
