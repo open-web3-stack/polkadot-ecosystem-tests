@@ -19,6 +19,7 @@ import { ApiPromise } from '@polkadot/api'
 import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
 import { encodeAddress } from '@polkadot/util-crypto'
 import { u128 } from '@polkadot/types'
+import { polkadotPeople } from '@polkadot-api/descriptors'
 
 import { check, checkEvents } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
@@ -53,6 +54,9 @@ export async function setIdentityThenRequestAndProvideJudgement<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(peopleChain: Chain<TCustom, TInitStorages>) {
   const [peopleClient] = await setupNetworks(peopleChain)
+
+  const papi = peopleClient.papi()
+  const typedPapi = papi.getTypedApi(polkadotPeople)
 
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx

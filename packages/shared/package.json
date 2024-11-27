@@ -5,9 +5,13 @@
 		"@acala-network/chopsticks": "1.0.1",
 		"@acala-network/chopsticks-testing": "1.0.1",
 		"@e2e-test/networks": "workspace:*",
+		"@polkadot-api/descriptors": "portal:.papi/descriptors",
 		"@polkadot/api": "14.3.1",
 		"@polkadot/types": "14.3.1",
 		"@polkadot/types-augment": "14.3.1"
+	},
+	"scripts": {
+		"postinstall": "npx papi"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
