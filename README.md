@@ -34,6 +34,8 @@ The user have to be authorized in the [command-runner-config.json](./.github/com
 
 Chain configurations are defined in [packages/networks/src/chains](packages/networks/src/chains). Use existing chains as examples. Make sure to update [index.ts](packages/networks/src/chains/index.ts) as well.
 
+To setup the notifications, create a new notification issue and add the issue number to [notifications.json](./.github/workflows/notifications.json).
+
 ### Add XCM tests between two chains
 
 The XCM tests are defined in [packages/kusama/src](packages/kusama/src) and [packages/polkadot/src](packages/polkadot/src) for Kusama chains and Polkadot chains respectively.
