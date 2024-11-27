@@ -183,7 +183,7 @@ jobs:
             const { data: config } = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: '.github/notifications.json',
+              path: '.github/workflows/notifications.json',
               ref: 'master'
             })
 
