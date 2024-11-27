@@ -190,11 +190,11 @@ jobs:
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
 
             for (const network of impactedNetworks) {
-              const notification = notifications[network]
-              if (notification) {
+              const issueNumber = notifications[network]
+              if (issueNumber) {
                 // add a comment to the issue
                 await github.rest.issues.createComment({
-                  issue_number: notification.issue_number,
+                  issue_number: issueNumber,
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   body: `
