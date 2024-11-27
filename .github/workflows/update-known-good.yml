@@ -40,7 +40,7 @@ jobs:
         id: tests
         run: |
           if [ "${{ github.event.inputs.retry }}" == "true" ]; then
-            echo tests=${{ github.event.inputs.failed_tests }} >> "$GITHUB_OUTPUT"
+            echo "tests=$(echo '${{ github.event.inputs.failed_tests }}' | jq -c .)" >> "$GITHUB_OUTPUT"
           else
             echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
           fi
