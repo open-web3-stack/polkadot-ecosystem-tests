@@ -381,24 +381,14 @@ export async function referendumLifecycleTest<
 export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(network: Network, relayChain: Chain<TCustom, TInitStoragesRelay>, ) {
-  let topLevelDescription: string
-  let addressEncoding: number
+>(
+  relayChain: Chain<TCustom, TInitStoragesRelay>,
+  testConfig: { testSuiteName: string, addressEncoding: number, }
+) {
 
-  switch (network) {
-    case Network.Kusama:
-      topLevelDescription = 'Kusama Governance'
-      addressEncoding = 2
-      break
-    case Network.Polkadot:
-      topLevelDescription = 'Polkadot Governance'
-      addressEncoding = 0
-      break
-  }
-
-  describe(topLevelDescription, function () {
+  describe(testConfig.testSuiteName, function () {
     test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(relayChain, addressEncoding)
+      await referendumLifecycleTest(relayChain,testConfig.addressEncoding)
     })
   })
 }
