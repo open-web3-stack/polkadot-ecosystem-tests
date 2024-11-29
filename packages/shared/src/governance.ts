@@ -47,11 +47,17 @@ class OngoingReferendumStatus {
 /**
  * Compare the selected properties of two referenda.
  *
- * Fails if any of the properties to be compared
- * is different.
+ * Fails if any of the properties to be compared is different.
+ *
+ * When awaiting a referendum's preparation period, it is desirable to compare the referendum
+ * pre- and post-block execution; in this case, an optional error message parameter is passable,
+ * to allow indicating the offending iteration.
+ *
  * @param ref1
  * @param ref2
  * @param propertiesToBeSkipped List of properties to be skipped in the comparison
+ * @param errorMsg Additional error message to use when using this function inside a loop, to
+ *        identify failing iteration.
  */
 function referendumCmp(
   ref1: PalletReferendaReferendumStatusConvictionVotingTally,
@@ -217,7 +223,13 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(decisiondepEvents, 'referenda').toMatchSnapshot("events for bob's decision deposit")
+  // Once more, fields containing temporally-contigent information - block numbers - must be excised
+  // from test data to avoid spurious failures after updating block numbers.
+  unwantedFields = new RegExp("alarm|index|submitted")
+
+  await checkEvents(decisiondepEvents, 'referenda')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for bob's decision deposit")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "referendum's data cannot be `None`")
@@ -254,7 +266,7 @@ export async function referendumLifecycleTest<
   referendumCmp(ongoingRefPreDecDep, ongoingRefPostDecDep, ['decisionDeposit', 'alarm'])
 
   /**
-   * Wait for decision period to elapse
+   * Wait for preparation period to elapse
    */
 
   let refPre = ongoingRefPostDecDep
@@ -277,6 +289,8 @@ export async function referendumLifecycleTest<
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   const refNowDeciding = referendumDataOpt.unwrap().asOngoing
+
+  unwantedFields = new RegExp("alarm|submitted|since")
 
   await check(refNowDeciding)
     .redact({ removeKeys: unwantedFields })
@@ -313,10 +327,15 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
+  unwantedFields = new RegExp("alarm|when|since|submitted")
+
   // Filtering for events only from the `convictionVoting` pallet would leave them empty.
   // Voting events were only introduced in
-  // https://github.com/paritytech/polkadot-sdk/pull/4613
-  await checkEvents(voteEvents).toMatchSnapshot("events for alice's vote")
+  // https://github.com/paritytech/polkadot-sdk/pull/4613, and will take a few releases until they
+  // are visible here - this will trigger a failure in tests.
+  await checkEvents(voteEvents)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for alice's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "referendum's data cannot be `None`")
@@ -370,7 +389,9 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents).toMatchSnapshot("events for dave's vote")
+  await checkEvents(voteEvents)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for dave's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "referendum's data cannot be `None`")
@@ -417,7 +438,9 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents).toMatchSnapshot("events for eve's vote")
+  await checkEvents(voteEvents)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for eve's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   assert(referendumDataOpt, "referendum's data cannot be `None`")
