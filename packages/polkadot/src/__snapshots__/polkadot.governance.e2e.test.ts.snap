@@ -283,7 +283,10 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after alice's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 23396917,
+    },
     "decisionDeposit": {
       "amount": 10000000000,
       "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
@@ -315,7 +318,10 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after dave's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 23396917,
+    },
     "decisionDeposit": {
       "amount": 10000000000,
       "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
@@ -347,7 +353,10 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after eve's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 23396917,
+    },
     "decisionDeposit": {
       "amount": 10000000000,
       "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
@@ -450,4 +459,37 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     "section": "referenda",
   },
 ]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum upon start of decision period 1`] = `
+{
+  "deciding": {
+    "confirming": null,
+    "since": 23396917,
+  },
+  "decisionDeposit": {
+    "amount": 10000000000,
+    "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+  },
+  "enactment": {
+    "after": 1,
+  },
+  "inQueue": false,
+  "origin": {
+    "origins": "SmallTipper",
+  },
+  "proposal": {
+    "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+  },
+  "submissionDeposit": {
+    "amount": 10000000000,
+    "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+  },
+  "tally": {
+    "ayes": 0,
+    "nays": 0,
+    "support": 0,
+  },
+  "track": 30,
+}
 `;

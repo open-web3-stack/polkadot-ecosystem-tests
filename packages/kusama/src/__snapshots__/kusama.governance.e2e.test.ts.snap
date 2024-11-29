@@ -283,7 +283,10 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after alice's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 25765235,
+    },
     "decisionDeposit": {
       "amount": 33333333333,
       "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
@@ -315,7 +318,10 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after dave's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 25765235,
+    },
     "decisionDeposit": {
       "amount": 33333333333,
       "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
@@ -347,7 +353,10 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after eve's vote 1`] = `
 {
   "ongoing": {
-    "deciding": null,
+    "deciding": {
+      "confirming": null,
+      "since": 25765235,
+    },
     "decisionDeposit": {
       "amount": 33333333333,
       "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
@@ -450,4 +459,37 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     "section": "referenda",
   },
 ]
+`;
+
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum upon start of decision period 1`] = `
+{
+  "deciding": {
+    "confirming": null,
+    "since": 25765235,
+  },
+  "decisionDeposit": {
+    "amount": 33333333333,
+    "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+  },
+  "enactment": {
+    "after": 1,
+  },
+  "inQueue": false,
+  "origin": {
+    "origins": "SmallTipper",
+  },
+  "proposal": {
+    "inline": "0x12030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+  },
+  "submissionDeposit": {
+    "amount": 33333333333,
+    "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  },
+  "tally": {
+    "ayes": 0,
+    "nays": 0,
+    "support": 0,
+  },
+  "track": 30,
+}
 `;

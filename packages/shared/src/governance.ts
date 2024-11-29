@@ -1,8 +1,9 @@
+import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { check, checkEvents } from '@e2e-test/shared/helpers'
-import { Network, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -56,6 +57,7 @@ function referendumCmp(
   ref1: PalletReferendaReferendumStatusConvictionVotingTally,
   ref2: PalletReferendaReferendumStatusConvictionVotingTally,
   propertiesToBeSkipped: string[],
+  errorMsg?: string,
 ) {
   type ReferendumProperties = (keyof PalletReferendaReferendumStatusConvictionVotingTally)[]
   const properties: ReferendumProperties = Object.keys(new OngoingReferendumStatus()) as ReferendumProperties
@@ -65,10 +67,16 @@ function referendumCmp(
     .forEach((prop) => {
       const cmp = ref1[(prop as string)!]!.eq(ref2[prop])
       if (!cmp) {
-        const msg = `Referenda differed on property ${String(prop)}
+        const msg = `Referenda differed on property \`${String(prop)}\`
           Left: ${ref1[prop]}
           Right: ${ref2[prop]}`
-        assert(cmp, msg)
+        let errorMessage: string
+        if (errorMsg === null || errorMsg === undefined) {
+          errorMessage = msg
+        } else {
+          errorMessage = errorMsg + '\n' + msg
+        }
+        assert(cmp, errorMessage)
       }
     })
 }
@@ -77,7 +85,8 @@ function referendumCmp(
  * Test the process of
  * 1. submitting a referendum for a treasury spend
  * 2. placing its decision deposit
- * 3. voting on it
+ * 3. awaiting the end of the preparation period
+ * 3. voting on it after the decision period has commenced
  *   3.1. using `vote`
  *   3.2. using a split vote
  *   3.3. using a split-abstain vote
@@ -245,6 +254,46 @@ export async function referendumLifecycleTest<
   referendumCmp(ongoingRefPreDecDep, ongoingRefPostDecDep, ['decisionDeposit', 'alarm'])
 
   /**
+   * Wait for decision period to elapse
+   */
+
+  let refPre = ongoingRefPostDecDep
+  let refPost: PalletReferendaReferendumStatusConvictionVotingTally
+
+  for (let i = 0; i < smallTipper[1].preparePeriod.toNumber() - 2; i++) {
+    await relayClient.dev.newBlock()
+      referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+      assert(referendumDataOpt, "referendum's data cannot be `None`")
+      referendumData = referendumDataOpt.unwrap()
+      assert(referendumData.isOngoing)
+      refPost = referendumData.asOngoing
+
+      referendumCmp(refPre, refPost, [], `Failed on iteration number ${i}.`)
+
+      refPre = refPost
+  }
+
+  await relayClient.dev.newBlock()
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  const refNowDeciding = referendumDataOpt.unwrap().asOngoing
+
+  await check(refNowDeciding)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('referendum upon start of decision period')
+
+  const decisionPeriodStartBlock = ongoingRefPreDecDep.submitted.add(smallTipper[1].preparePeriod)
+
+  assert(refNowDeciding.alarm.unwrap()[0].eq(smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock)))
+
+  assert(refNowDeciding.deciding.eq({
+    since: decisionPeriodStartBlock,
+    confirming: null
+  }))
+
+  referendumCmp(refPost!, refNowDeciding, ['alarm', 'deciding'])
+
+  /**
    * Vote on the referendum
    */
 
@@ -285,14 +334,26 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
+  // Check Alice's locked funds
   const aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
 
-  assert(aliceLockedFunds.eq([[smallTipper[0], ayeVote]]))
+  assert(aliceLockedFunds.eq(
+    [
+      [
+        smallTipper[0],
+        ayeVote
+      ]
+    ])
+  )
+
+  // After a vote the referendum's alarm is set to the block following the one the vote tx was
+  // included in.
+  ongoingRefFirstVote.alarm.unwrap()[0].eq(refNowDeciding.deciding.unwrap().since.add(new BN(1)))
 
   // Placing a vote for a referendum should change nothing BUT:
   // 1. the tally, and
   // 2. its decision period, which at this point should still be counting down.
-  referendumCmp(ongoingRefPostDecDep, ongoingRefFirstVote, ['tally', 'alarm'])
+  referendumCmp(refNowDeciding, ongoingRefFirstVote, ['tally', 'alarm'])
 
   // Dave's vote
 
@@ -331,6 +392,10 @@ export async function referendumLifecycleTest<
   // Dave voted with `split`, which does not allow expression of conviction in votes.
   assert(daveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote]]))
 
+  // After a vote the referendum's alarm is set to the block following the one the vote tx was
+  // included in.
+  ongoingRefSecondVote.alarm.unwrap()[0].eq(ongoingRefFirstVote.deciding.unwrap().since.add(new BN(1)))
+
   // Placing a split vote for a referendum should change nothing BUT:
   // 1. the tally, and
   // 2. its decision period, still counting down.
@@ -358,7 +423,9 @@ export async function referendumLifecycleTest<
   assert(referendumDataOpt, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
-  await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot("referendum info after eve's vote")
+  await check(referendumData)
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("referendum info after eve's vote")
 
   assert(referendumData.isOngoing)
   const ongoingRefThirdVote = referendumData.asOngoing
@@ -371,6 +438,10 @@ export async function referendumLifecycleTest<
   const eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   assert(eveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote + abstainVote]]))
+
+  // AFter a vote the referendum's alarm is set to the block following the one the vote tx was
+  // included in.
+  ongoingRefThirdVote.alarm.unwrap()[0].eq(ongoingRefSecondVote.deciding.unwrap().since.add(new BN(1)))
 
   // Placing a split abstain vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -387,8 +458,11 @@ export function governanceE2ETests<
 ) {
 
   describe(testConfig.testSuiteName, function () {
-    test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(relayChain,testConfig.addressEncoding)
-    })
+    test(
+      'referendum lifecycle test - submission, decision deposit, various voting should all work',
+      async () => {
+        await referendumLifecycleTest(relayChain,testConfig.addressEncoding)
+      },
+      10_000_000)
   })
 }

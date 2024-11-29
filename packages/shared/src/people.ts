@@ -20,7 +20,7 @@ import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@p
 import { encodeAddress } from '@polkadot/util-crypto'
 import { u128 } from '@polkadot/types'
 
-import { Network, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
 
 /**
