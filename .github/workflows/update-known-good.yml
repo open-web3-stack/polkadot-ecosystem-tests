@@ -197,7 +197,7 @@ jobs:
                   issue_number: issueNumber,
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  body: 'Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}'
+                  body: `Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
                 })
               }
             }
