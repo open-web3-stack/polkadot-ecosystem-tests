@@ -37,7 +37,7 @@
 		"lint-staged": "^15.2.10",
 		"prettier": "^3.3.3",
 		"tsx": "^4.19.2",
-		"typescript-eslint": "^8.15.0",
+		"typescript-eslint": "^8.16.0",
 		"unplugin-swc": "^1.5.1",
 		"vite-tsconfig-paths": "^5.1.3"
 	},
