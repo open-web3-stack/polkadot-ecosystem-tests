@@ -92,10 +92,10 @@ function referendumCmp(
  * 1. submitting a referendum for a treasury spend
  * 2. placing its decision deposit
  * 3. awaiting the end of the preparation period
- * 3. voting on it after the decision period has commenced
- *   3.1. using `vote`
- *   3.2. using a split vote
- *   3.3. using a split-abstain vote
+ * 4. voting on it after the decision period has commenced
+ *   4.1. using `vote`
+ *   4.2. using a split vote
+ *   4.3. using a split-abstain vote
  */
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -117,15 +117,6 @@ export async function referendumLifecycleTest<
     },
   })
 
-  /*
-  const preimageTx = relayClient.api.tx.preimage.notePreimage(encodedProposal)
-  const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccounts.alice))
-
-  await relayClient.dev.newBlock()
-
-  await checkEvents(preImageEvents, 'preimage').toMatchSnapshot('note preimage events')
-  */
-
   /**
    * Get current referendum count i.e. the next referendum's index
    */
@@ -134,14 +125,13 @@ export async function referendumLifecycleTest<
   /**
    * Submit a new referendum
    */
-  const encodedProposal = relayClient.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method.toHex()
 
   const submitReferendumTx = relayClient.api.tx.referenda.submit(
     {
       Origins: 'SmallTipper',
     } as any,
     {
-      Inline: encodedProposal,
+      Inline: relayClient.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method.toHex(),
     },
     {
       After: 1,
@@ -472,6 +462,59 @@ export async function referendumLifecycleTest<
   referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
 }
 
+export async function preimageTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const encodedProposal = relayClient.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method
+  const preimageTx = relayClient.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(preImageEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  /**
+   * Query noted preimage
+   */
+
+  let preimage = await relayClient.api.query.preimage.preimageFor(
+    [
+      encodedProposal.hash.toHex(),
+      encodedProposal.encodedLength
+    ]
+  )
+
+  assert(preimage.isSome)
+  assert(preimage.unwrap().toHex() === encodedProposal.toHex())
+
+  /**
+   * Unnote preimage with the same account that had previously noted it
+   */
+
+  const unnotePreimageTx = relayClient.api.tx.preimage.unnotePreimage(encodedProposal.hash.toHex())
+  const unnotePreImageEvents = await sendTransaction(unnotePreimageTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(unnotePreImageEvents, 'preimage').toMatchSnapshot('unnote preimage events')
+
+  /**
+   * Query unnoted preimage, and verify it is absent
+   */
+
+  preimage = await relayClient.api.query.preimage.preimageFor(
+    [
+      encodedProposal.hash.toHex(),
+      encodedProposal.encodedLength
+    ]
+  )
+
+  assert(preimage.isNone)
+}
+
 export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -484,8 +527,14 @@ export function governanceE2ETests<
     test(
       'referendum lifecycle test - submission, decision deposit, various voting should all work',
       async () => {
-        await referendumLifecycleTest(relayChain,testConfig.addressEncoding)
-      },
-      10_000_000)
+        await referendumLifecycleTest(relayChain, testConfig.addressEncoding)
+      })
+
+      test(
+        'preimage submission, query and removal works',
+        async() => {
+          await preimageTest(relayChain)
+        }
+      )
   })
 }
