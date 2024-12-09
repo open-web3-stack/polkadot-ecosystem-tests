@@ -96,6 +96,11 @@ function referendumCmp(
  *   4.1. using `vote`
  *   4.2. using a split vote
  *   4.3. using a split-abstain vote
+ * 5. cancelling the referendum using the scheduler to insert a `Root`-origin call
+ *   5.1 checking that submission/decision deposits are refunded
+ * 6. removing the votes cast
+ *   6.1 asserting that voting locks are rescinded
+ *   6.2 asserting that voting funds are returned
  */
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -222,7 +227,7 @@ export async function referendumLifecycleTest<
     .toMatchSnapshot("events for bob's decision deposit")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "referendum's data cannot be `None`")
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
   await check(referendumData)
@@ -265,7 +270,7 @@ export async function referendumLifecycleTest<
   for (let i = 0; i < smallTipper[1].preparePeriod.toNumber() - 2; i++) {
     await relayClient.dev.newBlock()
       referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-      assert(referendumDataOpt, "referendum's data cannot be `None`")
+      assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
       referendumData = referendumDataOpt.unwrap()
       assert(referendumData.isOngoing)
       refPost = referendumData.asOngoing
@@ -322,13 +327,13 @@ export async function referendumLifecycleTest<
   // Filtering for events only from the `convictionVoting` pallet would leave them empty.
   // Voting events were only introduced in
   // https://github.com/paritytech/polkadot-sdk/pull/4613, and will take a few releases until they
-  // are visible here - this will trigger a failure in tests.
+  // are visible here - this will trigger a failure in tests, which can then be addressed.
   await checkEvents(voteEvents)
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for alice's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "referendum's data cannot be `None`")
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
   await check(referendumData)
@@ -344,15 +349,14 @@ export async function referendumLifecycleTest<
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
   // Check Alice's locked funds
-  const aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
-
-  assert(aliceLockedFunds.eq(
+  let aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
+  const aliceClassLocks = [
     [
-      [
-        smallTipper[0],
-        ayeVote
-      ]
-    ])
+      smallTipper[0],
+      ayeVote
+    ]
+  ]
+  assert(aliceLockedFunds.eq(aliceClassLocks)
   )
 
   // After a vote the referendum's alarm is set to the block following the one the vote tx was
@@ -384,7 +388,7 @@ export async function referendumLifecycleTest<
     .toMatchSnapshot("events for dave's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "referendum's data cannot be `None`")
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
   await check(referendumData)
@@ -399,9 +403,10 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote
   await check(ongoingRefSecondVote.tally).toMatchObject(votes)
 
-  const daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+  let daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+  const daveClassLocks = [[smallTipper[0], ayeVote + nayVote]]
   // Dave voted with `split`, which does not allow expression of conviction in votes.
-  assert(daveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote]]))
+  assert(daveLockedFunds.eq(daveClassLocks))
 
   // After a vote the referendum's alarm is set to the block following the one the vote tx was
   // included in.
@@ -433,7 +438,7 @@ export async function referendumLifecycleTest<
     .toMatchSnapshot("events for eve's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "referendum's data cannot be `None`")
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
   await check(referendumData)
@@ -448,9 +453,10 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote + abstainVote
   await check(ongoingRefThirdVote.tally).toMatchObject(votes)
 
-  const eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+  let eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+  const eveClassLocks = [[smallTipper[0], ayeVote + nayVote + abstainVote]]
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
-  assert(eveLockedFunds.eq([[smallTipper[0], ayeVote + nayVote + abstainVote]]))
+  assert(eveLockedFunds.eq(eveClassLocks))
 
   // AFter a vote the referendum's alarm is set to the block following the one the vote tx was
   // included in.
@@ -460,8 +466,97 @@ export async function referendumLifecycleTest<
   // 1. the tally, and
   // 2. its decision period, still counting down.
   referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
+
+  /**
+   * Cancel the referendum using the scheduler pallet to simulate a root origin
+   */
+
+  const cancelRefCall = relayClient.api.tx.referenda.cancel(referendumIndex)
+
+  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  await relayClient.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: cancelRefCall.method.toHex(),
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await relayClient.dev.newBlock()
+
+  /**
+   * Check cancelled ref's data
+   */
+
+  referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  // cancelling a referendum does not remove it from storage
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
+
+  assert(referendumDataOpt.unwrap().isCancelled, "referendum should be cancelled!")
+  const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> = referendumDataOpt.unwrap().asCancelled
+
+  cancelledRef[0].eq(referendumIndex)
+  cancelledRef[1].unwrap().eq({
+    who: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    amount: relayClient.api.consts.referenda.submissionDeposit
+  })
+  cancelledRef[2].unwrap().eq({
+    who: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    amount: smallTipper[1].decisionDeposit
+  })
+
+  // Check that voting locks remain until withdrawn
+  aliceLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.alice.address)
+  assert(aliceLockedFunds.eq(aliceClassLocks))
+
+  daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+  assert(daveLockedFunds.eq(daveClassLocks))
+
+  eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+  assert(eveLockedFunds.eq(eveClassLocks))
+
+  const removeAliceVote = relayClient.api.tx.convictionVoting.removeVote(smallTipper[0], referendumIndex).method
+  const removeDaveVoteAsAlice = relayClient.api.tx.convictionVoting.removeOtherVote(
+    defaultAccounts.dave.address,
+    smallTipper[0],
+    referendumIndex
+  ).method
+  const removeEveVoteAsAlice = relayClient.api.tx.convictionVoting.removeOtherVote(
+    defaultAccounts.eve.address,
+    smallTipper[0],
+    referendumIndex
+  ).method
+
+  const batchTx = relayClient.api.tx.utility.batch([
+    removeAliceVote,
+    removeDaveVoteAsAlice,
+    removeEveVoteAsAlice,
+  ])
+
+  const batchEvents = await sendTransaction(batchTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(batchEvents).toMatchSnapshot('removal of votes in cancelled referendum')
 }
 
+/**
+ * Test the registering, querying and unregistering a preimage; in this test, a `spend_local`
+ * treasury call.
+ */
 export async function preimageTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
