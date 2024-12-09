@@ -7,7 +7,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
     const execCommand = `yarn update-known-good`
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
-    if (result.errorOutput || result.exitCode) {
+    if (result.exitCode) {
       core.setFailed('Failed to update known good blocks')
       await comment.createOrUpdateComment(createResult({
         context,
