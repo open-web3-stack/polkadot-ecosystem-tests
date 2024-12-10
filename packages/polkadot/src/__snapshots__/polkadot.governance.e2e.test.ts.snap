@@ -1,5 +1,29 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Governance > preimage submission, query and removal works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Polkadot Governance > preimage submission, query and removal works > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after vote's rescission 1`] = `
 [
   [
