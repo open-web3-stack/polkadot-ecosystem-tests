@@ -302,7 +302,7 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > bala
 
 exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > balance on to chain 1`] = `
 {
-  "balance": "(rounded 980000)",
+  "balance": "(rounded 1000000)",
   "extra": null,
   "reason": {
     "sufficient": null,

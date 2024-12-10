@@ -1,7 +1,7 @@
 module.exports = async ({ github, context, exec, commentId, core, testResult }) => {
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
-  
+
   if(testResult !== 'success') {
     return comment.createOrUpdateComment(`    Test failed`)
   }
@@ -16,7 +16,7 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
   await exec.exec(`git config --global user.name 'github-actions[bot]'`)
   await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`)
   await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS.env`)
-  await exec.exec(`git`, ['commit', '-am', '[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
+  await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
   await exec.exec('git push')
 
   let commitId = ''

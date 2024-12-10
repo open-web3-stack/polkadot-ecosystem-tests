@@ -2,10 +2,6 @@
 	"run": {
 		"allowed_issues": [45]
 	},
-	"update": {
-		"allowed_issues": [45],
-		"allowed_users": ["xlc", "ntduan"]
-	},
 	"merge": {
 		"allowed_users": ["xlc", "ntduan"]
 	},

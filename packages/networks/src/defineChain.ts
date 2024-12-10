@@ -7,7 +7,21 @@ const toNumber = (value: string | undefined): number | undefined => {
 
   return Number(value)
 }
-
+/**
+ * Defines a new chain configuration with support for custom properties and initial storage.
+ *
+ * @template TCustom - Type for custom chain configuration properties
+ * @template TInitStorages - Type for initial storage configurations
+ * @param config - Chain configuration object containing required settings
+ * @returns Chain configuration with extension capabilities
+ *
+ * @example
+ * const chain = defineChain({
+ *   name: 'testnet',
+ *   endpoint: 'wss://test.network',
+ *   custom: { networkId: 1 }
+ * })
+ */
 export function defineChain<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,

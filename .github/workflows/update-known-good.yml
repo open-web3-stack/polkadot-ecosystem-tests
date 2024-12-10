@@ -7,6 +7,10 @@ on:
         description: 'If this is a retry run'
         required: false
         type: boolean
+      failed_tests:
+        description: 'Failed tests to retry (JSON array)'
+        required: false
+        type: string
   schedule:
     - cron: '0 */6 * * *'
 
@@ -35,7 +39,11 @@ jobs:
       - name: Define Tests
         id: tests
         run: |
-          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event.inputs.retry }}" == "true" ]; then
+            echo "tests=$(echo '${{ github.event.inputs.failed_tests }}' | sed 's/^"\(.*\)"$/\1/')" >> "$GITHUB_OUTPUT"
+          else
+            echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+          fi
       - name: Update Known Good Block Numbers
         run: |
           yarn update-known-good
@@ -69,8 +77,16 @@ jobs:
   save:
     needs: tests
     runs-on: ubuntu-latest
+    if: success() && github.event.inputs.retry != 'true'
     steps:
+    - uses: actions/create-github-app-token@v1
+      id: app-token
+      with:
+        app-id: ${{ secrets.GH_APP_ID }}
+        private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
     - uses: actions/checkout@v4
+      with:
+        token: ${{ steps.app-token.outputs.token }}
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
@@ -81,7 +97,7 @@ jobs:
         git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
         git add KNOWN_GOOD_BLOCK_NUMBERS.env
         if ! git diff --cached --quiet; then
-          git commit -m "[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
+          git commit -m "[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
           git push
         else
           echo "No changes to commit"
@@ -91,6 +107,26 @@ jobs:
     if: failure() && github.event.inputs.retry != 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Get failed jobs
+        id: get-failed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+
+            const failedTests = response.data.jobs
+              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
+              .map(job => {
+                const match = job.name.match(/tests \((.*)\)/);
+                return match ? match[1] : null;
+              })
+              .filter(Boolean);
+
+            return JSON.stringify(failedTests);
       - name: sleep
         run: sleep 300
       - name: Dispatch retry workflow
@@ -103,25 +139,65 @@ jobs:
               workflow_id: 'update-known-good.yml',
               ref: 'master',
               inputs: {
-                retry: 'true'
+                retry: 'true',
+                failed_tests: '${{ steps.get-failed.outputs.result }}'
               }
             })
-  create-issue:
+  notify:
     needs: tests
     if: failure() && github.event.inputs.retry == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Create issue
+      - name: Create Comment
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.create({
+            const response = await github.rest.actions.listJobsForWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🚨 Test Failed 🚨',
-              body: `
-            Workflow: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+              run_id: context.runId
+            });
 
-            To rerun test, comment \`/bot run\` command in #45
-            `
+            const failedTests = response.data.jobs
+              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
+              .map(job => {
+                const match = job.name.match(/tests \((.*)\)/);
+                return match ? match[1] : null;
+              })
+              .filter(Boolean);
+
+            const impactedNetworks = new Set()
+            const regex = /(\w+)\.(\w+)?(\.\w+)?\.test/
+            for (const test of failedTests) {
+              const match = test.match(regex)
+              if (match) {
+                impactedNetworks.add(match[1])
+                if (match[2]) {
+                  impactedNetworks.add(match[2])
+                }
+              } else {
+                impactedNetworks.add("unknown")
+              }
+            }
+
+            const { data: config } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: '.github/workflows/notifications.json',
+              ref: 'master'
             })
+
+            const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
+
+            for (const network of impactedNetworks) {
+              const issueNumber = notifications[network]
+              if (issueNumber) {
+                // add a comment to the issue
+                await github.rest.issues.createComment({
+                  issue_number: issueNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+                })
+              }
+            }

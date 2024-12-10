@@ -7,7 +7,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
     const execCommand = `yarn update-known-good`
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
-    if (result.errorOutput || result.exitCode) {
+    if (result.exitCode) {
       core.setFailed('Failed to update known good blocks')
       await comment.createOrUpdateComment(createResult({
         context,
@@ -90,7 +90,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     if (!diffResult) {
       core.info('snapshot not updated')
-      await exec.exec(`git`, ['commit', '-am', '[CI Skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
+      await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
       await exec.exec('git push')
 
       let commitId = ''
@@ -111,7 +111,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
     } else {
       const branchName = `Update-SnapShot-${commentId}`
       await exec.exec(`git checkout -b ${branchName}`)
-      await exec.exec(`git`, ['commit', '-am', '[CI Skip] Update snapshots'])
+      await exec.exec(`git`, ['commit', '-am', '[ci skip] Update snapshots'])
 
 
       const commentUrl = `https://github.com/${context.payload.repository.full_name}/issues/${context.issue.number}#issuecomment-${commentId}`

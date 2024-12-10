@@ -1,61 +1,92 @@
 # Polkadot Ecosystem Tests
 
-Polkadot Ecosystem Tests powered by [Chopsticks](http://github.com/AcalaNetwork/chopsticks).
+Automated testing suite for the Polkadot ecosystem powered by [Chopsticks](http://github.com/AcalaNetwork/chopsticks).
 
-## Run and update tests
+## Quick Start
 
-- `yarn test` run all tests
-- `yarn test:ui` run all tests with Vitest UI
-- `yarn test <chain>` run tests for specific chain
-- `yarn update-known-good` update [KNOWN_GOOD_BLOCK_NUMBERS.env](./KNOWN_GOOD_BLOCK_NUMBERS.env) file
-- `yarn update-env` update block numbers for all chains
-- `yarn test -u` update snapshots
+```bash
+# Install dependencies
+yarn install
 
-## Notes
+# Run all tests
+yarn test
 
-- By default, the tests are run against the block numbers in `KNOWN_GOOD_BLOCK_NUMBERS.env`. If you want to run the tests against the latest block numbers, you can run `yarn update-env` first.
-- It is recommended to have `DB_PATH=./db.sqlite` in your `.env` file to cache the chain state in order to speed up repeated test runs.
-- The tests are always running against the block numbers specified in environment variables, which are configured in both `.env` and `KNOWN_GOOD_BLOCK_NUMBERS.env`. This ensures everything is reproducible.
-- Snapshots are used to compare the actual results with the expected results. The tests will fail if the snapshots are different, but it doesn't necessarily mean something is wrong. It is possible, for example, that some data structure has changed due to a runtime upgrade. In such cases, you can run `yarn test -u` to update the snapshots. However, always manually inspect the diffs to ensure they are expected.
+# Run tests for specific chain
+yarn test <chain>
 
-## Develop new tests
+# Run with Vitest UI
+yarn test:ui
 
-### Add a new chain
+# Update snapshots
+yarn test -u
+```
 
-Chain configurations are defined in [packages/networks/src/chains](packages/networks/src/chains). Use existing chains as examples. Make sure to update [index.ts](packages/networks/src/chains/index.ts) as well.
+## For Network Operators
 
-### Add XCM tests between two chains
+### Automated Test Runs
+- Tests run every 6 hours automatically
+- Failed tests are retried after 5 minutes
+- Persistent failures trigger notifications
+- Subscribe to [notification issues](https://github.com/open-web3-stack/polkadot-ecosystem-tests/issues?q=is%3Aissue+is%3Aopen+label%3Anotifications) for updates
 
-The XCM tests are defined in [packages/kusama/src](packages/kusama/src) and [packages/polkadot/src](packages/polkadot/src) for Kusama chains and Polkadot chains respectively.
-Add a new file named of `<chain1>.<chain2>.test.ts` for tests between those two chains. Use existing files as examples.
+### Manual Test Triggers
+Use the [bot trigger issue](https://github.com/open-web3-stack/polkadot-ecosystem-tests/issues/45) to run tests on-demand via GitHub Actions
 
-### Add new kind of XCM tests
+## For Test Writers
 
-The XCM tests are defined in [packages/shared/src/xcm](packages/shared/src/xcm). They are implemented in such a way that they are network agnostic and can be reused across different chains. The tests should also be tolerant to minor changes regarding onchain envoronment. For example, they should not be impacted by a small change in transaction fees, and should use `.redact` to round the numbers or remove fields that are constantly changing.
+### Environment Configuration
+Create `.env` file with:
+```env
+# Required settings
+DB_PATH=./db.sqlite         # Cache database location
+RUNTIME_LOG_LEVEL=3         # Log level (1=error to 5=trace)
+LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 
-For network specific tests that cannot be reused, just add them as normal tests.
+# Optional overrides
+<NETWORK>_BLOCK_NUMBER=123  # Custom block number
+<NETWORK>_WASM=/path/to/wasm # Custom runtime
+<NETWORK>_ENDPOINT=wss://... # Custom endpoint
+```
 
-## Environment Variables
+### Project Structure
+- `packages/shared/src/xcm`: Common XCM test suites
+- `packages/kusama/src`: Kusama network tests
+- `packages/polkadot/src`: Polkadot network tests
 
-Environment variables can be set in `.env` file. The following variables are supported:
+### Test Guidelines
+- Write network-agnostic tests where possible
+- Handle minor chain state changes gracefully
+- Use `.redact()` for volatile values
+- Leverage snapshots for easier maintenance
+- Follow naming convention: `<chain1>.<chain2>.test.ts` or `<chain1>.test.ts`
 
-- `DB_PATH`: path to the cache database.
-- `RUNTIME_LOG_LEVEL`: log level for the runtime. 5 for error, 4 for warn, 3 for info, 2 for debug, 1 for trace. Default is 0.
-- `LOG_LEVEL`: log level for Chopstick. Note, use `yarn vitest` instead of `yarn test` to see logs. Options are `error`, `warn`, `info`, `debug`, `trace`. Default is `error`.
-- `$(NETWORK_NAME)_BLOCK_NUMBER`: set block number for the chain.
-- `$(NETWORK_NAME)_WASM`: path to the chain's wasm file.
-- `$(NETWORK_NAME)_ENDPOINT`: endpoint of the chain.
+### Adding New Chains
+1. Add chain configuration in `packages/networks/src/chains/`
+2. Update chain index in `packages/networks/src/chains/index.ts`
+3. Create notification issue
+4. Update `.github/workflows/notifications.json`
 
-## Known Good Block Numbers
+### Debugging Tips
+- Use `{ only: true }` to isolate tests
+- Add logging to shared test suites
+- Insert `await chain.pause()` for state inspection
+- Connect via Polkadot.js Apps to paused chains
+- Carefully review snapshot changes
 
-Known good block numbers are stored in `KNOWN_GOOD_BLOCK_NUMBERS.env`. Those block numbers are used by default when running tests unless they are overriden by environment variables.
+### Block Number Management
+```bash
+# Update KNOWN_GOOD_BLOCK_NUMBERS.env to latest
+yarn update-known-good
 
-The [Update Known Good Block Numbers](https://github.com/open-web3-stack/polkadot-ecosystem-tests/actions/workflows/update-known-good.yml) workflow will automatically update the known good block numbers periodically.
+# Update .env to latest (CI always uses KNOWN_GOOD_BLOCK_NUMBERS.env)
+yarn update-env
+```
 
-Use `yarn update-known-good` to update the known good block numbers manually.
+## For Maintainers
 
-Use `yarn update-env` to fetch the latest block numbers for all chains and save them to `.env` file. Note this change is ignored by git. However, it can be useful to ensure the tests are not flaky due to block number changes.
+### Bot Commands
+- `/bot update` - Update snapshots
+- `/bot merge` - Approve and enable auto-merge
+- `/bot cancel-merge` - Disable auto-merge
 
-Use [Update Snapshots](https://github.com/open-web3-stack/polkadot-ecosystem-tests/actions/workflows/update-snapshot.yml) workflow if there are some new changes breaks the tests.
-It will update known good block numbers, update snapshots, and open an PR. Please review the update snapshots to ensure it is expected.
-In case of changes due to onchain fees, we will want to adjust precision in the tests to prevent flakiness in the future.
+Authorized users are defined in `.github/command-runner/command-runner-config.json`
