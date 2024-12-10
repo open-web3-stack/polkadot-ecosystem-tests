@@ -30,7 +30,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
  * In TypeScript, it is not possible to get a list of an interface's properties.
  *
  * In order to get properties to then granularly compare the same referenda in different
- * stages, the below class is required, to then instantiate as as PJS's interface.
+ * stages, the below class is required, to then instantiate as a PJS's interface.
  */
 class OngoingReferendumStatus {
   readonly track!: u16
@@ -52,7 +52,7 @@ class OngoingReferendumStatus {
  * Fails if any of the properties to be compared is different.
  *
  * When awaiting a referendum's preparation period, it is desirable to compare the referendum
- * pre- and post-block execution; in this case, an optional error message parameter is passable,
+ * pre- and post-block-execution; in this case, an optional error message parameter is passable,
  * to allow indicating the offending iteration.
  *
  * @param ref1
@@ -353,26 +353,30 @@ export async function referendumLifecycleTest<
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
   // Check Charlie's locked funds
-  let charlieLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
-  const charlieClassLocks = [
+  const charlieClassLocks = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
+  const localCharlieClassLocks = [
     [
       smallTipper[0],
       ayeVote
     ]
   ]
-  assert(charlieLockedFunds.eq(charlieClassLocks))
+  assert(charlieClassLocks.eq(localCharlieClassLocks))
 
   // , and overall account's votes
-  let votingForCharlie: PalletConvictionVotingVoteVoting =
+  const votingByCharlie: PalletConvictionVotingVoteVoting =
     await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.charlie.address, smallTipper[0])
-  assert(votingForCharlie.isCasting, "charlie's votes are cast, not delegated")
-  let charlieCastVotes: PalletConvictionVotingVoteCasting = votingForCharlie.asCasting
+  assert(votingByCharlie.isCasting, "charlie's votes are cast, not delegated")
+  const charlieCastVotes: PalletConvictionVotingVoteCasting = votingByCharlie.asCasting
 
-  await check(charlieCastVotes).toMatchSnapshot("charlie's votes after casting his")
+  // The information present in the `VotingFor` storage item contains the referendum index,
+  // which must be removed.
+  const unwantedRefIx = new RegExp(`${referendumIndex},`)
+
+  await check(charlieCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("charlie's votes after casting his")
   assert(charlieCastVotes.votes.length === 1)
   assert(charlieCastVotes.votes[0][0].eq(referendumIndex))
 
-  let charlieVotes = charlieCastVotes.votes[0][1].asStandard
+  const charlieVotes = charlieCastVotes.votes[0][1].asStandard
   assert(charlieVotes.vote.conviction.isLocked3x && charlieVotes.vote.isAye)
 
   // After a vote the referendum's alarm is set to the block following the one the vote tx was
@@ -419,24 +423,24 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote
   await check(ongoingRefSecondVote.tally).toMatchObject(votes)
 
-  let daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
-  const daveClassLocks = [[smallTipper[0], ayeVote + nayVote]]
+  const daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+  const localDaveClassLocks = [[smallTipper[0], ayeVote + nayVote]]
   // Dave voted with `split`, which does not allow expression of conviction in votes.
-  assert(daveLockedFunds.eq(daveClassLocks))
+  assert(daveLockedFunds.eq(localDaveClassLocks))
 
   // Check Dave's overall votes
 
-  let votingForDave: PalletConvictionVotingVoteVoting =
+  const votingByDave: PalletConvictionVotingVoteVoting =
     await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.dave.address, smallTipper[0])
-  assert(votingForDave.isCasting, "dave's votes are cast, not delegated")
-  let daveCastVotes: PalletConvictionVotingVoteCasting = votingForDave.asCasting
+  assert(votingByDave.isCasting, "dave's votes are cast, not delegated")
+  const daveCastVotes: PalletConvictionVotingVoteCasting = votingByDave.asCasting
 
-  await check(daveCastVotes).toMatchSnapshot("dave's votes after casting his")
+  await check(daveCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("dave's votes after casting his")
 
   assert(daveCastVotes.votes.length === 1)
   assert(daveCastVotes.votes[0][0].eq(referendumIndex))
 
-  let daveVote = daveCastVotes.votes[0][1].asSplit
+  const daveVote = daveCastVotes.votes[0][1].asSplit
   assert(daveVote.aye.eq(ayeVote))
   assert(daveVote.nay.eq(nayVote))
 
@@ -485,23 +489,23 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote + abstainVote
   await check(ongoingRefThirdVote.tally).toMatchObject(votes)
 
-  let eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
-  const eveClassLocks = [[smallTipper[0], ayeVote + nayVote + abstainVote]]
+  const eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+  const localEveClassLocks = [[smallTipper[0], ayeVote + nayVote + abstainVote]]
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
-  assert(eveLockedFunds.eq(eveClassLocks))
+  assert(eveLockedFunds.eq(localEveClassLocks))
 
   // Check Eve's overall votes
 
-  let votingForEve: PalletConvictionVotingVoteVoting =
+  const votingByEve: PalletConvictionVotingVoteVoting =
     await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.eve.address, smallTipper[0])
-  assert(votingForEve.isCasting, "eve's votes are cast, not delegated")
-  let eveCastVotes: PalletConvictionVotingVoteCasting = votingForEve.asCasting
+  assert(votingByEve.isCasting, "eve's votes are cast, not delegated")
+  const eveCastVotes: PalletConvictionVotingVoteCasting = votingByEve.asCasting
 
-  await check(eveCastVotes).toMatchSnapshot("eve's votes after casting hers")
+  await check(eveCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("eve's votes after casting hers")
   assert(eveCastVotes.votes.length === 1)
   assert(eveCastVotes.votes[0][0].eq(referendumIndex))
 
-  let eveVote = eveCastVotes.votes[0][1].asSplitAbstain
+  const eveVote = eveCastVotes.votes[0][1].asSplitAbstain
   assert(eveVote.aye.eq(ayeVote))
   assert(eveVote.nay.eq(nayVote))
   assert(eveVote.abstain.eq(abstainVote))
@@ -569,32 +573,48 @@ export async function referendumLifecycleTest<
     amount: smallTipper[1].decisionDeposit
   })
 
-  // Check that cancelling the referendum has no effect on locks
-  charlieLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
-  assert(charlieLockedFunds.eq(charlieClassLocks))
+  const testAccounts = {
+    'charlie': {
+      classLocks: charlieClassLocks,
+      localClassLocks: localCharlieClassLocks,
+      votingBy: votingByCharlie,
+    },
+    'dave': {
+      classLocks: daveLockedFunds,
+      localClassLocks: localDaveClassLocks,
+      votingBy: votingByDave,
+    },
+    'eve': {
+      classLocks: eveLockedFunds,
+      localClassLocks: localEveClassLocks,
+      votingBy: votingByEve,
+    },
+  }
 
-  daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
-  assert(daveLockedFunds.eq(daveClassLocks))
-
-  eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
-  assert(eveLockedFunds.eq(eveClassLocks))
+  // Check that cancelling the referendum has no effect on each voter's class locks
+  for (const account of Object.keys(testAccounts)) {
+    testAccounts[account].classLocks =
+      await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts[account].address)
+    assert(
+      testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
+      `${account}'s class locks should be unaffected by referendum cancellation`
+    )
+  }
 
   // Check that cancelling the referendum has no effect on accounts' votes
-
-  const postCancellationVotingForCharlie =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.charlie.address, smallTipper[0])
-  assert(postCancellationVotingForCharlie.eq(votingForCharlie))
-  await check(postCancellationVotingForCharlie).toMatchSnapshot("charlie's votes after referendum's cancellation")
-
-  const postCancellationVotingForDave =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.dave.address, smallTipper[0])
-  assert(postCancellationVotingForDave.eq(votingForDave))
-  await check(postCancellationVotingForDave).toMatchSnapshot("dave's votes after referendum's cancellation")
-
-  const postCancellationVotingForEve =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.eve.address, smallTipper[0])
-  assert(postCancellationVotingForEve.eq(votingForEve))
-  await check(postCancellationVotingForEve).toMatchSnapshot("eve's votes after referendum's cancellation")
+  for (const account of Object.keys(testAccounts)) {
+    const postCancellationVoting = await relayClient.api.query.convictionVoting.votingFor(
+      defaultAccounts[account].address,
+      smallTipper[0]
+    )
+    assert(
+      postCancellationVoting.eq(testAccounts[account].votingBy),
+      `${account}'s votes should be unaffected by referendum cancellation`
+    )
+    await check(postCancellationVoting)
+      .redact({ removeKeys: unwantedRefIx})
+      .toMatchSnapshot(`${account}'s votes after referendum's cancellation`)
+  }
 
   /**
    * Vote withdrawal transactions, batched atomically.
@@ -624,35 +644,26 @@ export async function referendumLifecycleTest<
 
   await checkEvents(batchEvents).toMatchSnapshot('removal of votes in cancelled referendum')
 
-  charlieLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
-  assert(charlieLockedFunds.eq(charlieClassLocks))
-  await check(charlieLockedFunds).toMatchSnapshot('charlie\'s class locks after vote\'s rescission')
-  votingForCharlie =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.charlie.address, smallTipper[0])
-  assert(votingForCharlie.isCasting)
-  charlieCastVotes = votingForCharlie.asCasting
-  await check(charlieCastVotes).toMatchSnapshot("charlie's votes after rescission")
-  assert(charlieCastVotes.votes.isEmpty)
+  // Check that each voter's class locks remain unaffected by vote removal - these are subject to a
+  // later update.
+  //
+  // Also check that voting for each account is appropriately empty.
+  for (const account of Object.keys(testAccounts)) {
+    testAccounts[account].classLocks =
+      await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts[account].address)
+    assert(
+      testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
+      `${account}'s class locks should be unaffected by vote removal`
+    )
+    await check(testAccounts[account].classLocks).toMatchSnapshot(`${account}'s class locks after their vote's rescission`)
 
-  daveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
-  assert(daveLockedFunds.eq(daveClassLocks))
-  await check(daveLockedFunds).toMatchSnapshot('dave\'s class locks after vote\'s rescission')
-  votingForDave =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.dave.address, smallTipper[0])
-  assert(votingForDave.isCasting)
-  daveCastVotes = votingForDave.asCasting
-  await check(daveCastVotes).toMatchSnapshot("dave's votes after rescission")
-  assert(daveCastVotes.votes.isEmpty)
-
-  eveLockedFunds = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
-  assert(eveLockedFunds.eq(eveClassLocks))
-  await check(eveLockedFunds).toMatchSnapshot('eve\'s class locks after vote\'s rescission')
-  votingForEve =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.eve.address, smallTipper[0])
-  assert(votingForEve.isCasting)
-  eveCastVotes = votingForEve.asCasting
-  await check(eveCastVotes).toMatchSnapshot("eve's votes after rescission")
-  assert(eveCastVotes.votes.isEmpty)
+    testAccounts[account].votingBy =
+      await relayClient.api.query.convictionVoting.votingFor(defaultAccounts[account].address, smallTipper[0])
+    assert(testAccounts[account].votingBy.isCasting)
+    const castVotes = testAccounts[account].votingBy.asCasting
+    await check(castVotes).toMatchSnapshot(`${account}'s votes after rescission`)
+    assert(castVotes.votes.isEmpty)
+  }
 }
 
 /**

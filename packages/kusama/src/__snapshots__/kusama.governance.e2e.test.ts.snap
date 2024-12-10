@@ -24,7 +24,7 @@ exports[`Kusama Governance > preimage submission, query and removal works > unno
 ]
 `;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after vote's rescission 1`] = `
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -45,7 +45,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   ],
   "votes": [
     [
-      470,
+      479,
       {
         "standard": {
           "balance": 50000000000,
@@ -70,7 +70,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     ],
     "votes": [
       [
-        470,
+        479,
         {
           "standard": {
             "balance": 50000000000,
@@ -97,7 +97,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 }
 `;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after vote's rescission 1`] = `
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -118,7 +118,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   ],
   "votes": [
     [
-      470,
+      479,
       {
         "split": {
           "aye": 50000000000,
@@ -143,7 +143,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     ],
     "votes": [
       [
-        470,
+        479,
         {
           "split": {
             "aye": 50000000000,
@@ -170,7 +170,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 }
 `;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after vote's rescission 1`] = `
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -191,7 +191,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   ],
   "votes": [
     [
-      470,
+      479,
       {
         "splitAbstain": {
           "abstain": 20000000000,
@@ -217,7 +217,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     ],
     "votes": [
       [
-        470,
+        479,
         {
           "splitAbstain": {
             "abstain": 20000000000,
@@ -243,88 +243,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   ],
   "votes": [],
 }
-`;
-
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for alice's vote 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 490000000)",
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 50000000000,
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-    },
-    "method": "Locked",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "amount": 0,
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 390000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 98000000)",
-      "who": "GqYfvRE6VNAsNbTZxEt4mV6KHrC3dF1APxn2urjuqHpFiYx",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "actualFee": "(rounded 490000000)",
-      "tip": 0,
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-    },
-    "method": "TransactionFeePaid",
-    "section": "transactionPayment",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
 `;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for bob's decision deposit 1`] = `
@@ -398,7 +316,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 98000000)",
-      "who": "GqYfvRE6VNAsNbTZxEt4mV6KHrC3dF1APxn2urjuqHpFiYx",
+      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
     },
     "method": "Deposit",
     "section": "balances",
@@ -487,7 +405,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 110000000)",
-      "who": "GqYfvRE6VNAsNbTZxEt4mV6KHrC3dF1APxn2urjuqHpFiYx",
+      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
     },
     "method": "Deposit",
     "section": "balances",
@@ -576,7 +494,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 120000000)",
-      "who": "GqYfvRE6VNAsNbTZxEt4mV6KHrC3dF1APxn2urjuqHpFiYx",
+      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
     },
     "method": "Deposit",
     "section": "balances",
@@ -605,40 +523,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     "section": "system",
   },
 ]
-`;
-
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after alice's vote 1`] = `
-{
-  "ongoing": {
-    "deciding": {
-      "confirming": null,
-    },
-    "decisionDeposit": {
-      "amount": 33333333333,
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
-    },
-    "enactment": {
-      "after": 1,
-    },
-    "inQueue": false,
-    "origin": {
-      "origins": "SmallTipper",
-    },
-    "proposal": {
-      "inline": "0x12030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-    },
-    "submissionDeposit": {
-      "amount": 33333333333,
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-    },
-    "tally": {
-      "ayes": 150000000000,
-      "nays": 0,
-      "support": 50000000000,
-    },
-    "track": 30,
-  },
-}
 `;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
@@ -900,7 +784,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 150000000)",
-      "who": "GqYfvRE6VNAsNbTZxEt4mV6KHrC3dF1APxn2urjuqHpFiYx",
+      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
     },
     "method": "Deposit",
     "section": "balances",

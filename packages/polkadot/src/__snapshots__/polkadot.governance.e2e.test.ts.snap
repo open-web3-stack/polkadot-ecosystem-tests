@@ -24,7 +24,7 @@ exports[`Polkadot Governance > preimage submission, query and removal works > un
 ]
 `;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after vote's rescission 1`] = `
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -45,7 +45,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   ],
   "votes": [
     [
-      1289,
+      1342,
       {
         "standard": {
           "balance": 50000000000,
@@ -70,7 +70,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     ],
     "votes": [
       [
-        1289,
+        1342,
         {
           "standard": {
             "balance": 50000000000,
@@ -97,7 +97,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 }
 `;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after vote's rescission 1`] = `
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -118,7 +118,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   ],
   "votes": [
     [
-      1289,
+      1342,
       {
         "split": {
           "aye": 50000000000,
@@ -143,7 +143,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     ],
     "votes": [
       [
-        1289,
+        1342,
         {
           "split": {
             "aye": 50000000000,
@@ -170,7 +170,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 }
 `;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after vote's rescission 1`] = `
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -191,7 +191,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   ],
   "votes": [
     [
-      1289,
+      1342,
       {
         "splitAbstain": {
           "abstain": 20000000000,
@@ -217,7 +217,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     ],
     "votes": [
       [
-        1289,
+        1342,
         {
           "splitAbstain": {
             "abstain": 20000000000,
@@ -316,7 +316,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": "(rounded 29000000)",
-      "who": "15MYgThgMfKf9Dz1TV1UC1RBiA8xDNYoGbKkkvXNtah8yACC",
+      "who": "1EwUAppef3eii8rNEXM44WxVsB6y1apZkfD8ejpwH7d4nmQ",
     },
     "method": "Deposit",
     "section": "balances",
@@ -405,7 +405,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": "(rounded 32000000)",
-      "who": "15MYgThgMfKf9Dz1TV1UC1RBiA8xDNYoGbKkkvXNtah8yACC",
+      "who": "1EwUAppef3eii8rNEXM44WxVsB6y1apZkfD8ejpwH7d4nmQ",
     },
     "method": "Deposit",
     "section": "balances",
@@ -494,7 +494,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": "(rounded 35000000)",
-      "who": "15MYgThgMfKf9Dz1TV1UC1RBiA8xDNYoGbKkkvXNtah8yACC",
+      "who": "1EwUAppef3eii8rNEXM44WxVsB6y1apZkfD8ejpwH7d4nmQ",
     },
     "method": "Deposit",
     "section": "balances",
@@ -784,7 +784,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": "(rounded 44000000)",
-      "who": "15MYgThgMfKf9Dz1TV1UC1RBiA8xDNYoGbKkkvXNtah8yACC",
+      "who": "1EwUAppef3eii8rNEXM44WxVsB6y1apZkfD8ejpwH7d4nmQ",
     },
     "method": "Deposit",
     "section": "balances",
