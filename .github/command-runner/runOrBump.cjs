@@ -12,7 +12,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       await comment.createOrUpdateComment(createResult({
         context,
         command: execCommand,
-        result: result.errorOutput || result.output,
+        result: result.errorOutput + '\n' + result.output,
         extra: `**Test Result**: \`Failed to update known good blocks\``
       }))
 
@@ -30,12 +30,12 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
-    if (result.errorOutput || result.exitCode) {
+    if (result.exitCode) {
       core.setFailed('Tests failed')
       await comment.createOrUpdateComment(createResult({
         context,
         command: execCommand,
-        result: (env ? `${env}\n` : '') + (result.errorOutput || result.output),
+        result: (env ? `${env}\n` : '') + (result.errorOutput + '\n' + result.output),
         extra: `**Test Result**: \`Failed\``
       }))
       process.exit(1)
