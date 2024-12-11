@@ -814,3 +814,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   },
 ]
 `;
+
+exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killed referendum events 1`] = `[]`;
+
+exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > referenda events 1`] = `[]`;

@@ -100,8 +100,9 @@ function referendumCmp(
  *   4.3. using a split-abstain vote
  * 5. cancelling the referendum using the scheduler to insert a `Root`-origin call
  *   5.1 checking that submission/decision deposits are refunded
+ *   5.2 checking that voters' class locks and voting data are not affected
  * 6. removing the votes cast
- *   6.1 asserting that voting locks are rescinded
+ *   6.1 asserting that voting locks are preserved
  *   6.2 asserting that voting funds are returned
  */
 export async function referendumLifecycleTest<
@@ -121,10 +122,11 @@ export async function referendumLifecycleTest<
         [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
         [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
         [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
-        [['15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5'], { providers: 1, data: { free: 10e10 } }]
       ],
     },
   })
+
+  await relayClient.pause()
 
   /**
    * Get current referendum count i.e. the next referendum's index
@@ -667,6 +669,150 @@ export async function referendumLifecycleTest<
 }
 
 /**
+ * Test the process of
+ * 1. submitting a referendum for a treasury spend
+ * 2. placing its decision deposit
+ * 3. killing the referendum using the scheduler to insert a `Root`-origin call
+ *   3.1 checking that submission/decision deposits are slashed
+ */
+export async function referendumLifecycleKillTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  /**
+   * Setup relay and parachain clients
+   */
+  const [relayClient] = await setupNetworks(relayChain)
+
+  // Fund test accounts not already provisioned in the test chain spec.
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  /**
+   * Get current referendum count i.e. the next referendum's index
+   */
+  const referendumIndex = await relayClient.api.query.referenda.referendumCount()
+
+  /**
+   * Submit a new referendum
+   */
+
+  const submitReferendumTx = relayClient.api.tx.referenda.submit(
+    {
+      Origins: 'SmallTipper',
+    } as any,
+    {
+      Inline: relayClient.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method.toHex(),
+    },
+    {
+      After: 1,
+    },
+  )
+  await sendTransaction(submitReferendumTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  /**
+   * Check the created referendum's data
+   */
+
+  const referendaTracks = relayClient.api.consts.referenda.tracks
+  const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
+
+  /**
+   * Place decision deposit
+   */
+
+  const decisionDepTx = relayClient.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  await sendTransaction(decisionDepTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  /**
+   * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
+   */
+
+  const killRefCall = relayClient.api.tx.referenda.kill(referendumIndex)
+
+  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  await relayClient.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: killRefCall.method.toHex(),
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await relayClient.dev.newBlock()
+
+  /**
+   * Check killed ref's data
+   */
+
+  // Retrieve the events for the latest block
+  const events = await relayClient.api.query.system.events()
+  
+  const referendaEvents = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'referenda'
+  });
+
+  assert(referendaEvents.length === 3, "killing a referendum should emit 3 events")
+
+  referendaEvents.forEach((record) => {
+    const { event } = record;
+    if (relayClient.api.events.referenda.Killed.is(event)) {
+      const [index, tally] = event.data
+      assert(index.eq(referendumIndex))
+      assert(tally.eq({
+        ayes: 0,
+        nays: 0,
+        support: 0,
+      }))
+    } else if (relayClient.api.events.referenda.DepositSlashed.is(event)) {
+      const [who, amount] = event.data
+
+      if (who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding))) {
+        assert(amount.eq(relayClient.api.consts.referenda.submissionDeposit))
+      } else if (who.eq(encodeAddress(defaultAccounts.bob.address, addressEncoding))) {
+        assert(amount.eq(smallTipper[1].decisionDeposit))
+      } else {
+        assert(false, "malformed decision slashed events")
+      }
+    }
+  })
+
+  const referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+  // killing a referendum does not remove it from storage, though it does prune most of its data.
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
+  assert(referendumDataOpt.unwrap().isKilled, "referendum should be cancelled!")
+
+  // The only information left from the killed referendum is the block number when it was killed.
+  const blockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+  const killedRef: u32 = referendumDataOpt.unwrap().asKilled
+  assert(killedRef.eq(blockNumber))
+}
+
+/**
  * Test the registering, querying and unregistering a preimage; in this test, a `spend_local`
  * treasury call.
  */
@@ -736,13 +882,18 @@ export function governanceE2ETests<
       'referendum lifecycle test - submission, decision deposit, various voting should all work',
       async () => {
         await referendumLifecycleTest(relayChain, testConfig.addressEncoding)
-      }, {timeout: 10_000_000})
+      })
 
-      test(
-        'preimage submission, query and removal works',
-        async() => {
-          await preimageTest(relayChain)
-        }
-      )
+    test(
+      'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+      async () => {
+        await referendumLifecycleKillTest(relayChain, testConfig.addressEncoding)
+      })
+
+    test(
+      'preimage submission, query and removal works',
+      async() => {
+        await preimageTest(relayChain)
+      })
   })
 }
