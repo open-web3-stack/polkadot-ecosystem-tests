@@ -91,7 +91,12 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
     if (!diffResult) {
       core.info('snapshot not updated')
       // dispatch update-known-good workflow to having it to update the snapshot
-      await exec.exec(`gh workflow run update-known-good.yml`)
+      await github.rest.actions.createWorkflowDispatch({
+				owner: context.repo.owner,
+				repo: context.repo.repo,
+				workflow_id: 'update-known-good.yml',
+				ref: 'master',
+			})
 
       return comment.createOrUpdateComment(createResult({
         context,
