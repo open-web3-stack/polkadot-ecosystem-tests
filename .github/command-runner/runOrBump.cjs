@@ -90,23 +90,14 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     if (!diffResult) {
       core.info('snapshot not updated')
-      await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
-      await exec.exec('git push')
-
-      let commitId = ''
-      await exec.exec('git', ['rev-parse', 'HEAD'], {
-        listeners: {
-          stdout: (data) => {
-            commitId += data.toString();
-          }
-        }
-      })
+      // dispatch update-known-good workflow to having it to update the snapshot
+      await exec.exec(`gh workflow run update-known-good.yml`)
 
       return comment.createOrUpdateComment(createResult({
         context,
         command: testResult.cmd,
         result: output,
-        extra: `<br/>**KNOWN_GOOD_BLOCK_NUMBERS.env has been updated**<br/>**Commit**: ${commitId}`
+        extra: `<br/>Triggered update-known-good workflow to update the snapshot`
       }))
     } else {
       const branchName = `Update-SnapShot-${commentId}`
