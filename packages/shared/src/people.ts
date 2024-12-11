@@ -20,8 +20,8 @@ import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@p
 import { encodeAddress } from '@polkadot/util-crypto'
 import { u128 } from '@polkadot/types'
 
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
-import { setupNetworks } from './setup.js'
 
 /**
  * Example identity to be used in tests.
@@ -718,11 +718,6 @@ async function sendXcmFromRelay(
   })
 }
 
-export enum PeopleChain {
-  Polkadot = 'Polkadot',
-  Kusama = 'Kusama',
-}
-
 /**
  * Test runner for people chains' E2E tests.
  *
@@ -737,22 +732,12 @@ export function peopleChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(pc: PeopleChain, relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
-  let topLevelDescription: string
-  let addressEncoding: number
-
-  switch (pc) {
-    case PeopleChain.Kusama:
-      topLevelDescription = 'Kusama People'
-      addressEncoding = 2
-      break
-    case PeopleChain.Polkadot:
-      topLevelDescription = 'Polkadot People'
-      addressEncoding = 0
-      break
-  }
-
-  describe(topLevelDescription, function () {
+>(
+  relayChain: Chain<TCustom, TInitStoragesRelay>,
+  peopleChain: Chain<TCustom, TInitStoragesPara>,
+  testConfig: { testSuiteName: string, addressEncoding: number, }
+) {
+  describe(testConfig.testSuiteName, function () {
     test('setting on-chain identity and requesting judgement should work', async () => {
       await setIdentityThenRequestAndProvideJudgement(peopleChain)
     })
@@ -766,11 +751,11 @@ export function peopleChainE2ETests<
     })
 
     test('setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work', async () => {
-      await setIdentityThenAddSubsThenRemove(peopleChain, addressEncoding)
+      await setIdentityThenAddSubsThenRemove(peopleChain, testConfig.addressEncoding)
     })
 
     test('adding a registrar as root from the relay chain works', async () => {
-      await addRegistrarViaRelayAsRoot(relayChain, peopleChain, addressEncoding)
+      await addRegistrarViaRelayAsRoot(relayChain, peopleChain, testConfig.addressEncoding)
     })
   })
 }
