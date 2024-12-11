@@ -126,8 +126,6 @@ export async function referendumLifecycleTest<
     },
   })
 
-  await relayClient.pause()
-
   /**
    * Get current referendum count i.e. the next referendum's index
    */
