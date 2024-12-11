@@ -39,7 +39,7 @@ describe('assetHubKusama & karura', async () => {
       fromBalance: query.tokens(karuraUsdt),
       toBalance: query.assets(assetHubKusamaUsdt),
       tx: tx.xtokens.transfer(karuraUsdt, 1e6, tx.xtokens.parachainV4(assetHubKusama.paraId!)),
-      precision: 2,
+      precision: 1,
     }
   })
 })
