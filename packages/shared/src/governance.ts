@@ -51,14 +51,18 @@ class OngoingReferendumStatus {
  *
  * Fails if any of the properties to be compared is different.
  *
- * When awaiting a referendum's preparation period, it is desirable to compare the referendum
- * pre- and post-block-execution; in this case, an optional error message parameter is passable,
- * to allow indicating the offending iteration.
+ * It can be desirable to compare a referendum in its pre- and post-block-execution states.
+ * For example:
+ * 1. from the time its decision deposited is placed until its preparation period elapses, no field
+ *    of the referendum may change
+ *   a. to know which block in the iterated comparisons caused the failure, an optional error
+ *      message parameter is passable
+ * 2. after placing a vote, the referendum's tally and alarm should change, but nothing else
  *
  * @param ref1
  * @param ref2
- * @param propertiesToBeSkipped List of properties to be skipped in the comparison
- * @param errorMsg Additional error message to use when using this function inside a loop, to
+ * @param propertiesToBeSkipped List of properties to not be included in the referenda comparison
+ * @param errorMsg Additional error message when using this function inside a loop, to
  *        identify failing iteration.
  */
 function referendumCmp(
@@ -162,7 +166,7 @@ export async function referendumLifecycleTest<
 
   let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-  assert(referendumDataOpt, "submitted referendum's data cannot be `None`")
+  assert(referendumDataOpt.isSome, "submitted referendum's data cannot be `None`")
   let referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
   // These fields must be excised from the queried referendum data before being put in the test
   // snapshot.
@@ -186,7 +190,7 @@ export async function referendumLifecycleTest<
 
   // The referendum was above set to be enacted 1 block after its passing.
   assert(ongoingRefPreDecDep.enactment.isAfter)
-  await check(ongoingRefPreDecDep.enactment.asAfter).toMatchObject(1)
+  assert(ongoingRefPreDecDep.enactment.asAfter.eq(1))
 
   const referendaTracks = relayClient.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
