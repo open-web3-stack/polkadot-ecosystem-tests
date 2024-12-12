@@ -13,7 +13,7 @@ const custom = {
 const getInitStorages = () => ({
   System: {
     Account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 10000 * 1e10 } }],
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
     ],
   },
   ParasDisputes: {
