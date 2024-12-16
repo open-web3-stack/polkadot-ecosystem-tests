@@ -336,8 +336,8 @@ export async function referendumLifecycleTest<
   // Voting events were only introduced in
   // https://github.com/paritytech/polkadot-sdk/pull/4613, and will take a few releases until they
   // are visible here - this will trigger a failure in tests, which can then be addressed.
-  await checkEvents(voteEvents)
-    .redact({ removeKeys: unwantedFields })
+  await checkEvents(voteEvents, "convictionVoting", "referenda")
+    .redact({ removeKeys: unwantedFields, redactKeys: unwantedFields })
     .toMatchSnapshot("events for charlie's vote")
 
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
@@ -376,7 +376,7 @@ export async function referendumLifecycleTest<
   // which must be removed.
   const unwantedRefIx = new RegExp(`${referendumIndex},`)
 
-  await check(charlieCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("charlie's votes after casting his")
+  await check(charlieCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("charlie's votes after casting his")
   assert(charlieCastVotes.votes.length === 1)
   assert(charlieCastVotes.votes[0][0].eq(referendumIndex))
 
@@ -407,7 +407,7 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents)
+  await checkEvents(voteEvents, "convictionVoting", "referenda")
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for dave's vote")
 
@@ -439,7 +439,7 @@ export async function referendumLifecycleTest<
   assert(votingByDave.isCasting, "dave's votes are cast, not delegated")
   const daveCastVotes: PalletConvictionVotingVoteCasting = votingByDave.asCasting
 
-  await check(daveCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("dave's votes after casting his")
+  await check(daveCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("dave's votes after casting his")
 
   assert(daveCastVotes.votes.length === 1)
   assert(daveCastVotes.votes[0][0].eq(referendumIndex))
@@ -473,7 +473,7 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents)
+  await checkEvents(voteEvents, "convictionVoting", "referenda")
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for eve's vote")
 
@@ -505,7 +505,7 @@ export async function referendumLifecycleTest<
   assert(votingByEve.isCasting, "eve's votes are cast, not delegated")
   const eveCastVotes: PalletConvictionVotingVoteCasting = votingByEve.asCasting
 
-  await check(eveCastVotes).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("eve's votes after casting hers")
+  await check(eveCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("eve's votes after casting hers")
   assert(eveCastVotes.votes.length === 1)
   assert(eveCastVotes.votes[0][0].eq(referendumIndex))
 
@@ -605,17 +605,21 @@ export async function referendumLifecycleTest<
     )
   }
 
-  // Check that cancelling the referendum has no effect on accounts' votes
+  // Check that cancelling the referendum has no effect on accounts' votes, as seen via `votingFor`
+  // storage item.
   for (const account of Object.keys(testAccounts)) {
-    const postCancellationVoting = await relayClient.api.query.convictionVoting.votingFor(
-      defaultAccounts[account].address,
-      smallTipper[0]
-    )
+    const postCancellationVoting: PalletConvictionVotingVoteVoting =
+      await relayClient.api.query.convictionVoting.votingFor(
+        (defaultAccounts[account].address as string),
+        smallTipper[0]
+      )
+    assert(postCancellationVoting.isCasting, `pre-referendum cancellation, ${account}'s votes were cast, not delegated`)
+    const postCancellationCastVotes: PalletConvictionVotingVoteCasting = postCancellationVoting.asCasting
     assert(
       postCancellationVoting.eq(testAccounts[account].votingBy),
       `${account}'s votes should be unaffected by referendum cancellation`
     )
-    await check(postCancellationVoting)
+    await check((postCancellationCastVotes).votes[0][1])
       .redact({ removeKeys: unwantedRefIx})
       .toMatchSnapshot(`${account}'s votes after referendum's cancellation`)
   }
@@ -646,7 +650,9 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(batchEvents).toMatchSnapshot('removal of votes in cancelled referendum')
+  await checkEvents(batchEvents)
+    .redact({ removeKeys: new RegExp('who') })
+    .toMatchSnapshot('removal of votes in cancelled referendum')
 
   // Check that each voter's class locks remain unaffected by vote removal - these are subject to a
   // later update.

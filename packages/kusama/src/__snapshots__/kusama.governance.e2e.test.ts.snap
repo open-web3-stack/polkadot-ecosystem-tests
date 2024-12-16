@@ -35,50 +35,18 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after casting his 1`] = `
 {
-  "delegations": {
-    "capital": 0,
-    "votes": 0,
+  "standard": {
+    "balance": 50000000000,
+    "vote": "0x83",
   },
-  "prior": [
-    0,
-    0,
-  ],
-  "votes": [
-    [
-      479,
-      {
-        "standard": {
-          "balance": 50000000000,
-          "vote": "0x83",
-        },
-      },
-    ],
-  ],
 }
 `;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after referendum's cancellation 1`] = `
 {
-  "casting": {
-    "delegations": {
-      "capital": 0,
-      "votes": 0,
-    },
-    "prior": [
-      0,
-      0,
-    ],
-    "votes": [
-      [
-        479,
-        {
-          "standard": {
-            "balance": 50000000000,
-            "vote": "0x83",
-          },
-        },
-      ],
-    ],
+  "standard": {
+    "balance": 50000000000,
+    "vote": "0x83",
   },
 }
 `;
@@ -108,50 +76,18 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after casting his 1`] = `
 {
-  "delegations": {
-    "capital": 0,
-    "votes": 0,
+  "split": {
+    "aye": 50000000000,
+    "nay": 10000000000,
   },
-  "prior": [
-    0,
-    0,
-  ],
-  "votes": [
-    [
-      479,
-      {
-        "split": {
-          "aye": 50000000000,
-          "nay": 10000000000,
-        },
-      },
-    ],
-  ],
 }
 `;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after referendum's cancellation 1`] = `
 {
-  "casting": {
-    "delegations": {
-      "capital": 0,
-      "votes": 0,
-    },
-    "prior": [
-      0,
-      0,
-    ],
-    "votes": [
-      [
-        479,
-        {
-          "split": {
-            "aye": 50000000000,
-            "nay": 10000000000,
-          },
-        },
-      ],
-    ],
+  "split": {
+    "aye": 50000000000,
+    "nay": 10000000000,
   },
 }
 `;
@@ -181,52 +117,20 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after casting hers 1`] = `
 {
-  "delegations": {
-    "capital": 0,
-    "votes": 0,
+  "splitAbstain": {
+    "abstain": 20000000000,
+    "aye": 50000000000,
+    "nay": 10000000000,
   },
-  "prior": [
-    0,
-    0,
-  ],
-  "votes": [
-    [
-      479,
-      {
-        "splitAbstain": {
-          "abstain": 20000000000,
-          "aye": 50000000000,
-          "nay": 10000000000,
-        },
-      },
-    ],
-  ],
 }
 `;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after referendum's cancellation 1`] = `
 {
-  "casting": {
-    "delegations": {
-      "capital": 0,
-      "votes": 0,
-    },
-    "prior": [
-      0,
-      0,
-    ],
-    "votes": [
-      [
-        479,
-        {
-          "splitAbstain": {
-            "abstain": 20000000000,
-            "aye": 50000000000,
-            "nay": 10000000000,
-          },
-        },
-      ],
-    ],
+  "splitAbstain": {
+    "abstain": 20000000000,
+    "aye": 50000000000,
+    "nay": 10000000000,
   },
 }
 `;
@@ -258,272 +162,11 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 ]
 `;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `
-[
-  {
-    "data": {
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
-    },
-    "method": "Upgraded",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 490000000)",
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 50000000000,
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
-    },
-    "method": "Locked",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "amount": 0,
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 390000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 98000000)",
-      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "actualFee": "(rounded 490000000)",
-      "tip": 0,
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
-    },
-    "method": "TransactionFeePaid",
-    "section": "transactionPayment",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `[]`;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `
-[
-  {
-    "data": {
-      "who": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
-    },
-    "method": "Upgraded",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 540000000)",
-      "who": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 60000000000,
-      "who": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
-    },
-    "method": "Locked",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "amount": 0,
-      "who": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 430000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 110000000)",
-      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "actualFee": "(rounded 540000000)",
-      "tip": 0,
-      "who": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
-    },
-    "method": "TransactionFeePaid",
-    "section": "transactionPayment",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `[]`;
 
-exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `
-[
-  {
-    "data": {
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-    },
-    "method": "Upgraded",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 590000000)",
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 80000000000,
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-    },
-    "method": "Locked",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "amount": 0,
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 470000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 120000000)",
-      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "actualFee": "(rounded 590000000)",
-      "tip": 0,
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-    },
-    "method": "TransactionFeePaid",
-    "section": "transactionPayment",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `[]`;
 
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
 {
@@ -740,7 +383,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 730000000)",
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -768,7 +410,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": 0,
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
     },
     "method": "Deposit",
     "section": "balances",
@@ -776,7 +417,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 590000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
     },
     "method": "Deposit",
     "section": "balances",
@@ -784,7 +424,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   {
     "data": {
       "amount": "(rounded 150000000)",
-      "who": "FNjtrA2fHm9WrPuvg1Z1h1qoD8bJPTRgj78F9UQ5LckCtDs",
     },
     "method": "Deposit",
     "section": "balances",
@@ -793,7 +432,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
     "data": {
       "actualFee": "(rounded 730000000)",
       "tip": 0,
-      "who": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
     },
     "method": "TransactionFeePaid",
     "section": "transactionPayment",
