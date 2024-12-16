@@ -8,43 +8,15 @@ import { check, checkEvents } from './helpers/index.js'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import {
-  FrameSupportPreimagesBounded,
-  FrameSupportScheduleDispatchTime,
-  KitchensinkRuntimeOriginCaller,
-  PalletConvictionVotingTally,
   PalletConvictionVotingVoteCasting,
   PalletConvictionVotingVoteVoting,
-  PalletReferendaDecidingStatus,
   PalletReferendaDeposit,
   PalletReferendaReferendumInfoConvictionVotingTally,
   PalletReferendaReferendumStatusConvictionVotingTally,
 } from '@polkadot/types/lookup'
 import { ITuple } from '@polkadot/types/types'
-import { Option, bool, u16, u32 } from '@polkadot/types'
+import { Option, u32 } from '@polkadot/types'
 import { encodeAddress } from '@polkadot/util-crypto'
-
-/**
- * Ongoing referenda are stored as `PalletReferendaReferendumStatusConvictionVotingTally`, an
- * interface in PJS.
- *
- * In TypeScript, it is not possible to get a list of an interface's properties.
- *
- * In order to get properties to then granularly compare the same referenda in different
- * stages, the below class is required, to then instantiate as a PJS's interface.
- */
-class OngoingReferendumStatus {
-  readonly track!: u16
-  readonly origin!: KitchensinkRuntimeOriginCaller
-  readonly proposal!: FrameSupportPreimagesBounded
-  readonly enactment!: FrameSupportScheduleDispatchTime
-  readonly submitted!: u32
-  readonly submissionDeposit!: PalletReferendaDeposit
-  readonly decisionDeposit!: Option<PalletReferendaDeposit>
-  readonly deciding!: Option<PalletReferendaDecidingStatus>
-  readonly tally!: PalletConvictionVotingTally
-  readonly inQueue!: bool
-  readonly alarm!: Option<ITuple<[u32, ITuple<[u32, u32]>]>>
-}
 
 /**
  * Compare the selected properties of two referenda.
@@ -71,8 +43,19 @@ function referendumCmp(
   propertiesToBeSkipped: string[],
   errorMsg?: string,
 ) {
-  type ReferendumProperties = (keyof PalletReferendaReferendumStatusConvictionVotingTally)[]
-  const properties: ReferendumProperties = Object.keys(new OngoingReferendumStatus()) as ReferendumProperties
+  const properties = [
+    'track',
+    'origin',
+    'proposal',
+    'enactment',
+    'submitted',
+    'submissionDeposit',
+    'decisionDeposit',
+    'deciding',
+    'tally',
+    'inQueue',
+    'alarm',
+  ]
 
   properties
     .filter((prop) => !propertiesToBeSkipped.includes(prop as string))
