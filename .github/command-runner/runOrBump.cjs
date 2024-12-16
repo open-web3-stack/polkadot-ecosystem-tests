@@ -12,7 +12,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       await comment.createOrUpdateComment(createResult({
         context,
         command: execCommand,
-        result: result.errorOutput || result.output,
+        result: result.errorOutput + '\n' + result.output,
         extra: `**Test Result**: \`Failed to update known good blocks\``
       }))
 
@@ -30,12 +30,12 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
-    if (result.errorOutput || result.exitCode) {
+    if (result.exitCode) {
       core.setFailed('Tests failed')
       await comment.createOrUpdateComment(createResult({
         context,
         command: execCommand,
-        result: (env ? `${env}\n` : '') + (result.errorOutput || result.output),
+        result: (env ? `${env}\n` : '') + (result.errorOutput + '\n' + result.output),
         extra: `**Test Result**: \`Failed\``
       }))
       process.exit(1)
@@ -90,23 +90,19 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     if (!diffResult) {
       core.info('snapshot not updated')
-      await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
-      await exec.exec('git push')
-
-      let commitId = ''
-      await exec.exec('git', ['rev-parse', 'HEAD'], {
-        listeners: {
-          stdout: (data) => {
-            commitId += data.toString();
-          }
-        }
-      })
+      // dispatch update-known-good workflow to having it to update the snapshot
+      await github.rest.actions.createWorkflowDispatch({
+				owner: context.repo.owner,
+				repo: context.repo.repo,
+				workflow_id: 'update-known-good.yml',
+				ref: 'master',
+			})
 
       return comment.createOrUpdateComment(createResult({
         context,
         command: testResult.cmd,
         result: output,
-        extra: `<br/>**KNOWN_GOOD_BLOCK_NUMBERS.env has been updated**<br/>**Commit**: ${commitId}`
+        extra: `<br/>Triggered update-known-good workflow to update the snapshot`
       }))
     } else {
       const branchName = `Update-SnapShot-${commentId}`
