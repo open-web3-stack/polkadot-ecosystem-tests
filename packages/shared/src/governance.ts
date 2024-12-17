@@ -57,23 +57,25 @@ function referendumCmp(
     'alarm',
   ]
 
-  properties
-    .filter((prop) => !propertiesToBeSkipped.includes(prop as string))
-    .forEach((prop) => {
-      const cmp = ref1[(prop as string)!]!.eq(ref2[prop])
-      if (!cmp) {
-        const msg = `Referenda differed on property \`${String(prop)}\`
-          Left: ${ref1[prop]}
-          Right: ${ref2[prop]}`
-        let errorMessage: string
-        if (errorMsg === null || errorMsg === undefined) {
-          errorMessage = msg
-        } else {
-          errorMessage = errorMsg + '\n' + msg
-        }
-        assert(cmp, errorMessage)
+  for (const prop of properties) {
+    if (propertiesToBeSkipped.includes(prop)) {
+      continue
+    }
+
+    const cmp = ref1[prop].eq(ref2[prop])
+    if (!cmp) {
+      const msg = `Referenda differed on property \`${prop}\`
+        Left: ${ref1[prop]}
+        Right: ${ref2[prop]}`
+      let errorMessage: string
+      if (errorMsg === null || errorMsg === undefined) {
+        errorMessage = msg
+      } else {
+        errorMessage = errorMsg + '\n' + msg
       }
-    })
+      assert(cmp, errorMessage)
+    }
+  }
 }
 
 /**
