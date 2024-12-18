@@ -12,7 +12,9 @@ const custom = {
 
 const getInitStorages = () => ({
   System: {
-    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10 * 1e12 } }]],
+    Account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
+    ],
   },
   ParasDisputes: {
     // these can makes block building super slow
@@ -26,7 +28,7 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: 'wss://polkadot-rpc.dwellir.com',
+  endpoint: 'wss://rpc-polkadot.luckyfriday.io',
   custom: custom.polkadot,
   initStorages: getInitStorages(),
   isRelayChain: true,
@@ -34,7 +36,7 @@ export const polkadot = defineChain({
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: 'wss:///kusama-rpc.dwellir.com',
+  endpoint: 'wss://rpc-kusama.luckyfriday.io',
   custom: custom.kusama,
   initStorages: getInitStorages(),
   isRelayChain: true,
