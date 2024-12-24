@@ -1,29 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Governance > preimage submission, query and removal works > note preimage events 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Noted",
-    "section": "preimage",
-  },
-]
-`;
-
-exports[`Polkadot Governance > preimage submission, query and removal works > unnote preimage events 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Cleared",
-    "section": "preimage",
-  },
-]
-`;
-
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
@@ -376,6 +352,32 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   },
   "track": 30,
 }
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
 `;
 
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `

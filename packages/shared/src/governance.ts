@@ -93,6 +93,7 @@ function referendumCmp(
  * 6. removing the votes cast
  *   6.1 asserting that voting locks are preserved
  *   6.2 asserting that voting funds are returned
+ * 7. refunding the submission and decision deposits
  */
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -124,7 +125,7 @@ export async function referendumLifecycleTest<
    * Submit a new referendum
    */
 
-  const submitReferendumTx = relayClient.api.tx.referenda.submit(
+  const submissionTx = relayClient.api.tx.referenda.submit(
     {
       Origins: 'SmallTipper',
     } as any,
@@ -135,13 +136,13 @@ export async function referendumLifecycleTest<
       After: 1,
     },
   )
-  const submitReferendumEvents = await sendTransaction(submitReferendumTx.signAsync(defaultAccounts.alice))
+  const submissionEvents = await sendTransaction(submissionTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
   // Fields to be removed, check comment below.
   let unwantedFields = new RegExp('index')
-  await checkEvents(submitReferendumEvents, 'referenda')
+  await checkEvents(submissionEvents, 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum submission events')
 
@@ -543,6 +544,26 @@ export async function referendumLifecycleTest<
    * Check cancelled ref's data
    */
 
+  // First, the emitted events
+  // Retrieve the events for the latest block
+  const events = await relayClient.api.query.system.events()
+
+  const referendaEvents = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'referenda'
+  });
+
+  assert(referendaEvents.length === 1, "cancelling a referendum should emit 1 event")
+
+  const cancellationEvent = referendaEvents[0]
+  assert(relayClient.api.events.referenda.Cancelled.is(cancellationEvent.event))
+
+  const [index, tally] = cancellationEvent.event.data
+  assert(index.eq(referendumIndex))
+  assert(tally.eq(votes))
+
+  // Now, check the referendum's data, post-cancellation
+
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   // cancelling a referendum does not remove it from storage
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
@@ -659,6 +680,23 @@ export async function referendumLifecycleTest<
     await check(castVotes).toMatchSnapshot(`${account}'s votes after rescission`)
     assert(castVotes.votes.isEmpty)
   }
+
+  // Check that submission and decision deposits are refunded to the respective voters.
+
+  const submissionRefundTx = relayClient.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
+  const submissionRefundEvents = await sendTransaction(submissionRefundTx.signAsync(defaultAccounts.alice))
+  const decisionRefundTx = relayClient.api.tx.referenda.refundDecisionDeposit(referendumIndex)
+  const decisionRefundEvents = await sendTransaction(decisionRefundTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(submissionRefundEvents, 'referenda')
+    .redact({ removeKeys: new RegExp('index') })
+    .toMatchSnapshot('refund of submission deposit')
+
+  await checkEvents(decisionRefundEvents, 'referenda')
+    .redact({ removeKeys: new RegExp('index') })
+    .toMatchSnapshot('refund of decision deposit')
 }
 
 /**
