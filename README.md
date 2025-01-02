@@ -14,6 +14,9 @@ yarn test
 # Run tests for specific chain
 yarn test <chain>
 
+# Run specific test
+yarn test -t <test-name> #<test-name> is what was passed to `vitest.test()`, usually inside a `describe()` suite
+
 # Run with Vitest UI
 yarn test:ui
 
@@ -50,6 +53,7 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 
 ### Project Structure
 - `packages/shared/src/xcm`: Common XCM test suites
+- `package/shared/src/*.ts`: Common utilities for E2E tests.
 - `packages/kusama/src`: Kusama network tests
 - `packages/polkadot/src`: Polkadot network tests
 
@@ -57,6 +61,10 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 - Write network-agnostic tests where possible
 - Handle minor chain state changes gracefully
 - Use `.redact()` for volatile values
+  - Pass `{ number: n }` to `.redact()` to explicitly redact all but the `n` most significant digits
+  - Pass `{ removeKeys: new RegExp(s) }` to remove keys from an object that are unwanted when e.g.
+    using `toMatchObject/toMatchSnapshot`. `s` can contain several fields e.g.
+    `"alarm|index|submitted"`. Check [this page](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) for how to use `RegExp`.
 - Leverage snapshots for easier maintenance
 - Follow naming convention: `<chain1>.<chain2>.test.ts` or `<chain1>.test.ts`
 
@@ -66,11 +74,23 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 3. Create notification issue
 4. Update `.github/workflows/notifications.json`
 
+### Adding new E2E tests
+1. Create a file in `packages/shared/src/` with the E2E tests, and their required utilities
+  - This assumes that the E2E test will run on Polkadot/Kusama: its code being shared makes it
+    reusable on both chains
+2. Using the shared utilities created in the previous step, create Polkadot/Kusama tests in
+  `packages/polkadot/src`/`packages/kusama/src`, respectively.
+3. Run the newly created tests so their snapshots can be created in `packages/<network>/src/__snapshots__`
+  - Inspect the snapshots, and make corrections to tests as necessary - or upstream, if the test
+    has revealed an issue with e.g. `polkadot-sdk`
+4. Craete a PR with the new tests.
+
 ### Debugging Tips
 - Use `{ only: true }` to isolate tests
 - Add logging to shared test suites
 - Insert `await chain.pause()` for state inspection
 - Connect via Polkadot.js Apps to paused chains
+  - Check the logs of the terminal running the `.pause`d test for the address and port
 - Carefully review snapshot changes
 
 ### Block Number Management
