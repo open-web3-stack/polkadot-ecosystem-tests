@@ -1,5 +1,49 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Governance > preimage submission, query and removal works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Polkadot Governance > preimage submission, query and removal works > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 560000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
@@ -450,6 +494,26 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       },
     },
     "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 640000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
     "section": "system",
   },
 ]

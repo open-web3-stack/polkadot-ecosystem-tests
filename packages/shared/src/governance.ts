@@ -88,7 +88,7 @@ function referendumCmp(
  *   4.2. using a split vote
  *   4.3. using a split-abstain vote
  * 5. cancelling the referendum using the scheduler to insert a `Root`-origin call
- *   5.1 checking that submission/decision deposits are refunded
+ *   5.1 checking that locks on submission/decision deposits are released
  *   5.2 checking that voters' class locks and voting data are not affected
  * 6. removing the votes cast
  *   6.1 asserting that voting locks are preserved
@@ -510,11 +510,17 @@ export async function referendumLifecycleTest<
   // 2. its decision period, still counting down.
   referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
 
-  /**
-   * Cancel the referendum using the scheduler pallet to simulate a root origin
-   */
-
+  // Attempt to cancel the referendum with a signed origin - this should fail.
+  
   const cancelRefCall = relayClient.api.tx.referenda.cancel(referendumIndex)
+  const cancelRefEvents = await sendTransaction(cancelRefCall.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(cancelRefEvents, 'referenda', 'system')
+    .toMatchSnapshot('cancelling referendum with signed origin')
+
+  // Cancel the referendum using the scheduler pallet to simulate a root origin
 
   const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -765,11 +771,19 @@ export async function referendumLifecycleKillTest<
 
   await relayClient.dev.newBlock()
 
+  // Attempt to kill the referendum with a signed origin
+  
+  const killRefCall = relayClient.api.tx.referenda.kill(referendumIndex)
+  const killRefEvents = await sendTransaction(killRefCall.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(killRefEvents, 'referenda', 'system').toMatchSnapshot('killing referendum with signed origin')
+
+
   /**
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
-
-  const killRefCall = relayClient.api.tx.referenda.kill(referendumIndex)
 
   const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
 
