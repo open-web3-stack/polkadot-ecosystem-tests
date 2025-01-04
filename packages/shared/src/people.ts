@@ -568,7 +568,8 @@ export async function addRegistrarViaRelayAsRoot<
   await peopleClient.dev.newBlock()
 
   // The recorded event should be `ExtrinsicFailed` with a `BadOrigin`.
-  await checkEvents(addRegistrarEvents, 'system').toMatchSnapshot('call add registrar with wrong origin')
+  await checkEvents(addRegistrarEvents, 'identity', 'system')
+    .toMatchSnapshot('call add registrar with wrong origin')
 
   /**
    * XCM from relay chain
@@ -619,6 +620,23 @@ export async function addRegistrarViaRelayAsRoot<
 
   // Also advance a block in the parachain - otherwise, the XCM call's effect would not be visible.
   await peopleClient.dev.newBlock()
+
+  // Check that the single event emitted in the last block was for the registrar addition.
+
+  const events = await peopleClient.api.query.system.events()
+
+  const peopleEvents = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'identity'
+  });
+
+  assert(peopleEvents.length === 1, "adding a registrar should emit 1 event")
+
+  const registrarEvent = peopleEvents[0]
+  assert(peopleClient.api.events.identity.RegistrarAdded.is(registrarEvent.event))
+
+  const [registrarIndex] = registrarEvent.event.data
+  assert(registrarIndex.eq(2), 'new registrar index should be 2')
 
   registrars.push({
     account: encodeAddress(defaultAccounts.charlie.address, addressEncoding),

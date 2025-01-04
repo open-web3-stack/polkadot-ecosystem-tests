@@ -24,6 +24,26 @@ exports[`Kusama Governance > preimage submission, query and removal works > unno
 ]
 `;
 
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 640000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
@@ -378,6 +398,32 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 }
 `;
 
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 33000000000)",
+      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 33000000000)",
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `
 [
   {
@@ -448,6 +494,26 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
       },
     },
     "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 720000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
     "section": "system",
   },
 ]
