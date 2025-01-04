@@ -24,6 +24,26 @@ exports[`Polkadot Governance > preimage submission, query and removal works > un
 ]
 `;
 
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 560000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
@@ -378,6 +398,32 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 }
 `;
 
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `
 [
   {
@@ -448,6 +494,26 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       },
     },
     "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 84000)",
+          "refTime": "(rounded 640000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
     "section": "system",
   },
 ]
