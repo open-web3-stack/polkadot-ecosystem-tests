@@ -111,6 +111,10 @@ Consider placing such tests elsewhere, or using different tools (e.g. XCM emulat
     has revealed an issue with e.g. `polkadot-sdk`
 4. Craete a PR with the new tests.
 
+### Regenerate Snapshots
+
+It is recommended to regenerate snapshots when renaming or removing tests. This can be done by deleting `__snapshots__` folders and running `yarn test -u`.
+
 ### Debugging Tips
 - Use `{ only: true }` to isolate tests
 - Add logging to shared test suites
