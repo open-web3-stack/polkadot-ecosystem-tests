@@ -28,7 +28,7 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: 'wss://rpc-polkadot.luckyfriday.io',
+  endpoint: 'wss://polkadot-rpc.dwellir.com',
   custom: custom.polkadot,
   initStorages: getInitStorages(),
   isRelayChain: true,
@@ -36,7 +36,7 @@ export const polkadot = defineChain({
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: 'wss://rpc-kusama.luckyfriday.io',
+  endpoint: 'wss://kusama-rpc.dwellir.com',
   custom: custom.kusama,
   initStorages: getInitStorages(),
   isRelayChain: true,
