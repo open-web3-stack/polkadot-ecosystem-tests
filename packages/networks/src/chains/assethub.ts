@@ -27,7 +27,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
-  endpoint: 'wss://rpc-asset-hub-polkadot.luckyfriday.io',
+  endpoint: 'wss://polkadot-asset-hub-rpc.polkadot.io',
   paraId: 1000,
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
@@ -35,7 +35,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'wss://rpc-asset-hub-kusama.luckyfriday.io',
+  endpoint: 'wss://kusama-asset-hub-rpc.polkadot.io',
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
