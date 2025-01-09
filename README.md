@@ -111,6 +111,75 @@ Consider placing such tests elsewhere, or using different tools (e.g. XCM emulat
     has revealed an issue with e.g. `polkadot-sdk`
 4. Craete a PR with the new tests.
 
+### Writing Tests
+
+#### Test Structure
+
+Tests are organized using Vitest and follow this general structure:
+
+```typescript
+import { coretimePolkadot, polkadot } from '@e2e-test/networks/chains'
+import { setupNetworks } from '@e2e-test/shared'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
+import { check, checkEvents, checkSystemEvents } from '../helpers/index.js'
+
+describe('chain.otherChain', () => {
+  // Create network instance before tests
+  const [polkadotClient, coretimeClient] = await setupNetworks(polkadot, coretimePolkadot)
+
+  it('should transfer tokens', async () => {
+    // Test implementation
+    const tx = await sendTransaction(polkadotClient.api.tx.xcmPallet.teleportAssets( /* args */ ))
+
+    // Assertions using snapshots
+    await checkEvents(result).toMatchSnapshot('teleportAssets events');
+  })
+})
+```
+
+#### Key Testing Patterns
+
+1. **Network Setup**
+```typescript
+// Create chain clients
+const [polkadotClient, coretimeClient] = await setupNetworks(polkadot, coretimePolkadot)
+```
+
+2. **Snapshot Testing**
+```typescript
+// Redact volatile values
+await check(result).redact().toMatchSnapshot();
+
+// Redact specific digits
+check(result.redact({ number: 1 })).toMatchSnapshot();
+
+// Remove specific keys
+check(result.redact({
+  removeKeys: /(timestamp|blockHash)/
+})).toMatchSnapshot();
+```
+
+Read [here](https://github.com/AcalaNetwork/chopsticks?tab=readme-ov-file#testing-with-acala-networkchopsticks-testing) for more about `@acala-network/chopsticks-testing`
+
+#### Best Practices
+
+1. **Network-Agnostic Testing**
+   - Write shared test suites in `packages/shared/src/`
+   - Implement chain-specific tests in respective packages
+   - Use parameterized tests for multi-chain scenarios
+
+2. **Snapshot Testing**
+   - Prefer snapshots over manual assertions
+   - Redact volatile values to prevent flaky tests
+   - Review snapshot changes carefully
+   - Keep snapshots focused and readable
+   - Update snapshots when behavior changes intentionally
+
+3. **Error Handling**
+   - Test both success and failure cases
+   - Verify error messages and types
+   - Handle chain-specific error scenarios
+
 ### Regenerate Snapshots
 
 It is recommended to regenerate snapshots when renaming or removing tests. This can be done by deleting `__snapshots__` folders and running `yarn test -u`.
@@ -121,6 +190,7 @@ It is recommended to regenerate snapshots when renaming or removing tests. This 
 - Insert `await chain.pause()` for state inspection
 - Connect via Polkadot.js Apps to paused chains
   - Check the logs of the terminal running the `.pause`d test for the address and port
+- Try to reproduce unexpected test result in a standalone Chopsticks instance
 - Carefully review snapshot changes
 
 ### Block Number Management
