@@ -1,12 +1,12 @@
 module.exports = async ({ github, context, command, core, commentId }) => {
-	const Comment = require('./comment.cjs')
-	const comment = new Comment({ github, context, commentId })
+  const Comment = require('./comment.cjs')
+  const comment = new Comment({ github, context, commentId })
 
-	if (command === 'merge') {
-		console.log('Run merge')
+  if (command === 'merge') {
+    console.log('Run merge')
 
-		const { repository } = await github.graphql(
-			`
+    const { repository } = await github.graphql(
+      `
       query($owner: String!, $repo: String!, $pullNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $pullNumber) {
@@ -15,16 +15,16 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `,
-			{
-				...context.repo,
-				pullNumber: context.issue.number,
-			},
-		)
+      {
+        ...context.repo,
+        pullNumber: context.issue.number,
+      },
+    )
 
-		const pullRequestId = repository.pullRequest.id
+    const pullRequestId = repository.pullRequest.id
 
-		await github.graphql(
-			`
+    await github.graphql(
+      `
       mutation($pullRequestId: ID!) {
         enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }) {
           pullRequest {
@@ -35,39 +35,39 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `,
-			{
-				pullRequestId: pullRequestId,
-			},
-		)
+      {
+        pullRequestId: pullRequestId,
+      },
+    )
 
-		const pendingReview = await github.rest.pulls.createReview({
-			...context.repo,
-			pull_number: context.issue.number,
-		})
+    const pendingReview = await github.rest.pulls.createReview({
+      ...context.repo,
+      pull_number: context.issue.number,
+    })
 
-		await github.rest.pulls.submitReview({
-			...context.repo,
-			pull_number: context.issue.number,
-			event: 'APPROVE',
-			review_id: pendingReview.data.id,
-		})
+    await github.rest.pulls.submitReview({
+      ...context.repo,
+      pull_number: context.issue.number,
+      event: 'APPROVE',
+      review_id: pendingReview.data.id,
+    })
 
-		await comment.createOrUpdateComment(`    Auto-merge enabled`)
-		core.info('Auto-merge enabled')
-		return
-	}
+    await comment.createOrUpdateComment(`    Auto-merge enabled`)
+    core.info('Auto-merge enabled')
+    return
+  }
 
-	if (command === 'cancel-merge') {
-		console.log('Run cancel-merge')
-		await github.rest.pulls.submitReview({
-			...context.repo,
-			pull_number: context.issue.number,
-			event: 'REQUEST_CHANGES',
-			body: 'Dismissed',
-		})
+  if (command === 'cancel-merge') {
+    console.log('Run cancel-merge')
+    await github.rest.pulls.submitReview({
+      ...context.repo,
+      pull_number: context.issue.number,
+      event: 'REQUEST_CHANGES',
+      body: 'Dismissed',
+    })
 
-		const { repository } = await github.graphql(
-			`
+    const { repository } = await github.graphql(
+      `
       query($owner: String!, $repo: String!, $pullNumber: Int!) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $pullNumber) {
@@ -76,16 +76,16 @@ module.exports = async ({ github, context, command, core, commentId }) => {
         }
       }
     `,
-			{
-				...context.repo,
-				pullNumber: context.issue.number,
-			},
-		)
+      {
+        ...context.repo,
+        pullNumber: context.issue.number,
+      },
+    )
 
-		const pullRequestId = repository.pullRequest.id
+    const pullRequestId = repository.pullRequest.id
 
-		await github.graphql(
-			`
+    await github.graphql(
+      `
       mutation($pullRequestId: ID!) {
         disablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId }) {
           pullRequest {
@@ -95,13 +95,13 @@ module.exports = async ({ github, context, command, core, commentId }) => {
           }
         }
     `,
-			{
-				pullRequestId: pullRequestId,
-			},
-		)
-		await comment.createOrUpdateComment(`    Auto-merge disabled`)
+      {
+        pullRequestId: pullRequestId,
+      },
+    )
+    await comment.createOrUpdateComment(`    Auto-merge disabled`)
 
-		core.info('Auto-merge disabled')
-		return
-	}
+    core.info('Auto-merge disabled')
+    return
+  }
 }
