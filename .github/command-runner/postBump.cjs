@@ -2,7 +2,7 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
   const Comment = require('./comment.cjs')
   const comment = new Comment({ github, context, commentId })
 
-  if(testResult !== 'success') {
+  if (testResult !== 'success') {
     return comment.createOrUpdateComment(`    Test failed`)
   }
 
@@ -23,11 +23,10 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
   await exec.exec('git', ['rev-parse', 'HEAD'], {
     listeners: {
       stdout: (data) => {
-        commitId += data.toString();
-      }
-    }
+        commitId += data.toString()
+      },
+    },
   })
 
   return comment.createOrUpdateComment(`**KNOWN_GOOD_BLOCK_NUMBERS.env has been updated**<br/>**Commit**: ${commitId}`)
 }
-

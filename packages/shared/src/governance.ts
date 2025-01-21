@@ -1,21 +1,21 @@
 import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
-import { Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import {
+import type { Option, u32 } from '@polkadot/types'
+import type {
   PalletConvictionVotingVoteCasting,
   PalletConvictionVotingVoteVoting,
   PalletReferendaDeposit,
   PalletReferendaReferendumInfoConvictionVotingTally,
   PalletReferendaReferendumStatusConvictionVotingTally,
 } from '@polkadot/types/lookup'
-import { ITuple } from '@polkadot/types/types'
-import { Option, u32 } from '@polkadot/types'
+import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 /**
@@ -71,7 +71,7 @@ function referendumCmp(
       if (errorMsg === null || errorMsg === undefined) {
         errorMessage = msg
       } else {
-        errorMessage = errorMsg + '\n' + msg
+        errorMessage = `${errorMsg}\n${msg}`
       }
       assert(cmp, errorMessage)
     }
@@ -141,7 +141,7 @@ export async function referendumLifecycleTest<
   await relayClient.dev.newBlock()
 
   // Fields to be removed, check comment below.
-  let unwantedFields = new RegExp('index')
+  let unwantedFields = /index/
   await checkEvents(submissionEvents, 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum submission events')
@@ -158,7 +158,7 @@ export async function referendumLifecycleTest<
   // snapshot.
   // These fields contain epoch-sensitive data, which will cause spurious test failures
   // periodically.
-  unwantedFields = new RegExp('alarm|submitted')
+  unwantedFields = /alarm|submitted/
   await check(referendumData)
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum info before decision deposit')
@@ -214,7 +214,7 @@ export async function referendumLifecycleTest<
 
   // Once more, fields containing temporally-contigent information - block numbers - must be excised
   // from test data to avoid spurious failures after updating block numbers.
-  unwantedFields = new RegExp("alarm|index|submitted")
+  unwantedFields = /alarm|index|submitted/
 
   await checkEvents(decisiondepEvents, 'referenda')
     .redact({ removeKeys: unwantedFields })
@@ -263,15 +263,15 @@ export async function referendumLifecycleTest<
 
   for (let i = 0; i < smallTipper[1].preparePeriod.toNumber() - 2; i++) {
     await relayClient.dev.newBlock()
-      referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
-      assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
-      referendumData = referendumDataOpt.unwrap()
-      assert(referendumData.isOngoing)
-      refPost = referendumData.asOngoing
+    referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
+    assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
+    referendumData = referendumDataOpt.unwrap()
+    assert(referendumData.isOngoing)
+    refPost = referendumData.asOngoing
 
-      referendumCmp(refPre, refPost, [], `Failed on iteration number ${i}.`)
+    referendumCmp(refPre, refPost, [], `Failed on iteration number ${i}.`)
 
-      refPre = refPost
+    refPre = refPost
   }
 
   await relayClient.dev.newBlock()
@@ -279,7 +279,7 @@ export async function referendumLifecycleTest<
   referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   const refNowDeciding = referendumDataOpt.unwrap().asOngoing
 
-  unwantedFields = new RegExp("alarm|submitted|since")
+  unwantedFields = /alarm|submitted|since/
 
   await check(refNowDeciding)
     .redact({ removeKeys: unwantedFields })
@@ -289,10 +289,12 @@ export async function referendumLifecycleTest<
 
   assert(refNowDeciding.alarm.unwrap()[0].eq(smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock)))
 
-  assert(refNowDeciding.deciding.eq({
-    since: decisionPeriodStartBlock,
-    confirming: null
-  }))
+  assert(
+    refNowDeciding.deciding.eq({
+      since: decisionPeriodStartBlock,
+      confirming: null,
+    }),
+  )
 
   referendumCmp(refPost!, refNowDeciding, ['alarm', 'deciding'])
 
@@ -316,13 +318,13 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  unwantedFields = new RegExp("alarm|when|since|submitted")
+  unwantedFields = /alarm|when|since|submitted/
 
   // Filtering for events only from the `convictionVoting` pallet would leave them empty.
   // Voting events were only introduced in
   // https://github.com/paritytech/polkadot-sdk/pull/4613, and will take a few releases until they
   // are visible here - this will trigger a failure in tests, which can then be addressed.
-  await checkEvents(voteEvents, "convictionVoting", "referenda")
+  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
     .redact({ removeKeys: unwantedFields, redactKeys: unwantedFields })
     .toMatchSnapshot("events for charlie's vote")
 
@@ -344,17 +346,14 @@ export async function referendumLifecycleTest<
 
   // Check Charlie's locked funds
   const charlieClassLocks = await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
-  const localCharlieClassLocks = [
-    [
-      smallTipper[0],
-      ayeVote
-    ]
-  ]
+  const localCharlieClassLocks = [[smallTipper[0], ayeVote]]
   assert(charlieClassLocks.eq(localCharlieClassLocks))
 
   // , and overall account's votes
-  const votingByCharlie: PalletConvictionVotingVoteVoting =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.charlie.address, smallTipper[0])
+  const votingByCharlie: PalletConvictionVotingVoteVoting = await relayClient.api.query.convictionVoting.votingFor(
+    defaultAccounts.charlie.address,
+    smallTipper[0],
+  )
   assert(votingByCharlie.isCasting, "charlie's votes are cast, not delegated")
   const charlieCastVotes: PalletConvictionVotingVoteCasting = votingByCharlie.asCasting
 
@@ -362,7 +361,9 @@ export async function referendumLifecycleTest<
   // which must be removed.
   const unwantedRefIx = new RegExp(`${referendumIndex},`)
 
-  await check(charlieCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("charlie's votes after casting his")
+  await check(charlieCastVotes.votes[0][1])
+    .redact({ removeKeys: unwantedRefIx })
+    .toMatchSnapshot("charlie's votes after casting his")
   assert(charlieCastVotes.votes.length === 1)
   assert(charlieCastVotes.votes[0][0].eq(referendumIndex))
 
@@ -393,7 +394,7 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents, "convictionVoting", "referenda")
+  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for dave's vote")
 
@@ -420,12 +421,16 @@ export async function referendumLifecycleTest<
 
   // Check Dave's overall votes
 
-  const votingByDave: PalletConvictionVotingVoteVoting =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.dave.address, smallTipper[0])
+  const votingByDave: PalletConvictionVotingVoteVoting = await relayClient.api.query.convictionVoting.votingFor(
+    defaultAccounts.dave.address,
+    smallTipper[0],
+  )
   assert(votingByDave.isCasting, "dave's votes are cast, not delegated")
   const daveCastVotes: PalletConvictionVotingVoteCasting = votingByDave.asCasting
 
-  await check(daveCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("dave's votes after casting his")
+  await check(daveCastVotes.votes[0][1])
+    .redact({ removeKeys: unwantedRefIx })
+    .toMatchSnapshot("dave's votes after casting his")
 
   assert(daveCastVotes.votes.length === 1)
   assert(daveCastVotes.votes[0][0].eq(referendumIndex))
@@ -459,7 +464,7 @@ export async function referendumLifecycleTest<
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(voteEvents, "convictionVoting", "referenda")
+  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for eve's vote")
 
@@ -467,9 +472,7 @@ export async function referendumLifecycleTest<
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
 
-  await check(referendumData)
-    .redact({ removeKeys: unwantedFields })
-    .toMatchSnapshot("referendum info after eve's vote")
+  await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot("referendum info after eve's vote")
 
   assert(referendumData.isOngoing)
   const ongoingRefThirdVote = referendumData.asOngoing
@@ -486,12 +489,16 @@ export async function referendumLifecycleTest<
 
   // Check Eve's overall votes
 
-  const votingByEve: PalletConvictionVotingVoteVoting =
-    await relayClient.api.query.convictionVoting.votingFor(defaultAccounts.eve.address, smallTipper[0])
+  const votingByEve: PalletConvictionVotingVoteVoting = await relayClient.api.query.convictionVoting.votingFor(
+    defaultAccounts.eve.address,
+    smallTipper[0],
+  )
   assert(votingByEve.isCasting, "eve's votes are cast, not delegated")
   const eveCastVotes: PalletConvictionVotingVoteCasting = votingByEve.asCasting
 
-  await check(eveCastVotes.votes[0][1]).redact({ removeKeys: unwantedRefIx}).toMatchSnapshot("eve's votes after casting hers")
+  await check(eveCastVotes.votes[0][1])
+    .redact({ removeKeys: unwantedRefIx })
+    .toMatchSnapshot("eve's votes after casting hers")
   assert(eveCastVotes.votes.length === 1)
   assert(eveCastVotes.votes[0][0].eq(referendumIndex))
 
@@ -499,7 +506,6 @@ export async function referendumLifecycleTest<
   assert(eveVote.aye.eq(ayeVote))
   assert(eveVote.nay.eq(nayVote))
   assert(eveVote.abstain.eq(abstainVote))
-
 
   // AFter a vote the referendum's alarm is set to the block following the one the vote tx was
   // included in.
@@ -511,14 +517,13 @@ export async function referendumLifecycleTest<
   referendumCmp(ongoingRefSecondVote, ongoingRefThirdVote, ['tally', 'alarm'])
 
   // Attempt to cancel the referendum with a signed origin - this should fail.
-  
+
   const cancelRefCall = relayClient.api.tx.referenda.cancel(referendumIndex)
   const cancelRefEvents = await sendTransaction(cancelRefCall.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(cancelRefEvents, 'referenda', 'system')
-    .toMatchSnapshot('cancelling referendum with signed origin')
+  await checkEvents(cancelRefEvents, 'referenda', 'system').toMatchSnapshot('cancelling referendum with signed origin')
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
@@ -555,11 +560,11 @@ export async function referendumLifecycleTest<
   const events = await relayClient.api.query.system.events()
 
   const referendaEvents = events.filter((record) => {
-    const { event } = record;
+    const { event } = record
     return event.section === 'referenda'
-  });
+  })
 
-  assert(referendaEvents.length === 1, "cancelling a referendum should emit 1 event")
+  assert(referendaEvents.length === 1, 'cancelling a referendum should emit 1 event')
 
   const cancellationEvent = referendaEvents[0]
   assert(relayClient.api.events.referenda.Cancelled.is(cancellationEvent.event))
@@ -574,33 +579,34 @@ export async function referendumLifecycleTest<
   // cancelling a referendum does not remove it from storage
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
 
-  assert(referendumDataOpt.unwrap().isCancelled, "referendum should be cancelled!")
-  const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> = referendumDataOpt.unwrap().asCancelled
+  assert(referendumDataOpt.unwrap().isCancelled, 'referendum should be cancelled!')
+  const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
+    referendumDataOpt.unwrap().asCancelled
 
   cancelledRef[0].eq(referendumIndex)
   // Check that the referendum's submission deposit was refunded to Alice
   cancelledRef[1].unwrap().eq({
     who: encodeAddress(defaultAccounts.alice.address, addressEncoding),
-    amount: relayClient.api.consts.referenda.submissionDeposit
+    amount: relayClient.api.consts.referenda.submissionDeposit,
   })
   // Check that the referendum's submission deposit was refunded to Bob
   cancelledRef[2].unwrap().eq({
     who: encodeAddress(defaultAccounts.bob.address, addressEncoding),
-    amount: smallTipper[1].decisionDeposit
+    amount: smallTipper[1].decisionDeposit,
   })
 
   const testAccounts = {
-    'charlie': {
+    charlie: {
       classLocks: charlieClassLocks,
       localClassLocks: localCharlieClassLocks,
       votingBy: votingByCharlie,
     },
-    'dave': {
+    dave: {
       classLocks: daveLockedFunds,
       localClassLocks: localDaveClassLocks,
       votingBy: votingByDave,
     },
-    'eve': {
+    eve: {
       classLocks: eveLockedFunds,
       localClassLocks: localEveClassLocks,
       votingBy: votingByEve,
@@ -609,11 +615,12 @@ export async function referendumLifecycleTest<
 
   // Check that cancelling the referendum has no effect on each voter's class locks
   for (const account of Object.keys(testAccounts)) {
-    testAccounts[account].classLocks =
-      await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts[account].address)
+    testAccounts[account].classLocks = await relayClient.api.query.convictionVoting.classLocksFor(
+      defaultAccounts[account].address,
+    )
     assert(
       testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
-      `${account}'s class locks should be unaffected by referendum cancellation`
+      `${account}'s class locks should be unaffected by referendum cancellation`,
     )
   }
 
@@ -621,18 +628,15 @@ export async function referendumLifecycleTest<
   // storage item.
   for (const account of Object.keys(testAccounts)) {
     const postCancellationVoting: PalletConvictionVotingVoteVoting =
-      await relayClient.api.query.convictionVoting.votingFor(
-        (defaultAccounts[account].address as string),
-        smallTipper[0]
-      )
+      await relayClient.api.query.convictionVoting.votingFor(defaultAccounts[account].address as string, smallTipper[0])
     assert(postCancellationVoting.isCasting, `pre-referendum cancellation, ${account}'s votes were cast, not delegated`)
     const postCancellationCastVotes: PalletConvictionVotingVoteCasting = postCancellationVoting.asCasting
     assert(
       postCancellationVoting.eq(testAccounts[account].votingBy),
-      `${account}'s votes should be unaffected by referendum cancellation`
+      `${account}'s votes should be unaffected by referendum cancellation`,
     )
-    await check((postCancellationCastVotes).votes[0][1])
-      .redact({ removeKeys: unwantedRefIx})
+    await check(postCancellationCastVotes.votes[0][1])
+      .redact({ removeKeys: unwantedRefIx })
       .toMatchSnapshot(`${account}'s votes after referendum's cancellation`)
   }
 
@@ -644,12 +648,12 @@ export async function referendumLifecycleTest<
   const removeDaveVoteAsCharlie = relayClient.api.tx.convictionVoting.removeOtherVote(
     defaultAccounts.dave.address,
     smallTipper[0],
-    referendumIndex
+    referendumIndex,
   ).method
   const removeEveVoteAsCharlie = relayClient.api.tx.convictionVoting.removeOtherVote(
     defaultAccounts.eve.address,
     smallTipper[0],
-    referendumIndex
+    referendumIndex,
   ).method
 
   const batchAllTx = relayClient.api.tx.utility.batchAll([
@@ -663,7 +667,7 @@ export async function referendumLifecycleTest<
   await relayClient.dev.newBlock()
 
   await checkEvents(batchEvents)
-    .redact({ removeKeys: new RegExp('who') })
+    .redact({ removeKeys: /who/ })
     .toMatchSnapshot('removal of votes in cancelled referendum')
 
   // Check that each voter's class locks remain unaffected by vote removal - these are subject to a
@@ -671,16 +675,21 @@ export async function referendumLifecycleTest<
   //
   // Also check that voting for each account is appropriately empty.
   for (const account of Object.keys(testAccounts)) {
-    testAccounts[account].classLocks =
-      await relayClient.api.query.convictionVoting.classLocksFor(defaultAccounts[account].address)
+    testAccounts[account].classLocks = await relayClient.api.query.convictionVoting.classLocksFor(
+      defaultAccounts[account].address,
+    )
     assert(
       testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
-      `${account}'s class locks should be unaffected by vote removal`
+      `${account}'s class locks should be unaffected by vote removal`,
     )
-    await check(testAccounts[account].classLocks).toMatchSnapshot(`${account}'s class locks after their vote's rescission`)
+    await check(testAccounts[account].classLocks).toMatchSnapshot(
+      `${account}'s class locks after their vote's rescission`,
+    )
 
-    testAccounts[account].votingBy =
-      await relayClient.api.query.convictionVoting.votingFor(defaultAccounts[account].address, smallTipper[0])
+    testAccounts[account].votingBy = await relayClient.api.query.convictionVoting.votingFor(
+      defaultAccounts[account].address,
+      smallTipper[0],
+    )
     assert(testAccounts[account].votingBy.isCasting)
     const castVotes = testAccounts[account].votingBy.asCasting
     await check(castVotes).toMatchSnapshot(`${account}'s votes after rescission`)
@@ -697,11 +706,11 @@ export async function referendumLifecycleTest<
   await relayClient.dev.newBlock()
 
   await checkEvents(submissionRefundEvents, 'referenda')
-    .redact({ removeKeys: new RegExp('index') })
+    .redact({ removeKeys: /index/ })
     .toMatchSnapshot('refund of submission deposit')
 
   await checkEvents(decisionRefundEvents, 'referenda')
-    .redact({ removeKeys: new RegExp('index') })
+    .redact({ removeKeys: /index/ })
     .toMatchSnapshot('refund of decision deposit')
 }
 
@@ -772,14 +781,13 @@ export async function referendumLifecycleKillTest<
   await relayClient.dev.newBlock()
 
   // Attempt to kill the referendum with a signed origin
-  
+
   const killRefCall = relayClient.api.tx.referenda.kill(referendumIndex)
   const killRefEvents = await sendTransaction(killRefCall.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
   await checkEvents(killRefEvents, 'referenda', 'system').toMatchSnapshot('killing referendum with signed origin')
-
 
   /**
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
@@ -815,24 +823,26 @@ export async function referendumLifecycleKillTest<
 
   // Retrieve the events for the latest block
   const events = await relayClient.api.query.system.events()
-  
-  const referendaEvents = events.filter((record) => {
-    const { event } = record;
-    return event.section === 'referenda'
-  });
 
-  assert(referendaEvents.length === 3, "killing a referendum should emit 3 events")
+  const referendaEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'referenda'
+  })
+
+  assert(referendaEvents.length === 3, 'killing a referendum should emit 3 events')
 
   referendaEvents.forEach((record) => {
-    const { event } = record;
+    const { event } = record
     if (relayClient.api.events.referenda.Killed.is(event)) {
       const [index, tally] = event.data
       assert(index.eq(referendumIndex))
-      assert(tally.eq({
-        ayes: 0,
-        nays: 0,
-        support: 0,
-      }))
+      assert(
+        tally.eq({
+          ayes: 0,
+          nays: 0,
+          support: 0,
+        }),
+      )
     } else if (relayClient.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
@@ -841,7 +851,7 @@ export async function referendumLifecycleKillTest<
       } else if (who.eq(encodeAddress(defaultAccounts.bob.address, addressEncoding))) {
         assert(amount.eq(smallTipper[1].decisionDeposit))
       } else {
-        assert(false, "malformed decision slashed events")
+        assert(false, 'malformed decision slashed events')
       }
     }
   })
@@ -849,7 +859,7 @@ export async function referendumLifecycleKillTest<
   const referendumDataOpt = await relayClient.api.query.referenda.referendumInfoFor(referendumIndex)
   // killing a referendum does not remove it from storage, though it does prune most of its data.
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
-  assert(referendumDataOpt.unwrap().isKilled, "referendum should be cancelled!")
+  assert(referendumDataOpt.unwrap().isKilled, 'referendum should be cancelled!')
 
   // The only information left from the killed referendum is the block number when it was killed.
   const blockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
@@ -879,12 +889,10 @@ export async function preimageTest<
    * Query noted preimage
    */
 
-  let preimage = await relayClient.api.query.preimage.preimageFor(
-    [
-      encodedProposal.hash.toHex(),
-      encodedProposal.encodedLength
-    ]
-  )
+  let preimage = await relayClient.api.query.preimage.preimageFor([
+    encodedProposal.hash.toHex(),
+    encodedProposal.encodedLength,
+  ])
 
   assert(preimage.isSome)
   assert(preimage.unwrap().toHex() === encodedProposal.toHex())
@@ -904,12 +912,10 @@ export async function preimageTest<
    * Query unnoted preimage, and verify it is absent
    */
 
-  preimage = await relayClient.api.query.preimage.preimageFor(
-    [
-      encodedProposal.hash.toHex(),
-      encodedProposal.encodedLength
-    ]
-  )
+  preimage = await relayClient.api.query.preimage.preimageFor([
+    encodedProposal.hash.toHex(),
+    encodedProposal.encodedLength,
+  ])
 
   assert(preimage.isNone)
 }
@@ -917,28 +923,18 @@ export async function preimageTest<
 export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(
-  relayChain: Chain<TCustom, TInitStoragesRelay>,
-  testConfig: { testSuiteName: string, addressEncoding: number, }
-) {
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
+  describe(testConfig.testSuiteName, () => {
+    test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
+      await referendumLifecycleTest(relayChain, testConfig.addressEncoding)
+    })
 
-  describe(testConfig.testSuiteName, function () {
-    test(
-      'referendum lifecycle test - submission, decision deposit, various voting should all work',
-      async () => {
-        await referendumLifecycleTest(relayChain, testConfig.addressEncoding)
-      })
+    test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
+      await referendumLifecycleKillTest(relayChain, testConfig.addressEncoding)
+    })
 
-    test(
-      'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-      async () => {
-        await referendumLifecycleKillTest(relayChain, testConfig.addressEncoding)
-      })
-
-    test(
-      'preimage submission, query and removal works',
-      async() => {
-        await preimageTest(relayChain)
-      })
+    test('preimage submission, query and removal works', async () => {
+      await preimageTest(relayChain)
+    })
   })
 }

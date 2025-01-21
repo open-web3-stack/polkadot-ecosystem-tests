@@ -1,10 +1,10 @@
 import { describe } from 'vitest'
 
-import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
 import { defaultAccounts } from '@e2e-test/networks'
-import { query, tx } from '@e2e-test/shared/api'
-import { runXtokenstHorizontal, runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
+import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
+import { query, tx } from '@e2e-test/shared/api'
+import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 describe('acala & moonbeam', async () => {
   const [acalaClient, moonbeamClient, polkadotClient] = await setupNetworks(acala, moonbeam, polkadot)

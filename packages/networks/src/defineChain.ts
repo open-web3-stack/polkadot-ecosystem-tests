@@ -1,4 +1,4 @@
-import { Chain, ChainConfig } from './types.js'
+import type { Chain, ChainConfig } from './types.js'
 
 const toNumber = (value: string | undefined): number | undefined => {
   if (value === undefined) {

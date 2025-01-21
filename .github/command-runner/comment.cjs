@@ -2,7 +2,7 @@ module.exports = class Comment {
   constructor({ github, context, commentId }) {
     this.github = github
     this.context = context
-    this.commentId = commentId || null;
+    this.commentId = commentId || null
   }
 
   async createOrUpdateComment(body) {
@@ -12,7 +12,7 @@ module.exports = class Comment {
         issue_number: this.context.issue.number,
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        body: `${body}` + `\n[view details](${actionUrl})`
+        body: `${body}` + `\n[view details](${actionUrl})`,
       })
       this.commentId = result.data.id
     }
@@ -21,7 +21,7 @@ module.exports = class Comment {
       issue_number: this.context.issue.number,
       owner: this.context.repo.owner,
       repo: this.context.repo.repo,
-      body: `${body}` + `\n[view details](${actionUrl})`
+      body: `${body}` + `\n[view details](${actionUrl})`,
     })
   }
 }

@@ -1,6 +1,6 @@
-import { fileURLToPath } from 'url'
-import fs from 'fs'
-import path, { dirname } from 'path'
+import fs from 'node:fs'
+import path, { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 import * as chains from '@e2e-test/networks/chains'
@@ -45,9 +45,9 @@ const main = async () => {
   const blockNumbersStr = (await Promise.all(blockNumbers)).join('\n')
 
   if (isUpdateKnownGood) {
-    envFile = blockNumbersStr + '\n'
+    envFile = `${blockNumbersStr}\n`
   } else {
-    envFile = blockNumbersStr + '\n\n' + envFile
+    envFile = `${blockNumbersStr}\n\n${envFile}`
   }
 
   console.log(blockNumbersStr)

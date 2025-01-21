@@ -1,5 +1,5 @@
-import { expect } from 'vitest'
 import { withExpect } from '@acala-network/chopsticks-testing'
+import { expect } from 'vitest'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
   toMatchSnapshot(msg?: string): void {
