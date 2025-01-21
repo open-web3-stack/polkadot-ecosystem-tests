@@ -1,4 +1,4 @@
-import { Client } from './createNetwork.js'
+import type { Client } from './createNetwork.js'
 
 export function captureSnapshot(...clients: Client[]) {
   const heads = clients.map((client) => [client.chain.head, client.chain] as const)

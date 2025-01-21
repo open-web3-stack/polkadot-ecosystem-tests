@@ -26,14 +26,7 @@
 		"lineWidth": 120,
 		"attributePosition": "auto",
 		"bracketSpacing": true,
-		"ignore": [
-			"**/tsconfig.tsbuildinfo",
-			"**/.gitignore",
-			"**/.yarn",
-			"**/*.yml",
-			"**/*.md",
-			"**/node_modules/**"
-		]
+		"ignore": ["**/tsconfig.tsbuildinfo", "**/.gitignore", "**/.yarn", "**/*.yml", "**/*.md", "**/node_modules/**"]
 	},
 	"organizeImports": { "enabled": true },
 	"linter": {
@@ -54,9 +47,7 @@
 				"useLiteralKeys": "off"
 			}
 		},
-		"ignore": [
-			"**/node_modules/"
-		]
+		"ignore": ["**/node_modules/"]
 	},
 	"javascript": {
 		"formatter": {

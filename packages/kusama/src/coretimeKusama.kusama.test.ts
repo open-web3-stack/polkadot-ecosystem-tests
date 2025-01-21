@@ -1,9 +1,9 @@
 import { describe } from 'vitest'
 
 import { coretimeKusama, kusama } from '@e2e-test/networks/chains'
+import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
-import { setupNetworks } from '@e2e-test/shared'
 
 describe('kusama & coretimeKusama', async () => {
   const [kusamaClient, coretimeClient] = await setupNetworks(kusama, coretimeKusama)
