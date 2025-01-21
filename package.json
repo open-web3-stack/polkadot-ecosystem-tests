@@ -14,6 +14,19 @@
 	"workspaces": [
 		"packages/*"
 	],
+	"resolutions": {
+		"@polkadot/api": "^15.0",
+		"@polkadot/api-augment": "^15.0",
+		"@polkadot/api-derive": "^15.0",
+		"@polkadot/rpc-augment": "^15.0",
+		"@polkadot/rpc-core": "^15.0",
+		"@polkadot/rpc-provider": "^15.0",
+		"@polkadot/types": "^15.0",
+		"@polkadot/types-augment": "^15.0",
+		"@polkadot/types-codec": "^15.0",
+		"@polkadot/types-create": "^15.0",
+		"@polkadot/types-known": "^15.0"
+	},
 	"packageManager": "yarn@4.2.2",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
