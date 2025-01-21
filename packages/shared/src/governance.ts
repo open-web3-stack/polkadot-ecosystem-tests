@@ -27,7 +27,8 @@ import { encodeAddress } from '@polkadot/util-crypto'
  * For example:
  * 1. from the time its decision deposited is placed until its preparation period elapses, no field
  *    of the referendum may change
- *   a. to know which block in the iterated comparisons caused the failure, an optional error
+ *
+ *     a. to know which block in the iterated comparisons caused the failure, an optional error
  *      message parameter is passable
  * 2. after placing a vote, the referendum's tally and alarm should change, but nothing else
  *
@@ -84,15 +85,24 @@ function referendumCmp(
  * 2. placing its decision deposit
  * 3. awaiting the end of the preparation period
  * 4. voting on it after the decision period has commenced
- *   4.1. using `vote`
- *   4.2. using a split vote
- *   4.3. using a split-abstain vote
+ *
+ *     4.1. using `vote`
+ *
+ *     4.2. using a split vote
+ *
+ *     4.3. using a split-abstain vote
  * 5. cancelling the referendum using the scheduler to insert a `Root`-origin call
- *   5.1 checking that locks on submission/decision deposits are released
- *   5.2 checking that voters' class locks and voting data are not affected
+ *
+ *     5.1 checking that locks on submission/decision deposits are released
+ *
+ *     5.2 checking that voters' class locks and voting data are not affected
+ *
  * 6. removing the votes cast
- *   6.1 asserting that voting locks are preserved
- *   6.2 asserting that voting funds are returned
+ *
+ *     6.1 asserting that voting locks are preserved
+ *
+ *     6.2 asserting that voting funds are returned
+ *
  * 7. refunding the submission and decision deposits
  */
 export async function referendumLifecycleTest<
@@ -710,7 +720,8 @@ export async function referendumLifecycleTest<
  * 1. submitting a referendum for a treasury spend
  * 2. placing its decision deposit
  * 3. killing the referendum using the scheduler to insert a `Root`-origin call
- *   3.1 checking that submission/decision deposits are slashed
+ *
+ *     3.1 checking that submission/decision deposits are slashed
  */
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -779,7 +790,6 @@ export async function referendumLifecycleKillTest<
   await relayClient.dev.newBlock()
 
   await checkEvents(killRefEvents, 'referenda', 'system').toMatchSnapshot('killing referendum with signed origin')
-
 
   /**
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.

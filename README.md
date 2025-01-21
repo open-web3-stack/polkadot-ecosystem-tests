@@ -109,7 +109,7 @@ Consider placing such tests elsewhere, or using different tools (e.g. XCM emulat
 3. Run the newly created tests so their snapshots can be created in `packages/<network>/src/__snapshots__`
   - Inspect the snapshots, and make corrections to tests as necessary - or upstream, if the test
     has revealed an issue with e.g. `polkadot-sdk`
-4. Craete a PR with the new tests.
+4. Create a PR with the new tests.
 
 ### Writing Tests
 
