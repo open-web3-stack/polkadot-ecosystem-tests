@@ -31,8 +31,8 @@ async function runCommand({ cmd, comment, exec }) {
 	})
 
 	return {
-		output: output.replace(/\x1b\[[0-9;]*m/g, ''),
-		errorOutput: errorOutput.replace(/\x1b\[[0-9;]*m/g, ''),
+		output: output.replace(new RegExp(`${ANSI_ESCAPE}\\[[0-9;]*m`, 'g'), ''),
+		errorOutput: errorOutput.replace(new RegExp(`${ANSI_ESCAPE}\\[[0-9;]*m`, 'g'), ''),
 		exitCode,
 		cmd,
 	}
