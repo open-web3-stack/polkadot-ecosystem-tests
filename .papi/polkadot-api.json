@@ -1,0 +1,14 @@
+{
+  "version": 0,
+  "descriptorPath": ".papi/descriptors",
+  "entries": {
+    "dot": {
+      "chain": "polkadot",
+      "metadata": ".papi/metadata/dot.scale"
+    },
+    "ksm": {
+      "chain": "ksmcc3",
+      "metadata": ".papi/metadata/ksm.scale"
+    }
+  }
+}

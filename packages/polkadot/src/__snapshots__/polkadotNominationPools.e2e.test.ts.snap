@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Nomination Pools > nomination pools test > referendum submission events 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": 170141183460469231731687303715884105728n,
+    "free": 300152012747n,
+    "frozen": 0n,
+    "reserved": 0n,
+  },
+  "nonce": 41,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;

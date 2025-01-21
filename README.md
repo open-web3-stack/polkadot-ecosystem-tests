@@ -79,7 +79,7 @@ Initial coverage can be limited to critical path scenarios composed of common ex
 from each of a runtime's pallets, and from there test more complex interactions.
 
 Note that since block execution throughput in `chopsticks` on a local development machine is limited
-to roughly `1` and `10` blocks/second, not all scenarios are testable in practice e.g. referenda
+to roughly `1-10` blocks/second, not all scenarios are testable in practice e.g. referenda
 confirmation, or the unbonding of staked funds.
 Consider placing such tests elsewhere, or using different tools (e.g. XCM emulator).
 
