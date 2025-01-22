@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 
 import { Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, objectCmp } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -42,7 +42,7 @@ function referendumCmp(
   ref1: PalletReferendaReferendumStatusConvictionVotingTally,
   ref2: PalletReferendaReferendumStatusConvictionVotingTally,
   propertiesToBeSkipped: string[],
-  errorMsg?: string,
+  optErrorMsg?: string,
 ) {
   const properties = [
     'track',
@@ -58,25 +58,12 @@ function referendumCmp(
     'alarm',
   ]
 
-  for (const prop of properties) {
-    if (propertiesToBeSkipped.includes(prop)) {
-      continue
-    }
+  const msgFun = (p: string) =>
+    `Referenda differed on property \`${p}\`
+      Left: ${ref1[p]}
+      Right: ${ref2[p]}`
 
-    const cmp = ref1[prop].eq(ref2[prop])
-    if (!cmp) {
-      const msg = `Referenda differed on property \`${prop}\`
-        Left: ${ref1[prop]}
-        Right: ${ref2[prop]}`
-      let errorMessage: string
-      if (errorMsg === null || errorMsg === undefined) {
-        errorMessage = msg
-      } else {
-        errorMessage = errorMsg + '\n' + msg
-      }
-      assert(cmp, errorMessage)
-    }
-  }
+  objectCmp(ref1, ref2, properties, propertiesToBeSkipped, msgFun, optErrorMsg)
 }
 
 /**
