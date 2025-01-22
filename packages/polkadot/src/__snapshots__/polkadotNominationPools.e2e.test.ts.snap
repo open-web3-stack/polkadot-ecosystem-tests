@@ -1,12 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 10000000000)",
+      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": "(rounded 10000000000)",
+      "joined": false,
+      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "poolId": "(rounded 310)",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
 [
   {
     "data": {
       "current": [
         "0.10%",
-        "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+        "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
       ],
       "poolId": "(rounded 310)",
     },
@@ -117,6 +140,20 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
       "poolId": "(rounded 310)",
     },
     "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+      "nominator": "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
+      "root": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    },
+    "method": "RolesUpdated",
     "section": "nominationPools",
   },
 ]

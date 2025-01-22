@@ -1,12 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1700000000)",
+      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": "(rounded 1700000000)",
+      "joined": false,
+      "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "poolId": "(rounded 210)",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
 [
   {
     "data": {
       "current": [
         "0.10%",
-        "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
+        "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       ],
       "poolId": "(rounded 210)",
     },
@@ -117,6 +140,20 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
       "poolId": "(rounded 210)",
     },
     "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
+      "nominator": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+      "root": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    },
+    "method": "RolesUpdated",
     "section": "nominationPools",
   },
 ]

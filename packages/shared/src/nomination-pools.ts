@@ -46,9 +46,33 @@ function nominationPoolCmp(
   objectCmp(pool1, pool2, properties, propertiesToBeSkipped, msgFun)
 }
 
+/**
+ * Nomination pool lifecycle test.
+ * Includes:
+ *
+ * 1. attempt to create a nomination pool with insufficient funds (should fail)
+ * 2. (successful) creation of a nomination pool
+ * 3. updating the roles of the pool
+ * 4. setting the commission data of the pool
+ * 5. having other accounts join the pool
+ * 6. bonding additional funds to the pool
+ * 
+ * @param relayChain 
+ * @param addressEncoding 
+ */
 async function nominationPoolTest(relayChain, addressEncoding: number) {
   const [relayClient] = await setupNetworks(relayChain)
  
+  // Fund test accounts not already provisioned in the test chain spec.
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
   const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
 
   // get the value for an account
@@ -66,7 +90,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     defaultAccounts.charlie.address
   )
 
-  let createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+  let createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.bob))
 
   await relayClient.dev.newBlock()
 
@@ -81,8 +105,8 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   createNomPoolTx = relayClient.api.tx.nominationPools.create(
     depositorMinBond,
     defaultAccounts.alice.address,
-    defaultAccounts.bob.address,
-    defaultAccounts.charlie.address
+    defaultAccounts.alice.address,
+    defaultAccounts.alice.address
   )
 
   createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
@@ -100,10 +124,10 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
 
   /// Check status of created pool
 
-  const postLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
-  assert(preLastPoolId + 1 === postLastPoolId, 'Pool ID should increment by 1')
+  const nomPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  assert(preLastPoolId + 1 === nomPoolId, 'Pool ID should be most recently available number + 1')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(postLastPoolId)
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should exist after block is applied')
 
   const nominationPoolPostCreation = poolData.unwrap()
@@ -119,10 +143,41 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   await check(nominationPoolPostCreation.roles).toMatchObject({
     depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
     root: encodeAddress(defaultAccounts.alice.address, addressEncoding),
-    nominator: encodeAddress(defaultAccounts.bob.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.alice.address, addressEncoding),
   })
   assert(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation')
+
+  /**
+   * Update pool roles
+   */
+
+  const updateRolesTx = relayClient.api.tx.nominationPools.updateRoles(
+    nomPoolId,
+    { Set: defaultAccounts.bob.address },
+    { Set: defaultAccounts.charlie.address },
+    { Set: defaultAccounts.dave.address },
+  )
+
+  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(updateRolesEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('update roles events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+
+  const nominationPoolWithRoles = poolData.unwrap()
+  nominationPoolCmp(nominationPoolPostCreation, nominationPoolWithRoles, ['roles'])
+
+  await check(nominationPoolWithRoles.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.dave.address, addressEncoding),
+  })
 
   /**
    * Set the pool's commission data
@@ -132,17 +187,17 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   const commission = 10e5
 
   const setCommissionTx = relayClient.api.tx.nominationPools.setCommission(
-    postLastPoolId,
-    [commission, defaultAccounts.dave.address]
+    nomPoolId,
+    [commission, defaultAccounts.eve.address]
   )
 
   const setCommissionMaxTx = relayClient.api.tx.nominationPools.setCommissionMax(
-    postLastPoolId,
+    nomPoolId,
     commission * 10
   )
 
   const setCommissionChangeRateTx = relayClient.api.tx.nominationPools.setCommissionChangeRate(
-    postLastPoolId,
+    nomPoolId,
     {
       maxIncrease: 10e8,
       minDelay: 10
@@ -150,7 +205,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   )
 
   const setCommissionClaimPermissionTx = relayClient.api.tx.nominationPools.setCommissionClaimPermission(
-    postLastPoolId,
+    nomPoolId,
     "Permissionless"
   )
 
@@ -161,7 +216,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     setCommissionClaimPermissionTx
   ])
 
-  const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccounts.alice))
+  const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccounts.bob))
 
   await relayClient.dev.newBlock()
 
@@ -169,20 +224,20 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     .toMatchSnapshot('commission alteration events')
 
   /// Check that all commission data were set correctly
-  poolData = await relayClient.api.query.nominationPools.bondedPools(postLastPoolId)
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after commission is changed')
 
   const blockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
 
   const nominationPoolWithCommission = poolData.unwrap()
 
-  nominationPoolCmp(nominationPoolPostCreation, nominationPoolWithCommission, ['commission'])
+  nominationPoolCmp(nominationPoolWithRoles, nominationPoolWithCommission, ['commission'])
 
   const newCommissionData = {
     max: commission * 10,
     current: [
       commission,
-      encodeAddress(defaultAccounts.dave.address, addressEncoding)
+      encodeAddress(defaultAccounts.eve.address, addressEncoding)
     ],
     changeRate: {
       maxIncrease: 10e8,
@@ -197,20 +252,8 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   /**
    * Have other accounts join the pool
    */
-
-  const ferdie = defaultAccounts.keyring.addFromUri('//Ferdie')
-
-  // Fund test accounts not already provisioned in the test chain spec.
-  await relayClient.dev.setStorage({
-    System: {
-      account: [
-        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
-        [[ferdie.address], { providers: 1, data: { free: 100000e10 } }],
-      ],
-    },
-  })
-
-  const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, postLastPoolId)
+  
+  const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, nomPoolId)
 
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccounts.eve))
 
@@ -219,7 +262,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
     .toMatchSnapshot('join nomination pool events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(postLastPoolId)
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after new member joins')
 
   const nominationPoolWithMembers = poolData.unwrap()
@@ -231,6 +274,30 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
 
   nominationPoolCmp(nominationPoolWithCommission, nominationPoolWithMembers, ['memberCounter', 'points'])
 
+  /**
+   * Bond additional funds as Eve
+   */
+
+  const bondExtraTx = relayClient.api.tx.nominationPools.bondExtra( { FreeBalance: minJoinBond - 1})
+
+  const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(defaultAccounts.eve))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(bondExtraEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('bond extra funds events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after extra funds are bonded')
+
+  const nominationPoolWithExtraBond = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithMembers, nominationPoolWithExtraBond, ['points'])
+
+  assert(
+    nominationPoolWithExtraBond.points.eq(depositorMinBond + 2 * minJoinBond - 1),
+    'Incorrect pool point count after bond_extra'
+  )
 }
 
 export function nominationPoolsE2ETests<
