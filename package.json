@@ -17,10 +17,8 @@
 	"packageManager": "yarn@4.2.2",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
-		"@polkadot-api/descriptors": "portal:.papi/descriptors",
 		"@swc/core": "^1.10.4",
 		"lodash": "^4.17.21",
-		"polkadot-api": "^1.8.2",
 		"typescript": "^5.6.3",
 		"vitest": "^2.1.6"
 	},

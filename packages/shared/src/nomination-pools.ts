@@ -1,85 +1,153 @@
-import { dot , ksm, MultiAddress} from "@polkadot-api/descriptors"
-import { createClient, getSs58AddressInfo } from "polkadot-api"
-import { getWsProvider } from "polkadot-api/ws-provider/node";
-import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
-
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { Chain, defaultAccountsSr25199, defaultSigners, defaultSignersSr25519 } from "@e2e-test/networks";
+import { Chain, defaultAccounts } from "@e2e-test/networks";
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
 
-import { describe, test } from "vitest";
+import { assert, describe, test } from "vitest";
+import { Option } from '@polkadot/types'
+import { sendTransaction } from '@acala-network/chopsticks-testing';
+import { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup';
+import { min } from 'lodash';
+import { permission } from 'process';
+import { b } from 'vitest/dist/chunks/suite.B2jumIFP.js';
 
 async function nominationPoolTest(relayChain, addressEncoding: number) {
-  const [relayClientPJS] = await setupNetworks(relayChain)
+  const [relayClient] = await setupNetworks(relayChain)
+ 
+  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
 
-// Connect to the polkadot relay chain.
-  const relayClientPAPI = createClient(
-    // Polkadot-SDK Nodes have issues, we recommend adding this enhancer
-    // see Requirements page for more info
-    withPolkadotSdkCompat(
-      getWsProvider(relayClientPJS.url),
-    )
-  );
-
-  // Fund test accounts not already provisioned in the test chain spec.
-  await relayClientPJS.dev.setStorage({
-    System: {
-      account: [
-        [[defaultAccountsSr25199.alice.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccountsSr25199.bob.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccountsSr25199.charlie.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccountsSr25199.dave.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccountsSr25199.eve.address], { providers: 1, data: { free: 10e10 } }],
-      ],
-    },
-  })
-
-  // With the `client`, you can get information such as subscribing to the last
-  // block to get the latest hash:
-  relayClientPAPI.finalizedBlock$.subscribe((finalizedBlock) =>
-    console.log(finalizedBlock.number, finalizedBlock.hash),
-  )
-   
-  // To interact with the chain, you need to get the `TypedApi`, which includes
-  // all the types for every call in that chain:
-  const dotApi = relayClientPAPI.getTypedApi(dot)
-   
   // get the value for an account
-  const minJoinBond = await dotApi.query.NominationPools.MinJoinBond.getValue()
-  const minCreateBond = await dotApi.query.NominationPools.MinCreateBond.getValue()
-  const existentialDep = await dotApi.constants.Balances.ExistentialDeposit()
+  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
 
-  const maxBI = (args: bigint[]) => args.reduce( (max, val) => max < val ? val : max, BigInt(Number.MIN_SAFE_INTEGER));
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
 
-  const depositor_min_bond = maxBI([minJoinBond, minCreateBond, existentialDep])
+  // Attempt to create a pool with insufficient funds
+  let createNomPoolTx = relayClient.api.tx.nominationPools.create(
+    depositorMinBond - 1,
+    defaultAccounts.alice.address,
+    defaultAccounts.bob.address,
+    defaultAccounts.charlie.address
+  )
 
-  const aliceAddr = MultiAddress.Id(encodeAddress(defaultSignersSr25519.alice.publicKey, addressEncoding))
-  const bobAddr = MultiAddress.Id(encodeAddress(defaultSignersSr25519.bob.publicKey, addressEncoding))
+  let createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
-  const transferTx = dotApi.tx.Balances.transfer_allow_death({
-    dest: bobAddr,
-    value: 100_000_000_000n,
+  await relayClient.dev.newBlock()
+
+  await checkEvents(createNomPoolEvents, 'system')
+    .toMatchSnapshot('create nomination pool with insufficient funds events')
+
+
+  // Create pool with sufficient funds
+  createNomPoolTx = relayClient.api.tx.nominationPools.create(
+    depositorMinBond,
+    defaultAccounts.alice.address,
+    defaultAccounts.bob.address,
+    defaultAccounts.charlie.address
+  )
+
+  createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+
+  /// Check that prior to the block taking effect, the pool does not yet exist with the
+  /// most recently available pool ID.
+  let poolData: Option<PalletNominationPoolsBondedPoolInner> =
+    await relayClient.api.query.nominationPools.bondedPools(preLastPoolId + 1)
+  assert(poolData.isNone, 'Pool should not exist before block is applied')
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('create nomination pool events')
+
+  /// Check status of created pool
+
+  const postLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  assert(preLastPoolId + 1 === postLastPoolId, 'Pool ID should increment by 1')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(postLastPoolId)
+  assert(poolData.isSome, 'Pool should exist after block is applied')
+
+  const nominationPool = poolData.unwrap()
+  await check(nominationPool.commission).toMatchObject({
+    current: null,
+    max: null,
+    changeRate: null,
+    throttleFrom: null,
+    claimPermission: null
+  })
+  assert(nominationPool.memberCounter.eq(1), 'Pool should have 1 member')
+  await check(nominationPool.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
   })
 
-  console.log(depositor_min_bond)
+  /// Set the pool commission
 
-  const createNomPoolTx = dotApi.tx.NominationPools.create({
-    amount: depositor_min_bond,
-    root: aliceAddr,
-    nominator: aliceAddr,
-    bouncer: aliceAddr
+  // This will be `Perbill` runtime-side, so 0.1%
+  const commission = 10e5
+
+  const setCommissionTx = relayClient.api.tx.nominationPools.setCommission(
+    postLastPoolId,
+    [commission, defaultAccounts.dave.address]
+  )
+
+  const setCommissionMaxTx = relayClient.api.tx.nominationPools.setCommissionMax(
+    postLastPoolId,
+    commission * 10
+  )
+
+  const setCommissionChangeRateTx = relayClient.api.tx.nominationPools.setCommissionChangeRate(
+    postLastPoolId,
+    {
+      maxIncrease: 10e8,
+      minDelay: 10
+    }
+  )
+
+  const setCommissionClaimPermissionTx = relayClient.api.tx.nominationPools.setCommissionClaimPermission(
+    postLastPoolId,
+    "Permissionless"
+  )
+
+  const commissionTx = relayClient.api.tx.utility.batchAll([
+    setCommissionTx,
+    setCommissionMaxTx,
+    setCommissionChangeRateTx,
+    setCommissionClaimPermissionTx
+  ])
+
+  const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(commissionEvents, 'nominationPools')
+    .toMatchSnapshot('commission alteration events')
+
+  /// Check that all commission data were set correctly
+  poolData = await relayClient.api.query.nominationPools.bondedPools(postLastPoolId)
+  assert(poolData.isSome, 'Pool should still exist after commission is changed')
+
+  const blockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  const nominationPoolWithCommission = poolData.unwrap()
+
+  await check(nominationPoolWithCommission.commission).toMatchObject({
+    max: commission * 10,
+    current: [
+      commission,
+      encodeAddress(defaultAccounts.dave.address, addressEncoding)
+    ],
+    changeRate: {
+      maxIncrease: 10e8,
+      minDelay: 10
+    },
+    throttleFrom: blockNumber,
+    claimPermission: { permissionless: null },
   })
-
-  // sign and submit the transaction while looking at the
-  // different events that will be emitted
-  const signedXtrnsc = await createNomPoolTx.sign(defaultSignersSr25519.alice)
-  const txFinalizedPayload = await relayClientPAPI.submit(signedXtrnsc, "best")
-
-  await relayClientPJS.dev.newBlock()
-
-  await relayClientPJS.pause()
 }
 
 export function nominationPoolsE2ETests<
@@ -92,7 +160,7 @@ export function nominationPoolsE2ETests<
 
   describe(testConfig.testSuiteName, function () {
     test(
-      'nomination pools test',
+      'nomination pool lifecycle test',
       async () => {
         await nominationPoolTest(relayChain, testConfig.addressEncoding)
       })

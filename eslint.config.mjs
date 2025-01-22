@@ -42,7 +42,6 @@ export default tseslint.config(
 			"**/vitest.config.mts",
 			".yarn/",
 			".github/command-runner/", // TODO: enable lint for those files
-			".papi/",
 		],
 	}
 )

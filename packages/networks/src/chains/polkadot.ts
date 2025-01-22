@@ -28,7 +28,7 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: 'wss://polkadot-rpc.dwellir.com',
+  endpoint: 'wss://rpc.ibp.network/polkadot',
   custom: custom.polkadot,
   initStorages: getInitStorages(),
   isRelayChain: true,
