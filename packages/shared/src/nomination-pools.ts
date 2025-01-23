@@ -62,13 +62,17 @@ function nominationPoolCmp(
  */
 async function nominationPoolTest(relayChain, addressEncoding: number) {
   const [relayClient] = await setupNetworks(relayChain)
- 
+
+  const ferdie = defaultAccounts.keyring.addFromUri('//Ferdie')
+
   // Fund test accounts not already provisioned in the test chain spec.
   await relayClient.dev.setStorage({
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.dave.address], { providers: 1, data: { free: 10000e10 } }],
         [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+        [[ferdie.address], { providers: 1, data: { free: 10000e10 } }],
       ],
     },
   })
@@ -89,7 +93,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     defaultAccounts.bob.address,
     defaultAccounts.charlie.address
   )
-
   let createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.bob))
 
   await relayClient.dev.newBlock()
@@ -108,7 +111,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     defaultAccounts.alice.address,
     defaultAccounts.alice.address
   )
-
   createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
   /// Check that prior to the block taking effect, the pool does not yet exist with the
@@ -158,7 +160,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     { Set: defaultAccounts.charlie.address },
     { Set: defaultAccounts.dave.address },
   )
-
   const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
@@ -215,7 +216,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     setCommissionChangeRateTx,
     setCommissionClaimPermissionTx
   ])
-
   const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccounts.bob))
 
   await relayClient.dev.newBlock()
@@ -254,7 +254,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
    */
   
   const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, nomPoolId)
-
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccounts.eve))
 
   await relayClient.dev.newBlock()
@@ -279,7 +278,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
    */
 
   const bondExtraTx = relayClient.api.tx.nominationPools.bondExtra( { FreeBalance: minJoinBond - 1})
-
   const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(defaultAccounts.eve))
 
   await relayClient.dev.newBlock()
@@ -298,6 +296,69 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     nominationPoolWithExtraBond.points.eq(depositorMinBond + 2 * minJoinBond - 1),
     'Incorrect pool point count after bond_extra'
   )
+
+  /**
+   * Claim commission as a random account - commission claim was set to permissionless.
+   *
+   * Commission is still 0 at this point, so the extrinsic will fail; the goal is to test the process.
+   */
+
+  const claimCommissionTx = relayClient.api.tx.nominationPools.claimCommission(nomPoolId)
+  const claimCommissionEvents = await sendTransaction(claimCommissionTx.signAsync(ferdie))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(claimCommissionEvents, 'nominationPools', 'system')
+    .toMatchSnapshot('claim commission events')
+
+  const events = await relayClient.api.query.system.events()
+
+  assert(
+    events.filter((record) => {
+      const { event } = record;
+      return event.section === 'nominationPools'
+    }).length === 0,
+    "claiming a fresh pool's commission will not emit any \"nomination pools\" events, as it the extrinsic fails"
+  )
+
+  const [systemEvent] = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(relayClient.api.events.system.ExtrinsicFailed.is(systemEvent.event))
+  const dispatchError = systemEvent.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  if (dispatchError.isModule) {
+    assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
+    const decoded = relayClient.api.registry.findMetaError(dispatchError.asModule);
+    
+    // Even though the pool has no commission to claim, the extrinsic should fail with this error,
+    // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
+    assert(decoded.section === 'nominationPools')
+    assert(decoded.name === 'NoPendingCommission')
+  } else {
+    assert(false, 'Dispatch error should be a module error')
+  }
+
+  /**
+   * Unbond previously bonded funds
+   */
+
+  const unbondTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond - 1)
+  const unbondEvents = await sendTransaction(unbondTx.signAsync(defaultAccounts.eve))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(unbondEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('unbond events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after funds are unbonded')
+  const nominationPoolPostUnbond = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 }
 
 export function nominationPoolsE2ETests<

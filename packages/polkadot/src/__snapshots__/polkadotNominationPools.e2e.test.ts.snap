@@ -23,6 +23,31 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1a000000",
+          "index": 39,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3700)",
+          "refTime": "(rounded 450000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
 [
   {
@@ -140,6 +165,30 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
       "poolId": "(rounded 310)",
     },
     "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 10000000000)",
+      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": "(rounded 10000000000)",
+      "era": "(rounded 1700)",
+      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "points": "(rounded 10000000000)",
+      "poolId": "(rounded 310)",
+    },
+    "method": "Unbonded",
     "section": "nominationPools",
   },
 ]
