@@ -183,6 +183,68 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state 
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state to destroying events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Destroying",
+      "poolId": "(rounded 310)",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (depositor) events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 39,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 8900)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (kick) events 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 10000000000,
+      "era": "(rounded 1700)",
+      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "points": 10000000000,
+      "poolId": "(rounded 310)",
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
 [
   {

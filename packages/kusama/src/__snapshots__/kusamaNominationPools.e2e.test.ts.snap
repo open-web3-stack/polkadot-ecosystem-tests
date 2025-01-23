@@ -183,6 +183,68 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > set state ev
 ]
 `;
 
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > set state to destroying events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Destroying",
+      "poolId": "(rounded 210)",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (depositor) events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 8900)",
+          "refTime": "(rounded 2100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick) events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1700000000)",
+      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": "(rounded 1700000000)",
+      "era": "(rounded 7700)",
+      "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "points": "(rounded 1700000000)",
+      "poolId": "(rounded 210)",
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
 [
   {

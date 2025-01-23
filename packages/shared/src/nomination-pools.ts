@@ -250,7 +250,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   await check(nominationPoolWithCommission.commission).toMatchObject(newCommissionData)
 
   /**
-   * Have other accounts join the pool
+   * Have another account join the pool
    */
   
   const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, nomPoolId)
@@ -291,7 +291,6 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   const nominationPoolWithExtraBond = poolData.unwrap()
 
   nominationPoolCmp(nominationPoolWithMembers, nominationPoolWithExtraBond, ['points'])
-
   assert(
     nominationPoolWithExtraBond.points.eq(depositorMinBond + 2 * minJoinBond - 1),
     'Incorrect pool point count after bond_extra'
@@ -311,7 +310,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   await checkEvents(claimCommissionEvents, 'nominationPools', 'system')
     .toMatchSnapshot('claim commission events')
 
-  const events = await relayClient.api.query.system.events()
+  let events = await relayClient.api.query.system.events()
 
   assert(
     events.filter((record) => {
@@ -327,17 +326,13 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   })
 
   assert(relayClient.api.events.system.ExtrinsicFailed.is(systemEvent.event))
-  const dispatchError = systemEvent.event.data.dispatchError
+  let dispatchError = systemEvent.event.data.dispatchError
 
   assert(dispatchError.isModule)
   if (dispatchError.isModule) {
-    assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
-    const decoded = relayClient.api.registry.findMetaError(dispatchError.asModule);
-    
     // Even though the pool has no commission to claim, the extrinsic should fail with this error,
     // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
-    assert(decoded.section === 'nominationPools')
-    assert(decoded.name === 'NoPendingCommission')
+    assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
   } else {
     assert(false, 'Dispatch error should be a module error')
   }
@@ -358,6 +353,7 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   assert(poolData.isSome, 'Pool should still exist after funds are unbonded')
   const nominationPoolPostUnbond = poolData.unwrap()
 
+  assert(nominationPoolPostUnbond.points.eq(depositorMinBond + minJoinBond))
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 
     /**
@@ -376,9 +372,93 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
     assert(poolData.isSome, 'Pool should still exist after state is changed')
 
     const nominationPoolBlocked = poolData.unwrap()
-    assert(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked')
 
+    assert(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked')
     nominationPoolCmp(nominationPoolPostUnbond, nominationPoolBlocked, ['state'])
+
+    /**
+     * Kick a member from the pool as the bouncer
+     */
+
+  const kickTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond)
+  const kickEvents = await sendTransaction(kickTx.signAsync(defaultAccounts.dave))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(kickEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('unbond (kick) events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after bouncer-unbond')
+  const nominationPoolPostKick = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolBlocked, nominationPoolPostKick, ['points'])
+  assert(nominationPoolPostKick.points.eq(depositorMinBond))
+  // Although the bouncer has forcefully unbonded the member, they are still counted as a member
+  // until the unbonding period (28/7 eras (Polkadot/Kusama)) has passed, and they withdraw.
+  assert(nominationPoolPostKick.memberCounter.eq(2))
+
+  /**
+   * Set pool state to `Destroying`
+   */
+
+  const setDestroyingTx = relayClient.api.tx.nominationPools.setState(nomPoolId, 'Destroying')
+  const setDestroyingEvents = await sendTransaction(setDestroyingTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(setDestroyingEvents, 'nominationPools')
+    .toMatchSnapshot('set state to destroying events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after state is changed')
+
+  const nominationPoolDestroying = poolData.unwrap()
+  assert(nominationPoolDestroying.state.isDestroying)
+  nominationPoolCmp(nominationPoolPostKick, nominationPoolDestroying, ['state'])
+
+  /**
+   * Unbond as depositor - allowed as the pool is set to destroying
+   *
+   * At this point in time, this operation will fail, as the previous depositor began the unbonding
+   * process, but has not fully unbonded and withdrawn their funds.
+   */
+
+  const unbondDepositorTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.alice.address, depositorMinBond)
+  const unbondDepositorEvents = await sendTransaction(unbondDepositorTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(unbondDepositorEvents, 'system')
+    .toMatchSnapshot('unbond (depositor) events')
+
+
+  /// Process events to look for the expected extrinsic error.
+
+  events = await relayClient.api.query.system.events()
+
+  // Collect the `system` event with the `ExtrinsicFailed` information.
+  const [ systemEv ] = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(relayClient.api.events.system.ExtrinsicFailed.is(systemEv.event))
+  dispatchError = systemEv.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  if (dispatchError.isModule) {
+    assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+  } else {
+    assert(false, 'Dispatch error should be a module error')
+  }
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome)
+
+  const nominationPoolPostDepositorUnbond = poolData.unwrap()
+  nominationPoolCmp(nominationPoolDestroying, nominationPoolPostDepositorUnbond, [])
+
 }
 
 export function nominationPoolsE2ETests<
