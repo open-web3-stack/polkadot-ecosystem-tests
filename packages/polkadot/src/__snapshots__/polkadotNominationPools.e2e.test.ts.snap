@@ -170,6 +170,19 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Blocked",
+      "poolId": "(rounded 310)",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
 [
   {

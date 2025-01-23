@@ -359,6 +359,26 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
   const nominationPoolPostUnbond = poolData.unwrap()
 
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
+
+    /**
+   * Set pool state to blocked
+   */
+
+    const setStateTx = relayClient.api.tx.nominationPools.setState(nomPoolId, 'Blocked')
+    const setStateEvents = await sendTransaction(setStateTx.signAsync(defaultAccounts.bob))
+  
+    await relayClient.dev.newBlock()
+    
+    await checkEvents(setStateEvents, 'nominationPools')
+      .toMatchSnapshot('set state events')
+
+    poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+    assert(poolData.isSome, 'Pool should still exist after state is changed')
+
+    const nominationPoolBlocked = poolData.unwrap()
+    assert(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked')
+
+    nominationPoolCmp(nominationPoolPostUnbond, nominationPoolBlocked, ['state'])
 }
 
 export function nominationPoolsE2ETests<

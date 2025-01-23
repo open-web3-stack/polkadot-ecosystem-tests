@@ -170,6 +170,19 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
 ]
 `;
 
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Blocked",
+      "poolId": "(rounded 210)",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
 [
   {
