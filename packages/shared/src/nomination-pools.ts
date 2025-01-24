@@ -47,16 +47,57 @@ function nominationPoolCmp(
 }
 
 /**
+ * Attempt to create a nomination pool with insufficient funds.
+ */
+async function nominationPoolCreationFailureTest(relayChain)  {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+
+  // Attempt to create a pool with insufficient funds
+  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
+    depositorMinBond - 1,
+    defaultAccounts.alice.address,
+    defaultAccounts.bob.address,
+    defaultAccounts.charlie.address
+  )
+  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(createNomPoolEvents, 'system')
+    .toMatchSnapshot('create nomination pool with insufficient funds events')
+
+}
+
+/**
  * Nomination pool lifecycle test.
  * Includes:
  *
- * 1. attempt to create a nomination pool with insufficient funds (should fail)
- * 2. (successful) creation of a nomination pool
- * 3. updating the roles of the pool
- * 4. setting the commission data of the pool
- * 5. having other accounts join the pool
- * 6. bonding additional funds to the pool
- * 
+ * 1. (successful) creation of a nomination pool
+ * 2. updating the roles of the pool
+ * 3. setting the commission data of the pool
+ *
+ *     3.1 setting the commission
+ *
+ *     3.2 setting the maximum commission
+ *
+ *     3.3 setting the commission change rate throttle and minimum delay between commission changes
+ *
+ *     3.4 setting the commission claim permission to permissionless
+ *
+ * 4. having another other account join the pool
+ * 5. bonding additional funds from this newcomer account to the pool
+ * 6. attempt to claim the pool's (zero) commission as a random account
+ * 7. unbonding the additionally bonded funds from the newcomer account
+ * 8. setting the pool state to blocked
+ * 9. kicking the newcomer account from the pool as the bouncer
+ * 10. setting the pool state to destroying
+ * 11. attempting to unbond the initial depositor's funds (should fail)
  * @param relayChain 
  * @param addressEncoding 
  */
@@ -79,39 +120,24 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
 
   const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
 
-  // get the value for an account
+  // Obtain the minimum deposit required to create a pool, as calculated by `pallet_nomination_poola::create`.
   const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
   const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
 
   const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
 
-  // Attempt to create a pool with insufficient funds
-  let createNomPoolTx = relayClient.api.tx.nominationPools.create(
-    depositorMinBond - 1,
-    defaultAccounts.alice.address,
-    defaultAccounts.bob.address,
-    defaultAccounts.charlie.address
-  )
-  let createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.bob))
-
-  await relayClient.dev.newBlock()
-
-  await checkEvents(createNomPoolEvents, 'system')
-    .toMatchSnapshot('create nomination pool with insufficient funds events')
-
-
   /**
    * Create pool with sufficient funds
    */
 
-  createNomPoolTx = relayClient.api.tx.nominationPools.create(
+  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
     depositorMinBond,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address
   )
-  createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
   /// Check that prior to the block taking effect, the pool does not yet exist with the
   /// most recently available pool ID.
@@ -475,5 +501,12 @@ export function nominationPoolsE2ETests<
       async () => {
         await nominationPoolTest(relayChain, testConfig.addressEncoding)
       })
+
+    test(
+      'nomination pool creation with insufficient funds',
+      async () => {
+        await nominationPoolCreationFailureTest(relayChain)
+      }
+    )
   })
 }

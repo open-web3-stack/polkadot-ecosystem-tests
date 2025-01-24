@@ -1,5 +1,30 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 8500)",
+          "refTime": "(rounded 2700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
 [
   {
@@ -118,31 +143,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomin
     },
     "method": "Bonded",
     "section": "nominationPools",
-  },
-]
-`;
-
-exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomination pool with insufficient funds events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x08000000",
-          "index": 41,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 8500)",
-          "refTime": "(rounded 2700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
   },
 ]
 `;
