@@ -8,6 +8,13 @@ import { assert, describe, test } from "vitest";
 import { Option } from '@polkadot/types'
 import { sendTransaction } from '@acala-network/chopsticks-testing';
 import { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup';
+import { ApiPromise } from '@polkadot/api';
+import { Codec } from '@polkadot/types/types';
+import { KeyringPair} from "@polkadot/keyring/types"
+
+/// -------
+/// Helpers
+/// -------
 
 /**
  * Compare the selected properties of two nomination pools.
@@ -45,6 +52,37 @@ function nominationPoolCmp(
 
   objectCmp(pool1, pool2, properties, propertiesToBeSkipped, msgFun)
 }
+
+/**
+ * Create a nomination pool for use in tests; useful helper to reduce boilerplate in tests.
+ *
+ * Creates a nomination pool with the minimum bond required to create a pool.
+ * When this function returns, the transaction will have been broadcast; for it to take effect, a block
+ * must be produced.
+ *
+ * @returns A promise resolving to the events emitted by the transaction, and the .
+ */
+async function createNominationPool(relayClient: { api: ApiPromise; }, signer: KeyringPair, root: string, nominator: string, bouncer: string): Promise<{ events: Promise<Codec[]> }> {
+  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+
+  const depositorBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+
+  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
+    depositorBond,
+    root,
+    nominator,
+    bouncer
+  )
+  const createNomPoolEvents = sendTransaction(createNomPoolTx.signAsync(signer))
+
+  return createNomPoolEvents
+}
+
+/// -------
+/// -------
+/// -------
 
 /**
  * Test that attempts to create a nomination pool with insufficient funds.
@@ -510,6 +548,11 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
 
 }
 
+/**
+ * Test setting a pool's metadata, checking it beforehand to see that a new pool's metadata is an empty string
+ * of bytes.
+ * @param relayChain
+ */
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -518,21 +561,15 @@ async function nominationPoolSetMetadataTest<
 
   const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
 
-  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
-
-  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
-
-  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
-    depositorMinBond,
+  const createNomPoolEvents = await createNominationPool(
+    relayClient,
+    defaultAccounts.alice,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address
   )
-  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
-  /// Check that prior to the block taking effect, the pool does not yet exist with the
+  /// Check that prior to the pool creation extrinsic taking effect, the pool does not yet exist with the
   /// most recently available pool ID.
   const poolData: Option<PalletNominationPoolsBondedPoolInner> =
     await relayClient.api.query.nominationPools.bondedPools(preLastPoolId + 1)
@@ -543,7 +580,7 @@ async function nominationPoolSetMetadataTest<
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
     .toMatchSnapshot('create nomination pool events')
 
-  // Check metadata pre-alteration
+  /// Check metadata pre-alteration
 
   const nomPoolId = preLastPoolId + 1
 
@@ -551,7 +588,7 @@ async function nominationPoolSetMetadataTest<
 
   assert(metadata.eq(''), 'Pool should not have metadata')
 
-  // Set pool's metadata
+  /// Set pool's metadata
 
   const setMetadataTx = relayClient.api.tx.nominationPools.setMetadata(nomPoolId, 'Test pool #1, welcome')
   const setMetadataEvents = await sendTransaction(setMetadataTx.signAsync(defaultAccounts.alice))
@@ -561,11 +598,133 @@ async function nominationPoolSetMetadataTest<
   await checkEvents(setMetadataEvents, 'nominationPools')
     .toMatchSnapshot('set metadata events')
 
-  /// Check the metadata
+  /// Check the set metadata
 
   metadata = await relayClient.api.query.nominationPools.metadata(nomPoolId)
 
   assert(metadata.eq('Test pool #1, welcome'), 'Pool should have the correct metadata set')
+}
+
+/**
+ * Test that joining a pool prevents an account from joining another.
+ *
+ */
+async function nominationPoolDoubleJoinError<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>){
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const firstPoolId = preLastPoolId + 1
+
+  await createNominationPool(
+    relayClient,
+    defaultAccounts.alice,
+    defaultAccounts.bob.address,
+    defaultAccounts.charlie.address,
+    defaultAccounts.dave.address
+  )
+
+  await relayClient.dev.newBlock()
+
+/**
+ * Have Eve join the pool
+ */
+
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const minJoinBond = await relayClient.api.query.nominationPools.minJoinBond()
+
+  const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, firstPoolId)
+  const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccounts.eve))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('join nomination pool events')
+
+  let poolData = await relayClient.api.query.nominationPools.bondedPools(firstPoolId)
+  assert(poolData.isSome, 'Pool should still exist after new member joins')
+
+  const nominationPoolWithMembers = poolData.unwrap()
+  assert(nominationPoolWithMembers.memberCounter.eq(2), 'Pool should have 2 members')
+
+  /**
+   * Create a second pool
+   */
+
+  /// The depositor in the second pool cannot be Alice, as that would also be a double join - precisely the object of this test.
+  await createNominationPool(
+    relayClient,
+    defaultAccounts.bob,
+    defaultAccounts.alice.address,
+    defaultAccounts.charlie.address,
+    defaultAccounts.dave.address
+  )
+
+  await relayClient.dev.newBlock()
+
+  const secondPoolId = firstPoolId + 1
+
+  /**
+   * Try having Eve join the second pool
+   */
+
+  const joinSecondPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, secondPoolId)
+  const joinSecondPoolEvents = await sendTransaction(joinSecondPoolTx.signAsync(defaultAccounts.eve))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(joinSecondPoolEvents, 'system')
+    .toMatchSnapshot('join second nomination pool events')
+
+  // As before, scrutinize the cause of failure for `pallet_nomination_pools::join`.
+
+  const events = await relayClient.api.query.system.events()
+
+  const [ ev ] = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+
+  if (dispatchError.isModule) {
+    assert(relayClient.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
+  } else {
+    assert(false, 'Dispatch error should be a module error')
+  }
+
+  /**
+   * Check that Eve is still a member of the first pool
+   */
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(firstPoolId)
+  assert(poolData.isSome, 'Pool should still exist after failed join')
+
+  const nominationPoolWithMembersAfterError = poolData.unwrap()
+  assert(nominationPoolWithMembersAfterError.memberCounter.eq(2), 'Pool should have 2 members')
+
+  /**
+   * Check that Eve is not a member of the second pool
+   */
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(secondPoolId)
+  assert(poolData.isSome, 'Pool should still exist after failed join')
+
+  const secondNominationPoolAfterFailedJoin = poolData.unwrap()
+  assert(secondNominationPoolAfterFailedJoin.memberCounter.eq(1), 'Pool should have 1 member')
 }
 
 export function nominationPoolsE2ETests<
@@ -594,6 +753,13 @@ export function nominationPoolsE2ETests<
       'nomination pool metadata test',
       async () => {
         await nominationPoolSetMetadataTest(relayChain)
+      }
+    )
+
+    test(
+      'nomination pool double join test: an account can only ever be in one pool at a time',
+      async () => {
+        await nominationPoolDoubleJoinError(relayChain)
       }
     )
   })
