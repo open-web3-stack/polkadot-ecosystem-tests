@@ -47,7 +47,9 @@ function nominationPoolCmp(
 }
 
 /**
- * Attempt to create a nomination pool with insufficient funds.
+ * Test that attempts to create a nomination pool with insufficient funds.
+ *
+ * It should fail with a `MinimumBondNotMet` error.
  */
 async function nominationPoolCreationFailureTest(relayChain)  {
   const [relayClient] = await setupNetworks(relayChain)
@@ -72,6 +74,24 @@ async function nominationPoolCreationFailureTest(relayChain)  {
   await checkEvents(createNomPoolEvents, 'system')
     .toMatchSnapshot('create nomination pool with insufficient funds events')
 
+  /// Process events
+
+  const events = await relayClient.api.query.system.events()
+
+  const [ ev ] = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  if (dispatchError.isModule) {
+    assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+  } else {
+    assert(false, 'Dispatch error should be a module error')
+  }
 }
 
 /**
