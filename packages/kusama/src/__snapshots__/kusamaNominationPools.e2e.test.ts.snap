@@ -282,3 +282,36 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > update roles
   },
 ]
 `;
+
+exports[`Kusama Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+      "poolId": "(rounded 210)",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 1000000000000,
+      "joined": true,
+      "member": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+      "poolId": "(rounded 210)",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;

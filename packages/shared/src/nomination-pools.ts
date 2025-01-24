@@ -51,7 +51,10 @@ function nominationPoolCmp(
  *
  * It should fail with a `MinimumBondNotMet` error.
  */
-async function nominationPoolCreationFailureTest(relayChain)  {
+async function nominationPoolCreationFailureTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>)  {
   const [relayClient] = await setupNetworks(relayChain)
 
   const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
@@ -507,6 +510,64 @@ async function nominationPoolTest(relayChain, addressEncoding: number) {
 
 }
 
+async function nominationPoolSetMetadataTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+
+  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+
+  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
+    depositorMinBond,
+    defaultAccounts.alice.address,
+    defaultAccounts.alice.address,
+    defaultAccounts.alice.address
+  )
+  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+
+  /// Check that prior to the block taking effect, the pool does not yet exist with the
+  /// most recently available pool ID.
+  const poolData: Option<PalletNominationPoolsBondedPoolInner> =
+    await relayClient.api.query.nominationPools.bondedPools(preLastPoolId + 1)
+  assert(poolData.isNone, 'Pool should not exist before block is applied')
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
+    .toMatchSnapshot('create nomination pool events')
+
+  // Check metadata pre-alteration
+
+  const nomPoolId = preLastPoolId + 1
+
+  let metadata = await relayClient.api.query.nominationPools.metadata(nomPoolId)
+
+  assert(metadata.eq(''), 'Pool should not have metadata')
+
+  // Set pool's metadata
+
+  const setMetadataTx = relayClient.api.tx.nominationPools.setMetadata(nomPoolId, 'Test pool #1, welcome')
+  const setMetadataEvents = await sendTransaction(setMetadataTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(setMetadataEvents, 'nominationPools')
+    .toMatchSnapshot('set metadata events')
+
+  /// Check the metadata
+
+  metadata = await relayClient.api.query.nominationPools.metadata(nomPoolId)
+
+  assert(metadata.eq('Test pool #1, welcome'), 'Pool should have the correct metadata set')
+}
+
 export function nominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -526,6 +587,13 @@ export function nominationPoolsE2ETests<
       'nomination pool creation with insufficient funds',
       async () => {
         await nominationPoolCreationFailureTest(relayChain)
+      }
+    )
+
+    test(
+      'nomination pool metadata test',
+      async () => {
+        await nominationPoolSetMetadataTest(relayChain)
       }
     )
   })

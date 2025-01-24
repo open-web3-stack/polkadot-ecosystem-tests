@@ -282,3 +282,36 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > update rol
   },
 ]
 `;
+
+exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "poolId": "(rounded 310)",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 5000000000000,
+      "joined": true,
+      "member": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "poolId": "(rounded 310)",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;
