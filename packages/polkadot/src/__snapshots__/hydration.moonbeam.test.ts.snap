@@ -122,6 +122,9 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
           ],
         },
       },
+      {
+        "setTopic": "(redacted)",
+      },
     ],
   },
 ]
@@ -308,6 +311,9 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > from chain
                 "parents": 0,
               },
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
