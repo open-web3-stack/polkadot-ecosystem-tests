@@ -73,6 +73,26 @@ exports[`Kusama Nomination Pools > nomination pool double join test: an account 
 ]
 `;
 
+exports[`Kusama Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 730000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
 [
   {

@@ -498,7 +498,7 @@ export async function referendumLifecycleTest<
   assert(eveVote.abstain.eq(abstainVote))
 
 
-  // AFter a vote the referendum's alarm is set to the block following the one the vote tx was
+  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   ongoingRefThirdVote.alarm.unwrap()[0].eq(ongoingRefSecondVote.deciding.unwrap().since.add(new BN(1)))
 

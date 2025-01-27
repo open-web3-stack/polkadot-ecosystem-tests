@@ -5,7 +5,7 @@ import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, objectCmp } from './helpers/index.js'
 
 import { assert, describe, test } from "vitest";
-import { Option } from '@polkadot/types'
+import { Option, u32 } from '@polkadot/types'
 import { sendTransaction } from '@acala-network/chopsticks-testing';
 import { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup';
 import { ApiPromise } from '@polkadot/api';
@@ -30,7 +30,7 @@ import { KeyringPair} from "@polkadot/keyring/types"
  *
  * @param pool1
  * @param pool2
- * @param propertiesToBeSkipped List of properties to not be included in the referenda comparison
+ * @param propertiesToBeSkipped List of properties to not be included in the comparison
  */
 function nominationPoolCmp(
   pool1: PalletNominationPoolsBondedPoolInner,
@@ -62,7 +62,13 @@ function nominationPoolCmp(
  *
  * @returns A promise resolving to the events emitted by the transaction, and the .
  */
-async function createNominationPool(relayClient: { api: ApiPromise; }, signer: KeyringPair, root: string, nominator: string, bouncer: string): Promise<{ events: Promise<Codec[]> }> {
+async function createNominationPool(
+  relayClient: { api: ApiPromise; },
+  signer: KeyringPair,
+  root: string,
+  nominator: string,
+  bouncer: string
+): Promise<{ events: Promise<Codec[]> }> {
   const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
   const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
@@ -727,6 +733,104 @@ async function nominationPoolDoubleJoinError<
   assert(secondNominationPoolAfterFailedJoin.memberCounter.eq(1), 'Pool should have 1 member')
 }
 
+/**
+ * Test setting global nomination pool parameters.
+ *
+ * First, this extrinsic is attempted with a signed origin.
+ *
+ * After that, it is ran, using the XCM + scheduler technique, with Polkadot and Kusama's `AdminOrigin`,
+ * which at the time of writing (Jan. 2025) is either `Root` or `StakingAdmin`.
+ */
+async function nominationPoolGlobalConfigTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const one = new u32(relayClient.api.registry, 1)
+
+  const preMinJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+  const preMinCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+  const preMaxPoolsOpt = (await relayClient.api.query.nominationPools.maxPools()).unwrapOr(one).toNumber()
+  const preMaxMembersOpt = (await relayClient.api.query.nominationPools.maxPoolMembers()).unwrapOr(one).toNumber() 
+  const preMaxMembersPerPool = (await relayClient.api.query.nominationPools.maxPoolMembersPerPool()).unwrapOr(one).toNumber()
+  const preGlobalMaxCommission = (await relayClient.api.query.nominationPools.globalMaxCommission()).unwrapOr(one).toNumber()
+
+  // Attempt to modify nomination pool global parameters with a signed origin - this should fail.
+
+  const setConfigsCall = (inc: number) => relayClient.api.tx.nominationPools.setConfigs(
+    { Set: preMinJoinBond + inc },
+    { Set: preMinCreateBond + inc },
+    { Set: preMaxPoolsOpt + inc },
+    { Set: preMaxMembersOpt + inc },
+    { Set: preMaxMembersPerPool + inc },
+    { Set: preGlobalMaxCommission + inc }
+  )
+  const setConfigEvents = await sendTransaction(setConfigsCall(0).signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(setConfigEvents, 'nominationPools', 'system')
+    .toMatchSnapshot('setting global nomination pool configs with signed origin')
+
+  // Set global configs using the scheduler pallet to simulate `Root/StakingAdmin` origins.
+
+  /// TODO: try using `StakingAdmin` origin as well.
+  const originsAndIncrements: [string, number][] = [['Root', 1]];
+
+  for (const [origin, inc] of originsAndIncrements) {
+    const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+    await relayClient.dev.setStorage({
+      Scheduler: {
+        agenda: [
+          [
+            [number + 1],
+            [
+              {
+                call: {
+                  Inline: setConfigsCall(inc).method.toHex(),
+                },
+                origin: {
+                  system: origin,
+                },
+              },
+            ],
+          ],
+        ],
+      },
+    })
+    
+    await relayClient.dev.newBlock()
+
+    const events = await relayClient.api.query.system.events()
+
+    const nomPoolsEvents = events.filter((record) => {
+      const { event } = record;
+      return event.section === 'nominationPools'
+    });
+  
+    // TODO: `set_configs` does not emit events at this point. Fix this, after making a PR to `polkadot-sdk` and it flows downstream :)
+    assert(nomPoolsEvents.length === 0, "setting global nomination pool configs should emit 1 event")
+  
+    const postMinJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
+    const postMinCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+    // None of the below can be `None`, as here it is assumed that the extrinsic above succeeded in setting them.
+    // They can be safely unwrapped.
+    const postMaxPoolsOpt = (await relayClient.api.query.nominationPools.maxPools()).unwrap().toNumber()
+    const postMaxMembersOpt = (await relayClient.api.query.nominationPools.maxPoolMembers()).unwrap().toNumber()
+    const postMaxMembersPerPool = (await relayClient.api.query.nominationPools.maxPoolMembersPerPool()).unwrap().toNumber()
+    const postGlobalMaxCommission = (await relayClient.api.query.nominationPools.globalMaxCommission()).unwrap().toNumber()
+
+    assert(postMinJoinBond === preMinJoinBond + inc)
+    assert(postMinCreateBond === preMinCreateBond + inc)
+    assert(postMaxPoolsOpt === preMaxPoolsOpt + inc)
+    assert(postMaxMembersOpt === preMaxMembersOpt + inc)
+    assert(postMaxMembersPerPool === preMaxMembersPerPool + inc)
+    assert(postGlobalMaxCommission === preGlobalMaxCommission + inc)
+  }
+}
+
 export function nominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -760,6 +864,13 @@ export function nominationPoolsE2ETests<
       'nomination pool double join test: an account can only ever be in one pool at a time',
       async () => {
         await nominationPoolDoubleJoinError(relayChain)
+      }
+    )
+
+    test(
+      'nomination pool global config test',
+      async () => {
+        await nominationPoolGlobalConfigTest(relayChain)
       }
     )
   })
