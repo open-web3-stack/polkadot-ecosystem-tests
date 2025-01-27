@@ -601,6 +601,7 @@ async function nominationPoolSetMetadataTest<
 
   await relayClient.dev.newBlock()
 
+  /// TODO: no events are emitted here pending a PR to `pallet_nomination_pools`.
   await checkEvents(setMetadataEvents, 'nominationPools')
     .toMatchSnapshot('set metadata events')
 
@@ -738,8 +739,12 @@ async function nominationPoolDoubleJoinError<
  *
  * First, this extrinsic is attempted with a signed origin.
  *
- * After that, it is ran, using the XCM + scheduler technique, with Polkadot and Kusama's `AdminOrigin`,
+ * After that, it is ran by inserting a call with it into the scheduler pallet's storage.
+ * This is to be done for Polkadot and Kusama's `AdminOrigin`,
  * which at the time of writing (Jan. 2025) is either `Root` or `StakingAdmin`.
+ *
+ * Pending a resolution to [this SE question](https://substrate.stackexchange.com/questions/12181/how-to-use-chopsticks-to-test-a-call-with-stakingadmin-origin),
+ * this test only uses the `Root` origin.
  */
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -831,6 +836,215 @@ async function nominationPoolGlobalConfigTest<
   }
 }
 
+/**
+ * Test to `update_roles` extrinsic.
+ *
+ * 1. First, it is used to change a pool's roles, as the pool's (then current) root.
+ * 2. Then, the previous root tries and fails to change the roles of the pool.
+ * 3. The new root changes the roles of the pool, removing itself as root and setting it as `None`.
+ * 4. A call to `update_roles` is inserted into the scheduler pallet's storage with a `Root` origin, which should
+ *    allow it to run successfully in the next block; this is because at this stage, the pool has no root.
+ */
+async function nominationPoolsUpdateRolesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  /**
+   * Create the pool - here, Bob is the initial root.
+   */
+
+  await createNominationPool(
+    relayClient,
+    defaultAccounts.alice,
+    defaultAccounts.bob.address,
+    defaultAccounts.charlie.address,
+    defaultAccounts.dave.address
+  )
+
+  await relayClient.dev.newBlock()
+
+  let poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should exist after creation')
+
+  const nominationPool = poolData.unwrap()
+
+  await check(nominationPool.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.dave.address, addressEncoding),
+  })
+
+  /**
+   * Change the pool's roles as the pool's current root - now Alice will be the root, though Bob's the one who
+   * must sign this transaction.
+   */
+
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const updateRolesTx = relayClient.api.tx.nominationPools.updateRoles(
+    poolId,
+    { Set: defaultAccounts.alice.address },
+    { Set: defaultAccounts.dave.address },
+    { Set: defaultAccounts.bob.address },
+  )
+  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(updateRolesEvents, 'nominationPools')
+    .toMatchSnapshot('update roles events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+
+  const nominationPoolWithRoles = poolData.unwrap()
+
+  nominationPoolCmp(nominationPool, nominationPoolWithRoles, ['roles'])
+
+  await check(nominationPoolWithRoles.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.dave.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+  })
+
+  /**
+   * Try and fail to change the pool's roles as the previous root
+   */
+
+  const updateRolesFailTx = relayClient.api.tx.nominationPools.updateRoles(
+    poolId,
+    { Set: defaultAccounts.eve.address },
+    { Set: defaultAccounts.eve.address },
+    { Set: defaultAccounts.eve.address },
+  )
+  const updateRolesFailEvents = await sendTransaction(updateRolesFailTx.signAsync(defaultAccounts.bob))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(updateRolesFailEvents, 'system')
+    .toMatchSnapshot('update roles failure events')
+
+  let events = await relayClient.api.query.system.events()
+
+  const [ ev ] = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  if (dispatchError.isModule) {
+    assert(relayClient.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
+  } else {
+    assert(false, 'Dispatch error should be a module error')
+  }
+
+  /**
+   * As the pool's newly set root, remove oneself from the role.
+   */
+
+  const updateRolesRemoveSelfTx = relayClient.api.tx.nominationPools.updateRoles(
+    poolId,
+    { Remove: null },
+    { Noop: null },
+    { Noop: null },
+  )
+  const updateRolesRemoveSelfEvents = await sendTransaction(updateRolesRemoveSelfTx.signAsync(defaultAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(updateRolesRemoveSelfEvents, 'nominationPools')
+    .toMatchSnapshot('update roles remove self events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+
+  const nominationPoolWithoutRoot = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithRoles, nominationPoolWithoutRoot, ['roles'])
+
+  await check(nominationPoolWithoutRoot.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: null,
+    nominator: encodeAddress(defaultAccounts.dave.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+  })
+
+  /**
+   * Set the pool's roles via scheduler pallet, with a `Root` origin.
+   */
+
+  const updateRolesCall = relayClient.api.tx.nominationPools.updateRoles(
+    poolId,
+    { Set: defaultAccounts.charlie.address },
+    { Set: defaultAccounts.dave.address },
+    { Set: defaultAccounts.eve.address },
+  )
+
+  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  await relayClient.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: updateRolesCall.method.toHex(),
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await relayClient.dev.newBlock()
+
+  events = await relayClient.api.query.system.events()
+
+  const nomPoolsEvents = events.filter((record) => {
+    const { event } = record;
+    return event.section === 'nominationPools'
+  });
+
+  await check(nomPoolsEvents, 'nominationPools')
+    .toMatchSnapshot('update pool roles via scheduler pallet')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+
+  const nominationPoolUpdatedRoles = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithoutRoot, nominationPoolUpdatedRoles, ['roles'])
+
+  await check(nominationPoolUpdatedRoles.roles).toMatchObject({
+    depositor: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    root: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    nominator: encodeAddress(defaultAccounts.dave.address, addressEncoding),
+    bouncer: encodeAddress(defaultAccounts.eve.address, addressEncoding),
+  })
+}
+
 export function nominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -871,6 +1085,13 @@ export function nominationPoolsE2ETests<
       'nomination pool global config test',
       async () => {
         await nominationPoolGlobalConfigTest(relayChain)
+      }
+    )
+
+    test(
+      'nomination pools update roles test',
+      async () => {
+        await nominationPoolsUpdateRolesTest(relayChain, testConfig.addressEncoding)
       }
     )
   })

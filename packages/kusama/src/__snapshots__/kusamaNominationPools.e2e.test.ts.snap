@@ -383,3 +383,75 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
 `;
 
 exports[`Kusama Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;
+
+exports[`Kusama Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+        "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+        "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
+      ],
+      "index": "0x2908",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pools update roles test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "nominator": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
+      "root": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pools update roles test > update roles failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x11000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3700)",
+          "refTime": "(rounded 270000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pools update roles test > update roles remove self events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "nominator": "Ei5cESVBSoEA3ZYfDUdMobkH8ZG8nLBwptyijjuWWyA17dr",
+      "root": null,
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;

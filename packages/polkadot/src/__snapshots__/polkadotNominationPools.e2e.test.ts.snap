@@ -383,3 +383,75 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
 `;
 
 exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;
+
+exports[`Polkadot Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
+        "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+        "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+      ],
+      "index": "0x2708",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "nominator": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+      "root": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x11000000",
+          "index": 39,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3700)",
+          "refTime": "(rounded 250000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles remove self events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "nominator": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+      "root": null,
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
