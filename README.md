@@ -62,15 +62,19 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 This repository contains E2E tests for the Polkadot/Kusama networks.
 
 These include:
+- E2E suite for nomination pools:
+  - Creating a pool, joining it, bonding extra
+  - Setting a pool's state, metadata, roles and commission data
+  - Scenario checking an account can be at most in one pool
+- E2E suite for governance infrastructure - referenda, preimages, and conviction voting. It includes
+  - Creating a referendum for a treasury proposal, voting on it (with conviction/split/abstain)
+  - Cancelling and killing referenda with XCM root-originated calls
+  - Noting and unnoting preimages
 - E2E test suite to the people chains in both networks. This suite contains scenarios such as
   - Adding, modifying, and removing identities
   - Requesting judgement requests on registrars, and providing it
   - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
   - Adding, modifying, and removing subidentities for an account
-- E2E suite for governance infrastructure - referenda, preimages, and conviction voting. It includes
-  - Creating a referendum for a treasury proposal, voting on it
-  - Cancelling and killing referenda with XCM root-originated calls
-  - Noting and unnoting preimages
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
@@ -79,7 +83,7 @@ Initial coverage can be limited to critical path scenarios composed of common ex
 from each of a runtime's pallets, and from there test more complex interactions.
 
 Note that since block execution throughput in `chopsticks` on a local development machine is limited
-to roughly `1` and `10` blocks/second, not all scenarios are testable in practice e.g. referenda
+to roughly `1-10` blocks/second, not all scenarios are testable in practice e.g. referenda
 confirmation, or the unbonding of staked funds.
 Consider placing such tests elsewhere, or using different tools (e.g. XCM emulator).
 
@@ -109,7 +113,7 @@ Consider placing such tests elsewhere, or using different tools (e.g. XCM emulat
 3. Run the newly created tests so their snapshots can be created in `packages/<network>/src/__snapshots__`
   - Inspect the snapshots, and make corrections to tests as necessary - or upstream, if the test
     has revealed an issue with e.g. `polkadot-sdk`
-4. Craete a PR with the new tests.
+4. Create a PR with the new tests.
 
 ### Writing Tests
 

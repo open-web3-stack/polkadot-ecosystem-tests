@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, objectCmp } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -27,7 +27,8 @@ import { encodeAddress } from '@polkadot/util-crypto'
  * For example:
  * 1. from the time its decision deposited is placed until its preparation period elapses, no field
  *    of the referendum may change
- *   a. to know which block in the iterated comparisons caused the failure, an optional error
+ *
+ *     a. to know which block in the iterated comparisons caused the failure, an optional error
  *      message parameter is passable
  * 2. after placing a vote, the referendum's tally and alarm should change, but nothing else
  *
@@ -41,7 +42,7 @@ function referendumCmp(
   ref1: PalletReferendaReferendumStatusConvictionVotingTally,
   ref2: PalletReferendaReferendumStatusConvictionVotingTally,
   propertiesToBeSkipped: string[],
-  errorMsg?: string,
+  optErrorMsg?: string,
 ) {
   const properties = [
     'track',
@@ -57,25 +58,12 @@ function referendumCmp(
     'alarm',
   ]
 
-  for (const prop of properties) {
-    if (propertiesToBeSkipped.includes(prop)) {
-      continue
-    }
+  const msgFun = (p: string) =>
+    `Referenda differed on property \`${p}\`
+      Left: ${ref1[p]}
+      Right: ${ref2[p]}`
 
-    const cmp = ref1[prop].eq(ref2[prop])
-    if (!cmp) {
-      const msg = `Referenda differed on property \`${prop}\`
-        Left: ${ref1[prop]}
-        Right: ${ref2[prop]}`
-      let errorMessage: string
-      if (errorMsg === null || errorMsg === undefined) {
-        errorMessage = msg
-      } else {
-        errorMessage = `${errorMsg}\n${msg}`
-      }
-      assert(cmp, errorMessage)
-    }
-  }
+  objectCmp(ref1, ref2, properties, propertiesToBeSkipped, msgFun, optErrorMsg)
 }
 
 /**
@@ -84,15 +72,24 @@ function referendumCmp(
  * 2. placing its decision deposit
  * 3. awaiting the end of the preparation period
  * 4. voting on it after the decision period has commenced
- *   4.1. using `vote`
- *   4.2. using a split vote
- *   4.3. using a split-abstain vote
+ *
+ *     4.1. using `vote`
+ *
+ *     4.2. using a split vote
+ *
+ *     4.3. using a split-abstain vote
  * 5. cancelling the referendum using the scheduler to insert a `Root`-origin call
- *   5.1 checking that locks on submission/decision deposits are released
- *   5.2 checking that voters' class locks and voting data are not affected
+ *
+ *     5.1 checking that locks on submission/decision deposits are released
+ *
+ *     5.2 checking that voters' class locks and voting data are not affected
+ *
  * 6. removing the votes cast
- *   6.1 asserting that voting locks are preserved
- *   6.2 asserting that voting funds are returned
+ *
+ *     6.1 asserting that voting locks are preserved
+ *
+ *     6.2 asserting that voting funds are returned
+ *
  * 7. refunding the submission and decision deposits
  */
 export async function referendumLifecycleTest<
@@ -507,7 +504,7 @@ export async function referendumLifecycleTest<
   assert(eveVote.nay.eq(nayVote))
   assert(eveVote.abstain.eq(abstainVote))
 
-  // AFter a vote the referendum's alarm is set to the block following the one the vote tx was
+  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   ongoingRefThirdVote.alarm.unwrap()[0].eq(ongoingRefSecondVote.deciding.unwrap().since.add(new BN(1)))
 
@@ -719,7 +716,8 @@ export async function referendumLifecycleTest<
  * 1. submitting a referendum for a treasury spend
  * 2. placing its decision deposit
  * 3. killing the referendum using the scheduler to insert a `Root`-origin call
- *   3.1 checking that submission/decision deposits are slashed
+ *
+ *     3.1 checking that submission/decision deposits are slashed
  */
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
