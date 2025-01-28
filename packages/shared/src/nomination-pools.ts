@@ -780,8 +780,13 @@ async function nominationPoolGlobalConfigTest<
 
   // Set global configs using the scheduler pallet to simulate `Root/StakingAdmin` origins.
 
-  /// TODO: try using `StakingAdmin` origin as well.
-  const originsAndIncrements: [string, number][] = [['Root', 1]];
+  type Origin = { system: string } | { "Origins": string }
+  type OriginsAndIncrements = [Origin, number]
+
+  const originsAndIncrements: OriginsAndIncrements[] = [
+    [ { system: 'Root' }, 1 ],
+    [ { "Origins": 'StakingAdmin' }, 2 ]
+  ]
 
   for (const [origin, inc] of originsAndIncrements) {
     const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
@@ -796,9 +801,7 @@ async function nominationPoolGlobalConfigTest<
                 call: {
                   Inline: setConfigsCall(inc).method.toHex(),
                 },
-                origin: {
-                  system: origin,
-                },
+                origin: origin,
               },
             ],
           ],
