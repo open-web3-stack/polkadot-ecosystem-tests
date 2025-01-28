@@ -40,7 +40,6 @@ exports[`Kusama Nomination Pools > nomination pool double join test: an account 
       "bonded": "(rounded 1700000000)",
       "joined": true,
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-      "poolId": "(rounded 210)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -108,7 +107,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra f
       "bonded": "(rounded 1700000000)",
       "joined": false,
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-      "poolId": "(rounded 210)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -149,7 +147,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission a
         "0.10%",
         "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       ],
-      "poolId": "(rounded 210)",
     },
     "method": "PoolCommissionUpdated",
     "section": "nominationPools",
@@ -157,7 +154,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission a
   {
     "data": {
       "maxCommission": "1.00%",
-      "poolId": "(rounded 210)",
     },
     "method": "PoolMaxCommissionUpdated",
     "section": "nominationPools",
@@ -168,7 +164,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission a
         "maxIncrease": "100.00%",
         "minDelay": 10,
       },
-      "poolId": "(rounded 210)",
     },
     "method": "PoolCommissionChangeRateUpdated",
     "section": "nominationPools",
@@ -176,7 +171,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission a
   {
     "data": {
       "permission": "Permissionless",
-      "poolId": "(rounded 210)",
     },
     "method": "PoolCommissionClaimPermissionUpdated",
     "section": "nominationPools",
@@ -197,7 +191,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomin
   {
     "data": {
       "depositor": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "poolId": "(rounded 210)",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -207,7 +200,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomin
       "bonded": 1000000000000,
       "joined": true,
       "member": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "poolId": "(rounded 210)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -230,7 +222,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
       "bonded": "(rounded 1700000000)",
       "joined": true,
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
-      "poolId": "(rounded 210)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -243,7 +234,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > set state ev
   {
     "data": {
       "newState": "Blocked",
-      "poolId": "(rounded 210)",
     },
     "method": "StateChanged",
     "section": "nominationPools",
@@ -256,7 +246,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > set state to
   {
     "data": {
       "newState": "Destroying",
-      "poolId": "(rounded 210)",
     },
     "method": "StateChanged",
     "section": "nominationPools",
@@ -305,7 +294,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick
       "era": "(rounded 7700)",
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       "points": "(rounded 1700000000)",
-      "poolId": "(rounded 210)",
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -329,7 +317,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond event
       "era": "(rounded 7700)",
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       "points": "(rounded 1700000000)",
-      "poolId": "(rounded 210)",
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -364,7 +351,6 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
   {
     "data": {
       "depositor": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "poolId": "(rounded 210)",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -374,7 +360,6 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
       "bonded": 1000000000000,
       "joined": true,
       "member": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "poolId": "(rounded 210)",
     },
     "method": "Bonded",
     "section": "nominationPools",

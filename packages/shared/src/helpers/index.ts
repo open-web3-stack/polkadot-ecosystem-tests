@@ -1,5 +1,5 @@
-import { assert, expect } from 'vitest'
 import { withExpect } from '@acala-network/chopsticks-testing'
+import { assert, expect } from 'vitest'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
   toMatchSnapshot(msg?: string): void {
@@ -35,7 +35,7 @@ export function objectCmp(
   properties: string[],
   propertiesToBeSkipped: string[],
   msgFun: (p: string) => string,
-  optErrorMsg?: string
+  optErrorMsg?: string,
 ) {
   for (const prop of properties) {
     if (propertiesToBeSkipped.includes(prop)) {
@@ -49,7 +49,7 @@ export function objectCmp(
       if (optErrorMsg === null || optErrorMsg === undefined) {
         errorMessage = msg
       } else {
-        errorMessage = optErrorMsg + '\n' + msg
+        errorMessage = `${optErrorMsg}\n${msg}`
       }
       assert(cmp, errorMessage)
     }

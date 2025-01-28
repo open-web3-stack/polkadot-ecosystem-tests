@@ -30,7 +30,7 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
   {
     "data": {
       "amount": 10000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Bonded",
     "section": "staking",
@@ -40,7 +40,6 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
       "bonded": 10000000000,
       "joined": true,
       "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
-      "poolId": "(rounded 310)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -98,7 +97,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
   {
     "data": {
       "amount": "(rounded 10000000000)",
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Bonded",
     "section": "staking",
@@ -108,7 +107,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
       "bonded": "(rounded 10000000000)",
       "joined": false,
       "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
-      "poolId": "(rounded 310)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -149,7 +147,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
         "0.10%",
         "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
       ],
-      "poolId": "(rounded 310)",
     },
     "method": "PoolCommissionUpdated",
     "section": "nominationPools",
@@ -157,7 +154,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
   {
     "data": {
       "maxCommission": "1.00%",
-      "poolId": "(rounded 310)",
     },
     "method": "PoolMaxCommissionUpdated",
     "section": "nominationPools",
@@ -168,7 +164,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
         "maxIncrease": "100.00%",
         "minDelay": 10,
       },
-      "poolId": "(rounded 310)",
     },
     "method": "PoolCommissionChangeRateUpdated",
     "section": "nominationPools",
@@ -176,7 +171,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
   {
     "data": {
       "permission": "Permissionless",
-      "poolId": "(rounded 310)",
     },
     "method": "PoolCommissionClaimPermissionUpdated",
     "section": "nominationPools",
@@ -189,7 +183,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
   {
     "data": {
       "amount": 5000000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Bonded",
     "section": "staking",
@@ -197,7 +191,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
   {
     "data": {
       "depositor": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
-      "poolId": "(rounded 310)",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -207,7 +200,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
       "bonded": 5000000000000,
       "joined": true,
       "member": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
-      "poolId": "(rounded 310)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -220,7 +212,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
   {
     "data": {
       "amount": 10000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Bonded",
     "section": "staking",
@@ -230,7 +222,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
       "bonded": 10000000000,
       "joined": true,
       "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
-      "poolId": "(rounded 310)",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -243,7 +234,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state 
   {
     "data": {
       "newState": "Blocked",
-      "poolId": "(rounded 310)",
     },
     "method": "StateChanged",
     "section": "nominationPools",
@@ -256,7 +246,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state 
   {
     "data": {
       "newState": "Destroying",
-      "poolId": "(rounded 310)",
     },
     "method": "StateChanged",
     "section": "nominationPools",
@@ -294,7 +283,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (ki
   {
     "data": {
       "amount": 10000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Unbonded",
     "section": "staking",
@@ -305,7 +294,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (ki
       "era": "(rounded 1700)",
       "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
       "points": 10000000000,
-      "poolId": "(rounded 310)",
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -318,7 +306,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond eve
   {
     "data": {
       "amount": "(rounded 10000000000)",
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Unbonded",
     "section": "staking",
@@ -329,7 +317,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond eve
       "era": "(rounded 1700)",
       "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
       "points": "(rounded 10000000000)",
-      "poolId": "(rounded 310)",
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -356,7 +343,7 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
   {
     "data": {
       "amount": 5000000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGG1PdgRAe4CmoxtYzshDJXbAqbXYuQ",
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
     },
     "method": "Bonded",
     "section": "staking",
@@ -364,7 +351,6 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
   {
     "data": {
       "depositor": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
-      "poolId": "(rounded 310)",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -374,7 +360,6 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
       "bonded": 5000000000000,
       "joined": true,
       "member": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
-      "poolId": "(rounded 310)",
     },
     "method": "Bonded",
     "section": "nominationPools",
