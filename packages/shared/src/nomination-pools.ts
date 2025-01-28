@@ -124,11 +124,7 @@ async function nominationPoolCreationFailureTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  if (dispatchError.isModule) {
-    assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
-  } else {
-    assert(false, 'Dispatch error should be a module error')
-  }
+  assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
 }
 
 /**
@@ -406,13 +402,9 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   let dispatchError = systemEvent.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  if (dispatchError.isModule) {
-    // Even though the pool has no commission to claim, the extrinsic should fail with this error,
-    // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
-    assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
-  } else {
-    assert(false, 'Dispatch error should be a module error')
-  }
+  // Even though the pool has no commission to claim, the extrinsic should fail with this error,
+  // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
+  assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
 
   /**
    * Unbond previously bonded funds
@@ -526,11 +518,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   dispatchError = systemEv.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  if (dispatchError.isModule) {
-    assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
-  } else {
-    assert(false, 'Dispatch error should be a module error')
-  }
+  assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
 
   poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome)
@@ -691,12 +679,7 @@ async function nominationPoolDoubleJoinError<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-
-  if (dispatchError.isModule) {
-    assert(relayClient.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
-  } else {
-    assert(false, 'Dispatch error should be a module error')
-  }
+  assert(relayClient.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
 
   /**
    * Check that Eve is still a member of the first pool
@@ -942,11 +925,7 @@ async function nominationPoolsUpdateRolesTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  if (dispatchError.isModule) {
-    assert(relayClient.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
-  } else {
-    assert(false, 'Dispatch error should be a module error')
-  }
+  assert(relayClient.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
 
   /**
    * As the pool's newly set root, remove oneself from the role.
