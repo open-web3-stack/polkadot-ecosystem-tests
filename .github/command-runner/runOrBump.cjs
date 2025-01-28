@@ -9,35 +9,38 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     if (result.exitCode) {
       core.setFailed('Failed to update known good blocks')
-      await comment.createOrUpdateComment(createResult({
-        context,
-        command: execCommand,
-        result: result.errorOutput + '\n' + result.output,
-        extra: `**Test Result**: \`Failed to update known good blocks\``
-      }))
+      await comment.createOrUpdateComment(
+        createResult({
+          context,
+          command: execCommand,
+          result: `${result.errorOutput}\n${result.output}`,
+          extra: `**Test Result**: \`Failed to update known good blocks\``,
+        }),
+      )
 
       process.exit(1)
     }
-
 
     return result
   }
 
   const excuteTest = async ({ update, env }) => {
-    const execCommand = update ?
-      `yarn test --reporter default ${update ? '-u' : ''}` :
-      `yarn test --reporter default ${args.trim()}`
+    const execCommand = update
+      ? `yarn test --reporter default ${update ? '-u' : ''}`
+      : `yarn test --reporter default ${args.trim()}`
 
     const result = await runCommand({ cmd: execCommand, comment, exec })
 
     if (result.exitCode) {
       core.setFailed('Tests failed')
-      await comment.createOrUpdateComment(createResult({
-        context,
-        command: execCommand,
-        result: (env ? `${env}\n` : '') + (result.errorOutput + '\n' + result.output),
-        extra: `**Test Result**: \`Failed\``
-      }))
+      await comment.createOrUpdateComment(
+        createResult({
+          context,
+          command: execCommand,
+          result: `${env ? `${env}\n` : ''}${result.errorOutput}\n${result.output}`,
+          extra: `**Test Result**: \`Failed\``,
+        }),
+      )
       process.exit(1)
     }
 
@@ -45,7 +48,7 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
   }
 
   if (command === 'run') {
-    const updateKnownGoodResult = await excuteUpdateKnownGood();
+    const updateKnownGoodResult = await excuteUpdateKnownGood()
 
     let newEnv = updateKnownGoodResult.output
 
@@ -53,24 +56,26 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       newEnv = writeNewEnv({ env })
     }
 
-    const testResult = await excuteTest({ update: false, env: newEnv });
+    const testResult = await excuteTest({ update: false, env: newEnv })
     core.info('Tests Passed')
-    const output = newEnv + `\n${testResult.output}`
-    return comment.createOrUpdateComment(createResult({
-      context,
-      command: testResult.cmd,
-      result: output,
-      extra: `**Test Result**: \`Passed\``
-    }))
+    const output = `${newEnv}\n${testResult.output}`
+    return comment.createOrUpdateComment(
+      createResult({
+        context,
+        command: testResult.cmd,
+        result: output,
+        extra: `**Test Result**: \`Passed\``,
+      }),
+    )
   }
 
   if (command === 'bump') {
-		if (env.trim().length) {
-			core.setFailed('env is not supported in bump command')
-			return comment.createOrUpdateComment(`    ENV is not supported in bump command`)
-		}
+    if (env.trim().length) {
+      core.setFailed('env is not supported in bump command')
+      return comment.createOrUpdateComment(`    ENV is not supported in bump command`)
+    }
 
-    const updateKnownGoodResult = await excuteUpdateKnownGood();
+    const updateKnownGoodResult = await excuteUpdateKnownGood()
 
     await exec.exec(`git config --global user.name 'github-actions[bot]'`)
     await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`)
@@ -83,8 +88,8 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       process.exit(1)
     }
 
-    const testResult = await excuteTest({ update: true, env: updateKnownGoodResult.output });
-    const output = updateKnownGoodResult.output + `\n${testResult.output}`
+    const testResult = await excuteTest({ update: true, env: updateKnownGoodResult.output })
+    const output = `${updateKnownGoodResult.output}\n${testResult.output}`
 
     const diffResult = await exec.exec('git diff --exit-code', null, { ignoreReturnCode: true })
 
@@ -92,41 +97,43 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
       core.info('snapshot not updated')
       // dispatch update-known-good workflow to having it to update the snapshot
       await github.rest.actions.createWorkflowDispatch({
-				owner: context.repo.owner,
-				repo: context.repo.repo,
-				workflow_id: 'update-known-good.yml',
-				ref: 'master',
-			})
-
-      return comment.createOrUpdateComment(createResult({
-        context,
-        command: testResult.cmd,
-        result: output,
-        extra: `<br/>Triggered update-known-good workflow to update the snapshot`
-      }))
-    } else {
-      const branchName = `Update-SnapShot-${commentId}`
-      await exec.exec(`git checkout -b ${branchName}`)
-      await exec.exec(`git`, ['commit', '-am', '[ci skip] Update snapshots'])
-
-
-      const commentUrl = `https://github.com/${context.payload.repository.full_name}/issues/${context.issue.number}#issuecomment-${commentId}`
-      await exec.exec(`git push origin HEAD:${branchName}`)
-      const result = await github.rest.pulls.create({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        title: branchName,
-        head: branchName,
-        base: 'master',
-        body: `Update Snapshots (${commentUrl})`,
+        workflow_id: 'update-known-good.yml',
+        ref: 'master',
       })
-      core.info(`The Pull request #${result.data.number} has been created to update the snapshot`)
-      return comment.createOrUpdateComment(createResult({
+
+      return comment.createOrUpdateComment(
+        createResult({
+          context,
+          command: testResult.cmd,
+          result: output,
+          extra: `<br/>Triggered update-known-good workflow to update the snapshot`,
+        }),
+      )
+    }
+    const branchName = `Update-SnapShot-${commentId}`
+    await exec.exec(`git checkout -b ${branchName}`)
+    await exec.exec(`git`, ['commit', '-am', '[ci skip] Update snapshots'])
+
+    const commentUrl = `https://github.com/${context.payload.repository.full_name}/issues/${context.issue.number}#issuecomment-${commentId}`
+    await exec.exec(`git push origin HEAD:${branchName}`)
+    const result = await github.rest.pulls.create({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      title: branchName,
+      head: branchName,
+      base: 'master',
+      body: `Update Snapshots (${commentUrl})`,
+    })
+    core.info(`The Pull request #${result.data.number} has been created to update the snapshot`)
+    return comment.createOrUpdateComment(
+      createResult({
         context,
         command: testResult.cmd,
         result: output,
-        extra: `<br/>**The Pull request #${result.data.number} has been created to update the snapshot**`
-      }))
-    }
+        extra: `<br/>**The Pull request #${result.data.number} has been created to update the snapshot**`,
+      }),
+    )
   }
 }

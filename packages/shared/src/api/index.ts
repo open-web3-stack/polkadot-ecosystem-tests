@@ -1,4 +1,4 @@
-import { ApiPromise } from '@polkadot/api'
+import type { ApiPromise } from '@polkadot/api'
 
 export const xtokens = {
   relaychainV3: (acc: any) => ({

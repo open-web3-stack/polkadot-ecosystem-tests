@@ -1,12 +1,12 @@
-import { defineConfig } from 'vitest/config'
 import swc from 'unplugin-swc'
+import { defineConfig } from 'vitest/config'
 
-import { resolve } from 'path';
+import { resolve } from 'node:path'
+import dotenv from 'dotenv'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import dotenv from 'dotenv';
 
-dotenv.config();
-dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS.env') });
+dotenv.config()
+dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS.env') })
 if (process.env.LOG_LEVEL === undefined) {
 	process.env.LOG_LEVEL = 'error'
 }
@@ -25,4 +25,3 @@ export default defineConfig({
 	},
 	plugins: [tsconfigPaths(), swc.vite()],
 })
-

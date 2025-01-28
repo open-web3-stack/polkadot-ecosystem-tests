@@ -1,4 +1,4 @@
-import { ApiPromise } from '@polkadot/api'
+import type { ApiPromise } from '@polkadot/api'
 
 export const queryBalance = (api: ApiPromise, address: string) => {
   return api.query.system.account(address)

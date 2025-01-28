@@ -10,15 +10,15 @@
 
 import { assert, describe, test } from 'vitest'
 
-import { StorageValues } from '@acala-network/chopsticks'
+import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
-import { ApiPromise } from '@polkadot/api'
-import { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
+import type { ApiPromise } from '@polkadot/api'
+import type { u128 } from '@polkadot/types'
+import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
 import { encodeAddress } from '@polkadot/util-crypto'
-import { u128 } from '@polkadot/types'
 
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
@@ -568,8 +568,7 @@ export async function addRegistrarViaRelayAsRoot<
   await peopleClient.dev.newBlock()
 
   // The recorded event should be `ExtrinsicFailed` with a `BadOrigin`.
-  await checkEvents(addRegistrarEvents, 'identity', 'system')
-    .toMatchSnapshot('call add registrar with wrong origin')
+  await checkEvents(addRegistrarEvents, 'identity', 'system').toMatchSnapshot('call add registrar with wrong origin')
 
   /**
    * XCM from relay chain
@@ -626,11 +625,11 @@ export async function addRegistrarViaRelayAsRoot<
   const events = await peopleClient.api.query.system.events()
 
   const peopleEvents = events.filter((record) => {
-    const { event } = record;
+    const { event } = record
     return event.section === 'identity'
-  });
+  })
 
-  assert(peopleEvents.length === 1, "adding a registrar should emit 1 event")
+  assert(peopleEvents.length === 1, 'adding a registrar should emit 1 event')
 
   const registrarEvent = peopleEvents[0]
   assert(peopleClient.api.events.identity.RegistrarAdded.is(registrarEvent.event))
@@ -753,9 +752,9 @@ export function peopleChainE2ETests<
 >(
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   peopleChain: Chain<TCustom, TInitStoragesPara>,
-  testConfig: { testSuiteName: string, addressEncoding: number, }
+  testConfig: { testSuiteName: string; addressEncoding: number },
 ) {
-  describe(testConfig.testSuiteName, function () {
+  describe(testConfig.testSuiteName, () => {
     test('setting on-chain identity and requesting judgement should work', async () => {
       await setIdentityThenRequestAndProvideJudgement(peopleChain)
     })

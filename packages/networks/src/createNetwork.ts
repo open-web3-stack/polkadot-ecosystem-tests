@@ -1,7 +1,7 @@
 import { connectParachains, connectVertical } from '@acala-network/chopsticks'
 import { setupContext } from '@acala-network/chopsticks-testing'
 
-import { Chain } from './types.js'
+import type { Chain } from './types.js'
 
 export async function createNetwork<T extends Chain>(chainConfig: T) {
   const network = await setupContext(chainConfig)

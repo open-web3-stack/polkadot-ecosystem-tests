@@ -1,10 +1,10 @@
-import { type KeyringPair } from '@polkadot/keyring/types'
-import { it } from 'vitest'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { it } from 'vitest'
 
-import { Client, defaultAccounts } from '@e2e-test/networks'
-import { GetBalance, Tx } from './types.js'
+import { type Client, defaultAccounts } from '@e2e-test/networks'
 import { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } from '../helpers/index.js'
+import type { GetBalance, Tx } from './types.js'
 
 export const runXtokenstHorizontal = (
   name: string,
@@ -51,9 +51,13 @@ export const runXtokenstHorizontal = (
       await checkEvents(tx0, 'xTokens').toMatchSnapshot('tx events')
 
       if (isCheckUmp) {
-        await checkUmp(fromChain).toMatchSnapshot('from chain ump messages')
+        await checkUmp(fromChain)
+          .redact({ redactKeys: /setTopic/ })
+          .toMatchSnapshot('from chain ump messages')
       } else {
-        await checkHrmp(fromChain).toMatchSnapshot('from chain hrmp messages')
+        await checkHrmp(fromChain)
+          .redact({ redactKeys: /setTopic/ })
+          .toMatchSnapshot('from chain hrmp messages')
       }
 
       if (routeChain) {
