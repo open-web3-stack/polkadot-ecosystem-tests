@@ -13,6 +13,9 @@ ${result}
 `
 }
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: <explanation>
+const ansiEscapeRegex = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g
+
 async function runCommand({ cmd, comment, exec }) {
   let output = ''
   let errorOutput = ''
@@ -31,8 +34,8 @@ async function runCommand({ cmd, comment, exec }) {
   })
 
   return {
-    output: output.replace(new RegExp(`${ANSI_ESCAPE}\\[[0-9;]*m`, 'g'), ''),
-    errorOutput: errorOutput.replace(new RegExp(`${ANSI_ESCAPE}\\[[0-9;]*m`, 'g'), ''),
+    output: output.replace(ansiEscapeRegex, ''),
+    errorOutput: errorOutput.replace(ansiEscapeRegex, ''),
     exitCode,
     cmd,
   }
