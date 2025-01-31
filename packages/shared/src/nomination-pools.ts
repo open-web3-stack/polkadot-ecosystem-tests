@@ -192,10 +192,11 @@ async function nominationPoolCreationFailureTest<
  * 6. bonding additional funds from this newcomer account to the pool
  * 7. attempt to claim the pool's (zero) commission as a random account
  * 8. unbonding the additionally bonded funds from the newcomer account
- * 9. setting the pool state to blocked
- * 10. kicking the newcomer account from the pool as the bouncer
- * 11. setting the pool state to destroying
- * 12. attempting to unbond the initial depositor's funds (should fail)
+ * 9. moving the pool to the `chill` nominating state, as its nominator
+ * 10. setting the pool state to blocked
+ * 11. kicking the newcomer account from the pool as the bouncer
+ * 12. setting the pool state to destroying
+ * 13. attempting to unbond the initial depositor's funds (should fail)
  * @param relayChain
  * @param addressEncoding
  */
@@ -495,6 +496,27 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   assert(nominationPoolPostUnbond.points.eq(depositorMinBond + minJoinBond))
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
+
+  /**
+   * As the pool's nominator, call `chill`
+   */
+
+  const chillTx = relayClient.api.tx.nominationPools.chill(nomPoolId)
+  const chillEvents = await sendTransaction(chillTx.signAsync(defaultAccounts.charlie))
+
+  await relayClient.dev.newBlock()
+
+  // Like `nominate`, `chill` also does not emit any staking/nom. pool events. #7377 also fixes this.
+  await checkEvents(chillEvents, 'nominationPools', 'staking', 'system')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('chill events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after chill')
+
+  const nominationPoolPostChill = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolPostUnbond, nominationPoolPostChill, [])
 
   /**
    * Set pool state to blocked
