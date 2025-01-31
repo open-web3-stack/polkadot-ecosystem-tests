@@ -1,6 +1,6 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, objectCmp } from './helpers/index.js'
 
@@ -506,7 +506,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   await relayClient.dev.newBlock()
 
-  // Like `nominate`, `chill` also does not emit any staking/nom. pool events. #7377 also fixes this.
+  // Like `nominate`, `chill` also does not emit any nomination pool events. #7377 also fixes this.
   await checkEvents(chillEvents, 'nominationPools', 'staking', 'system')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('chill events')
@@ -1106,53 +1106,6 @@ async function nominationPoolsUpdateRolesTest<
     nominator: encodeAddress(defaultAccounts.dave.address, addressEncoding),
     bouncer: encodeAddress(defaultAccounts.eve.address, addressEncoding),
   })
-}
-
-async function quickTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  // Create a pool
-  const [relayClient] = await setupNetworks(relayChain)
-
-  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
-
-  const alice = (await defaultAccountsSr25199).keyring.createFromUri('//Alice')
-
-  const validator = '14AkAFBzukRhAFh1wyko1ZoNWnUyq7bY1XbjeTeCHimCzPU1'
-
-  await relayClient.dev.setStorage({
-    System: {
-      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
-    },
-  })
-
-  const createNomPoolEvents = await createNominationPool(
-    relayClient,
-    alice,
-    alice.address,
-    alice.address,
-    alice.address,
-  )
-
-  await relayClient.dev.newBlock()
-
-  await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
-    .toMatchSnapshot('create nomination pool events')
-
-  const nominateTx = relayClient.api.tx.nominationPools.nominate(preLastPoolId + 1, [validator])
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice))
-
-  await relayClient.dev.newBlock()
-
-  relayClient.api.call.nominationPoolsApi.poolAccounts(preLastPoolId + 1)
-
-  await relayClient.pause()
-
-  await checkEvents(nominateEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
-    .toMatchSnapshot('nominate events')
 }
 
 export function nominationPoolsE2ETests<
