@@ -229,6 +229,25 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 27000)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
 [
   {

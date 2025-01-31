@@ -1,6 +1,6 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, objectCmp } from './helpers/index.js'
 
@@ -75,6 +75,50 @@ async function createNominationPool(
   return createNomPoolEvents
 }
 
+/**
+ * Select a random set of validators from among the list of validators present in the node's storage.
+ *
+ * Only the first page of validators in storage is considered - the size of the page is provided as an argument.
+ *
+ * @param api PJS client object.
+ * @param pageSize The size of the page to fetch from storage.
+ * @returns
+ */
+async function getRandomValidators(api: ApiPromise, pageSize: number) {
+  // Between 1 and 16 validators can be nominated by the pool at any time.
+  const min_validators = 1
+  const max_validators = 16
+  assert(pageSize >= max_validators)
+
+  const count = Math.floor(Math.random() * max_validators) + min_validators
+
+  // Query the list of validators from the `Validators` storage item in the `staking` pallet.
+  const validators = await api.query.staking.validators.keysPaged({ args: [], pageSize: pageSize })
+
+  const validatorIds = validators.map((key) => key.args[0].toString())
+
+  const selectedValidators: string[] = []
+
+  for (let i = 0; i < count; i++) {
+    const randomIndex = Math.floor(Math.random() * validatorIds.length)
+    const validatorAddr = validatorIds[randomIndex]
+    const validator = await api.query.staking.validators(validatorAddr)
+
+    // The pool's nominator should only select validators who still allow for nominators
+    // to select them i.e. they have not blocked themselves.
+    if (validator.blocked.isFalse) {
+      selectedValidators.push(validatorIds[randomIndex])
+    }
+
+    // Remove the selected validator to avoid duplicates. Do so whether or not it was blocked.
+    // If it was blocked, it need not be considered in the next iteration.
+    // If it wasn't, it's already been selected, and must be removed to avoid duplicate validators.
+    validatorIds.splice(randomIndex, 1)
+  }
+
+  return selectedValidators
+}
+
 /// -------
 /// -------
 /// -------
@@ -143,6 +187,7 @@ async function nominationPoolCreationFailureTest<
  *
  *     3.4 setting the commission claim permission to permissionless
  *
+ * 4. nominating a validator set as the pool's validator
  * 4. having another other account join the pool
  * 5. bonding additional funds from this newcomer account to the pool
  * 6. attempt to claim the pool's (zero) commission as a random account
@@ -164,6 +209,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
         [[defaultAccounts.dave.address], { providers: 1, data: { free: 10000e10 } }],
         [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
         [[ferdie.address], { providers: 1, data: { free: 10000e10 } }],
@@ -320,6 +366,28 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   }
 
   await check(nominationPoolWithCommission.commission).toMatchObject(newCommissionData)
+
+  /**
+   * Nominate a validator set
+   */
+
+  const validators = await getRandomValidators(relayClient.api, 100)
+
+  const nominateTx = relayClient.api.tx.nominationPools.nominate(nomPoolId, validators)
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.charlie))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('nomination pool validator selection events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after validators are nominated')
+
+  const nominationPoolAfterNomination = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithCommission, nominationPoolAfterNomination, [])
 
   /**
    * Have another account join the pool
@@ -1014,6 +1082,53 @@ async function nominationPoolsUpdateRolesTest<
     nominator: encodeAddress(defaultAccounts.dave.address, addressEncoding),
     bouncer: encodeAddress(defaultAccounts.eve.address, addressEncoding),
   })
+}
+
+async function quickTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  // Create a pool
+  const [relayClient] = await setupNetworks(relayChain)
+
+  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+
+  const alice = (await defaultAccountsSr25199).keyring.createFromUri('//Alice')
+
+  const validator = '14AkAFBzukRhAFh1wyko1ZoNWnUyq7bY1XbjeTeCHimCzPU1'
+
+  await relayClient.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  const createNomPoolEvents = await createNominationPool(
+    relayClient,
+    alice,
+    alice.address,
+    alice.address,
+    alice.address,
+  )
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('create nomination pool events')
+
+  const nominateTx = relayClient.api.tx.nominationPools.nominate(preLastPoolId + 1, [validator])
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice))
+
+  await relayClient.dev.newBlock()
+
+  relayClient.api.call.nominationPoolsApi.poolAccounts(preLastPoolId + 1)
+
+  await relayClient.pause()
+
+  await checkEvents(nominateEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('nominate events')
 }
 
 export function nominationPoolsE2ETests<
