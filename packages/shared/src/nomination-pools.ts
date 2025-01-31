@@ -188,14 +188,14 @@ async function nominationPoolCreationFailureTest<
  *     3.4 setting the commission claim permission to permissionless
  *
  * 4. nominating a validator set as the pool's validator
- * 4. having another other account join the pool
- * 5. bonding additional funds from this newcomer account to the pool
- * 6. attempt to claim the pool's (zero) commission as a random account
- * 7. unbonding the additionally bonded funds from the newcomer account
- * 8. setting the pool state to blocked
- * 9. kicking the newcomer account from the pool as the bouncer
- * 10. setting the pool state to destroying
- * 11. attempting to unbond the initial depositor's funds (should fail)
+ * 5. having another other account join the pool
+ * 6. bonding additional funds from this newcomer account to the pool
+ * 7. attempt to claim the pool's (zero) commission as a random account
+ * 8. unbonding the additionally bonded funds from the newcomer account
+ * 9. setting the pool state to blocked
+ * 10. kicking the newcomer account from the pool as the bouncer
+ * 11. setting the pool state to destroying
+ * 12. attempting to unbond the initial depositor's funds (should fail)
  * @param relayChain
  * @param addressEncoding
  */
@@ -378,6 +378,8 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   await relayClient.dev.newBlock()
 
+  // `nominate` does not emit any events from `staking` or `nominationPools` as of
+  // Jan. 2025. #7377 will fix this.
   await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('nomination pool validator selection events')
