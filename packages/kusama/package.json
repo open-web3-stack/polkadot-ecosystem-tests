@@ -2,7 +2,7 @@
 	"name": "@e2e-test/kusama",
 	"type": "module",
 	"dependencies": {
-		"@acala-network/chopsticks-testing": "^1.0.2-2",
+		"@acala-network/chopsticks-testing": "^1.0.2",
 		"@e2e-test/shared": "workspace:*"
 	}
 }
