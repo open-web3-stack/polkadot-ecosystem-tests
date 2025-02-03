@@ -263,8 +263,8 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination p
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 15000)",
-          "refTime": "(rounded 1200000000)",
+          "proofSize": "(rounded 45000)",
+          "refTime": "(rounded 1500000000)",
         },
       },
     },

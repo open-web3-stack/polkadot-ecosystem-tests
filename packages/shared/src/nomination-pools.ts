@@ -8,7 +8,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { type Option, u32 } from '@polkadot/types'
-import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
+import type { PalletNominationPoolsBondedPoolInner, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { Codec } from '@polkadot/types/types'
 import { assert, describe, test } from 'vitest'
 
@@ -76,45 +76,53 @@ async function createNominationPool(
 }
 
 /**
- * Select a random set of validators from among the list of validators present in the node's storage.
+ * Select some validators from the list present in the `Validators` storage item, in the `Staking` pallet.
  *
- * Only the first page of validators in storage is considered - the size of the page is provided as an argument.
+ * To avoid fetching all validators at once (over a thousand in Jan. 2025), only the first page of validators
+ * in storage is considered - the size of the page is provided as an argument.
+ *
+ * If, in the validator page of the selected size, less than `validatorCount` validators are available, the function
+ * will get as close to `validatorCount` as possible.
  *
  * @param api PJS client object.
  * @param pageSize The size of the page to fetch from storage.
- * @returns
+ * @param validatorCount The (desired) number of validators to select.
+ * @returns A list of at least 1 validator, and at most 16.
  */
-async function getRandomValidators(api: ApiPromise, pageSize: number) {
+async function getValidators(api: ApiPromise, pageSize: number, validatorCount: number) {
   // Between 1 and 16 validators can be nominated by the pool at any time.
   const min_validators = 1
   const max_validators = 16
-  assert(pageSize >= max_validators)
 
-  const count = Math.floor(Math.random() * max_validators) + min_validators
+  assert(pageSize >= max_validators)
+  assert(min_validators <= validatorCount && validatorCount <= max_validators)
 
   // Query the list of validators from the `Validators` storage item in the `staking` pallet.
-  const validators = await api.query.staking.validators.keysPaged({ args: [], pageSize: pageSize })
+  const validators = await api.query.staking.validators.entriesPaged({ args: [], pageSize: pageSize })
 
-  const validatorIds = validators.map((key) => key.args[0].toString())
+  const validatorIds: [string, PalletStakingValidatorPrefs][] = validators.map((tuple) => [
+    tuple[0].args[0].toString(),
+    tuple[1],
+  ])
 
   const selectedValidators: string[] = []
 
-  for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * validatorIds.length)
-    const validatorAddr = validatorIds[randomIndex]
-    const validator = await api.query.staking.validators(validatorAddr)
+  let ix = 0
+  let count = 0
+  while (count < validatorCount) {
+    const [valAddr, valData] = validatorIds[ix]
 
     // The pool's nominator should only select validators who still allow for nominators
     // to select them i.e. they have not blocked themselves.
-    if (validator.blocked.isFalse) {
-      selectedValidators.push(validatorIds[randomIndex])
+    if (valData.blocked.isFalse) {
+      selectedValidators.push(valAddr)
+      count += 1
     }
 
-    // Remove the selected validator to avoid duplicates. Do so whether or not it was blocked.
-    // If it was blocked, it need not be considered in the next iteration.
-    // If it wasn't, it's already been selected, and must be removed to avoid duplicate validators.
-    validatorIds.splice(randomIndex, 1)
+    ix += 1
   }
+
+  assert(selectedValidators.length >= min_validators && selectedValidators.length <= max_validators)
 
   return selectedValidators
 }
@@ -372,15 +380,15 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Nominate a validator set
    */
 
-  const validators = await getRandomValidators(relayClient.api, 100)
+  const validators = await getValidators(relayClient.api, 100, 16)
 
   const nominateTx = relayClient.api.tx.nominationPools.nominate(nomPoolId, validators)
   const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.charlie))
 
   await relayClient.dev.newBlock()
 
-  // `nominate` does not emit any events from `staking` or `nominationPools` as of
-  // Jan. 2025. #7377 will fix this.
+  // TODO: `nominate` does not emit any events from `staking` or `nominationPools` as of
+  // Jan. 2025. [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) will fix this.
   await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('nomination pool validator selection events')
@@ -506,7 +514,8 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   await relayClient.dev.newBlock()
 
-  // Like `nominate`, `chill` also does not emit any nomination pool events. #7377 also fixes this.
+  // TODO: Like `nominate`, `chill` also does not emit any nomination pool events.
+  // [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) also fixes this.
   await checkEvents(chillEvents, 'nominationPools', 'staking', 'system')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('chill events')

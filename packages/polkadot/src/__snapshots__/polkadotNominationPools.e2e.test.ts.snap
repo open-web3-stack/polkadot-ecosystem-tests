@@ -263,8 +263,8 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 45000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
