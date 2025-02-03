@@ -114,6 +114,32 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra f
 ]
 `;
 
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
+[
+  {
+    "data": {
+      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4600)",
+          "refTime": "(rounded 990000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
 [
   {
@@ -225,6 +251,25 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
     },
     "method": "Bonded",
     "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 45000)",
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;

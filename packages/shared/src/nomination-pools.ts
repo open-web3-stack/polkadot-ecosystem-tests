@@ -8,7 +8,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { type Option, u32 } from '@polkadot/types'
-import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
+import type { PalletNominationPoolsBondedPoolInner, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { Codec } from '@polkadot/types/types'
 import { assert, describe, test } from 'vitest'
 
@@ -73,6 +73,58 @@ async function createNominationPool(
   const createNomPoolEvents = sendTransaction(createNomPoolTx.signAsync(signer))
 
   return createNomPoolEvents
+}
+
+/**
+ * Select some validators from the list present in the `Validators` storage item, in the `Staking` pallet.
+ *
+ * To avoid fetching all validators at once (over a thousand in Jan. 2025), only the first page of validators
+ * in storage is considered - the size of the page is provided as an argument.
+ *
+ * If, in the validator page of the selected size, less than `validatorCount` validators are available, the function
+ * will get as close to `validatorCount` as possible.
+ *
+ * @param api PJS client object.
+ * @param pageSize The size of the page to fetch from storage.
+ * @param validatorCount The (desired) number of validators to select.
+ * @returns A list of at least 1 validator, and at most 16.
+ */
+async function getValidators(api: ApiPromise, pageSize: number, validatorCount: number) {
+  // Between 1 and 16 validators can be nominated by the pool at any time.
+  const min_validators = 1
+  const max_validators = 16
+
+  assert(pageSize >= max_validators)
+  assert(min_validators <= validatorCount && validatorCount <= max_validators)
+
+  // Query the list of validators from the `Validators` storage item in the `staking` pallet.
+  const validators = await api.query.staking.validators.entriesPaged({ args: [], pageSize: pageSize })
+
+  const validatorIds: [string, PalletStakingValidatorPrefs][] = validators.map((tuple) => [
+    tuple[0].args[0].toString(),
+    tuple[1],
+  ])
+
+  const selectedValidators: string[] = []
+
+  let ix = 0
+  let count = 0
+  while (count < validatorCount) {
+    const [valAddr, valData] = validatorIds[ix]
+
+    // The pool's nominator should only select validators who still allow for nominators
+    // to select them i.e. they have not blocked themselves.
+    if (valData.blocked.isFalse) {
+      selectedValidators.push(valAddr)
+      count += 1
+    }
+
+    ix += 1
+  }
+
+  assert(selectedValidators.length >= min_validators && selectedValidators.length <= max_validators)
+
+  return selectedValidators
 }
 
 /// -------
@@ -143,14 +195,16 @@ async function nominationPoolCreationFailureTest<
  *
  *     3.4 setting the commission claim permission to permissionless
  *
- * 4. having another other account join the pool
- * 5. bonding additional funds from this newcomer account to the pool
- * 6. attempt to claim the pool's (zero) commission as a random account
- * 7. unbonding the additionally bonded funds from the newcomer account
- * 8. setting the pool state to blocked
- * 9. kicking the newcomer account from the pool as the bouncer
- * 10. setting the pool state to destroying
- * 11. attempting to unbond the initial depositor's funds (should fail)
+ * 4. nominating a validator set as the pool's validator
+ * 5. having another other account join the pool
+ * 6. bonding additional funds from this newcomer account to the pool
+ * 7. attempt to claim the pool's (zero) commission as a random account
+ * 8. unbonding the additionally bonded funds from the newcomer account
+ * 9. moving the pool to the `chill` nominating state, as its nominator
+ * 10. setting the pool state to blocked
+ * 11. kicking the newcomer account from the pool as the bouncer
+ * 12. setting the pool state to destroying
+ * 13. attempting to unbond the initial depositor's funds (should fail)
  * @param relayChain
  * @param addressEncoding
  */
@@ -164,6 +218,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
         [[defaultAccounts.dave.address], { providers: 1, data: { free: 10000e10 } }],
         [[defaultAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
         [[ferdie.address], { providers: 1, data: { free: 10000e10 } }],
@@ -322,6 +377,30 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   await check(nominationPoolWithCommission.commission).toMatchObject(newCommissionData)
 
   /**
+   * Nominate a validator set
+   */
+
+  const validators = await getValidators(relayClient.api, 100, 16)
+
+  const nominateTx = relayClient.api.tx.nominationPools.nominate(nomPoolId, validators)
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.charlie))
+
+  await relayClient.dev.newBlock()
+
+  // TODO: `nominate` does not emit any events from `staking` or `nominationPools` as of
+  // Jan. 2025. [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) will fix this.
+  await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('nomination pool validator selection events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after validators are nominated')
+
+  const nominationPoolAfterNomination = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolWithCommission, nominationPoolAfterNomination, [])
+
+  /**
    * Have another account join the pool
    */
 
@@ -425,6 +504,28 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   assert(nominationPoolPostUnbond.points.eq(depositorMinBond + minJoinBond))
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
+
+  /**
+   * As the pool's nominator, call `chill`
+   */
+
+  const chillTx = relayClient.api.tx.nominationPools.chill(nomPoolId)
+  const chillEvents = await sendTransaction(chillTx.signAsync(defaultAccounts.charlie))
+
+  await relayClient.dev.newBlock()
+
+  // TODO: Like `nominate`, `chill` also does not emit any nomination pool events.
+  // [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) also fixes this.
+  await checkEvents(chillEvents, 'nominationPools', 'staking', 'system')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('chill events')
+
+  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  assert(poolData.isSome, 'Pool should still exist after chill')
+
+  const nominationPoolPostChill = poolData.unwrap()
+
+  nominationPoolCmp(nominationPoolPostUnbond, nominationPoolPostChill, [])
 
   /**
    * Set pool state to blocked

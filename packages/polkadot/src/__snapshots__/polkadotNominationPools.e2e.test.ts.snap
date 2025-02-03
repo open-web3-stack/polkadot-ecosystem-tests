@@ -114,6 +114,32 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
+[
+  {
+    "data": {
+      "stash": "13UVJyLnbVp8c4FQeiGG4xVRNURXD6y3qzyjCZgS7dm34uSE",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4600)",
+          "refTime": "(rounded 860000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
 [
   {
@@ -225,6 +251,25 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
     },
     "method": "Bonded",
     "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 45000)",
+          "refTime": "(rounded 1300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;
