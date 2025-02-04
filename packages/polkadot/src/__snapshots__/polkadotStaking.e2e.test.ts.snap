@@ -1,5 +1,92 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "1.00%",
+      },
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 2`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "1.00%",
+      },
+      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 3`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "1.00%",
+      },
+      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > events when bonding funds 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > events when bonding funds 2`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > events when bonding funds 3`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
 [
   {
