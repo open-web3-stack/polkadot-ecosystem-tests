@@ -116,26 +116,24 @@ async function stakingLifecycleTest<
 
   /// Bond each validator's funds
 
-  const nonce = await client.api.rpc.system.accountNextIndex(validators[0].address)
-
-  for (const validator of validators) {
+  for (const [index, validator] of validators.entries()) {
     const bondTx = client.api.tx.staking.bond(5000e10, { Staked: null })
 
     const bondEvents = await sendTransaction(bondTx.signAsync(validator))
 
     client.dev.newBlock()
 
-    await checkEvents(bondEvents, 'staking').toMatchSnapshot('events when bonding funds')
+    await checkEvents(bondEvents, 'staking').toMatchSnapshot(`validator ${index} bond events`)
   }
 
-  for (const validator of validators) {
+  for (const [index, validator] of validators.entries()) {
     // 10e6 is 0.1% commission
     const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
     const validateEvents = await sendTransaction(validateTx.signAsync(validator))
 
     client.dev.newBlock()
 
-    await checkEvents(validateEvents, 'staking').toMatchSnapshot('events for validate extrinsic')
+    await checkEvents(validateEvents, 'staking').toMatchSnapshot(`validator ${index} validate events`)
   }
 }
 

@@ -1,6 +1,19 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 1`] = `
+exports[`Polkadot Staking > staking lifecycle > validator 0 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > validator 0 validate events 1`] = `
 [
   {
     "data": {
@@ -16,7 +29,20 @@ exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 1`
 ]
 `;
 
-exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 2`] = `
+exports[`Polkadot Staking > staking lifecycle > validator 1 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > validator 1 validate events 1`] = `
 [
   {
     "data": {
@@ -32,7 +58,20 @@ exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 2`
 ]
 `;
 
-exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 3`] = `
+exports[`Polkadot Staking > staking lifecycle > validator 2 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > validator 2 validate events 1`] = `
 [
   {
     "data": {
@@ -43,45 +82,6 @@ exports[`Polkadot Staking > staking lifecycle > events for validate extrinsic 3`
       "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
     },
     "method": "ValidatorPrefsSet",
-    "section": "staking",
-  },
-]
-`;
-
-exports[`Polkadot Staking > staking lifecycle > events when bonding funds 1`] = `
-[
-  {
-    "data": {
-      "amount": 50000000000000,
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-]
-`;
-
-exports[`Polkadot Staking > staking lifecycle > events when bonding funds 2`] = `
-[
-  {
-    "data": {
-      "amount": 50000000000000,
-      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-]
-`;
-
-exports[`Polkadot Staking > staking lifecycle > events when bonding funds 3`] = `
-[
-  {
-    "data": {
-      "amount": 50000000000000,
-      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
-    },
-    "method": "Bonded",
     "section": "staking",
   },
 ]
