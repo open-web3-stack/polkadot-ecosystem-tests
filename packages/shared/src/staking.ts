@@ -1,4 +1,4 @@
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { checkEvents } from './helpers/index.js'
 
@@ -87,9 +87,11 @@ async function nominateNoBondedFundsFailureTest<
  * Staking lifecycle test.
  * Stages:
  *
- * 1. account keypairs (Ed25519) are generated and funded, to become validators
+ * 1. account keypairs (Ed25519) are generated and funded
  * 2. these accounts bond their funds
  * 3. they then choose to become validators
+ * 4. another account bonds funds
+ * 5. this account nominates the validators
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -118,7 +120,6 @@ async function stakingLifecycleTest<
 
   for (const [index, validator] of validators.entries()) {
     const bondTx = client.api.tx.staking.bond(5000e10, { Staked: null })
-
     const bondEvents = await sendTransaction(bondTx.signAsync(validator))
 
     client.dev.newBlock()
@@ -135,6 +136,34 @@ async function stakingLifecycleTest<
 
     await checkEvents(validateEvents, 'staking').toMatchSnapshot(`validator ${index} validate events`)
   }
+
+  /// Bond another account's funds
+
+  const alice = (await defaultAccountsSr25199).keyring.createFromUri('//Alice')
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+    },
+  })
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  const bondEvents = await sendTransaction(bondTx.signAsync(alice))
+
+  client.dev.newBlock()
+
+  await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
+
+  /// Nominate the validators
+
+  const nonce = await client.api.rpc.system.accountNextIndex(alice.address)
+
+  const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce }))
+
+  client.dev.newBlock()
+
+  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
 }
 
 export function stakingE2ETests<

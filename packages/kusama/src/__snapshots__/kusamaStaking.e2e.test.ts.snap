@@ -1,5 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
 [
   {

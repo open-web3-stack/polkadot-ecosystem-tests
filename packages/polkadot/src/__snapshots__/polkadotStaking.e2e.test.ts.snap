@@ -1,5 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Polkadot Staking > staking lifecycle > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > staking lifecycle > validator 0 bond events 1`] = `
 [
   {
