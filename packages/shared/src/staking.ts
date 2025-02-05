@@ -95,11 +95,12 @@ async function nominateNoBondedFundsFailureTest<
  * 2. these accounts bond their funds
  * 3. they then choose to become validators
  * 4. another account bonds funds
- * 5. this account nominates the validators
- * 6. one of the validators chills itself
- * 7. this validator forcibly removes its nomination
- * 8. this validator sets its preferences so that it is blocked
- * 9. the nominator tries to nominate the blocked validator
+ * 5. this account bonds extra funds
+ * 6. this account nominates the validators
+ * 7. one of the validators chills itself
+ * 8. this validator forcibly removes its nomination
+ * 9. this validator sets its preferences so that it is blocked
+ * 10. the nominator tries to nominate the blocked validator
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -107,7 +108,9 @@ async function stakingLifecycleTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
+  ///
   /// Generate validators, and fund them.
+  ///
 
   const validatorCount = 3
 
@@ -124,7 +127,9 @@ async function stakingLifecycleTest<
     },
   })
 
+  ///
   /// Bond each validator's funds
+  ///
 
   for (const [index, validator] of validators.entries()) {
     const bondTx = client.api.tx.staking.bond(5000e10, { Staked: null })
@@ -135,9 +140,15 @@ async function stakingLifecycleTest<
     await checkEvents(bondEvents, 'staking').toMatchSnapshot(`validator ${index} bond events`)
   }
 
+  // Use the network's minimum validator commission.
+  const minValidatorCommission = await client.api.query.staking.minCommission()
+
+  const eraNumberOpt = await client.api.query.staking.currentEra()
+  assert(eraNumberOpt.isSome)
+  const eraNumber = eraNumberOpt.unwrap()
+
   for (const [index, validator] of validators.entries()) {
-    // 10e6 is 0.1% commission
-    const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
+    const validateTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: false })
     const validateEvents = await sendTransaction(validateTx.signAsync(validator))
 
     client.dev.newBlock()
@@ -145,7 +156,9 @@ async function stakingLifecycleTest<
     await checkEvents(validateEvents, 'staking').toMatchSnapshot(`validator ${index} validate events`)
   }
 
+  ///
   /// Bond another account's funds
+  ///
 
   const alice = (await defaultAccountsSr25199).keyring.createFromUri('//Alice')
 
@@ -162,17 +175,24 @@ async function stakingLifecycleTest<
 
   await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
 
-  /// Nominate the validators
-
-  const eraNumberOpt = await client.api.query.staking.currentEra()
-  assert(eraNumberOpt.isSome)
-  const eraNumber = eraNumberOpt.unwrap()
+  /// Bond extra funds
 
   // Necessary to avoid `ResponseError: {"invalid":{"stale":null}}` errors
-  const nonce = await client.api.rpc.system.accountNextIndex(alice.address)
+  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+  const bondExtraTx = client.api.tx.staking.bondExtra(10000e10)
+  const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(alice, { nonce: aliceNonce++ }))
+
+  client.dev.newBlock()
+
+  await checkEvents(bondExtraEvents, 'staking').toMatchSnapshot('nominator bond extra events')
+
+  ///
+  /// Nominate the validators
+  ///
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce }))
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce }))
 
   client.dev.newBlock()
 
@@ -190,7 +210,9 @@ async function stakingLifecycleTest<
   const targets = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
   assert(validators.every((v) => targets.includes(encodeAddress(v.address, addressEncoding))))
 
+  ///
   /// Chill one of the validators
+  ///
 
   const chillTx = client.api.tx.staking.chill()
   const chillEvents = await sendTransaction(chillTx.signAsync(validators[0]))
@@ -215,7 +237,9 @@ async function stakingLifecycleTest<
   const targetsPostChill = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
   assert(targetsPostChill.every((v) => targets.includes(encodeAddress(v, addressEncoding))))
 
+  ///
   /// Chilled validator wishes to remove all its nominations
+  ///
 
   let validatorZeroNonce = (await client.api.rpc.system.accountNextIndex(validators[0].address)).toNumber()
 
@@ -240,14 +264,29 @@ async function stakingLifecycleTest<
   const targetsPostKick = nominationsPostKick.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
   assert(!targetsPostKick.includes(encodeAddress(validators[0].address, addressEncoding)))
 
+  ///
   /// Chilled validator wishes to validate again, but this time it blocks itself
+  ///
 
-  const blockTx = client.api.tx.staking.validate({ commission: 10e6, blocked: true })
+  const blockTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: true })
   const blockEvents = await sendTransaction(blockTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
 
   client.dev.newBlock()
 
   await checkEvents(blockEvents, 'staking').toMatchSnapshot('validate (blocked) events')
+
+  ///
+  /// Nominator tries to select the blocked validator
+  ///
+
+  const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
+  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice))
+
+  client.dev.newBlock()
+
+  await checkEvents(nominateEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when attempting to nominate a blocked validator',
+  )
 
   // Check events for the correct error code
   const events = await client.api.query.system.events()
@@ -261,23 +300,7 @@ async function stakingLifecycleTest<
   const dispatchError = ev1.event.data.dispatchError
 
   assert(dispatchError.isModule)
-
-  console.log(dispatchError.index)
-
-  await client.pause()
-
-  //assert(client.api.errors.staking.BadTarget.is(dispatchError.asModule))
-
-  /// Nominator tries to select the blocked validator
-
-  const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice))
-
-  client.dev.newBlock()
-
-  await checkEvents(nominateEvents2).toMatchSnapshot('events when attempting to nominate a blocked validator')
-
-  await client.pause()
+  assert(client.api.errors.staking.BadTarget.is(dispatchError.asModule))
 }
 
 export function stakingE2ETests<
