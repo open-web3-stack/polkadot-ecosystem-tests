@@ -6,7 +6,6 @@ import { checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { PalletStakingNominations } from '@polkadot/types/lookup'
 import { assert, describe, test } from 'vitest'
 
 /// -------
@@ -96,6 +95,8 @@ async function nominateNoBondedFundsFailureTest<
  * 4. another account bonds funds
  * 5. this account nominates the validators
  * 6. one of the validators chills itself
+ * 7. this validator forcibly removes its nomination
+ * 8. this validator sets its preferences so that it is blocked
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -164,7 +165,7 @@ async function stakingLifecycleTest<
   assert(eraNumberOpt.isSome)
   const eraNumber = eraNumberOpt.unwrap()
 
-  // Necessary to avoid `stale` extrinsic errors
+  // Necessary to avoid `ResponseError: {"invalid":{"stale":null}}` errors
   const nonce = await client.api.rpc.system.accountNextIndex(alice.address)
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
@@ -210,6 +211,31 @@ async function stakingLifecycleTest<
   // posterior call to `chill`.
   const targetsPostChill = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
   assert(targetsPostChill.every((v) => targets.includes(encodeAddress(v, addressEncoding))))
+
+  /// Chilled validator wishes to remove all its nominations
+
+  const validatorZeroNonce = await client.api.rpc.system.accountNextIndex(validators[0].address)
+
+  const kickTx = client.api.tx.staking.kick([alice.address])
+  const kickEvents = await sendTransaction(kickTx.signAsync(validators[0], { nonce: validatorZeroNonce }))
+
+  client.dev.newBlock()
+
+  await checkEvents(kickEvents, 'staking').toMatchSnapshot('kick events')
+
+  /// Check the nominator's nominations once again
+
+  nominationsOpt = await client.api.query.staking.nominators(alice.address)
+  assert(nominationsOpt.isSome)
+  const nominationsPostKick = nominationsOpt.unwrap()
+
+  assert(nominationsPostKick.submittedIn.eq(eraNumber))
+  assert(nominationsPostKick.suppressed.isFalse)
+  assert(nominationsPostKick.targets.length === validators.length - 1)
+
+  // Check that the kicked validator is *not* in the nominations.
+  const targetsPostKick = nominationsPostKick.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
+  assert(!targetsPostKick.includes(encodeAddress(validators[0].address, addressEncoding)))
 }
 
 export function stakingE2ETests<

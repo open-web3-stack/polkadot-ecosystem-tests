@@ -12,6 +12,19 @@ exports[`Polkadot Staking > staking lifecycle > chill events 1`] = `
 ]
 `;
 
+exports[`Polkadot Staking > staking lifecycle > kick events 1`] = `
+[
+  {
+    "data": {
+      "nominator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "Kicked",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > staking lifecycle > nominate events 1`] = `[]`;
 
 exports[`Polkadot Staking > staking lifecycle > nominator bond events 1`] = `
