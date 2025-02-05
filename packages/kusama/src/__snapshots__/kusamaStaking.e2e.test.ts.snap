@@ -87,7 +87,7 @@ exports[`Kusama Staking > trying to become a validator with no bonded funds fail
 ]
 `;
 
-exports[`Kusama Staking > trying to nominate with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+exports[`Kusama Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
 [
   {
     "data": {
@@ -101,8 +101,8 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 960000000)",
+          "proofSize": "(rounded 8800)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },

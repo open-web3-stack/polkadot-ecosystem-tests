@@ -152,7 +152,7 @@ exports[`Polkadot Staking > trying to become a validator with no bonded funds fa
 ]
 `;
 
-exports[`Polkadot Staking > trying to nominate with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+exports[`Polkadot Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
 [
   {
     "data": {
@@ -166,8 +166,8 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 830000000)",
+          "proofSize": "(rounded 8800)",
+          "refTime": "(rounded 970000000)",
         },
       },
     },

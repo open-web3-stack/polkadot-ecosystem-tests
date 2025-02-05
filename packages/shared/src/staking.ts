@@ -60,13 +60,15 @@ async function nominateNoBondedFundsFailureTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const nominateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
-  const validateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.alice))
+  // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
+  // so anything can be given here.
+  const nominateTx = client.api.tx.staking.nominate([defaultAccounts.alice.address])
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.alice))
 
   client.dev.newBlock()
 
-  await checkEvents(validateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when attempting to validate with no bonded funds',
+  await checkEvents(nominateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when attempting to nominate with no bonded funds',
   )
 
   /// Check event - the above extrinsic should have raised a `NotController` error.
