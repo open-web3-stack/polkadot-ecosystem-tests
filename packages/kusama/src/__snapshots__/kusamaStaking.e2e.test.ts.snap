@@ -1,5 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > staking lifecycle > chill events 1`] = `[]`;
+
 exports[`Kusama Staking > staking lifecycle > nominate events 1`] = `[]`;
 
 exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `

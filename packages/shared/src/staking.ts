@@ -1,9 +1,12 @@
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import { PalletStakingNominations } from '@polkadot/types/lookup'
 import { assert, describe, test } from 'vitest'
 
 /// -------
@@ -92,11 +95,12 @@ async function nominateNoBondedFundsFailureTest<
  * 3. they then choose to become validators
  * 4. another account bonds funds
  * 5. this account nominates the validators
+ * 6. one of the validators chills itself
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
   /// Generate validators, and fund them.
@@ -156,6 +160,11 @@ async function stakingLifecycleTest<
 
   /// Nominate the validators
 
+  const eraNumberOpt = await client.api.query.staking.currentEra()
+  assert(eraNumberOpt.isSome)
+  const eraNumber = eraNumberOpt.unwrap()
+
+  // Necessary to avoid `stale` extrinsic errors
   const nonce = await client.api.rpc.system.accountNextIndex(alice.address)
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
@@ -164,6 +173,43 @@ async function stakingLifecycleTest<
   client.dev.newBlock()
 
   await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+
+  /// Check the nominator's nominations
+
+  let nominationsOpt = await client.api.query.staking.nominators(alice.address)
+  assert(nominationsOpt.isSome)
+  const nominations = nominationsOpt.unwrap()
+  assert(nominations.submittedIn.eq(eraNumber))
+  assert(nominations.suppressed.isFalse)
+  assert(nominations.targets.length === validators.length)
+
+  const targets = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
+  assert(validators.every((v) => targets.includes(encodeAddress(v.address, addressEncoding))))
+
+  /// Chill one of the validators
+
+  const chillTx = client.api.tx.staking.chill()
+  const chillEvents = await sendTransaction(chillTx.signAsync(validators[0]))
+
+  client.dev.newBlock()
+
+  await checkEvents(chillEvents, 'staking').toMatchSnapshot('chill events')
+
+  /// Check the nominator's nominations again
+
+  nominationsOpt = await client.api.query.staking.nominators(alice.address)
+  assert(nominationsOpt.isSome)
+  const nominationsPostChill = nominationsOpt.unwrap()
+
+  assert(nominationsPostChill.submittedIn.eq(eraNumber))
+  assert(nominationsPostChill.suppressed.isFalse)
+  assert(nominationsPostChill.targets.length === validators.length)
+
+  // Check that the chilled validator is *still* in the nominations.
+  // Its previous call to `validate` would only have taken effect in the next era, as will the
+  // posterior call to `chill`.
+  const targetsPostChill = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
+  assert(targetsPostChill.every((v) => targets.includes(encodeAddress(v, addressEncoding))))
 }
 
 export function stakingE2ETests<
@@ -180,7 +226,7 @@ export function stakingE2ETests<
     })
 
     test('staking lifecycle', async () => {
-      await stakingLifecycleTest(chain)
+      await stakingLifecycleTest(chain, testConfig.addressEncoding)
     })
   })
 }

@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > staking lifecycle > chill events 1`] = `
+[
+  {
+    "data": {
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > staking lifecycle > nominate events 1`] = `[]`;
 
 exports[`Polkadot Staking > staking lifecycle > nominator bond events 1`] = `
