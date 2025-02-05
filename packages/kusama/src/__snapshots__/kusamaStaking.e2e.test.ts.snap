@@ -2,6 +2,79 @@
 
 exports[`Kusama Staking > staking lifecycle > chill events 1`] = `[]`;
 
+exports[`Kusama Staking > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 760000000)",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 0,
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 600000000)",
+      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 150000000)",
+      "who": "GytnrkQJgbQEzsNeN6Jv96GUv1PS5SyRyBhtTYcoCkxGP4v",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "actualFee": "(rounded 760000000)",
+      "tip": 0,
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 1200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > kick events 1`] = `
+[
+  {
+    "data": {
+      "nominator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "Kicked",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Kusama Staking > staking lifecycle > nominate events 1`] = `[]`;
 
 exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
@@ -16,6 +89,8 @@ exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
   },
 ]
 `;
+
+exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `[]`;
 
 exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
 [
@@ -61,53 +136,3 @@ exports[`Kusama Staking > staking lifecycle > validator 2 bond events 1`] = `
 `;
 
 exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = `[]`;
-
-exports[`Kusama Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 6,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 960000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 6,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 8800)",
-          "refTime": "(rounded 1100000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;

@@ -91,7 +91,7 @@ async function nominateNoBondedFundsFailureTest<
  * Staking lifecycle test.
  * Stages:
  *
- * 1. account keypairs (Ed25519) are generated and funded
+ * 1. account keypairs for tentative validators (Ed25519) are generated and funded
  * 2. these accounts bond their funds
  * 3. they then choose to become validators
  * 4. another account bonds funds
@@ -99,6 +99,7 @@ async function nominateNoBondedFundsFailureTest<
  * 6. one of the validators chills itself
  * 7. this validator forcibly removes its nomination
  * 8. this validator sets its preferences so that it is blocked
+ * 9. the nominator tries to nominate the blocked validator
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -216,10 +217,10 @@ async function stakingLifecycleTest<
 
   /// Chilled validator wishes to remove all its nominations
 
-  const validatorZeroNonce = await client.api.rpc.system.accountNextIndex(validators[0].address)
+  let validatorZeroNonce = (await client.api.rpc.system.accountNextIndex(validators[0].address)).toNumber()
 
   const kickTx = client.api.tx.staking.kick([alice.address])
-  const kickEvents = await sendTransaction(kickTx.signAsync(validators[0], { nonce: validatorZeroNonce }))
+  const kickEvents = await sendTransaction(kickTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
 
   client.dev.newBlock()
 
@@ -235,9 +236,48 @@ async function stakingLifecycleTest<
   assert(nominationsPostKick.suppressed.isFalse)
   assert(nominationsPostKick.targets.length === validators.length - 1)
 
-  // Check that the kicked validator is *not* in the nominations.
+  // Check that the kicked nominator's nominations *no longer* include the validator who kicked them.
   const targetsPostKick = nominationsPostKick.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
   assert(!targetsPostKick.includes(encodeAddress(validators[0].address, addressEncoding)))
+
+  /// Chilled validator wishes to validate again, but this time it blocks itself
+
+  const blockTx = client.api.tx.staking.validate({ commission: 10e6, blocked: true })
+  const blockEvents = await sendTransaction(blockTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
+
+  client.dev.newBlock()
+
+  await checkEvents(blockEvents, 'staking').toMatchSnapshot('validate (blocked) events')
+
+  // Check events for the correct error code
+  const events = await client.api.query.system.events()
+
+  const [ev1] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev1.event))
+  const dispatchError = ev1.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+
+  console.log(dispatchError.index)
+
+  await client.pause()
+
+  //assert(client.api.errors.staking.BadTarget.is(dispatchError.asModule))
+
+  /// Nominator tries to select the blocked validator
+
+  const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
+  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice))
+
+  client.dev.newBlock()
+
+  await checkEvents(nominateEvents2).toMatchSnapshot('events when attempting to nominate a blocked validator')
+
+  await client.pause()
 }
 
 export function stakingE2ETests<

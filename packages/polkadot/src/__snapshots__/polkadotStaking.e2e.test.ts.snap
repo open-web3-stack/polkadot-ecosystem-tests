@@ -12,6 +12,31 @@ exports[`Polkadot Staking > staking lifecycle > chill events 1`] = `
 ]
 `;
 
+exports[`Polkadot Staking > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x14000000",
+          "index": 7,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > staking lifecycle > kick events 1`] = `
 [
   {
@@ -35,6 +60,22 @@ exports[`Polkadot Staking > staking lifecycle > nominator bond events 1`] = `
       "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Polkadot Staking > staking lifecycle > validate (blocked) events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": true,
+        "commission": "1.00%",
+      },
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "ValidatorPrefsSet",
     "section": "staking",
   },
 ]
