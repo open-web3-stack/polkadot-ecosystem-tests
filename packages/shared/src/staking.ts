@@ -2,7 +2,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { checkEvents } from './helpers/index.js'
+import { check, checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -315,6 +315,82 @@ async function stakingLifecycleTest<
   await checkEvents(unbondEvents, 'staking').toMatchSnapshot('unbond events')
 }
 
+/**
+ * Test the fast unstaking process.
+ *
+ * 1. An accounts bonds some funds
+ * 2. it nominates some validators
+ * 3. it registers itself for fast unstaking
+ */
+async function fastUnstakeTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const kr = await defaultAccountsSr25199
+  const alice = kr.keyring.createFromUri('//Alice')
+  const bob = kr.keyring.createFromUri('//Charlie')
+  const charlie = kr.keyring.createFromUri('//Alice')
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+    },
+  })
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+
+  const bondEvents = await sendTransaction(bondTx.signAsync(alice))
+
+  client.dev.newBlock()
+
+  await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
+
+  /// Nominate some validators
+
+  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+  const nominateTx = client.api.tx.staking.nominate([bob.address, charlie.address])
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
+
+  client.dev.newBlock()
+
+  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+
+  // Check nominations
+
+  let nominationsOpt = await client.api.query.staking.nominators(alice.address)
+  assert(nominationsOpt.isSome)
+  const nominations = nominationsOpt.unwrap()
+
+  const eraNumberOpt = await client.api.query.staking.currentEra()
+  assert(eraNumberOpt.isSome)
+  const eraIndex = eraNumberOpt.unwrap()
+
+  await check(nominations).toMatchObject({
+    submittedIn: eraIndex.toNumber(),
+    suppressed: false,
+    targets: [encodeAddress(bob.address, addressEncoding), encodeAddress(charlie.address, addressEncoding)],
+  })
+
+  /// Fast unstake
+
+  const registerFastUnstakeTx = client.api.tx.fastUnstake.registerFastUnstake()
+  const registerFastUnstakeEvents = await sendTransaction(
+    registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }),
+  )
+
+  client.dev.newBlock()
+
+  // `register_fast_unstake` emits no events as of Jan. 2025
+  await checkEvents(registerFastUnstakeEvents, 'fastUnstake').toMatchSnapshot('register fast unstake events')
+
+  // Check that Alice's tentative nominations have been removed
+  nominationsOpt = await client.api.query.staking.nominators(alice.address)
+  assert(nominationsOpt.isNone)
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -330,6 +406,10 @@ export function stakingE2ETests<
 
     test('staking lifecycle', async () => {
       await stakingLifecycleTest(chain, testConfig.addressEncoding)
+    })
+
+    test('test fast unstake', async () => {
+      await fastUnstakeTest(chain, testConfig.addressEncoding)
     })
   })
 }
