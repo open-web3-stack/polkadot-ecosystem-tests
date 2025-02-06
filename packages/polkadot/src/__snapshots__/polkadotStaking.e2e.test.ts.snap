@@ -78,6 +78,19 @@ exports[`Polkadot Staking > staking lifecycle > nominator bond extra events 1`] 
 ]
 `;
 
+exports[`Polkadot Staking > staking lifecycle > unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > staking lifecycle > validate (blocked) events 1`] = `
 [
   {

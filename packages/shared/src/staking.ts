@@ -101,6 +101,7 @@ async function nominateNoBondedFundsFailureTest<
  * 8. this validator forcibly removes its nomination
  * 9. this validator sets its preferences so that it is blocked
  * 10. the nominator tries to nominate the blocked validator
+ * 11. the chilled validator unbonds all its funds
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -192,7 +193,7 @@ async function stakingLifecycleTest<
   ///
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce }))
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   client.dev.newBlock()
 
@@ -280,7 +281,7 @@ async function stakingLifecycleTest<
   ///
 
   const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice))
+  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice, { nonce: aliceNonce++ }))
 
   client.dev.newBlock()
 
@@ -301,6 +302,17 @@ async function stakingLifecycleTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.staking.BadTarget.is(dispatchError.asModule))
+
+  ///
+  /// Chilled validator unbonds all its funds
+  ///
+
+  const unbondTx = client.api.tx.staking.unbond(5000e10)
+  const unbondEvents = await sendTransaction(unbondTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
+
+  client.dev.newBlock()
+
+  await checkEvents(unbondEvents, 'staking').toMatchSnapshot('unbond events')
 }
 
 export function stakingE2ETests<
