@@ -6,6 +6,7 @@ import { check, checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import { assert, describe, test } from 'vitest'
 
 /// -------
@@ -155,6 +156,12 @@ async function stakingLifecycleTest<
     client.dev.newBlock()
 
     await checkEvents(validateEvents, 'staking').toMatchSnapshot(`validator ${index} validate events`)
+
+    const prefs: PalletStakingValidatorPrefs = await client.api.query.staking.validators(validator.address)
+    const { commission, blocked } = prefs
+
+    assert(commission.eq(minValidatorCommission))
+    assert(blocked.isFalse)
   }
 
   ///
@@ -275,6 +282,12 @@ async function stakingLifecycleTest<
   client.dev.newBlock()
 
   await checkEvents(blockEvents, 'staking').toMatchSnapshot('validate (blocked) events')
+
+  const prefs: PalletStakingValidatorPrefs = await client.api.query.staking.validators(validators[0].address)
+  const { commission, blocked } = prefs
+
+  assert(commission.eq(minValidatorCommission))
+  assert(blocked.isTrue)
 
   ///
   /// Nominator tries to select the blocked validator
