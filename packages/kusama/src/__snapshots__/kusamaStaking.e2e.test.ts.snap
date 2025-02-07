@@ -28,8 +28,8 @@ exports[`Kusama Staking > set staking configs > set staking configs event 1`] = 
         "class": "Mandatory",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 1493,
-          "refTime": 283106000,
+          "proofSize": "(rounded 1500)",
+          "refTime": "(rounded 280000000)",
         },
       },
     ],
