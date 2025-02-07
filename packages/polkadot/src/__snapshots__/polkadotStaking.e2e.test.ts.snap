@@ -1,5 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > force apply validator commission > force apply min commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3500)",
+          "refTime": "(rounded 260000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > set staking configs > set staking configs bad origin events 1`] = `
 [
   {

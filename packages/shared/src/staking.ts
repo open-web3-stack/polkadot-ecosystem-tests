@@ -1,4 +1,5 @@
 import { encodeAddress } from '@polkadot/util-crypto'
+import BN from 'bn.js'
 
 import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
@@ -30,7 +31,7 @@ async function validateNoBondedFundsFailureTest<
   const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
   const validateEvents = await sendTransaction(validateTx.signAsync(defaultAccounts.alice))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(validateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to validate with no bonded funds',
@@ -66,7 +67,7 @@ async function nominateNoBondedFundsFailureTest<
   const nominateTx = client.api.tx.staking.nominate([defaultAccounts.alice.address])
   const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.alice))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(nominateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to nominate with no bonded funds',
@@ -100,7 +101,7 @@ async function nominateNoBondedFundsFailureTest<
  * 5. this account bonds extra funds
  * 6. this account nominates the validators
  * 7. one of the validators chills itself
- * 8. this validator forcibly removes its nomination
+ * 8. this validator forcibly kicks its nomination
  * 9. this validator sets its preferences so that it is blocked
  * 10. the nominator tries to nominate the blocked validator
  * 11. the chilled validator unbonds all its funds
@@ -138,7 +139,7 @@ async function stakingLifecycleTest<
     const bondTx = client.api.tx.staking.bond(5000e10, { Staked: null })
     const bondEvents = await sendTransaction(bondTx.signAsync(validator))
 
-    client.dev.newBlock()
+    await client.dev.newBlock()
 
     await checkEvents(bondEvents, 'staking').toMatchSnapshot(`validator ${index} bond events`)
   }
@@ -154,7 +155,7 @@ async function stakingLifecycleTest<
     const validateTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: false })
     const validateEvents = await sendTransaction(validateTx.signAsync(validator))
 
-    client.dev.newBlock()
+    await client.dev.newBlock()
 
     await checkEvents(validateEvents, 'staking').toMatchSnapshot(`validator ${index} validate events`)
 
@@ -180,7 +181,7 @@ async function stakingLifecycleTest<
   const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
   const bondEvents = await sendTransaction(bondTx.signAsync(alice))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
 
@@ -192,7 +193,7 @@ async function stakingLifecycleTest<
   const bondExtraTx = client.api.tx.staking.bondExtra(10000e10)
   const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(alice, { nonce: aliceNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(bondExtraEvents, 'staking').toMatchSnapshot('nominator bond extra events')
 
@@ -203,7 +204,7 @@ async function stakingLifecycleTest<
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
   const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
 
@@ -226,7 +227,7 @@ async function stakingLifecycleTest<
   const chillTx = client.api.tx.staking.chill()
   const chillEvents = await sendTransaction(chillTx.signAsync(validators[0]))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(chillEvents, 'staking').toMatchSnapshot('chill events')
 
@@ -255,7 +256,7 @@ async function stakingLifecycleTest<
   const kickTx = client.api.tx.staking.kick([alice.address])
   const kickEvents = await sendTransaction(kickTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(kickEvents, 'staking').toMatchSnapshot('kick events')
 
@@ -280,7 +281,7 @@ async function stakingLifecycleTest<
   const blockTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: true })
   const blockEvents = await sendTransaction(blockTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(blockEvents, 'staking').toMatchSnapshot('validate (blocked) events')
 
@@ -297,7 +298,7 @@ async function stakingLifecycleTest<
   const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
   const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice, { nonce: aliceNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(nominateEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to nominate a blocked validator',
@@ -324,7 +325,7 @@ async function stakingLifecycleTest<
   const unbondTx = client.api.tx.staking.unbond(5000e10)
   const unbondEvents = await sendTransaction(unbondTx.signAsync(validators[0], { nonce: validatorZeroNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking').toMatchSnapshot('unbond events')
 }
@@ -357,7 +358,7 @@ async function fastUnstakeTest<
 
   const bondEvents = await sendTransaction(bondTx.signAsync(alice))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
 
@@ -368,7 +369,7 @@ async function fastUnstakeTest<
   const nominateTx = client.api.tx.staking.nominate([bob.address, charlie.address])
   const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
 
@@ -395,7 +396,7 @@ async function fastUnstakeTest<
     registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }),
   )
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   // `register_fast_unstake` emits no events as of Jan. 2025
   await checkEvents(registerFastUnstakeEvents, 'fastUnstake').toMatchSnapshot('register fast unstake events')
@@ -458,7 +459,7 @@ async function setStakingConfigsTest<
 
   const setStakingConfigsEvents = await sendTransaction(setStakingConfigsCall(0).signAsync(alice))
 
-  client.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(setStakingConfigsEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'set staking configs bad origin events',
@@ -543,6 +544,117 @@ async function setStakingConfigsTest<
   assert(postMaxStakedRewards === preMaxStakedRewards + inc)
 }
 
+/**
+ * Test that
+ *
+ * 1. setting a global minimum validator commission, and then
+ * 2. forcefully updating a validator's commission as an aritrary account
+ *
+ * works.
+ */
+async function forceApplyValidatorCommissionTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  /// Create some Sr25519 accounts and fund them
+
+  const alice = (await defaultAccountsSr25199).alice
+  const bob = (await defaultAccountsSr25199).bob
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  const minCommission = await client.api.query.staking.minCommission()
+
+  ///
+  /// Create validator with the current minimum commission
+  ///
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const validateTx = client.api.tx.staking.validate({ commission: minCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const validatorPrefs = await client.api.query.staking.validators(alice.address)
+  await check(validatorPrefs).toMatchObject({
+    commission: minCommission.toNumber(),
+    blocked: false,
+  })
+
+  ///
+  /// Set the new commission
+  ///
+
+  const newCommission = minCommission.add(new BN(10e6))
+
+  const setStakingConfigsTx = client.api.tx.staking.setStakingConfigs(
+    { Noop: null },
+    { Noop: null },
+    { Noop: null },
+    { Noop: null },
+    { Noop: null },
+    { Set: newCommission },
+    { Noop: null },
+  )
+
+  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: setStakingConfigsTx.method.toHex(),
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await client.dev.newBlock()
+
+  ///
+
+  ///
+  /// Forcefully update the validator's commission
+  ///
+
+  const forceApplyMinCommissionTx = client.api.tx.staking.forceApplyMinCommission(alice.address)
+  const forceApplyMinCommissionEvents = await sendTransaction(forceApplyMinCommissionTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // TODO: `force_apply_min_commission` does not emit events at this point.
+  await checkEvents(forceApplyMinCommissionEvents, 'staking', 'system').toMatchSnapshot(
+    'force apply min commission events',
+  )
+
+  const validatorPrefsPost: PalletStakingValidatorPrefs = await client.api.query.staking.validators(alice.address)
+  assert(validatorPrefsPost.commission.eq(newCommission))
+  assert(validatorPrefsPost.blocked.isFalse)
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -566,6 +678,10 @@ export function stakingE2ETests<
 
     test('set staking configs', async () => {
       await setStakingConfigsTest(chain)
+    })
+
+    test('force apply validator commission', async () => {
+      await forceApplyValidatorCommissionTest(chain)
     })
   })
 }

@@ -1,5 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > force apply validator commission > force apply min commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3500)",
+          "refTime": "(rounded 290000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Staking > set staking configs > set staking configs bad origin events 1`] = `
 [
   {
