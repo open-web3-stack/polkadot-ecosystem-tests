@@ -1,5 +1,47 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > set staking configs > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 830000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set staking configs > set staking configs event 1`] = `
+{
+  "event": {
+    "data": [
+      {
+        "class": "Mandatory",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 1493,
+          "refTime": 283106000,
+        },
+      },
+    ],
+    "index": "0x0000",
+  },
+  "phase": {
+    "applyExtrinsic": 0,
+  },
+  "topics": [],
+}
+`;
+
 exports[`Kusama Staking > staking lifecycle > chill events 1`] = `
 [
   {

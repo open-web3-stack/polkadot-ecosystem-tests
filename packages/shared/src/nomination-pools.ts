@@ -886,6 +886,8 @@ async function nominationPoolGlobalConfigTest<
 
     await relayClient.dev.newBlock()
 
+    // Because this extrinsic was executed via the scheduler technique, its events won't be available
+    // through `checkEvents` - hence the need for this event extraction process.
     const events = await relayClient.api.query.system.events()
 
     const nomPoolsEvents = events.filter((record) => {

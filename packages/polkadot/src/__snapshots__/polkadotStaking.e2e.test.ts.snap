@@ -1,5 +1,47 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > set staking configs > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 720000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set staking configs > set staking configs event 1`] = `
+{
+  "event": {
+    "data": [
+      {
+        "class": "Mandatory",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1500)",
+          "refTime": "(rounded 260000000)",
+        },
+      },
+    ],
+    "index": "0x0000",
+  },
+  "phase": {
+    "applyExtrinsic": 0,
+  },
+  "topics": [],
+}
+`;
+
 exports[`Polkadot Staking > staking lifecycle > chill events 1`] = `
 [
   {
@@ -210,3 +252,53 @@ exports[`Polkadot Staking > test fast unstake > nominator bond events 1`] = `
 `;
 
 exports[`Polkadot Staking > test fast unstake > register fast unstake events 1`] = `[]`;
+
+exports[`Polkadot Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 7,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4600)",
+          "refTime": "(rounded 830000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 7,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 8800)",
+          "refTime": "(rounded 970000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

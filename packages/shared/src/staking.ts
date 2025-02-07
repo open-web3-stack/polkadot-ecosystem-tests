@@ -90,6 +90,7 @@ async function nominateNoBondedFundsFailureTest<
 
 /**
  * Staking lifecycle test.
+ *
  * Stages:
  *
  * 1. account keypairs for tentative validators (Ed25519) are generated and funded
@@ -168,7 +169,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = (await defaultAccountsSr25199).keyring.createFromUri('//Alice')
+  const alice = (await defaultAccountsSr25199).alice
 
   await client.dev.setStorage({
     System: {
@@ -342,9 +343,9 @@ async function fastUnstakeTest<
   const [client] = await setupNetworks(chain)
 
   const kr = await defaultAccountsSr25199
-  const alice = kr.keyring.createFromUri('//Alice')
-  const bob = kr.keyring.createFromUri('//Charlie')
-  const charlie = kr.keyring.createFromUri('//Alice')
+  const alice = kr.alice
+  const bob = kr.bob
+  const charlie = kr.charlie
 
   await client.dev.setStorage({
     System: {
@@ -404,6 +405,144 @@ async function fastUnstakeTest<
   assert(nominationsOpt.isNone)
 }
 
+/**
+ * Test the setting of staking configuration parameters
+ *
+ * This requires a `Root` origin.
+ *
+ * 1. First, the extrinsic is attempted with only a `Signed` origin, which should fail.
+ * 2. Then, the extrinsic is run with a `Root` origin, introduced via the `scheduler` pallet into the agenda for the
+ *    upcoming block, which should succeed.
+ *
+ *    2.1 The new global staking config values are checked.
+ */
+async function setStakingConfigsTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = (await defaultAccountsSr25199).alice
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+    },
+  })
+
+  const oneThousand = client.api.createType('u32', 1000)
+  const tenPercent = client.api.createType('Percent', 1)
+
+  const preMinNominatorBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const preMinValidatorBond = (await client.api.query.staking.minValidatorBond()).toNumber()
+  const preMaxNominatorsCount = (await client.api.query.staking.maxNominatorsCount()).unwrapOr(oneThousand).toNumber()
+  const preMaxValidatorsCount = (await client.api.query.staking.maxValidatorsCount()).unwrapOr(oneThousand).toNumber()
+  const preChillThreshold = (await client.api.query.staking.chillThreshold()).unwrapOr(tenPercent).toNumber()
+  const preMinCommission = (await client.api.query.staking.minCommission()).toNumber()
+  const preMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrapOr(tenPercent).toNumber()
+
+  const setStakingConfigsCall = (inc: number) =>
+    client.api.tx.staking.setStakingConfigs(
+      { Set: preMinNominatorBond + inc },
+      { Set: preMinValidatorBond + inc },
+      { Set: preMaxNominatorsCount + inc },
+      { Set: preMaxValidatorsCount + inc },
+      { Set: preChillThreshold + inc },
+      { Set: preMinCommission + inc },
+      { Set: preMaxStakedRewards + inc },
+    )
+
+  ///
+  /// Try the extrinsic with a `Signed` origin
+  ///
+
+  const setStakingConfigsEvents = await sendTransaction(setStakingConfigsCall(0).signAsync(alice))
+
+  client.dev.newBlock()
+
+  await checkEvents(setStakingConfigsEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'set staking configs bad origin events',
+  )
+
+  // Dissect the error
+
+  let events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+
+  ///
+  /// Run the extrinsic with a `Root` origin
+  ///
+
+  const inc = 10
+
+  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: setStakingConfigsCall(inc).method.toHex(),
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await client.dev.newBlock()
+
+  // Check new config values
+
+  events = await client.api.query.system.events()
+
+  const stakingEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+
+  // TODO: `set_staking_configs` does not emit events at this point.
+  assert(stakingEvents.length === 0, 'setting staking configs should emit 1 event')
+
+  const postMinNominatorBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const postMinValidatorBond = (await client.api.query.staking.minValidatorBond()).toNumber()
+  const postMaxNominatorsCount = (await client.api.query.staking.maxNominatorsCount()).unwrap().toNumber()
+  const postMaxValidatorsCount = (await client.api.query.staking.maxValidatorsCount()).unwrap().toNumber()
+  const postChillThreshold = (await client.api.query.staking.chillThreshold()).unwrap().toNumber()
+  const postMinCommission = (await client.api.query.staking.minCommission()).toNumber()
+  const postMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrap().toNumber()
+
+  const [setStakingConfigsSuccess] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicSuccess'
+  })
+
+  await check(setStakingConfigsSuccess).redact({ number: 2 }).toMatchSnapshot('set staking configs event')
+
+  assert(postMinNominatorBond === preMinNominatorBond + inc)
+  assert(postMinValidatorBond === preMinValidatorBond + inc)
+  assert(postMaxNominatorsCount === preMaxNominatorsCount + inc)
+  assert(postMaxValidatorsCount === preMaxValidatorsCount + inc)
+  assert(postChillThreshold === preChillThreshold + inc)
+  assert(postMinCommission === preMinCommission + inc)
+  assert(postMaxStakedRewards === preMaxStakedRewards + inc)
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -423,6 +562,10 @@ export function stakingE2ETests<
 
     test('test fast unstake', async () => {
       await fastUnstakeTest(chain, testConfig.addressEncoding)
+    })
+
+    test('set staking configs', async () => {
+      await setStakingConfigsTest(chain)
     })
   })
 }
