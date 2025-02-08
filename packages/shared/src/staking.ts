@@ -407,7 +407,112 @@ async function fastUnstakeTest<
 }
 
 /**
- * Test the setting of staking configuration parameters
+ * Test the setting of minimum validator commission with `set_min_commission`.
+ *
+ * This is done for `Root/StakingAdmin` origins, which constitute valid `AdminOrigin` in Polkadot/Kusama
+ * as of Jan. 2025.
+ *
+ * 1. First, the extrinsic is attempted with only a `Signed` origin, which should fail.
+ * 2. Then, the extrinsic is run with both `AdminOrigin/Root` origins, via the `scheduler` pallet.
+ *
+ *    2.1 The new minimum validator commission value is checked.
+ */
+async function setMinCommission<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = (await defaultAccountsSr25199).alice
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+    },
+  })
+
+  const preMinCommission = (await client.api.query.staking.minCommission()).toNumber()
+
+  const setMinCommissionCall = (inc: number) => client.api.tx.staking.setMinCommission(preMinCommission + inc)
+
+  ///
+  /// Try the extrinsic with a `Signed` origin
+  ///
+
+  const setStakingConfigsEvents = await sendTransaction(setMinCommissionCall(0).signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(setStakingConfigsEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'set staking configs bad origin events',
+  )
+
+  // Dissect the error
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+
+  ///
+  /// Run the extrinsic with a `Root/StakingAdmin` origins.
+  ///
+
+  type Origin = { system: string } | { Origins: string }
+  type OriginsAndIncrements = [Origin, number]
+
+  const originsAndIncrements: OriginsAndIncrements[] = [
+    [{ system: 'Root' }, 100],
+    [{ Origins: 'StakingAdmin' }, 200],
+  ]
+
+  for (const [origin, inc] of originsAndIncrements) {
+    const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+    await client.dev.setStorage({
+      Scheduler: {
+        agenda: [
+          [
+            [number + 1],
+            [
+              {
+                call: {
+                  Inline: setMinCommissionCall(inc).method.toHex(),
+                },
+                origin: origin,
+              },
+            ],
+          ],
+        ],
+      },
+    })
+
+    await client.dev.newBlock()
+
+    const events = await client.api.query.system.events()
+
+    const stakingEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'staking'
+    })
+
+    // TODO: `set_minimum_commission` does not emit events at this point.
+    assert(stakingEvents.length === 0, 'setting global nomination pool configs should emit 1 event')
+
+    const postMinCommission = (await client.api.query.staking.minCommission()).toNumber()
+
+    assert(postMinCommission === preMinCommission + inc)
+  }
+}
+
+/**
+ * Test the setting of staking configuration parameters with `set_staking_configs`.
  *
  * This requires a `Root` origin.
  *
@@ -545,6 +650,8 @@ async function setStakingConfigsTest<
 }
 
 /**
+ * Test for `setStakingConfigs + force_apply_min_commission`.
+ *
  * Test that
  *
  * 1. setting a global minimum validator commission, and then
@@ -674,6 +781,10 @@ export function stakingE2ETests<
 
     test('test fast unstake', async () => {
       await fastUnstakeTest(chain, testConfig.addressEncoding)
+    })
+
+    test('set minimum validator commission', async () => {
+      await setMinCommission(chain)
     })
 
     test('set staking configs', async () => {

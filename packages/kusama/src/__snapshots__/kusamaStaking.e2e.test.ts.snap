@@ -19,6 +19,26 @@ exports[`Kusama Staking > force apply validator commission > force apply min com
 ]
 `;
 
+exports[`Kusama Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Staking > set staking configs > set staking configs bad origin events 1`] = `
 [
   {
