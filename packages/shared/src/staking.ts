@@ -731,6 +731,120 @@ async function forceApplyValidatorCommissionTest<
   assert(validatorPrefsPost.blocked.isFalse)
 }
 
+/**
+ * Test system extrinsics regulating validator count:
+ * 1. `set_validator_count`
+ * 2. `increase_validator_count`
+ * 3. `scale_validator_count`
+ */
+async function modifyValidatorCountTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = (await defaultAccountsSr25199).alice
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+    },
+  })
+
+  ///
+  /// `setValidatorCount`
+  ///
+
+  const setValidatorCountCall = (count: number) => client.api.tx.staking.setValidatorCount(count)
+
+  /// Run the call with a signed origin - it MUST fail.
+
+  const setValidatorCountEvents = await sendTransaction(setValidatorCountCall(0).signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(setValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'set validator count bad origin events',
+  )
+  let events = await client.api.query.system.events()
+
+  /// Run the call with a `Root` origin
+
+  schedulerSetStorage(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  const stakingEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+  // None of these validator count setting extrinsics emit events.
+  assert(stakingEvents.length === 0)
+
+  let validatorCount = await client.api.query.staking.validatorCount()
+  assert(validatorCount.eq(new BN(100)))
+
+  ///
+  /// `increaseValidatorCount`
+  ///
+
+  const increaseValidatorCountCall = (inc: number) => client.api.tx.staking.increaseValidatorCount(inc)
+
+  /// Run the call with a signed origin - it MUST fail.
+
+  const increaseValidatorCountEvents = await sendTransaction(increaseValidatorCountCall(0).signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(increaseValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'increase validator count bad origin events',
+  )
+
+  /// Run the call with a `Root` origin
+
+  schedulerSetStorage(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  assert(stakingEvents.length === 0)
+
+  validatorCount = await client.api.query.staking.validatorCount()
+  assert(validatorCount.eq(new BN(200)))
+
+  ///
+  /// `scaleValidatorCount`
+  ///
+
+  const scaleValidatorCountCall = (factor: number) => client.api.tx.staking.scaleValidatorCount(factor)
+
+  /// Run the call with a signed origin - it MUST fail.
+
+  const scaleValidatorCountEvents = await sendTransaction(scaleValidatorCountCall(0).signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(scaleValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'scale validator count bad origin events',
+  )
+
+  /// Run the call with a `Root` origin
+
+  schedulerSetStorage(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  assert(stakingEvents.length === 0)
+
+  validatorCount = await client.api.query.staking.validatorCount()
+  assert(validatorCount.eq(new BN(220)))
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -762,6 +876,10 @@ export function stakingE2ETests<
 
     test('force apply validator commission', async () => {
       await forceApplyValidatorCommissionTest(chain)
+    })
+
+    test('modify validator count', async () => {
+      await modifyValidatorCountTest(chain)
     })
   })
 }
