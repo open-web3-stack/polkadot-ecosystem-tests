@@ -62,6 +62,11 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 This repository contains E2E tests for the Polkadot/Kusama networks.
 
 These include:
+- E2E test suite to the people chains in both networks. This suite contains scenarios such as
+  - Adding, modifying, and removing identities
+  - Requesting judgement requests on registrars, and providing it
+  - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
+  - Adding, modifying, and removing subidentities for an account
 - E2E suite for nomination pools:
   - Creating a pool, joining it, bonding extra
   - Setting a pool's state, metadata, roles and commission data
@@ -70,11 +75,12 @@ These include:
   - Creating a referendum for a treasury proposal, voting on it (with conviction/split/abstain)
   - Cancelling and killing referenda with XCM root-originated calls
   - Noting and unnoting preimages
-- E2E test suite to the people chains in both networks. This suite contains scenarios such as
-  - Adding, modifying, and removing identities
-  - Requesting judgement requests on registrars, and providing it
-  - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
-  - Adding, modifying, and removing subidentities for an account
+- E2E suite for staking infrastructure:
+  - bonding funds, declaring intent to nominate/validate, unbonding, chilling
+  - changing global staking configs - minimum nom./val. bonds, val. commissions, nom./val. counts, etc.
+  - more complex scenarios:
+    - forcefully updating a validator's commission after an increase to the global parameters' commission
+    - chilling other participants in the system, only when the conditions for doing so are met
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
