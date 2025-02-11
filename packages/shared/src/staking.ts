@@ -6,8 +6,10 @@ import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { ISubmittableResult } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
 import { assert, describe, test } from 'vitest'
 
@@ -845,6 +847,177 @@ async function modifyValidatorCountTest<
   assert(validatorCount.eq(new BN(220)))
 }
 
+/**
+ * Test the `chill_other` mechanism, used to remove nominators/validators from the system when:
+ *
+ * 1. a minimum bond amount has been set (for nominators/validators resp.)
+ * 2. A limit of nominators/validators has been set
+ * 3. A chilling threshold has been set - a percentage of the nominator/validator limits beyond which
+ *    users can begin calling `chill_other` on others.
+ *
+ * If any of these are missing, we do not have enough information to allow the
+ * `chill_other` to succeed from one user to another.
+ */
+async function chillOtherTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  /// Rquired information for this test, to set appropriate thresholds later
+
+  const minNominatorBond = await client.api.query.staking.minNominatorBond()
+  const minValidatorBond = await client.api.query.staking.minValidatorBond()
+
+  const minValidatorCommission = await client.api.query.staking.minCommission()
+
+  const currentNominatorCount = await client.api.query.staking.counterForNominators()
+  const currentValidatorCount = await client.api.query.staking.counterForValidators()
+
+  /// Disregard staking configs pre-test-execution, excluding minumum validator/nominator bonds, which are not
+  /// optional, and whose pre-test values can be used in the test.
+
+  const setStakingConfigsCall = client.api.tx.staking.setStakingConfigs(
+    { Noop: null },
+    { Noop: null },
+    { Remove: null },
+    { Remove: null },
+    { Remove: null },
+    { Noop: null },
+    { Noop: null },
+  )
+
+  schedulerSetStorage(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
+
+  const alice = (await defaultAccountsSr25199).alice
+  const bob = (await defaultAccountsSr25199).bob
+  const charlie = (await defaultAccountsSr25199).charlie
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  /// Alice and Bob bond funds according to their desired roles.
+
+  const nomBondTx = client.api.tx.staking.bond(minNominatorBond, { Staked: null })
+  const valBondTx = client.api.tx.staking.bond(minValidatorBond, { Staked: null })
+  await sendTransaction(valBondTx.signAsync(alice))
+  await sendTransaction(nomBondTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  /// Alice becomes a validator
+
+  const validateTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  /// Bob becomes a nominator, and nominates Alice
+
+  const nominateTx = client.api.tx.staking.nominate([alice.address])
+  await sendTransaction(nominateTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  /// Generate all possible combinations of `set_staking_configs` calls, to test the `chill_other` mechanism.
+  /// 1. No limits set at all (1 such call)
+  /// 2. Only some of the limits set (6 such calls)
+  /// 3. All limits set (1 such call)
+
+  const noop = { Noop: null }
+  const remove = { Remove: null }
+  const setNominatorBond = { Set: minNominatorBond.toNumber() + 1 }
+  const setValidatorBond = { Set: minValidatorBond.toNumber() + 1 }
+
+  // Nominator/validator limits can be set to the current count; since the chill threshold will be set to 75%,
+  // this will allow the use of `chill_other`.
+  const setNominatorCount = { Set: currentNominatorCount }
+  const setValidatorCount = { Set: currentValidatorCount }
+
+  // Chill threshold of 75% - which, when setting nominator/validator count limits to the current count, will be
+  // enough to allow the use of `chill_other`.
+  const chillThresholdSet = { Set: 75 }
+
+  const setStakingConfigsCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+
+  for (const bondLimits of [
+    [remove, remove],
+    [setNominatorBond, setValidatorBond],
+  ]) {
+    for (const countLimits of [
+      [remove, remove],
+      [setNominatorCount, setValidatorCount],
+    ]) {
+      for (const chillThreshold of [remove, chillThresholdSet]) {
+        const [a, b, c, d, e, f, g] = [...bondLimits, ...countLimits, chillThreshold, ...Array(2).fill(noop)]
+
+        setStakingConfigsCalls.push(client.api.tx.staking.setStakingConfigs(a, b, c, d, e, f, g))
+      }
+    }
+  }
+
+  assert(setStakingConfigsCalls.length === 8)
+
+  // Extract the last call, which should be the only one with which `chill_other` can succeed.
+  const successfulCall = setStakingConfigsCalls.pop()
+
+  for (const call of setStakingConfigsCalls) {
+    schedulerSetStorage(client, call.method.toHex(), { system: 'Root' })
+
+    await client.dev.newBlock()
+
+    const chillOtherTx = client.api.tx.staking.chillOther(bob.address)
+    const chillOtherEvents = await sendTransaction(chillOtherTx.signAsync(charlie))
+
+    await client.dev.newBlock()
+
+    await checkEvents(chillOtherEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+      'chill other bad origin events',
+    )
+
+    // Inspect the error - it needs to be `CannotChillOther`
+    const events = await client.api.query.system.events()
+
+    const [ev] = events.filter((record) => {
+      const { event } = record
+      return event.section === 'system' && event.method === 'ExtrinsicFailed'
+    })
+
+    assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+    const dispatchError = ev.event.data.dispatchError
+    assert(dispatchError.isModule)
+    assert(client.api.errors.staking.CannotChillOther.is(dispatchError.asModule))
+  }
+
+  /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
+  /// and observe that Bob is forcibly chilled.
+
+  schedulerSetStorage(client, successfulCall!.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  const chillOtherTx = client.api.tx.staking.chillOther(bob.address)
+  const chillOtherEvents = await sendTransaction(chillOtherTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  await checkEvents(chillOtherEvents, 'staking').toMatchSnapshot('chill other events')
+
+  const nominatorPrefs = await client.api.query.staking.nominators(bob.address)
+  assert(nominatorPrefs.isNone)
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -880,6 +1053,10 @@ export function stakingE2ETests<
 
     test('modify validator count', async () => {
       await modifyValidatorCountTest(chain)
+    })
+
+    test('chill other', async () => {
+      await chillOtherTest(chain)
     })
   })
 }
