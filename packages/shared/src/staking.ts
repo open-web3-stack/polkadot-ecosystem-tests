@@ -855,8 +855,8 @@ async function modifyValidatorCountTest<
  * 3. A chilling threshold has been set - a percentage of the nominator/validator limits beyond which
  *    users can begin calling `chill_other` on others.
  *
- * If any of these are missing, we do not have enough information to allow the
- * `chill_other` to succeed from one user to another.
+ * This test checks that if any of these are missing, `chill_other` cannot succeed, and it only succeeds
+ * when all are met.
  */
 async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
