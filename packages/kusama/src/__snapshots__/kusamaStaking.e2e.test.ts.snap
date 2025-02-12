@@ -1,0 +1,590 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Staking > chill other > chill other bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 2`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 3`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 4`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 5`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 6`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other bad origin events 7`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x15000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > chill other > chill other events 1`] = `
+[
+  {
+    "data": {
+      "stash": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > force apply validator commission > force apply min commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 3500)",
+          "refTime": "(rounded 290000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > modify validator count > increase validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > modify validator count > scale validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set staking configs > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 830000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set staking configs > set staking configs event 1`] = `
+{
+  "event": {
+    "data": [
+      {
+        "class": "Mandatory",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1500)",
+          "refTime": "(rounded 280000000)",
+        },
+      },
+    ],
+    "index": "0x0000",
+  },
+  "phase": {
+    "applyExtrinsic": 0,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Kusama Staking > staking lifecycle > chill events 1`] = `
+[
+  {
+    "data": {
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x14000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 1200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > kick events 1`] = `
+[
+  {
+    "data": {
+      "nominator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "Kicked",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > nominator bond extra events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": true,
+        "commission": "10.00%",
+      },
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 0 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "10.00%",
+      },
+      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 1 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "E7xuB8G3dKNK4z535AW5cuApRGSjEhdkcwySBUTKxruasqh",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 1 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "10.00%",
+      },
+      "stash": "E7xuB8G3dKNK4z535AW5cuApRGSjEhdkcwySBUTKxruasqh",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 2 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "Eunjnq21mXWD8bpiCYchh5aXgDStuKdcoXFopXpfu5KcLXs",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "10.00%",
+      },
+      "stash": "Eunjnq21mXWD8bpiCYchh5aXgDStuKdcoXFopXpfu5KcLXs",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > test fast unstake > nominate events 1`] = `[]`;
+
+exports[`Kusama Staking > test fast unstake > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Kusama Staking > test fast unstake > register fast unstake events 1`] = `[]`;
+
+exports[`Kusama Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4600)",
+          "refTime": "(rounded 960000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 6,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 8800)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
