@@ -539,6 +539,26 @@ exports[`Polkadot Staking > test fast unstake > nominator bond events 1`] = `
 
 exports[`Polkadot Staking > test fast unstake > register fast unstake events 1`] = `[]`;
 
+exports[`Polkadot Staking > test force unstake > force unstake bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
 [
   {

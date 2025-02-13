@@ -3,7 +3,7 @@ import BN from 'bn.js'
 
 import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -357,6 +357,89 @@ async function stakingLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking').toMatchSnapshot('unbond events')
+}
+
+/**
+ * Test the use of `force_unstake` to forcibly remove a nominator from the system.
+ *
+ * 1. Two accounts bond funds
+ * 2. One account declares its intent to validate, and the other nominates the first
+ * 3. The nominator is forcibly unstaked via a `Root` call to `force_unstake`
+ *
+ * A nominator must be used in these tests and not a validator, since registering validators requires
+ * waiting for an entire era to pass.
+ */
+async function forceUnstakeTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = (await defaultAccountsSr25199).alice
+  const bob = (await defaultAccountsSr25199).bob
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  ///
+  /// Bond funds for both Alice and Bob
+  ///
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  /// Express intent to validate as Alice, and nominate as Bob
+
+  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const nominateTx = client.api.tx.staking.nominate([alice.address])
+  await sendTransaction(nominateTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  ///
+  /// Force unstake Bob, first with a signed origin (which *must* fail), and then a `Root` origin.
+  ///
+
+  const slashingSpans = await client.api.query.staking.slashingSpans(bob.address)
+  assert(slashingSpans.isNone)
+
+  // Bob can have no slashing spans recorded as a fresh nominator, so `force_unstake`'s second argument is 0.
+  const forceUnstakeTx = client.api.tx.staking.forceUnstake(bob.address, 0)
+
+  /// Try the extrinsic with a `Signed` origin
+
+  await sendTransaction(forceUnstakeTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'force unstake bad origin events',
+  )
+
+  ///
+
+  let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
+  assert(nominatorPrefs.isSome)
+
+  schedulerSetStorage(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  nominatorPrefs = await client.api.query.staking.nominators(bob.address)
+  assert(nominatorPrefs.isNone)
 }
 
 /**
@@ -1033,6 +1116,10 @@ export function stakingE2ETests<
 
     test('staking lifecycle', async () => {
       await stakingLifecycleTest(chain, testConfig.addressEncoding)
+    })
+
+    test('test force unstake', async () => {
+      await forceUnstakeTest(chain)
     })
 
     test('test fast unstake', async () => {
