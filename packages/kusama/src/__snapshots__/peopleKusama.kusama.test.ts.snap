@@ -74,7 +74,7 @@ exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > tx events
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 160000000)",
+            "refTime": "(rounded 165000000)",
           },
         },
       },
@@ -310,7 +310,7 @@ exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > to chain 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 310000000)",
+        "refTime": "(rounded 320000000)",
       },
     },
     "method": "Processed",
@@ -327,7 +327,7 @@ exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > tx events
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 159000000)",
+            "refTime": "(rounded 167000000)",
           },
         },
       },

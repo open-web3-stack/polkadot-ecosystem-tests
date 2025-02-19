@@ -10,7 +10,7 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 2600)",
-          "refTime": "(rounded 240000000)",
+          "refTime": "(rounded 250000000)",
         },
       },
     },
