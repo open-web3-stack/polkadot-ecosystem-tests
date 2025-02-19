@@ -8,7 +8,7 @@ import { check, checkEvents, checkSystemEvents } from './helpers/index.js'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { PalletStakingActiveEraInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
 import { assert, describe, test } from 'vitest'
@@ -440,6 +440,110 @@ async function forceUnstakeTest<
 
   nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isNone)
+}
+
+/**
+ * Test deferment of a slash.
+ */
+async function cancelDeferredSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  //process.env.KUSAMA_BLOCK_NUMBER = blockNumber.toString();
+  const [client] = await setupNetworks(chain)
+
+  let eraNumberOpt = await client.api.query.staking.currentEra()
+  assert(eraNumberOpt.isSome)
+  let eraIndex = eraNumberOpt.unwrap().toNumber()
+
+  console.log('pre era index', eraIndex)
+
+  const alice = (await defaultAccountsSr25199).alice
+  const bob = (await defaultAccountsSr25199).bob
+  const charlie = (await defaultAccountsSr25199).charlie
+  const dave = (await defaultAccountsSr25199).dave
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  /// Nominate as Bob, validate as Alice
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
+  const validateEvents = await sendTransaction(validateTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const nominateTx = client.api.tx.staking.nominate([alice.address])
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  eraNumberOpt = await client.api.query.staking.currentEra()
+  assert(eraNumberOpt.isSome)
+  eraIndex = eraNumberOpt.unwrap().toNumber()
+
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          // The next block will begin a new era
+          [eraIndex],
+          [
+            {
+              validator: '114SUbKCXjmb9czpWTtS3JANSmNRwVa4mmsMrWYpRG1kDH5',
+              own: 2e10,
+              others: [[bob.address, 9e10]],
+              reporters: [charlie.address],
+              payout: 3e10,
+            },
+            {
+              validator: alice.address,
+              own: 4e10,
+              others: [[bob.address, 5e10]],
+              reporters: [dave.address],
+              payout: 7e10,
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  let allSlashes = await client.api.query.staking.unappliedSlashes.entries()
+  console.log('PRE')
+  for (const [key, value] of allSlashes) {
+    console.log(key.toHuman())
+    console.log(value.toHuman())
+  }
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(eraIndex, [0])
+
+  //schedulerSetStorage(client, cancelDeferredSlashTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  console.log('post era index', eraIndex)
+
+  allSlashes = await client.api.query.staking.unappliedSlashes.entries()
+  console.log('POST')
+  for (const [key, value] of allSlashes) {
+    console.log(key.toHuman())
+    console.log(value.toHuman())
+  }
+
+  await client.pause()
 }
 
 /**
@@ -1118,8 +1222,12 @@ export function stakingE2ETests<
       await stakingLifecycleTest(chain, testConfig.addressEncoding)
     })
 
-    test('test force unstake', async () => {
+    test('test force unstaking of nominator', async () => {
       await forceUnstakeTest(chain)
+    })
+
+    test('test cancellation of a deferred slash', async () => {
+      await cancelDeferredSlashTest(chain)
     })
 
     test('test fast unstake', async () => {
