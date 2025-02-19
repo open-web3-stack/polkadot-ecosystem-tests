@@ -12,6 +12,7 @@ const custom = {
     ldot: { Token: 'LDOT' },
     dai: { Erc20: '0x54a37a01cd75b616d63e0ab665bffdb0143c52ae' },
     usdt: { ForeignAsset: 12 },
+    weth: { ForeignAsset: 13 }, // TODO: Register WETH
     ausd: { Token: 'AUSD' },
     aca: { Token: 'ACA' },
     lcdot: { LiquidCrowdloan: 13 },

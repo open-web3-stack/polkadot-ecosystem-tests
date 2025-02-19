@@ -88,6 +88,7 @@ export const xtokens = {
       ),
 }
 
+type TransferType = 'Teleport' | 'LocalReserve' | 'DestinationReserve' | 'RemoteReserve'
 export const xcmPallet = {
   relaychainV4: {
     V4: {
@@ -103,6 +104,35 @@ export const xcmPallet = {
       },
     },
   }),
+  transferAssetsUsingType:
+    (dest: any, tokens: any[], assetTransferType: TransferType, remoteFeesId: any, feesTransferType: TransferType) =>
+    ({ api }: { api: ApiPromise }, acc: any) =>
+      (api.tx.xcmPallet || api.tx.polkadotXcm).transferAssetsUsingTypeAndThen(
+        dest,
+        { V3: tokens },
+        assetTransferType,
+        { V3: remoteFeesId },
+        feesTransferType,
+        {
+          V3: [
+            {
+              DepositAsset: {
+                assets: {
+                  wild: {
+                    allCounted: 2,
+                  },
+                },
+                beneficiary: {
+                  parents: 0,
+                  interior: { x1: { AccountId32: { id: acc } } },
+                },
+              },
+            },
+            { setTopic: '0x0000000000000000000000000000000000000000000000000000000000000000' },
+          ],
+        },
+        'Unlimited',
+      ),
   limitedTeleportAssets:
     (token: any, amount: any, dest: any) =>
     ({ api }: { api: ApiPromise }, acc: any) =>
