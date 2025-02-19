@@ -21,7 +21,7 @@ describe('acala & snowbridge', async () => {
       tx: tx.xcmPallet.transferAssetsUsingType(
         tx.xcmPallet.parachainV3(0, acalaClient.config.paraId!),
         [
-          { id: ahDOT, fun: { Fungible: 1e18 } },
+          { id: ahDOT, fun: { Fungible: 1e10 } },
           { id: ahWETH, fun: { Fungible: 1e18 } },
         ],
         'LocalReserve',
@@ -39,7 +39,7 @@ describe('acala & snowbridge', async () => {
       tx: tx.xcmPallet.transferAssetsUsingType(
         tx.xcmPallet.parachainV3(0, acalaClient.config.paraId!),
         [
-          { id: acalaDOT, fun: { Fungible: 1e18 } },
+          { id: acalaDOT, fun: { Fungible: 1e10 } },
           { id: acalaWETH, fun: { Fungible: 1e18 } },
         ],
         'DestinationReserve',
