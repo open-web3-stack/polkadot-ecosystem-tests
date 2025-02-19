@@ -70,7 +70,7 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 294000000)",
+            "refTime": "(rounded 301000000)",
           },
         },
       },
@@ -304,7 +304,7 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > to chain ump events 1
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 310000000)",
+        "refTime": "(rounded 320000000)",
       },
     },
     "method": "Processed",

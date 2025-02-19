@@ -315,7 +315,7 @@ exports[`Kusama Staking > set staking configs > set staking configs event 1`] = 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 280000000)",
+          "refTime": "(rounded 290000000)",
         },
       },
     ],
@@ -554,7 +554,7 @@ exports[`Kusama Staking > trying to become a validator with no bonded funds fail
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 960000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -579,7 +579,7 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 8800)",
-          "refTime": "(rounded 1100000000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
