@@ -57,19 +57,19 @@ function nominationPoolCmp(
  * @returns A promise resolving to the events emitted by the transaction, and the .
  */
 async function createNominationPool(
-  relayClient: { api: ApiPromise },
+  client: { api: ApiPromise },
   signer: KeyringPair,
   root: string,
   nominator: string,
   bouncer: string,
 ): Promise<{ events: Promise<Codec[]> }> {
-  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
 
   const depositorBond = Math.max(minJoinBond, minCreateBond, existentialDep)
 
-  const createNomPoolTx = relayClient.api.tx.nominationPools.create(depositorBond, root, nominator, bouncer)
+  const createNomPoolTx = client.api.tx.nominationPools.create(depositorBond, root, nominator, bouncer)
   const createNomPoolEvents = sendTransaction(createNomPoolTx.signAsync(signer))
 
   return createNomPoolEvents
@@ -140,16 +140,16 @@ async function nominationPoolCreationFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
-  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
 
   const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
 
   // Attempt to create a pool with insufficient funds
-  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
+  const createNomPoolTx = client.api.tx.nominationPools.create(
     depositorMinBond - 1,
     defaultAccounts.alice.address,
     defaultAccounts.bob.address,
@@ -157,26 +157,26 @@ async function nominationPoolCreationFailureTest<
   )
   await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'create nomination pool with insufficient funds events',
   )
 
   /// Process events
 
-  const events = await relayClient.api.query.system.events()
+  const events = await client.api.query.system.events()
 
   const [ev] = events.filter((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+  assert(client.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
 }
 
 /**
@@ -209,12 +209,12 @@ async function nominationPoolCreationFailureTest<
  * @param addressEncoding
  */
 async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
   const ferdie = defaultAccounts.keyring.addFromUri('//Ferdie')
 
   // Fund test accounts not already provisioned in the test chain spec.
-  await relayClient.dev.setStorage({
+  await client.dev.setStorage({
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
@@ -226,12 +226,12 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     },
   })
 
-  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
   // Obtain the minimum deposit required to create a pool, as calculated by `pallet_nomination_poola::create`.
-  const minJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-  const minCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = relayClient.api.consts.balances.existentialDeposit.toNumber()
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
 
   const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
 
@@ -239,7 +239,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Create pool with sufficient funds
    */
 
-  const createNomPoolTx = relayClient.api.tx.nominationPools.create(
+  const createNomPoolTx = client.api.tx.nominationPools.create(
     depositorMinBond,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address,
@@ -249,12 +249,12 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   /// Check that prior to the block taking effect, the pool does not yet exist with the
   /// most recently available pool ID.
-  let poolData: Option<PalletNominationPoolsBondedPoolInner> = await relayClient.api.query.nominationPools.bondedPools(
+  let poolData: Option<PalletNominationPoolsBondedPoolInner> = await client.api.query.nominationPools.bondedPools(
     preLastPoolId + 1,
   )
   assert(poolData.isNone, 'Pool should not exist before block is applied')
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
@@ -262,10 +262,10 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   /// Check status of created pool
 
-  const nomPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const nomPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   assert(preLastPoolId + 1 === nomPoolId, 'Pool ID should be most recently available number + 1')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should exist after block is applied')
 
   const nominationPoolPostCreation = poolData.unwrap()
@@ -290,7 +290,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Update pool roles
    */
 
-  const updateRolesTx = relayClient.api.tx.nominationPools.updateRoles(
+  const updateRolesTx = client.api.tx.nominationPools.updateRoles(
     nomPoolId,
     { Set: defaultAccounts.bob.address },
     { Set: defaultAccounts.charlie.address },
@@ -298,11 +298,11 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   )
   const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(updateRolesEvents, 'staking', 'nominationPools').toMatchSnapshot('update roles events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after roles are updated')
 
   const nominationPoolWithRoles = poolData.unwrap()
@@ -322,24 +322,24 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   // This will be `Perbill` runtime-side, so 0.1%
   const commission = 10e5
 
-  const setCommissionTx = relayClient.api.tx.nominationPools.setCommission(nomPoolId, [
+  const setCommissionTx = client.api.tx.nominationPools.setCommission(nomPoolId, [
     commission,
     defaultAccounts.eve.address,
   ])
 
-  const setCommissionMaxTx = relayClient.api.tx.nominationPools.setCommissionMax(nomPoolId, commission * 10)
+  const setCommissionMaxTx = client.api.tx.nominationPools.setCommissionMax(nomPoolId, commission * 10)
 
-  const setCommissionChangeRateTx = relayClient.api.tx.nominationPools.setCommissionChangeRate(nomPoolId, {
+  const setCommissionChangeRateTx = client.api.tx.nominationPools.setCommissionChangeRate(nomPoolId, {
     maxIncrease: 10e8,
     minDelay: 10,
   })
 
-  const setCommissionClaimPermissionTx = relayClient.api.tx.nominationPools.setCommissionClaimPermission(
+  const setCommissionClaimPermissionTx = client.api.tx.nominationPools.setCommissionClaimPermission(
     nomPoolId,
     'Permissionless',
   )
 
-  const commissionTx = relayClient.api.tx.utility.batchAll([
+  const commissionTx = client.api.tx.utility.batchAll([
     setCommissionTx,
     setCommissionMaxTx,
     setCommissionChangeRateTx,
@@ -347,17 +347,17 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   ])
   const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccounts.bob))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(commissionEvents, 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('commission alteration events')
 
   /// Check that all commission data were set correctly
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after commission is changed')
 
-  const blockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const nominationPoolWithCommission = poolData.unwrap()
 
@@ -380,12 +380,12 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Nominate a validator set
    */
 
-  const validators = await getValidators(relayClient.api, 100, 16)
+  const validators = await getValidators(client.api, 100, 16)
 
-  const nominateTx = relayClient.api.tx.nominationPools.nominate(nomPoolId, validators)
+  const nominateTx = client.api.tx.nominationPools.nominate(nomPoolId, validators)
   const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.charlie))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   // TODO: `nominate` does not emit any events from `staking` or `nominationPools` as of
   // Jan. 2025. [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) will fix this.
@@ -393,7 +393,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('nomination pool validator selection events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after validators are nominated')
 
   const nominationPoolAfterNomination = poolData.unwrap()
@@ -404,16 +404,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Have another account join the pool
    */
 
-  const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, nomPoolId)
+  const joinPoolTx = client.api.tx.nominationPools.join(minJoinBond, nomPoolId)
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccounts.eve))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('join nomination pool events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after new member joins')
 
   const nominationPoolWithMembers = poolData.unwrap()
@@ -429,16 +429,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Bond additional funds as Eve
    */
 
-  const bondExtraTx = relayClient.api.tx.nominationPools.bondExtra({ FreeBalance: minJoinBond - 1 })
+  const bondExtraTx = client.api.tx.nominationPools.bondExtra({ FreeBalance: minJoinBond - 1 })
   const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(defaultAccounts.eve))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(bondExtraEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('bond extra funds events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after extra funds are bonded')
 
   const nominationPoolWithExtraBond = poolData.unwrap()
@@ -455,16 +455,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Commission is still 0 at this point, so the extrinsic will fail; the goal is to test the process.
    */
 
-  const claimCommissionTx = relayClient.api.tx.nominationPools.claimCommission(nomPoolId)
+  const claimCommissionTx = client.api.tx.nominationPools.claimCommission(nomPoolId)
   await sendTransaction(claimCommissionTx.signAsync(ferdie))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'claim commission events',
   )
 
-  let events = await relayClient.api.query.system.events()
+  let events = await client.api.query.system.events()
 
   assert(
     events.filter((record) => {
@@ -479,28 +479,28 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(relayClient.api.events.system.ExtrinsicFailed.is(systemEvent.event))
+  assert(client.api.events.system.ExtrinsicFailed.is(systemEvent.event))
   let dispatchError = systemEvent.event.data.dispatchError
 
   assert(dispatchError.isModule)
   // Even though the pool has no commission to claim, the extrinsic should fail with this error,
   // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
-  assert(relayClient.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
+  assert(client.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
 
   /**
    * Unbond previously bonded funds
    */
 
-  const unbondTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond - 1)
+  const unbondTx = client.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond - 1)
   const unbondEvents = await sendTransaction(unbondTx.signAsync(defaultAccounts.eve))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('unbond events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after funds are unbonded')
   const nominationPoolPostUnbond = poolData.unwrap()
 
@@ -511,10 +511,10 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * As the pool's nominator, call `chill`
    */
 
-  const chillTx = relayClient.api.tx.nominationPools.chill(nomPoolId)
+  const chillTx = client.api.tx.nominationPools.chill(nomPoolId)
   const chillEvents = await sendTransaction(chillTx.signAsync(defaultAccounts.charlie))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   // TODO: Like `nominate`, `chill` also does not emit any nomination pool events.
   // [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) also fixes this.
@@ -522,7 +522,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('chill events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after chill')
 
   const nominationPoolPostChill = poolData.unwrap()
@@ -533,16 +533,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Set pool state to blocked
    */
 
-  const setStateTx = relayClient.api.tx.nominationPools.setState(nomPoolId, 'Blocked')
+  const setStateTx = client.api.tx.nominationPools.setState(nomPoolId, 'Blocked')
   const setStateEvents = await sendTransaction(setStateTx.signAsync(defaultAccounts.bob))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(setStateEvents, 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('set state events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after state is changed')
 
   const nominationPoolBlocked = poolData.unwrap()
@@ -554,16 +554,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Kick a member from the pool as the bouncer
    */
 
-  const kickTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond)
+  const kickTx = client.api.tx.nominationPools.unbond(defaultAccounts.eve.address, minJoinBond)
   const kickEvents = await sendTransaction(kickTx.signAsync(defaultAccounts.dave))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(kickEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('unbond (kick) events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after bouncer-unbond')
   const nominationPoolPostKick = poolData.unwrap()
 
@@ -577,16 +577,16 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Set pool state to `Destroying`
    */
 
-  const setDestroyingTx = relayClient.api.tx.nominationPools.setState(nomPoolId, 'Destroying')
+  const setDestroyingTx = client.api.tx.nominationPools.setState(nomPoolId, 'Destroying')
   const setDestroyingEvents = await sendTransaction(setDestroyingTx.signAsync(defaultAccounts.bob))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(setDestroyingEvents, 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('set state to destroying events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after state is changed')
 
   const nominationPoolDestroying = poolData.unwrap()
@@ -600,18 +600,18 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * process, but has not fully unbonded and withdrawn their funds.
    */
 
-  const unbondDepositorTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.alice.address, depositorMinBond)
+  const unbondDepositorTx = client.api.tx.nominationPools.unbond(defaultAccounts.alice.address, depositorMinBond)
   await sendTransaction(unbondDepositorTx.signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'unbond (depositor) events',
   )
 
   /// Process events to look for the expected extrinsic error.
 
-  events = await relayClient.api.query.system.events()
+  events = await client.api.query.system.events()
 
   // Collect the `system` event with the `ExtrinsicFailed` information.
   const [systemEv] = events.filter((record) => {
@@ -619,15 +619,15 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(relayClient.api.events.system.ExtrinsicFailed.is(systemEv.event))
+  assert(client.api.events.system.ExtrinsicFailed.is(systemEv.event))
   dispatchError = systemEv.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+  assert(client.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
 
   /// Check that the pool state is unchanged after the failed unbonding attempt.
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome)
 
   const nominationPoolPostDepositorUnbond = poolData.unwrap()
@@ -643,12 +643,12 @@ async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
-  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
   const createNomPoolEvents = await createNominationPool(
-    relayClient,
+    client,
     defaultAccounts.alice,
     defaultAccounts.alice.address,
     defaultAccounts.alice.address,
@@ -657,11 +657,12 @@ async function nominationPoolSetMetadataTest<
 
   /// Check that prior to the pool creation extrinsic taking effect, the pool does not yet exist with the
   /// most recently available pool ID.
-  const poolData: Option<PalletNominationPoolsBondedPoolInner> =
-    await relayClient.api.query.nominationPools.bondedPools(preLastPoolId + 1)
+  const poolData: Option<PalletNominationPoolsBondedPoolInner> = await client.api.query.nominationPools.bondedPools(
+    preLastPoolId + 1,
+  )
   assert(poolData.isNone, 'Pool should not exist before block is applied')
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
@@ -671,23 +672,23 @@ async function nominationPoolSetMetadataTest<
 
   const nomPoolId = preLastPoolId + 1
 
-  let metadata = await relayClient.api.query.nominationPools.metadata(nomPoolId)
+  let metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
   assert(metadata.eq(''), 'Pool should not have metadata')
 
   /// Set pool's metadata
 
-  const setMetadataTx = relayClient.api.tx.nominationPools.setMetadata(nomPoolId, 'Test pool #1, welcome')
+  const setMetadataTx = client.api.tx.nominationPools.setMetadata(nomPoolId, 'Test pool #1, welcome')
   const setMetadataEvents = await sendTransaction(setMetadataTx.signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   /// TODO: no events are emitted here pending a PR to `pallet_nomination_pools`.
   await checkEvents(setMetadataEvents, 'nominationPools').toMatchSnapshot('set metadata events')
 
   /// Check the set metadata
 
-  metadata = await relayClient.api.query.nominationPools.metadata(nomPoolId)
+  metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
   assert(metadata.eq('Test pool #1, welcome'), 'Pool should have the correct metadata set')
 }
@@ -700,26 +701,26 @@ async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
-  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const firstPoolId = preLastPoolId + 1
 
   await createNominationPool(
-    relayClient,
+    client,
     defaultAccounts.alice,
     defaultAccounts.bob.address,
     defaultAccounts.charlie.address,
     defaultAccounts.dave.address,
   )
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   /**
    * Have Eve join the pool
    */
 
-  await relayClient.dev.setStorage({
+  await client.dev.setStorage({
     System: {
       account: [
         [[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
@@ -728,18 +729,18 @@ async function nominationPoolDoubleJoinError<
     },
   })
 
-  const minJoinBond = await relayClient.api.query.nominationPools.minJoinBond()
+  const minJoinBond = await client.api.query.nominationPools.minJoinBond()
 
-  const joinPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, firstPoolId)
+  const joinPoolTx = client.api.tx.nominationPools.join(minJoinBond, firstPoolId)
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccounts.eve))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('join nomination pool events')
 
-  let poolData = await relayClient.api.query.nominationPools.bondedPools(firstPoolId)
+  let poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)
   assert(poolData.isSome, 'Pool should still exist after new member joins')
 
   const nominationPoolWithMembers = poolData.unwrap()
@@ -751,14 +752,14 @@ async function nominationPoolDoubleJoinError<
 
   /// The depositor in the second pool cannot be Alice, as that would also be a double join - precisely the object of this test.
   await createNominationPool(
-    relayClient,
+    client,
     defaultAccounts.bob,
     defaultAccounts.alice.address,
     defaultAccounts.charlie.address,
     defaultAccounts.dave.address,
   )
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   const secondPoolId = firstPoolId + 1
 
@@ -766,35 +767,35 @@ async function nominationPoolDoubleJoinError<
    * Try having Eve join the second pool
    */
 
-  const joinSecondPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, secondPoolId)
+  const joinSecondPoolTx = client.api.tx.nominationPools.join(minJoinBond, secondPoolId)
   await sendTransaction(joinSecondPoolTx.signAsync(defaultAccounts.eve))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'join second nomination pool events',
   )
 
   // As before, scrutinize the cause of failure for `pallet_nomination_pools::join`.
 
-  const events = await relayClient.api.query.system.events()
+  const events = await client.api.query.system.events()
 
   const [ev] = events.filter((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(relayClient.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
+  assert(client.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
 
   /**
    * Check that Eve is still a member of the first pool
    */
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(firstPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)
   assert(poolData.isSome, 'Pool should still exist after failed join')
 
   const nominationPoolWithMembersAfterError = poolData.unwrap()
@@ -804,7 +805,7 @@ async function nominationPoolDoubleJoinError<
    * Check that Eve is not a member of the second pool
    */
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(secondPoolId)
+  poolData = await client.api.query.nominationPools.bondedPools(secondPoolId)
   assert(poolData.isSome, 'Pool should still exist after failed join')
 
   const secondNominationPoolAfterFailedJoin = poolData.unwrap()
@@ -827,25 +828,21 @@ async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
-  const one = new u32(relayClient.api.registry, 1)
+  const one = new u32(client.api.registry, 1)
 
-  const preMinJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-  const preMinCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
-  const preMaxPoolsOpt = (await relayClient.api.query.nominationPools.maxPools()).unwrapOr(one).toNumber()
-  const preMaxMembersOpt = (await relayClient.api.query.nominationPools.maxPoolMembers()).unwrapOr(one).toNumber()
-  const preMaxMembersPerPool = (await relayClient.api.query.nominationPools.maxPoolMembersPerPool())
-    .unwrapOr(one)
-    .toNumber()
-  const preGlobalMaxCommission = (await relayClient.api.query.nominationPools.globalMaxCommission())
-    .unwrapOr(one)
-    .toNumber()
+  const preMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const preMinCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const preMaxPoolsOpt = (await client.api.query.nominationPools.maxPools()).unwrapOr(one).toNumber()
+  const preMaxMembersOpt = (await client.api.query.nominationPools.maxPoolMembers()).unwrapOr(one).toNumber()
+  const preMaxMembersPerPool = (await client.api.query.nominationPools.maxPoolMembersPerPool()).unwrapOr(one).toNumber()
+  const preGlobalMaxCommission = (await client.api.query.nominationPools.globalMaxCommission()).unwrapOr(one).toNumber()
 
   // Attempt to modify nomination pool global parameters with a signed origin - this should fail.
 
   const setConfigsCall = (inc: number) =>
-    relayClient.api.tx.nominationPools.setConfigs(
+    client.api.tx.nominationPools.setConfigs(
       { Set: preMinJoinBond + inc },
       { Set: preMinCreateBond + inc },
       { Set: preMaxPoolsOpt + inc },
@@ -855,9 +852,9 @@ async function nominationPoolGlobalConfigTest<
     )
   await sendTransaction(setConfigsCall(0).signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'setting global nomination pool configs with signed origin',
   )
 
@@ -872,9 +869,9 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+    const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
-    await relayClient.dev.setStorage({
+    await client.dev.setStorage({
       Scheduler: {
         agenda: [
           [
@@ -892,11 +889,11 @@ async function nominationPoolGlobalConfigTest<
       },
     })
 
-    await relayClient.dev.newBlock()
+    await client.dev.newBlock()
 
     // Because this extrinsic was executed via the scheduler technique, its events won't be available
     // through `checkEvents` - hence the need for this event extraction process.
-    const events = await relayClient.api.query.system.events()
+    const events = await client.api.query.system.events()
 
     const nomPoolsEvents = events.filter((record) => {
       const { event } = record
@@ -906,18 +903,14 @@ async function nominationPoolGlobalConfigTest<
     // TODO: `set_configs` does not emit events at this point. Fix this, after making a PR to `polkadot-sdk` and it flows downstream :)
     assert(nomPoolsEvents.length === 0, 'setting global nomination pool configs should emit 1 event')
 
-    const postMinJoinBond = (await relayClient.api.query.nominationPools.minJoinBond()).toNumber()
-    const postMinCreateBond = (await relayClient.api.query.nominationPools.minCreateBond()).toNumber()
+    const postMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+    const postMinCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
     // None of the below can be `None`, as here it is assumed that the extrinsic above succeeded in setting them.
     // They can be safely unwrapped.
-    const postMaxPoolsOpt = (await relayClient.api.query.nominationPools.maxPools()).unwrap().toNumber()
-    const postMaxMembersOpt = (await relayClient.api.query.nominationPools.maxPoolMembers()).unwrap().toNumber()
-    const postMaxMembersPerPool = (await relayClient.api.query.nominationPools.maxPoolMembersPerPool())
-      .unwrap()
-      .toNumber()
-    const postGlobalMaxCommission = (await relayClient.api.query.nominationPools.globalMaxCommission())
-      .unwrap()
-      .toNumber()
+    const postMaxPoolsOpt = (await client.api.query.nominationPools.maxPools()).unwrap().toNumber()
+    const postMaxMembersOpt = (await client.api.query.nominationPools.maxPoolMembers()).unwrap().toNumber()
+    const postMaxMembersPerPool = (await client.api.query.nominationPools.maxPoolMembersPerPool()).unwrap().toNumber()
+    const postGlobalMaxCommission = (await client.api.query.nominationPools.globalMaxCommission()).unwrap().toNumber()
 
     assert(postMinJoinBond === preMinJoinBond + inc)
     assert(postMinCreateBond === preMinCreateBond + inc)
@@ -941,9 +934,9 @@ async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
-  const [relayClient] = await setupNetworks(relayChain)
+  const [client] = await setupNetworks(relayChain)
 
-  const preLastPoolId = (await relayClient.api.query.nominationPools.lastPoolId()).toNumber()
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
 
   /**
@@ -951,16 +944,16 @@ async function nominationPoolsUpdateRolesTest<
    */
 
   await createNominationPool(
-    relayClient,
+    client,
     defaultAccounts.alice,
     defaultAccounts.bob.address,
     defaultAccounts.charlie.address,
     defaultAccounts.dave.address,
   )
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  let poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  let poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should exist after creation')
 
   const nominationPool = poolData.unwrap()
@@ -977,13 +970,13 @@ async function nominationPoolsUpdateRolesTest<
    * must sign this transaction.
    */
 
-  await relayClient.dev.setStorage({
+  await client.dev.setStorage({
     System: {
       account: [[[defaultAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }]],
     },
   })
 
-  const updateRolesTx = relayClient.api.tx.nominationPools.updateRoles(
+  const updateRolesTx = client.api.tx.nominationPools.updateRoles(
     poolId,
     { Set: defaultAccounts.alice.address },
     { Set: defaultAccounts.dave.address },
@@ -991,11 +984,11 @@ async function nominationPoolsUpdateRolesTest<
   )
   const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccounts.bob))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(updateRolesEvents, 'nominationPools').toMatchSnapshot('update roles events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should still exist after roles are updated')
 
   const nominationPoolWithRoles = poolData.unwrap()
@@ -1013,7 +1006,7 @@ async function nominationPoolsUpdateRolesTest<
    * Try and fail to change the pool's roles as the previous root
    */
 
-  const updateRolesFailTx = relayClient.api.tx.nominationPools.updateRoles(
+  const updateRolesFailTx = client.api.tx.nominationPools.updateRoles(
     poolId,
     { Set: defaultAccounts.eve.address },
     { Set: defaultAccounts.eve.address },
@@ -1021,30 +1014,30 @@ async function nominationPoolsUpdateRolesTest<
   )
   await sendTransaction(updateRolesFailTx.signAsync(defaultAccounts.bob))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'update roles failure events',
   )
 
-  let events = await relayClient.api.query.system.events()
+  let events = await client.api.query.system.events()
 
   const [ev] = events.filter((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(relayClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(relayClient.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
+  assert(client.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
 
   /**
    * As the pool's newly set root, remove oneself from the role.
    */
 
-  const updateRolesRemoveSelfTx = relayClient.api.tx.nominationPools.updateRoles(
+  const updateRolesRemoveSelfTx = client.api.tx.nominationPools.updateRoles(
     poolId,
     { Remove: null },
     { Noop: null },
@@ -1052,11 +1045,11 @@ async function nominationPoolsUpdateRolesTest<
   )
   const updateRolesRemoveSelfEvents = await sendTransaction(updateRolesRemoveSelfTx.signAsync(defaultAccounts.alice))
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(updateRolesRemoveSelfEvents, 'nominationPools').toMatchSnapshot('update roles remove self events')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should still exist after roles are updated')
 
   const nominationPoolWithoutRoot = poolData.unwrap()
@@ -1074,16 +1067,16 @@ async function nominationPoolsUpdateRolesTest<
    * Set the pool's roles via scheduler pallet, with a `Root` origin.
    */
 
-  const updateRolesCall = relayClient.api.tx.nominationPools.updateRoles(
+  const updateRolesCall = client.api.tx.nominationPools.updateRoles(
     poolId,
     { Set: defaultAccounts.charlie.address },
     { Set: defaultAccounts.dave.address },
     { Set: defaultAccounts.eve.address },
   )
 
-  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
-  await relayClient.dev.setStorage({
+  await client.dev.setStorage({
     Scheduler: {
       agenda: [
         [
@@ -1103,9 +1096,9 @@ async function nominationPoolsUpdateRolesTest<
     },
   })
 
-  await relayClient.dev.newBlock()
+  await client.dev.newBlock()
 
-  events = await relayClient.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const nomPoolsEvents = events.filter((record) => {
     const { event } = record
@@ -1114,7 +1107,7 @@ async function nominationPoolsUpdateRolesTest<
 
   await check(nomPoolsEvents, 'nominationPools').toMatchSnapshot('update pool roles via scheduler pallet')
 
-  poolData = await relayClient.api.query.nominationPools.bondedPools(poolId)
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should still exist after roles are updated')
 
   const nominationPoolUpdatedRoles = poolData.unwrap()
