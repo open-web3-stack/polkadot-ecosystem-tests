@@ -2,7 +2,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, objectCmp } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { ApiPromise } from '@polkadot/api'
@@ -869,25 +869,7 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-    await client.dev.setStorage({
-      Scheduler: {
-        agenda: [
-          [
-            [number + 1],
-            [
-              {
-                call: {
-                  Inline: setConfigsCall(inc).method.toHex(),
-                },
-                origin: origin,
-              },
-            ],
-          ],
-        ],
-      },
-    })
+    scheduleCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -1074,27 +1056,7 @@ async function nominationPoolsUpdateRolesTest<
     { Set: defaultAccounts.eve.address },
   )
 
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: updateRolesCall.method.toHex(),
-              },
-              origin: {
-                system: 'Root',
-              },
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  scheduleCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

@@ -3,45 +3,18 @@ import BN from 'bn.js'
 
 import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import type { HexString } from '@polkadot/util/types'
 import { assert, describe, test } from 'vitest'
 
 /// -------
 /// Helpers
 /// -------
-
-/**
- * Given a PJS client and a hex-encoded extrinsic with a given non-`Signed` origin, modify the
- * `scheduler` pallet's storage to execute the extrinsic in the next block.
- */
-async function schedulerSetStorage(client: any, call: HexString, origin: any) {
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: call,
-              },
-              origin: origin,
-            },
-          ],
-        ],
-      ],
-    },
-  })
-}
 
 /// -------
 /// -------
@@ -432,7 +405,7 @@ async function forceUnstakeTest<
   let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isSome)
 
-  schedulerSetStorage(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -583,7 +556,7 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    schedulerSetStorage(client, setMinCommissionCall(inc).method.toHex(), origin)
+    scheduleCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -681,7 +654,7 @@ async function setStakingConfigsTest<
 
   const inc = 10
 
-  schedulerSetStorage(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -789,7 +762,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
   )
 
-  schedulerSetStorage(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -853,7 +826,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -887,7 +860,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -916,7 +889,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -968,7 +941,7 @@ async function chillOtherTest<
     { Noop: null },
   )
 
-  schedulerSetStorage(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1054,7 +1027,7 @@ async function chillOtherTest<
   const successfulCall = setStakingConfigsCalls.pop()
 
   for (const call of setStakingConfigsCalls) {
-    schedulerSetStorage(client, call.method.toHex(), { system: 'Root' })
+    scheduleCallWithOrigin(client, call.method.toHex(), { system: 'Root' })
 
     await client.dev.newBlock()
 
@@ -1084,7 +1057,7 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  schedulerSetStorage(client, successfulCall!.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, objectCmp } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -526,27 +526,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: cancelRefCall.method.toHex(),
-              },
-              origin: {
-                system: 'Root',
-              },
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  scheduleCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -797,27 +777,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: killRefCall.method.toHex(),
-              },
-              origin: {
-                system: 'Root',
-              },
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  scheduleCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
