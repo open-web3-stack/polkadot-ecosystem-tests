@@ -2,7 +2,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, objectCmp } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, objectCmp } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { ApiPromise } from '@polkadot/api'
@@ -155,13 +155,13 @@ async function nominationPoolCreationFailureTest<
     defaultAccounts.bob.address,
     defaultAccounts.charlie.address,
   )
-  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
+  await sendTransaction(createNomPoolTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(createNomPoolEvents, 'system')
-    .redact({ removeKeys: /poolId/ })
-    .toMatchSnapshot('create nomination pool with insufficient funds events')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'create nomination pool with insufficient funds events',
+  )
 
   /// Process events
 
@@ -456,11 +456,13 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    */
 
   const claimCommissionTx = relayClient.api.tx.nominationPools.claimCommission(nomPoolId)
-  const claimCommissionEvents = await sendTransaction(claimCommissionTx.signAsync(ferdie))
+  await sendTransaction(claimCommissionTx.signAsync(ferdie))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(claimCommissionEvents, 'nominationPools', 'system').toMatchSnapshot('claim commission events')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'claim commission events',
+  )
 
   let events = await relayClient.api.query.system.events()
 
@@ -599,11 +601,13 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    */
 
   const unbondDepositorTx = relayClient.api.tx.nominationPools.unbond(defaultAccounts.alice.address, depositorMinBond)
-  const unbondDepositorEvents = await sendTransaction(unbondDepositorTx.signAsync(defaultAccounts.alice))
+  await sendTransaction(unbondDepositorTx.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(unbondDepositorEvents, 'system').toMatchSnapshot('unbond (depositor) events')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'unbond (depositor) events',
+  )
 
   /// Process events to look for the expected extrinsic error.
 
@@ -620,6 +624,8 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   assert(dispatchError.isModule)
   assert(relayClient.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+
+  /// Check that the pool state is unchanged after the failed unbonding attempt.
 
   poolData = await relayClient.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome)
@@ -761,11 +767,13 @@ async function nominationPoolDoubleJoinError<
    */
 
   const joinSecondPoolTx = relayClient.api.tx.nominationPools.join(minJoinBond, secondPoolId)
-  const joinSecondPoolEvents = await sendTransaction(joinSecondPoolTx.signAsync(defaultAccounts.eve))
+  await sendTransaction(joinSecondPoolTx.signAsync(defaultAccounts.eve))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(joinSecondPoolEvents, 'system').toMatchSnapshot('join second nomination pool events')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'join second nomination pool events',
+  )
 
   // As before, scrutinize the cause of failure for `pallet_nomination_pools::join`.
 
@@ -845,11 +853,11 @@ async function nominationPoolGlobalConfigTest<
       { Set: preMaxMembersPerPool + inc },
       { Set: preGlobalMaxCommission + inc },
     )
-  const setConfigEvents = await sendTransaction(setConfigsCall(0).signAsync(defaultAccounts.alice))
+  await sendTransaction(setConfigsCall(0).signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(setConfigEvents, 'nominationPools', 'system').toMatchSnapshot(
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'setting global nomination pool configs with signed origin',
   )
 
@@ -1011,11 +1019,13 @@ async function nominationPoolsUpdateRolesTest<
     { Set: defaultAccounts.eve.address },
     { Set: defaultAccounts.eve.address },
   )
-  const updateRolesFailEvents = await sendTransaction(updateRolesFailTx.signAsync(defaultAccounts.bob))
+  await sendTransaction(updateRolesFailTx.signAsync(defaultAccounts.bob))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(updateRolesFailEvents, 'system').toMatchSnapshot('update roles failure events')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'update roles failure events',
+  )
 
   let events = await relayClient.api.query.system.events()
 

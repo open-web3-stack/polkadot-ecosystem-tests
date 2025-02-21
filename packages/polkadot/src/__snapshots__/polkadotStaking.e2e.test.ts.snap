@@ -539,7 +539,7 @@ exports[`Polkadot Staking > test fast unstake > nominator bond events 1`] = `
 
 exports[`Polkadot Staking > test fast unstake > register fast unstake events 1`] = `[]`;
 
-exports[`Polkadot Staking > test force unstake > force unstake bad origin events 1`] = `
+exports[`Polkadot Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
 [
   {
     "data": {

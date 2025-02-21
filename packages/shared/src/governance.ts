@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, objectCmp } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, objectCmp } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -516,11 +516,13 @@ export async function referendumLifecycleTest<
   // Attempt to cancel the referendum with a signed origin - this should fail.
 
   const cancelRefCall = relayClient.api.tx.referenda.cancel(referendumIndex)
-  const cancelRefEvents = await sendTransaction(cancelRefCall.signAsync(defaultAccounts.alice))
+  await sendTransaction(cancelRefCall.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(cancelRefEvents, 'referenda', 'system').toMatchSnapshot('cancelling referendum with signed origin')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cancelling referendum with signed origin',
+  )
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
@@ -781,11 +783,13 @@ export async function referendumLifecycleKillTest<
   // Attempt to kill the referendum with a signed origin
 
   const killRefCall = relayClient.api.tx.referenda.kill(referendumIndex)
-  const killRefEvents = await sendTransaction(killRefCall.signAsync(defaultAccounts.alice))
+  await sendTransaction(killRefCall.signAsync(defaultAccounts.alice))
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(killRefEvents, 'referenda', 'system').toMatchSnapshot('killing referendum with signed origin')
+  await checkSystemEvents(relayClient, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'killing referendum with signed origin',
+  )
 
   /**
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
