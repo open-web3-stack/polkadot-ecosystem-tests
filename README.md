@@ -76,7 +76,8 @@ These include:
   - Cancelling and killing referenda with XCM root-originated calls
   - Noting and unnoting preimages
 - E2E suite for staking infrastructure:
-  - bonding funds, declaring intent to nominate/validate, unbonding, chilling
+  - bonding funds, declaring intent to nominate/validate, unbonding, chilling, forcibly unstaking as `Root`
+    - includes a test to fast unstaking
   - changing global staking configs - minimum nom./val. bonds, val. commissions, nom./val. counts, etc.
   - more complex scenarios:
     - forcefully updating a validator's commission after an increase to the global parameters' commission

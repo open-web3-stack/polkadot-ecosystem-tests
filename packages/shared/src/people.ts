@@ -21,7 +21,7 @@ import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } fro
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents } from './helpers/index.js'
 
 /**
  * Example identity to be used in tests.
@@ -561,14 +561,25 @@ export async function addRegistrarViaRelayAsRoot<
   })
 
   const addRegistrarTx = peopleClient.api.tx.identity.addRegistrar(defaultAccounts.charlie.address)
-  const addRegistrarEvents = await sendTransaction(addRegistrarTx.signAsync(defaultAccounts.charlie))
+  await sendTransaction(addRegistrarTx.signAsync(defaultAccounts.charlie))
 
   // First, try sending the `add_registrar` call without the proper origin: just as `Signed`,
   // which is insufficient.
   await peopleClient.dev.newBlock()
 
   // The recorded event should be `ExtrinsicFailed` with a `BadOrigin`.
-  await checkEvents(addRegistrarEvents, 'identity', 'system').toMatchSnapshot('call add registrar with wrong origin')
+  await checkSystemEvents(peopleClient, 'system').toMatchSnapshot('call add registrar with wrong origin')
+
+  let events = await peopleClient.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(peopleClient.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
 
   /**
    * XCM from relay chain
@@ -622,7 +633,7 @@ export async function addRegistrarViaRelayAsRoot<
 
   // Check that the single event emitted in the last block was for the registrar addition.
 
-  const events = await peopleClient.api.query.system.events()
+  events = await peopleClient.api.query.system.events()
 
   const peopleEvents = events.filter((record) => {
     const { event } = record
