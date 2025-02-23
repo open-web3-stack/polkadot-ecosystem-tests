@@ -19,9 +19,14 @@ import type { ApiPromise } from '@polkadot/api'
 import type { u128 } from '@polkadot/types'
 import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
 import { encodeAddress } from '@polkadot/util-crypto'
+import type { HexString } from '@polkadot/util/types'
 
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, xcmSendTransact } from './helpers/index.js'
+
+/// -------
+/// Helpers
+/// -------
 
 /**
  * Example identity to be used in tests.
@@ -38,6 +43,25 @@ const identity = {
   display: { Raw: 'Test Display' },
   pgpFingerprint: 'a1b2c3d4e5f6g7h8i9j1',
 }
+
+/**
+ * Send an XCM message from the relay chain to the people parachain.
+ * This message contains a `Transact` with an extrinsic to be executed in the parachain, with a `Root` origin.
+ */
+async function sendXcmFromRelayToPeople(
+  relayClient: {
+    api: ApiPromise
+    dev: { setStorage: (values: StorageValues, blockHash?: string) => Promise<any> }
+  },
+  call: HexString,
+  requireWeightAtMost?: { proofSize: string; refTime: string },
+): Promise<any> {
+  await xcmSendTransact(relayClient, 1004, call, { system: 'Root' }, requireWeightAtMost)
+}
+
+/// -------
+/// -------
+/// -------
 
 /**
  * Test the process of
@@ -585,9 +609,9 @@ export async function addRegistrarViaRelayAsRoot<
    * XCM from relay chain
    */
 
-  const encodedPeopleChainCalldata = addRegistrarTx.method.toHex()
+  const encodedPeopleChainCalldata: HexString = addRegistrarTx.method.toHex()
 
-  await sendXcmFromRelay(relayClient, encodedPeopleChainCalldata, { proofSize: '10000', refTime: '1000000000' })
+  await sendXcmFromRelayToPeople(relayClient, encodedPeopleChainCalldata, { proofSize: '10000', refTime: '1000000000' })
 
   /**
    * Checks to people parachain's registrar list at several points of interest.
@@ -631,7 +655,7 @@ export async function addRegistrarViaRelayAsRoot<
   // Also advance a block in the parachain - otherwise, the XCM call's effect would not be visible.
   await peopleClient.dev.newBlock()
 
-  // Check that the single event emitted in the last block was for the registrar addition.
+  // Check that, in the people chain, the single event emitted in the last block was for the registrar addition.
 
   events = await peopleClient.api.query.system.events()
 
@@ -661,89 +685,6 @@ export async function addRegistrarViaRelayAsRoot<
     registrars,
     'Registrars after parachain chain block differ from expected',
   )
-}
-
-/**
- * Send an XCM message containing an extrinsic to be executed in the people chain, as `Root`
- *
- * @param relayClient Relay chain client form which to execute `xcmPallet.send`
- * @param encodedChainCallData Hex-encoded identity pallet extrinsic
- * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
- */
-async function sendXcmFromRelay(
-  relayClient: {
-    api: ApiPromise
-    dev: {
-      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
-    }
-  },
-  encodedChainCallData: `0x${string}`,
-  requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
-): Promise<any> {
-  // Destination of the XCM message sent from the relay chain to the parachain via `xcmPallet`
-  const dest = {
-    V4: {
-      parents: 0,
-      interior: {
-        X1: [
-          {
-            Parachain: 1004,
-          },
-        ],
-      },
-    },
-  }
-
-  // The message being sent to the parachain, containing a call to be executed in the parachain:
-  // an origin-restricted extrinsic from the `identity` pallet, to be executed as a `SuperUser`.
-  const message = {
-    V4: [
-      {
-        UnpaidExecution: {
-          weightLimit: 'Unlimited',
-          checkOrigin: null,
-        },
-      },
-      {
-        Transact: {
-          call: {
-            encoded: encodedChainCallData,
-          },
-          originKind: 'SuperUser',
-          requireWeightAtMost,
-        },
-      },
-    ],
-  }
-
-  const xcmTx = relayClient.api.tx.xcmPallet.send(dest, message)
-  const encodedRelayCallData = xcmTx.method.toHex()
-
-  /**
-   * Execution of XCM call via RPC `dev_setStorage`
-   */
-
-  const number = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
-
-  await relayClient.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: encodedRelayCallData,
-              },
-              origin: {
-                system: 'Root',
-              },
-            },
-          ],
-        ],
-      ],
-    },
-  })
 }
 
 /**
