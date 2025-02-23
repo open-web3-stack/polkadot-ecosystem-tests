@@ -86,10 +86,6 @@ export async function scheduleCallWithOrigin(client: any, encodedCall: HexString
   })
 }
 
-export async function getBlockNumber(client: any): Promise<number> {
-  return (await client.api.rpc.chain.getHeader()).number.toNumber()
-}
-
 /**
  * Send an XCM message containing an extrinsic to be executed in a parachain with a given origin.
  *
