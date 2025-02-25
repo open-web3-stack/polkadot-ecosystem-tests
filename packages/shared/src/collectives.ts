@@ -10,12 +10,8 @@
 
 import { assert, describe, test } from 'vitest'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
+import { Chain, Client } from '@e2e-test/networks'
 
-import { Chain, Client, defaultAccounts } from '@e2e-test/networks'
-
-import { checkEvents } from './helpers/index.js'
-import { Codec } from '@polkadot/types/types'
 import { setupNetworks } from './setup.js'
 
 /**
@@ -32,49 +28,35 @@ export async function fellowshipWhitelistCall(
   relayClient: Client,
   collectivesClient: Client,
 ) {
-
-  await collectivesClient.dev.setStorage({
-    System: {
-      account: [[[defaultAccounts.charlie.address], { providers: 1, data: { free: 1e10 } }]],
-    },
-  })
-
   /**
    * Example 32 byte call hash; value is not important for the test
    */
   const encodedCallToWhitelist = "0x0101010101010101010101010101010101010101010101010101010101010101"
 
-  const parachainEvents = await sendXcmFromPara(relayClient, collectivesClient, encodedCallToWhitelist, { proofSize: '10000', refTime: '1000000000' })
+  await sendXcmFromPara(relayClient, collectivesClient, encodedCallToWhitelist, { proofSize: '10000', refTime: '1000000000' })
   await collectivesClient.dev.newBlock()
-  await checkEvents(parachainEvents, 'polkadotXcm').toMatchSnapshot("xcm events")
-  
- 
-  await relayClient.dev.newBlock()
-  const events = await relayClient.api.query.system.events()
 
-  events.forEach((record) => {
+  const collectivesEvents = await collectivesClient.api.query.system.events()
+  const xcmEvents = collectivesEvents.filter((record) => {
     const { event } = record
-    console.log(event)
+    return event.section === 'polkadotXcm'
   })
+  assert(xcmEvents.length === 2, 'polkadotXcm should emit 2 events')
+  // assert(collectivesClient.api.events.polkadotXcm.FeePaid.is(xcmEvents[0].event))
+  assert(collectivesClient.api.events.polkadotXcm.Sent.is(xcmEvents[1].event))
 
-  const whitelistEvents = events.filter((record) => {
+  await relayClient.dev.newBlock()
+  const relayEvents = await relayClient.api.query.system.events()
+  const whitelistEvents = relayEvents.filter((record) => {
     const { event } = record
     return event.section === 'whitelist'
   })
-
-  const msgQueueEvents = events.filter((record) => {
-    const { event } = record
-    return event.section === 'messageQueue'
-  })
-
   assert(whitelistEvents.length === 1, 'whitelisting should emit 1 whitelist events on relay chain')
-  assert(msgQueueEvents.length === 1, 'whitelisting should emit 1 message queue events on relay chain')
-
   const whitelistEvent = whitelistEvents[0]
-  const msgQueueEvent = msgQueueEvents[0]
+  assert(relayClient.api.events.whitelist.CallWhitelisted.is(whitelistEvent.event))
 
-  assert(relayClient.api.events.messageQueue.CallWhitelisted.is(whitelistEvent.event))
-  assert(relayClient.api.events.messageQueue.Processed.is(msgQueueEvent.event))
+  const [callHash] = whitelistEvent.event.data
+  assert(callHash.eq(encodedCallToWhitelist), 'actually whitelisted hash is different than the one requested to whitelist')
 }
 
 /**
@@ -89,9 +71,7 @@ async function sendXcmFromPara(
   parachainClient: Client,
   encodedChainCallData: `0x${string}`,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
-): Promise<{
-  events: Promise<Codec[]>;
-}> {
+): Promise<any> {
   // Destination of the XCM message sent from the parachain to the relay chain`
   const dest = {
     V4: {
@@ -123,8 +103,31 @@ async function sendXcmFromPara(
 
   const xcmTx = parachainClient.api.tx.polkadotXcm.send(dest, message)
 
-  const result = await sendTransaction(xcmTx.signAsync(defaultAccounts.alice))
-  return result;
+   /**
+   * Execution of XCM call via RPC `dev_setStorage`
+   */
+
+  const number = (await parachainClient.api.rpc.chain.getHeader()).number.toNumber()
+
+  await parachainClient.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [number + 1],
+          [
+            {
+              call: {
+                Inline: xcmTx.method.toHex(),
+              },
+              origin: {
+                fellowshipOrigins: 'Fellows',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
 }
 
 /**
