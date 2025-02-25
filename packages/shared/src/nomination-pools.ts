@@ -4,6 +4,7 @@ import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
+import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -89,7 +90,7 @@ async function createNominationPool(
  * @param validatorCount The (desired) number of validators to select.
  * @returns A list of at least 1 validator, and at most 16.
  */
-async function getValidators(api: ApiPromise, pageSize: number, validatorCount: number) {
+async function getValidators(api: ApiPromise, pageSize: number, validatorCount: number): Promise<string[]> {
   // Between 1 and 16 validators can be nominated by the pool at any time.
   const min_validators = 1
   const max_validators = 16
@@ -125,6 +126,79 @@ async function getValidators(api: ApiPromise, pageSize: number, validatorCount: 
   assert(selectedValidators.length >= min_validators && selectedValidators.length <= max_validators)
 
   return selectedValidators
+}
+
+/**
+ * Create a given number of keypairs, add some funds to them, and bond those funds.
+ */
+async function createAndBondAccounts(
+  client: {
+    api: ApiPromise
+    dev: {
+      newBlock: (param?: any) => Promise<string>
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  validatorCount: number,
+): Promise<KeyringPair[]> {
+  const validators: KeyringPair[] = []
+
+  for (let i = 0; i < validatorCount; i++) {
+    const validator = defaultAccounts.keyring.addFromUri(`//Validator_${i}`)
+    validators.push(validator)
+  }
+
+  await client.dev.setStorage({
+    System: {
+      account: validators.map((v) => [[v.address], { providers: 1, data: { free: 10000e10 } }]),
+    },
+  })
+
+  for (let i = 0; i < validatorCount; i++) {
+    const bondTx = client.api.tx.staking.bond(1000e10, { Staked: null })
+    await sendTransaction(bondTx.signAsync(validators[i]))
+  }
+
+  await client.dev.newBlock()
+
+  return validators
+}
+
+/**
+ * Insert the given validators into storage.
+ *
+ * The `Validators` storage item is *not* meant to be manipulated directly.
+ * However, in the case that the test chain has no validators and it is impracticable to call `validate` and wait
+ * for the next era, this function can be used.
+ *
+ * Note also that normally, a successful call to `validate` would also manipulate the `VoterList` in storage, which is
+ * not done here
+ * For the purposes of most tests (e.g. just verifying that nominating existing validators works), this can be ignored.
+ * @param client
+ * @param validators
+ */
+async function setValidatorsStorage(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  validators: string[],
+) {
+  const minCommission = await client.api.query.staking.minCommission()
+
+  await client.dev.setStorage({
+    Staking: {
+      Validators: validators.map((val) => [
+        [val],
+        {
+          blocked: false,
+          commission: minCommission,
+        },
+      ]),
+    },
+  })
 }
 
 /// -------
@@ -376,11 +450,27 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   await check(nominationPoolWithCommission.commission).toMatchObject(newCommissionData)
 
-  /**
-   * Nominate a validator set
-   */
+  ///
+  /// Nominate a validator set
+  ///
 
-  const validators = await getValidators(client.api, 100, 16)
+  /// If there are no validators (this test might be running in a genesis testnet), create some.
+
+  const validatorCount = 16
+
+  const currValCount = await client.api.query.staking.counterForValidators()
+
+  let validators: string[]
+
+  if (currValCount.eq(0)) {
+    const validatorKeyPairs = await createAndBondAccounts(client, validatorCount)
+
+    validators = validatorKeyPairs.map((v) => v.address)
+
+    await setValidatorsStorage(client, validators)
+  } else {
+    validators = await getValidators(client.api, 100, validatorCount)
+  }
 
   const nominateTx = client.api.tx.nominationPools.nominate(nomPoolId, validators)
   const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.charlie))
@@ -395,6 +485,10 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after validators are nominated')
+
+  // TODO: current runtimes do not have the `PoolAccounts` runtime API call available.
+  // When they do, verify that the pool's bonded account made the above nominations.
+  //const [bondedAcc, rewardAcc] = await client.api.call.nominationPoolsApi.poolAccounts(nomPoolId)
 
   const nominationPoolAfterNomination = poolData.unwrap()
 

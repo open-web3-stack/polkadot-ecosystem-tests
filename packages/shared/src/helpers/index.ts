@@ -64,7 +64,16 @@ export function objectCmp(
  * Given a PJS client and a hex-encoded extrinsic with a given origin, modify the
  * `scheduler` pallet's `agenda` storage to execute the extrinsic in the next block.
  */
-export async function scheduleCallWithOrigin(client: any, encodedCall: HexString, origin: any) {
+export async function scheduleCallWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  encodedCall: HexString,
+  origin: any,
+) {
   const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   await client.dev.setStorage({

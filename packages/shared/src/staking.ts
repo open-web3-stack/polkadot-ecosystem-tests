@@ -12,6 +12,8 @@ import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { assert, describe, test } from 'vitest'
 
+import type { DeriveSessionProgress } from '@polkadot/api-derive/types'
+
 /// -------
 /// Helpers
 /// -------
@@ -53,6 +55,13 @@ async function validateNoBondedFundsFailureTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.staking.NotController.is(dispatchError.asModule))
+
+  const sesh: DeriveSessionProgress = await client.api.derive.session.progress()
+
+  console.log('session length: ', sesh.sessionLength.toHuman())
+  console.log('active era start: ', sesh.activeEraStart.toHuman())
+  console.log('era progress: ', sesh.eraProgress.toHuman())
+  console.log('session progress: ', sesh.sessionProgress.toHuman())
 }
 
 /**
