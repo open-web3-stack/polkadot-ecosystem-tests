@@ -4,13 +4,41 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
 [
   {
     "data": {
+      "dispatchInfo": {
+        "class": "Mandatory",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000)",
+          "refTime": "(rounded 300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Mandatory",
+        "paysFee": "No",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+  {
+    "data": {
       "dispatchError": "BadOrigin",
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 2600)",
-          "refTime": "(rounded 250000000)",
+          "proofSize": "(rounded 3000)",
+          "refTime": "(rounded 200000000)",
         },
       },
     },
