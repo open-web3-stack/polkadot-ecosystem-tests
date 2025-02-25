@@ -130,7 +130,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 990000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -155,7 +155,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commis
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 3700)",
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 510000000)",
         },
       },
     },
@@ -264,7 +264,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination p
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 45000)",
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 1600000000)",
         },
       },
     },
@@ -313,7 +313,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (depo
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 8900)",
-          "refTime": "(rounded 2100000000)",
+          "refTime": "(rounded 2200000000)",
         },
       },
     },
@@ -336,7 +336,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick
   {
     "data": {
       "balance": "(rounded 1700000000)",
-      "era": "(rounded 7700)",
+      "era": "(rounded 7800)",
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       "points": "(rounded 1700000000)",
     },
@@ -359,7 +359,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond event
   {
     "data": {
       "balance": "(rounded 1700000000)",
-      "era": "(rounded 7700)",
+      "era": "(rounded 7800)",
       "member": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
       "points": "(rounded 1700000000)",
     },
