@@ -31,9 +31,9 @@ async function validateNoBondedFundsFailureTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  // 10e6 is 1% commission
-  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
-  await sendTransaction(validateTx.signAsync(defaultAccounts.alice))
+  // 1e7 is 1% commission
+  const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
+  await sendTransaction(validateTx.signAsync(defaultAccountsSr25199.alice))
 
   await client.dev.newBlock()
 

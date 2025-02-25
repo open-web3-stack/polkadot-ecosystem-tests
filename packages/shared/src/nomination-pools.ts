@@ -276,8 +276,9 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
    * Set the pool's commission data
    */
 
-  // This will be `Perbill` runtime-side, so 0.1%
-  const commission = 10e5
+  // This will be `Perbill` runtime-side, so 0.1%. Note that in TypeScript,
+  // `10e1` = `10 * 10`
+  const commission = 1e6
 
   const setCommissionTx = client.api.tx.nominationPools.setCommission(nomPoolId, [
     commission,
@@ -287,7 +288,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
   const setCommissionMaxTx = client.api.tx.nominationPools.setCommissionMax(nomPoolId, commission * 10)
 
   const setCommissionChangeRateTx = client.api.tx.nominationPools.setCommissionChangeRate(nomPoolId, {
-    maxIncrease: 10e8,
+    maxIncrease: 1e9,
     minDelay: 10,
   })
 
@@ -324,7 +325,7 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
     max: commission * 10,
     current: [commission, encodeAddress(defaultAccounts.eve.address, addressEncoding)],
     changeRate: {
-      maxIncrease: 10e8,
+      maxIncrease: 1e9,
       minDelay: 10,
     },
     throttleFrom: blockNumber,
