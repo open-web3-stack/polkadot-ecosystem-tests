@@ -593,7 +593,7 @@ export async function addRegistrarViaRelayAsRoot<
 
   // The recorded event should be `ExtrinsicFailed` with a `BadOrigin`.
   await checkSystemEvents(peopleClient, 'system')
-    .redact({ number: 3 })
+    .redact({ number: 1 })
     .toMatchSnapshot('call add registrar with wrong origin')
 
   let events = await peopleClient.api.query.system.events()
