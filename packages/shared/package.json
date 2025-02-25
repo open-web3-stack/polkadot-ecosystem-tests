@@ -6,7 +6,6 @@
 		"@acala-network/chopsticks-testing": "1.0.2-2",
 		"@e2e-test/networks": "workspace:*",
 		"@polkadot/api": "^15.0",
-		"@polkadot/react-hooks": "^0.39.1",
 		"@polkadot/types": "^15.0",
 		"@polkadot/types-augment": "^15.0"
 	},
