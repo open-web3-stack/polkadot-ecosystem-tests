@@ -8,8 +8,8 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
         "class": "Mandatory",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 260000000)",
+          "proofSize": "(rounded 1490)",
+          "refTime": "(rounded 264000000)",
         },
       },
     },
@@ -23,7 +23,7 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
         "paysFee": "No",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 110000000)",
+          "refTime": "(rounded 107000000)",
         },
       },
     },
@@ -37,8 +37,8 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 2600)",
-          "refTime": "(rounded 240000000)",
+          "proofSize": "(rounded 2630)",
+          "refTime": "(rounded 244000000)",
         },
       },
     },
