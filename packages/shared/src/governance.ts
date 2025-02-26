@@ -1,7 +1,7 @@
 import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
@@ -17,6 +17,12 @@ import type {
 } from '@polkadot/types/lookup'
 import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
+/// -------
+/// Helpers
+/// -------
+
+const devAccounts = await defaultAccountsSr25199
 
 /**
  * Compare the selected properties of two referenda.
@@ -105,10 +111,10 @@ export async function referendumLifecycleTest<
   await client.dev.setStorage({
     System: {
       account: [
-        [[defaultAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
-        [[defaultAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.dave.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.eve.address], { providers: 1, data: { free: 10e10 } }],
       ],
     },
   })
@@ -127,13 +133,13 @@ export async function referendumLifecycleTest<
       Origins: 'SmallTipper',
     } as any,
     {
-      Inline: client.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method.toHex(),
+      Inline: client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method.toHex(),
     },
     {
       After: 1,
     },
   )
-  const submissionEvents = await sendTransaction(submissionTx.signAsync(defaultAccounts.alice))
+  const submissionEvents = await sendTransaction(submissionTx.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -187,7 +193,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPreDecDep.deciding.isNone)
   assert(ongoingRefPreDecDep.decisionDeposit.isNone)
 
-  assert(ongoingRefPreDecDep.submissionDeposit.who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding)))
+  assert(ongoingRefPreDecDep.submissionDeposit.who.eq(encodeAddress(devAccounts.alice.address, addressEncoding)))
   assert(ongoingRefPreDecDep.submissionDeposit.amount.eq(client.api.consts.referenda.submissionDeposit))
 
   // Current voting state of the referendum.
@@ -205,7 +211,7 @@ export async function referendumLifecycleTest<
    */
 
   const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
-  const decisiondepEvents = await sendTransaction(decisionDepTx.signAsync(defaultAccounts.bob))
+  const decisiondepEvents = await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -233,9 +239,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPostDecDep.deciding.isNone)
   assert(ongoingRefPostDecDep.decisionDeposit.isSome)
 
-  assert(
-    ongoingRefPostDecDep.decisionDeposit.unwrap().who.eq(encodeAddress(defaultAccounts.bob.address, addressEncoding)),
-  )
+  assert(ongoingRefPostDecDep.decisionDeposit.unwrap().who.eq(encodeAddress(devAccounts.bob.address, addressEncoding)))
   assert(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.eq(smallTipper[1].decisionDeposit))
 
   // The block at which the referendum's preparation period will end, and its decision period will begin.
@@ -311,7 +315,7 @@ export async function referendumLifecycleTest<
       balance: ayeVote,
     },
   })
-  let voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.charlie))
+  let voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -342,13 +346,13 @@ export async function referendumLifecycleTest<
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
   // Check Charlie's locked funds
-  const charlieClassLocks = await client.api.query.convictionVoting.classLocksFor(defaultAccounts.charlie.address)
+  const charlieClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.charlie.address)
   const localCharlieClassLocks = [[smallTipper[0], ayeVote]]
   assert(charlieClassLocks.eq(localCharlieClassLocks))
 
   // , and overall account's votes
   const votingByCharlie: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
-    defaultAccounts.charlie.address,
+    devAccounts.charlie.address,
     smallTipper[0],
   )
   assert(votingByCharlie.isCasting, "charlie's votes are cast, not delegated")
@@ -387,7 +391,7 @@ export async function referendumLifecycleTest<
     },
   })
 
-  voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.dave))
+  voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.dave))
 
   await client.dev.newBlock()
 
@@ -411,7 +415,7 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote
   await check(ongoingRefSecondVote.tally).toMatchObject(votes)
 
-  const daveLockedFunds = await client.api.query.convictionVoting.classLocksFor(defaultAccounts.dave.address)
+  const daveLockedFunds = await client.api.query.convictionVoting.classLocksFor(devAccounts.dave.address)
   const localDaveClassLocks = [[smallTipper[0], ayeVote + nayVote]]
   // Dave voted with `split`, which does not allow expression of conviction in votes.
   assert(daveLockedFunds.eq(localDaveClassLocks))
@@ -419,7 +423,7 @@ export async function referendumLifecycleTest<
   // Check Dave's overall votes
 
   const votingByDave: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
-    defaultAccounts.dave.address,
+    devAccounts.dave.address,
     smallTipper[0],
   )
   assert(votingByDave.isCasting, "dave's votes are cast, not delegated")
@@ -457,7 +461,7 @@ export async function referendumLifecycleTest<
     },
   })
 
-  voteEvents = await sendTransaction(voteTx.signAsync(defaultAccounts.eve))
+  voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -479,7 +483,7 @@ export async function referendumLifecycleTest<
   votes.support += ayeVote + abstainVote
   await check(ongoingRefThirdVote.tally).toMatchObject(votes)
 
-  const eveLockedFunds = await client.api.query.convictionVoting.classLocksFor(defaultAccounts.eve.address)
+  const eveLockedFunds = await client.api.query.convictionVoting.classLocksFor(devAccounts.eve.address)
   const localEveClassLocks = [[smallTipper[0], ayeVote + nayVote + abstainVote]]
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   assert(eveLockedFunds.eq(localEveClassLocks))
@@ -487,7 +491,7 @@ export async function referendumLifecycleTest<
   // Check Eve's overall votes
 
   const votingByEve: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
-    defaultAccounts.eve.address,
+    devAccounts.eve.address,
     smallTipper[0],
   )
   assert(votingByEve.isCasting, "eve's votes are cast, not delegated")
@@ -516,7 +520,7 @@ export async function referendumLifecycleTest<
   // Attempt to cancel the referendum with a signed origin - this should fail.
 
   const cancelRefCall = client.api.tx.referenda.cancel(referendumIndex)
-  await sendTransaction(cancelRefCall.signAsync(defaultAccounts.alice))
+  await sendTransaction(cancelRefCall.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -565,12 +569,12 @@ export async function referendumLifecycleTest<
   cancelledRef[0].eq(referendumIndex)
   // Check that the referendum's submission deposit was refunded to Alice
   cancelledRef[1].unwrap().eq({
-    who: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+    who: encodeAddress(devAccounts.alice.address, addressEncoding),
     amount: client.api.consts.referenda.submissionDeposit,
   })
   // Check that the referendum's submission deposit was refunded to Bob
   cancelledRef[2].unwrap().eq({
-    who: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+    who: encodeAddress(devAccounts.bob.address, addressEncoding),
     amount: smallTipper[1].decisionDeposit,
   })
 
@@ -595,7 +599,7 @@ export async function referendumLifecycleTest<
   // Check that cancelling the referendum has no effect on each voter's class locks
   for (const account of Object.keys(testAccounts)) {
     testAccounts[account].classLocks = await client.api.query.convictionVoting.classLocksFor(
-      defaultAccounts[account].address,
+      devAccounts[account].address,
     )
     assert(
       testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
@@ -607,7 +611,7 @@ export async function referendumLifecycleTest<
   // storage item.
   for (const account of Object.keys(testAccounts)) {
     const postCancellationVoting: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
-      defaultAccounts[account].address as string,
+      devAccounts[account].address as string,
       smallTipper[0],
     )
     assert(postCancellationVoting.isCasting, `pre-referendum cancellation, ${account}'s votes were cast, not delegated`)
@@ -627,12 +631,12 @@ export async function referendumLifecycleTest<
 
   const removeCharlieVote = client.api.tx.convictionVoting.removeVote(smallTipper[0], referendumIndex).method
   const removeDaveVoteAsCharlie = client.api.tx.convictionVoting.removeOtherVote(
-    defaultAccounts.dave.address,
+    devAccounts.dave.address,
     smallTipper[0],
     referendumIndex,
   ).method
   const removeEveVoteAsCharlie = client.api.tx.convictionVoting.removeOtherVote(
-    defaultAccounts.eve.address,
+    devAccounts.eve.address,
     smallTipper[0],
     referendumIndex,
   ).method
@@ -643,7 +647,7 @@ export async function referendumLifecycleTest<
     removeEveVoteAsCharlie,
   ])
 
-  const batchEvents = await sendTransaction(batchAllTx.signAsync(defaultAccounts.charlie))
+  const batchEvents = await sendTransaction(batchAllTx.signAsync(devAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -657,7 +661,7 @@ export async function referendumLifecycleTest<
   // Also check that voting for each account is appropriately empty.
   for (const account of Object.keys(testAccounts)) {
     testAccounts[account].classLocks = await client.api.query.convictionVoting.classLocksFor(
-      defaultAccounts[account].address,
+      devAccounts[account].address,
     )
     assert(
       testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
@@ -668,7 +672,7 @@ export async function referendumLifecycleTest<
     )
 
     testAccounts[account].votingBy = await client.api.query.convictionVoting.votingFor(
-      defaultAccounts[account].address,
+      devAccounts[account].address,
       smallTipper[0],
     )
     assert(testAccounts[account].votingBy.isCasting)
@@ -680,9 +684,9 @@ export async function referendumLifecycleTest<
   // Check that submission and decision deposits are refunded to the respective voters.
 
   const submissionRefundTx = client.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
-  const submissionRefundEvents = await sendTransaction(submissionRefundTx.signAsync(defaultAccounts.alice))
+  const submissionRefundEvents = await sendTransaction(submissionRefundTx.signAsync(devAccounts.alice))
   const decisionRefundTx = client.api.tx.referenda.refundDecisionDeposit(referendumIndex)
-  const decisionRefundEvents = await sendTransaction(decisionRefundTx.signAsync(defaultAccounts.bob))
+  const decisionRefundEvents = await sendTransaction(decisionRefundTx.signAsync(devAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -716,8 +720,8 @@ export async function referendumLifecycleKillTest<
   await client.dev.setStorage({
     System: {
       account: [
-        [[defaultAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+        [[devAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
       ],
     },
   })
@@ -736,13 +740,13 @@ export async function referendumLifecycleKillTest<
       Origins: 'SmallTipper',
     } as any,
     {
-      Inline: client.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method.toHex(),
+      Inline: client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method.toHex(),
     },
     {
       After: 1,
     },
   )
-  await sendTransaction(submitReferendumTx.signAsync(defaultAccounts.alice))
+  await sendTransaction(submitReferendumTx.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -758,14 +762,14 @@ export async function referendumLifecycleKillTest<
    */
 
   const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
-  await sendTransaction(decisionDepTx.signAsync(defaultAccounts.bob))
+  await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
 
   await client.dev.newBlock()
 
   // Attempt to kill the referendum with a signed origin
 
   const killRefCall = client.api.tx.referenda.kill(referendumIndex)
-  await sendTransaction(killRefCall.signAsync(defaultAccounts.alice))
+  await sendTransaction(killRefCall.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -810,9 +814,9 @@ export async function referendumLifecycleKillTest<
     } else if (client.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
-      if (who.eq(encodeAddress(defaultAccounts.alice.address, addressEncoding))) {
+      if (who.eq(encodeAddress(devAccounts.alice.address, addressEncoding))) {
         assert(amount.eq(client.api.consts.referenda.submissionDeposit))
-      } else if (who.eq(encodeAddress(defaultAccounts.bob.address, addressEncoding))) {
+      } else if (who.eq(encodeAddress(devAccounts.bob.address, addressEncoding))) {
         assert(amount.eq(smallTipper[1].decisionDeposit))
       } else {
         assert(false, 'malformed decision slashed events')
@@ -841,9 +845,9 @@ export async function preimageTest<
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(relayChain)
 
-  const encodedProposal = client.api.tx.treasury.spendLocal(1e10, defaultAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
-  const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccounts.alice))
+  const preImageEvents = await sendTransaction(preimageTx.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -866,7 +870,7 @@ export async function preimageTest<
    */
 
   const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(encodedProposal.hash.toHex())
-  const unnotePreImageEvents = await sendTransaction(unnotePreimageTx.signAsync(defaultAccounts.alice))
+  const unnotePreImageEvents = await sendTransaction(unnotePreimageTx.signAsync(devAccounts.alice))
 
   await client.dev.newBlock()
 

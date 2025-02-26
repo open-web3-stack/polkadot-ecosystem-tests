@@ -1,7 +1,7 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 import BN from 'bn.js'
 
-import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
@@ -11,8 +11,6 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { assert, describe, test } from 'vitest'
-
-import type { DeriveSessionProgress } from '@polkadot/api-derive/types'
 
 /// -------
 /// Helpers
@@ -31,9 +29,9 @@ async function validateNoBondedFundsFailureTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  // 10e6 is 1% commission
-  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
-  await sendTransaction(validateTx.signAsync(defaultAccounts.alice))
+  // 1e7 is 1% commission
+  const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
+  await sendTransaction(validateTx.signAsync(defaultAccountsSr25199.alice))
 
   await client.dev.newBlock()
 
@@ -55,13 +53,6 @@ async function validateNoBondedFundsFailureTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.staking.NotController.is(dispatchError.asModule))
-
-  const sesh: DeriveSessionProgress = await client.api.derive.session.progress()
-
-  console.log('session length: ', sesh.sessionLength.toHuman())
-  console.log('active era start: ', sesh.activeEraStart.toHuman())
-  console.log('era progress: ', sesh.eraProgress.toHuman())
-  console.log('session progress: ', sesh.sessionProgress.toHuman())
 }
 
 /**
@@ -75,8 +66,8 @@ async function nominateNoBondedFundsFailureTest<
 
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
-  const nominateTx = client.api.tx.staking.nominate([defaultAccounts.alice.address])
-  await sendTransaction(nominateTx.signAsync(defaultAccounts.alice))
+  const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25199.alice.address])
+  await sendTransaction(nominateTx.signAsync(defaultAccountsSr25199.alice))
 
   await client.dev.newBlock()
 
@@ -132,7 +123,7 @@ async function stakingLifecycleTest<
   const validators: KeyringPair[] = []
 
   for (let i = 0; i < validatorCount; i++) {
-    const validator = defaultAccounts.keyring.addFromUri(`//Validator_${i}`)
+    const validator = defaultAccountsSr25199.keyring.addFromUri(`//Validator_${i}`)
     validators.push(validator)
   }
 

@@ -39,7 +39,7 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
     "data": {
       "bonded": 10000000000,
       "joined": true,
-      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "member": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -106,7 +106,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
     "data": {
       "bonded": "(rounded 10000000000)",
       "joined": false,
-      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "member": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -171,7 +171,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
     "data": {
       "current": [
         "0.10%",
-        "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+        "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
       ],
     },
     "method": "PoolCommissionUpdated",
@@ -216,7 +216,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
   },
   {
     "data": {
-      "depositor": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "depositor": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -225,7 +225,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
     "data": {
       "bonded": 5000000000000,
       "joined": true,
-      "member": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "member": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -247,7 +247,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
     "data": {
       "bonded": 10000000000,
       "joined": true,
-      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "member": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -337,7 +337,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (ki
     "data": {
       "balance": 10000000000,
       "era": "(rounded 1800)",
-      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "member": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
       "points": 10000000000,
     },
     "method": "Unbonded",
@@ -360,7 +360,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond eve
     "data": {
       "balance": "(rounded 10000000000)",
       "era": "(rounded 1800)",
-      "member": "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
+      "member": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
       "points": "(rounded 10000000000)",
     },
     "method": "Unbonded",
@@ -373,9 +373,9 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > update rol
 [
   {
     "data": {
-      "bouncer": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
-      "nominator": "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
-      "root": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "bouncer": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+      "nominator": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      "root": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "method": "RolesUpdated",
     "section": "nominationPools",
@@ -395,7 +395,7 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
   },
   {
     "data": {
-      "depositor": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "depositor": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -404,7 +404,7 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
     "data": {
       "bonded": 5000000000000,
       "joined": true,
-      "member": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "member": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -419,9 +419,9 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
   {
     "event": {
       "data": [
-        "12Xct2dQgcnXSNa9Kpf9KRRDWuTfJijiJC2y33rHK2hNkmUE",
-        "1gKv3Sj4RGmqbd411Gsg81j4iEGZzGdqiywgEpizx3bhddE",
-        "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+        "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+        "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+        "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
       ],
       "index": "0x2708",
     },
@@ -437,9 +437,9 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
 [
   {
     "data": {
-      "bouncer": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
-      "nominator": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
-      "root": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "bouncer": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "nominator": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+      "root": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "RolesUpdated",
     "section": "nominationPools",
@@ -476,8 +476,8 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
 [
   {
     "data": {
-      "bouncer": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
-      "nominator": "138m6FMgQs3mqvkcr9iac14tzAGg2R59ZwniVNTJaonBSSaZ",
+      "bouncer": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "nominator": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
       "root": null,
     },
     "method": "RolesUpdated",
