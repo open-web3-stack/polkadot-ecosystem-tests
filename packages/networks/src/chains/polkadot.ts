@@ -1,4 +1,4 @@
-import { defaultAccounts } from '../defaultAccounts.js'
+import { defaultAccounts, defaultAccountsSr25199 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -12,7 +12,10 @@ const custom = {
 
 const getInitStorages = () => ({
   System: {
-    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }]],
+    Account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
+      [[defaultAccountsSr25199.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
+    ],
   },
   ParasDisputes: {
     // these can makes block building super slow
