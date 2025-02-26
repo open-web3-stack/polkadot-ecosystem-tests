@@ -15,7 +15,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 2`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 3`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 4`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 5`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 6`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 7`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -196,7 +196,7 @@ exports[`Polkadot Staking > force apply validator commission > force apply min c
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 3500)",
-          "refTime": "(rounded 260000000)",
+          "refTime": "(rounded 270000000)",
         },
       },
     },
@@ -574,7 +574,7 @@ exports[`Polkadot Staking > trying to become a validator with no bonded funds fa
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 830000000)",
+          "refTime": "(rounded 850000000)",
         },
       },
     },
@@ -599,7 +599,7 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 8800)",
-          "refTime": "(rounded 970000000)",
+          "refTime": "(rounded 990000000)",
         },
       },
     },
