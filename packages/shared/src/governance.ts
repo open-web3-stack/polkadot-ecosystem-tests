@@ -321,11 +321,7 @@ export async function referendumLifecycleTest<
 
   unwantedFields = /alarm|when|since|submitted/
 
-  // Filtering for events only from the `convictionVoting` pallet would leave them empty.
-  // Voting events were only introduced in
-  // https://github.com/paritytech/polkadot-sdk/pull/4613, and will take a few releases until they
-  // are visible here - this will trigger a failure in tests, which can then be addressed.
-  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
+  await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields, redactKeys: unwantedFields })
     .toMatchSnapshot("events for charlie's vote")
 
@@ -395,7 +391,7 @@ export async function referendumLifecycleTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
+  await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for dave's vote")
 
@@ -465,7 +461,7 @@ export async function referendumLifecycleTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(voteEvents, 'convictionVoting', 'referenda')
+  await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for eve's vote")
 
