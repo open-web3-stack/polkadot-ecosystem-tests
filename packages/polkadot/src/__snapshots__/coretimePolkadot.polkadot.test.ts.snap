@@ -113,7 +113,7 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 270000000)",
+        "refTime": "(rounded 280000000)",
       },
     },
     "method": "Processed",
@@ -130,7 +130,7 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 159000000)",
+            "refTime": "(rounded 165000000)",
           },
         },
       },
@@ -321,7 +321,7 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 138000000)",
+            "refTime": "(rounded 144000000)",
           },
         },
       },
