@@ -22,7 +22,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 /// Helpers
 /// -------
 
-const devAccounts = await defaultAccountsSr25199
+const devAccounts = defaultAccountsSr25199
 
 /**
  * Compare the selected properties of two referenda.
