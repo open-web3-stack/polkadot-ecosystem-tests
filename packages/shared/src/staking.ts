@@ -172,7 +172,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -348,8 +348,8 @@ async function forceUnstakeTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
-  const bob = (await defaultAccountsSr25199).bob
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
 
   await client.dev.setStorage({
     System: {
@@ -506,7 +506,7 @@ async function setMinCommission<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -593,7 +593,7 @@ async function setStakingConfigsTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -712,8 +712,8 @@ async function forceApplyValidatorCommissionTest<
 
   /// Create some Sr25519 accounts and fund them
 
-  const alice = (await defaultAccountsSr25199).alice
-  const bob = (await defaultAccountsSr25199).bob
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
 
   await client.dev.setStorage({
     System: {
@@ -799,7 +799,7 @@ async function modifyValidatorCountTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -947,9 +947,9 @@ async function chillOtherTest<
 
   /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
 
-  const alice = (await defaultAccountsSr25199).alice
-  const bob = (await defaultAccountsSr25199).bob
-  const charlie = (await defaultAccountsSr25199).charlie
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
+  const charlie = defaultAccountsSr25199.charlie
 
   await client.dev.setStorage({
     System: {
