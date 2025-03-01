@@ -7,7 +7,7 @@
 		"@e2e-test/networks": "workspace:*",
 		"@polkadot/api": "^15.0",
 		"@polkadot/types": "^15.0",
-		"@polkadot/types-augment": "^15.0"
+		"@polkadot/types-augment": "^15.7"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
