@@ -332,7 +332,7 @@ exports[`Kusama Staking > staking lifecycle > chill events 1`] = `
 [
   {
     "data": {
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Chilled",
     "section": "staking",
@@ -370,7 +370,7 @@ exports[`Kusama Staking > staking lifecycle > kick events 1`] = `
   {
     "data": {
       "nominator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Kicked",
     "section": "staking",
@@ -411,7 +411,7 @@ exports[`Kusama Staking > staking lifecycle > unbond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Unbonded",
     "section": "staking",
@@ -427,7 +427,7 @@ exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `
         "blocked": true,
         "commission": "10.00%",
       },
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -440,7 +440,7 @@ exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Bonded",
     "section": "staking",
@@ -456,7 +456,7 @@ exports[`Kusama Staking > staking lifecycle > validator 0 validate events 1`] = 
         "blocked": false,
         "commission": "10.00%",
       },
-      "stash": "HNXkympzM8W82Ps1U7aMrxC1XSjH2Nc8M1JeLyNXNzA3CW8",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -469,7 +469,7 @@ exports[`Kusama Staking > staking lifecycle > validator 1 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "E7xuB8G3dKNK4z535AW5cuApRGSjEhdkcwySBUTKxruasqh",
+      "stash": "GtgvkKoi3CxJk2mP5ZzuJ7Mj8ipiy4Sf6T4wtt89W8m8FNa",
     },
     "method": "Bonded",
     "section": "staking",
@@ -485,7 +485,7 @@ exports[`Kusama Staking > staking lifecycle > validator 1 validate events 1`] = 
         "blocked": false,
         "commission": "10.00%",
       },
-      "stash": "E7xuB8G3dKNK4z535AW5cuApRGSjEhdkcwySBUTKxruasqh",
+      "stash": "GtgvkKoi3CxJk2mP5ZzuJ7Mj8ipiy4Sf6T4wtt89W8m8FNa",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -498,7 +498,7 @@ exports[`Kusama Staking > staking lifecycle > validator 2 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "Eunjnq21mXWD8bpiCYchh5aXgDStuKdcoXFopXpfu5KcLXs",
+      "stash": "ErRmn1hykJ1ppjMoNfQyRYA9c3j7y3YZnKQsCecD1k9D42B",
     },
     "method": "Bonded",
     "section": "staking",
@@ -514,7 +514,7 @@ exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = 
         "blocked": false,
         "commission": "10.00%",
       },
-      "stash": "Eunjnq21mXWD8bpiCYchh5aXgDStuKdcoXFopXpfu5KcLXs",
+      "stash": "ErRmn1hykJ1ppjMoNfQyRYA9c3j7y3YZnKQsCecD1k9D42B",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -538,6 +538,26 @@ exports[`Kusama Staking > test fast unstake > nominator bond events 1`] = `
 `;
 
 exports[`Kusama Staking > test fast unstake > register fast unstake events 1`] = `[]`;
+
+exports[`Kusama Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
 
 exports[`Kusama Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
 [

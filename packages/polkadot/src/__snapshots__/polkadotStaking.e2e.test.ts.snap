@@ -15,7 +15,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 2`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 3`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 4`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 5`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 6`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 7`] = `
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -196,7 +196,7 @@ exports[`Polkadot Staking > force apply validator commission > force apply min c
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 3500)",
-          "refTime": "(rounded 260000000)",
+          "refTime": "(rounded 270000000)",
         },
       },
     },
@@ -332,7 +332,7 @@ exports[`Polkadot Staking > staking lifecycle > chill events 1`] = `
 [
   {
     "data": {
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Chilled",
     "section": "staking",
@@ -370,7 +370,7 @@ exports[`Polkadot Staking > staking lifecycle > kick events 1`] = `
   {
     "data": {
       "nominator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Kicked",
     "section": "staking",
@@ -411,7 +411,7 @@ exports[`Polkadot Staking > staking lifecycle > unbond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Unbonded",
     "section": "staking",
@@ -427,7 +427,7 @@ exports[`Polkadot Staking > staking lifecycle > validate (blocked) events 1`] = 
         "blocked": true,
         "commission": "0.00%",
       },
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -440,7 +440,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 0 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Bonded",
     "section": "staking",
@@ -456,7 +456,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 0 validate events 1`] 
         "blocked": false,
         "commission": "0.00%",
       },
-      "stash": "15oDEzh2DmP3ouawCQMXc4RLiZA9Af7ZkTu3QygmbfoBUa8o",
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -469,7 +469,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 1 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
+      "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
     "method": "Bonded",
     "section": "staking",
@@ -485,7 +485,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 1 validate events 1`] 
         "blocked": false,
         "commission": "0.00%",
       },
-      "stash": "12YePC3TH3ZuzxB9E1QTKpNKXSyrcsSbNjqiCpBrQFfw2Fjw",
+      "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -498,7 +498,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 2 bond events 1`] = `
   {
     "data": {
       "amount": 50000000000000,
-      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
+      "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
     "method": "Bonded",
     "section": "staking",
@@ -514,7 +514,7 @@ exports[`Polkadot Staking > staking lifecycle > validator 2 validate events 1`] 
         "blocked": false,
         "commission": "0.00%",
       },
-      "stash": "13LUDokDFBn3u1ntu8nZwtYjEhvrnY4bEvQzaTFDkBtM3oD5",
+      "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
     "method": "ValidatorPrefsSet",
     "section": "staking",
@@ -539,6 +539,26 @@ exports[`Polkadot Staking > test fast unstake > nominator bond events 1`] = `
 
 exports[`Polkadot Staking > test fast unstake > register fast unstake events 1`] = `[]`;
 
+exports[`Polkadot Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6200)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
 [
   {
@@ -554,7 +574,7 @@ exports[`Polkadot Staking > trying to become a validator with no bonded funds fa
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 830000000)",
+          "refTime": "(rounded 850000000)",
         },
       },
     },
@@ -579,7 +599,7 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 8800)",
-          "refTime": "(rounded 970000000)",
+          "refTime": "(rounded 990000000)",
         },
       },
     },

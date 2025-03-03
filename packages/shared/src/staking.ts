@@ -1,47 +1,20 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 import BN from 'bn.js'
 
-import { type Chain, defaultAccounts, defaultAccountsSr25199 } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import type { HexString } from '@polkadot/util/types'
 import { assert, describe, test } from 'vitest'
 
 /// -------
 /// Helpers
 /// -------
-
-/**
- * Given a PJS client and a hex-encoded extrinsic with a given non-`Signed` origin, modify the
- * `scheduler` pallet's storage to execute the extrinsic in the next block.
- */
-async function schedulerSetStorage(client: any, call: HexString, origin: any) {
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [number + 1],
-          [
-            {
-              call: {
-                Inline: call,
-              },
-              origin: origin,
-            },
-          ],
-        ],
-      ],
-    },
-  })
-}
 
 /// -------
 /// -------
@@ -56,13 +29,13 @@ async function validateNoBondedFundsFailureTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  // 10e6 is 1% commission
-  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
-  const validateEvents = await sendTransaction(validateTx.signAsync(defaultAccounts.alice))
+  // 1e7 is 1% commission
+  const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
+  await sendTransaction(validateTx.signAsync(defaultAccountsSr25199.alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(validateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to validate with no bonded funds',
   )
 
@@ -93,12 +66,12 @@ async function nominateNoBondedFundsFailureTest<
 
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
-  const nominateTx = client.api.tx.staking.nominate([defaultAccounts.alice.address])
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccounts.alice))
+  const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25199.alice.address])
+  await sendTransaction(nominateTx.signAsync(defaultAccountsSr25199.alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to nominate with no bonded funds',
   )
 
@@ -150,7 +123,7 @@ async function stakingLifecycleTest<
   const validators: KeyringPair[] = []
 
   for (let i = 0; i < validatorCount; i++) {
-    const validator = defaultAccounts.keyring.addFromUri(`//Validator_${i}`)
+    const validator = defaultAccountsSr25199.keyring.addFromUri(`//Validator_${i}`)
     validators.push(validator)
   }
 
@@ -199,7 +172,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -325,11 +298,11 @@ async function stakingLifecycleTest<
   ///
 
   const nominateTx2 = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents2 = await sendTransaction(nominateTx2.signAsync(alice, { nonce: aliceNonce++ }))
+  await sendTransaction(nominateTx2.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when attempting to nominate a blocked validator',
   )
 
@@ -357,6 +330,87 @@ async function stakingLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking').toMatchSnapshot('unbond events')
+}
+
+/**
+ * Test the use of `force_unstake` to forcibly remove a nominator from the system.
+ *
+ * 1. Two accounts bond funds
+ * 2. One account declares its intent to validate, and the other nominates the first
+ * 3. The nominator is forcibly unstaked via a `Root` call to `force_unstake`
+ *
+ * A nominator must be used in these tests and not a validator, since registering validators requires
+ * waiting for an entire era to pass.
+ */
+async function forceUnstakeTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  ///
+  /// Bond funds for both Alice and Bob
+  ///
+
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  /// Express intent to validate as Alice, and nominate as Bob
+
+  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const nominateTx = client.api.tx.staking.nominate([alice.address])
+  await sendTransaction(nominateTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  ///
+  /// Force unstake Bob, first with a signed origin (which *must* fail), and then a `Root` origin.
+  ///
+
+  const slashingSpans = await client.api.query.staking.slashingSpans(bob.address)
+  assert(slashingSpans.isNone)
+
+  // Bob can have no slashing spans recorded as a fresh nominator, so `force_unstake`'s second argument is 0.
+  const forceUnstakeTx = client.api.tx.staking.forceUnstake(bob.address, 0)
+
+  /// Try the extrinsic with a `Signed` origin
+
+  await sendTransaction(forceUnstakeTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'force unstake bad origin events',
+  )
+
+  let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
+  assert(nominatorPrefs.isSome)
+
+  scheduleCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  nominatorPrefs = await client.api.query.staking.nominators(bob.address)
+  assert(nominatorPrefs.isNone)
 }
 
 /**
@@ -452,7 +506,7 @@ async function setMinCommission<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -468,11 +522,11 @@ async function setMinCommission<
   /// Try the extrinsic with a `Signed` origin
   ///
 
-  const setStakingConfigsEvents = await sendTransaction(setMinCommissionCall(0).signAsync(alice))
+  await sendTransaction(setMinCommissionCall(0).signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(setStakingConfigsEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'set staking configs bad origin events',
   )
 
@@ -502,7 +556,7 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    schedulerSetStorage(client, setMinCommissionCall(inc).method.toHex(), origin)
+    scheduleCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -539,7 +593,7 @@ async function setStakingConfigsTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -573,11 +627,11 @@ async function setStakingConfigsTest<
   /// Try the extrinsic with a `Signed` origin
   ///
 
-  const setStakingConfigsEvents = await sendTransaction(setStakingConfigsCall(0).signAsync(alice))
+  await sendTransaction(setStakingConfigsCall(0).signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(setStakingConfigsEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'set staking configs bad origin events',
   )
 
@@ -600,7 +654,7 @@ async function setStakingConfigsTest<
 
   const inc = 10
 
-  schedulerSetStorage(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -658,8 +712,8 @@ async function forceApplyValidatorCommissionTest<
 
   /// Create some Sr25519 accounts and fund them
 
-  const alice = (await defaultAccountsSr25199).alice
-  const bob = (await defaultAccountsSr25199).bob
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
 
   await client.dev.setStorage({
     System: {
@@ -708,7 +762,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
   )
 
-  schedulerSetStorage(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -745,7 +799,7 @@ async function modifyValidatorCountTest<
 >(chain: Chain<TCustom, TInitStoragesRelay>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = (await defaultAccountsSr25199).alice
+  const alice = defaultAccountsSr25199.alice
 
   await client.dev.setStorage({
     System: {
@@ -761,18 +815,18 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a signed origin - it MUST fail.
 
-  const setValidatorCountEvents = await sendTransaction(setValidatorCountCall(0).signAsync(alice))
+  await sendTransaction(setValidatorCountCall(0).signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(setValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'set validator count bad origin events',
   )
   let events = await client.api.query.system.events()
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -796,17 +850,17 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a signed origin - it MUST fail.
 
-  const increaseValidatorCountEvents = await sendTransaction(increaseValidatorCountCall(0).signAsync(alice))
+  await sendTransaction(increaseValidatorCountCall(0).signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(increaseValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'increase validator count bad origin events',
   )
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -825,17 +879,17 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a signed origin - it MUST fail.
 
-  const scaleValidatorCountEvents = await sendTransaction(scaleValidatorCountCall(0).signAsync(alice))
+  await sendTransaction(scaleValidatorCountCall(0).signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(scaleValidatorCountEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'scale validator count bad origin events',
   )
 
   /// Run the call with a `Root` origin
 
-  schedulerSetStorage(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -887,15 +941,15 @@ async function chillOtherTest<
     { Noop: null },
   )
 
-  schedulerSetStorage(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
   /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
 
-  const alice = (await defaultAccountsSr25199).alice
-  const bob = (await defaultAccountsSr25199).bob
-  const charlie = (await defaultAccountsSr25199).charlie
+  const alice = defaultAccountsSr25199.alice
+  const bob = defaultAccountsSr25199.bob
+  const charlie = defaultAccountsSr25199.charlie
 
   await client.dev.setStorage({
     System: {
@@ -973,16 +1027,16 @@ async function chillOtherTest<
   const successfulCall = setStakingConfigsCalls.pop()
 
   for (const call of setStakingConfigsCalls) {
-    schedulerSetStorage(client, call.method.toHex(), { system: 'Root' })
+    scheduleCallWithOrigin(client, call.method.toHex(), { system: 'Root' })
 
     await client.dev.newBlock()
 
     const chillOtherTx = client.api.tx.staking.chillOther(bob.address)
-    const chillOtherEvents = await sendTransaction(chillOtherTx.signAsync(charlie))
+    await sendTransaction(chillOtherTx.signAsync(charlie))
 
     await client.dev.newBlock()
 
-    await checkEvents(chillOtherEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
       'chill other bad origin events',
     )
 
@@ -1003,7 +1057,7 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  schedulerSetStorage(client, successfulCall!.method.toHex(), { system: 'Root' })
+  scheduleCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1033,6 +1087,10 @@ export function stakingE2ETests<
 
     test('staking lifecycle', async () => {
       await stakingLifecycleTest(chain, testConfig.addressEncoding)
+    })
+
+    test('test force unstaking of nominator', async () => {
+      await forceUnstakeTest(chain)
     })
 
     test('test fast unstake', async () => {

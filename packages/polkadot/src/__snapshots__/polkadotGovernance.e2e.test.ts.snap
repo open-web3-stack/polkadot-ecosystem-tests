@@ -174,7 +174,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "method": "DecisionDepositPlaced",
     "section": "referenda",
@@ -182,11 +182,63 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
 ]
 `;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `[]`;
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "Standard": {
+          "balance": 50000000000,
+          "vote": {
+            "conviction": "Locked3x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `[]`;
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "Split": {
+          "aye": 50000000000,
+          "nay": 10000000000,
+        },
+      },
+      "who": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
 
-exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `[]`;
+exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "SplitAbstain": {
+          "abstain": 20000000000,
+          "aye": 50000000000,
+          "nay": 10000000000,
+        },
+      },
+      "who": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
 
 exports[`Polkadot Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
 {
@@ -196,7 +248,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     },
     "decisionDeposit": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "enactment": {
       "after": 1,
@@ -206,11 +258,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
       "ayes": 150000000000,
@@ -230,7 +282,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     },
     "decisionDeposit": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "enactment": {
       "after": 1,
@@ -240,11 +292,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
       "ayes": 155000000000,
@@ -264,7 +316,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     },
     "decisionDeposit": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "enactment": {
       "after": 1,
@@ -274,11 +326,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
       "ayes": 160000000000,
@@ -303,11 +355,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
       "ayes": 0,
@@ -325,7 +377,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     "deciding": null,
     "decisionDeposit": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "enactment": {
       "after": 1,
@@ -335,11 +387,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
       "ayes": 0,
@@ -373,7 +425,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   },
   "decisionDeposit": {
     "amount": 10000000000,
-    "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+    "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
   },
   "enactment": {
     "after": 1,
@@ -383,11 +435,11 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
     "origins": "SmallTipper",
   },
   "proposal": {
-    "inline": "0x13030700e40b540200d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+    "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
   },
   "submissionDeposit": {
     "amount": 10000000000,
-    "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
   },
   "tally": {
     "ayes": 0,
@@ -403,7 +455,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": 10000000000,
-      "who": "15jftzMaVPDfhKQ98RbYZ82t1wNxNdw6cS8E6kgSmMhcrxVz",
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
     },
     "method": "DecisionDepositRefunded",
     "section": "referenda",
@@ -416,7 +468,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   {
     "data": {
       "amount": 10000000000,
-      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "SubmissionDepositRefunded",
     "section": "referenda",
@@ -455,13 +507,6 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   },
   {
     "data": {
-      "amount": 0,
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
       "amount": "(rounded 180000000)",
     },
     "method": "Deposit",
@@ -489,7 +534,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 150000)",
-          "refTime": "(rounded 1300000000)",
+          "refTime": "(rounded 1400000000)",
         },
       },
     },
@@ -509,7 +554,7 @@ exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decisio
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 650000000)",
         },
       },
     },

@@ -76,7 +76,8 @@ These include:
   - Cancelling and killing referenda with XCM root-originated calls
   - Noting and unnoting preimages
 - E2E suite for staking infrastructure:
-  - bonding funds, declaring intent to nominate/validate, unbonding, chilling
+  - bonding funds, declaring intent to nominate/validate, unbonding, chilling, forcibly unstaking as `Root`
+    - includes a test to fast unstaking
   - changing global staking configs - minimum nom./val. bonds, val. commissions, nom./val. counts, etc.
   - more complex scenarios:
     - forcefully updating a validator's commission after an increase to the global parameters' commission
@@ -169,7 +170,20 @@ check(result.redact({
 })).toMatchSnapshot();
 ```
 
+3. **Executing extrinsics with a given origin**
+Use `scheduleCallWithOrigin` on chains whose runtime includes `pallet-scheduler` to be able to execute
+permission-restricted extrinsics with the appropriate origin e.g. `Root`-gated global parameter controls
+for staking and nomination pools
+
+4. **Send XCM `Transact`s to execute extrinsics with given origin in parachain**
+In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `xcmSendTransact` to
+perform the technique in 3. in the desired parachain.
+
+    4.1. Take care to adjust the parameters in accordance with the destination parachain, in particular
+         `refTime/proofSize`
+
 Read [here](https://github.com/AcalaNetwork/chopsticks?tab=readme-ov-file#testing-with-acala-networkchopsticks-testing) for more about `@acala-network/chopsticks-testing`
+
 
 #### Best Practices
 
