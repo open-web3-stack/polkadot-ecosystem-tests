@@ -5,12 +5,12 @@ const custom = {
   collectivesPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
-  collectiveseKusama: {
+  collectivesKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
 }
 
-const getInitStorages = (_config: typeof custom.collectivesPolkadot | typeof custom.collectiveseKusama) => ({
+const getInitStorages = (_config: typeof custom.collectivesPolkadot | typeof custom.collectivesKusama) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
@@ -27,10 +27,10 @@ export const collectivesPolkadot = defineChain({
   initStorages: getInitStorages(custom.collectivesPolkadot),
 })
 
-export const collectiveseKusama = defineChain({
-  name: 'collectiveseKusama',
+export const collectivesKusama = defineChain({
+  name: 'collectivesKusama',
   endpoint: 'wss://kusama-collectives-rpc.polkadot.io',
   paraId: 1001,
-  custom: custom.collectiveseKusama,
-  initStorages: getInitStorages(custom.collectiveseKusama),
+  custom: custom.collectivesKusama,
+  initStorages: getInitStorages(custom.collectivesKusama),
 })

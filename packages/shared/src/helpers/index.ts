@@ -101,7 +101,7 @@ export async function scheduleCallWithOrigin(
 /**
  * Send an XCM message containing an extrinsic to be executed in a parachain with a given origin.
  *
- * @param client Relay chain or parachain client form which to execute `xcmPallet.send`
+ * @param client Relay chain or parachain client from which to execute `xcmPallet.send`
  * @param dest MultiLocation destination to which the XCM message is to be sent
  * @param call Hex-encoded identity pallet extrinsic
  * @param origin Origin with which the extrinsic is to be executed at the location parachain
