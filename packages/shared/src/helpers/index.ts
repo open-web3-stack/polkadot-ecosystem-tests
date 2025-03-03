@@ -101,39 +101,25 @@ export async function scheduleCallWithOrigin(
 /**
  * Send an XCM message containing an extrinsic to be executed in a parachain with a given origin.
  *
- * @param relayClient Relay chain client form which to execute `xcmPallet.send`
- * @param parachainId ID of the parachain to which the XCM message is to be sent
+ * @param client Relay chain or parachain client from which to execute `xcmPallet.send`
+ * @param dest MultiLocation destination to which the XCM message is to be sent
  * @param call Hex-encoded identity pallet extrinsic
  * @param origin Origin with which the extrinsic is to be executed at the location parachain
  * @param requireWeightAtMost Reftime/proof size parameters that `send::Transact` may require (only in XCM v4);
  *        sensible defaults are given.
  */
 export async function xcmSendTransact(
-  relayClient: {
+  client: {
     api: ApiPromise
     dev: {
       setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
     }
   },
-  parachainId: number,
+  dest: any,
   call: HexString,
-  origin: any,
+  origin: { origin: any; originKind: string },
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
 ): Promise<any> {
-  // Destination of the XCM message sent from the relay chain to the parachain via `xcmPallet`
-  const dest = {
-    V4: {
-      parents: 0,
-      interior: {
-        X1: [
-          {
-            Parachain: parachainId,
-          },
-        ],
-      },
-    },
-  }
-
   // The message being sent to the parachain, containing a call to be executed in the parachain:
   const message = {
     V4: [
@@ -148,19 +134,18 @@ export async function xcmSendTransact(
           call: {
             encoded: call,
           },
-          originKind: 'SuperUser',
+          originKind: origin.originKind,
           requireWeightAtMost,
         },
       },
     ],
   }
 
-  const xcmTx = relayClient.api.tx.xcmPallet.send(dest, message)
+  const xcmTx = (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
   const encodedRelayCallData = xcmTx.method.toHex()
 
   /// See `scheduleCallWithOrigin` for more.
-
-  await scheduleCallWithOrigin(relayClient, encodedRelayCallData, origin)
+  await scheduleCallWithOrigin(client, encodedRelayCallData, origin.origin)
 }
 
 /**

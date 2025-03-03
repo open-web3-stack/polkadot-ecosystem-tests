@@ -56,7 +56,22 @@ async function sendXcmFromRelayToPeople(
   call: HexString,
   requireWeightAtMost?: { proofSize: string; refTime: string },
 ): Promise<any> {
-  await xcmSendTransact(relayClient, 1004, call, { system: 'Root' }, requireWeightAtMost)
+  await xcmSendTransact(
+    relayClient,
+    {
+      parents: 0,
+      interior: {
+        X1: [
+          {
+            Parachain: 1004,
+          },
+        ],
+      },
+    },
+    call,
+    { origin: { system: 'Root' }, originKind: 'SuperUser' },
+    requireWeightAtMost,
+  )
 }
 
 /// -------
