@@ -1,5 +1,65 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 540000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 430000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Scheduler > schedule named task with wrong origin > events when scheduling task with insufficient origin 1`] = `
 [
   {
