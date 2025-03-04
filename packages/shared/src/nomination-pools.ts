@@ -96,8 +96,8 @@ async function createNominationPool(
 async function nominationPoolCreationFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(relayChain)
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
 
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
@@ -162,11 +162,11 @@ async function nominationPoolCreationFailureTest<
  * 11. kicking the newcomer account from the pool as the bouncer
  * 12. setting the pool state to destroying
  * 13. attempting to unbond the initial depositor's funds (should fail)
- * @param relayChain
+ * @param chain
  * @param addressEncoding
  */
-async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) {
-  const [client] = await setupNetworks(relayChain)
+async function nominationPoolLifecycleTest(chain, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
 
   const ferdie = defaultAccountsSr25199.keyring.addFromUri('//Ferdie')
 
@@ -615,13 +615,13 @@ async function nominationPoolLifecycleTest(relayChain, addressEncoding: number) 
 /**
  * Test setting a pool's metadata, checking it beforehand to see that a new pool's metadata is an empty string
  * of bytes.
- * @param relayChain
+ * @param chain
  */
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(relayChain)
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
@@ -678,8 +678,8 @@ async function nominationPoolSetMetadataTest<
 async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(relayChain)
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const firstPoolId = preLastPoolId + 1
@@ -805,8 +805,8 @@ async function nominationPoolDoubleJoinError<
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(relayChain)
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
 
   const one = new u32(client.api.registry, 1)
 
@@ -893,8 +893,8 @@ async function nominationPoolGlobalConfigTest<
 async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
-  const [client] = await setupNetworks(relayChain)
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
@@ -1067,30 +1067,30 @@ async function nominationPoolsUpdateRolesTest<
 export function nominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, () => {
     test('nomination pool lifecycle test', async () => {
-      await nominationPoolLifecycleTest(relayChain, testConfig.addressEncoding)
+      await nominationPoolLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('nomination pool creation with insufficient funds', async () => {
-      await nominationPoolCreationFailureTest(relayChain)
+      await nominationPoolCreationFailureTest(chain)
     })
 
     test('nomination pool metadata test', async () => {
-      await nominationPoolSetMetadataTest(relayChain)
+      await nominationPoolSetMetadataTest(chain)
     })
 
     test('nomination pool double join test: an account can only ever be in one pool at a time', async () => {
-      await nominationPoolDoubleJoinError(relayChain)
+      await nominationPoolDoubleJoinError(chain)
     })
 
     test('nomination pool global config test', async () => {
-      await nominationPoolGlobalConfigTest(relayChain)
+      await nominationPoolGlobalConfigTest(chain)
     })
 
     test('nomination pools update roles test', async () => {
-      await nominationPoolsUpdateRolesTest(relayChain, testConfig.addressEncoding)
+      await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding)
     })
   })
 }
