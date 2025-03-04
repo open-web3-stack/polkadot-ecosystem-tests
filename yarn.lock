@@ -2132,6 +2132,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/crypto-js@npm:^4":
+  version: 4.2.2
+  resolution: "@types/crypto-js@npm:4.2.2"
+  checksum: 10c0/760a2078f36f2a3a1089ef367b0d13229876adcf4bcd6e8824d00d9e9bfad8118dc7e6a3cc66322b083535e12be3a29044ccdc9603bfb12519ff61551a3322c6
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:1.0.6, @types/estree@npm:^1.0.0":
   version: 1.0.6
   resolution: "@types/estree@npm:1.0.6"
@@ -2846,6 +2853,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crypto-js@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "crypto-js@npm:4.2.0"
+  checksum: 10c0/8fbdf9d56f47aea0794ab87b0eb9833baf80b01a7c5c1b0edc7faf25f662fb69ab18dc2199e2afcac54670ff0cd9607a9045a3f7a80336cccd18d77a55b9fdf0
+  languageName: node
+  linkType: hard
+
 "data-uri-to-buffer@npm:^4.0.0":
   version: 4.0.1
   resolution: "data-uri-to-buffer@npm:4.0.1"
@@ -2987,9 +3001,11 @@ __metadata:
     "@biomejs/biome": "npm:1.9.4"
     "@e2e-test/networks": "workspace:*"
     "@swc/core": "npm:^1.11.5"
+    "@types/crypto-js": "npm:^4"
     "@types/lodash": "npm:^4.17.13"
     "@types/node": "npm:^22.13.0"
     "@vitest/ui": "npm:^3.0.7"
+    crypto-js: "npm:^4.2.0"
     dotenv: "npm:^16.4.5"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^15.2.10"

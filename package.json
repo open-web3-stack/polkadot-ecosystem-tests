@@ -31,12 +31,14 @@
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
 		"@swc/core": "^1.11.5",
+		"crypto-js": "^4.2.0",
 		"lodash": "^4.17.21",
 		"typescript": "^5.8.2",
 		"vitest": "^3.0.7"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@types/crypto-js": "^4",
 		"@types/lodash": "^4.17.13",
 		"@types/node": "^22.13.0",
 		"@vitest/ui": "^3.0.7",
