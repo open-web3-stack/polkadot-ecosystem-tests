@@ -175,7 +175,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
-  await badOriginHelper(client, cancelTx, 'events when cancelling task with insufficient origin')
+  await badOriginHelper(client, cancelTx, 'events when cancelling named task with insufficient origin')
 }
 
 export function schedulerE2ETests<

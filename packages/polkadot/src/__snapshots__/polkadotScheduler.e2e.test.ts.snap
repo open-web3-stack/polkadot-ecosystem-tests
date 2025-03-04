@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Scheduler > cancel named scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+exports[`Polkadot Scheduler > cancel named scheduled task with wrong origin > events when cancelling named task with insufficient origin 1`] = `
 [
   {
     "data": {
@@ -41,26 +41,6 @@ exports[`Polkadot Scheduler > cancel scheduled task with wrong origin > events w
 `;
 
 exports[`Polkadot Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 380000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Scheduler > schedule named task with wrong origin > events when scheduling task with insufficient origin 1`] = `
 [
   {
     "data": {
