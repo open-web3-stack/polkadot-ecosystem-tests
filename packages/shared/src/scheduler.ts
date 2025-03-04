@@ -1,4 +1,4 @@
-import { describe, test } from 'vitest'
+import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
@@ -29,6 +29,19 @@ export async function scheduleBadOriginTest<
   await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'events when scheduling task with insufficient origin',
   )
+
+  // Check events
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
 }
 
 export function schedulerE2ETests<
