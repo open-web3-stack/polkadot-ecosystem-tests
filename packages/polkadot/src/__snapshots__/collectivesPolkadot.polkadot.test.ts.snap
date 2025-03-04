@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`collectives & polkadot > whitelisting a call by fellowship > destination chain events 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 10000,
+        "refTime": "(rounded 1000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > whitelisting a call by fellowship > source chain events 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17000101010101010101010101010101010101010101010101010101010101010101",
+            },
+            "originKind": "Xcm",
+            "requireWeightAtMost": {
+              "proofSize": 10000,
+              "refTime": 1000000000,
+            },
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
