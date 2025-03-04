@@ -100,12 +100,9 @@ function referendumCmp(
  */
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
-  /**
-   * Setup relay and parachain clients
-   */
-  const [client] = await setupNetworks(relayChain)
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -705,12 +702,9 @@ export async function referendumLifecycleTest<
  */
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
-  /**
-   * Setup relay and parachain clients
-   */
-  const [client] = await setupNetworks(relayChain)
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -837,9 +831,9 @@ export async function referendumLifecycleKillTest<
  */
 export async function preimageTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(relayChain)
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
 
   const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -883,19 +877,19 @@ export async function preimageTest<
 
 export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, () => {
     test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(relayChain, testConfig.addressEncoding)
+      await referendumLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
-      await referendumLifecycleKillTest(relayChain, testConfig.addressEncoding)
+      await referendumLifecycleKillTest(chain, testConfig.addressEncoding)
     })
 
     test('preimage submission, query and removal works', async () => {
-      await preimageTest(relayChain)
+      await preimageTest(chain)
     })
   })
 }

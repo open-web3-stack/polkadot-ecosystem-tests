@@ -25,8 +25,8 @@ import { assert, describe, test } from 'vitest'
  */
 async function validateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1e7 is 1% commission
@@ -60,8 +60,8 @@ async function validateNoBondedFundsFailureTest<
  */
 async function nominateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
@@ -110,8 +110,8 @@ async function nominateNoBondedFundsFailureTest<
  */
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
   ///
@@ -344,8 +344,8 @@ async function stakingLifecycleTest<
  */
 async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25199.alice
@@ -422,8 +422,8 @@ async function forceUnstakeTest<
  */
 async function fastUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
   const kr = await defaultAccountsSr25199
@@ -502,8 +502,8 @@ async function fastUnstakeTest<
  */
 async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25199.alice
@@ -589,8 +589,8 @@ async function setMinCommission<
  */
 async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25199.alice
@@ -706,8 +706,8 @@ async function setStakingConfigsTest<
  */
 async function forceApplyValidatorCommissionTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   /// Create some Sr25519 accounts and fund them
@@ -795,8 +795,8 @@ async function forceApplyValidatorCommissionTest<
  */
 async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25199.alice
@@ -914,8 +914,8 @@ async function modifyValidatorCountTest<
  */
 async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   /// Rquired information for this test, to set appropriate thresholds later
@@ -1074,8 +1074,8 @@ async function chillOtherTest<
 
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, () => {
     test('trying to become a validator with no bonded funds fails', async () => {
       await validateNoBondedFundsFailureTest(chain)
