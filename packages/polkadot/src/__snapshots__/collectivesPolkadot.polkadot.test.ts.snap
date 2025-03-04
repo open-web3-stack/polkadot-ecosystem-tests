@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Collectives > whitelisting a call by fellowship > destination chain events 1`] = `
+exports[`collectives & polkadot > whitelisting a call by fellowship > destination chain events 1`] = `
 [
   {
     "data": {
@@ -29,7 +29,7 @@ exports[`Polkadot Collectives > whitelisting a call by fellowship > destination 
 ]
 `;
 
-exports[`Polkadot Collectives > whitelisting a call by fellowship > source chain events 1`] = `
+exports[`collectives & polkadot > whitelisting a call by fellowship > source chain events 1`] = `
 [
   {
     "data": {
