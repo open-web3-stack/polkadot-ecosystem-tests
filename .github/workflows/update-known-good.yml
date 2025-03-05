@@ -189,18 +189,13 @@ jobs:
 
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
 
-            console.log(impactedNetworks)
-            console.log(notifications)
-
             for (const network of impactedNetworks) {
-              const issueNumber = notifications[network]
-              if (issueNumber) {
-                // add a comment to the issue
-                await github.rest.issues.createComment({
-                  issue_number: issueNumber,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: `Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-                })
-              }
+              const issueNumber = notifications[network] ?? notifications['unknown']
+              // add a comment to the issue
+              await github.rest.issues.createComment({
+                issue_number: issueNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+              })
             }
