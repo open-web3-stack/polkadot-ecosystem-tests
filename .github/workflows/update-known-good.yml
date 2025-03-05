@@ -189,6 +189,9 @@ jobs:
 
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
 
+            console.log(impactedNetworks)
+            console.log(notifications)
+
             for (const network of impactedNetworks) {
               const issueNumber = notifications[network]
               if (issueNumber) {
