@@ -72,6 +72,10 @@ function referendumCmp(
   objectCmp(ref1, ref2, properties, propertiesToBeSkipped, msgFun, optErrorMsg)
 }
 
+/// -------
+/// -------
+/// -------
+
 /**
  * Test the process of
  * 1. submitting a referendum for a treasury spend
