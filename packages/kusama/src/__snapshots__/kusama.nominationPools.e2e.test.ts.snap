@@ -30,7 +30,6 @@ exports[`Kusama Nomination Pools > nomination pool double join test: an account 
   {
     "data": {
       "amount": "(rounded 1700000000)",
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
     },
     "method": "Bonded",
     "section": "staking",
@@ -97,7 +96,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra f
   {
     "data": {
       "amount": "(rounded 1700000000)",
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
     },
     "method": "Bonded",
     "section": "staking",
@@ -117,9 +115,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra f
 exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
 [
   {
-    "data": {
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
-    },
+    "data": {},
     "method": "Chilled",
     "section": "staking",
   },
@@ -237,7 +233,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
   {
     "data": {
       "amount": "(rounded 1700000000)",
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
     },
     "method": "Bonded",
     "section": "staking",
@@ -327,7 +322,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick
   {
     "data": {
       "amount": "(rounded 1700000000)",
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
     },
     "method": "Unbonded",
     "section": "staking",
@@ -350,7 +344,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond event
   {
     "data": {
       "amount": "(rounded 1700000000)",
-      "stash": "F3opxRbN5ZavB4LTn2UYFiR65bYBcdqyfzfmkutumQadysv",
     },
     "method": "Unbonded",
     "section": "staking",
