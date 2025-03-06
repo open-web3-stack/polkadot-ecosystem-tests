@@ -1,7 +1,7 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 import BN from 'bn.js'
 
-import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
@@ -29,7 +29,7 @@ async function validateNoBondedFundsFailureTest<
 >(client: Client<TCustom, TInitStorages>) {
   // 1e7 is 1% commission
   const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
-  await sendTransaction(validateTx.signAsync(defaultAccountsSr25199.alice))
+  await sendTransaction(validateTx.signAsync(defaultAccountsSr25519.alice))
 
   await client.dev.newBlock()
 
@@ -62,8 +62,8 @@ async function nominateNoBondedFundsFailureTest<
 >(client: Client<TCustom, TInitStorages>) {
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
-  const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25199.alice.address])
-  await sendTransaction(nominateTx.signAsync(defaultAccountsSr25199.alice))
+  const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25519.alice.address])
+  await sendTransaction(nominateTx.signAsync(defaultAccountsSr25519.alice))
 
   await client.dev.newBlock()
 
@@ -117,7 +117,7 @@ async function stakingLifecycleTest<
   const validators: KeyringPair[] = []
 
   for (let i = 0; i < validatorCount; i++) {
-    const validator = defaultAccountsSr25199.keyring.addFromUri(`//Validator_${i}`)
+    const validator = defaultAccountsSr25519.keyring.addFromUri(`//Validator_${i}`)
     validators.push(validator)
   }
 
@@ -166,7 +166,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = defaultAccountsSr25199.alice
+  const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
     System: {
@@ -340,8 +340,8 @@ async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25199.alice
-  const bob = defaultAccountsSr25199.bob
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
 
   await client.dev.setStorage({
     System: {
@@ -416,7 +416,7 @@ async function fastUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
-  const kr = defaultAccountsSr25199
+  const kr = defaultAccountsSr25519
   const alice = kr.alice
   const bob = kr.bob
   const charlie = kr.charlie
@@ -494,7 +494,7 @@ async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25199.alice
+  const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
     System: {
@@ -579,7 +579,7 @@ async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25199.alice
+  const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
     System: {
@@ -696,8 +696,8 @@ async function forceApplyValidatorCommissionTest<
 >(client: Client<TCustom, TInitStorages>) {
   /// Create some Sr25519 accounts and fund them
 
-  const alice = defaultAccountsSr25199.alice
-  const bob = defaultAccountsSr25199.bob
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
 
   await client.dev.setStorage({
     System: {
@@ -781,7 +781,7 @@ async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25199.alice
+  const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
     System: {
@@ -927,9 +927,9 @@ async function chillOtherTest<
 
   /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
 
-  const alice = defaultAccountsSr25199.alice
-  const bob = defaultAccountsSr25199.bob
-  const charlie = defaultAccountsSr25199.charlie
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
 
   await client.dev.setStorage({
     System: {

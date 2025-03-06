@@ -1,7 +1,7 @@
 import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
-import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
@@ -22,7 +22,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 /// Helpers
 /// -------
 
-const devAccounts = defaultAccountsSr25199
+const devAccounts = defaultAccountsSr25519
 
 /**
  * Compare the selected properties of two referenda.
