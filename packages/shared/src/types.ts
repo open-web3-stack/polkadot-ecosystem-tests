@@ -1,5 +1,5 @@
 import type { Blockchain, StorageValues } from '@acala-network/chopsticks'
-import type { Chain } from '@e2e-test/networks/types'
+import type { Chain } from '@e2e-test/networks'
 import type { ApiPromise, WsProvider } from '@polkadot/api'
 
 export type Prettify<T> = {
