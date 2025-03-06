@@ -209,7 +209,6 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
   {
     "data": {
       "amount": 5000000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGGFf4eEPmvE6SJiLvHicp9h2XMgfK7",
     },
     "method": "Bonded",
     "section": "staking",
@@ -388,7 +387,6 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
   {
     "data": {
       "amount": 5000000000000,
-      "stash": "13UVJyLnbVp8c4FQeiGGFf4eEPmvE6SJiLvHicp9h2XMgfK7",
     },
     "method": "Bonded",
     "section": "staking",
