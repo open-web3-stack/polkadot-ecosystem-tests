@@ -172,7 +172,7 @@ jobs:
               const match = test.match(regex)
               if (match) {
                 impactedNetworks.add(match[1])
-                if (match[2]) {
+                if (match[2] && match[2] !== "e2e" && match[3] !== ".e2e") {
                   impactedNetworks.add(match[2])
                 }
               } else {
@@ -189,8 +189,12 @@ jobs:
 
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
 
+            const issuesToNotify = new Set()
             for (const network of impactedNetworks) {
-              const issueNumber = notifications[network] ?? notifications['unknown']
+              issuesToNotify.add(notifications[network] ?? notifications['unknown'])
+            }
+
+            for (const issueNumber of issuesToNotify) {
               // add a comment to the issue
               await github.rest.issues.createComment({
                 issue_number: issueNumber,
