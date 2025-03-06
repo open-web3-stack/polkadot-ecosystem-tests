@@ -213,8 +213,9 @@ async function nominationPoolLifecycleTest(chain, addressEncoding: number) {
 
   await client.dev.newBlock()
 
+  const removedKeys = /poolId|stash/
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: removedKeys })
     .toMatchSnapshot('create nomination pool events')
 
   /// Check status of created pool
@@ -642,8 +643,9 @@ async function nominationPoolSetMetadataTest<
 
   await client.dev.newBlock()
 
+  const removedKeys = /poolId|stash/
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: removedKeys })
     .toMatchSnapshot('create nomination pool events')
 
   /// Check metadata pre-alteration
