@@ -1,7 +1,7 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { type Client, setupNetworks } from '@e2e-test/shared'
 import {
   check,
   checkEvents,
@@ -96,9 +96,7 @@ async function createNominationPool(
 async function nominationPoolCreationFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStoragesRelay>) {
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
   const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
@@ -165,9 +163,10 @@ async function nominationPoolCreationFailureTest<
  * @param chain
  * @param addressEncoding
  */
-async function nominationPoolLifecycleTest(chain, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
-
+async function nominationPoolLifecycleTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
   const ferdie = defaultAccountsSr25199.keyring.addFromUri('//Ferdie')
 
   // Fund test accounts not already provisioned in the test chain spec.
@@ -620,9 +619,7 @@ async function nominationPoolLifecycleTest(chain, addressEncoding: number) {
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStoragesRelay>) {
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
   const createNomPoolEvents = await createNominationPool(
@@ -678,9 +675,7 @@ async function nominationPoolSetMetadataTest<
 async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStoragesRelay>) {
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const firstPoolId = preLastPoolId + 1
 
@@ -805,9 +800,7 @@ async function nominationPoolDoubleJoinError<
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStoragesRelay>) {
   const one = new u32(client.api.registry, 1)
 
   const preMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
@@ -893,9 +886,7 @@ async function nominationPoolGlobalConfigTest<
 async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
 
@@ -1068,29 +1059,31 @@ export function nominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, () => {
+  describe(testConfig.testSuiteName, async () => {
+    const [client] = await setupNetworks(chain)
+
     test('nomination pool lifecycle test', async () => {
-      await nominationPoolLifecycleTest(chain, testConfig.addressEncoding)
+      await nominationPoolLifecycleTest(client, testConfig.addressEncoding)
     })
 
     test('nomination pool creation with insufficient funds', async () => {
-      await nominationPoolCreationFailureTest(chain)
+      await nominationPoolCreationFailureTest(client)
     })
 
     test('nomination pool metadata test', async () => {
-      await nominationPoolSetMetadataTest(chain)
+      await nominationPoolSetMetadataTest(client)
     })
 
     test('nomination pool double join test: an account can only ever be in one pool at a time', async () => {
-      await nominationPoolDoubleJoinError(chain)
+      await nominationPoolDoubleJoinError(client)
     })
 
     test('nomination pool global config test', async () => {
-      await nominationPoolGlobalConfigTest(chain)
+      await nominationPoolGlobalConfigTest(client)
     })
 
     test('nomination pools update roles test', async () => {
-      await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding)
+      await nominationPoolsUpdateRolesTest(client, testConfig.addressEncoding)
     })
   })
 }
