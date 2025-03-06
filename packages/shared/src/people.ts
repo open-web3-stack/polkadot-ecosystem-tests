@@ -13,7 +13,7 @@ import { assert, describe, test } from 'vitest'
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { u128 } from '@polkadot/types'
@@ -99,13 +99,13 @@ export async function setIdentityThenRequestAndProvideJudgement<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.bob))
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
-  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
   const registrationIdentityInfo: PalletIdentityLegacyIdentityInfo = registrationInfo.info
@@ -123,7 +123,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   // Recall that, in the people chain's test storage, Alice is the 0th registrar.
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
-  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccounts.bob))
+  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
@@ -133,7 +133,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   await checkEvents(reqJudgEvents, 'identity').toMatchSnapshot('judgement request events')
 
-  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
 
@@ -160,11 +160,11 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   const provJudgTx = txApi.identity.provideJudgement(
     0,
-    defaultAccounts.bob.address,
+    defaultAccountsSr25199.bob.address,
     'Reasonable',
     registrationIdentityInfo.hash.toHex(),
   )
-  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccounts.alice))
+  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccountsSr25199.alice))
 
   await peopleClient.chain.newBlock()
 
@@ -174,7 +174,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   await checkEvents(provJudgEvents, 'identity').toMatchSnapshot('judgement provision events')
 
-  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
 
@@ -213,18 +213,18 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   await peopleClient.dev.setStorage({
     System: {
-      account: [[[defaultAccounts.eve.address], { providers: 1, data: { free: 1e10 } }]],
+      account: [[[defaultAccountsSr25199.eve.address], { providers: 1, data: { free: 1e10 } }]],
     },
   })
 
   let setIdTx = txApi.identity.setIdentity(identity)
-  let setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.eve))
+  let setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25199.eve))
 
   await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
-  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.eve.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
 
@@ -242,7 +242,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   // Batch txs to request 2 judgements in 1 tx
   const batchedTx = peopleClient.api.tx.utility.batchAll([reqJudgAliceTx.method.toHex(), reqJudgBobTx.method.toHex()])
-  const batchedEvents = await sendTransaction(batchedTx.signAsync(defaultAccounts.eve))
+  const batchedEvents = await sendTransaction(batchedTx.signAsync(defaultAccountsSr25199.eve))
 
   await peopleClient.chain.newBlock()
 
@@ -254,11 +254,11 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   const provJudgTx = txApi.identity.provideJudgement(
     0,
-    defaultAccounts.eve.address,
+    defaultAccountsSr25199.eve.address,
     'Reasonable',
     identityInfo.hash.toHex(),
   )
-  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccounts.alice))
+  const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccountsSr25199.alice))
 
   await peopleClient.chain.newBlock()
 
@@ -268,7 +268,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
    * Compare pre and post-judgement identity information.
    */
 
-  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.eve.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
@@ -299,7 +299,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   // It is acceptable to use the same identity as before - what matters is the submission of an
   // `set_identity` extrinsic.
   setIdTx = txApi.identity.setIdentity(identity)
-  setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.eve))
+  setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25199.eve))
 
   await peopleClient.chain.newBlock()
 
@@ -309,7 +309,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
    * Requery judgement data
    */
 
-  const resetIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.eve.address)
+  const resetIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.eve.address)
   assert(resetIdentityInfoReply.isSome, 'Failed to query identity after new identity request')
   const resetRegistrationInfo = resetIdentityInfoReply.unwrap()[0]
   const resetIdentityInfo: PalletIdentityLegacyIdentityInfo = resetRegistrationInfo.info
@@ -347,13 +347,13 @@ export async function setIdentityThenRequesThenCancelThenClear<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.bob))
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
-  const identityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
   const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
 
@@ -364,7 +364,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
    */
 
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
-  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccounts.bob))
+  const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
@@ -374,7 +374,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
    * Check post-request identity state
    */
 
-  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
   const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
 
@@ -393,13 +393,13 @@ export async function setIdentityThenRequesThenCancelThenClear<
    */
 
   const cancelJudgTx = txApi.identity.cancelRequest(0)
-  const cancelJudgEvents = await sendTransaction(cancelJudgTx.signAsync(defaultAccounts.bob))
+  const cancelJudgEvents = await sendTransaction(cancelJudgTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
   await checkEvents(cancelJudgEvents, 'identity').toMatchSnapshot('cancel judgement events')
 
-  const newIdentityInfoReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const newIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(newIdentityInfoReply.isSome, 'Failed to query identity after judgement cancellation')
   const newRegistrationInfo: PalletIdentityRegistration = newIdentityInfoReply.unwrap()[0]
 
@@ -410,13 +410,13 @@ export async function setIdentityThenRequesThenCancelThenClear<
    */
 
   const clearIdTx = txApi.identity.clearIdentity()
-  const clearIdEvents = await sendTransaction(clearIdTx.signAsync(defaultAccounts.bob))
+  const clearIdEvents = await sendTransaction(clearIdTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.chain.newBlock()
 
   await checkEvents(clearIdEvents, 'identity').toMatchSnapshot('clear identity events')
 
-  const identityInfoNullReply = await querier.identity.identityOf(defaultAccounts.bob.address)
+  const identityInfoNullReply = await querier.identity.identityOf(defaultAccountsSr25199.bob.address)
   assert(identityInfoNullReply.isNone, "Bob's identity should be empty after it is cleared")
 }
 
@@ -442,7 +442,7 @@ export async function setIdentityThenAddSubsThenRemove<
    */
 
   const setIdTx = txApi.identity.setIdentity(identity)
-  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccounts.alice))
+  const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25199.alice))
 
   await peopleClient.chain.newBlock()
 
@@ -453,10 +453,10 @@ export async function setIdentityThenAddSubsThenRemove<
    */
 
   const setSubsTx = txApi.identity.setSubs([
-    [defaultAccounts.bob.address, { Raw: 'bob' }],
-    [defaultAccounts.charlie.address, { Raw: 'charlie' }],
+    [defaultAccountsSr25199.bob.address, { Raw: 'bob' }],
+    [defaultAccountsSr25199.charlie.address, { Raw: 'charlie' }],
   ])
-  const setSubsEvents = await sendTransaction(setSubsTx.signAsync(defaultAccounts.alice))
+  const setSubsEvents = await sendTransaction(setSubsTx.signAsync(defaultAccountsSr25199.alice))
 
   // Withouth a second block being mined, the `setSubs` extrinsic will not take effect.
   await peopleClient.dev.newBlock({ count: 1 })
@@ -469,29 +469,29 @@ export async function setIdentityThenAddSubsThenRemove<
    * Check Alice, Bob and Charlie's statuses regarding sub/super identities
    */
 
-  let aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  let aliceSubData = await querier.identity.subsOf(defaultAccountsSr25199.alice.address)
   const doubleIdDepositAmnt: u128 = aliceSubData[0]
 
   await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot("alice's two subidentities")
   await check(aliceSubData[1]).toMatchObject([
-    encodeAddress(defaultAccounts.bob.address, addressEncoding),
-    encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    encodeAddress(defaultAccountsSr25199.bob.address, addressEncoding),
+    encodeAddress(defaultAccountsSr25199.charlie.address, addressEncoding),
   ])
 
-  let bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
+  let bobSuperData = await querier.identity.superOf(defaultAccountsSr25199.bob.address)
   await check(bobSuperData).toMatchSnapshot("bob's superaccount data")
   assert(bobSuperData.isSome)
   await check(bobSuperData.unwrap().toJSON()).toMatchObject([
-    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
+    encodeAddress(defaultAccountsSr25199.alice.publicKey, addressEncoding),
     // 'bob' in hex
     { raw: '0x626f62' },
   ])
 
-  let charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  let charlieSuperData = await querier.identity.superOf(defaultAccountsSr25199.charlie.address)
   await check(charlieSuperData).toMatchSnapshot("charlie's superaccount data")
   assert(charlieSuperData.isSome)
   await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
-    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
+    encodeAddress(defaultAccountsSr25199.alice.publicKey, addressEncoding),
     // 'charlie' in hex
     { raw: '0x636861726c6965' },
   ])
@@ -500,21 +500,21 @@ export async function setIdentityThenAddSubsThenRemove<
    * Rename Charles' subidentity (as Alice)
    */
 
-  const renameSubTx = txApi.identity.renameSub(defaultAccounts.charlie.address, { Raw: 'carolus' })
-  const renameSubEvents = await sendTransaction(renameSubTx.signAsync(defaultAccounts.alice))
+  const renameSubTx = txApi.identity.renameSub(defaultAccountsSr25199.charlie.address, { Raw: 'carolus' })
+  const renameSubEvents = await sendTransaction(renameSubTx.signAsync(defaultAccountsSr25199.alice))
 
   await peopleClient.dev.newBlock({ count: 1 })
 
   await checkEvents(renameSubEvents, 'identity').toMatchSnapshot('rename subidentity events')
 
-  charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  charlieSuperData = await querier.identity.superOf(defaultAccountsSr25199.charlie.address)
   // `pallet_identity::rename_sub` does not emit any events at the moment (Oct 2024), so this will
   // be empty in the snapshot.
   await check(charlieSuperData).toMatchSnapshot("carolus' superaccount data")
 
   assert(charlieSuperData.isSome)
   await check(charlieSuperData.unwrap().toJSON()).toMatchObject([
-    encodeAddress(defaultAccounts.alice.publicKey, addressEncoding),
+    encodeAddress(defaultAccountsSr25199.alice.publicKey, addressEncoding),
     // 'carolus' in hex
     { raw: '0x6361726f6c7573' },
   ])
@@ -523,19 +523,19 @@ export async function setIdentityThenAddSubsThenRemove<
    * As Alice, remove Charlie as a subidentity
    */
 
-  const removeSubTx = txApi.identity.removeSub(defaultAccounts.charlie.address)
-  const removeSubEvents = await sendTransaction(removeSubTx.signAsync(defaultAccounts.alice))
+  const removeSubTx = txApi.identity.removeSub(defaultAccountsSr25199.charlie.address)
+  const removeSubEvents = await sendTransaction(removeSubTx.signAsync(defaultAccountsSr25199.alice))
 
   await peopleClient.dev.newBlock({ count: 1 })
 
   await checkEvents(removeSubEvents, 'identity').toMatchSnapshot('remove subidentity events')
 
-  aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  aliceSubData = await querier.identity.subsOf(defaultAccountsSr25199.alice.address)
   await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot('subidentity data after 1st subid removal')
   assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
-  await check(aliceSubData[1]).toMatchObject([encodeAddress(defaultAccounts.bob.address, addressEncoding)])
+  await check(aliceSubData[1]).toMatchObject([encodeAddress(defaultAccountsSr25199.bob.address, addressEncoding)])
 
-  charlieSuperData = await querier.identity.superOf(defaultAccounts.charlie.address)
+  charlieSuperData = await querier.identity.superOf(defaultAccountsSr25199.charlie.address)
   assert(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity')
 
   /**
@@ -543,16 +543,16 @@ export async function setIdentityThenAddSubsThenRemove<
    */
 
   const quitSubTx = txApi.identity.quitSub()
-  const quitSubEvents = await sendTransaction(quitSubTx.signAsync(defaultAccounts.bob))
+  const quitSubEvents = await sendTransaction(quitSubTx.signAsync(defaultAccountsSr25199.bob))
 
   await peopleClient.dev.newBlock({ count: 1 })
 
   await checkEvents(quitSubEvents, 'identity').toMatchSnapshot('quit subidentity events')
 
-  aliceSubData = await querier.identity.subsOf(defaultAccounts.alice.address)
+  aliceSubData = await querier.identity.subsOf(defaultAccountsSr25199.alice.address)
   await check(aliceSubData).toMatchObject([0, []])
 
-  bobSuperData = await querier.identity.superOf(defaultAccounts.bob.address)
+  bobSuperData = await querier.identity.superOf(defaultAccountsSr25199.bob.address)
   await check(bobSuperData.toJSON()).toMatchObject(null, 'Bob should no longer have a supraidentity')
 }
 
@@ -581,12 +581,12 @@ export async function addRegistrarViaRelayAsRoot<
 
   await peopleClient.dev.setStorage({
     System: {
-      account: [[[defaultAccounts.charlie.address], { providers: 1, data: { free: 1e10 } }]],
+      account: [[[defaultAccountsSr25199.charlie.address], { providers: 1, data: { free: 1e10 } }]],
     },
   })
 
-  const addRegistrarTx = peopleClient.api.tx.identity.addRegistrar(defaultAccounts.charlie.address)
-  await sendTransaction(addRegistrarTx.signAsync(defaultAccounts.charlie))
+  const addRegistrarTx = peopleClient.api.tx.identity.addRegistrar(defaultAccountsSr25199.charlie.address)
+  await sendTransaction(addRegistrarTx.signAsync(defaultAccountsSr25199.charlie))
 
   // First, try sending the `add_registrar` call without the proper origin: just as `Signed`,
   // which is insufficient.
@@ -623,13 +623,13 @@ export async function addRegistrarViaRelayAsRoot<
   // Recall that, in the people chain used for tests, 2 initial test registrars exist.
   const registrars = [
     {
-      account: encodeAddress(defaultAccounts.alice.address, addressEncoding),
+      account: encodeAddress(defaultAccountsSr25199.alice.address, addressEncoding),
       fee: 1,
       fields: 0,
     },
 
     {
-      account: encodeAddress(defaultAccounts.bob.address, addressEncoding),
+      account: encodeAddress(defaultAccountsSr25199.bob.address, addressEncoding),
       fee: 0,
       fields: 0,
     },
@@ -676,7 +676,7 @@ export async function addRegistrarViaRelayAsRoot<
   assert(registrarIndex.eq(2), 'new registrar index should be 2')
 
   registrars.push({
-    account: encodeAddress(defaultAccounts.charlie.address, addressEncoding),
+    account: encodeAddress(defaultAccountsSr25199.charlie.address, addressEncoding),
     fee: 0,
     fields: 0,
   })
