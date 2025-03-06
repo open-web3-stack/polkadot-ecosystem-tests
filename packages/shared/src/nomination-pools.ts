@@ -212,8 +212,9 @@ async function nominationPoolLifecycleTest<
 
   await client.dev.newBlock()
 
+  const removedKeys = /poolId|stash/
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: removedKeys })
     .toMatchSnapshot('create nomination pool events')
 
   /// Check status of created pool
@@ -363,7 +364,7 @@ async function nominationPoolLifecycleTest<
   // TODO: `nominate` does not emit any events from `staking` or `nominationPools` as of
   // Jan. 2025. [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) will fix this.
   await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('nomination pool validator selection events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -387,7 +388,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('join nomination pool events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -412,7 +413,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(bondExtraEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('bond extra funds events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -474,7 +475,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('unbond events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -496,7 +497,7 @@ async function nominationPoolLifecycleTest<
   // TODO: Like `nominate`, `chill` also does not emit any nomination pool events.
   // [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) also fixes this.
   await checkEvents(chillEvents, 'nominationPools', 'staking', 'system')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('chill events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -537,7 +538,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(kickEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('unbond (kick) events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -639,8 +640,9 @@ async function nominationPoolSetMetadataTest<
 
   await client.dev.newBlock()
 
+  const removedKeys = /poolId|stash/
   await checkEvents(createNomPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: removedKeys })
     .toMatchSnapshot('create nomination pool events')
 
   /// Check metadata pre-alteration
@@ -710,7 +712,7 @@ async function nominationPoolDoubleJoinError<
   await client.dev.newBlock()
 
   await checkEvents(joinPoolEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId/ })
+    .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('join nomination pool events')
 
   let poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)

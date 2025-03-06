@@ -37,6 +37,27 @@ Use the [bot trigger issue](https://github.com/open-web3-stack/polkadot-ecosyste
 
 ## For Test Writers
 
+### Test Naming Convention
+
+For XCM tests between two networks, use the naming convention
+
+```
+<chain-a>.<chain-b>.test.ts
+```
+
+For end-to-end tests on a single network, use
+
+```
+<chain-name>.<test-suite-name>.e2e.test.ts
+```
+
+#### Reason
+
+This repository has automated test failure reporting enabled.
+Each network has its own issue, to which the failing CI/CD pipeline will write a comment with the offending job.
+
+This naming convention is necessary so the script that does all this can correctly identify the issue it must write to.
+
 ### Environment Configuration
 Create `.env` file with:
 ```env
