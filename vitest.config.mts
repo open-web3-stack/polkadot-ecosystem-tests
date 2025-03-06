@@ -18,7 +18,7 @@ export default defineConfig({
 		pool: 'forks',
 		passWithNoTests: true,
 		retry: 1,
-		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['basic'],
+		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['default'],
 	},
 	build: {
 		outDir: '../../dist',
