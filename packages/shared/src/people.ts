@@ -101,7 +101,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const setIdTx = txApi.identity.setIdentity(identity)
   const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
@@ -125,7 +125,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
   const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   /**
    * Compare pre and post-request identity information
@@ -166,7 +166,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
   )
   const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccountsSr25519.alice))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   /**
    * Compare pre and post-judgement identity information.
@@ -220,7 +220,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   let setIdTx = txApi.identity.setIdentity(identity)
   let setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25519.eve))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
@@ -244,7 +244,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   const batchedTx = peopleClient.api.tx.utility.batchAll([reqJudgAliceTx.method.toHex(), reqJudgBobTx.method.toHex()])
   const batchedEvents = await sendTransaction(batchedTx.signAsync(defaultAccountsSr25519.eve))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(batchedEvents, 'identity').toMatchSnapshot('double judgment request events')
 
@@ -260,7 +260,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   )
   const provJudgEvents = await sendTransaction(provJudgTx.signAsync(defaultAccountsSr25519.alice))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   checkEvents(provJudgEvents, 'identity').toMatchSnapshot('judgement provision events')
 
@@ -301,7 +301,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   setIdTx = txApi.identity.setIdentity(identity)
   setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25519.eve))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity twice events')
 
@@ -349,7 +349,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
   const setIdTx = txApi.identity.setIdentity(identity)
   const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
@@ -366,7 +366,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
   const reqJudgTx = txApi.identity.requestJudgement(0, 1)
   const reqJudgEvents = await sendTransaction(reqJudgTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(reqJudgEvents, 'identity').toMatchSnapshot('judgement request events')
 
@@ -395,7 +395,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
   const cancelJudgTx = txApi.identity.cancelRequest(0)
   const cancelJudgEvents = await sendTransaction(cancelJudgTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(cancelJudgEvents, 'identity').toMatchSnapshot('cancel judgement events')
 
@@ -412,7 +412,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
   const clearIdTx = txApi.identity.clearIdentity()
   const clearIdEvents = await sendTransaction(clearIdTx.signAsync(defaultAccountsSr25519.bob))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(clearIdEvents, 'identity').toMatchSnapshot('clear identity events')
 
@@ -444,7 +444,7 @@ export async function setIdentityThenAddSubsThenRemove<
   const setIdTx = txApi.identity.setIdentity(identity)
   const setIdEvents = await sendTransaction(setIdTx.signAsync(defaultAccountsSr25519.alice))
 
-  await peopleClient.dev.newBlock()
+  await peopleClient.chain.newBlock()
 
   await checkEvents(setIdEvents, 'identity').toMatchSnapshot('set identity events')
 
