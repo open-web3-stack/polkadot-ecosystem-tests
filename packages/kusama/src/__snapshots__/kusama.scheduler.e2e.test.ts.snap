@@ -40,6 +40,33 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
 ]
 `;
 
+exports[`Kusama Scheduler > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+
+exports[`Kusama Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 27000000)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 27000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Kusama Scheduler > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Kusama Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `

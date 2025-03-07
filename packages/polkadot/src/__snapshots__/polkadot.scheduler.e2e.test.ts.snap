@@ -40,6 +40,33 @@ exports[`Polkadot Scheduler > cancel scheduled task with wrong origin > events w
 ]
 `;
 
+exports[`Polkadot Scheduler > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+
+exports[`Polkadot Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Polkadot Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `

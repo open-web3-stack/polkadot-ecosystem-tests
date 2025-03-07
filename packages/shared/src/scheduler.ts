@@ -284,12 +284,12 @@ export async function scheduledNamedCallExecutes<
 }
 
 /**
- * Test to cancellation fo scheduled task
+ * Test cancellation of scheduled task
  *
  * 1. create a `Root`-origin call
  * 2. schedule said call
  * 3. cancel the call
- * 4. verify that it's data is removed from the agenda
+ * 4. verify that its data is removed from the agenda
  */
 export async function cancelScheduledTask<
   TCustom extends Record<string, unknown> | undefined,
@@ -319,6 +319,55 @@ export async function cancelScheduledTask<
   // This should capture 2 system events, and no `TotalIssuanceForced`.
   // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleCallWithOrigin`
   // 2. The other will be for the cancellation of the scheduled task
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for scheduled task cancellation',
+  )
+
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 0)
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'empty event for cancelled task',
+  )
+}
+
+/**
+ * Test cancellation of a (named) scheduled task
+ *
+ * 1. create a `Root`-origin call
+ * 2. schedule said call, with a name
+ * 3. cancel the call
+ * 4. verify that its data is removed from the agenda
+ */
+export async function cancelScheduledNamedTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  const taskId = sha256AsU8a('task_id')
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 3, null, 0, adjustIssuanceTx)
+
+  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+
+  const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
+
+  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
     'events for scheduled task cancellation',
   )
@@ -436,6 +485,10 @@ export function schedulerE2ETests<
 
     test('cancelling a scheduled task is possible', async () => {
       await cancelScheduledTask(client)
+    })
+
+    test('cancelling a named scheduled task is possible', async () => {
+      await cancelScheduledNamedTask(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
