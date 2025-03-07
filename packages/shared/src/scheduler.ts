@@ -1,7 +1,7 @@
 import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { type Client, setupNetworks } from '@e2e-test/shared'
 import CryptoJS from 'crypto-js'
 import { check, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
@@ -14,8 +14,11 @@ import type { ISubmittableResult } from '@polkadot/types/types'
 /// Helpers
 /// -------
 
-export async function badOriginHelper(
-  client: any,
+export async function badOriginHelper<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  client: Client<TCustom, TInitStorages>,
   scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
   snapshotDescription: string,
 ) {
@@ -55,9 +58,7 @@ export async function badOriginHelper(
 export async function scheduleBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const call = client.api.tx.system.remark('test').method.toHex()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber, null, 0, call)
@@ -71,9 +72,7 @@ export async function scheduleBadOriginTest<
 export async function scheduleNamedBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const call = client.api.tx.system.remark('test').method.toHex()
 
@@ -98,9 +97,7 @@ export async function scheduleNamedBadOriginTest<
 export async function cancelScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const call = client.api.tx.system.remark('test').method.toHex()
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, call)
@@ -141,9 +138,7 @@ export async function cancelScheduledTaskBadOriginTest<
 export async function cancelNamedScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const call = client.api.tx.system.remark('test').method.toHex()
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -193,9 +188,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 export async function scheduledOverweightCallFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Call whose weight will be artifically inflated
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -255,25 +248,27 @@ export function schedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, () => {
+  describe(testConfig.testSuiteName, async () => {
+    const [client] = await setupNetworks(chain)
+
     test('schedule task with wrong origin', async () => {
-      await scheduleBadOriginTest(chain)
+      await scheduleBadOriginTest(client)
     })
 
     test('schedule named task with wrong origin', async () => {
-      await scheduleNamedBadOriginTest(chain)
+      await scheduleNamedBadOriginTest(client)
     })
 
     test('cancel scheduled task with wrong origin', async () => {
-      await cancelScheduledTaskBadOriginTest(chain)
+      await cancelScheduledTaskBadOriginTest(client)
     })
 
     test('cancel named scheduled task with wrong origin', async () => {
-      await cancelNamedScheduledTaskBadOriginTest(chain)
+      await cancelNamedScheduledTaskBadOriginTest(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
-      await scheduledOverweightCallFails(chain)
+      await scheduledOverweightCallFails(client)
     })
   })
 }
