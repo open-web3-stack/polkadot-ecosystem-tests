@@ -2,13 +2,14 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import CryptoJS from 'crypto-js'
 import { check, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { PalletSchedulerScheduled } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+
+import { sha256AsU8a } from '@polkadot/util-crypto'
 
 /// -------
 /// Helpers
@@ -76,9 +77,7 @@ export async function scheduleNamedBadOriginTest<
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const call = client.api.tx.system.remark('test').method.toHex()
 
-  const hash = CryptoJS.SHA256('task_id')
-  const buf = Buffer.from(hash.toString(CryptoJS.enc.Hex), 'hex')
-  const taskId = new Uint8Array(buf)
+  const taskId = sha256AsU8a('task_id')
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber, null, 0, call)
 
@@ -142,9 +141,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   const call = client.api.tx.system.remark('test').method.toHex()
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
-  const hash = CryptoJS.SHA256('task_id')
-  const buf = Buffer.from(hash.toString(CryptoJS.enc.Hex), 'hex')
-  const taskId = new Uint8Array(buf)
+  const taskId = sha256AsU8a('task_id')
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, call)
 
