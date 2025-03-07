@@ -200,6 +200,56 @@ exports[`Polkadot Scheduler > scheduling a named call is possible, and the call 
 ]
 `;
 
+exports[`Polkadot Scheduler > scheduling a task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
 [
   {
