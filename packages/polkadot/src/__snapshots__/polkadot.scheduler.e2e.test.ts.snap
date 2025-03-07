@@ -94,22 +94,6 @@ exports[`Polkadot Scheduler > cancelling a scheduled task is possible > events f
 ]
 `;
 
-exports[`Polkadot Scheduler > experiment > events when scheduling overweight task 1`] = `
-[
-  {
-    "data": {
-      "id": null,
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
-    },
-    "method": "PermanentlyOverweight",
-    "section": "scheduler",
-  },
-]
-`;
-
 exports[`Polkadot Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {

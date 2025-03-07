@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > events when cancelling named task with insufficient origin 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task with wrong origin > events when cancelling named task with insufficient origin 1`] = `
 [
   {
     "data": {
@@ -9,7 +9,7 @@ exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > even
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
+          "proofSize": "(rounded 160000)",
           "refTime": "(rounded 540000000)",
         },
       },
@@ -20,7 +20,7 @@ exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > even
 ]
 `;
 
-exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
 [
   {
     "data": {
@@ -29,8 +29,8 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 500000000)",
+          "proofSize": "(rounded 160000)",
+          "refTime": "(rounded 510000000)",
         },
       },
     },
@@ -40,14 +40,14 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
 ]
 `;
 
-exports[`Kusama Scheduler > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
-exports[`Kusama Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(rounded 5900000)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -57,7 +57,7 @@ exports[`Kusama Scheduler > cancelling a named scheduled task is possible > even
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -67,14 +67,14 @@ exports[`Kusama Scheduler > cancelling a named scheduled task is possible > even
 ]
 `;
 
-exports[`Kusama Scheduler > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
-exports[`Kusama Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(rounded 5900000)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -84,7 +84,7 @@ exports[`Kusama Scheduler > cancelling a scheduled task is possible > events for
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -94,7 +94,7 @@ exports[`Kusama Scheduler > cancelling a scheduled task is possible > events for
 ]
 `;
 
-exports[`Kusama Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {
     "data": {
@@ -103,8 +103,8 @@ exports[`Kusama Scheduler > schedule named task with wrong origin > events when 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 430000000)",
+          "proofSize": "(rounded 160000)",
+          "refTime": "(rounded 420000000)",
         },
       },
     },
@@ -114,7 +114,7 @@ exports[`Kusama Scheduler > schedule named task with wrong origin > events when 
 ]
 `;
 
-exports[`Kusama Scheduler > schedule task with wrong origin > events when scheduling task with insufficient origin 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong origin > events when scheduling task with insufficient origin 1`] = `
 [
   {
     "data": {
@@ -123,7 +123,7 @@ exports[`Kusama Scheduler > schedule task with wrong origin > events when schedu
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
+          "proofSize": "(rounded 160000)",
           "refTime": "(rounded 290000000)",
         },
       },
@@ -134,12 +134,12 @@ exports[`Kusama Scheduler > schedule task with wrong origin > events when schedu
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling a call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(rounded 85000000000000)",
+      "old": "(rounded 85000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -149,7 +149,7 @@ exports[`Kusama Scheduler > scheduling a call is possible, and the call itself s
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -159,37 +159,12 @@ exports[`Kusama Scheduler > scheduling a call is possible, and the call itself s
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
-    },
-    "method": "TotalIssuanceForced",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "id": "(hash)",
-      "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Kusama Scheduler > scheduling a named task after a delay is possible > events for scheduled task execution 1`] = `
-[
-  {
-    "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(rounded 85000000000000)",
+      "old": "(rounded 85000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -199,7 +174,7 @@ exports[`Kusama Scheduler > scheduling a named task after a delay is possible > 
       "id": "(hash)",
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -209,12 +184,37 @@ exports[`Kusama Scheduler > scheduling a named task after a delay is possible > 
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling a named task after a delay is possible > events when scheduling task with delay 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 85000000000000)",
+      "old": "(rounded 85000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 5900000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task after a delay is possible > events when scheduling task with delay 1`] = `
 [
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(rounded 5900000)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -224,7 +224,7 @@ exports[`Kusama Scheduler > scheduling a named task after a delay is possible > 
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -234,12 +234,12 @@ exports[`Kusama Scheduler > scheduling a named task after a delay is possible > 
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling a task after a delay is possible > events for scheduled task execution 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a delay is possible > events for scheduled task execution 1`] = `
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(rounded 85000000000000)",
+      "old": "(rounded 85000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -249,7 +249,7 @@ exports[`Kusama Scheduler > scheduling a task after a delay is possible > events
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -259,12 +259,12 @@ exports[`Kusama Scheduler > scheduling a task after a delay is possible > events
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `
 [
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(rounded 5900000)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -274,7 +274,7 @@ exports[`Kusama Scheduler > scheduling a task after a delay is possible > events
       "id": null,
       "result": "Ok",
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
@@ -284,13 +284,13 @@ exports[`Kusama Scheduler > scheduling a task after a delay is possible > events
 ]
 `;
 
-exports[`Kusama Scheduler > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
 [
   {
     "data": {
       "id": null,
       "task": [
-        "(rounded 27000000)",
+        "(rounded 5900000)",
         0,
       ],
     },
