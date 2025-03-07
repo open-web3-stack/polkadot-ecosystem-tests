@@ -284,6 +284,56 @@ export async function scheduledNamedCallExecutes<
 }
 
 /**
+ * Test to cancellation fo scheduled task
+ *
+ * 1. create a `Root`-origin call
+ * 2. schedule said call
+ * 3. cancel the call
+ * 4. verify that it's data is removed from the agenda
+ */
+export async function cancelScheduledTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 3, null, 0, adjustIssuanceTx)
+
+  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+
+  const cancelTx = client.api.tx.scheduler.cancel(currBlockNumber + 2, 0)
+
+  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // This should capture 2 system events, and no `TotalIssuanceForced`.
+  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleCallWithOrigin`
+  // 2. The other will be for the cancellation of the scheduled task
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for scheduled task cancellation',
+  )
+
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 0)
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'empty event for cancelled task',
+  )
+}
+
+/**
  * Test the process of
  *
  * 1. creating a call requiring a `Root` origin: an update to total issuance
@@ -382,6 +432,10 @@ export function schedulerE2ETests<
 
     test('scheduling a named call is possible, and the call itself succeeds', async () => {
       await scheduledNamedCallExecutes(client)
+    })
+
+    test('cancelling a scheduled task is possible', async () => {
+      await cancelScheduledTask(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
