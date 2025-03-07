@@ -440,6 +440,64 @@ export async function scheduleTaskAfterDelay<
 }
 
 /**
+ * Test scheduling a named task after a delay.
+ */
+export async function scheduleNamedTaskAfterDelay<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+  const taskId = sha256AsU8a('task_id')
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, 1, null, 0, adjustIssuanceTx)
+
+  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 0)
+
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling task with delay')
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
+    priority: 0,
+    call: { inline: adjustIssuanceTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for scheduled task execution',
+  )
+
+  const newTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+
+  // Check that the call was removed from the agenda
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
+  assert(scheduled.length === 0)
+}
+
+/**
  * Test the process of
  *
  * 1. creating a call requiring a `Root` origin: an update to total issuance
@@ -550,6 +608,10 @@ export function schedulerE2ETests<
 
     test('scheduling a task after a delay is possible', async () => {
       await scheduleTaskAfterDelay(client)
+    })
+
+    test('scheduling a named task after a delay is possible', async () => {
+      await scheduleNamedTaskAfterDelay(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
