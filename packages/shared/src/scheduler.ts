@@ -175,6 +175,41 @@ export async function cancelNamedScheduledTaskBadOriginTest<
  * Test the process of
  *
  * 1. creating a call requiring a `Root` origin: an update to total issuance
+ * 2. scheduling it
+ * 3. checking that the call was executed
+ */
+
+export async function scheduledCallExecutes<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, adjustIssuanceTx)
+
+  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for scheduled task execution',
+  )
+
+  const newTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+}
+
+/**
+ * Test the process of
+ *
+ * 1. creating a call requiring a `Root` origin: an update to total issuance
  * 2. artificially manipulating that call's weight to the per-block weight limit allotted to scheduled calls
  * 3. scheduling the call
  * 4. checking that the call was not executed
@@ -262,6 +297,10 @@ export function schedulerE2ETests<
 
     test('cancel named scheduled task with wrong origin', async () => {
       await cancelNamedScheduledTaskBadOriginTest(client)
+    })
+
+    test('scheduling a call is possible, and the call itself succeeds', async () => {
+      await scheduledCallExecutes(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {

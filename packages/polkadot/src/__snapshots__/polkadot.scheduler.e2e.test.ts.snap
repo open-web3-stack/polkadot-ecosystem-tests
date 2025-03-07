@@ -96,6 +96,31 @@ exports[`Polkadot Scheduler > schedule task with wrong origin > events when sche
 ]
 `;
 
+exports[`Polkadot Scheduler > scheduling a call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
 [
   {
