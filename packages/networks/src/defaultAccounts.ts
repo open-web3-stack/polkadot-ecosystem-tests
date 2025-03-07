@@ -26,7 +26,7 @@ export const defaultAccounts: {
  * These are preferrable over Ed25519 because PJS offers Sr25519 development keypairs when used in conjunction with
  * `chopsticks`, which helps debugging tests when `pause()`ing.
  */
-export const defaultAccountsSr25199: {
+export const defaultAccountsSr25519: {
   alice: KeyringPair
   bob: KeyringPair
   charlie: KeyringPair

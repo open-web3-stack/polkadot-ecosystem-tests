@@ -1,8 +1,8 @@
 import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
-import { type Chain, defaultAccountsSr25199 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Client, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
@@ -22,7 +22,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 /// Helpers
 /// -------
 
-const devAccounts = defaultAccountsSr25199
+const devAccounts = defaultAccountsSr25519
 
 /**
  * Compare the selected properties of two referenda.
@@ -101,9 +101,7 @@ function referendumCmp(
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -703,9 +701,7 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -832,9 +828,7 @@ export async function referendumLifecycleKillTest<
 export async function preimageTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(devAccounts.alice))
@@ -879,17 +873,19 @@ export function governanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, () => {
+  describe(testConfig.testSuiteName, async () => {
+    const [client] = await setupNetworks(chain)
+
     test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(chain, testConfig.addressEncoding)
+      await referendumLifecycleTest(client, testConfig.addressEncoding)
     })
 
     test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
-      await referendumLifecycleKillTest(chain, testConfig.addressEncoding)
+      await referendumLifecycleKillTest(client, testConfig.addressEncoding)
     })
 
     test('preimage submission, query and removal works', async () => {
-      await preimageTest(chain)
+      await preimageTest(client)
     })
   })
 }

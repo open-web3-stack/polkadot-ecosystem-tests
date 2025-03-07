@@ -51,17 +51,17 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
 exports[`Kusama People > adding a registrar as root from the relay chain works > registrars after parachain block 1`] = `
 [
   {
-    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "account": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     "fee": 1,
     "fields": 0,
   },
   {
-    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     "fee": 0,
     "fields": 0,
   },
   {
-    "account": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+    "account": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
     "fee": 0,
     "fields": 0,
   },
@@ -71,12 +71,12 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
 exports[`Kusama People > adding a registrar as root from the relay chain works > registrars after relay block 1`] = `
 [
   {
-    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "account": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     "fee": 1,
     "fields": 0,
   },
   {
-    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     "fee": 0,
     "fields": 0,
   },
@@ -86,12 +86,12 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
 exports[`Kusama People > adding a registrar as root from the relay chain works > registrars before relay block 1`] = `
 [
   {
-    "account": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    "account": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     "fee": 1,
     "fields": 0,
   },
   {
-    "account": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     "fee": 0,
     "fields": 0,
   },
@@ -103,7 +103,7 @@ exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, 
   {
     "data": {
       "registrarIndex": 0,
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "who": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
     },
     "method": "JudgementRequested",
     "section": "identity",
@@ -111,7 +111,7 @@ exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, 
   {
     "data": {
       "registrarIndex": 1,
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "who": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
     },
     "method": "JudgementRequested",
     "section": "identity",
@@ -174,7 +174,7 @@ exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, 
   {
     "data": {
       "registrarIndex": 0,
-      "target": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "target": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
     },
     "method": "JudgementGiven",
     "section": "identity",
@@ -186,7 +186,7 @@ exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, 
 [
   {
     "data": {
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "who": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
     },
     "method": "IdentitySet",
     "section": "identity",
@@ -198,7 +198,7 @@ exports[`Kusama People > setting an on-chain identity, requesting 2 judgements, 
 [
   {
     "data": {
-      "who": "DFeS2XXq12E9iRyp52vRvYaMgWrgMXgDc6Cuc7KvfEaGETq",
+      "who": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
     },
     "method": "IdentitySet",
     "section": "identity",
@@ -244,7 +244,7 @@ exports[`Kusama People > setting on-chain identity and requesting judgement shou
   {
     "data": {
       "registrarIndex": 0,
-      "target": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "target": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "JudgementGiven",
     "section": "identity",
@@ -257,7 +257,7 @@ exports[`Kusama People > setting on-chain identity and requesting judgement shou
   {
     "data": {
       "registrarIndex": 0,
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "JudgementRequested",
     "section": "identity",
@@ -269,7 +269,7 @@ exports[`Kusama People > setting on-chain identity and requesting judgement shou
 [
   {
     "data": {
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "IdentitySet",
     "section": "identity",
@@ -281,15 +281,15 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 [
   "(rounded 13368666620)",
   [
-    "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
-    "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+    "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
   ],
 ]
 `;
 
 exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > bob's superaccount data 1`] = `
 [
-  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
   {
     "raw": "0x626f62",
   },
@@ -298,7 +298,7 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 
 exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > carolus' superaccount data 1`] = `
 [
-  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
   {
     "raw": "0x6361726f6c7573",
   },
@@ -307,7 +307,7 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 
 exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > charlie's superaccount data 1`] = `
 [
-  "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+  "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
   {
     "raw": "0x636861726c6965",
   },
@@ -319,8 +319,8 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
   {
     "data": {
       "deposit": "(rounded 6700000000)",
-      "main": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "sub": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "main": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sub": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "SubIdentityRevoked",
     "section": "identity",
@@ -333,8 +333,8 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
   {
     "data": {
       "deposit": "(rounded 6700000000)",
-      "main": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
-      "sub": "E6wQ1iDTCXykVP58tRC5Dx4oskFR5zkg59EGR8tEjtMKVzY",
+      "main": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sub": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
     },
     "method": "SubIdentityRemoved",
     "section": "identity",
@@ -348,7 +348,7 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 [
   {
     "data": {
-      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "IdentitySet",
     "section": "identity",
@@ -362,7 +362,7 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 [
   6684333309,
   [
-    "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+    "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
   ],
 ]
 `;
@@ -372,7 +372,7 @@ exports[`Kusama People > setting on-chain identity, requesting judgement, cancel
   {
     "data": {
       "registrarIndex": 0,
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "JudgementUnrequested",
     "section": "identity",
@@ -385,7 +385,7 @@ exports[`Kusama People > setting on-chain identity, requesting judgement, cancel
   {
     "data": {
       "deposit": "(rounded 6700000000)",
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "IdentityCleared",
     "section": "identity",
@@ -398,7 +398,7 @@ exports[`Kusama People > setting on-chain identity, requesting judgement, cancel
   {
     "data": {
       "registrarIndex": 0,
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "JudgementRequested",
     "section": "identity",
@@ -410,7 +410,7 @@ exports[`Kusama People > setting on-chain identity, requesting judgement, cancel
 [
   {
     "data": {
-      "who": "HJzQySPFxy81SD4wVMbJvZjJufYV1C8zKEVL7y3h4tbRbyR",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "IdentitySet",
     "section": "identity",

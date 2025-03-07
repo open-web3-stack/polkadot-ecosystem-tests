@@ -19,7 +19,16 @@ export async function setupNetworks<T extends Chain[]>(...chains: T) {
 
   const restoreSnapshot = captureSnapshot(...networks)
 
-  beforeEach(restoreSnapshot)
+  beforeEach(async () => {
+    await restoreSnapshot()
+    await Promise.all(
+      networks.map(async (network) => {
+        const blockNumber = (await network.api.rpc.chain.getHeader()).number.toNumber()
+
+        network.dev.setHead(blockNumber)
+      }),
+    )
+  })
 
   afterAll(async () => {
     await Promise.all(networks.map((network) => network.teardown()))
