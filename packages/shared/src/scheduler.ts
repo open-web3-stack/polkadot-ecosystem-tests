@@ -87,7 +87,7 @@ export async function scheduleNamedBadOriginTest<
 /**
  * Test the process of
  *
- * 1. scheduling a call with an origin fulfilling `SchedulOrigin`
+ * 1. scheduling a call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
  * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
@@ -128,7 +128,7 @@ export async function cancelScheduledTaskBadOriginTest<
 /**
  * Test the process of
  *
- * 1. scheduling a named call with an origin fulfilling `SchedulOrigin`
+ * 1. scheduling a named call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
  * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
@@ -195,6 +195,22 @@ export async function scheduledCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: { inline: adjustIssuanceTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
   await client.dev.newBlock()
   currBlockNumber += 1
 
@@ -204,6 +220,10 @@ export async function scheduledCallExecutes<
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+
+  // Check that the call was removed from the agenda
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+  assert(scheduled.length === 0)
 }
 
 /**
@@ -232,6 +252,22 @@ export async function scheduledNamedCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
+    priority: 0,
+    call: { inline: adjustIssuanceTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
   await client.dev.newBlock()
   currBlockNumber += 1
 
@@ -241,6 +277,10 @@ export async function scheduledNamedCallExecutes<
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+
+  // Check that the call was removed from the agenda
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+  assert(scheduled.length === 0)
 }
 
 /**
@@ -261,7 +301,7 @@ export async function scheduledOverweightCallFails<
   // Call whose weight will be artifically inflated
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  // Network's maximum allowed weight for scheduled calls.
+  // Network's maximum allowed weight for a block's entirety of scheduled calls.
   const maxWeight = client.api.consts.scheduler.maximumWeight
 
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
