@@ -1,4 +1,4 @@
-import { defaultAccounts } from '../defaultAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -10,6 +10,7 @@ const custom = {
 const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
   System: {
     account: [
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
     ],

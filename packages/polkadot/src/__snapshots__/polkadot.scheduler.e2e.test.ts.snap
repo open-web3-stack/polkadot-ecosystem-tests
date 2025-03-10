@@ -1,0 +1,301 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Scheduler > cancel named scheduled task with wrong origin > events when cancelling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 480000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > cancel scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 450000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+
+exports[`Polkadot Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
+
+exports[`Polkadot Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 380000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > schedule task with wrong origin > events when scheduling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 42000)",
+          "refTime": "(rounded 270000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named task after a delay is possible > events when scheduling task with delay 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "PermanentlyOverweight",
+    "section": "scheduler",
+  },
+]
+`;
