@@ -1,5 +1,6 @@
 export * from './acala.js'
 export * from './assethub.js'
+export * from './assethubnext.js'
 export * from './astar.js'
 export * from './coretime.js'
 export * from './collectives.js'
