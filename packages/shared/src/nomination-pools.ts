@@ -475,7 +475,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(unbondEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId|stash/ })
+    .redact({ removeKeys: /poolId|stash|era/ })
     .toMatchSnapshot('unbond events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
@@ -538,7 +538,7 @@ async function nominationPoolLifecycleTest<
   await client.dev.newBlock()
 
   await checkEvents(kickEvents, 'staking', 'nominationPools')
-    .redact({ removeKeys: /poolId|stash/ })
+    .redact({ removeKeys: /poolId|stash|era/ })
     .toMatchSnapshot('unbond (kick) events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
