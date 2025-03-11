@@ -94,6 +94,43 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancelling a scheduled task is
 ]
 `;
 
+exports[`Asset Hub Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Asset Hub Polkadot Scheduler E2E tests > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {

@@ -94,6 +94,20 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task 
 ]
 `;
 
+exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `[]`;
+
+exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {
