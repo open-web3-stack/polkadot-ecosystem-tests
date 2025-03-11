@@ -2,7 +2,13 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
+import {
+  check,
+  checkEvents,
+  checkSystemEvents,
+  scheduleInlineCallWithOrigin,
+  scheduleLookupCallWithOrigin,
+} from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -49,10 +55,6 @@ export async function badOriginHelper<
 /// -------
 /// -------
 
-// const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-// const call = client.api.tx.system.remark('test').method.toHex()
-// client.api.tx.scheduler.schedule(currBlockNumber, null, 0, call)
-
 /**
  * Test the process of scheduling a call with a bad origin, and check that it fails.
  */
@@ -90,7 +92,7 @@ export async function scheduleNamedBadOriginTest<
  * 1. scheduling a call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
- * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
+ * Scheduler tests rely on `scheduleInlineCallWithOrigin`, as there would otherwise be no way of scheduling a call
  * with the proper origin.
  */
 export async function cancelScheduledTaskBadOriginTest<
@@ -101,7 +103,7 @@ export async function cancelScheduledTaskBadOriginTest<
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, call)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -131,7 +133,7 @@ export async function cancelScheduledTaskBadOriginTest<
  * 1. scheduling a named call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
- * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
+ * Scheduler tests rely on `scheduleInlineCallWithOrigin`, as there would otherwise be no way of scheduling a call
  * with the proper origin.
  */
 export async function cancelNamedScheduledTaskBadOriginTest<
@@ -145,7 +147,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, call)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -188,7 +190,7 @@ export async function scheduledCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -245,7 +247,7 @@ export async function scheduledNamedCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -300,7 +302,7 @@ export async function cancelScheduledTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -311,13 +313,13 @@ export async function cancelScheduledTask<
 
   const cancelTx = client.api.tx.scheduler.cancel(currBlockNumber + 2, 0)
 
-  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
 
   // This should capture 2 system events, and no `TotalIssuanceForced`.
-  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleCallWithOrigin`
+  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleInlineCallWithOrigin`
   // 2. The other will be for the cancellation of the scheduled task
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
     'events for scheduled task cancellation',
@@ -352,7 +354,7 @@ export async function cancelScheduledNamedTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -363,7 +365,7 @@ export async function cancelScheduledNamedTask<
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
-  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -394,7 +396,7 @@ export async function scheduleTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.scheduleAfter(1, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -452,7 +454,7 @@ export async function scheduleNamedTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, 1, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -523,7 +525,7 @@ export async function scheduledOverweightCallFails<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, withWeightTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -565,6 +567,78 @@ export async function scheduledOverweightCallFails<
   assert(scheduled.length === 1)
 
   await check(scheduled[0].unwrap()).toMatchObject(task)
+}
+
+/**
+ * Test scheduling of preimage lookup call.
+ *
+ * 1. Create a call requiring a `Root` origin: an update to total issuance
+ * 2. Note the call in storage for the `preimage` pallet
+ * 3. Schedule the call
+ * 4. Check that the call was executed
+ *
+ * As of Mar. 2025, this fails on the Collectives chain.
+ * The issue has been fixed, and when it is upstreamed, this test can then be updated.
+ * @param client
+ */
+async function scheduleLookupCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
+  const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccountsSr25519.alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(preImageEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  const preimageHash = encodedProposal.hash
+
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await scheduleLookupCallWithOrigin(
+    client,
+    { hash: preimageHash, len: encodedProposal.encodedLength },
+    { system: 'Root' },
+  )
+
+  const agenda = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(agenda.length === 1)
+  assert(agenda[0].isSome)
+  const scheduledTask = agenda[0].unwrap()
+  await check(scheduledTask).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: { lookup: { hash: preimageHash.toHex(), len: encodedProposal.encodedLength } },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  await client.dev.newBlock()
+
+  // Check if `parachainInfo` pallet exists
+  const parachainInfo = client.api.query.parachainInfo
+  if (parachainInfo) {
+    // In the collectives chain, dispatch of lookup calls does not work at present.
+    // Fix: https://github.com/polkadot-fellows/runtimes/pull/614
+    if ((await parachainInfo.parachainId()).eq(1001)) {
+      const newTotalIssuance = await client.api.query.balances.totalIssuance()
+      assert(newTotalIssuance.eq(oldTotalIssuance))
+    }
+  } else {
+    const newTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  }
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for scheduled lookup-task execution',
+  )
 }
 
 export function schedulerE2ETests<
@@ -616,6 +690,10 @@ export function schedulerE2ETests<
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
       await scheduledOverweightCallFails(client)
+    })
+
+    test('execution of scheduled preimage lookup call works', async () => {
+      await scheduleLookupCall(client)
     })
   })
 }
