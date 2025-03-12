@@ -641,6 +641,104 @@ async function scheduleLookupCall<
   )
 }
 
+/**
+ * Test the scheduling of a periodic task that executes multiple times:
+ *
+ * 1. Create a Root-origin call to adjust total issuance
+ * 2. Schedule it to run every other block, starting 2 blocks after scheduling
+ * 3. Verify it executes 3 times at the correct intervals
+ */
+export async function schedulePeriodicTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const period = 2 // blocks between executions
+  const repetitions = 4 // total number of executions
+
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduleTx = client.api.tx.scheduler.schedule(
+    currBlockNumber + 2, // when
+    [period, repetitions], // maybe_periodic: [period, repetitions]
+    0, // priority
+    adjustIssuanceTx, // call
+  )
+
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // Move to first execution block
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Initial agenda check
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: { inline: adjustIssuanceTx.method.toHex() },
+    // The number of repetitions is reduced by 1 because the first scheduled execution has already occurred:
+    // it is exactly this task.
+    maybePeriodic: [period, repetitions - 1],
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  // The task has a period of .
+  for (let i = 1; i <= repetitions; i++) {
+    // Execution block
+    await client.dev.newBlock()
+    currBlockNumber += 1
+
+    await checkSystemEvents(client, 'scheduler', {
+      section: 'balances',
+      method: 'TotalIssuanceForced',
+    }).toMatchSnapshot(`events for periodic task execution ${i}`)
+
+    const currentTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
+
+    // Check agenda for next scheduled execution (if not the last iteration)
+    if (i < repetitions) {
+      scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
+      assert(scheduled.length === 1)
+      assert(scheduled[0].isSome)
+      let maybePeriodic: [number, number] | null
+      if (i === repetitions - 1) {
+        maybePeriodic = null
+      } else {
+        maybePeriodic = [period, repetitions - (i + 1)]
+      }
+
+      await check(scheduled[0].unwrap()).toMatchObject({
+        maybeId: null,
+        priority: 0,
+        call: { inline: adjustIssuanceTx.method.toHex() },
+        maybePeriodic: maybePeriodic,
+        origin: {
+          system: {
+            root: null,
+          },
+        },
+      })
+    }
+
+    // Skip one block (no execution)
+    await client.dev.newBlock()
+    currBlockNumber += 1
+  }
+
+  // Verify task is removed after all executions
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 0)
+}
+
 export function schedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -694,6 +792,10 @@ export function schedulerE2ETests<
 
     test('execution of scheduled preimage lookup call works', async () => {
       await scheduleLookupCall(client)
+    })
+
+    test('scheduling a periodic task is possible', async () => {
+      await schedulePeriodicTask(client)
     })
   })
 }
