@@ -51,6 +51,9 @@ export async function badOriginHelper<
   assert(dispatchError.isBadOrigin)
 }
 
+const PERIOD = 2
+const REPETITIONS = 3
+
 /// -------
 /// -------
 /// -------
@@ -655,8 +658,6 @@ async function testPeriodicTask<
   client: Client<TCustom, TInitStorages>,
   scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
   taskId: Uint8Array | null,
-  period: number,
-  repetitions: number,
 ) {
   scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
@@ -677,7 +678,7 @@ async function testPeriodicTask<
     call: { inline: adjustIssuanceTx.method.toHex() },
     // The number of repetitions is reduced by 1 because the first scheduled execution has already occurred:
     // it is exactly this task.
-    maybePeriodic: [period, repetitions - 1],
+    maybePeriodic: [PERIOD, REPETITIONS - 1],
     origin: {
       system: {
         root: null,
@@ -689,7 +690,7 @@ async function testPeriodicTask<
   // 1. it executes at the correct intervals,
   // 2. it runs the expected number of executions.
   // 3. the task is removed from the agenda after all executions.
-  for (let i = 1; i <= repetitions; i++) {
+  for (let i = 1; i <= REPETITIONS; i++) {
     // Execution block
     await client.dev.newBlock()
     currBlockNumber += 1
@@ -703,16 +704,16 @@ async function testPeriodicTask<
     assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
 
     // Check agenda for next scheduled execution (if not the last iteration)
-    if (i < repetitions) {
+    if (i < REPETITIONS) {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
       assert(scheduled.length === 1)
       assert(scheduled[0].isSome)
 
       let maybePeriodic: [number, number] | null
-      if (i === repetitions - 1) {
+      if (i === REPETITIONS - 1) {
         maybePeriodic = null
       } else {
-        maybePeriodic = [period, repetitions - (i + 1)]
+        maybePeriodic = [PERIOD, REPETITIONS - (i + 1)]
       }
 
       await check(scheduled[0].unwrap()).toMatchObject({
@@ -749,20 +750,17 @@ export async function schedulePeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const period = 2 // blocks between executions
-  const repetitions = 3 // total number of executions
-
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const scheduleTx = client.api.tx.scheduler.schedule(
     currBlockNumber + 2, // when
-    [period, repetitions], // maybe_periodic: [period, repetitions]
+    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
     0, // priority
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(client, scheduleTx, null, period, repetitions)
+  await testPeriodicTask(client, scheduleTx, null)
 }
 
 /**
@@ -776,9 +774,6 @@ export async function scheduleNamedPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  const period = 2 // blocks between executions
-  const repetitions = 3 // total number of executions
-
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -786,12 +781,12 @@ export async function scheduleNamedPeriodicTask<
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(
     taskId, // id
     currBlockNumber + 2, // when
-    [period, repetitions], // maybe_periodic: [period, repetitions]
+    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
     0, // priority
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(client, scheduleNamedTx, taskId, period, repetitions)
+  await testPeriodicTask(client, scheduleNamedTx, taskId)
 }
 
 export function schedulerE2ETests<
