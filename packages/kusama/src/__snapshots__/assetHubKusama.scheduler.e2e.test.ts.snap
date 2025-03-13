@@ -131,6 +131,31 @@ exports[`Asset Hub Kusama Scheduler E2E tests > execution of scheduled preimage 
 ]
 `;
 
+exports[`Asset Hub Kusama Scheduler E2E tests > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 27000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Asset Hub Kusama Scheduler E2E tests > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {

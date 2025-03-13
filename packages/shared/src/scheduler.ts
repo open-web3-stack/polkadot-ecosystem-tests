@@ -12,7 +12,7 @@ import {
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { PalletSchedulerScheduled } from '@polkadot/types/lookup'
+import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 
 import { sha256AsU8a } from '@polkadot/util-crypto'
@@ -789,6 +789,132 @@ export async function scheduleNamedPeriodicTask<
   await testPeriodicTask(client, scheduleNamedTx, taskId)
 }
 
+/**
+ * Test priority-based execution of weighted tasks:
+ *
+ * Note: Current behavior (pre polkadot-sdk#7790) incorrectly drops postponed tasks from
+ * the agenda when they cannot be executed due to weight constraints. PR #7790 fixes this
+ * by ensuring postponed tasks are put back into the agenda for the next block.
+ *
+ * 1. Create two transactions with weights that exceed half the maximum weight per block
+ * 2. Schedule them for the same block with different priorities
+ * 3. Verify that:
+ *    - The higher priority task executes first and is removed from agenda
+ *    - The lower priority task is incorrectly dropped (current behavior)
+ *    - The incompleteSince storage is updated correctly
+ *    - No tasks execute in the next block since the low priority task was dropped
+ */
+export async function schedulePriorityWeightedTasks<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
+  const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  // Get maximum weight and create tasks that use 60% of it each
+  const { refTime, proofSize }: SpWeightsWeightV2Weight = client.api.consts.scheduler.maximumWeight
+  const taskWeight = {
+    refTime: refTime.unwrap().muln(60).divn(100),
+    proofSize: proofSize.unwrap().muln(60).divn(100),
+  }
+
+  const highPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceHighTx, taskWeight)
+  const lowPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceLowTx, taskWeight)
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const targetBlock = currBlockNumber + 2
+
+  // Schedule both tasks for the same block with different priorities
+  const scheduleHighPriorityTx = client.api.tx.scheduler.schedule(
+    targetBlock,
+    null,
+    0, // higher priority
+    highPriorityTx,
+  )
+  const scheduleLowPriorityTx = client.api.tx.scheduler.schedule(
+    targetBlock,
+    null,
+    1, // lower priority
+    lowPriorityTx,
+  )
+
+  // Schedule both tasks
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [currBlockNumber + 1],
+          [
+            {
+              call: { Inline: scheduleLowPriorityTx.method.toHex() },
+              origin: { system: 'Root' },
+            },
+            {
+              call: { Inline: scheduleHighPriorityTx.method.toHex() },
+              origin: { system: 'Root' },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // Move to execution block
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Verify both tasks are in the agenda
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 2)
+  assert(scheduled[0].isSome && scheduled[1].isSome)
+
+  // Execute first block - should only complete high priority task
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Check that high priority task executed
+  const midTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(midTotalIssuance.eq(initialTotalIssuance.addn(2)))
+
+  // Verify incompleteSince is set to current block
+  const incompleteSince = await client.api.query.scheduler.incompleteSince()
+  assert(incompleteSince.isSome)
+  assert(incompleteSince.unwrap().eq(currBlockNumber))
+
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+  assert(scheduled.length === 2)
+  assert(scheduled[0].isSome && scheduled[1].isNone)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: null,
+    priority: 1,
+    call: { inline: lowPriorityTx.method.toHex() },
+    maybePeriodic: null,
+    origin: { system: { root: null } },
+  })
+
+  // Execute second scheduled task
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  const finalTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(finalTotalIssuance.eq(initialTotalIssuance.addn(3)))
+
+  // Verify incompleteSince has been unset
+  const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
+  assert(finalIncompleteSince.isNone)
+
+  // Verify agenda is now empty
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
+  assert(scheduled.length === 0)
+
+  // Check events - should only see one execution
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for priority weighted tasks execution',
+  )
+}
+
 export function schedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -850,6 +976,10 @@ export function schedulerE2ETests<
 
     test('execution of scheduled preimage lookup call works', async () => {
       await scheduleLookupCall(client)
+    })
+
+    test('priority-based execution of weighted tasks works correctly', async () => {
+      await schedulePriorityWeightedTasks(client)
     })
   })
 }
