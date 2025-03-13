@@ -362,7 +362,7 @@ exports[`Polkadot Scheduler > scheduling a named task after a delay is possible 
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for periodic task execution 1 1`] = `
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 1 1`] = `
 [
   {
     "data": {
@@ -395,7 +395,7 @@ exports[`Polkadot Scheduler > scheduling a periodic task is possible > events fo
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for periodic task execution 2 1`] = `
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 2 1`] = `
 [
   {
     "data": {
@@ -428,40 +428,7 @@ exports[`Polkadot Scheduler > scheduling a periodic task is possible > events fo
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for periodic task execution 3 1`] = `
-[
-  {
-    "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
-    },
-    "method": "TotalIssuanceForced",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-      "when": "(rounded 25000000)",
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for periodic task execution 4 1`] = `
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 3 1`] = `
 [
   {
     "data": {

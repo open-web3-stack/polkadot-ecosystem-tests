@@ -642,33 +642,28 @@ async function scheduleLookupCall<
 }
 
 /**
- * Test the scheduling of a periodic task that executes multiple times:
- *
- * 1. Create a Root-origin call to adjust total issuance
- * 2. Schedule it to run every other block, starting 2 blocks after scheduling
- * 3. Verify it executes 3 times at the correct intervals
+ * Helper function containing common logic for testing periodic tasks
+ * Tests that:
+ * 1. task executes at the correct intervals
+ * 2. runs the expected number of executions
+ * 3. task is removed from the agenda after all executions
  */
-export async function schedulePeriodicTask<
+async function testPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  const period = 2 // blocks between executions
-  const repetitions = 4 // total number of executions
-
-  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
-
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  const scheduleTx = client.api.tx.scheduler.schedule(
-    currBlockNumber + 2, // when
-    [period, repetitions], // maybe_periodic: [period, repetitions]
-    0, // priority
-    adjustIssuanceTx, // call
-  )
-
+>(
+  client: Client<TCustom, TInitStorages>,
+  scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  taskId: Uint8Array | null,
+  period: number,
+  repetitions: number,
+) {
   scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   // Move to first execution block
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   await client.dev.newBlock()
   currBlockNumber += 1
 
@@ -677,7 +672,7 @@ export async function schedulePeriodicTask<
   assert(scheduled.length === 1)
   assert(scheduled[0].isSome)
   await check(scheduled[0].unwrap()).toMatchObject({
-    maybeId: null,
+    maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
     priority: 0,
     call: { inline: adjustIssuanceTx.method.toHex() },
     // The number of repetitions is reduced by 1 because the first scheduled execution has already occurred:
@@ -702,17 +697,17 @@ export async function schedulePeriodicTask<
     await checkSystemEvents(client, 'scheduler', {
       section: 'balances',
       method: 'TotalIssuanceForced',
-    }).toMatchSnapshot(`events for periodic task execution ${i}`)
+    }).toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
 
     const currentTotalIssuance = await client.api.query.balances.totalIssuance()
     assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
 
-    // Check agenda for next scheduled execution, if not the last iteration: in this case, the task will have
-    // been removed from the agenda.
+    // Check agenda for next scheduled execution (if not the last iteration)
     if (i < repetitions) {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
       assert(scheduled.length === 1)
       assert(scheduled[0].isSome)
+
       let maybePeriodic: [number, number] | null
       if (i === repetitions - 1) {
         maybePeriodic = null
@@ -721,7 +716,7 @@ export async function schedulePeriodicTask<
       }
 
       await check(scheduled[0].unwrap()).toMatchObject({
-        maybeId: null,
+        maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
         priority: 0,
         call: { inline: adjustIssuanceTx.method.toHex() },
         maybePeriodic: maybePeriodic,
@@ -744,6 +739,33 @@ export async function schedulePeriodicTask<
 }
 
 /**
+ * Test the scheduling of a periodic task that executes multiple times:
+ *
+ * 1. Create a Root-origin call to adjust total issuance
+ * 2. Schedule it to run every other block, starting 2 blocks after scheduling
+ * 3. Verify it executes 3 times at the correct intervals
+ */
+export async function schedulePeriodicTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const period = 2 // blocks between executions
+  const repetitions = 3 // total number of executions
+
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const scheduleTx = client.api.tx.scheduler.schedule(
+    currBlockNumber + 2, // when
+    [period, repetitions], // maybe_periodic: [period, repetitions]
+    0, // priority
+    adjustIssuanceTx, // call
+  )
+
+  await testPeriodicTask(client, scheduleTx, null, period, repetitions)
+}
+
+/**
  * Test scheduling a named periodic task that executes multiple times
  *
  * 1. Create a Root-origin call to adjust total issuance
@@ -758,9 +780,9 @@ export async function scheduleNamedPeriodicTask<
   const repetitions = 3 // total number of executions
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
-  const taskId = sha256AsU8a('periodic_task_id')
+  const taskId = sha256AsU8a('task_id')
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(
     taskId, // id
     currBlockNumber + 2, // when
@@ -769,80 +791,7 @@ export async function scheduleNamedPeriodicTask<
     adjustIssuanceTx, // call
   )
 
-  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
-  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
-
-  // Move to first execution block
-  await client.dev.newBlock()
-  currBlockNumber += 1
-
-  // Initial agenda check
-  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
-
-  await check(scheduled[0].unwrap()).toMatchObject({
-    maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
-    priority: 0,
-    call: { inline: adjustIssuanceTx.method.toHex() },
-    maybePeriodic: [period, repetitions - 1],
-    origin: {
-      system: {
-        root: null,
-      },
-    },
-  })
-
-  // Run through the task's repetitions, and verify that
-  // 1. it executes at the correct intervals,
-  // 2. it runs the expected number of executions.
-  // 3. the task is removed from the agenda after all executions.
-  for (let i = 1; i <= repetitions; i++) {
-    // Execution block
-    await client.dev.newBlock()
-    currBlockNumber += 1
-
-    await checkSystemEvents(client, 'scheduler', {
-      section: 'balances',
-      method: 'TotalIssuanceForced',
-    }).toMatchSnapshot(`events for named periodic task execution ${i}`)
-
-    const currentTotalIssuance = await client.api.query.balances.totalIssuance()
-    assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
-
-    let maybePeriodic: [number, number] | null
-    if (i === repetitions - 1) {
-      maybePeriodic = null
-    } else {
-      maybePeriodic = [period, repetitions - (i + 1)]
-    }
-
-    // Check agenda for next scheduled execution (if not the last iteration)
-    if (i < repetitions) {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-      assert(scheduled.length === 1)
-      assert(scheduled[0].isSome)
-      await check(scheduled[0].unwrap()).toMatchObject({
-        maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
-        priority: 0,
-        call: { inline: adjustIssuanceTx.method.toHex() },
-        maybePeriodic: maybePeriodic,
-        origin: {
-          system: {
-            root: null,
-          },
-        },
-      })
-    }
-
-    // Skip one block (no execution)
-    await client.dev.newBlock()
-    currBlockNumber += 1
-  }
-
-  // Verify task is removed after all executions
-  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  await testPeriodicTask(client, scheduleNamedTx, taskId, period, repetitions)
 }
 
 export function schedulerE2ETests<
