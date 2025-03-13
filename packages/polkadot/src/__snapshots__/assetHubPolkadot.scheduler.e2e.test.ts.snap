@@ -147,7 +147,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > priority-based execution of we
       "result": "Ok",
       "task": [
         "(rounded 25000000)",
-        0,
+        1,
       ],
     },
     "method": "Dispatched",

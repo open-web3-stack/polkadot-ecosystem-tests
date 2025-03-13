@@ -147,7 +147,7 @@ exports[`Polkadot Scheduler > priority-based execution of weighted tasks works c
       "result": "Ok",
       "task": [
         "(rounded 25000000)",
-        0,
+        1,
       ],
     },
     "method": "Dispatched",

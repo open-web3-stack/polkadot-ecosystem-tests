@@ -874,6 +874,11 @@ export async function schedulePriorityWeightedTasks<
   await client.dev.newBlock()
   currBlockNumber += 1
 
+  // Check events - should only see one execution
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for priority weighted tasks execution',
+  )
+
   // Check that high priority task executed
   const midTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(midTotalIssuance.eq(initialTotalIssuance.addn(2)))
@@ -908,11 +913,6 @@ export async function schedulePriorityWeightedTasks<
   // Verify agenda is now empty
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
   assert(scheduled.length === 0)
-
-  // Check events - should only see one execution
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for priority weighted tasks execution',
-  )
 }
 
 export function schedulerE2ETests<

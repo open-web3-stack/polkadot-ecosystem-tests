@@ -147,7 +147,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > priority-based execution of weig
       "result": "Ok",
       "task": [
         "(rounded 27000000)",
-        0,
+        1,
       ],
     },
     "method": "Dispatched",

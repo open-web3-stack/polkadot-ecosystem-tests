@@ -124,7 +124,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > priority-based execution of 
       "result": "Ok",
       "task": [
         "(rounded 5900000)",
-        0,
+        1,
       ],
     },
     "method": "Dispatched",
