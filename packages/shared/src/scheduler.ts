@@ -915,6 +915,256 @@ export async function schedulePriorityWeightedTasks<
   assert(scheduled.length === 0)
 }
 
+/**
+ * Test setting and canceling retry configuration for unnamed scheduled tasks:
+ *
+ * 1. Create and schedule a task that will fail
+ *    - `remarkWithEvent` fails with `Root` origin
+ * 2. Set retry configuration using `scheduler.setRetry`
+ * 3. Verify task fails and is rescheduled per its retry config
+ * 4. Cancel the retry configuration
+ * 5. Verify the task remains scheduled but without its retry config
+ */
+export async function scheduleWithRetryConfig<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  // Create a task that will fail - remarkWithEvent requires signed origin
+  const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // Define base task object once
+  const baseTask = {
+    maybeId: null,
+    priority: 1,
+    call: { inline: failingTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  }
+
+  const retryConfig = {
+    totalRetries: 3,
+    remaining: 3,
+    period: 3,
+  }
+
+  // Schedule the task first
+  const scheduleTx = client.api.tx.scheduler.schedule(initialBlockNumber + 3, null, 1, failingTx)
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  // Move to scheduling block
+  await client.dev.newBlock()
+
+  // Check initial schedule
+  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  // Set retry configuration
+  const setRetryTx = client.api.tx.scheduler.setRetry(
+    [initialBlockNumber + 3, 0],
+    retryConfig.totalRetries,
+    retryConfig.period,
+  )
+  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  let retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 3, 0])
+  assert(retryOpt.isSome)
+  let retry = retryOpt.unwrap()
+  await check(retry).toMatchObject(retryConfig)
+
+  // Move to block of first execution
+  await client.dev.newBlock()
+
+  // Check failure events
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for failed task execution')
+
+  // Verify task failed and was rescheduled
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  const cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 6, 0])
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock({ count: 2 })
+
+  // Check retry cancellation events
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for retry config cancellation')
+
+  // Verify task is still scheduled but without retry config
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isNone)
+}
+
+/**
+ * Test setting and canceling retry configuration for named scheduled tasks:
+ *
+ * 1. Create and schedule a named task that will fail
+ *    - `remarkWithEvent` fails with `Root` origin
+ * 2. Set retry configuration using `scheduler.setRetryNamed`
+ * 3. Verify task fails and is rescheduled per its retry config
+ * 4. Cancel the retry configuration
+ * 5. Verify the task remains scheduled but without its retry config
+ */
+export async function scheduleNamedWithRetryConfig<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  // Create a task that will fail - remarkWithEvent requires signed origin
+  const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
+  const taskId = sha256AsU8a('retry_task')
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // Define base task object once
+  const baseTask = {
+    maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
+    priority: 1,
+    call: { inline: failingTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  }
+
+  const retryConfig = {
+    totalRetries: 3,
+    remaining: 3,
+    period: 3,
+  }
+
+  // Schedule the named task first
+  const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, initialBlockNumber + 3, null, 1, failingTx)
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  // Move to scheduling block
+  await client.dev.newBlock()
+
+  // Check initial schedule
+  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  // Set retry configuration
+  const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
+  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  let retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 3, 0])
+  assert(retryOpt.isSome)
+  let retry = retryOpt.unwrap()
+  await check(retry).toMatchObject(retryConfig)
+
+  // Move to block of first execution
+  await client.dev.newBlock()
+
+  // Check failure events
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for failed named task execution')
+
+  // Verify task failed and was rescheduled
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  // Retries of named tasks have no id
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  let cancelRetryTx = client.api.tx.scheduler.cancelRetryNamed(taskId)
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock({ count: 2 })
+
+  // Check retry cancellation events
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for retry config cancellation')
+
+  // Verify task is still scheduled but without retry config
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  // Once again - retries of named tasks have no id, even after removal of retry config
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  // A named task's retry will be unnamed, so its retry configuration must be cancelled
+  // via `cancelRetry` - `cancelRetryNamed` has no effect.
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  await client.dev.newBlock()
+
+  // In the meantime, the task has been retried a second time, and has scheduled for a third
+
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 9)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 9, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 2,
+  })
+
+  // Cancel the retry configuration with `cancelRetry`
+  cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 9, 0])
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 9, 0])
+  assert(retryOpt.isNone)
+}
+
 export function schedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -980,6 +1230,14 @@ export function schedulerE2ETests<
 
     test('priority-based execution of weighted tasks works correctly', async () => {
       await schedulePriorityWeightedTasks(client)
+    })
+
+    test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
+      await scheduleWithRetryConfig(client)
+    })
+
+    test('setting and canceling retry configuration for named scheduled tasks', async () => {
+      await scheduleNamedWithRetryConfig(client)
     })
   })
 }

@@ -543,3 +543,61 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling an overweight call 
   },
 ]
 `;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for failed named task execution 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `[]`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `[]`;
