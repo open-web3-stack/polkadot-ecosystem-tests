@@ -229,6 +229,7 @@ export const tx = {
 
 export const query = {
   balances: ({ api }: { api: ApiPromise }, address: string) => api.query.system.account(address),
+  totalIssuance: ({ api }: { api: ApiPromise }) => api.query.balances.totalIssuance(),
   tokens:
     (token: any) =>
     ({ api }: { api: ApiPromise }, address: string) =>
