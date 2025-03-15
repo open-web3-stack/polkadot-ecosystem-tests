@@ -198,6 +198,20 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
 ]
 `;
 
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `[]`;
+
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
 [
   {

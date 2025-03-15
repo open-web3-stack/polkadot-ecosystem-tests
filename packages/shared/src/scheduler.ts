@@ -625,15 +625,13 @@ async function scheduleLookupCall<
 
   await client.dev.newBlock()
 
-  // Check if `parachainInfo` pallet exists
+  // In the collectives chain, dispatch of lookup calls does not work at present.
+  // Fix: https://github.com/polkadot-fellows/runtimes/pull/614
+  // Check if `parachainInfo` pallet exists to distinguish between collectives and other chains.
   const parachainInfo = client.api.query.parachainInfo
-  if (parachainInfo) {
-    // In the collectives chain, dispatch of lookup calls does not work at present.
-    // Fix: https://github.com/polkadot-fellows/runtimes/pull/614
-    if ((await parachainInfo.parachainId()).eq(1001)) {
-      const newTotalIssuance = await client.api.query.balances.totalIssuance()
-      assert(newTotalIssuance.eq(oldTotalIssuance))
-    }
+  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
+    const newTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(newTotalIssuance.eq(oldTotalIssuance))
   } else {
     const newTotalIssuance = await client.api.query.balances.totalIssuance()
     assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -642,6 +640,109 @@ async function scheduleLookupCall<
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
     'events for scheduled lookup-task execution',
   )
+}
+
+/**
+ * Test scheduling a call using a preimage that gets removed:
+ *
+ * 1. Note a preimage for a call that adjusts total issuance
+ * 2. Schedule the preimaged call
+ * 3. Remove the preimage
+ * 4. Move to execution block
+ */
+export async function schedulePreimagedCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
+
+  // Note the preimage
+  const noteTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  const noteEvents = await sendTransaction(noteTx.signAsync(defaultAccountsSr25519.alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(noteEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  // Schedule using the preimage hash
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [blockNumber + 2],
+          [
+            {
+              call: {
+                lookup: {
+                  hash: encodedProposal.hash.toHex(),
+                  len: encodedProposal.encodedLength,
+                },
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  let scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  const scheduledTask = scheduled[0].unwrap()
+  await check(scheduledTask).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: {
+      lookup: {
+        hash: encodedProposal.hash.toHex(),
+        len: encodedProposal.encodedLength,
+      },
+    },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  // Unnote the preimage
+  const unnoteTx = client.api.tx.preimage.unnotePreimage(encodedProposal.hash.toHex())
+  await unnoteTx.signAndSend(defaultAccountsSr25519.alice)
+  await client.dev.newBlock()
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // Move to execution block
+  await client.dev.newBlock()
+
+  scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
+  // See above note regarding `runtimes#614`
+  const parachainInfo = client.api.query.parachainInfo
+  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
+    assert(scheduled.length === 1)
+    assert(scheduled[0].isNone)
+  } else {
+    assert(scheduled.length === 1)
+    assert(scheduled[0].isSome)
+    const scheduledTask = scheduled[0].unwrap()
+    await check(scheduledTask).toMatchObject({
+      maybeId: null,
+      priority: 0,
+    })
+  }
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for failing scheduled lookup-task execution',
+  )
+
+  const newTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(newTotalIssuance.eq(oldTotalIssuance))
 }
 
 /**
@@ -1226,6 +1327,10 @@ export function schedulerE2ETests<
 
     test('execution of scheduled preimage lookup call works', async () => {
       await scheduleLookupCall(client)
+    })
+
+    test('scheduling a call using a preimage that gets removed', async () => {
+      await schedulePreimagedCall(client)
     })
 
     test('priority-based execution of weighted tasks works correctly', async () => {

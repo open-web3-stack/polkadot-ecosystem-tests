@@ -221,6 +221,34 @@ exports[`Kusama Scheduler > scheduling a call is possible, and the call itself s
 ]
 `;
 
+exports[`Kusama Scheduler > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": [
+        "(rounded 27000000)",
+        0,
+      ],
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Scheduler > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Kusama Scheduler > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
 [
   {

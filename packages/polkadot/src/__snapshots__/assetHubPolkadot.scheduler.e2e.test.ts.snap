@@ -221,6 +221,34 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call is possible,
 ]
 `;
 
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
 [
   {
