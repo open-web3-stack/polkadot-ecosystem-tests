@@ -94,6 +94,68 @@ exports[`Polkadot Scheduler > cancelling a scheduled task is possible > events f
 ]
 `;
 
+exports[`Polkadot Scheduler > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        1,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
 [
   {
@@ -159,7 +221,126 @@ exports[`Polkadot Scheduler > scheduling a call is possible, and the call itself
 ]
 `;
 
+exports[`Polkadot Scheduler > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 1`] = `
 [
   {
     "data": {
@@ -218,6 +399,97 @@ exports[`Polkadot Scheduler > scheduling a named task after a delay is possible 
     },
     "method": "Scheduled",
     "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > scheduling a periodic task is possible > events for  periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 16000000000000000000)",
+      "old": "(rounded 16000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
   },
   {
     "data": {
@@ -299,3 +571,61 @@ exports[`Polkadot Scheduler > scheduling an overweight call is possible, but the
   },
 ]
 `;
+
+exports[`Polkadot Scheduler > setting and canceling retry configuration for named scheduled tasks > events for failed named task execution 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `[]`;
+
+exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(rounded 25000000)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `[]`;

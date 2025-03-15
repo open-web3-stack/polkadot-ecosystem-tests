@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, objectCmp, scheduleCallWithOrigin } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -525,7 +525,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  scheduleCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -771,7 +771,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  scheduleCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

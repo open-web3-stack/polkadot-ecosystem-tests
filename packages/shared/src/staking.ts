@@ -3,7 +3,7 @@ import BN from 'bn.js'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -397,7 +397,7 @@ async function forceUnstakeTest<
   let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isSome)
 
-  scheduleCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -544,7 +544,7 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    scheduleCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
+    scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -640,7 +640,7 @@ async function setStakingConfigsTest<
 
   const inc = 10
 
-  scheduleCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -746,7 +746,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
   )
 
-  scheduleCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -808,7 +808,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -842,7 +842,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -871,7 +871,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -921,7 +921,7 @@ async function chillOtherTest<
     { Noop: null },
   )
 
-  scheduleCallWithOrigin(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1007,7 +1007,7 @@ async function chillOtherTest<
   const successfulCall = setStakingConfigsCalls.pop()
 
   for (const call of setStakingConfigsCalls) {
-    scheduleCallWithOrigin(client, call.method.toHex(), { system: 'Root' })
+    scheduleInlineCallWithOrigin(client, call.method.toHex(), { system: 'Root' })
 
     await client.dev.newBlock()
 
@@ -1037,7 +1037,7 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  scheduleCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

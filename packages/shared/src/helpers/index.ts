@@ -64,8 +64,11 @@ export function objectCmp(
 }
 
 /**
- * Given a PJS client and a hex-encoded extrinsic with a given origin, modify the
- * `scheduler` pallet's `agenda` storage to execute the extrinsic in the next block.
+ * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
+ * block.
+ *
+ * The call can be either an inline call or a lookup call, which in the latter case *must* have been noted
+ * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
  */
 export async function scheduleCallWithOrigin(
   client: {
@@ -74,7 +77,14 @@ export async function scheduleCallWithOrigin(
       setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
     }
   },
-  encodedCall: HexString,
+  call:
+    | { Inline: any }
+    | {
+        Lookup: {
+          hash: any
+          len: any
+        }
+      },
   origin: any,
 ) {
   const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -86,9 +96,7 @@ export async function scheduleCallWithOrigin(
           [number + 1],
           [
             {
-              call: {
-                Inline: encodedCall,
-              },
+              call,
               origin: origin,
             },
           ],
@@ -96,6 +104,40 @@ export async function scheduleCallWithOrigin(
       ],
     },
   })
+}
+
+/**
+ * Given a PJS client and an inline call with a given origin, modify the
+ * `scheduler` pallet's `agenda` storage to execute the call in the next block.
+ */
+export async function scheduleInlineCallWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  encodedCall: HexString,
+  origin: any,
+) {
+  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin)
+}
+
+/**
+ * Given a PJS client and a lookup call with a given origin, modify the
+ * `scheduler` pallet's `agenda` storage to execute the call in the next block.
+ */
+export async function scheduleLookupCallWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  lookupCall: { hash: any; len: any },
+  origin: any,
+) {
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin)
 }
 
 /**
@@ -145,7 +187,7 @@ export async function xcmSendTransact(
   const encodedRelayCallData = xcmTx.method.toHex()
 
   /// See `scheduleCallWithOrigin` for more.
-  await scheduleCallWithOrigin(client, encodedRelayCallData, origin.origin)
+  await scheduleCallWithOrigin(client, { Inline: encodedRelayCallData }, origin.origin)
 }
 
 /**

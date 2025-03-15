@@ -9,7 +9,7 @@ import {
   createAndBondAccounts,
   getValidators,
   objectCmp,
-  scheduleCallWithOrigin,
+  scheduleInlineCallWithOrigin,
   setValidatorsStorage,
 } from './helpers/index.js'
 
@@ -842,7 +842,7 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    scheduleCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
+    scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -1029,7 +1029,7 @@ async function nominationPoolsUpdateRolesTest<
     { Set: defaultAccountsSr25519.eve.address },
   )
 
-  scheduleCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
