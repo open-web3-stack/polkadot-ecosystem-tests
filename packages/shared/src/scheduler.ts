@@ -51,7 +51,18 @@ export async function badOriginHelper<
   assert(dispatchError.isBadOrigin)
 }
 
+/**
+ * The period of the periodic task.
+ *
+ * Used in test to scheduling of periodic tasks.
+ */
 const PERIOD = 2
+
+/**
+ * The number of repetitions that a given periodic task should run for.
+ *
+ * Used in test to scheduling of periodic tasks.
+ */
 const REPETITIONS = 3
 
 /// -------
@@ -219,9 +230,11 @@ export async function scheduledCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -276,9 +289,11 @@ export async function scheduledNamedCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -324,9 +339,11 @@ export async function cancelScheduledTask<
   // This should capture 2 system events, and no `TotalIssuanceForced`.
   // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleInlineCallWithOrigin`
   // 2. The other will be for the cancellation of the scheduled task
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task cancellation',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
@@ -373,9 +390,11 @@ export async function cancelScheduledNamedTask<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task cancellation',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
@@ -407,7 +426,11 @@ export async function scheduleTaskAfterDelay<
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling task with delay')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events when scheduling task with delay')
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -432,9 +455,11 @@ export async function scheduleTaskAfterDelay<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -465,7 +490,11 @@ export async function scheduleNamedTaskAfterDelay<
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling task with delay')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events when scheduling task with delay')
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -490,9 +519,11 @@ export async function scheduleNamedTaskAfterDelay<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -563,7 +594,11 @@ export async function scheduledOverweightCallFails<
 
   // Check that an event was emitted certifying the scheduled call as overweight
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling overweight task')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events when scheduling overweight task')
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
@@ -637,9 +672,11 @@ async function scheduleLookupCall<
     assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
   }
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled lookup-task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|task/,
+    })
+    .toMatchSnapshot('events for scheduled lookup-task execution')
 }
 
 /**
@@ -737,20 +774,23 @@ export async function schedulePreimagedCall<
     })
   }
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for failing scheduled lookup-task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for failing scheduled lookup-task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance))
 }
 
 /**
- * Helper function containing common logic for testing periodic tasks
+ * Helper function containing common logic for testing periodic tasks.
+ *
  * Tests that:
  * 1. task executes at the correct intervals
- * 2. runs the expected number of executions
- * 3. task is removed from the agenda after all executions
+ * 2. it runs the expected number of executions, and that
+ * 3. the task is removed from the agenda after all executions
  */
 async function testPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
@@ -777,8 +817,8 @@ async function testPeriodicTask<
     maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
     priority: 0,
     call: { inline: adjustIssuanceTx.method.toHex() },
-    // The number of repetitions is reduced by 1 because the first scheduled execution has already occurred:
-    // it is exactly this task.
+    // The number of repetitions has already been reduced by 1 because the first scheduled execution has already
+    // occurred: it is exactly this task.
     maybePeriodic: [PERIOD, REPETITIONS - 1],
     origin: {
       system: {
@@ -799,7 +839,11 @@ async function testPeriodicTask<
     await checkSystemEvents(client, 'scheduler', {
       section: 'balances',
       method: 'TotalIssuanceForced',
-    }).toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
+    })
+      .redact({
+        redactKeys: /new|old|task|when/,
+      })
+      .toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
 
     const currentTotalIssuance = await client.api.query.balances.totalIssuance()
     assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
@@ -892,18 +936,13 @@ export async function scheduleNamedPeriodicTask<
 
 /**
  * Test priority-based execution of weighted tasks:
- *
- * Note: Current behavior (pre polkadot-sdk#7790) incorrectly drops postponed tasks from
- * the agenda when they cannot be executed due to weight constraints. PR #7790 fixes this
- * by ensuring postponed tasks are put back into the agenda for the next block.
- *
  * 1. Create two transactions with weights that exceed half the maximum weight per block
  * 2. Schedule them for the same block with different priorities
  * 3. Verify that:
  *    - The higher priority task executes first and is removed from agenda
- *    - The lower priority task is incorrectly dropped (current behavior)
- *    - The incompleteSince storage is updated correctly
- *    - No tasks execute in the next block since the low priority task was dropped
+ *    - The lower priority task is not executed in the first block
+ *    - The lower priority task is executed in the second block
+ *    - The `incompleteSince` storage is updated correctly
  */
 export async function schedulePriorityWeightedTasks<
   TCustom extends Record<string, unknown> | undefined,
@@ -912,7 +951,7 @@ export async function schedulePriorityWeightedTasks<
   const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
   const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  // Get maximum weight and create tasks that use 60% of it each
+  // Get the maximum weight schedulable per block, and create tasks that each use 60% of it.
   const { refTime, proofSize }: SpWeightsWeightV2Weight = client.api.consts.scheduler.maximumWeight
   const taskWeight = {
     refTime: refTime.unwrap().muln(60).divn(100),
@@ -922,7 +961,8 @@ export async function schedulePriorityWeightedTasks<
   const highPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceHighTx, taskWeight)
   const lowPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceLowTx, taskWeight)
 
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const initBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  let currBlockNumber = initBlockNumber
   const targetBlock = currBlockNumber + 2
 
   // Schedule both tasks for the same block with different priorities
@@ -962,7 +1002,7 @@ export async function schedulePriorityWeightedTasks<
 
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
-  // Move to execution block
+  // Move to block just before scheduled execution
   await client.dev.newBlock()
   currBlockNumber += 1
 
@@ -975,16 +1015,18 @@ export async function schedulePriorityWeightedTasks<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  // Check events - should only see one execution
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for priority weighted tasks execution',
-  )
+  // Check events - there should only be one execution
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|task/,
+    })
+    .toMatchSnapshot('events for priority weighted tasks execution')
 
-  // Check that high priority task executed
+  // Check that *only* the high priority task executed
   const midTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(midTotalIssuance.eq(initialTotalIssuance.addn(2)))
 
-  // Verify incompleteSince is set to current block
+  // Verify `incompleteSince` is set to current block
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
   assert(incompleteSince.isSome)
   assert(incompleteSince.unwrap().eq(currBlockNumber))
@@ -1000,19 +1042,23 @@ export async function schedulePriorityWeightedTasks<
     origin: { system: { root: null } },
   })
 
-  // Execute second scheduled task
+  // Move to the next block, where the lower priority task will execute
   await client.dev.newBlock()
   currBlockNumber += 1
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(finalTotalIssuance.eq(initialTotalIssuance.addn(3)))
 
-  // Verify incompleteSince has been unset
+  // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
   assert(finalIncompleteSince.isNone)
 
   // Verify agenda is now empty
+  scheduled = await client.api.query.scheduler.agenda(initBlockNumber)
+  assert(scheduled.length === 0)
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
   assert(scheduled.length === 0)
 }
 
@@ -1085,7 +1131,11 @@ export async function scheduleWithRetryConfig<
   await client.dev.newBlock()
 
   // Check failure events
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for failed task execution')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task|when/,
+    })
+    .toMatchSnapshot('events for failed task execution')
 
   // Verify task failed and was rescheduled
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
@@ -1106,10 +1156,16 @@ export async function scheduleWithRetryConfig<
   const cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 6, 0])
   scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
 
-  await client.dev.newBlock({ count: 2 })
+  await client.dev.newBlock()
 
   // Check retry cancellation events
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for retry config cancellation')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for retry config cancellation')
+
+  await client.dev.newBlock()
 
   // Verify task is still scheduled but without retry config
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
@@ -1187,7 +1243,11 @@ export async function scheduleNamedWithRetryConfig<
   await client.dev.newBlock()
 
   // Check failure events
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for failed named task execution')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task|when/,
+    })
+    .toMatchSnapshot('events for failed named task execution')
 
   // Verify task failed and was rescheduled
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
@@ -1212,10 +1272,16 @@ export async function scheduleNamedWithRetryConfig<
   let cancelRetryTx = client.api.tx.scheduler.cancelRetryNamed(taskId)
   scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
 
-  await client.dev.newBlock({ count: 2 })
+  await client.dev.newBlock()
 
   // Check retry cancellation events
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events for retry config cancellation')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for retry config cancellation')
+
+  await client.dev.newBlock()
 
   // Verify task is still scheduled but without retry config
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)

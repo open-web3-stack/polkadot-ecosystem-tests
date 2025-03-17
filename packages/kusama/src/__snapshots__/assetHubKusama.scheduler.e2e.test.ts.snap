@@ -47,7 +47,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancelling a named scheduled tas
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -56,10 +56,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancelling a named scheduled tas
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -74,7 +71,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancelling a scheduled task is p
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -83,10 +80,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancelling a scheduled task is p
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -98,8 +92,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > execution of scheduled preimage 
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -108,10 +102,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > execution of scheduled preimage 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -135,8 +126,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > priority-based execution of weig
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -145,10 +136,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > priority-based execution of weig
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        1,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -200,8 +188,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a call is possible, a
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -210,10 +198,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a call is possible, a
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -226,10 +211,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a call using a preima
   {
     "data": {
       "id": null,
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "CallUnavailable",
     "section": "scheduler",
@@ -253,8 +235,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named call is possi
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -263,10 +245,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named call is possi
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -278,8 +257,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -288,10 +267,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -299,7 +275,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -311,8 +287,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -321,10 +297,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -332,7 +305,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -344,8 +317,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -354,10 +327,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named periodic task
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -369,8 +339,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named task after a 
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -379,10 +349,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named task after a 
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -395,7 +362,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named task after a 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -404,10 +371,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a named task after a 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -419,8 +383,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -429,10 +393,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -440,7 +401,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -452,8 +413,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -462,10 +423,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -473,7 +431,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -485,8 +443,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -495,10 +453,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a periodic task is po
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -510,8 +465,8 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a task after a delay 
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -520,10 +475,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a task after a delay 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -536,7 +488,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a task after a delay 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -545,10 +497,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling a task after a delay 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -561,10 +510,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > scheduling an overweight call is
   {
     "data": {
       "id": null,
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "PermanentlyOverweight",
     "section": "scheduler",
@@ -580,10 +526,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -591,7 +534,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -599,7 +542,26 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
 ]
 `;
 
-exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `[]`;
+exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
 [
@@ -609,10 +571,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 27000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -620,7 +579,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
   {
     "data": {
       "index": 0,
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -628,4 +587,24 @@ exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry conf
 ]
 `;
 
-exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `[]`;
+exports[`Asset Hub Kusama Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "RetryCancelled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;

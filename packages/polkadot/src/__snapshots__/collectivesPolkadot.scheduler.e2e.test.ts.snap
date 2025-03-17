@@ -47,7 +47,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -56,10 +56,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -74,7 +71,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -83,10 +80,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -112,8 +106,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > priority-based execution of 
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -122,10 +116,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > priority-based execution of 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        1,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -177,8 +168,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -187,10 +178,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -216,8 +204,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is p
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -226,10 +214,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is p
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -241,8 +226,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -251,10 +236,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -262,7 +244,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -274,8 +256,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -284,10 +266,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -295,7 +274,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -307,8 +286,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -317,10 +296,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -332,8 +308,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task afte
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -342,10 +318,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task afte
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -358,7 +331,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task afte
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -367,10 +340,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named task afte
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -382,8 +352,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -392,10 +362,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -403,7 +370,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -415,8 +382,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -425,10 +392,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -436,7 +400,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -448,8 +412,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -458,10 +422,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a periodic task i
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -473,8 +434,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
 [
   {
     "data": {
-      "new_": "(rounded 85000000000000)",
-      "old": "(rounded 85000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -483,10 +444,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -499,7 +457,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -508,10 +466,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -524,10 +479,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling an overweight cal
   {
     "data": {
       "id": null,
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "PermanentlyOverweight",
     "section": "scheduler",
@@ -543,10 +495,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -554,7 +503,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -562,7 +511,26 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 44,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
 [
@@ -572,10 +540,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 5900000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -583,7 +548,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 5900000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -591,4 +556,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "RetryCancelled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
