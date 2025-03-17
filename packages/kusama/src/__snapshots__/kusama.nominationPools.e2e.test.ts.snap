@@ -329,7 +329,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick
   {
     "data": {
       "balance": "(rounded 1700000000)",
-      "era": "(rounded 7800)",
       "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
       "points": "(rounded 1700000000)",
     },
@@ -351,7 +350,6 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond event
   {
     "data": {
       "balance": "(rounded 1700000000)",
-      "era": "(rounded 7800)",
       "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
       "points": "(rounded 1700000000)",
     },
