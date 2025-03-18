@@ -1,35 +1,35 @@
 import { describe } from 'vitest'
 
 import { defaultAccounts } from '@e2e-test/networks'
-import { kusama, peopleKusama } from '@e2e-test/networks/chains'
+import { bridgeHubKusama, kusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
-describe('kusama & peopleKusama', async () => {
-  const [kusamaClient, peopleClient] = await setupNetworks(kusama, peopleKusama)
+describe('kusama & bridgeHubKusama', async () => {
+  const [kusamaClient, bridgeHubClient] = await setupNetworks(kusama, bridgeHubKusama)
 
-  const peopleKSM = peopleKusama.custom.ksm
+  const bridgeHubKSM = bridgeHubKusama.custom.ksm
   const kusamaKSM = kusama.custom.ksm
 
-  runXcmPalletDown('kusama transfer KSM to peopleKusama', async () => {
+  runXcmPalletDown('kusama transfer KSM to bridgeHubKusama', async () => {
     return {
       fromChain: kusamaClient,
-      toChain: peopleClient,
+      toChain: bridgeHubClient,
       balance: query.balances,
       toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, peopleKusama.paraId!)),
+      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, bridgeHubKusama.paraId!)),
       totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })
 
-  runXcmPalletUp('peopleKusama transfer KSM to kusama', async () => {
+  runXcmPalletUp('bridgeHubKusama transfer KSM to kusama', async () => {
     return {
-      fromChain: peopleClient,
+      fromChain: bridgeHubClient,
       toChain: kusamaClient,
       balance: query.balances,
       toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(peopleKSM, 1e12, tx.xcmPallet.relaychainV4),
+      tx: tx.xcmPallet.teleportAssetsV3(bridgeHubKSM, 1e12, tx.xcmPallet.relaychainV4),
       totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })

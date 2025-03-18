@@ -14,5 +14,7 @@
 	"coretimePolkadot": 141,
 	"hydration": 142,
 	"collectivesPolkadot": 192,
+	"bridgeHubPolkadot": 207,
+	"bridgeHubKusama": 208,
 	"unknown": 143
 }

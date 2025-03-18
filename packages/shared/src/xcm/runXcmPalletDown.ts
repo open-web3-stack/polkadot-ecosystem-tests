@@ -17,7 +17,6 @@ export const runXcmPalletDown = (
     fromAccount?: KeyringPair
     toAccount?: KeyringPair
     precision?: number
-    verifyTotaIssuance?: Client
     totalIssuanceProvider?: GetTotalIssuance
   }>,
   options: { only?: boolean } = {},
