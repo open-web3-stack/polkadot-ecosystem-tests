@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > balance on from chain 1`] = `
+exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,7 +15,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 }
 `;
 
-exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > balance on to chain 1`] = `
+exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -30,7 +30,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 }
 `;
 
-exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > from chain ump messages 1`] = `
+exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
     "v4": [
@@ -82,7 +82,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
               "x1": [
                 {
                   "accountId32": {
-                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
                     "network": null,
                   },
                 },
@@ -100,7 +100,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 ]
 `;
 
-exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > to chain ump events 1`] = `
+exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -113,7 +113,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 320000000)",
       },
     },
     "method": "Processed",
@@ -122,7 +122,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 ]
 `;
 
-exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > tx events 1`] = `
+exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx events 1`] = `
 [
   {
     "data": {
@@ -143,7 +143,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 305000000)",
+            "Fungible": "(rounded 1030000000)",
           },
           "id": {
             "interior": "Here",
@@ -157,7 +157,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -233,7 +233,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -247,7 +247,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 ]
 `;
 
-exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > balance on from chain 1`] = `
+exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -262,12 +262,12 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
 }
 `;
 
-exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > balance on to chain 1`] = `
+exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 11000000000000)",
+    "free": "(rounded 1000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -277,7 +277,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
 }
 `;
 
-exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > to chain dmp events 1`] = `
+exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -290,8 +290,8 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 760000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 770000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -313,7 +313,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
 ]
 `;
 
-exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > tx events 1`] = `
+exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -321,7 +321,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 144000000)",
+            "refTime": "(rounded 165000000)",
           },
         },
       },
@@ -334,7 +334,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "fees": [
         {
           "fun": {
-            "Fungible": 397000000,
+            "Fungible": "(rounded 1320000000)",
           },
           "id": {
             "interior": "Here",
@@ -348,7 +348,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -430,7 +430,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -440,114 +440,6 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
     },
     "method": "Sent",
     "section": "xcmPallet",
-  },
-]
-`;
-
-exports[`collectives & polkadot > whitelisting a call by fellowship > destination chain events 1`] = `
-[
-  {
-    "data": {
-      "callHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
-    },
-    "method": "CallWhitelisted",
-    "section": "whitelist",
-  },
-  {
-    "data": {
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 1000000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
-
-exports[`collectives & polkadot > whitelisting a call by fellowship > source chain events 1`] = `
-[
-  {
-    "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
-      "destination": {
-        "interior": "Here",
-        "parents": 1,
-      },
-      "message": [
-        {
-          "UnpaidExecution": {
-            "checkOrigin": null,
-            "weightLimit": "Unlimited",
-          },
-        },
-        {
-          "Transact": {
-            "call": {
-              "encoded": "0x17000101010101010101010101010101010101010101010101010101010101010101",
-            },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
-              "proofSize": 10000,
-              "refTime": 1000000000,
-            },
-          },
-        },
-      ],
-      "messageId": "(redacted)",
-      "origin": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "Sent",
-    "section": "polkadotXcm",
   },
 ]
 `;
