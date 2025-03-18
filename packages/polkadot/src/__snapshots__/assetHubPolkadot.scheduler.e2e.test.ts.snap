@@ -47,7 +47,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancelling a named scheduled t
   {
     "data": {
       "index": 0,
-      "when": "(rounded 25000000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -56,10 +56,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancelling a named scheduled t
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -74,7 +71,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancelling a scheduled task is
   {
     "data": {
       "index": 0,
-      "when": "(rounded 25000000)",
+      "when": "(redacted)",
     },
     "method": "Canceled",
     "section": "scheduler",
@@ -83,10 +80,63 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancelling a scheduled task is
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -138,8 +188,8 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call is possible,
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -148,13 +198,35 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call is possible,
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
   },
 ]
 `;
@@ -163,8 +235,8 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named call is pos
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -173,10 +245,89 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named call is pos
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -188,8 +339,8 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named task after 
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -198,10 +349,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named task after 
     "data": {
       "id": "(hash)",
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -214,7 +362,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named task after 
   {
     "data": {
       "index": 0,
-      "when": "(rounded 25000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -223,10 +371,89 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a named task after 
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a periodic task is possible > events for  periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a periodic task is possible > events for  periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a periodic task is possible > events for  periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -238,8 +465,8 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a task after a dela
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(redacted)",
+      "old": "(redacted)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -248,10 +475,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a task after a dela
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -264,7 +488,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a task after a dela
   {
     "data": {
       "index": 0,
-      "when": "(rounded 25000000)",
+      "when": "(redacted)",
     },
     "method": "Scheduled",
     "section": "scheduler",
@@ -273,10 +497,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling a task after a dela
     "data": {
       "id": null,
       "result": "Ok",
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -289,12 +510,100 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > scheduling an overweight call 
   {
     "data": {
       "id": null,
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "PermanentlyOverweight",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for failed named task execution 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 1,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Asset Hub Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "RetryCancelled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
     "section": "scheduler",
   },
 ]

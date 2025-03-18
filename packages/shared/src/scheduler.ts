@@ -2,11 +2,17 @@ import { assert, describe, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkSystemEvents, scheduleCallWithOrigin } from './helpers/index.js'
+import {
+  check,
+  checkEvents,
+  checkSystemEvents,
+  scheduleInlineCallWithOrigin,
+  scheduleLookupCallWithOrigin,
+} from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { PalletSchedulerScheduled } from '@polkadot/types/lookup'
+import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 
 import { sha256AsU8a } from '@polkadot/util-crypto'
@@ -45,13 +51,23 @@ export async function badOriginHelper<
   assert(dispatchError.isBadOrigin)
 }
 
-/// -------
-/// -------
-/// -------
+/**
+ * The period of the periodic task.
+ *
+ * Used in test to scheduling of periodic tasks.
+ */
+const PERIOD = 2
 
-// const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-// const call = client.api.tx.system.remark('test').method.toHex()
-// client.api.tx.scheduler.schedule(currBlockNumber, null, 0, call)
+/**
+ * The number of repetitions that a given periodic task should run for.
+ *
+ * Used in test to scheduling of periodic tasks.
+ */
+const REPETITIONS = 3
+
+/// -------
+/// -------
+/// -------
 
 /**
  * Test the process of scheduling a call with a bad origin, and check that it fails.
@@ -90,7 +106,7 @@ export async function scheduleNamedBadOriginTest<
  * 1. scheduling a call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
- * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
+ * Scheduler tests rely on `scheduleInlineCallWithOrigin`, as there would otherwise be no way of scheduling a call
  * with the proper origin.
  */
 export async function cancelScheduledTaskBadOriginTest<
@@ -101,7 +117,7 @@ export async function cancelScheduledTaskBadOriginTest<
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, call)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -131,7 +147,7 @@ export async function cancelScheduledTaskBadOriginTest<
  * 1. scheduling a named call with an origin fulfilling `ScheduleOrigin`
  * 2. cancelling the call with a bad origin
  *
- * Scheduler tests rely on `scheduleCallWithOrigin`, as there would otherwise be no way of scheduling a call
+ * Scheduler tests rely on `scheduleInlineCallWithOrigin`, as there would otherwise be no way of scheduling a call
  * with the proper origin.
  */
 export async function cancelNamedScheduledTaskBadOriginTest<
@@ -145,7 +161,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, call)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -188,7 +204,7 @@ export async function scheduledCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -214,9 +230,11 @@ export async function scheduledCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -245,7 +263,7 @@ export async function scheduledNamedCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -271,9 +289,11 @@ export async function scheduledNamedCallExecutes<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -300,7 +320,7 @@ export async function cancelScheduledTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -311,17 +331,19 @@ export async function cancelScheduledTask<
 
   const cancelTx = client.api.tx.scheduler.cancel(currBlockNumber + 2, 0)
 
-  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
 
   // This should capture 2 system events, and no `TotalIssuanceForced`.
-  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleCallWithOrigin`
+  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleInlineCallWithOrigin`
   // 2. The other will be for the cancellation of the scheduled task
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task cancellation',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
@@ -352,7 +374,7 @@ export async function cancelScheduledNamedTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -363,14 +385,16 @@ export async function cancelScheduledNamedTask<
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
-  scheduleCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task cancellation',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
@@ -394,7 +418,7 @@ export async function scheduleTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.scheduleAfter(1, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -402,7 +426,11 @@ export async function scheduleTaskAfterDelay<
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling task with delay')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events when scheduling task with delay')
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -427,9 +455,11 @@ export async function scheduleTaskAfterDelay<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -452,7 +482,7 @@ export async function scheduleNamedTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, 1, null, 0, adjustIssuanceTx)
 
-  scheduleCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -460,7 +490,11 @@ export async function scheduleNamedTaskAfterDelay<
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
   assert(scheduled.length === 0)
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling task with delay')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /when|task/,
+    })
+    .toMatchSnapshot('events when scheduling task with delay')
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -485,9 +519,11 @@ export async function scheduleNamedTaskAfterDelay<
   await client.dev.newBlock()
   currBlockNumber += 1
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for scheduled task execution',
-  )
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|when|task/,
+    })
+    .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
   assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
@@ -523,7 +559,7 @@ export async function scheduledOverweightCallFails<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, withWeightTx)
 
-  scheduleCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -558,13 +594,742 @@ export async function scheduledOverweightCallFails<
 
   // Check that an event was emitted certifying the scheduled call as overweight
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot('events when scheduling overweight task')
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events when scheduling overweight task')
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
   assert(scheduled.length === 1)
 
   await check(scheduled[0].unwrap()).toMatchObject(task)
+}
+
+/**
+ * Test scheduling of preimage lookup call.
+ *
+ * 1. Create a call requiring a `Root` origin: an update to total issuance
+ * 2. Note the call in storage for the `preimage` pallet
+ * 3. Schedule the call
+ * 4. Check that the call was executed
+ *
+ * As of Mar. 2025, this fails on the Collectives chain.
+ * The issue has been fixed, and when it is upstreamed, this test can then be updated.
+ * @param client
+ */
+async function scheduleLookupCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
+  const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccountsSr25519.alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(preImageEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  const preimageHash = encodedProposal.hash
+
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await scheduleLookupCallWithOrigin(
+    client,
+    { hash: preimageHash, len: encodedProposal.encodedLength },
+    { system: 'Root' },
+  )
+
+  const agenda = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(agenda.length === 1)
+  assert(agenda[0].isSome)
+  const scheduledTask = agenda[0].unwrap()
+  await check(scheduledTask).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: { lookup: { hash: preimageHash.toHex(), len: encodedProposal.encodedLength } },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  await client.dev.newBlock()
+
+  // In the collectives chain, dispatch of lookup calls does not work at present.
+  // Fix: https://github.com/polkadot-fellows/runtimes/pull/614
+  // Check if `parachainInfo` pallet exists to distinguish between collectives and other chains.
+  const parachainInfo = client.api.query.parachainInfo
+  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
+    const newTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(newTotalIssuance.eq(oldTotalIssuance))
+  } else {
+    const newTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  }
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|task/,
+    })
+    .toMatchSnapshot('events for scheduled lookup-task execution')
+}
+
+/**
+ * Test scheduling a call using a preimage that gets removed:
+ *
+ * 1. Note a preimage for a call that adjusts total issuance
+ * 2. Schedule the preimaged call
+ * 3. Remove the preimage
+ * 4. Move to execution block
+ */
+export async function schedulePreimagedCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
+
+  // Note the preimage
+  const noteTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  const noteEvents = await sendTransaction(noteTx.signAsync(defaultAccountsSr25519.alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(noteEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  // Schedule using the preimage hash
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [blockNumber + 2],
+          [
+            {
+              call: {
+                lookup: {
+                  hash: encodedProposal.hash.toHex(),
+                  len: encodedProposal.encodedLength,
+                },
+              },
+              origin: {
+                system: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  let scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  const scheduledTask = scheduled[0].unwrap()
+  await check(scheduledTask).toMatchObject({
+    maybeId: null,
+    priority: 0,
+    call: {
+      lookup: {
+        hash: encodedProposal.hash.toHex(),
+        len: encodedProposal.encodedLength,
+      },
+    },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  // Unnote the preimage
+  const unnoteTx = client.api.tx.preimage.unnotePreimage(encodedProposal.hash.toHex())
+  await unnoteTx.signAndSend(defaultAccountsSr25519.alice)
+  await client.dev.newBlock()
+
+  const oldTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // Move to execution block
+  await client.dev.newBlock()
+
+  scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
+  // See above note regarding `runtimes#614`
+  const parachainInfo = client.api.query.parachainInfo
+  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
+    assert(scheduled.length === 1)
+    assert(scheduled[0].isNone)
+  } else {
+    assert(scheduled.length === 1)
+    assert(scheduled[0].isSome)
+    const scheduledTask = scheduled[0].unwrap()
+    await check(scheduledTask).toMatchObject({
+      maybeId: null,
+      priority: 0,
+    })
+  }
+
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for failing scheduled lookup-task execution')
+
+  const newTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(newTotalIssuance.eq(oldTotalIssuance))
+}
+
+/**
+ * Helper function containing common logic for testing periodic tasks.
+ *
+ * Tests that:
+ * 1. task executes at the correct intervals
+ * 2. it runs the expected number of executions, and that
+ * 3. the task is removed from the agenda after all executions
+ */
+async function testPeriodicTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  client: Client<TCustom, TInitStorages>,
+  scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  taskId: Uint8Array | null,
+) {
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  // Move to first execution block
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Initial agenda check
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
+    priority: 0,
+    call: { inline: adjustIssuanceTx.method.toHex() },
+    // The number of repetitions has already been reduced by 1 because the first scheduled execution has already
+    // occurred: it is exactly this task.
+    maybePeriodic: [PERIOD, REPETITIONS - 1],
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  })
+
+  // Run through the task's repetitions, and verify that
+  // 1. it executes at the correct intervals,
+  // 2. it runs the expected number of executions.
+  // 3. the task is removed from the agenda after all executions.
+  for (let i = 1; i <= REPETITIONS; i++) {
+    // Execution block
+    await client.dev.newBlock()
+    currBlockNumber += 1
+
+    await checkSystemEvents(client, 'scheduler', {
+      section: 'balances',
+      method: 'TotalIssuanceForced',
+    })
+      .redact({
+        redactKeys: /new|old|task|when/,
+      })
+      .toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
+
+    const currentTotalIssuance = await client.api.query.balances.totalIssuance()
+    assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
+
+    // Check agenda for next scheduled execution (if not the last iteration)
+    if (i < REPETITIONS) {
+      scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
+      assert(scheduled.length === 1)
+      assert(scheduled[0].isSome)
+
+      let maybePeriodic: [number, number] | null
+      if (i === REPETITIONS - 1) {
+        maybePeriodic = null
+      } else {
+        maybePeriodic = [PERIOD, REPETITIONS - (i + 1)]
+      }
+
+      await check(scheduled[0].unwrap()).toMatchObject({
+        maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
+        priority: 0,
+        call: { inline: adjustIssuanceTx.method.toHex() },
+        maybePeriodic: maybePeriodic,
+        origin: {
+          system: {
+            root: null,
+          },
+        },
+      })
+    }
+
+    // Skip one block (no execution)
+    await client.dev.newBlock()
+    currBlockNumber += 1
+  }
+
+  // Verify task is removed after all executions
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 0)
+}
+
+/**
+ * Test the scheduling of a periodic task that executes multiple times:
+ *
+ * 1. Create a Root-origin call to adjust total issuance
+ * 2. Schedule it to run every other block, starting 2 blocks after scheduling
+ * 3. Verify it executes 3 times at the correct intervals
+ */
+export async function schedulePeriodicTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const scheduleTx = client.api.tx.scheduler.schedule(
+    currBlockNumber + 2, // when
+    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
+    0, // priority
+    adjustIssuanceTx, // call
+  )
+
+  await testPeriodicTask(client, scheduleTx, null)
+}
+
+/**
+ * Test scheduling a named periodic task that executes multiple times
+ *
+ * 1. Create a Root-origin call to adjust total issuance
+ * 2. Schedule it with a name to run every other block, starting 2 blocks after scheduling
+ * 3. Verify it executes 3 times at the correct intervals
+ */
+export async function scheduleNamedPeriodicTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+  const taskId = sha256AsU8a('task_id')
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(
+    taskId, // id
+    currBlockNumber + 2, // when
+    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
+    0, // priority
+    adjustIssuanceTx, // call
+  )
+
+  await testPeriodicTask(client, scheduleNamedTx, taskId)
+}
+
+/**
+ * Test priority-based execution of weighted tasks:
+ * 1. Create two transactions with weights that exceed half the maximum weight per block
+ * 2. Schedule them for the same block with different priorities
+ * 3. Verify that:
+ *    - The higher priority task executes first and is removed from agenda
+ *    - The lower priority task is not executed in the first block
+ *    - The lower priority task is executed in the second block
+ *    - The `incompleteSince` storage is updated correctly
+ */
+export async function schedulePriorityWeightedTasks<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
+  const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  // Get the maximum weight schedulable per block, and create tasks that each use 60% of it.
+  const { refTime, proofSize }: SpWeightsWeightV2Weight = client.api.consts.scheduler.maximumWeight
+  const taskWeight = {
+    refTime: refTime.unwrap().muln(60).divn(100),
+    proofSize: proofSize.unwrap().muln(60).divn(100),
+  }
+
+  const highPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceHighTx, taskWeight)
+  const lowPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceLowTx, taskWeight)
+
+  const initBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  let currBlockNumber = initBlockNumber
+  const targetBlock = currBlockNumber + 2
+
+  // Schedule both tasks for the same block with different priorities
+  const scheduleHighPriorityTx = client.api.tx.scheduler.schedule(
+    targetBlock,
+    null,
+    0, // higher priority
+    highPriorityTx,
+  )
+  const scheduleLowPriorityTx = client.api.tx.scheduler.schedule(
+    targetBlock,
+    null,
+    1, // lower priority
+    lowPriorityTx,
+  )
+
+  // Schedule both tasks
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [currBlockNumber + 1],
+          [
+            {
+              call: { Inline: scheduleLowPriorityTx.method.toHex() },
+              origin: { system: 'Root' },
+            },
+            {
+              call: { Inline: scheduleHighPriorityTx.method.toHex() },
+              origin: { system: 'Root' },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // Move to block just before scheduled execution
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Verify both tasks are in the agenda
+  let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+  assert(scheduled.length === 2)
+  assert(scheduled[0].isSome && scheduled[1].isSome)
+
+  // Execute first block - should only complete high priority task
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  // Check events - there should only be one execution
+  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({
+      redactKeys: /new|old|task/,
+    })
+    .toMatchSnapshot('events for priority weighted tasks execution')
+
+  // Check that *only* the high priority task executed
+  const midTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(midTotalIssuance.eq(initialTotalIssuance.addn(2)))
+
+  // Verify `incompleteSince` is set to current block
+  const incompleteSince = await client.api.query.scheduler.incompleteSince()
+  assert(incompleteSince.isSome)
+  assert(incompleteSince.unwrap().eq(currBlockNumber))
+
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+  assert(scheduled.length === 2)
+  assert(scheduled[0].isSome && scheduled[1].isNone)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    maybeId: null,
+    priority: 1,
+    call: { inline: lowPriorityTx.method.toHex() },
+    maybePeriodic: null,
+    origin: { system: { root: null } },
+  })
+
+  // Move to the next block, where the lower priority task will execute
+  await client.dev.newBlock()
+  currBlockNumber += 1
+
+  const finalTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(finalTotalIssuance.eq(initialTotalIssuance.addn(3)))
+
+  // Verify `incompleteSince` has been unset
+  const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
+  assert(finalIncompleteSince.isNone)
+
+  // Verify agenda is now empty
+  scheduled = await client.api.query.scheduler.agenda(initBlockNumber)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+  assert(scheduled.length === 0)
+}
+
+/**
+ * Test setting and canceling retry configuration for unnamed scheduled tasks:
+ *
+ * 1. Create and schedule a task that will fail
+ *    - `remarkWithEvent` fails with `Root` origin
+ * 2. Set retry configuration using `scheduler.setRetry`
+ * 3. Verify task fails and is rescheduled per its retry config
+ * 4. Cancel the retry configuration
+ * 5. Verify the task remains scheduled but without its retry config
+ */
+export async function scheduleWithRetryConfig<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  // Create a task that will fail - remarkWithEvent requires signed origin
+  const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // Define base task object once
+  const baseTask = {
+    maybeId: null,
+    priority: 1,
+    call: { inline: failingTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  }
+
+  const retryConfig = {
+    totalRetries: 3,
+    remaining: 3,
+    period: 3,
+  }
+
+  // Schedule the task first
+  const scheduleTx = client.api.tx.scheduler.schedule(initialBlockNumber + 3, null, 1, failingTx)
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  // Move to scheduling block
+  await client.dev.newBlock()
+
+  // Check initial schedule
+  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  // Set retry configuration
+  const setRetryTx = client.api.tx.scheduler.setRetry(
+    [initialBlockNumber + 3, 0],
+    retryConfig.totalRetries,
+    retryConfig.period,
+  )
+  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  let retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 3, 0])
+  assert(retryOpt.isSome)
+  let retry = retryOpt.unwrap()
+  await check(retry).toMatchObject(retryConfig)
+
+  // Move to block of first execution
+  await client.dev.newBlock()
+
+  // Check failure events
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task|when/,
+    })
+    .toMatchSnapshot('events for failed task execution')
+
+  // Verify task failed and was rescheduled
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  const cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 6, 0])
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  // Check retry cancellation events
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for retry config cancellation')
+
+  await client.dev.newBlock()
+
+  // Verify task is still scheduled but without retry config
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isNone)
+}
+
+/**
+ * Test setting and canceling retry configuration for named scheduled tasks:
+ *
+ * 1. Create and schedule a named task that will fail
+ *    - `remarkWithEvent` fails with `Root` origin
+ * 2. Set retry configuration using `scheduler.setRetryNamed`
+ * 3. Verify task fails and is rescheduled per its retry config
+ * 4. Cancel the retry configuration
+ * 5. Verify the task remains scheduled but without its retry config
+ */
+export async function scheduleNamedWithRetryConfig<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  // Create a task that will fail - remarkWithEvent requires signed origin
+  const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
+  const taskId = sha256AsU8a('retry_task')
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // Define base task object once
+  const baseTask = {
+    maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
+    priority: 1,
+    call: { inline: failingTx.method.toHex() },
+    maybePeriodic: null,
+    origin: {
+      system: {
+        root: null,
+      },
+    },
+  }
+
+  const retryConfig = {
+    totalRetries: 3,
+    remaining: 3,
+    period: 3,
+  }
+
+  // Schedule the named task first
+  const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, initialBlockNumber + 3, null, 1, failingTx)
+  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+
+  // Move to scheduling block
+  await client.dev.newBlock()
+
+  // Check initial schedule
+  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+
+  // Set retry configuration
+  const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
+  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  let retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 3, 0])
+  assert(retryOpt.isSome)
+  let retry = retryOpt.unwrap()
+  await check(retry).toMatchObject(retryConfig)
+
+  // Move to block of first execution
+  await client.dev.newBlock()
+
+  // Check failure events
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task|when/,
+    })
+    .toMatchSnapshot('events for failed named task execution')
+
+  // Verify task failed and was rescheduled
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  assert(scheduled.length === 0)
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  // Retries of named tasks have no id
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  let cancelRetryTx = client.api.tx.scheduler.cancelRetryNamed(taskId)
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  // Check retry cancellation events
+  await checkSystemEvents(client, 'scheduler')
+    .redact({
+      redactKeys: /task/,
+    })
+    .toMatchSnapshot('events for retry config cancellation')
+
+  await client.dev.newBlock()
+
+  // Verify task is still scheduled but without retry config
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  // Once again - retries of named tasks have no id, even after removal of retry config
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
+  // A named task's retry will be unnamed, so its retry configuration must be cancelled
+  // via `cancelRetry` - `cancelRetryNamed` has no effect.
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 1,
+  })
+
+  await client.dev.newBlock()
+
+  // In the meantime, the task has been retried a second time, and has scheduled for a third
+
+  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 9)
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  await check(scheduled[0].unwrap()).toMatchObject({
+    ...baseTask,
+    maybeId: null,
+  })
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 9, 0])
+  assert(retryOpt.isSome)
+  retry = retryOpt.unwrap()
+  await check(retry).toMatchObject({
+    ...retryConfig,
+    remaining: retryConfig.remaining - 2,
+  })
+
+  // Cancel the retry configuration with `cancelRetry`
+  cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 9, 0])
+  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 9, 0])
+  assert(retryOpt.isNone)
 }
 
 export function schedulerE2ETests<
@@ -610,12 +1375,40 @@ export function schedulerE2ETests<
       await scheduleTaskAfterDelay(client)
     })
 
+    test('scheduling a periodic task is possible', async () => {
+      await schedulePeriodicTask(client)
+    })
+
+    test('scheduling a named periodic task that executes multiple times', async () => {
+      await scheduleNamedPeriodicTask(client)
+    })
+
     test('scheduling a named task after a delay is possible', async () => {
       await scheduleNamedTaskAfterDelay(client)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
       await scheduledOverweightCallFails(client)
+    })
+
+    test('execution of scheduled preimage lookup call works', async () => {
+      await scheduleLookupCall(client)
+    })
+
+    test('scheduling a call using a preimage that gets removed', async () => {
+      await schedulePreimagedCall(client)
+    })
+
+    test('priority-based execution of weighted tasks works correctly', async () => {
+      await schedulePriorityWeightedTasks(client)
+    })
+
+    test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
+      await scheduleWithRetryConfig(client)
+    })
+
+    test('setting and canceling retry configuration for named scheduled tasks', async () => {
+      await scheduleNamedWithRetryConfig(client)
     })
   })
 }
