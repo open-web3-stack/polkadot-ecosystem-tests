@@ -17,7 +17,7 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > balance on from cha
 
 exports[`acala & moonbeam > acala transfer ACA to moonbeam > balance on to chain 1`] = `
 {
-  "balance": "(rounded 328000000000)",
+  "balance": "(rounded 308000000000)",
   "extra": null,
   "reason": {
     "sufficient": null,
@@ -129,7 +129,7 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > to chain xcm events
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 29000)",
-        "refTime": "(rounded 4200000000)",
+        "refTime": "(rounded 4300000000)",
       },
     },
     "method": "Processed",
@@ -372,7 +372,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > to chain xcm events
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 29000)",
-        "refTime": "(rounded 4200000000)",
+        "refTime": "(rounded 4300000000)",
       },
     },
     "method": "Processed",
@@ -551,7 +551,7 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > to chain xcm event
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 29000)",
-        "refTime": "(rounded 4200000000)",
+        "refTime": "(rounded 4300000000)",
       },
     },
     "method": "Processed",
@@ -648,7 +648,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > balance on to chain
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 993000000000)",
+    "free": "(rounded 991000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -735,6 +735,9 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -754,7 +757,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > to chain xcm events
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 800000000,
+        "refTime": 1000000000,
       },
     },
     "method": "Processed",
@@ -770,8 +773,8 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > tx events 1`] = `
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 9700)",
-            "refTime": "(rounded 3900000000)",
+            "proofSize": 10000,
+            "refTime": "(rounded 4000000000)",
           },
         },
       },
@@ -1024,6 +1027,9 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
           ],
         },
       },
+      {
+        "setTopic": "(redacted)",
+      },
     ],
   },
 ]
@@ -1077,7 +1083,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 20000)",
-            "refTime": "(rounded 4700000000)",
+            "refTime": "(rounded 4800000000)",
           },
         },
       },
@@ -1184,6 +1190,9 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -1203,7 +1212,7 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > to chain xcm event
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 800000000,
+        "refTime": 1000000000,
       },
     },
     "method": "Processed",
@@ -1219,8 +1228,8 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > tx events 1`] = `
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 9700)",
-            "refTime": "(rounded 3900000000)",
+            "proofSize": 10000,
+            "refTime": "(rounded 4000000000)",
           },
         },
       },

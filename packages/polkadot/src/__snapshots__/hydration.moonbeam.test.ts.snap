@@ -161,7 +161,7 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > to chain xc
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 29000)",
-        "refTime": "(rounded 4200000000)",
+        "refTime": "(rounded 4300000000)",
       },
     },
     "method": "Processed",
@@ -335,8 +335,8 @@ exports[`hydration & moonbeam > hydration transfer GLMR to moonbeam > to chain x
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 38000)",
-        "refTime": "(rounded 7600000000)",
+        "proofSize": "(rounded 39000)",
+        "refTime": "(rounded 7900000000)",
       },
     },
     "method": "Processed",
@@ -533,6 +533,9 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
           ],
         },
       },
+      {
+        "setTopic": "(redacted)",
+      },
     ],
   },
 ]
@@ -586,7 +589,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > tx events 1
         "Complete": {
           "used": {
             "proofSize": "(rounded 20000)",
-            "refTime": "(rounded 4700000000)",
+            "refTime": "(rounded 4800000000)",
           },
         },
       },
