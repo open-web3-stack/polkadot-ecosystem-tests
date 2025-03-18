@@ -1,0 +1,96 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Proxy > add proxies to an account > events when adding proxy (with/without delay) accounts to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Any",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Governance",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Staking",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Auction",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Society",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "NominationPools",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Spokesperson",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
