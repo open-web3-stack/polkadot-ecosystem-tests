@@ -74,3 +74,243 @@ exports[`Polkadot Collectives Proxy > add proxies to an account > events when ad
   },
 ]
 `;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy account to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Any",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy account to Alice 2`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type Alliance to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Alliance",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type Ambassador to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Ambassador",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type Any to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Any",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type CancelProxy to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type Collator to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type Fellowship to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Fellowship",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when adding proxy with type NonTransfer to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type Alliance from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Alliance",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type Ambassador from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Ambassador",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type Any from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type CancelProxy from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type Collator from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type Fellowship from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Fellowship",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > add proxies to an account > events when removing proxy with type NonTransfer from Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;

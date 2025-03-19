@@ -1,12 +1,10 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
-import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
-import { assert, describe, expect, test } from 'vitest'
+import { assert, describe, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
 /**
  * Test to the process of adding a proxy to an account.
@@ -23,44 +21,45 @@ export async function addProxyTest<
 >(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
 
-  const batchAll: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-
-  for (const proxyTypeIx of Object.values(proxyTypes)) {
+  for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     const addProxyTx = client.api.tx.proxy.addProxy(bob.address, proxyTypeIx, 0)
-    batchAll.push(addProxyTx)
-  }
+    const addProxyEvents = await sendTransaction(addProxyTx.signAsync(alice))
 
-  const batchAllTx = client.api.tx.utility.batchAll(batchAll)
-  const addProxyEvents = await sendTransaction(batchAllTx.signAsync(alice))
+    await client.dev.newBlock()
 
-  await client.dev.newBlock()
+    await checkEvents(addProxyEvents, 'proxy').toMatchSnapshot(
+      `events when adding proxy with type ${proxyType} to Alice`,
+    )
 
-  await checkEvents(addProxyEvents, 'proxy').toMatchSnapshot(
-    'events when adding proxy (with/without delay) accounts to Alice',
-  )
+    // Check created proxies
 
-  // Check created proxies
+    const proxyData = await client.api.query.proxy.proxies(alice.address)
+    const proxies: Vec<PalletProxyProxyDefinition> = proxyData[0]
+    assert(proxies.length === 1)
 
-  const proxyData = await client.api.query.proxy.proxies(alice.address)
-  const proxies: Vec<PalletProxyProxyDefinition> = proxyData[0]
-  const proxyDeposit = proxyData[1]
+    const proxyDeposit = proxyData[1]
+    const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
+    const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+    const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
+    assert(proxyDeposit.eq(proxyDepositTotal))
 
-  expect(proxies.length).toBe(Object.keys(proxyTypes).length)
-  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
-  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
-  const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor.muln(proxies.length))
-  assert(proxyDeposit.eq(proxyDepositTotal))
+    const proxy = proxies[0]
+    await check(proxy).toMatchObject({
+      delegate: encodeAddress(bob.address, addressEncoding),
+      proxyType: proxyType,
+      delay: 0,
+    })
 
-  // Check proxies
-  for (const proxy of proxies) {
-    await check(proxy)
-      .redact({ redactKeys: /proxyType/ })
-      .toMatchObject({
-        delegate: encodeAddress(bob.address, addressEncoding),
-        delay: 0,
-      })
+    // Remove proxy
+    const removeProxyTx = client.api.tx.proxy.removeProxy(bob.address, proxyTypeIx, 0)
+    const removeProxyEvents = await sendTransaction(removeProxyTx.signAsync(alice))
+
+    await client.dev.newBlock()
+
+    await checkEvents(removeProxyEvents, 'proxy').toMatchSnapshot(
+      `events when removing proxy with type ${proxyType} from Alice`,
+    )
   }
 }
 
