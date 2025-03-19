@@ -1,11 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (with/without delay) accounts to Alice 1`] = `
+exports[`Polkadot Proxy > add proxies to an account > events when adding proxies to Alice 1`] = `
 [
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
@@ -15,7 +15,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
@@ -25,7 +25,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "13bRd6vgUdDeskuZ1W1uG8aHL6T5gEFYVjxqFUbrzjhfjumZ",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Governance",
     },
@@ -35,7 +35,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "13VW2PgsJsxnnXF69YyVpvEDRuZoG1WgQV7z5FXUkGYoWSQt",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Staking",
     },
@@ -45,7 +45,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "CancelProxy",
     },
@@ -55,7 +55,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "13VJqoABRR4wTZ3QUmCdpBN86iDAP87wjy211q1qMcdaVczh",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Auction",
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "15Zyo43VEGkCbNJFtTeX57Wpyve3HVGSrxAjBXHnC6byk4GQ",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NominationPools",
     },
@@ -75,239 +75,74 @@ exports[`Polkadot Proxy > add proxies to an account > events when adding proxy (
 ]
 `;
 
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy account to Alice 1`] = `
+exports[`Polkadot Proxy > add proxies to an account > events when removing proxies from Alice 1`] = `
 [
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
-    "method": "ProxyAdded",
+    "method": "ProxyRemoved",
     "section": "proxy",
   },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy account to Alice 2`] = `
-[
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type Any to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Any",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type Auction to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Auction",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type CancelProxy to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "CancelProxy",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type Governance to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Governance",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type NominationPools to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "NominationPools",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type NonTransfer to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "NonTransfer",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when adding proxy with type Staking to Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Staking",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type Any from Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Any",
-    },
     "method": "ProxyRemoved",
     "section": "proxy",
   },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type Auction from Alice 1`] = `
-[
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "Auction",
-    },
-    "method": "ProxyRemoved",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type CancelProxy from Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "CancelProxy",
-    },
-    "method": "ProxyRemoved",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type Governance from Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "13bRd6vgUdDeskuZ1W1uG8aHL6T5gEFYVjxqFUbrzjhfjumZ",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Governance",
     },
     "method": "ProxyRemoved",
     "section": "proxy",
   },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type NominationPools from Alice 1`] = `
-[
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "NominationPools",
-    },
-    "method": "ProxyRemoved",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type NonTransfer from Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "proxyType": "NonTransfer",
-    },
-    "method": "ProxyRemoved",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > add proxies to an account > events when removing proxy with type Staking from Alice 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "delegatee": "13VW2PgsJsxnnXF69YyVpvEDRuZoG1WgQV7z5FXUkGYoWSQt",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Staking",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "13VJqoABRR4wTZ3QUmCdpBN86iDAP87wjy211q1qMcdaVczh",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "Auction",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "15Zyo43VEGkCbNJFtTeX57Wpyve3HVGSrxAjBXHnC6byk4GQ",
+      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "proxyType": "NominationPools",
     },
     "method": "ProxyRemoved",
     "section": "proxy",
