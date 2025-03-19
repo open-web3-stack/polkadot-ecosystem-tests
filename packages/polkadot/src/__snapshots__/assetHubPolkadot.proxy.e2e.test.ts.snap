@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot AssetHub Proxy > add proxies to an account > events when adding proxies to Alice 1`] = `
+exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
 [
   {
     "data": {
@@ -75,7 +75,9 @@ exports[`Polkadot AssetHub Proxy > add proxies to an account > events when addin
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > add proxies to an account > events when removing proxies from Alice 1`] = `
+exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when removing all proxies from Alice 1`] = `[]`;
+
+exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
     "data": {
