@@ -49,3 +49,12 @@ export const CoretimeProxyTypes = {
   OnDemandPurchaser: 5,
   Collator: 6,
 }
+
+export const PeopleProxyTypes = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Identity: 3,
+  IdentityJudgement: 4,
+  Collator: 5,
+}
