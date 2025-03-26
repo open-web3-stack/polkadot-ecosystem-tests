@@ -5,7 +5,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D2rYAkwcRmvEawMYd2noBTEVLqMn5TNPAN1EjTm1E5f2ezm",
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Any",
     },
@@ -15,7 +15,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D3F9fEVXqS8NZi5TyqmK8zYo7wwV6ccoVsZtv5NtzYQe7BN",
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "NonTransfer",
     },
@@ -25,7 +25,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "GRQ1TSX5D9qComE771gfRc7SMjS5wwnsieeYVNnrXkuCfhs",
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "CancelProxy",
     },
@@ -35,7 +35,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "J21mQKhXJwiJZkRJKk8QMhFQKx2b9QySMjtpsVsnAwytKac",
+      "delegatee": "DfeV9UQE55S368Ym2LfgJJpXcfkF5MmjnwFDvAe9VKMBpAy",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Assets",
     },
@@ -45,7 +45,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D7yxf1FxYgZ9Y3uRetRCzXDAD7HGcEVqKrVheysVuHCariu",
+      "delegatee": "EwHAaLmkR3hm3Yu2ULBtfASxRT8L8Hhn5m1VYciJ7RVr5F4",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "AssetOwner",
     },
@@ -55,7 +55,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "FtAR5SV7srpL51BTnPi5cw6mfzLK68s7KhzWMhSkCh9yYXr",
+      "delegatee": "Eio83Zh4aVyhpaTTYr9wEp2pjiX1qTN4xngG9FKo5xoPwRQ",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "AssetManager",
     },
@@ -65,7 +65,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "FoT9ioxgb1H3FGoCAcYL1EddAcyHadV1Un2AS5rekxm5URh",
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Collator",
     },
@@ -82,7 +82,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D2rYAkwcRmvEawMYd2noBTEVLqMn5TNPAN1EjTm1E5f2ezm",
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Any",
     },
@@ -92,7 +92,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D3F9fEVXqS8NZi5TyqmK8zYo7wwV6ccoVsZtv5NtzYQe7BN",
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "NonTransfer",
     },
@@ -102,7 +102,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "GRQ1TSX5D9qComE771gfRc7SMjS5wwnsieeYVNnrXkuCfhs",
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "CancelProxy",
     },
@@ -112,7 +112,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "J21mQKhXJwiJZkRJKk8QMhFQKx2b9QySMjtpsVsnAwytKac",
+      "delegatee": "DfeV9UQE55S368Ym2LfgJJpXcfkF5MmjnwFDvAe9VKMBpAy",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Assets",
     },
@@ -122,7 +122,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "D7yxf1FxYgZ9Y3uRetRCzXDAD7HGcEVqKrVheysVuHCariu",
+      "delegatee": "EwHAaLmkR3hm3Yu2ULBtfASxRT8L8Hhn5m1VYciJ7RVr5F4",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "AssetOwner",
     },
@@ -132,7 +132,7 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "FtAR5SV7srpL51BTnPi5cw6mfzLK68s7KhzWMhSkCh9yYXr",
+      "delegatee": "Eio83Zh4aVyhpaTTYr9wEp2pjiX1qTN4xngG9FKo5xoPwRQ",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "AssetManager",
     },
@@ -142,11 +142,212 @@ exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account,
   {
     "data": {
       "delay": 0,
-      "delegatee": "FoT9ioxgb1H3FGoCAcYL1EddAcyHadV1Un2AS5rekxm5URh",
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
       "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "proxyType": "Collator",
     },
     "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "JBmSV2xqmKNL8ttsCAYrfaWWZiWRTFbHY8ovAPhKFvPxpeV",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "NonTransfer",
+      "pure": "JMj2LRfR22eRD6qki25YvJWgfrKwGCaGFQiwdBcJCQydsZc",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "CancelProxy",
+      "pure": "JE3NWAarHC77tbt9qaKG9H67Y73ZqKBH3NRE23P8AeJ1rjF",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Assets",
+      "pure": "Gzzqa4gWLkEVhXAHy36vGn5D4xLZcv1p5tNb5ZyS8p3FGZT",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "AssetOwner",
+      "pure": "EKusEAKXJZZ6snA4ivPjCkMxk3baej912pqCvAKLbtHsLsb",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "AssetManager",
+      "pure": "D4PJDo2XLT8coqNYip3YUFosu83Ryo3UZFBcQfjPoa8HpdC",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Collator",
+      "pure": "CnPcBWuUFVfKXf4sZ5Nsb8yTy4ctMZWkvs8VEXvwaHSMLp3",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

@@ -5,7 +5,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
@@ -15,7 +15,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
@@ -25,7 +25,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13bRd6vgUdDeskuZ1W1uG8aHL6T5gEFYVjxqFUbrzjhfjumZ",
+      "delegatee": "135k9QX4ZeEXP4kS4Gcv9SL3btAuYCieG2R5njKJtpQt83Ng",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Governance",
     },
@@ -35,7 +35,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13VW2PgsJsxnnXF69YyVpvEDRuZoG1WgQV7z5FXUkGYoWSQt",
+      "delegatee": "14AaZyMGZGnDYRPHYMdWpEc2pypTdYWd2zMajSy5p5X6aF47",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Staking",
     },
@@ -45,7 +45,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "CancelProxy",
     },
@@ -55,7 +55,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13VJqoABRR4wTZ3QUmCdpBN86iDAP87wjy211q1qMcdaVczh",
+      "delegatee": "13Ser3ju8nUCLamjtqEYPnmvTfA7ZseKU5qJN42kevysMqwu",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Auction",
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "15Zyo43VEGkCbNJFtTeX57Wpyve3HVGSrxAjBXHnC6byk4GQ",
+      "delegatee": "12T88XwSRehhRCHEsUpwGoCWamXY7Fy2oYWSaS5DACADEbkQ",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NominationPools",
     },
@@ -82,7 +82,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
@@ -92,7 +92,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
@@ -102,7 +102,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13bRd6vgUdDeskuZ1W1uG8aHL6T5gEFYVjxqFUbrzjhfjumZ",
+      "delegatee": "135k9QX4ZeEXP4kS4Gcv9SL3btAuYCieG2R5njKJtpQt83Ng",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Governance",
     },
@@ -112,7 +112,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13VW2PgsJsxnnXF69YyVpvEDRuZoG1WgQV7z5FXUkGYoWSQt",
+      "delegatee": "14AaZyMGZGnDYRPHYMdWpEc2pypTdYWd2zMajSy5p5X6aF47",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Staking",
     },
@@ -122,7 +122,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "CancelProxy",
     },
@@ -132,7 +132,7 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "13VJqoABRR4wTZ3QUmCdpBN86iDAP87wjy211q1qMcdaVczh",
+      "delegatee": "13Ser3ju8nUCLamjtqEYPnmvTfA7ZseKU5qJN42kevysMqwu",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Auction",
     },
@@ -142,11 +142,212 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
   {
     "data": {
       "delay": 0,
-      "delegatee": "15Zyo43VEGkCbNJFtTeX57Wpyve3HVGSrxAjBXHnC6byk4GQ",
+      "delegatee": "12T88XwSRehhRCHEsUpwGoCWamXY7Fy2oYWSaS5DACADEbkQ",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NominationPools",
     },
     "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "16kNW721NsmvX9DLwfYZ5nfJHvsAdhiH27zvLahnbCnkF4Bq",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "NonTransfer",
+      "pure": "16NWTRUwWz9KyVFRHGR3AH2YPdwDZHveu7sGo4hvroBzhNVM",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Governance",
+      "pure": "14tSm9oxUctSQowwXTFGg3oMFGfsEQR9cZqMZgcZJWcQuhX9",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Staking",
+      "pure": "14h1a7f5XScfTGDDDKd2R7ZshzMexrjscAw5hYzPQaNTPT5h",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "CancelProxy",
+      "pure": "13bvYWuTTpMy1DVSYnFvvtBeKoHTBtNxCve9ukAq2S3eLGTj",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Auction",
+      "pure": "14LHiJMW5BKGyJdgaF9obbYQ8wXje94Ejt9YmvgeQTuuMFcV",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "NominationPools",
+      "pure": "16kqz5z657TdUHc38KWJeKa4GQtHcz9RAdVWDoQD55Yzt9V2",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 7 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 8 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

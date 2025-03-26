@@ -2,6 +2,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
+import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
@@ -11,10 +12,27 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, describe, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
 
+/// -------
+/// Helpers
+/// -------
+
 /**
  * Delay parameter for proxy tests.
  */
 const PROXY_DELAY = 5
+
+/**
+ * Given a keyring and a network's proxy types, create a keypair for each proxy type.
+ */
+function createProxyAccounts(
+  accountName: string,
+  kr: Keyring,
+  proxyTypes: Record<string, number>,
+): Record<string, KeyringPair> {
+  return Object.fromEntries(
+    Object.entries(proxyTypes).map(([proxyType, _]) => [proxyType, kr.addFromUri(`${accountName} proxy ${proxyType}`)]),
+  )
+}
 
 /**
  * Test to the process of adding and removing proxies to another account.
@@ -37,10 +55,11 @@ export async function addRemoveProxyTest<
   const kr = defaultAccountsSr25519.keyring
 
   // Create object with keys as proxy types and values as an Sr25519 keypair
-  const proxyAccounts: {
-    [k: string]: KeyringPair
-  } = Object.fromEntries(
-    Object.entries(proxyTypes).map(([proxyType, _]) => [proxyType, kr.addFromUri(`//Alice proxy ${proxyType}`)]),
+  const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
+
+  // Map from proxy indices to proxy types
+  const proxyIndicesToTypes = Object.fromEntries(
+    Object.entries(proxyTypes).map(([proxyType, proxyTypeIx]) => [proxyTypeIx, proxyType]),
   )
 
   // Create proxies
@@ -72,12 +91,11 @@ export async function addRemoveProxyTest<
   assert(proxyDeposit.eq(proxyDepositTotal))
 
   for (const proxy of proxies) {
-    await check(proxy)
-      .redact({ removeKeys: /proxyType/ })
-      .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, addressEncoding),
-        delay: 0,
-      })
+    await check(proxy).toMatchObject({
+      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, addressEncoding),
+      proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
+      delay: 0,
+    })
   }
 
   // Remove proxies
@@ -157,6 +175,133 @@ export async function addRemoveProxyTest<
 }
 
 /**
+ * Test pure proxy management.
+ *
+ * 1. create as many pure proxies as there are proxy types in the current network
+ * 2. check that they were created
+ * 3. delete all of them
+ * 4. verify that they were deleted
+ */
+export async function createKillPureProxyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+  const alice = defaultAccountsSr25519.alice
+
+  // Create pure proxies
+
+  // Map between proxy types (represented as the index of the proxy type in the network's proxy enum), and
+  // the index of the `proxy` extrinsic in the block in which the pure proxy was created.
+  // To kill the pure proxies later, these data will be required.
+  const pureProxyExtrinsicIndices = new Map<number, number>()
+  // When creating pure proxies via batch calls, each proxy must be assigned a unique index.
+  // Because this test uses a batch transaction to create several pure proxies of *different* types, the indices
+  // can be the same for all proxies: zero.
+  const proxyIx = 0
+  // Map betewen proxy types (their indices, again), and their addresses.
+  const pureProxyAddresses = new Map<number, string>()
+
+  const batch: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+
+  for (const proxyTypeIx of Object.values(proxyTypes)) {
+    const addProxyTx = client.api.tx.proxy.createPure(proxyTypeIx, 0, proxyIx)
+    batch.push(addProxyTx)
+  }
+
+  const batchCreatePureProxiesTx = client.api.tx.utility.batchAll(batch)
+  const createPureProxiesEvents = await sendTransaction(batchCreatePureProxiesTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(createPureProxiesEvents, 'proxy').toMatchSnapshot(`events when creating pure proxies for Alice`)
+
+  // Check created proxies
+
+  // Pure proxies aren't visible in the `proxies` query.
+  const proxyData = await client.api.query.proxy.proxies(alice.address)
+  const proxies: Vec<PalletProxyProxyDefinition> = proxyData[0]
+  assert(proxies.length === 0)
+  const proxyDeposit = proxyData[1]
+  assert(proxyDeposit.eq(0))
+
+  const events = await client.api.query.system.events()
+
+  const proxyEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'PureCreated'
+  })
+
+  assert(proxyEvents.length === Object.keys(proxyTypes).length)
+
+  for (const proxyEvent of proxyEvents) {
+    assert(client.api.events.proxy.PureCreated.is(proxyEvent.event))
+    const eventData = proxyEvent.event.data
+    // Log the extrinsic index that the `pure_proxy` extrinsic that created this pure proxy was run in.
+    pureProxyExtrinsicIndices.set(
+      proxyEvent.event.data.proxyType.toNumber(),
+      proxyEvent.phase.asApplyExtrinsic.toNumber(),
+    )
+
+    pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
+
+    // Confer event data vs. storage
+    const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
+    assert(pureProxy[0].length === 1)
+    assert(pureProxy[0][0].proxyType.eq(eventData.proxyType))
+    assert(pureProxy[0][0].delay.eq(0))
+    assert(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding)))
+
+    const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
+    const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+    const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
+    assert(pureProxy[1].eq(proxyDepositTotal))
+  }
+
+  // Kill pure proxies
+
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  for (const [proxyTypeIx, extIndex] of pureProxyExtrinsicIndices.entries()) {
+    const killProxyTx = client.api.tx.proxy.killPure(alice.address, proxyTypeIx, proxyIx, currBlockNumber, extIndex)
+
+    const proxyTx = client.api.tx.proxy.proxy(pureProxyAddresses.get(proxyTypeIx)!, null, killProxyTx)
+
+    const proxyEvents = await sendTransaction(proxyTx.signAsync(alice))
+
+    await client.dev.newBlock()
+
+    // `proxy.killPure` does not emit any events.
+    // #7995 will fix this, eliciting a failed test run sometime in the future.
+    await checkEvents(proxyEvents, 'proxy').toMatchSnapshot(
+      `events when killing pure proxy of type ${proxyTypeIx} for Alice`,
+    )
+  }
+
+  // Check that the pure proxies were killed; at present, only `Any` pure proxies can successfully call
+  // `proxy.killPure`.
+  // Pending a fix, this can be updated to check that all pure proxy types can be killed.
+  for (const proxyEvent of proxyEvents) {
+    assert(client.api.events.proxy.PureCreated.is(proxyEvent.event))
+    const eventData = proxyEvent.event.data
+
+    const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
+
+    if (eventData.proxyType.toNumber() === proxyTypes['Any']) {
+      assert(pureProxy[0].length === 0)
+      assert(pureProxy[1].eq(0))
+    } else {
+      assert(pureProxy[0].length === 1)
+      assert(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding)))
+
+      const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
+      const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+      const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
+      assert(pureProxy[1].eq(proxyDepositTotal))
+    }
+  }
+}
+
+/**
  * E2E tests for proxy functionality:
  * - Adding and removing proxies
  * - Executing calls through proxies
@@ -175,6 +320,10 @@ export async function proxyE2ETests<
 
     test('add proxies (with/without delay) to an account, and remove them', async () => {
       await addRemoveProxyTest(client, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
+    })
+
+    test('create and kill pure proxies', async () => {
+      await createKillPureProxyTest(client, testConfig.addressEncoding, proxyTypes)
     })
   })
 }

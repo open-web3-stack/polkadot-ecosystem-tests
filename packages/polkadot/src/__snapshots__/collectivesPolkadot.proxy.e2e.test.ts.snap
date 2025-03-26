@@ -5,7 +5,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
@@ -15,7 +15,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
@@ -25,7 +25,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "CancelProxy",
     },
@@ -35,7 +35,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E8djj9v1Fpj8TsP6rVaChnLCLPBDNSdbfkw4oFj3mnWgzo",
+      "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Collator",
     },
@@ -45,7 +45,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "19ktvoUkdDpQwH1K4Tf5Hfvq8o3nReLsKjSQJ95cNL6wQEZ",
+      "delegatee": "13tsR5Cx9rYpR5UgpYskh3cyfiRxgVJiVvSJR89qLBjxtbA9",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Alliance",
     },
@@ -55,7 +55,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "13GZMoFRJj54M89iLM38DJtYtBCNRdoviYpJuNdtsRMRKGsB",
+      "delegatee": "12mR752ZLe32C5xhai4kE9n1sytSpE1XPTXr7dmzv2tYMMVs",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Fellowship",
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1goKFyQDTEMLKZvXHTM8bpUhX2AaMjUC1f7aERHnECVdYA9",
+      "delegatee": "14YRWSTsjvjY39pPXKu9fj1zHyso2E2mpxFmdtw6dMuyKjdW",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Ambassador",
     },
@@ -82,7 +82,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1TY2Bg8qr2TvU8RjZGk3NvPCNYmfiCL1HFk1NBA5WtgTupW",
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Any",
     },
@@ -92,7 +92,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1Tvdg9gmFgg4Su9ev5iZLThW9fMNjMaRcmJfYnmyHMS5Njr",
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "NonTransfer",
     },
@@ -102,7 +102,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "14r5VUMiJdQNtgxJJ3Fdud5G9PSqyagkVqYPK86BvpZvdsos",
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "CancelProxy",
     },
@@ -112,7 +112,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "14E8djj9v1Fpj8TsP6rVaChnLCLPBDNSdbfkw4oFj3mnWgzo",
+      "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Collator",
     },
@@ -122,7 +122,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "19ktvoUkdDpQwH1K4Tf5Hfvq8o3nReLsKjSQJ95cNL6wQEZ",
+      "delegatee": "13tsR5Cx9rYpR5UgpYskh3cyfiRxgVJiVvSJR89qLBjxtbA9",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Alliance",
     },
@@ -132,7 +132,7 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "13GZMoFRJj54M89iLM38DJtYtBCNRdoviYpJuNdtsRMRKGsB",
+      "delegatee": "12mR752ZLe32C5xhai4kE9n1sytSpE1XPTXr7dmzv2tYMMVs",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Fellowship",
     },
@@ -142,11 +142,212 @@ exports[`Polkadot Collectives Proxy > add proxies (with/without delay) to an acc
   {
     "data": {
       "delay": 0,
-      "delegatee": "1goKFyQDTEMLKZvXHTM8bpUhX2AaMjUC1f7aERHnECVdYA9",
+      "delegatee": "14YRWSTsjvjY39pPXKu9fj1zHyso2E2mpxFmdtw6dMuyKjdW",
       "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "proxyType": "Ambassador",
     },
     "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "1sSdMJvvPzacMdGgubnUW8zFXKR7tzGL1wAYxt7ndQVowhu",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "NonTransfer",
+      "pure": "145ZMrBpAofUjCMHjaMDcCMBwogcTXow3dQkJv22n93Vv9ge",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "CancelProxy",
+      "pure": "121zb84vrguq3KW77VL7fRfYX7oD6Go4u8FnMnRjUykh1fRv",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Collator",
+      "pure": "13FffQrrWKvQ8NpJ64CE1LjBh4s4JWoXmb1DtEGp5J9yGFWK",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Alliance",
+      "pure": "14o34Zd751aycpr63MzfH5FMvrXwHcAuCymzXf8cT6osjzpX",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Fellowship",
+      "pure": "1ntS2unK9BnTkqWMDDBUiudsaHHQJ84TdbEF7NL3DJRxPMM",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Ambassador",
+      "pure": "123sSAZCdCFCmLqeVunDpt1yZyYeZ1ZtQmcEWwrM3XZo6zJL",
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]
