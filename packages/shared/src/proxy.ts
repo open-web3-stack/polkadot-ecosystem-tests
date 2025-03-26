@@ -178,9 +178,11 @@ export async function addRemoveProxyTest<
  * Test pure proxy management.
  *
  * 1. create as many pure proxies as there are proxy types in the current network
- * 2. check that they were created
- * 3. delete all of them
+ * 2. use a `utility.batchAll` transaction
+ * 2. check that they were all created
+ * 3. (attempt to) delete all of them
  * 4. verify that they were deleted
+ *     - only the `Any` proxy is currently removable via `proxy.killPure`, see #8056
  */
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -261,8 +263,15 @@ export async function createKillPureProxyTest<
 
   // Kill pure proxies
 
+  // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
+  // The current block number will have been the block in which the batch transaction containing all of the
+  // `createPure` extrinsics were executed.
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
+  // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
+  // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
+  // and the created pure account will become the delegator; this needs to be reflected in the arguments for
+  // `proxy.proxy`.
   for (const [proxyTypeIx, extIndex] of pureProxyExtrinsicIndices.entries()) {
     const killProxyTx = client.api.tx.proxy.killPure(alice.address, proxyTypeIx, proxyIx, currBlockNumber, extIndex)
 
@@ -279,15 +288,16 @@ export async function createKillPureProxyTest<
     )
   }
 
-  // Check that the pure proxies were killed; at present, only `Any` pure proxies can successfully call
-  // `proxy.killPure`.
-  // Pending a fix, this can be updated to check that all pure proxy types can be killed.
+  // Check that the pure proxies were killed
+
   for (const proxyEvent of proxyEvents) {
     assert(client.api.events.proxy.PureCreated.is(proxyEvent.event))
     const eventData = proxyEvent.event.data
 
     const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
 
+    // At present, only `Any` pure proxies can successfully call `proxy.killPure`.
+    // Pending a fix (see #8056), this may be updated to check that all pure proxy types can be killed.
     if (eventData.proxyType.toNumber() === proxyTypes['Any']) {
       assert(pureProxy[0].length === 0)
       assert(pureProxy[1].eq(0))
