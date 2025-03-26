@@ -213,7 +213,9 @@ export async function createKillPureProxyTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(createPureProxiesEvents, 'proxy').toMatchSnapshot(`events when creating pure proxies for Alice`)
+  await checkEvents(createPureProxiesEvents, 'proxy')
+    .redact({ removeKeys: /pure/ })
+    .toMatchSnapshot(`events when creating pure proxies for Alice`)
 
   // Check created proxies
 

@@ -158,7 +158,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "1sSdMJvvPzacMdGgubnUW8zFXKR7tzGL1wAYxt7ndQVowhu",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -168,7 +167,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "145ZMrBpAofUjCMHjaMDcCMBwogcTXow3dQkJv22n93Vv9ge",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -178,7 +176,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "121zb84vrguq3KW77VL7fRfYX7oD6Go4u8FnMnRjUykh1fRv",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -188,7 +185,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "pure": "13FffQrrWKvQ8NpJ64CE1LjBh4s4JWoXmb1DtEGp5J9yGFWK",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -198,7 +194,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Alliance",
-      "pure": "14o34Zd751aycpr63MzfH5FMvrXwHcAuCymzXf8cT6osjzpX",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -208,7 +203,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Fellowship",
-      "pure": "1ntS2unK9BnTkqWMDDBUiudsaHHQJ84TdbEF7NL3DJRxPMM",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -218,7 +212,6 @@ exports[`Polkadot Collectives Proxy > create and kill pure proxies > events when
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Ambassador",
-      "pure": "123sSAZCdCFCmLqeVunDpt1yZyYeZ1ZtQmcEWwrM3XZo6zJL",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",

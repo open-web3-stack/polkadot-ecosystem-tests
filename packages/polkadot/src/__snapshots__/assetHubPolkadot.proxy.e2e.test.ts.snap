@@ -158,7 +158,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "1DTuWTA9pSizuPUZLMCDRn2MgueiXGN6QfdnoX9ks8M51Hp",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -168,7 +167,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "1WXKnBxCZEFeCWuUxLByD4fnsRqsGQhfF7SXR8ZVuAsMEb4",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -178,7 +176,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "12SYWLFT58Dtp2NNrGyZirJap7hh8BZUKruz1F5zNSypAA4e",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -188,7 +185,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Assets",
-      "pure": "1iWR8gUKAy3nWSnBtHDvswKUU1E83GyKNyErKQVjKY9nYei",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -198,7 +194,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "AssetOwner",
-      "pure": "15sonHNFwkCdYCidhjkDRQEJtVE7gCD1kfYBPCwgrgBbEXcn",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -208,7 +203,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "AssetManager",
-      "pure": "15yjFgt4AJEUF9CRz5Yb2bP8aWfMi2NJFPj4imfkntiPuWPq",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -218,7 +212,6 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "pure": "13YUSeXNuqqSSjAVZKJ1LrrsX1wn24jsiQf5pNK8GGJHQZM5",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",

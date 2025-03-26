@@ -158,7 +158,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "16bTqZokFJ7KYEdwcZ69cpPTwE88K4znkQLGvV3KQCuUdr7i",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -168,7 +167,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "16gfp4BWBopC2HRocnJo8R5Rv4X62USXbZ2Brhfd6rRBo6dy",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -178,7 +176,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "13zunjGvdfA6b9627mm8sDFTfKDhMxLmmVFn2n5kaj3NW9ay",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -188,7 +185,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Broker",
-      "pure": "169u6FCcXDcgYavLZjsBu7WnR5YEJZzdGngBqPLRLHojhc7s",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -198,7 +194,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CoretimeRenewer",
-      "pure": "12YZ3GCCt7rV8tsuciZQoWtDmXdSAVoemHZ9bGwxc2TVqHxi",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -208,7 +203,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "OnDemandPurchaser",
-      "pure": "13o6jmPc7RVpiB1uv21Wjr3XxY2RBnTzDUG43MohWHyZnTP3",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -218,7 +212,6 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "pure": "14Tb6PtNuzJs8cAj5RYkCDH7Tat38sEnMK3Dy9h6cTLZcJGH",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",

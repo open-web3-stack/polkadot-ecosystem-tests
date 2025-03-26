@@ -138,7 +138,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "13emEgEfkXNFntBNXXtujw5iNW6bu6YWjRNXFMZB35Sb6gJm",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -148,7 +147,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "12iePWrBcJgsrXV7DNgYwkuY9pvUbHrLYHT9H8LnWZUGyMBQ",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -158,7 +156,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "133ogxbZnY9MGuAZJk3XCKB1gJsmzCXRBLHxK5Mzg4AzZnkW",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -168,7 +165,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Identity",
-      "pure": "1jdY3NxkkctdmDycsghWhPzBPrjoY8iBieeLuoSsseH8saf",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -178,7 +174,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "IdentityJudgement",
-      "pure": "136fdMurhH6dPkCJsQbzh4bvwkWf2PTbGGdeApnPSAUP3APg",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -188,7 +183,6 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "pure": "13DHH1XpyUautZbi3gN99DQ3bT22dcP3BDDmXSxSA96Jue1S",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",

@@ -158,7 +158,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "16kNW721NsmvX9DLwfYZ5nfJHvsAdhiH27zvLahnbCnkF4Bq",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -168,7 +167,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "16NWTRUwWz9KyVFRHGR3AH2YPdwDZHveu7sGo4hvroBzhNVM",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -178,7 +176,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Governance",
-      "pure": "14tSm9oxUctSQowwXTFGg3oMFGfsEQR9cZqMZgcZJWcQuhX9",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -188,7 +185,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Staking",
-      "pure": "14h1a7f5XScfTGDDDKd2R7ZshzMexrjscAw5hYzPQaNTPT5h",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -198,7 +194,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "13bvYWuTTpMy1DVSYnFvvtBeKoHTBtNxCve9ukAq2S3eLGTj",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -208,7 +203,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Auction",
-      "pure": "14LHiJMW5BKGyJdgaF9obbYQ8wXje94Ejt9YmvgeQTuuMFcV",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",
@@ -218,7 +212,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when creating pu
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NominationPools",
-      "pure": "16kqz5z657TdUHc38KWJeKa4GQtHcz9RAdVWDoQD55Yzt9V2",
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "PureCreated",

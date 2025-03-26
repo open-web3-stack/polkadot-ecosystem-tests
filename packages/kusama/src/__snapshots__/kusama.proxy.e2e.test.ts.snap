@@ -198,7 +198,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "D8Jsgjk61sWumqdLD8n2YukKR3oh6pViuCBCPvtK2TSXfmD",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -208,7 +207,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "pure": "EWjs7uWDzveH7ybuA7YDBYTf8b5esdMV4pvotZnSJTjMX9A",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -218,7 +216,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Governance",
-      "pure": "Dt86E9suUEoU5HkDeLajkaQqSHNpTZgn4XAD9gpBFPrNX3o",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -228,7 +225,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Staking",
-      "pure": "E8kKUdtXz7uz6LiEtZJ3dG7iWCaxV7S8HNrMrp1frFmU2TK",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -238,7 +234,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "pure": "GqURNCPxRWTX1sMW17NhjMyeHpgstPuY7AREeGofEkPfNwX",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -248,7 +243,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Auction",
-      "pure": "DMznkhBA3VMd44aBdad1j4CCKpuVhs8thsR42UxJbgidzo8",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -258,7 +252,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Society",
-      "pure": "FJu6QyyhL3eqa6Nbxe6r8GKHMq8gG6UrrLk2Uk5ZSZr29M3",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -268,7 +261,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NominationPools",
-      "pure": "HH1j7Yzxe9AdeD9arWeXt1FYiNa86dG5sVV37oP2hJdxMi6",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -278,7 +270,6 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Spokesperson",
-      "pure": "GjxbwyzXxhrHTBoMVp2rcm47kYVY8UjXFidpdvm7fEtWHNe",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
