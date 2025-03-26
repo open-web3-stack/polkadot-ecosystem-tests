@@ -22,8 +22,6 @@ const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpec
 
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
 
-export * from './proxyTypes.js'
-
 /**
  * Compare the selected properties of two objects.
  *
