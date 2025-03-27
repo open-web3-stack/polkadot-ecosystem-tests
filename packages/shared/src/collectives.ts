@@ -86,7 +86,7 @@ async function sendWhitelistCallViaXcmTransact(
  * `describe` runner this function creates.
  *
  * @param topLevelDescription A description of this test runner e.g. "Polkadot Collectives E2E tests"
- * @param relayClient The relay chain to be used by these tests
+ * @param destChain The destination chain to where Collectives chain will send whitelist call by xcm
  * @param collectivesClient The collectives's chain associated to the previous `relayChain`
  */
 export function collectivesChainE2ETests<
@@ -94,15 +94,15 @@ export function collectivesChainE2ETests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(
-  relayChain: Chain<TCustom, TInitStoragesRelay>,
+  destChain: Chain<TCustom, TInitStoragesRelay>,
   collectivesChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string },
 ) {
   describe(testConfig.testSuiteName, async () => {
-    const [relayClient, collectivesClient] = await setupNetworks(relayChain, collectivesChain)
+    const [targetChainClient, collectivesClient] = await setupNetworks(destChain, collectivesChain)
 
     test('whitelisting a call by fellowship', async () => {
-      await fellowshipWhitelistCall(relayClient, collectivesClient)
+      await fellowshipWhitelistCall(targetChainClient, collectivesClient)
     })
   })
 }
