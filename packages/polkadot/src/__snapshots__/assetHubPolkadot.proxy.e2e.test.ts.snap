@@ -345,3 +345,15 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
   },
 ]
 `;
+
+exports[`Polkadot AssetHub Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;

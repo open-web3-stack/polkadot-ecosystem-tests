@@ -297,3 +297,15 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
   },
 ]
 `;
+
+exports[`People Polkadot Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;

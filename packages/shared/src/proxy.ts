@@ -12,6 +12,8 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, describe, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
 
+import BN from 'bn.js'
+
 /// -------
 /// Helpers
 /// -------
@@ -270,7 +272,7 @@ export async function createKillPureProxyTest<
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
-  // and the created pure account will become the delegator; this needs to be reflected in the arguments for
+  // and the created pure account will become the delegator this needs to be reflected in the arguments for
   // `proxy.proxy`.
   for (const [proxyTypeIx, extIndex] of pureProxyExtrinsicIndices.entries()) {
     const killProxyTx = client.api.tx.proxy.killPure(alice.address, proxyTypeIx, proxyIx, currBlockNumber, extIndex)
@@ -314,6 +316,57 @@ export async function createKillPureProxyTest<
 }
 
 /**
+ * Test a simple proxy scenario.
+ *
+ * 1. Alice adds Bob as their `Any` proxy, with no associated delay
+ * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Charlie
+ * 3. Charlie's balance is check, as is Alice's
+ */
+export async function proxyAnnouncementTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+
+  // Fund test accounts not already provisioned in the test chain spec.
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Alice adds Bob as a 0-delay proxy
+  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Bob performs a proxy call to transfer funds to Charlie
+  const transferAmount: number = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
+  const proxyTx = client.api.tx.proxy.proxy(alice.address, null, transferCall)
+
+  const proxyEvents = await sendTransaction(proxyTx.signAsync(bob))
+
+  // Check Charlie's balances beforehand
+  const oldAliceBalance = (await client.api.query.system.account(alice.address)).data.free
+  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
+  assert(charlieBalance.eq(0), 'Charlie should have no funds')
+
+  await client.dev.newBlock()
+
+  await checkEvents(proxyEvents, 'proxy').toMatchSnapshot("events when Bob transfers funds to Charlie as Alice's proxy")
+
+  // Check Alice's and Charlie's balances
+  const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free
+  assert(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds')
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
+  assert(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds')
+}
+
+/**
  * E2E tests for proxy functionality:
  * - Adding and removing proxies
  * - Executing calls through proxies
@@ -336,6 +389,10 @@ export async function proxyE2ETests<
 
     test('create and kill pure proxies', async () => {
       await createKillPureProxyTest(client, testConfig.addressEncoding, proxyTypes)
+    })
+
+    test('perform proxy call on behalf of delegator', async () => {
+      await proxyAnnouncementTest(client)
     })
   })
 }

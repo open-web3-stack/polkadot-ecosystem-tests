@@ -297,3 +297,15 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when killin
   },
 ]
 `;
+
+exports[`People Kusama Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
