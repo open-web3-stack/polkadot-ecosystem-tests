@@ -369,6 +369,124 @@ export async function proxyAnnouncementTest<
 }
 
 /**
+ * Test proxy announcements.
+ *
+ * 1. Alice adds Bob as their `Any` proxy, with no associated delay
+ * 2. Bob announces an intent to perform a proxy call, on behalf of Alice, to transfer some funds to Charlie
+ * 3. Alice rejects the announcement
+ * 4. Bob reannounces the intent
+ * 5. Bob cancels the intent themselves
+ * 6. Bob reannounces the intent once more
+ * 7. Bob finally performs the proxy call
+ */
+export async function proxyAnnouncementLifecycleTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Alice adds Bob as a 0-delay proxy
+
+  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Bob announces an intent to transfer funds to Charlie
+  const transferAmount: number = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
+
+  await client.dev.newBlock()
+
+  const announceTx = client.api.tx.proxy.announce(alice.address, transferCall.method.hash)
+  const announcementEvents = await sendTransaction(announceTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
+
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const announcementObject = {
+    real: encodeAddress(alice.address, addressEncoding),
+    callHash: transferCall.method.hash.toHex(),
+    height: currBlockNumber,
+  }
+
+  // Sanity check - the announcement should be associated to Bob and not their delegator, Alice
+  let announcements = await client.api.query.proxy.announcements(alice.address)
+  assert(announcements[0].length === 0)
+  assert(announcements[1].eq(0))
+  announcements = await client.api.query.proxy.announcements(bob.address)
+  assert(announcements[0].length === 1)
+  await check(announcements[0][0]).toMatchObject(announcementObject)
+
+  const announcementDeposit = client.api.consts.proxy.announcementDepositBase
+  const announcementDepositFactor = client.api.consts.proxy.announcementDepositFactor
+  const announcementDepositTotal = announcementDeposit.add(announcementDepositFactor)
+  assert(announcements[1].eq(announcementDepositTotal))
+
+  const rejectAnnouncementTx = client.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
+  const rejectAnnouncementEvents = await sendTransaction(rejectAnnouncementTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Rejection of announcements emits no events, this should be empty.
+  await checkEvents(rejectAnnouncementEvents, 'proxy').toMatchSnapshot(
+    "events when Alice rejects Bob's proxy call announcement",
+  )
+
+  announcements = await client.api.query.proxy.announcements(bob.address)
+  assert(announcements[0].length === 0)
+  assert(announcements[1].eq(0))
+
+  // Bob reannounces the intent
+  await sendTransaction(announceTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  announcements = await client.api.query.proxy.announcements(bob.address)
+  assert(announcements[0].length === 1)
+  announcementObject.height = currBlockNumber + 2
+  await check(announcements[0][0]).toMatchObject(announcementObject)
+  assert(announcements[1].eq(announcementDepositTotal))
+
+  // Bob cancels the intent themselves
+  const removeAnnouncementTx = client.api.tx.proxy.removeAnnouncement(alice.address, transferCall.method.hash)
+  const removeAnnouncementEvents = await sendTransaction(removeAnnouncementTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Removal of announcements emits no events, this should also be empty.
+  await checkEvents(removeAnnouncementEvents, 'proxy').toMatchSnapshot(
+    'events when Bob removes their proxy call announcement',
+  )
+
+  announcements = await client.api.query.proxy.announcements(bob.address)
+  assert(announcements[0].length === 0)
+  assert(announcements[1].eq(0))
+
+  // Bob reannounces the intent once more
+  await sendTransaction(announceTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(bob.address, alice.address, null, transferCall)
+  const proxyAnnouncedEvents = await sendTransaction(proxyAnnouncedTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  await checkEvents(proxyAnnouncedEvents, 'proxy').toMatchSnapshot('events when Bob performs the announced proxy call')
+}
+
+/**
  * E2E tests for proxy functionality:
  * - Adding and removing proxies
  * - Executing calls through proxies
@@ -395,6 +513,10 @@ export async function proxyE2ETests<
 
     test('perform proxy call on behalf of delegator', async () => {
       await proxyAnnouncementTest(client)
+    })
+
+    test('proxy announcement lifecycle test', async () => {
+      await proxyAnnouncementLifecycleTest(client, testConfig.addressEncoding)
     })
   })
 }
