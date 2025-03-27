@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collectives & asset hub next > whitelisting a call by fellowship > destination chain events 1`] = `
+exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > destination chain events 1`] = `
 [
   {
     "data": {
@@ -27,7 +27,7 @@ exports[`collectives & asset hub next > whitelisting a call by fellowship > dest
 ]
 `;
 
-exports[`collectives & asset hub next > whitelisting a call by fellowship > source chain events 1`] = `
+exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > source chain events 1`] = `
 [
   {
     "data": {

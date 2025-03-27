@@ -6,11 +6,11 @@ const custom = {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
   collectivesWestend: {
-    dot: { Concrete: { parents: 1, interior: 'Here' } },
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
   },
 }
 
-const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
+const getInitStorages = (_config: typeof custom.collectivesPolkadot | typeof custom.collectivesWestend) => ({
   System: {
     account: [
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
