@@ -350,6 +350,15 @@ exports[`Polkadot Coretime Proxy > perform proxy call on behalf of delegator > e
 [
   {
     "data": {
+      "amount": 1000000000000,
+      "from": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "to": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",

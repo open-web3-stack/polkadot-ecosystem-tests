@@ -357,7 +357,9 @@ export async function proxyAnnouncementTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(proxyEvents, 'proxy').toMatchSnapshot("events when Bob transfers funds to Charlie as Alice's proxy")
+  await checkEvents(proxyEvents, 'proxy', { section: 'balances', method: 'Transfer' }).toMatchSnapshot(
+    "events when Bob transfers funds to Charlie as Alice's proxy",
+  )
 
   // Check Alice's and Charlie's balances
   const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free

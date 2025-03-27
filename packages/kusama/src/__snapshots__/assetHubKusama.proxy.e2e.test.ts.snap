@@ -350,6 +350,15 @@ exports[`Kusama AssetHub Proxy > perform proxy call on behalf of delegator > eve
 [
   {
     "data": {
+      "amount": 1000000000000,
+      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "to": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
