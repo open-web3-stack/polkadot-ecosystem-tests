@@ -8,7 +8,7 @@ import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } f
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { FrameSystemEventRecord, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { assert, describe, test } from 'vitest'
 
@@ -1052,6 +1052,65 @@ async function chillOtherTest<
   assert(nominatorPrefs.isNone)
 }
 
+async function unappliedSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  console.log(currBlockNumber)
+
+  const progress = client.api.derive.session.progress()
+  const p = await progress
+  console.log(p.eraProgress.toHuman())
+  await client.dev.setHead(currBlockNumber - p.eraProgress.toNumber() - 1)
+
+  currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  console.log(currBlockNumber)
+
+  // Search through blocks until `staking.EraPaid` event is found
+  const MAX = 100
+
+  let i = 0
+  let stakingEvents: FrameSystemEventRecord[]
+
+  while (i < MAX) {
+    const events = await client.api.query.system.events()
+    stakingEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'staking' && event.method === 'EraPaid'
+    })
+    if (stakingEvents.length > 0) {
+      break
+    }
+
+    await client.dev.setStorage({
+      ParasDisputes: {
+        $removePrefix: ['disputes', 'included'],
+      },
+      Dmp: {
+        $removePrefix: ['downwardMessageQueues'],
+      },
+      Staking: {
+        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      },
+      Session: {
+        $removePrefix: ['nextKeys'],
+      },
+    })
+
+    await client.dev.newBlock()
+    i++
+  }
+
+  if (stakingEvents!.length === 0) {
+    assert.fail('staking.EraPaid event not found')
+  }
+
+  // Insert a slash into storage
+}
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1097,6 +1156,10 @@ export function stakingE2ETests<
 
     test('chill other', async () => {
       await chillOtherTest(client)
+    })
+
+    test('unapplied slash', async () => {
+      await unappliedSlashTest(client)
     })
   })
 }
