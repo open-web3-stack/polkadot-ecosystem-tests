@@ -1,4 +1,4 @@
-import { defaultAccounts } from '../defaultAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -12,7 +12,10 @@ const custom = {
 
 const getInitStorages = (_config: typeof custom.coretimePolkadot | typeof custom.coretimeKusama) => ({
   System: {
-    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+    account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+    ],
   },
 })
 
