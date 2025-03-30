@@ -20,6 +20,8 @@ import { assert, describe, expect, test } from 'vitest'
  * Locate the block number at which the current era ends.
  *
  * This is done by searching through blocks and their eventsuntil the `staking.EraPaid` event is found.
+ * The starting point is obtained from the estimated block given by `api.derive.session.progress`, and
+ * the search is limited to a fixed number of blocks.
  *
  * Complexity: in essence, `O(1)` since `MAX` and the number of events per block are fixed, but in practice,
  * it can perform `MAX * MAX_EVENTS` checks, with at least `MAX` network roundtrips.
