@@ -16,6 +16,59 @@ import { assert, describe, test } from 'vitest'
 /// Helpers
 /// -------
 
+async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const progress = client.api.derive.session.progress()
+  const p = await progress
+  console.log(p.eraProgress.toHuman())
+  await client.dev.setHead(currBlockNumber - p.eraProgress.toNumber() - 1)
+
+  currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  console.log(currBlockNumber)
+
+  // Search through blocks until `staking.EraPaid` event is found
+  const MAX = 100
+
+  let i = 0
+  let stakingEvents: FrameSystemEventRecord[]
+
+  while (i < MAX) {
+    const events = await client.api.query.system.events()
+    stakingEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'staking' && event.method === 'EraPaid'
+    })
+    if (stakingEvents.length > 0) {
+      break
+    }
+
+    await client.dev.setStorage({
+      ParasDisputes: {
+        $removePrefix: ['disputes', 'included'],
+      },
+      Dmp: {
+        $removePrefix: ['downwardMessageQueues'],
+      },
+      Staking: {
+        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      },
+      Session: {
+        $removePrefix: ['nextKeys'],
+      },
+    })
+
+    await client.dev.newBlock()
+    i++
+  }
+
+  if (stakingEvents!.length === 0) {
+    return undefined
+  }
+
+  return currBlockNumber + i - 1
+}
+
 /// -------
 /// -------
 /// -------
@@ -1057,58 +1110,65 @@ async function unappliedSlashTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+  const ferdie = defaultAccountsSr25519.keyring.addFromUri('//Ferdie')
 
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  console.log(currBlockNumber)
+  const eraChangeBlock = await locateEraChange(client)
+  assert(eraChangeBlock !== undefined)
 
-  const progress = client.api.derive.session.progress()
-  const p = await progress
-  console.log(p.eraProgress.toHuman())
-  await client.dev.setHead(currBlockNumber - p.eraProgress.toNumber() - 1)
+  console.log(eraChangeBlock)
 
-  currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  console.log(currBlockNumber)
+  // Go to block just before era change
+  await client.dev.setHead(eraChangeBlock - 1)
 
-  // Search through blocks until `staking.EraPaid` event is found
-  const MAX = 100
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+    Staking: {
+      Validators: [[[alice.address], { commission: 10, blocked: false }]],
+    },
+  })
 
-  let i = 0
-  let stakingEvents: FrameSystemEventRecord[]
+  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
 
-  while (i < MAX) {
-    const events = await client.api.query.system.events()
-    stakingEvents = events.filter((record) => {
-      const { event } = record
-      return event.section === 'staking' && event.method === 'EraPaid'
-    })
-    if (stakingEvents.length > 0) {
-      break
-    }
+  await client.dev.newBlock()
 
-    await client.dev.setStorage({
-      ParasDisputes: {
-        $removePrefix: ['disputes', 'included'],
-      },
-      Dmp: {
-        $removePrefix: ['downwardMessageQueues'],
-      },
-      Staking: {
-        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-      },
-      Session: {
-        $removePrefix: ['nextKeys'],
-      },
-    })
-
-    await client.dev.newBlock()
-    i++
-  }
-
-  if (stakingEvents!.length === 0) {
-    assert.fail('staking.EraPaid event not found')
-  }
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
 
   // Insert a slash into storage
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra + 1],
+          [
+            {
+              validator: alice.address,
+              own: 1111e10,
+              others: [
+                [bob.address, 2222e10],
+                [charlie.address, 3333e10],
+              ],
+              reporters: [dave.address],
+              payout: 4444e10,
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await client.pause()
 }
 
 export function stakingE2ETests<
