@@ -10,12 +10,20 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { FrameSystemEventRecord, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 /// -------
 /// Helpers
 /// -------
 
+/**
+ * Locate the block number at which the current era ends.
+ *
+ * This is done by searching through blocks and their eventsuntil the `staking.EraPaid` event is found.
+ *
+ * Complexity: in essence, `O(1)` since `MAX` and the number of events per block are fixed, but in practice,
+ * it can perform `MAX * MAX_EVENTS` checks, with at least `MAX` network roundtrips.
+ */
 async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -1105,6 +1113,17 @@ async function chillOtherTest<
   assert(nominatorPrefs.isNone)
 }
 
+/**
+ * Test that an unapplied slash to valid validators/nominators, scheduled for a certain era `n + 1`, is applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to the block just before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Bond funds from each of the accounts that will be slashed.
+ * 4. Insert a slash into storage, for the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is applied.
+ */
 async function unappliedSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1113,14 +1132,15 @@ async function unappliedSlashTest<
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
   const dave = defaultAccountsSr25519.dave
-  const ferdie = defaultAccountsSr25519.keyring.addFromUri('//Ferdie')
 
   const eraChangeBlock = await locateEraChange(client)
   assert(eraChangeBlock !== undefined)
 
   console.log(eraChangeBlock)
 
-  // Go to block just before era change
+  // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
+  // accounts that will be slashed.
+  // If this isn't done, the slash will not be applied.
   await client.dev.setHead(eraChangeBlock - 1)
 
   await client.dev.setStorage({
@@ -1131,12 +1151,12 @@ async function unappliedSlashTest<
         [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
       ],
     },
-    Staking: {
-      Validators: [[[alice.address], { commission: 10, blocked: false }]],
-    },
   })
 
-  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
+  const bondAmount = 1000e10
+  const slashAmount = bondAmount / 2
+
+  const bondTx = client.api.tx.staking.bond(1000e10, { Staked: null })
   await sendTransaction(bondTx.signAsync(alice))
   await sendTransaction(bondTx.signAsync(bob))
   await sendTransaction(bondTx.signAsync(charlie))
@@ -1145,7 +1165,8 @@ async function unappliedSlashTest<
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
 
-  // Insert a slash into storage
+  // Insert a slash into storage. The accounts named here as validators/nominators need not have called
+  // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
   await client.dev.setStorage({
     Staking: {
       UnappliedSlashes: [
@@ -1154,13 +1175,13 @@ async function unappliedSlashTest<
           [
             {
               validator: alice.address,
-              own: 1111e10,
+              own: slashAmount,
               others: [
-                [bob.address, 2222e10],
-                [charlie.address, 3333e10],
+                [bob.address, slashAmount * 2],
+                [charlie.address, slashAmount * 3],
               ],
               reporters: [dave.address],
-              payout: 4444e10,
+              payout: bondAmount,
             },
           ],
         ],
@@ -1168,7 +1189,35 @@ async function unappliedSlashTest<
     },
   })
 
-  await client.pause()
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+
+  await client.dev.newBlock()
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  // First, verify that all acounts' frozen funds have been slashed
+
+  expect(aliceFundsPostSlash.data.frozen.toNumber()).toBe(bondAmount - slashAmount)
+  // Recall that `bondAmount - slashAmount * 2` is zero.
+  expect(bobFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
+  // to what it bonded.
+  // Thus, also zero.
+  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(0)
+
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
+  // Recall again that even though Charlie's slash is 1.5 times his bond, the slash can at msot tax all he has
+  // bonded, and not one unit more.
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
 }
 
 export function stakingE2ETests<
