@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to coretimePolkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 10000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to coretimePolkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to coretimePolkadot > to chain dmp events 1`] = `[]`;
+
+exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to coretimePolkadot > tx events 1`] = `[]`;
+
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 10000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > from chain ump messages 1`] = `[]`;
+
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > to chain ump events 1`] = `[]`;
+
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > tx events 1`] = `[]`;
