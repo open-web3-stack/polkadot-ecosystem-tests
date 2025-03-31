@@ -8,7 +8,8 @@ import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } f
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { FrameSystemEventRecord, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { BlockHash } from '@polkadot/types/interfaces'
+import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { assert, describe, expect, test } from 'vitest'
 
@@ -24,38 +25,44 @@ import { assert, describe, expect, test } from 'vitest'
  *
  * Complexity: in essence, `O(1)` since `MAX` is fixed, but in practice,
  * `ceil(log_2(MAX))`.
+ *
+ * @returns The block number at which the current era ends, and following which a `staking.EraPaid` event
+ * is emitted.
  */
 async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
   const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const activeEraOpt = await client.api.query.staking.activeEra()
   if (activeEraOpt.isNone) {
+    // Nothing to do if there is no active era.
     return undefined
   }
   const activeEra = activeEraOpt.unwrap().index.toNumber()
   const previousEra = activeEra - 1
 
-  const progress = client.api.derive.session.progress()
-  const p = await progress
-  console.log(p.eraProgress.toHuman())
+  // Estimate of active era start block.
+  const eraProgress = await client.api.derive.session.eraProgress()
 
-  // It is assumed that the active era must change at most this amount of blocks after the estimate provided
-  // by `api.derive.session.progress`.
+  // It is assumed that the active era changes at most this amount of blocks after the estimate provided
+  // by `api.derive.session.progress`. Adjust as needed.
   const MAX = 100
 
-  let lo = initialBlockNumber - p.eraProgress.toNumber() - 1
+  // Initial bounds for binary search.
+  let lo = initialBlockNumber - eraProgress.toNumber() - 1
   let hi = lo + MAX
+  assert(lo < hi)
 
-  console.log('lo, and hi: ', lo, hi)
+  let result: number | undefined = undefined
+  let mid!: number
+  let midBlockHash: BlockHash | undefined
+  let eraAtMidBlock: number | undefined
 
   while (lo < hi) {
-    const mid = lo + Math.floor((hi - lo) / 2)
-    console.log('mid is: ', mid)
+    mid = lo + Math.floor((hi - lo) / 2)
 
-    const midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
-    console.log('mid hash is: ', midBlockHash.toHex())
-    await client.dev.setHead(midBlockHash.toHex())
-    const eraAtMidBlock = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+    midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
+    const apiAt = await client.api.at(midBlockHash)
+    eraAtMidBlock = (await apiAt.query.staking.activeEra()).unwrap().index.toNumber()
 
     if (eraAtMidBlock === activeEra) {
       hi = mid - 1
@@ -65,14 +72,26 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
       // This really should never happen
       return undefined
     }
-
-    const midDescendantBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
-    await client.dev.setHead(midDescendantBlockHash.toHex())
-    const n = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-    if (n !== eraAtMidBlock) {
-      return mid
-    }
   }
+
+  // Disambiguate to which side of the divide the found block is.
+
+  const midDescendantBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
+  const midParentBlockHash = await client.api.rpc.chain.getBlockHash(mid - 1)
+  const apiAfter = await client.api.at(midDescendantBlockHash)
+  const apiBefore = await client.api.at(midParentBlockHash)
+
+  const eraAtMidDescendantBlock = (await apiAfter.query.staking.activeEra()).unwrap().index.toNumber()
+  if (eraAtMidDescendantBlock !== eraAtMidBlock) {
+    result = mid
+  }
+
+  const eraAtMidParentBlock = (await apiBefore.query.staking.activeEra()).unwrap().index.toNumber()
+  if (eraAtMidParentBlock !== eraAtMidBlock) {
+    result = mid - 1
+  }
+
+  return result
 }
 
 async function experiment(client: Client<any, any>) {
@@ -89,12 +108,23 @@ async function experiment(client: Client<any, any>) {
   const eraStartBlockHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock)
   console.log('era start block hash: ', eraStartBlockHash.toHex())
 
-  let nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 1)
+  let apiAtCurrBlock = await client.api.at(eraStartBlockHash)
+  const era = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
+  console.log('era: ', era)
+
+  let nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 10)
   console.log('next hash: ', nextHash.toHex())
 
-  await client.dev.setHead(eraStartBlockHash.toHex())
-  nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 1)
-  console.log('next hash: ', nextHash.toHex())
+  apiAtCurrBlock = await client.api.at(nextHash)
+  let eraAtNextBlock = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
+  console.log('era at next block: ', eraAtNextBlock)
+
+  nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 100)
+  apiAtCurrBlock = await client.api.at(nextHash)
+  eraAtNextBlock = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
+  console.log('era at next block: ', eraAtNextBlock)
+
+  return
 }
 
 /// -------
@@ -1153,12 +1183,13 @@ async function unappliedSlashTest<
   const charlie = defaultAccountsSr25519.charlie
   const dave = defaultAccountsSr25519.dave
 
-  await experiment(client)
-
   const eraChangeBlock = await locateEraChange(client)
-  assert(eraChangeBlock !== undefined)
+  if (eraChangeBlock === undefined) {
+    // This test only makes sense to run if there's an active era.
+    return
+  }
 
-  console.log(eraChangeBlock)
+  console.log('era change block: ', eraChangeBlock)
 
   // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
   // accounts that will be slashed.
@@ -1221,6 +1252,21 @@ async function unappliedSlashTest<
   assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
   assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
   assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+
+  await client.dev.setStorage({
+    ParasDisputes: {
+      $removePrefix: ['disputes', 'included'],
+    },
+    Dmp: {
+      $removePrefix: ['downwardMessageQueues'],
+    },
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+    },
+    Session: {
+      $removePrefix: ['nextKeys'],
+    },
+  })
 
   await client.dev.newBlock()
 
