@@ -19,64 +19,82 @@ import { assert, describe, expect, test } from 'vitest'
 /**
  * Locate the block number at which the current era ends.
  *
- * This is done by searching through blocks and their eventsuntil the `staking.EraPaid` event is found.
- * The starting point is obtained from the estimated block given by `api.derive.session.progress`, and
- * the search is limited to a fixed number of blocks.
+ * This is done by binary-searching through blocks, starting at the estimate obtained from
+ * `api.derive.session.progress`, and stopping when `api.query.staking.activeEra` changes.
  *
- * Complexity: in essence, `O(1)` since `MAX` and the number of events per block are fixed, but in practice,
- * it can perform `MAX * MAX_EVENTS` checks, with at least `MAX` network roundtrips.
+ * Complexity: in essence, `O(1)` since `MAX` is fixed, but in practice,
+ * `ceil(log_2(MAX))`.
  */
 async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const activeEraOpt = await client.api.query.staking.activeEra()
+  if (activeEraOpt.isNone) {
+    return undefined
+  }
+  const activeEra = activeEraOpt.unwrap().index.toNumber()
+  const previousEra = activeEra - 1
 
   const progress = client.api.derive.session.progress()
   const p = await progress
   console.log(p.eraProgress.toHuman())
-  await client.dev.setHead(currBlockNumber - p.eraProgress.toNumber() - 1)
 
-  currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  console.log(currBlockNumber)
-
-  // Search through blocks until `staking.EraPaid` event is found
+  // It is assumed that the active era must change at most this amount of blocks after the estimate provided
+  // by `api.derive.session.progress`.
   const MAX = 100
 
-  let i = 0
-  let stakingEvents: FrameSystemEventRecord[]
+  let lo = initialBlockNumber - p.eraProgress.toNumber() - 1
+  let hi = lo + MAX
 
-  while (i < MAX) {
-    const events = await client.api.query.system.events()
-    stakingEvents = events.filter((record) => {
-      const { event } = record
-      return event.section === 'staking' && event.method === 'EraPaid'
-    })
-    if (stakingEvents.length > 0) {
-      break
+  console.log('lo, and hi: ', lo, hi)
+
+  while (lo < hi) {
+    const mid = lo + Math.floor((hi - lo) / 2)
+    console.log('mid is: ', mid)
+
+    const midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
+    console.log('mid hash is: ', midBlockHash.toHex())
+    await client.dev.setHead(midBlockHash.toHex())
+    const eraAtMidBlock = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+
+    if (eraAtMidBlock === activeEra) {
+      hi = mid - 1
+    } else if (eraAtMidBlock === previousEra) {
+      lo = mid + 1
+    } else {
+      // This really should never happen
+      return undefined
     }
 
-    await client.dev.setStorage({
-      ParasDisputes: {
-        $removePrefix: ['disputes', 'included'],
-      },
-      Dmp: {
-        $removePrefix: ['downwardMessageQueues'],
-      },
-      Staking: {
-        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-      },
-      Session: {
-        $removePrefix: ['nextKeys'],
-      },
-    })
-
-    await client.dev.newBlock()
-    i++
+    const midDescendantBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
+    await client.dev.setHead(midDescendantBlockHash.toHex())
+    const n = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+    if (n !== eraAtMidBlock) {
+      return mid
+    }
   }
+}
 
-  if (stakingEvents!.length === 0) {
-    return undefined
-  }
+async function experiment(client: Client<any, any>) {
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  console.log('initial block number: ', initialBlockNumber)
 
-  return currBlockNumber + i - 1
+  const sessionProgress = client.api.derive.session.progress()
+  const sessProg = await sessionProgress
+  console.log('era started approx. ', sessProg.eraProgress.toHuman(), ' blocks ago')
+
+  const approxEraStartBlock = initialBlockNumber - sessProg.eraProgress.toNumber()
+  console.log('era start block: ', approxEraStartBlock)
+
+  const eraStartBlockHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock)
+  console.log('era start block hash: ', eraStartBlockHash.toHex())
+
+  let nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 1)
+  console.log('next hash: ', nextHash.toHex())
+
+  await client.dev.setHead(eraStartBlockHash.toHex())
+  nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 1)
+  console.log('next hash: ', nextHash.toHex())
 }
 
 /// -------
@@ -1135,6 +1153,8 @@ async function unappliedSlashTest<
   const charlie = defaultAccountsSr25519.charlie
   const dave = defaultAccountsSr25519.dave
 
+  await experiment(client)
+
   const eraChangeBlock = await locateEraChange(client)
   assert(eraChangeBlock !== undefined)
 
@@ -1177,9 +1197,12 @@ async function unappliedSlashTest<
           [
             {
               validator: alice.address,
+              // Less than the bonded funds.
               own: slashAmount,
               others: [
+                // Exactly the bonded funds.
                 [bob.address, slashAmount * 2],
+                // More than the bonded funds.
                 [charlie.address, slashAmount * 3],
               ],
               reporters: [dave.address],
@@ -1213,7 +1236,7 @@ async function unappliedSlashTest<
   // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
   // to what it bonded.
   // Thus, also zero.
-  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(0)
+  expect(charlieFundsPostSlash.data.frozen.toNumber()).toBe(0)
 
   expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
   expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
