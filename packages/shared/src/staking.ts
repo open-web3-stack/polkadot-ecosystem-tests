@@ -1232,6 +1232,24 @@ async function unappliedSlashTest<
 
   await client.dev.newBlock()
 
+  const stakingSlashEvents: any[] = []
+  const balancesSlashEvents: any[] = []
+
+  const events = await client.api.query.system.events()
+  for (const record of events) {
+    const { event } = record
+    if (event.section === 'staking' && event.method === 'Slashed') {
+      assert(client.api.events.staking.Slashed.is(event))
+      stakingSlashEvents.push(record)
+    } else if (event.section === 'balances' && event.method === 'Slashed') {
+      assert(client.api.events.balances.Slashed.is(event))
+      balancesSlashEvents.push(record)
+    }
+  }
+
+  await check(stakingSlashEvents).toMatchSnapshot('staking slash events')
+  await check(balancesSlashEvents).toMatchSnapshot('balances slash events')
+
   const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)

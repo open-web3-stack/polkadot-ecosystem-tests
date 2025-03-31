@@ -608,3 +608,91 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
   },
 ]
 `;
+
+exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+        5000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+        10000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+        10000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+        5000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+        10000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+        10000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
