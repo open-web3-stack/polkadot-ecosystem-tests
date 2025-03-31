@@ -52,7 +52,6 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
   let hi = lo + MAX
   assert(lo < hi)
 
-  let result: number | undefined = undefined
   let mid!: number
   let midBlockHash: BlockHash | undefined
   let eraAtMidBlock: number | undefined
@@ -83,48 +82,13 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
 
   const eraAtMidDescendantBlock = (await apiAfter.query.staking.activeEra()).unwrap().index.toNumber()
   if (eraAtMidDescendantBlock !== eraAtMidBlock) {
-    result = mid
+    return mid
   }
 
   const eraAtMidParentBlock = (await apiBefore.query.staking.activeEra()).unwrap().index.toNumber()
   if (eraAtMidParentBlock !== eraAtMidBlock) {
-    result = mid - 1
+    return mid - 1
   }
-
-  return result
-}
-
-async function experiment(client: Client<any, any>) {
-  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  console.log('initial block number: ', initialBlockNumber)
-
-  const sessionProgress = client.api.derive.session.progress()
-  const sessProg = await sessionProgress
-  console.log('era started approx. ', sessProg.eraProgress.toHuman(), ' blocks ago')
-
-  const approxEraStartBlock = initialBlockNumber - sessProg.eraProgress.toNumber()
-  console.log('era start block: ', approxEraStartBlock)
-
-  const eraStartBlockHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock)
-  console.log('era start block hash: ', eraStartBlockHash.toHex())
-
-  let apiAtCurrBlock = await client.api.at(eraStartBlockHash)
-  const era = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
-  console.log('era: ', era)
-
-  let nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 10)
-  console.log('next hash: ', nextHash.toHex())
-
-  apiAtCurrBlock = await client.api.at(nextHash)
-  let eraAtNextBlock = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
-  console.log('era at next block: ', eraAtNextBlock)
-
-  nextHash = await client.api.rpc.chain.getBlockHash(approxEraStartBlock + 100)
-  apiAtCurrBlock = await client.api.at(nextHash)
-  eraAtNextBlock = (await apiAtCurrBlock.query.staking.activeEra()).unwrap().index.toNumber()
-  console.log('era at next block: ', eraAtNextBlock)
-
-  return
 }
 
 /// -------
@@ -1188,8 +1152,6 @@ async function unappliedSlashTest<
     // This test only makes sense to run if there's an active era.
     return
   }
-
-  console.log('era change block: ', eraChangeBlock)
 
   // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
   // accounts that will be slashed.
