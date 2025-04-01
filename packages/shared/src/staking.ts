@@ -1127,6 +1127,10 @@ async function chillOtherTest<
   assert(nominatorPrefs.isNone)
 }
 
+/// --------------
+/// Slashing tests
+/// --------------
+
 /**
  * Test that an unapplied slash to valid validators/nominators, scheduled for a certain era `n + 1`, is applied
  * when transitioning from era `n` to `n + 1`.
@@ -1271,24 +1275,13 @@ async function unappliedSlashTest<
   expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
 }
 
-/// --------------
-/// Slashing tests
-/// --------------
 /**
- * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
- * when transitioning from era `n` to `n + 1`.
- *
- * 1. Calculate the block number at which the era will change.
- * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
- * 3. Insert a slash into storage.
- * 4. Bond funds from each of the accounts that will be slashed.
- * 5. Advance to the block in which the era changes.
- * 6. Observe that the slash is *not* applied.
+ * Test cancelling unapplied slashes, using different origins.
  */
 async function cancelDeferredSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(client: Client<TCustom, TInitStorages>, origin: any) {
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -1357,7 +1350,7 @@ async function cancelDeferredSlashTest<
   assert(slash.length === 1)
 
   const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
-  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin)
 
   // Check stakers' bonded funds before the slash would be applied.
 
@@ -1409,6 +1402,46 @@ async function cancelDeferredSlashTest<
   assert(aliceFundsPostSlash.eq(aliceFundsPreSlash))
   assert(bobFundsPostSlash.eq(bobFundsPreSlash))
   assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `Root` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsRoot<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(client, { system: 'Root' })
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `StakingAdmin` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsAdmin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(client, { Origins: 'StakingAdmin' })
 }
 
 /// --------------
@@ -1466,8 +1499,12 @@ export function stakingE2ETests<
       await unappliedSlashTest(client)
     })
 
-    test('cancel deferred slash', async () => {
-      await cancelDeferredSlashTest(client)
+    test('cancel deferred slash as root', async () => {
+      await cancelDeferredSlashTestAsRoot(client)
+    })
+
+    test('cancel deferred slash as admin', async () => {
+      await cancelDeferredSlashTestAsAdmin(client)
     })
   })
 }
