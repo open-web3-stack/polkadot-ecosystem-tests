@@ -1405,6 +1405,39 @@ async function cancelDeferredSlashTest<
 }
 
 /**
+ * Test the cancellation of a slash with an incorrect origin.
+ */
+async function cancelDeferredSlashTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [0])
+  const cancelDeferredSlashEvents = await sendTransaction(cancelDeferredSlashTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(cancelDeferredSlashEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('cancel deferred slash events with bad origin')
+
+  // Scrutinize events
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+/**
  * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
  * when transitioning from era `n` to `n + 1`.
  *
@@ -1497,6 +1530,10 @@ export function stakingE2ETests<
 
     test('unapplied slash', async () => {
       await unappliedSlashTest(client)
+    })
+
+    test('cancel deferred slash with bad origin', async () => {
+      await cancelDeferredSlashTestBadOrigin(client)
     })
 
     test('cancel deferred slash as root', async () => {
