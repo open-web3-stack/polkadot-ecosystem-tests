@@ -286,6 +286,45 @@ exports[`Polkadot Staking > modify validator count > set validator count bad ori
 ]
 `;
 
+exports[`Polkadot Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 210000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
 [
   {

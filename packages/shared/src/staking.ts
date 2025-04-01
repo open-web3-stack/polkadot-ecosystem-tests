@@ -883,7 +883,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1477,6 +1477,59 @@ async function cancelDeferredSlashTestAsAdmin<
   await cancelDeferredSlashTest(client, { Origins: 'StakingAdmin' })
 }
 
+/**
+ * Test setting invulnerables with a bad origin.
+ */
+async function setInvulnerablesTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables([alice.address])
+  const setInvulnerablesEvents = await sendTransaction(setInvulnerablesTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(setInvulnerablesEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('set invulnerables events with bad signed origin')
+
+  let events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+
+  // Try it with `StakingAdmin` origin, which is still not enough on Polkadot/Kusama.
+
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { Origins: 'StakingAdmin' })
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'scheduler').toMatchSnapshot(
+    'events when setting invulnerables with bad staking admin origin',
+  )
+
+  events = await client.api.query.system.events()
+
+  const [ev_] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev_.event))
+  const e = ev_.event.data
+  assert(e.result.isErr)
+  assert(e.result.asErr.isBadOrigin)
+}
+
 /// --------------
 /// --------------
 /// --------------
@@ -1542,6 +1595,10 @@ export function stakingE2ETests<
 
     test('cancel deferred slash as admin', async () => {
       await cancelDeferredSlashTestAsAdmin(client)
+    })
+
+    test('set invulnerables with bad origin', async () => {
+      await setInvulnerablesTestBadOrigin(client)
     })
   })
 }
