@@ -50,7 +50,7 @@ export async function fellowshipWhitelistCall(destClient: Client, collectivesCli
  * @param encodedChainCallData Hex-encoded call extrinsic to be executed at the destination
  * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
  */
-async function sendWhitelistCallViaXcmTransact(
+export async function sendWhitelistCallViaXcmTransact(
   destClient: Client,
   collectivesClient: Client,
   encodedChainCallData: `0x${string}`,
