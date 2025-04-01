@@ -1134,7 +1134,7 @@ async function chillOtherTest<
  * 1. Calculate the block number at which the era will change.
  * 2. Go to the block just before that one, and modify the staking ledger to include the accounts that will be slashed.
  * 3. Bond funds from each of the accounts that will be slashed.
- * 4. Insert a slash into storage, for the accounts that will be slashed.
+ * 4. Insert a slash into storage, with the accounts that will be slashed.
  * 5. Advance to the block in which the era changes.
  * 6. Observe that the slash is applied.
  */
@@ -1171,7 +1171,7 @@ async function unappliedSlashTest<
   const bondAmount = 1000e10
   const slashAmount = bondAmount / 2
 
-  const bondTx = client.api.tx.staking.bond(1000e10, { Staked: null })
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
   await sendTransaction(bondTx.signAsync(alice))
   await sendTransaction(bondTx.signAsync(bob))
   await sendTransaction(bondTx.signAsync(charlie))
@@ -1271,6 +1271,150 @@ async function unappliedSlashTest<
   expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
 }
 
+/// --------------
+/// Slashing tests
+/// --------------
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  const eraChangeBlock = await locateEraChange(client)
+  if (eraChangeBlock === undefined) {
+    // This test only makes sense to run if there's an active era.
+    return
+  }
+
+  // Go to a block before the one in which the era changes. In the two blocks before it changes,
+  // 1. the call to `cancel_deferred_slash` will be scheduled
+  // 2. the stakers in question will call `bond`
+  await client.dev.setHead(eraChangeBlock - 2)
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const bondAmount = 1000e10
+  const slashAmount = bondAmount / 2
+
+  // Insert a slash into storage.
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra + 1],
+          [
+            {
+              validator: alice.address,
+              own: slashAmount,
+              others: [
+                [bob.address, slashAmount],
+                [charlie.address, slashAmount],
+              ],
+              reporters: [dave.address],
+              payout: bondAmount,
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  // Fund validators
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Two blocks away from the era change.
+
+  let slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
+  assert(slash.length === 1)
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
+  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), { system: 'Root' })
+
+  // Check stakers' bonded funds before the slash would be applied.
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+
+  await client.dev.newBlock()
+
+  // And the slash should have been cancelled.
+
+  slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
+  assert(slash.length === 0)
+
+  // Era-boundary block creation tends to be slow.
+  await client.dev.setStorage({
+    ParasDisputes: {
+      $removePrefix: ['disputes', 'included'],
+    },
+    Dmp: {
+      $removePrefix: ['downwardMessageQueues'],
+    },
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+    },
+    Session: {
+      $removePrefix: ['nextKeys'],
+    },
+  })
+
+  // This new block marks the start of the new era.
+  await client.dev.newBlock()
+
+  // The era should have changed.
+
+  const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  assert(newActiveEra === activeEra + 1)
+
+  // None of the validators' funds should have been slashed.
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  assert(aliceFundsPostSlash.eq(aliceFundsPreSlash))
+  assert(bobFundsPostSlash.eq(bobFundsPreSlash))
+  assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
+}
+
+/// --------------
+/// --------------
+/// --------------
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1320,6 +1464,10 @@ export function stakingE2ETests<
 
     test('unapplied slash', async () => {
       await unappliedSlashTest(client)
+    })
+
+    test('cancel deferred slash', async () => {
+      await cancelDeferredSlashTest(client)
     })
   })
 }
