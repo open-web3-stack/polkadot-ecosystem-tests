@@ -3,7 +3,7 @@ import { assert, describe, test } from 'vitest'
 import type { Client } from '@e2e-test/networks'
 import { assetHubPolkadot, collectivesPolkadot, polkadot } from '@e2e-test/networks/chains'
 import { sendWhitelistCallViaXcmTransact, setupNetworks } from '@e2e-test/shared'
-import { scheduleCallWithOrigin } from '@e2e-test/shared/helpers'
+import { scheduleCallWithOrigin } from '@e2e-test/shared/helpers/index.js'
 import type { HexString } from '@polkadot/util/types'
 
 function createXcmAuthorizeUpgradeBatch(codeHash: HexString, sourceClient: Client, destClient: Client) {
@@ -24,7 +24,7 @@ function createXcmAuthorizeUpgradeBatch(codeHash: HexString, sourceClient: Clien
 
   const authorizeUpgradeCall = destClient.api.tx.system.authorizeUpgrade(codeHash)
 
-  const callData = authorizeUpgradeCall.method.toU8a()
+  const callData = authorizeUpgradeCall.method.toHex()
 
   const xcmMessage = [
     {
@@ -40,7 +40,9 @@ function createXcmAuthorizeUpgradeBatch(codeHash: HexString, sourceClient: Clien
           refTime: '5000000000',
           proofSize: '500000',
         },
-        call: callData,
+        call: {
+          encoded: callData,
+        },
       },
     },
   ]
@@ -70,10 +72,11 @@ describe('polkadot & asset hub & collectives', async () => {
 
     const batchCall = createXcmAuthorizeUpgradeBatch(codeHash, polkadotClient, ahClient)
 
+    // guaranteed to be None because of `$removePrefix: ['authorizedUpgrade']` in chain storage config
     assert((await ahClient.api.query.system.authorizedUpgrade()).isNone)
 
     const notePreimageTx = polkadotClient.api.tx.preimage.notePreimage(batchCall.method.toHex())
-    const batchCallHash = batchCall.hash.toHex()
+    const batchCallHash = batchCall.method.hash.toHex()
 
     await scheduleCallWithOrigin(polkadotClient, { Inline: notePreimageTx.method.toHex() }, { System: 'Root' })
 
