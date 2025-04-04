@@ -2,8 +2,14 @@
 
 exports[`Polkadot Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
 [
-  "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+  "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
   5000000000,
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vesting removal event 1`] = `
+[
+  "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
 ]
 `;
 

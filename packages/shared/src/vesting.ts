@@ -165,14 +165,14 @@ async function testForceVestedTransfer<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
 
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
 
-  const forcedVestingTx = client.api.tx.vesting.forceVestedTransfer(bob.address, alice.address, {
+  const forcedVestingTx = client.api.tx.vesting.forceVestedTransfer(charlie.address, alice.address, {
     perBlock,
     locked,
     startingBlock: currBlockNumber,
@@ -201,7 +201,7 @@ async function testForceVestedTransfer<
 
   // Check that no vesting balance was created.
 
-  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
+  const vestingBalance = await client.api.query.vesting.vesting(charlie.address)
   assert(vestingBalance.isNone)
 }
 
@@ -213,14 +213,14 @@ async function testForceRemoveVestedSchedule<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
 
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
 
-  const vestingTx = client.api.tx.vesting.vestedTransfer(bob.address, {
+  const vestingTx = client.api.tx.vesting.vestedTransfer(charlie.address, {
     perBlock,
     locked,
     startingBlock: currBlockNumber - 1,
@@ -229,14 +229,14 @@ async function testForceRemoveVestedSchedule<
 
   await client.dev.newBlock()
 
-  const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(bob.address, 0)
+  const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(charlie.address, 0)
   await sendTransaction(forceRemoveVestingTx.signAsync(alice))
 
   await client.dev.newBlock()
 
   // Check that no vesting schedule was removed.
 
-  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
+  const vestingBalance = await client.api.query.vesting.vesting(charlie.address)
   assert(vestingBalance.isSome)
 
   // Check events
@@ -261,14 +261,14 @@ async function testForceVestedTransferAndRemoval<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
 
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
 
-  const forceVestingTx = client.api.tx.vesting.forceVestedTransfer(alice.address, bob.address, {
+  const forceVestingTx = client.api.tx.vesting.forceVestedTransfer(alice.address, dave.address, {
     perBlock,
     locked,
     startingBlock: currBlockNumber - 1,
@@ -293,13 +293,13 @@ async function testForceVestedTransferAndRemoval<
 
   // Check that Bob's frozen balance corresponds to the as-yet unvested amount in the event
 
-  let bobAccount = await client.api.query.system.account(bob.address)
+  let bobAccount = await client.api.query.system.account(dave.address)
   expect(bobAccount.data.free.toNumber()).toBe(locked)
   expect(bobAccount.data.frozen.toNumber()).toBe(vestingUpdatedEvent.unvested.toNumber())
 
   // Check that a vesting schedule was forcibly created.
 
-  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
+  const vestingBalance = await client.api.query.vesting.vesting(dave.address)
   assert(vestingBalance.isSome)
   assert(vestingBalance.unwrap().length === 1)
   assert(vestingBalance.unwrap()[0].locked.eq(locked))
@@ -308,7 +308,7 @@ async function testForceVestedTransferAndRemoval<
 
   // Forcibly remove the vesting schedule.
 
-  const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(bob.address, 0)
+  const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(dave.address, 0)
   scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
@@ -325,13 +325,13 @@ async function testForceVestedTransferAndRemoval<
   await check(vestingRemoved).toMatchSnapshot('forced vesting removal event')
 
   // Check that the vesting schedule was removed.
-  const vestingBalance2 = await client.api.query.vesting.vesting(bob.address)
+  const vestingBalance2 = await client.api.query.vesting.vesting(dave.address)
   assert(vestingBalance2.isNone)
 
   // Check that Bob's frozen balance is now 0, and that his free balance is equal to the initially vested amount.
   // In other words, forcible removal of vesting schedule does not make obliterate funds.
 
-  bobAccount = await client.api.query.system.account(bob.address)
+  bobAccount = await client.api.query.system.account(dave.address)
   expect(bobAccount.data.frozen.toNumber()).toBe(0)
   expect(bobAccount.data.free.toNumber()).toBe(locked)
 }
@@ -343,27 +343,27 @@ export function vestingE2ETests<
   describe(testConfig.testSuiteName, async () => {
     const [client] = await setupNetworks(chain)
 
-    // Hack: vesting pallet will be disabled on Asset Hubs, so this is a way of ensuring the test is only
-    // run on relay chains.
-    if (client.api.query.scheduler) {
+    const c = await client.api.rpc.system.chain()
+    // The vesting pallet will be disabled on Asset Hubs while the AHM is prepared/ongoing, so this ensures some tests
+    // using `vesting.vestedTrasnfer` are only run on relay chains.
+    // Furthermore, some tests use the `scheduler` pallet, which is not present on Asset Hubs, so they are put here
+    // even if they do not include on vested transfers.
+    if (!c.toString().includes('Asset Hub')) {
       test('vesting schedule lifecycle', async () => {
         await testVestedTransfer(client, testConfig.addressEncoding)
+      })
+
+      test('signed-origin forced removal of vesting schedule fails', async () => {
+        await testForceRemoveVestedSchedule(client)
+      })
+
+      test('forced vested transfer and forced removal of vesting schedule work', async () => {
+        await testForceVestedTransferAndRemoval(client)
       })
     }
 
     test('signed-origin force-vested transfer fails', async () => {
       await testForceVestedTransfer(client)
     })
-
-    test('signed-origin forced removal of vesting schedule fails', async () => {
-      await testForceRemoveVestedSchedule(client)
-    })
-
-    // Asset Hubs do not have the scheduler pallet, so for them, the test is skipped.
-    if (client.api.query.scheduler) {
-      test('forced vested transfer and forced removal of vesting schedule work', async () => {
-        await testForceVestedTransferAndRemoval(client)
-      })
-    }
   })
 }

@@ -2,8 +2,14 @@
 
 exports[`Kusama Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
 [
-  "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+  "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
   16666666650,
+]
+`;
+
+exports[`Kusama Vesting > forced vested transfer and forced removal of vesting schedule work > forced vesting removal event 1`] = `
+[
+  "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
 ]
 `;
 
