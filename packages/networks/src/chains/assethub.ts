@@ -20,7 +20,6 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
     ],
-    $removePrefix: ['authorizedUpgrade'],
   },
   Assets: {
     account: [

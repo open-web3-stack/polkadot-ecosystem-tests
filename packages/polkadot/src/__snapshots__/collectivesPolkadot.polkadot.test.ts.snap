@@ -1,5 +1,409 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > collectives events emitted when sending xcm 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17001f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+            },
+            "originKind": "Xcm",
+            "requireWeightAtMost": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events after notePreimge 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 23,
+          },
+        },
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching whitelisted call wtih bad origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x1f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+      "result": {
+        "Ok": {
+          "actualWeight": {
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 300000000)",
+          },
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x1f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 10000,
+        "refTime": "(rounded 510000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
+[
+  {
+    "data": {
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "UpgradeAuthorized",
+    "section": "system",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 500000,
+        "refTime": "(rounded 5000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > collectives events emitted when sending xcm 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17003812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+            },
+            "originKind": "Xcm",
+            "requireWeightAtMost": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events after notePreimge 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching non-whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 23,
+          },
+        },
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching whitelisted call wtih bad origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": [
+        "(rounded 25000000)",
+        0,
+      ],
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > governing chain events about dispatching whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x3812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > governing chain events emitted on receiving xcm from collectives 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x3812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 10000,
+        "refTime": "(rounded 510000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
+[
+  {
+    "data": {
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "UpgradeAuthorized",
+    "section": "system",
+  },
+]
+`;
+
 exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > balance on from chain 1`] = `
 {
   "consumers": 0,

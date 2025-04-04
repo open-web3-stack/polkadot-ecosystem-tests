@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 
 import type { Chain, Client } from '@e2e-test/networks'
 
-import { checkSystemEvents, xcmSendTransact } from './helpers/index.js'
+import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
 /**
  * Test the process of whitelisting a call
@@ -70,13 +70,15 @@ export async function sendWhitelistCallViaXcmTransact(
     }
   }
 
-  await xcmSendTransact(
+  const xcmTx = createXcmTransactSend(
     collectivesClient,
     dest,
     destClient.api.tx.whitelist.whitelistCall(encodedChainCallData).method.toHex(),
-    { origin: { FellowshipOrigins: 'Fellows' }, originKind: 'Xcm' },
+    'Xcm',
     requireWeightAtMost,
   )
+
+  await scheduleInlineCallWithOrigin(collectivesClient, xcmTx.method.toHex(), { FellowshipOrigins: 'Fellows' })
 }
 
 /**
