@@ -261,8 +261,8 @@ __metadata:
     "@acala-network/chopsticks-testing": "npm:^1.0.3"
     "@e2e-test/networks": "workspace:*"
     "@polkadot/api": "npm:^15.0"
-    "@polkadot/types": "npm:^15.0"
-    "@polkadot/types-augment": "npm:^15.0"
+    "@polkadot/types": "npm:^15.9"
+    "@polkadot/types-augment": "npm:^15.9"
   languageName: unknown
   linkType: soft
 
@@ -2104,19 +2104,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.17.13":
-  version: 4.17.14
-  resolution: "@types/lodash@npm:4.17.14"
-  checksum: 10c0/343c6f722e0b39969036a885ad5aad6578479ead83987128c9b994e6b7f2fb9808244d802d4d332396bb09096f720a6c7060de16a492f5460e06a44560360322
+"@types/lodash@npm:^4.17.16":
+  version: 4.17.16
+  resolution: "@types/lodash@npm:4.17.16"
+  checksum: 10c0/cf017901b8ab1d7aabc86d5189d9288f4f99f19a75caf020c0e2c77b8d4cead4db0d0b842d009b029339f92399f49f34377dd7c2721053388f251778b4c23534
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.13.0, @types/node@npm:^22.13.5, @types/node@npm:^22.9.0":
+"@types/node@npm:*, @types/node@npm:^22.13.5, @types/node@npm:^22.9.0":
   version: 22.13.5
   resolution: "@types/node@npm:22.13.5"
   dependencies:
     undici-types: "npm:~6.20.0"
   checksum: 10c0/a2e7ed7bb0690e439004779baedeb05159c5cc41ef6d81c7a6ebea5303fde4033669e1c0e41ff7453b45fd2fea8dbd55fddfcd052950c7fcae3167c970bca725
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^22.13.16":
+  version: 22.13.16
+  resolution: "@types/node@npm:22.13.16"
+  dependencies:
+    undici-types: "npm:~6.20.0"
+  checksum: 10c0/06a33975e0a55d84841e584544cf943cd31d1bea31152a1fd755391540f57059fee9257b3342ad6e424b316c67166df707087fcf6f95d95dd05a9cd9ccd7d99b
   languageName: node
   linkType: hard
 
@@ -2167,6 +2176,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/pretty-format@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@vitest/pretty-format@npm:3.1.1"
+  dependencies:
+    tinyrainbow: "npm:^2.0.0"
+  checksum: 10c0/540cd46d317fc80298c93b185f3fb48dfe90eaaa3942fd700fde6e88d658772c01b56ad5b9b36e4ac368a02e0fc8e0dc72bbdd6dd07a5d75e89ef99c8df5ba6e
+  languageName: node
+  linkType: hard
+
 "@vitest/runner@npm:3.0.7":
   version: 3.0.7
   resolution: "@vitest/runner@npm:3.0.7"
@@ -2197,11 +2215,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/ui@npm:^3.0.7":
-  version: 3.0.7
-  resolution: "@vitest/ui@npm:3.0.7"
+"@vitest/ui@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "@vitest/ui@npm:3.1.1"
   dependencies:
-    "@vitest/utils": "npm:3.0.7"
+    "@vitest/utils": "npm:3.1.1"
     fflate: "npm:^0.8.2"
     flatted: "npm:^3.3.3"
     pathe: "npm:^2.0.3"
@@ -2209,8 +2227,8 @@ __metadata:
     tinyglobby: "npm:^0.2.12"
     tinyrainbow: "npm:^2.0.0"
   peerDependencies:
-    vitest: 3.0.7
-  checksum: 10c0/08e1a45a8c6888024d606952568d7a434b4cf9049033c0907a0d45e7769ce11cac667f8fbe0063cf254fd09041df4a35a5ccb491134010cf7c2ce3219c889726
+    vitest: 3.1.1
+  checksum: 10c0/03bd014a4afa2c4cd6007d8000d881c653414f30d275fe35067b3d50c8a07b9f53cb2a294a8d36adaece7e4671030f90bd51aedb412d64479b981e051e7996ba
   languageName: node
   linkType: hard
 
@@ -2222,6 +2240,17 @@ __metadata:
     loupe: "npm:^3.1.3"
     tinyrainbow: "npm:^2.0.0"
   checksum: 10c0/4023a4ebfa675dc3d9298764e1c62395e9fb1b5518d7f0f9d79bf25d98627166db620f8b5cb9bc5acbac2b74b1c635cce91d8ec99f065188a92611e5f7631220
+  languageName: node
+  linkType: hard
+
+"@vitest/utils@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@vitest/utils@npm:3.1.1"
+  dependencies:
+    "@vitest/pretty-format": "npm:3.1.1"
+    loupe: "npm:^3.1.3"
+    tinyrainbow: "npm:^2.0.0"
+  checksum: 10c0/a9cfe0c0f095b58644ce3ba08309de5be8564c10dad9e62035bd378e60b2834e6a256e6e4ded7dcf027fdc2371301f7965040ad3e6323b747d5b3abbb7ceb0d6
   languageName: node
   linkType: hard
 
@@ -2952,9 +2981,9 @@ __metadata:
     "@biomejs/biome": "npm:1.9.4"
     "@e2e-test/networks": "workspace:*"
     "@swc/core": "npm:^1.11.5"
-    "@types/lodash": "npm:^4.17.13"
-    "@types/node": "npm:^22.13.0"
-    "@vitest/ui": "npm:^3.0.7"
+    "@types/lodash": "npm:^4.17.16"
+    "@types/node": "npm:^22.13.16"
+    "@vitest/ui": "npm:^3.1.1"
     dotenv: "npm:^16.4.5"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^15.2.10"
