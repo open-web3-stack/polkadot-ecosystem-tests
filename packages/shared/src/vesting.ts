@@ -336,6 +336,50 @@ async function testForceVestedTransferAndRemoval<
   expect(bobAccount.data.free.toNumber()).toBe(locked)
 }
 
+/**
+ * Test performing two vested transfers on the same block.
+ *
+ * 1. Call `vesting.vestedTransfer` from Alice to Bob
+ * 2. Call `vesting.vestedTransfer` from Alice to Bob, with different parameters, on the same block
+ * 3. Check that only one vesting schedule is created
+ */
+async function testSameBlockVestingSchedules<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber()
+  const perBlock1 = Math.floor(locked1 / 4)
+
+  const locked2 = locked1 * 2
+  const perBlock2 = Math.floor(locked2 / 8)
+
+  const vestingTx1 = client.api.tx.vesting.vestedTransfer(bob.address, {
+    perBlock: perBlock1,
+    locked: locked1,
+    startingBlock: currBlockNumber,
+  })
+
+  const vestingTx2 = client.api.tx.vesting.vestedTransfer(bob.address, {
+    perBlock: perBlock2,
+    locked: locked2,
+    startingBlock: currBlockNumber - 2,
+  })
+
+  await sendTransaction(vestingTx1.signAsync(alice))
+  await sendTransaction(vestingTx2.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
+  assert(vestingBalance.isSome)
+  expect(vestingBalance.unwrap().length).toBe(1)
+}
+
 export function vestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -359,6 +403,10 @@ export function vestingE2ETests<
 
       test('forced vested transfer and forced removal of vesting schedule work', async () => {
         await testForceVestedTransferAndRemoval(client)
+      })
+
+      test('test performing two vested transfers on the same block', async () => {
+        await testSameBlockVestingSchedules(client)
       })
     }
 
