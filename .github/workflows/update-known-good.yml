@@ -121,8 +121,7 @@ jobs:
               }
             );
 
-            console.log(response)
-            const failedTests = response.data.jobs
+            const failedTests = response
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
                 const match = job.name.match(/tests \((.*)\)/);
@@ -165,8 +164,7 @@ jobs:
               },
             );
 
-            console.log(response)
-            const failedTests = response.data.jobs
+            const failedTests = response
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
                 const match = job.name.match(/tests \((.*)\)/);
