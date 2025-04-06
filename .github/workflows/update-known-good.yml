@@ -118,6 +118,7 @@ jobs:
               run_id: context.runId
             });
 
+            console.log(response.data.jobs)
             const failedTests = response.data.jobs
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
