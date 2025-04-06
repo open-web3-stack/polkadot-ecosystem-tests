@@ -122,6 +122,7 @@ jobs:
               (response) => response.data.jobs
             );
 
+            console.log(jobs)
             const failedTests = jobs
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
