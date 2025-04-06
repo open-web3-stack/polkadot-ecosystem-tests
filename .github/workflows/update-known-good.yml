@@ -112,14 +112,17 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const response = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId
-            });
+            const jobs = await octokit.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId
+              },
+              (response) => response.data.jobs
+            );
 
-            console.log(response.data.jobs)
-            const failedTests = response.data.jobs
+            const failedTests = jobs
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
                 const match = job.name.match(/tests \((.*)\)/);
@@ -153,14 +156,17 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const response = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId
-            });
+            const jobs = await octokit.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId
+              },
+              (response) => response.data.jobs
+            );
 
-            console.log(response.data.jobs)
-            const failedTests = response.data.jobs
+            const failedTests = jobs
               .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
               .map(job => {
                 const match = job.name.match(/tests \((.*)\)/);
