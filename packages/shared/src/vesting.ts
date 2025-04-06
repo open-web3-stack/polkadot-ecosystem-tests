@@ -337,47 +337,95 @@ async function testForceVestedTransferAndRemoval<
 }
 
 /**
- * Test performing two vested transfers on the same block.
+ * Test the merge of two vesting schedules.
  *
- * 1. Call `vesting.vestedTransfer` from Alice to Bob
- * 2. Call `vesting.vestedTransfer` from Alice to Bob, with different parameters, on the same block
- * 3. Check that only one vesting schedule is created
+ * 1. Call `vesting.vestedTransfer` from Alice to Eve
+ * 2. Call `vesting.vestedTransfer` from Alice to Eve, with different parameters, on the same block
+ * 3. Check that both vesting schedules are created
+ * 4. Merge them
+ * 5. Check that a merged vesting schedule is created
  */
-async function testSameBlockVestingSchedules<
+async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const eve = defaultAccountsSr25519.eve
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber()
-  const perBlock1 = Math.floor(locked1 / 4)
-
-  const locked2 = locked1 * 2
-  const perBlock2 = Math.floor(locked2 / 8)
-
-  const vestingTx1 = client.api.tx.vesting.vestedTransfer(bob.address, {
-    perBlock: perBlock1,
-    locked: locked1,
-    startingBlock: currBlockNumber,
+  await client.dev.setStorage({
+    System: {
+      account: [[[eve.address], { providers: 1, data: { free: 100e10 } }]],
+    },
   })
 
-  const vestingTx2 = client.api.tx.vesting.vestedTransfer(bob.address, {
+  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const initialBlockNumber = currBlockNumber
+
+  const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber() * 3
+  let blocksToUnlock1 = 13
+  const perBlock1 = Math.floor(locked1 / blocksToUnlock1)
+  blocksToUnlock1 += locked1 % blocksToUnlock1 ? 1 : 0
+
+  const locked2 = locked1 * 2
+  let blocksToUnlock2 = 19
+  const perBlock2 = Math.floor(locked2 / blocksToUnlock2)
+  blocksToUnlock2 += locked2 % blocksToUnlock2 ? 1 : 0
+
+  const vestingTx1 = client.api.tx.vesting.vestedTransfer(eve.address, {
+    perBlock: perBlock1,
+    locked: locked1,
+    startingBlock: currBlockNumber - 1,
+  })
+
+  const vestingTx2 = client.api.tx.vesting.vestedTransfer(eve.address, {
     perBlock: perBlock2,
     locked: locked2,
     startingBlock: currBlockNumber - 2,
   })
 
-  await sendTransaction(vestingTx1.signAsync(alice))
-  await sendTransaction(vestingTx2.signAsync(alice))
+  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+  const vestingEvents1 = await sendTransaction(vestingTx1.signAsync(alice, { nonce: aliceNonce++ }))
+  const vestingEvents2 = await sendTransaction(vestingTx2.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
+  currBlockNumber += 1
+
+  await checkEvents(vestingEvents1, 'vesting').toMatchSnapshot('vesting events 1')
+  await checkEvents(vestingEvents2, 'vesting').toMatchSnapshot('vesting events 2')
+
+  const vestingBalance = await client.api.query.vesting.vesting(eve.address)
   assert(vestingBalance.isSome)
-  expect(vestingBalance.unwrap().length).toBe(1)
+  expect(vestingBalance.unwrap().length).toBe(2)
+
+  const mergeVestingTx = client.api.tx.vesting.mergeSchedules(0, 1)
+
+  const mergeVestingEvents = await sendTransaction(mergeVestingTx.signAsync(eve))
+
+  await client.dev.newBlock()
+
+  currBlockNumber += 1
+
+  await checkEvents(mergeVestingEvents, 'vesting').toMatchSnapshot('vesting schedules merger events')
+
+  const vestingBalance2 = await client.api.query.vesting.vesting(eve.address)
+  assert(vestingBalance2.isSome)
+  expect(vestingBalance2.unwrap().length).toBe(1)
+
+  const mergedVestingSchedule = vestingBalance2.unwrap()[0]
+  // Merging schedules will unlock hitherto unvested funds, so the locked amount is the sum of the two schedules'
+  // locked amounts, minus the sum of the two schedules' unvested amounts.
+  const newLocked = locked1 + locked2 - (perBlock1 * 3 + perBlock2 * 4)
+  expect(mergedVestingSchedule.locked.toNumber()).toBe(newLocked)
+
+  // The remainder of the merged schedule's duration should be the longest of the two schedules.
+  const blocksToUnlock = Math.max(blocksToUnlock1 - 3, blocksToUnlock2 - 4)
+  const newPerBlock = Math.floor(newLocked / blocksToUnlock)
+  expect(mergedVestingSchedule.perBlock.toNumber()).toBe(newPerBlock)
+  expect(mergedVestingSchedule.startingBlock.toNumber()).toBe(
+    Math.max(currBlockNumber, initialBlockNumber - 1, initialBlockNumber - 2),
+  )
 }
 
 export function vestingE2ETests<
@@ -405,8 +453,8 @@ export function vestingE2ETests<
         await testForceVestedTransferAndRemoval(client)
       })
 
-      test('test performing two vested transfers on the same block', async () => {
-        await testSameBlockVestingSchedules(client)
+      test('test merger of two vesting schedules', async () => {
+        await testMergeVestingSchedules(client)
       })
     }
 

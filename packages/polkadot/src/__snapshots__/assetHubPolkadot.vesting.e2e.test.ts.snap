@@ -33,6 +33,84 @@ exports[`Polkadot Asset Hub Vesting > signed-origin force-vested transfer fails 
 ]
 `;
 
+exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > merge vesting events 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": 7500000000,
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting events 1 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": "(rounded 25000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": "(rounded 76000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting schedules merger events 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": "(rounded 70000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > test performing two vested transfers on the same block > vesting events 1 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": 7500000000,
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Vesting > test performing two vested transfers on the same block > vesting events 2 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "unvested": 20000000000,
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest events 1`] = `
 [
   {
