@@ -33,19 +33,6 @@ exports[`Kusama Vesting > signed-origin force-vested transfer fails > force vest
 ]
 `;
 
-exports[`Kusama Vesting > test merger of two vesting schedules > merge vesting events 1`] = `
-[
-  {
-    "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 25000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
 exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 1 1`] = `
 [
   {
@@ -78,32 +65,6 @@ exports[`Kusama Vesting > test merger of two vesting schedules > vesting schedul
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
       "unvested": "(rounded 230000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Kusama Vesting > test performing two vested transfers on the same block > vesting events 1 1`] = `
-[
-  {
-    "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 25000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Kusama Vesting > test performing two vested transfers on the same block > vesting events 2 1`] = `
-[
-  {
-    "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 67000000000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
