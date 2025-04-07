@@ -341,9 +341,11 @@ async function testForceVestedTransferAndRemoval<
  *
  * 1. Call `vesting.vestedTransfer` from Alice to Eve
  * 2. Call `vesting.vestedTransfer` from Alice to Eve, with different parameters, on the same block
+ *   - the amount being vested, the per-block vesting amount, and the starting block are all different. This doesn't
+ *     make the test complete, but depending on the values chosen, it can present interesting scenarios.
  * 3. Check that both vesting schedules are created
  * 4. Merge them
- * 5. Check that a merged vesting schedule is created
+ * 5. Check that a single merged vesting schedule now exists for Eve
  */
 async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
@@ -362,11 +364,14 @@ async function testMergeVestingSchedules<
   const initialBlockNumber = currBlockNumber
 
   const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber() * 3
+  // It is unlikely that the network's vesting amount is divisible by this prime number, so this should
+  // be interpreted as `blocksToUnlock1 + 1`
   let blocksToUnlock1 = 13
   const perBlock1 = Math.floor(locked1 / blocksToUnlock1)
   blocksToUnlock1 += locked1 % blocksToUnlock1 ? 1 : 0
 
   const locked2 = locked1 * 2
+  // Another prime number, so the same applies above.
   let blocksToUnlock2 = 19
   const perBlock2 = Math.floor(locked2 / blocksToUnlock2)
   blocksToUnlock2 += locked2 % blocksToUnlock2 ? 1 : 0
