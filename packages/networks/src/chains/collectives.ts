@@ -5,9 +5,12 @@ const custom = {
   collectivesPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  collectivesWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
-const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
+const getInitStorages = (_config: typeof custom.collectivesPolkadot | typeof custom.collectivesWestend) => ({
   System: {
     account: [
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
@@ -23,4 +26,12 @@ export const collectivesPolkadot = defineChain({
   paraId: 1001,
   custom: custom.collectivesPolkadot,
   initStorages: getInitStorages(custom.collectivesPolkadot),
+})
+
+export const collectivesWestend = defineChain({
+  name: 'collectivesWestend',
+  endpoint: 'wss://westend-collectives-rpc.polkadot.io',
+  paraId: 1001,
+  custom: custom.collectivesWestend,
+  initStorages: getInitStorages(custom.collectivesWestend),
 })

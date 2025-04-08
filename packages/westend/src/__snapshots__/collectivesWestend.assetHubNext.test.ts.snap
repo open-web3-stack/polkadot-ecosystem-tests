@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > destination chain events 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 280000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > source chain events 1`] = `
+[
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 1100,
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x5f000101010101010101010101010101010101010101010101010101010101010101",
+            },
+            "fallbackMaxWeight": {
+              "proofSize": 10000,
+              "refTime": 1000000000,
+            },
+            "originKind": "Xcm",
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
