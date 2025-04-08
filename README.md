@@ -209,8 +209,8 @@ permission-restricted extrinsics with the appropriate origin e.g. `Root`-gated g
 for staking and nomination pools
 
 4. **Send XCM `Transact`s to execute extrinsics with given origin in parachain**
-In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `xcmSendTransact` to
-perform the technique in 3. in the desired parachain.
+In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `createXcmTransactSend` 
+along with `scheduleCallWithOrigin` to prepare and schedule sending of an XCM to perform the technique in 3. in the desired parachain.
 
     4.1. Take care to adjust the parameters in accordance with the destination parachain, in particular
          `refTime/proofSize`

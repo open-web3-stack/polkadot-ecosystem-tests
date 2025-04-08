@@ -12,7 +12,7 @@ import { describe, test } from 'vitest'
 
 import type { Chain, Client } from '@e2e-test/networks'
 
-import { checkSystemEvents, xcmSendTransact } from './helpers/index.js'
+import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
 /**
  * Test the process of whitelisting a call
@@ -38,7 +38,6 @@ export async function fellowshipWhitelistCall(destClient: Client, collectivesCli
 
   await destClient.dev.newBlock()
   await checkSystemEvents(destClient, 'whitelist', 'messageQueue')
-    // TODO: redacting 'id' is not perfect here; but seems not possible to redact nested keys, in this case specifically only "message.id"
     .redact({ hash: false, redactKeys: /id/ })
     .toMatchSnapshot('destination chain events')
 }
@@ -50,7 +49,7 @@ export async function fellowshipWhitelistCall(destClient: Client, collectivesCli
  * @param encodedChainCallData Hex-encoded call extrinsic to be executed at the destination
  * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
  */
-async function sendWhitelistCallViaXcmTransact(
+export async function sendWhitelistCallViaXcmTransact(
   destClient: Client,
   collectivesClient: Client,
   encodedChainCallData: `0x${string}`,
@@ -70,13 +69,15 @@ async function sendWhitelistCallViaXcmTransact(
     }
   }
 
-  await xcmSendTransact(
+  const xcmTx = createXcmTransactSend(
     collectivesClient,
     dest,
     destClient.api.tx.whitelist.whitelistCall(encodedChainCallData).method.toHex(),
-    { origin: { FellowshipOrigins: 'Fellows' }, originKind: 'Xcm' },
+    'Xcm',
     requireWeightAtMost,
   )
+
+  await scheduleInlineCallWithOrigin(collectivesClient, xcmTx.method.toHex(), { FellowshipOrigins: 'Fellows' })
 }
 
 /**

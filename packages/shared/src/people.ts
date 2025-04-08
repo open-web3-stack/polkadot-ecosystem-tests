@@ -22,7 +22,13 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import type { HexString } from '@polkadot/util/types'
 
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, xcmSendTransact } from './helpers/index.js'
+import {
+  check,
+  checkEvents,
+  checkSystemEvents,
+  createXcmTransactSend,
+  scheduleCallWithOrigin,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -56,7 +62,7 @@ async function sendXcmFromRelayToPeople(
   call: HexString,
   requireWeightAtMost?: { proofSize: string; refTime: string },
 ): Promise<any> {
-  await xcmSendTransact(
+  const xcmTx = createXcmTransactSend(
     relayClient,
     {
       parents: 0,
@@ -69,9 +75,11 @@ async function sendXcmFromRelayToPeople(
       },
     },
     call,
-    { origin: { system: 'Root' }, originKind: 'SuperUser' },
+    'SuperUser',
     requireWeightAtMost,
   )
+
+  await scheduleCallWithOrigin(relayClient, { Inline: xcmTx.method.toHex() }, { system: 'Root' })
 }
 
 /// -------
