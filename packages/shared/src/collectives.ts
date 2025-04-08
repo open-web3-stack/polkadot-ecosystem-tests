@@ -38,7 +38,6 @@ export async function fellowshipWhitelistCall(destClient: Client, collectivesCli
 
   await destClient.dev.newBlock()
   await checkSystemEvents(destClient, 'whitelist', 'messageQueue')
-    // TODO: redacting 'id' is not perfect here; but seems not possible to redact nested keys, in this case specifically only "message.id"
     .redact({ hash: false, redactKeys: /id/ })
     .toMatchSnapshot('destination chain events')
 }

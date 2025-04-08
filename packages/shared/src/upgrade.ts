@@ -121,7 +121,6 @@ export async function authorizeUpgradeViaCollectives(
     .toMatchSnapshot('collectives events emitted when sending xcm')
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'whitelist', 'messageQueue')
-    // TODO: redacting 'id' is not perfect here; but seems not possible to redact nested keys, in this case specifically only "message.id"
     .redact({ hash: false, redactKeys: /id/ })
     .toMatchSnapshot('governing chain events emitted on receiving xcm from collectives')
 
@@ -147,7 +146,6 @@ export async function authorizeUpgradeViaCollectives(
   } else {
     await chainToUpgrade.dev.newBlock()
     await checkSystemEvents(chainToUpgrade, 'messageQueue', { section: 'system', method: 'UpgradeAuthorized' })
-      // TODO: redacting 'id' is not perfect here; but seems not possible to redact nested keys, in this case specifically only "message.id"
       .redact({ hash: false, redactKeys: /id/ })
       .toMatchSnapshot('to-be-upgraded chain events to confirm authorized upgrade')
   }
