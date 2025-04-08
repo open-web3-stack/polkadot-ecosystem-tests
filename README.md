@@ -83,6 +83,15 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 This repository contains E2E tests for the Polkadot/Kusama networks.
 
 These include:
+- E2E suite for proxy accounts:
+  - proxy account creation, removal
+  - pure proxy account creation, removal
+  - proxy calls
+  - test delay in proxy actions, as well as announcement/removal, and executing of announced action
+- E2E suite for vesting
+  - normal (signed) and forced (root) vested transfers
+  - forced (root) vesting schedule removal
+  - merger of vesting schedules
 - E2E suite for nomination pools:
   - Creating a pool, joining it, bonding extra
   - Setting a pool's state, metadata, roles and commission data
@@ -106,7 +115,6 @@ These include:
   - Requesting judgement requests on registrars, and providing it
   - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
   - Adding, modifying, and removing subidentities for an account
-
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
@@ -201,8 +209,8 @@ permission-restricted extrinsics with the appropriate origin e.g. `Root`-gated g
 for staking and nomination pools
 
 4. **Send XCM `Transact`s to execute extrinsics with given origin in parachain**
-In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `xcmSendTransact` to
-perform the technique in 3. in the desired parachain.
+In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `createXcmTransactSend` 
+along with `scheduleCallWithOrigin` to prepare and schedule sending of an XCM to perform the technique in 3. in the desired parachain.
 
     4.1. Take care to adjust the parameters in accordance with the destination parachain, in particular
          `refTime/proofSize`

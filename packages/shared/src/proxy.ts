@@ -322,7 +322,7 @@ export async function createKillPureProxyTest<
  * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Charlie
  * 3. Charlie's balance is check, as is Alice's
  */
-export async function proxyAnnouncementTest<
+export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
@@ -512,7 +512,7 @@ export async function proxyE2ETests<
     })
 
     test('perform proxy call on behalf of delegator', async () => {
-      await proxyAnnouncementTest(client)
+      await proxyCallTest(client)
     })
 
     test('proxy announcement lifecycle test', async () => {
