@@ -105,7 +105,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
         },
       },
       "task": [
-        "(rounded 25000000)",
+        "(rounded 26000000)",
         0,
       ],
     },
@@ -124,7 +124,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
         "Err": "BadOrigin",
       },
       "task": [
-        "(rounded 25000000)",
+        "(rounded 26000000)",
         0,
       ],
     },
