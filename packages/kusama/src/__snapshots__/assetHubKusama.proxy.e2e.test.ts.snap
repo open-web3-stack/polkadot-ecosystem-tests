@@ -396,3 +396,15 @@ exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when
 `;
 
 exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
+
+exports[`Kusama AssetHub Proxy > proxy call filtering test > events when sending proxy action for Any 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
