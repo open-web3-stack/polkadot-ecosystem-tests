@@ -14,6 +14,8 @@ import { check, checkEvents } from './helpers/index.js'
 
 import BN from 'bn.js'
 
+import { match } from 'ts-pattern'
+
 /// -------
 /// Helpers
 /// -------
@@ -35,6 +37,97 @@ function createProxyAccounts(
     Object.entries(proxyTypes).map(([proxyType, _]) => [proxyType, kr.addFromUri(`${accountName} proxy ${proxyType}`)]),
   )
 }
+
+function buildProxyAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(proxyType: string, client: Client<TCustom, TInitStorages>): SubmittableExtrinsic<'promise', ISubmittableResult>[] {
+  const result = match(proxyType)
+    .with('Any', () => {
+      const batch = [client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10)]
+      if (client.api.tx.staking) {
+        batch.push(client.api.tx.staking.bond(100e10, 'Staked'))
+      }
+      if (client.api.tx.referenda) {
+        batch.push(
+          client.api.tx.referenda.submit(
+            {
+              Origins: 'SmallTipper',
+            } as any,
+            {
+              Inline: client.api.tx.system.remark('hello').method.toHex(),
+            },
+            {
+              After: 0,
+            },
+          ),
+        )
+      }
+      console.log(batch.length)
+      return [client.api.tx.utility.batchAll(batch)]
+    })
+    .otherwise(() => [])
+
+  return result
+}
+
+async function proxyCallFilteringTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+  const alice = defaultAccountsSr25519.alice
+  const kr = defaultAccountsSr25519.keyring
+
+  const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
+
+  const proxyTypesToTest = ['Any']
+
+  // For every proxy type:
+  // 1. As Alice, add a proxy account of that type
+  // 2. As the proxy account, execute an action - on behalf of Alice - that such a proxy type is allowed to execute
+  // 3. Verify that the action was correctly executed
+  //     - The extrinsic is not required to be well-formed; the transaction can fail, just not because the call was
+  //       filtered over the proxy's lack of permission.
+  for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
+    // For this network, there might be some proxy types not to be tested.
+    if (!proxyTypesToTest.includes(proxyType)) {
+      continue
+    }
+
+    const addProxyTx = client.api.tx.proxy.addProxy(proxyAccounts[proxyType].address, proxyTypeIx, 0)
+    await sendTransaction(addProxyTx.signAsync(alice))
+
+    await client.dev.newBlock()
+
+    const proxyActions = buildProxyAction(proxyType, client)
+    // If there's a single extrinsic, then it's a batch, since the proxy type in question allows the `utility` pallet.
+    if (proxyActions.length === 1) {
+      await client.dev.setStorage({
+        System: {
+          account: [[[proxyAccounts[proxyType].address], { providers: 1, data: { free: 1000e10 } }]],
+        },
+      })
+
+      // Recall that `proxyActions` is an array of extrinsics, which at this point is known to be of length 1.
+      // That single extrinsic represents the action to be performed by the proxy, on behalf of the delegating account.
+      const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyActions[0])
+
+      const proxyActionEvents = await sendTransaction(proxyTx.signAsync(proxyAccounts[proxyType]))
+
+      await client.dev.newBlock()
+
+      await checkEvents(proxyActionEvents, 'proxy').toMatchSnapshot(`events when sending proxy action for ${proxyType}`)
+      // Some proxy types do not allow use of the `utility` pallet, so a representative set of actions must be enacted
+      // manually, one extrinsic per block, and events checked for each extrinsic.
+    } else {
+      // TODO
+    }
+  }
+}
+
+/// -------
+/// -------
+/// -------
 
 /**
  * Test to the process of adding and removing proxies to another account.
@@ -517,6 +610,10 @@ export async function proxyE2ETests<
 
     test('proxy announcement lifecycle test', async () => {
       await proxyAnnouncementLifecycleTest(client, testConfig.addressEncoding)
+    })
+
+    test('proxy call filtering test', async () => {
+      await proxyCallFilteringTest(client, proxyTypes)
     })
   })
 }
