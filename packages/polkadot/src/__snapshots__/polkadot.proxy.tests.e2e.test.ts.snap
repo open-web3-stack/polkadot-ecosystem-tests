@@ -408,3 +408,34 @@ exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy 
   },
 ]
 `;
+
+exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy action for Governance 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy action for NonTransfer 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;

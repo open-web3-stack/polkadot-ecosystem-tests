@@ -408,3 +408,15 @@ exports[`Polkadot Collectives Proxy > proxy call filtering test > events when se
   },
 ]
 `;
+
+exports[`Polkadot Collectives Proxy > proxy call filtering test > events when sending proxy action for NonTransfer 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;

@@ -360,3 +360,15 @@ exports[`People Kusama Proxy > proxy call filtering test > events when sending p
   },
 ]
 `;
+
+exports[`People Kusama Proxy > proxy call filtering test > events when sending proxy action for NonTransfer 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;

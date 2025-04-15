@@ -42,28 +42,56 @@ function buildProxyAction<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(proxyType: string, client: Client<TCustom, TInitStorages>): SubmittableExtrinsic<'promise', ISubmittableResult>[] {
+  const balanceCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+  if (client.api.tx.balances) {
+    balanceCalls.push(client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10))
+  }
+
+  const governanceCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+  if (client.api.tx.referenda) {
+    governanceCalls.push(
+      client.api.tx.referenda.submit(
+        {
+          Origins: 'SmallTipper',
+        } as any,
+        {
+          Inline: client.api.tx.system.remark('hello').method.toHex(),
+        },
+        {
+          After: 0,
+        },
+      ),
+    )
+  }
+
+  const stakingCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+  if (client.api.tx.staking) {
+    stakingCalls.push(client.api.tx.staking.bond(100e10, 'Staked'))
+  }
+
+  const systemCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = [
+    client.api.tx.system.remarkWithEvent('hello'),
+  ]
+
   const result = match(proxyType)
     .with('Any', () => {
-      const batch = [client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10)]
-      if (client.api.tx.staking) {
-        batch.push(client.api.tx.staking.bond(100e10, 'Staked'))
-      }
-      if (client.api.tx.referenda) {
-        batch.push(
-          client.api.tx.referenda.submit(
-            {
-              Origins: 'SmallTipper',
-            } as any,
-            {
-              Inline: client.api.tx.system.remark('hello').method.toHex(),
-            },
-            {
-              After: 0,
-            },
-          ),
-        )
-      }
-      console.log(batch.length)
+      const batch = balanceCalls
+      // If the network has staking, staking calls will be added to the batch.
+      // Otherwise, this is a no-op.
+      batch.concat(stakingCalls)
+      // Same as above - this pattern will be used where sensible.
+      batch.concat(governanceCalls)
+      return [client.api.tx.utility.batchAll(batch)]
+    })
+    .with('NonTransfer', () => {
+      const batch = systemCalls
+      batch.concat(stakingCalls)
+      batch.concat(governanceCalls)
+      return [client.api.tx.utility.batchAll(batch)]
+    })
+    .with('Governance', () => {
+      const batch = systemCalls
+      batch.concat(governanceCalls)
       return [client.api.tx.utility.batchAll(batch)]
     })
     .otherwise(() => [])
@@ -80,7 +108,7 @@ async function proxyCallFilteringTest<
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = ['Any']
+  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer']
 
   // For every proxy type:
   // 1. As Alice, add a proxy account of that type
@@ -116,9 +144,19 @@ async function proxyCallFilteringTest<
 
       await client.dev.newBlock()
 
+      await client.pause()
+
       await checkEvents(proxyActionEvents, 'proxy').toMatchSnapshot(`events when sending proxy action for ${proxyType}`)
       // Some proxy types do not allow use of the `utility` pallet, so a representative set of actions must be enacted
       // manually, one extrinsic per block, and events checked for each extrinsic.
+
+      const events = await client.api.query.system.events()
+      // All of the batched extrinsics must have been executed successfully - if this event is emitted, then no item in
+      // the batch failed.
+      const proxyEvents = events.filter((record) => {
+        const { event } = record
+        return event.section === 'utility' && event.method === 'BatchCompleted'
+      })
     } else {
       // TODO
     }
@@ -413,7 +451,7 @@ export async function createKillPureProxyTest<
  *
  * 1. Alice adds Bob as their `Any` proxy, with no associated delay
  * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Charlie
- * 3. Charlie's balance is check, as is Alice's
+ * 3. Charlie's balance is checked, as is Alice's
  */
 export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -525,6 +563,8 @@ export async function proxyAnnouncementLifecycleTest<
   const announcementDepositFactor = client.api.consts.proxy.announcementDepositFactor
   const announcementDepositTotal = announcementDeposit.add(announcementDepositFactor)
   assert(announcements[1].eq(announcementDepositTotal))
+
+  // Alice rejects the announcement
 
   const rejectAnnouncementTx = client.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
   const rejectAnnouncementEvents = await sendTransaction(rejectAnnouncementTx.signAsync(alice))
