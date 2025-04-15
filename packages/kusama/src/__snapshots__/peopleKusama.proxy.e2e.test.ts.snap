@@ -349,7 +349,7 @@ exports[`People Kusama Proxy > proxy announcement lifecycle test > events when B
 
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`People Kusama Proxy > proxy call filtering test > events when sending proxy action for Any 1`] = `
+exports[`People Kusama Proxy > proxy call filtering test for Any > events when sending proxy action for Any 1`] = `
 [
   {
     "data": {
@@ -361,7 +361,7 @@ exports[`People Kusama Proxy > proxy call filtering test > events when sending p
 ]
 `;
 
-exports[`People Kusama Proxy > proxy call filtering test > events when sending proxy action for NonTransfer 1`] = `
+exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events when sending proxy action for NonTransfer 1`] = `
 [
   {
     "data": {

@@ -397,7 +397,7 @@ exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob pe
 
 exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy action for Any 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Any > events when sending proxy action for Any 1`] = `
 [
   {
     "data": {
@@ -409,18 +409,11 @@ exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy 
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy action for Governance 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Governance > events when sending proxy action for Governance 1`] = `
 [
   {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -428,7 +421,7 @@ exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy 
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test > events when sending proxy action for NonTransfer 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events when sending proxy action for NonTransfer 1`] = `
 [
   {
     "data": {

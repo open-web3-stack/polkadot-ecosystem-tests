@@ -9,7 +9,7 @@ import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
 
 import BN from 'bn.js'
@@ -81,85 +81,111 @@ function buildProxyAction<
       batch.concat(stakingCalls)
       // Same as above - this pattern will be used where sensible.
       batch.concat(governanceCalls)
-      return [client.api.tx.utility.batchAll(batch)]
+      return [client.api.tx.utility.forceBatch(batch)]
     })
     .with('NonTransfer', () => {
       const batch = systemCalls
       batch.concat(stakingCalls)
       batch.concat(governanceCalls)
-      return [client.api.tx.utility.batchAll(batch)]
+      return [client.api.tx.utility.forceBatch(batch)]
     })
     .with('Governance', () => {
-      const batch = systemCalls
+      const batch: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
       batch.concat(governanceCalls)
-      return [client.api.tx.utility.batchAll(batch)]
+      return [client.api.tx.utility.forceBatch(batch)]
     })
     .otherwise(() => [])
 
   return result
 }
 
-async function proxyCallFilteringTest<
+/**
+ * For a particular proxy type:
+ * 1. As Alice, add a proxy account of that type
+ * 2. As the proxy account, execute an action - on behalf of Alice - that such a proxy type is allowed to execute
+ * 3. Verify that the action was correctly executed
+ *     - The extrinsic is not required to be well-formed; the transaction can fail, just not because the call was
+ *       filtered over the proxy's lack of permission.
+ *
+ * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
+ */
+async function proxyCallFilteringSingleTestRunner<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+  const alice = defaultAccountsSr25519.alice
+
+  const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const proxyActions = buildProxyAction(proxyType, client)
+  // If there's a single extrinsic, then it is a batch of calls, since the proxy type in question allows the `utility`
+  // pallet.
+  if (proxyActions.length === 1) {
+    await client.dev.setStorage({
+      System: {
+        account: [[[proxyAccount.address], { providers: 1, data: { free: 1000e10 } }]],
+      },
+    })
+
+    // Recall that `proxyActions` is an array of extrinsics, which at this point is known to be of length 1.
+    // That single extrinsic - a utility batch - contains the actions to be performed by the proxy on behalf of the
+    // delegating account.
+    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyActions[0])
+
+    const proxyActionEvents = await sendTransaction(proxyTx.signAsync(proxyAccount))
+
+    await client.dev.newBlock()
+
+    await checkEvents(proxyActionEvents, 'proxy').toMatchSnapshot(`events when sending proxy action for ${proxyType}`)
+
+    const events = await client.api.query.system.events()
+    events
+      .filter((record) => {
+        const { event } = record
+        return event.section === 'utility' && (event.method === 'ItemCompleted' || event.method === 'ItemFailed')
+      })
+      .forEach((record) => {
+        if (client.api.events.utility.ItemFailed.is(record.event)) {
+          const itemFailedData = record.event.data
+          assert(itemFailedData.error.isModule)
+
+          // The call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
+          // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
+          expect(client.api.errors.system.CallFiltered.is(itemFailedData.error.asModule)).toBe(false)
+        } else {
+          // The call was executed successfully - nothing to check.
+          expect(client.api.events.utility.ItemCompleted.is(record.event)).toBe(true)
+        }
+      })
+  } else {
+    // Some proxy types do not allow use of the `utility` pallet, so a representative set of actions must be enacted
+    // manually, one extrinsic per block, and events checked for each extrinsic.
+    // TODO
+  }
+}
+
+async function proxyCallFilteringTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
-  const alice = defaultAccountsSr25519.alice
   const kr = defaultAccountsSr25519.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
   const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer']
 
-  // For every proxy type:
-  // 1. As Alice, add a proxy account of that type
-  // 2. As the proxy account, execute an action - on behalf of Alice - that such a proxy type is allowed to execute
-  // 3. Verify that the action was correctly executed
-  //     - The extrinsic is not required to be well-formed; the transaction can fail, just not because the call was
-  //       filtered over the proxy's lack of permission.
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // For this network, there might be some proxy types not to be tested.
     if (!proxyTypesToTest.includes(proxyType)) {
       continue
     }
 
-    const addProxyTx = client.api.tx.proxy.addProxy(proxyAccounts[proxyType].address, proxyTypeIx, 0)
-    await sendTransaction(addProxyTx.signAsync(alice))
-
-    await client.dev.newBlock()
-
-    const proxyActions = buildProxyAction(proxyType, client)
-    // If there's a single extrinsic, then it's a batch, since the proxy type in question allows the `utility` pallet.
-    if (proxyActions.length === 1) {
-      await client.dev.setStorage({
-        System: {
-          account: [[[proxyAccounts[proxyType].address], { providers: 1, data: { free: 1000e10 } }]],
-        },
-      })
-
-      // Recall that `proxyActions` is an array of extrinsics, which at this point is known to be of length 1.
-      // That single extrinsic represents the action to be performed by the proxy, on behalf of the delegating account.
-      const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyActions[0])
-
-      const proxyActionEvents = await sendTransaction(proxyTx.signAsync(proxyAccounts[proxyType]))
-
-      await client.dev.newBlock()
-
-      await client.pause()
-
-      await checkEvents(proxyActionEvents, 'proxy').toMatchSnapshot(`events when sending proxy action for ${proxyType}`)
-      // Some proxy types do not allow use of the `utility` pallet, so a representative set of actions must be enacted
-      // manually, one extrinsic per block, and events checked for each extrinsic.
-
-      const events = await client.api.query.system.events()
-      // All of the batched extrinsics must have been executed successfully - if this event is emitted, then no item in
-      // the batch failed.
-      const proxyEvents = events.filter((record) => {
-        const { event } = record
-        return event.section === 'utility' && event.method === 'BatchCompleted'
-      })
-    } else {
-      // TODO
-    }
+    test(`proxy call filtering test for ${proxyType}`, async () => {
+      await proxyCallFilteringSingleTestRunner(client, proxyType, proxyTypeIx, proxyAccounts[proxyType])
+    })
   }
 }
 
@@ -652,8 +678,6 @@ export async function proxyE2ETests<
       await proxyAnnouncementLifecycleTest(client, testConfig.addressEncoding)
     })
 
-    test('proxy call filtering test', async () => {
-      await proxyCallFilteringTest(client, proxyTypes)
-    })
+    proxyCallFilteringTestRunner(client, proxyTypes)
   })
 }
