@@ -7,7 +7,7 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
-import type { ISubmittableResult } from '@polkadot/types/types'
+import type { Codec, ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, describe, expect, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
@@ -214,17 +214,31 @@ async function proxyCallFilteringSingleTestRunner<
     },
   })
 
+  let proxyAccountNonce = (await client.api.rpc.system.accountNextIndex(proxyAccount.address)).toNumber()
+
+  // Create a record to store transaction results
+  const transactionResults: Record<string, { events: Promise<Codec[]> }> = {}
+
+  // First, send all of the proxy extrinsics.
   for (const proxyAction of proxyActions) {
     // Recall that `proxyActions` is an array of extrinsics meant to be executed by the proxy, on behalf of the
     // delegating account.
     const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
 
-    const proxyActionEvents = await sendTransaction(proxyTx.signAsync(proxyAccount))
+    transactionResults[`${proxyAction.pallet}.${proxyAction.extrinsic}`] = await sendTransaction(
+      proxyTx.signAsync(proxyAccount, { nonce: proxyAccountNonce++ }),
+    )
+  }
 
-    await client.dev.newBlock()
+  // Advance through a single block.
+  await client.dev.newBlock()
 
-    await checkEvents(proxyActionEvents, 'proxy', proxyAction.pallet).toMatchSnapshot(
-      `events for proxy action: proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+  // Then, for all of the emitted events, verify proxy call execution results.
+  for (const [actionKey, proxyActionEvents] of Object.entries(transactionResults)) {
+    const [pallet, extrinsic] = actionKey.split('.')
+
+    await checkEvents(proxyActionEvents, 'proxy', pallet).toMatchSnapshot(
+      `events for proxy action: proxy type ${proxyType}, pallet ${pallet}, call ${extrinsic}`,
     )
 
     const events = await client.api.query.system.events()
