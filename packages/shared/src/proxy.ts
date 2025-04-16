@@ -47,6 +47,11 @@ function buildProxyAction<
     balanceCalls.push(client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10))
   }
 
+  const bountyCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+  if (client.api.tx.bounties) {
+    bountyCalls.push(client.api.tx.bounties.proposeBounty(300e10, 'Test Bounty'))
+  }
+
   const governanceCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
   if (client.api.tx.referenda) {
     governanceCalls.push(
@@ -76,21 +81,25 @@ function buildProxyAction<
   const result = match(proxyType)
     .with('Any', () => {
       const batch = balanceCalls
+      batch.concat(bountyCalls)
       // If the network has staking, staking calls will be added to the batch.
       // Otherwise, this is a no-op.
       batch.concat(stakingCalls)
       // Same as above - this pattern will be used where sensible.
       batch.concat(governanceCalls)
+      batch.concat(systemCalls)
       return [client.api.tx.utility.forceBatch(batch)]
     })
     .with('NonTransfer', () => {
       const batch = systemCalls
+      batch.concat(bountyCalls)
       batch.concat(stakingCalls)
       batch.concat(governanceCalls)
       return [client.api.tx.utility.forceBatch(batch)]
     })
     .with('Governance', () => {
       const batch: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
+      batch.concat(bountyCalls)
       batch.concat(governanceCalls)
       return [client.api.tx.utility.forceBatch(batch)]
     })
@@ -178,7 +187,7 @@ async function proxyCallFilteringTestRunner<
   const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer']
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
-    // For this network, there might be some proxy types not to be tested.
+    // In this network, there might be some proxy types that don't/cannot be tested.
     if (!proxyTypesToTest.includes(proxyType)) {
       continue
     }
