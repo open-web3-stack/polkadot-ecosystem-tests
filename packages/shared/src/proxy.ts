@@ -40,8 +40,9 @@ function createProxyAccounts(
 
 /**
  * Shorthand for a list of PJS-type fully-formed extrinsics.
+ *
+ * The pallet and extrinsic names are kept to better identify the correspoding snapshot.
  */
-
 interface ProxyAction {
   pallet: string
   extrinsic: string
@@ -51,7 +52,9 @@ interface ProxyAction {
 interface ProxyActionBuilder {
   buildBalanceAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
+  buildFastUnstakeAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
+  buildNominationPoolsAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
   buildUtilityAction(): ProxyAction[]
@@ -90,6 +93,19 @@ class ProxyActionBuilderImpl<
     return bountyCalls
   }
 
+  buildFastUnstakeAction(): ProxyAction[] {
+    const fastUnstakeCalls: ProxyAction[] = []
+    if (this.client.api.tx.staking) {
+      fastUnstakeCalls.push({
+        pallet: 'staking',
+        extrinsic: 'fastUnstake',
+        call: this.client.api.tx.fastUnstake.registerFastUnstake(),
+      })
+    }
+
+    return fastUnstakeCalls
+  }
+
   buildGovernanceAction(): ProxyAction[] {
     const governanceCalls: ProxyAction[] = []
     if (this.client.api.tx.referenda) {
@@ -111,6 +127,19 @@ class ProxyActionBuilderImpl<
     }
 
     return governanceCalls
+  }
+
+  buildNominationPoolsAction(): ProxyAction[] {
+    const nominationPoolsCalls: ProxyAction[] = []
+    if (this.client.api.tx.nominationPools) {
+      nominationPoolsCalls.push({
+        pallet: 'nominationPools',
+        extrinsic: 'bond',
+        call: this.client.api.tx.nominationPools.chill(1),
+      })
+    }
+
+    return nominationPoolsCalls
   }
 
   buildStakingAction(): ProxyAction[] {
@@ -174,6 +203,16 @@ function buildProxyAction<
     .with('Governance', () => [
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+    ])
+    .with('Staking', () => [
+      ...proxyActionBuilder.buildFastUnstakeAction(),
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('NominationPools', () => [
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
     ])
     .otherwise(() => [])
 
@@ -273,7 +312,7 @@ async function proxyCallFilteringTestRunner<
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer']
+  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools']
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // In this network, there might be some proxy types that don't/cannot be tested.
