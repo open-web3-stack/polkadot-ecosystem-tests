@@ -38,71 +38,143 @@ function createProxyAccounts(
   )
 }
 
+/**
+ * Shorthand for a list of PJS-type fully-formed extrinsics.
+ */
+
+interface ProxyAction {
+  pallet: string
+  extrinsic: string
+  call: SubmittableExtrinsic<'promise', ISubmittableResult>
+}
+
+interface ProxyActionBuilder {
+  buildBalanceAction(): ProxyAction[]
+  buildBountyAction(): ProxyAction[]
+  buildGovernanceAction(): ProxyAction[]
+  buildStakingAction(): ProxyAction[]
+  buildSystemAction(): ProxyAction[]
+  buildUtilityAction(): ProxyAction[]
+}
+
+class ProxyActionBuilderImpl<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> implements ProxyActionBuilder
+{
+  constructor(private client: Client<TCustom, TInitStorages>) {}
+
+  buildBalanceAction(): ProxyAction[] {
+    const balanceCalls: ProxyAction[] = []
+    if (this.client.api.tx.balances) {
+      balanceCalls.push({
+        pallet: 'balances',
+        extrinsic: 'transferKeepAlive',
+        call: this.client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10),
+      })
+    }
+
+    return balanceCalls
+  }
+
+  buildBountyAction(): ProxyAction[] {
+    const bountyCalls: ProxyAction[] = []
+    if (this.client.api.tx.bounties) {
+      bountyCalls.push({
+        pallet: 'bounties',
+        extrinsic: 'proposeBounty',
+        call: this.client.api.tx.bounties.proposeBounty(100e10, 'Test Bounty'),
+      })
+    }
+
+    return bountyCalls
+  }
+
+  buildGovernanceAction(): ProxyAction[] {
+    const governanceCalls: ProxyAction[] = []
+    if (this.client.api.tx.referenda) {
+      governanceCalls.push({
+        pallet: 'referenda',
+        extrinsic: 'submit',
+        call: this.client.api.tx.referenda.submit(
+          {
+            Origins: 'SmallTipper',
+          } as any,
+          {
+            Inline: this.client.api.tx.system.remark('hello').method.toHex(),
+          },
+          {
+            After: 0,
+          },
+        ),
+      })
+    }
+
+    return governanceCalls
+  }
+
+  buildStakingAction(): ProxyAction[] {
+    const stakingCalls: ProxyAction[] = []
+    if (this.client.api.tx.staking) {
+      stakingCalls.push({
+        pallet: 'staking',
+        extrinsic: 'bond',
+        call: this.client.api.tx.staking.bond(100e10, 'Staked'),
+      })
+    }
+
+    return stakingCalls
+  }
+
+  buildSystemAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'system',
+        extrinsic: 'remark',
+        call: this.client.api.tx.system.remark('hello'),
+      },
+    ]
+  }
+
+  buildUtilityAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'utility',
+        extrinsic: 'forceBatch',
+        call: this.client.api.tx.utility.batch([]),
+      },
+    ]
+  }
+}
+
 function buildProxyAction<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(proxyType: string, client: Client<TCustom, TInitStorages>): SubmittableExtrinsic<'promise', ISubmittableResult>[] {
-  const balanceCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-  if (client.api.tx.balances) {
-    balanceCalls.push(client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10))
-  }
+>(proxyType: string, client: Client<TCustom, TInitStorages>): ProxyAction[] {
+  const proxyActionBuilder = new ProxyActionBuilderImpl(client)
 
-  const bountyCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-  if (client.api.tx.bounties) {
-    bountyCalls.push(client.api.tx.bounties.proposeBounty(300e10, 'Test Bounty'))
-  }
-
-  const governanceCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-  if (client.api.tx.referenda) {
-    governanceCalls.push(
-      client.api.tx.referenda.submit(
-        {
-          Origins: 'SmallTipper',
-        } as any,
-        {
-          Inline: client.api.tx.system.remark('hello').method.toHex(),
-        },
-        {
-          After: 0,
-        },
-      ),
-    )
-  }
-
-  const stakingCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-  if (client.api.tx.staking) {
-    stakingCalls.push(client.api.tx.staking.bond(100e10, 'Staked'))
-  }
-
-  const systemCalls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = [
-    client.api.tx.system.remarkWithEvent('hello'),
-  ]
-
+  // Note the pattern used: if the network has a certain pallet available, the list returned by the proxy action
+  // builder won't be empty.
+  // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
-    .with('Any', () => {
-      const batch = balanceCalls
-      batch.concat(bountyCalls)
-      // If the network has staking, staking calls will be added to the batch.
-      // Otherwise, this is a no-op.
-      batch.concat(stakingCalls)
-      // Same as above - this pattern will be used where sensible.
-      batch.concat(governanceCalls)
-      batch.concat(systemCalls)
-      return [client.api.tx.utility.forceBatch(batch)]
-    })
-    .with('NonTransfer', () => {
-      const batch = systemCalls
-      batch.concat(bountyCalls)
-      batch.concat(stakingCalls)
-      batch.concat(governanceCalls)
-      return [client.api.tx.utility.forceBatch(batch)]
-    })
-    .with('Governance', () => {
-      const batch: SubmittableExtrinsic<'promise', ISubmittableResult>[] = []
-      batch.concat(bountyCalls)
-      batch.concat(governanceCalls)
-      return [client.api.tx.utility.forceBatch(batch)]
-    })
+    .with('Any', () => [
+      ...proxyActionBuilder.buildBalanceAction(),
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('NonTransfer', () => [
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+    ])
+    .with('Governance', () => [
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+    ])
     .otherwise(() => [])
 
   return result
@@ -121,7 +193,9 @@ function buildProxyAction<
 async function proxyCallFilteringSingleTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+>(chain: Chain<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
 
   const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
@@ -130,56 +204,57 @@ async function proxyCallFilteringSingleTestRunner<
   await client.dev.newBlock()
 
   const proxyActions = buildProxyAction(proxyType, client)
-  // If there's a single extrinsic, then it is a batch of calls, since the proxy type in question allows the `utility`
-  // pallet.
-  if (proxyActions.length === 1) {
-    await client.dev.setStorage({
-      System: {
-        account: [[[proxyAccount.address], { providers: 1, data: { free: 1000e10 } }]],
-      },
-    })
+  if (proxyActions.length === 0) {
+    return
+  }
 
-    // Recall that `proxyActions` is an array of extrinsics, which at this point is known to be of length 1.
-    // That single extrinsic - a utility batch - contains the actions to be performed by the proxy on behalf of the
+  await client.dev.setStorage({
+    System: {
+      account: [[[proxyAccount.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  for (const proxyAction of proxyActions) {
+    // Recall that `proxyActions` is an array of extrinsics meant to be executed by the proxy, on behalf of the
     // delegating account.
-    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyActions[0])
+    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
 
     const proxyActionEvents = await sendTransaction(proxyTx.signAsync(proxyAccount))
 
     await client.dev.newBlock()
 
-    await checkEvents(proxyActionEvents, 'proxy').toMatchSnapshot(`events when sending proxy action for ${proxyType}`)
+    await checkEvents(proxyActionEvents, 'proxy', proxyAction.pallet).toMatchSnapshot(
+      `events for proxy action: pallet ${proxyAction.call}, call ${proxyAction.extrinsic}, proxy type ${proxyType}`,
+    )
 
     const events = await client.api.query.system.events()
     events
       .filter((record) => {
         const { event } = record
-        return event.section === 'utility' && (event.method === 'ItemCompleted' || event.method === 'ItemFailed')
+        return event.section === 'proxy' && event.method === 'ProxyExecuted'
       })
       .forEach((record) => {
-        if (client.api.events.utility.ItemFailed.is(record.event)) {
-          const itemFailedData = record.event.data
-          assert(itemFailedData.error.isModule)
+        assert(client.api.events.proxy.ProxyExecuted.is(record.event))
+        const proxyExecutedData = record.event.data
+        if (proxyExecutedData.result.isErr) {
+          const error = proxyExecutedData.result.asErr
+          assert(error.isModule)
 
-          // The call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
+          // A call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
           // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
-          expect(client.api.errors.system.CallFiltered.is(itemFailedData.error.asModule)).toBe(false)
+          expect(client.api.errors.system.CallFiltered.is(error.asModule)).toBe(false)
         } else {
           // The call was executed successfully - nothing to check.
-          expect(client.api.events.utility.ItemCompleted.is(record.event)).toBe(true)
+          expect(proxyExecutedData.result.isOk).toBe(true)
         }
       })
-  } else {
-    // Some proxy types do not allow use of the `utility` pallet, so a representative set of actions must be enacted
-    // manually, one extrinsic per block, and events checked for each extrinsic.
-    // TODO
   }
 }
 
 async function proxyCallFilteringTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
   const kr = defaultAccountsSr25519.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
@@ -193,7 +268,7 @@ async function proxyCallFilteringTestRunner<
     }
 
     test(`proxy call filtering test for ${proxyType}`, async () => {
-      await proxyCallFilteringSingleTestRunner(client, proxyType, proxyTypeIx, proxyAccounts[proxyType])
+      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType])
     })
   }
 }
@@ -218,7 +293,9 @@ async function proxyCallFilteringTestRunner<
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>, delay: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>, delay: number) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const kr = defaultAccountsSr25519.keyring
 
@@ -355,7 +432,9 @@ export async function addRemoveProxyTest<
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
 
   // Create pure proxies
@@ -491,7 +570,9 @@ export async function createKillPureProxyTest<
 export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -548,7 +629,9 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -669,24 +752,22 @@ export async function proxyE2ETests<
   proxyTypes: Record<string, number>,
 ) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('add proxies (with/without delay) to an account, and remove them', async () => {
-      await addRemoveProxyTest(client, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
+      await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
     })
 
     test('create and kill pure proxies', async () => {
-      await createKillPureProxyTest(client, testConfig.addressEncoding, proxyTypes)
+      await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes)
     })
 
     test('perform proxy call on behalf of delegator', async () => {
-      await proxyCallTest(client)
+      await proxyCallTest(chain)
     })
 
     test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(client, testConfig.addressEncoding)
+      await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
     })
 
-    proxyCallFilteringTestRunner(client, proxyTypes)
+    proxyCallFilteringTestRunner(chain, proxyTypes)
   })
 }

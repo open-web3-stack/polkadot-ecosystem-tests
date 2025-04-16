@@ -349,6 +349,101 @@ exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when
 
 exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
+exports[`People Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type Any 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 280000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0a03","args":{"dest":{"id":"16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L"},"value":1000000000000}}}, call transferKeepAlive, proxy type Any 1`] = `
+[
+  {
+    "data": {
+      "who": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
+    },
+    "method": "Upgraded",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 23000000)",
+      "who": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "freeBalance": 1000000000000,
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "to": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "amount": "(rounded 23000000)",
+      "who": "13UVJyLgBASGhE2ok3TvxUfaQBGUt88JCcdYjHvUhvQkFTTx",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2800","args":{"calls":[]}}}, call forceBatch, proxy type Any 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Polkadot Proxy > proxy call filtering test for Any > events when sending proxy action for Any 1`] = `
 [
   {
@@ -357,6 +452,32 @@ exports[`People Polkadot Proxy > proxy call filtering test for Any > events when
     },
     "method": "ProxyExecuted",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type NonTransfer 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 280000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;
