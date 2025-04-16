@@ -562,18 +562,6 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for Any > events when sending proxy action for Any 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type Governance 1`] = `
 [
   {
@@ -606,18 +594,6 @@ exports[`Polkadot Proxy > proxy call filtering test for Governance > events for 
     "method": "BountyProposed",
     "section": "bounties",
   },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Governance > events when sending proxy action for Governance 1`] = `
-[
   {
     "data": {
       "result": "Ok",
@@ -706,18 +682,6 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
     "method": "BountyProposed",
     "section": "bounties",
   },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events when sending proxy action for NonTransfer 1`] = `
-[
   {
     "data": {
       "result": "Ok",

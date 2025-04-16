@@ -492,18 +492,6 @@ exports[`Polkadot AssetHub Proxy > proxy call filtering test for Any > events fo
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > proxy call filtering test for Any > events when sending proxy action for Any 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot AssetHub Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"assetId":null,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type NonTransfer 1`] = `
 [
   {
@@ -526,18 +514,6 @@ exports[`Polkadot AssetHub Proxy > proxy call filtering test for NonTransfer > e
     },
     "method": "ExtrinsicSuccess",
     "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > proxy call filtering test for NonTransfer > events when sending proxy action for NonTransfer 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
   },
 ]
 `;
