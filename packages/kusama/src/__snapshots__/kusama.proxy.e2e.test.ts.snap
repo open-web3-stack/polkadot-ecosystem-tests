@@ -658,6 +658,25 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
+exports[`Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call rejectAnnouncement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call proposeBounty 1`] = `
 [
   {

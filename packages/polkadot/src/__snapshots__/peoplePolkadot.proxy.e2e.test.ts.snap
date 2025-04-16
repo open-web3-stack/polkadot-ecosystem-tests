@@ -444,6 +444,25 @@ exports[`People Polkadot Proxy > proxy call filtering test for Any > events for 
 ]
 `;
 
+exports[`People Polkadot Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call rejectAnnouncement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {

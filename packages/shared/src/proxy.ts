@@ -49,9 +49,21 @@ interface ProxyAction {
   call: SubmittableExtrinsic<'promise', ISubmittableResult>
 }
 
+/**
+ * A builder for proxy action lists.
+ *
+ * Each builder method returns a list of actions from a certain pallet that should/should not bevalid for a given proxy
+ * type.
+ * Returning lists allows for:
+ * 1. no-ops in the form of empty lists, and
+ * 2. providing multipled extrinsics of interest per pallet
+ *
+ * The test for each proxy type is then free to combine these lists as required.
+ */
 interface ProxyActionBuilder {
-  buildBalanceAction(): ProxyAction[]
+  buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
+  buildCancelProxyAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
@@ -67,7 +79,7 @@ class ProxyActionBuilderImpl<
 {
   constructor(private client: Client<TCustom, TInitStorages>) {}
 
-  buildBalanceAction(): ProxyAction[] {
+  buildBalancesAction(): ProxyAction[] {
     const balanceCalls: ProxyAction[] = []
     if (this.client.api.tx.balances) {
       balanceCalls.push({
@@ -91,6 +103,20 @@ class ProxyActionBuilderImpl<
     }
 
     return bountyCalls
+  }
+
+  buildCancelProxyAction(): ProxyAction[] {
+    const cancelProxyCalls: ProxyAction[] = []
+    const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
+    if (this.client.api.tx.proxy) {
+      cancelProxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'rejectAnnouncement',
+        call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
+      })
+    }
+
+    return cancelProxyCalls
   }
 
   buildFastUnstakeAction(): ProxyAction[] {
@@ -176,6 +202,12 @@ class ProxyActionBuilderImpl<
   }
 }
 
+/**
+ * Given a proxy type and a PJS client, create a list of actions that should/should not be valid for a given proxy
+ * type.
+ *
+ * Pattern matches on the proxy type (as string); if incorrect or nonexistent, the result is an empty list.
+ */
 function buildProxyAction<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -187,7 +219,7 @@ function buildProxyAction<
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
     .with('Any', () => [
-      ...proxyActionBuilder.buildBalanceAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
@@ -214,6 +246,7 @@ function buildProxyAction<
       ...proxyActionBuilder.buildNominationPoolsAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
+    .with('CancelProxy', () => [...proxyActionBuilder.buildCancelProxyAction()])
     .otherwise(() => [])
 
   return result
@@ -222,9 +255,9 @@ function buildProxyAction<
 /**
  * For a particular proxy type:
  * 1. As Alice, add a proxy account of that type
- * 2. As the proxy account, execute an action - on behalf of Alice - that such a proxy type is allowed to execute
- * 3. Verify that the action was correctly executed
- *     - The extrinsic is not required to be well-formed; the transaction can fail, just not because the call was
+ * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed to execute
+ * 3. Verify that the actions were correctly executed
+ *     - The extrinsics are not required to be well-formed; the transaction can fail, though not because the call was
  *       filtered over the proxy's lack of permission.
  *
  * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
@@ -304,6 +337,12 @@ async function proxyCallFilteringSingleTestRunner<
   }
 }
 
+/**
+ * Main test runner for proxy call filtering.
+ *
+ * 1. creates proxies of every type (available in the current network) for Alice
+ * 2. runs the test for each proxy type (if the proxy type is testable)
+ */
 async function proxyCallFilteringTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -312,7 +351,7 @@ async function proxyCallFilteringTestRunner<
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools']
+  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools', 'CancelProxy']
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // In this network, there might be some proxy types that don't/cannot be tested.

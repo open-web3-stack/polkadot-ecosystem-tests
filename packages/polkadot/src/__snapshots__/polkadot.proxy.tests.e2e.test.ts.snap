@@ -562,6 +562,25 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 ]
 `;
 
+exports[`Polkadot Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call rejectAnnouncement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call proposeBounty 1`] = `
 [
   {
