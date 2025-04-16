@@ -397,33 +397,7 @@ exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when
 
 exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"assetId":null,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"assetId":null,"mode":0},"method":{"callIndex":"0x0a03","args":{"dest":{"id":"HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam"},"value":1000000000000}}}, call transferKeepAlive, proxy type Any 1`] = `
+exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transferKeepAlive 1`] = `
 [
   {
     "data": {
@@ -475,7 +449,33 @@ exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"assetId":null,"mode":0},"method":{"callIndex":"0x2800","args":{"calls":[]}}}, call forceBatch, proxy type Any 1`] = `
+exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call forceBatch 1`] = `
 [
   {
     "data": {},
@@ -492,7 +492,7 @@ exports[`Kusama AssetHub Proxy > proxy call filtering test for Any > events for 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"assetId":null,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type NonTransfer 1`] = `
+exports[`Kusama AssetHub Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {
     "data": {

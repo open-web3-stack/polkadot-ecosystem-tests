@@ -397,33 +397,7 @@ exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob pe
 
 exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 270000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0503","args":{"dest":{"id":"16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L"},"value":1000000000000}}}, call transferKeepAlive, proxy type Any 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transferKeepAlive 1`] = `
 [
   {
     "data": {
@@ -483,7 +457,49 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0700","args":{"value":1000000000000,"payee":{"staked":null}}}}, call bond, proxy type Any 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet bounties, call proposeBounty 1`] = `
+[
+  {
+    "data": {
+      "index": 66,
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 1500)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet staking, call bond 1`] = `
 [
   {
     "data": {
@@ -503,108 +519,7 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1a00","args":{"calls":[]}}}, call forceBatch, proxy type Any 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "index": "(rounded 1500)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2200","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "index": 66,
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type Governance 1`] = `
-[
-  {
-    "data": {
-      "index": "(rounded 1500)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2200","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type Governance 1`] = `
-[
-  {
-    "data": {
-      "index": 66,
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type NonTransfer 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -630,15 +545,12 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0700","args":{"value":1000000000000,"payee":{"staked":null}}}}, call bond, proxy type NonTransfer 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call forceBatch 1`] = `
 [
   {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Bonded",
-    "section": "staking",
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
   },
   {
     "data": {
@@ -650,7 +562,26 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type NonTransfer 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call proposeBounty 1`] = `
+[
+  {
+    "data": {
+      "index": 66,
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet referenda, call submit 1`] = `
 [
   {
     "data": {
@@ -673,7 +604,7 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
 ]
 `;
 
-exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"111111111111111111111111111111111HC1"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2200","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type NonTransfer 1`] = `
+exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet bounties, call proposeBounty 1`] = `
 [
   {
     "data": {
@@ -688,6 +619,75 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
     },
     "method": "ProxyExecuted",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 1500)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet staking, call bond 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 270000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;

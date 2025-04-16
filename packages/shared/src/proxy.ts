@@ -224,7 +224,7 @@ async function proxyCallFilteringSingleTestRunner<
     await client.dev.newBlock()
 
     await checkEvents(proxyActionEvents, 'proxy', proxyAction.pallet).toMatchSnapshot(
-      `events for proxy action: pallet ${proxyAction.call}, call ${proxyAction.extrinsic}, proxy type ${proxyType}`,
+      `events for proxy action: proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
     )
 
     const events = await client.api.query.system.events()

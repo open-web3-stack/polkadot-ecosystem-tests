@@ -493,33 +493,7 @@ exports[`Kusama Proxy > proxy announcement lifecycle test > events when Bob perf
 
 exports[`Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0403","args":{"dest":{"id":"HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam"},"value":1000000000000}}}, call transferKeepAlive, proxy type Any 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transferKeepAlive 1`] = `
 [
   {
     "data": {
@@ -579,7 +553,49 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0600","args":{"value":1000000000000,"payee":{"staked":null}}}}, call bond, proxy type Any 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet bounties, call proposeBounty 1`] = `
+[
+  {
+    "data": {
+      "index": 35,
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 520)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet staking, call bond 1`] = `
 [
   {
     "data": {
@@ -599,108 +615,7 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "index": "(rounded 520)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1800","args":{"calls":[]}}}, call forceBatch, proxy type Any 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2300","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type Any 1`] = `
-[
-  {
-    "data": {
-      "index": 35,
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type Governance 1`] = `
-[
-  {
-    "data": {
-      "index": "(rounded 520)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2300","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type Governance 1`] = `
-[
-  {
-    "data": {
-      "index": 35,
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0000","args":{"remark":"0x68656c6c6f"}}}, call remark, proxy type NonTransfer 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -726,15 +641,12 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x0600","args":{"value":1000000000000,"payee":{"staked":null}}}}, call bond, proxy type NonTransfer 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call forceBatch 1`] = `
 [
   {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Bonded",
-    "section": "staking",
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
   },
   {
     "data": {
@@ -746,7 +658,26 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x1500","args":{"proposal_origin":{"origins":"SmallTipper"},"proposal":{"inline":"0x00001468656c6c6f"},"enactment_moment":{"after":0}}}}, call submit, proxy type NonTransfer 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call proposeBounty 1`] = `
+[
+  {
+    "data": {
+      "index": 35,
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet referenda, call submit 1`] = `
 [
   {
     "data": {
@@ -769,7 +700,7 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: pallet {"signature":{"signer":{"id":"CaKWz5omakTK7ovp4m3koXrHyHb7NG3Nt7GENHbviByZpKp"},"signature":{"ed25519":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},"era":{"immortalEra":"0x00"},"nonce":0,"tip":0,"mode":0},"method":{"callIndex":"0x2300","args":{"value":1000000000000,"description":"0x5465737420426f756e7479"}}}, call proposeBounty, proxy type NonTransfer 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet bounties, call proposeBounty 1`] = `
 [
   {
     "data": {
@@ -784,6 +715,75 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
     },
     "method": "ProxyExecuted",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 520)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet staking, call bond 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;
