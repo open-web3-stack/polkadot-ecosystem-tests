@@ -1,3 +1,6 @@
+/**
+ * Proxy types in the Polkadot relay chain.
+ */
 export const PolkadotProxyTypes = {
   Any: 0,
   NonTransfer: 1,
