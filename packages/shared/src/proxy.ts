@@ -70,6 +70,7 @@ interface ProxyActionBuilder {
   buildGovernanceAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
   buildSlotsAction(): ProxyAction[]
+  buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
   buildUtilityAction(): ProxyAction[]
@@ -153,7 +154,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.staking) {
       fastUnstakeCalls.push({
         pallet: 'staking',
-        extrinsic: 'fastUnstake',
+        extrinsic: 'registerFastUnstake',
         call: this.client.api.tx.fastUnstake.registerFastUnstake(),
       })
     }
@@ -189,7 +190,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.nominationPools) {
       nominationPoolsCalls.push({
         pallet: 'nominationPools',
-        extrinsic: 'bond',
+        extrinsic: 'chill',
         call: this.client.api.tx.nominationPools.chill(1),
       })
     }
@@ -202,12 +203,25 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.slots) {
       slotsCalls.push({
         pallet: 'slots',
-        extrinsic: 'lease',
+        extrinsic: 'triggerOnboard',
         call: this.client.api.tx.slots.triggerOnboard(1000),
       })
     }
 
     return slotsCalls
+  }
+
+  buildSocietyAction(): ProxyAction[] {
+    const societyCalls: ProxyAction[] = []
+    if (this.client.api.tx.society) {
+      societyCalls.push({
+        pallet: 'society',
+        extrinsic: 'bid',
+        call: this.client.api.tx.society.bid(100e10),
+      })
+    }
+
+    return societyCalls
   }
 
   buildStakingAction(): ProxyAction[] {
@@ -227,8 +241,8 @@ class ProxyActionBuilderImpl<
     return [
       {
         pallet: 'system',
-        extrinsic: 'remark',
-        call: this.client.api.tx.system.remark('hello'),
+        extrinsic: 'remarkWithEvent',
+        call: this.client.api.tx.system.remarkWithEvent('hello'),
       },
     ]
   }
@@ -237,7 +251,7 @@ class ProxyActionBuilderImpl<
     return [
       {
         pallet: 'utility',
-        extrinsic: 'forceBatch',
+        extrinsic: 'batch',
         call: this.client.api.tx.utility.batch([]),
       },
     ]
@@ -296,6 +310,7 @@ function buildProxyAction<
       ...proxyActionBuilder.buildCrowdloanAction(),
       ...proxyActionBuilder.buildSlotsAction(),
     ])
+    .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
     .otherwise(() => [])
 
   return result
@@ -400,7 +415,16 @@ async function proxyCallFilteringTestRunner<
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools', 'CancelProxy', 'Auction']
+  const proxyTypesToTest = [
+    'Any',
+    'Governance',
+    'NonTransfer',
+    'Staking',
+    'NominationPools',
+    'CancelProxy',
+    'Auction',
+    'Society',
+  ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // In this network, there might be some proxy types that don't/cannot be tested.
