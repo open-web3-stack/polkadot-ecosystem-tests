@@ -69,6 +69,7 @@ interface ProxyActionBuilder {
   buildFastUnstakeAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
+  buildParasRegistrarAction(): ProxyAction[]
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
@@ -198,6 +199,26 @@ class ProxyActionBuilderImpl<
     return nominationPoolsCalls
   }
 
+  buildParasRegistrarAction(): ProxyAction[] {
+    const parasRegistrarCalls: ProxyAction[] = []
+    if (this.client.api.tx.parasRegistrar) {
+      parasRegistrarCalls.concat([
+        {
+          pallet: 'parasRegistrar',
+          extrinsic: 'reserve',
+          call: this.client.api.tx.parasRegistrar.reserve(),
+        },
+        {
+          pallet: 'parasRegistrar',
+          extrinsic: 'register',
+          call: this.client.api.tx.parasRegistrar.register(1000, 'genesis head', 'validation code'),
+        },
+      ])
+    }
+
+    return parasRegistrarCalls
+  }
+
   buildSlotsAction(): ProxyAction[] {
     const slotsCalls: ProxyAction[] = []
     if (this.client.api.tx.slots) {
@@ -316,6 +337,8 @@ function buildProxyAction<
       ...proxyActionBuilder.buildSlotsAction(),
     ])
     .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
+    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
+    .with('ParaRegistration', () => [...proxyActionBuilder.buildParasRegistrarAction()])
     .otherwise(() => [])
 
   return result
@@ -430,6 +453,7 @@ async function proxyCallFilteringTestRunner<
     'Auction',
     'Society',
     'Spokesperson',
+    'ParaRegistration',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
