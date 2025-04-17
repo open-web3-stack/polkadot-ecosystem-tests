@@ -241,6 +241,11 @@ class ProxyActionBuilderImpl<
     return [
       {
         pallet: 'system',
+        extrinsic: 'remark',
+        call: this.client.api.tx.system.remark('hello'),
+      },
+      {
+        pallet: 'system',
         extrinsic: 'remarkWithEvent',
         call: this.client.api.tx.system.remarkWithEvent('hello'),
       },
@@ -424,6 +429,7 @@ async function proxyCallFilteringTestRunner<
     'CancelProxy',
     'Auction',
     'Society',
+    'Spokesperson',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
