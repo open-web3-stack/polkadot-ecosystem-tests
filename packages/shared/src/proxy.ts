@@ -71,6 +71,7 @@ interface ProxyActionBuilder {
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildCancelProxyAction(): ProxyAction[]
+  buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
@@ -187,6 +188,19 @@ class ProxyActionBuilderImpl<
     }
 
     return cancelProxyCalls
+  }
+
+  buildCollatorSelectionAction(): ProxyAction[] {
+    const collatorSelectionCalls: ProxyAction[] = []
+    if (this.client.api.tx.collatorSelection) {
+      collatorSelectionCalls.push({
+        pallet: 'collatorSelection',
+        extrinsic: 'registerAsCandidate',
+        call: this.client.api.tx.collatorSelection.registerAsCandidate(),
+      })
+    }
+
+    return collatorSelectionCalls
   }
 
   buildCrowdloanAction(): ProxyAction[] {
@@ -521,6 +535,7 @@ function buildProxyAction<
       ...proxyActionBuilder.buildUniquesOwnerAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
+    .with('Collator', () => [...proxyActionBuilder.buildCollatorSelectionAction()])
 
     .otherwise(() => [])
 
@@ -645,6 +660,7 @@ async function proxyCallFilteringTestRunner<
     'Assets',
     'AssetOwner',
     'AssetManager',
+    'Collator',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
