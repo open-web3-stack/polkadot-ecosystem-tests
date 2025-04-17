@@ -7,12 +7,14 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
-import type { ISubmittableResult } from '@polkadot/types/types'
+import type { Codec, ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 import { check, checkEvents } from './helpers/index.js'
 
 import BN from 'bn.js'
+
+import { match } from 'ts-pattern'
 
 /// -------
 /// Helpers
@@ -37,6 +39,647 @@ function createProxyAccounts(
 }
 
 /**
+ * Shorthand for a list of PJS-type fully-formed extrinsics.
+ *
+ * The pallet and extrinsic names are kept to better identify the correspoding snapshot.
+ */
+interface ProxyAction {
+  pallet: string
+  extrinsic: string
+  call: SubmittableExtrinsic<'promise', ISubmittableResult>
+}
+
+/**
+ * A builder for proxy action lists.
+ *
+ * Each builder method returns a list of actions from a certain pallet that should/should not bevalid for a given proxy
+ * type.
+ * Returning lists allows for:
+ * 1. no-ops in the form of empty lists, and
+ * 2. providing multipled extrinsics of interest per pallet
+ *
+ * The test for each proxy type is then free to combine these lists as required.
+ */
+interface ProxyActionBuilder {
+  // The `Asset, `AssetOwner` and `AssetManager` proxy types rely on the same pallets, but different call filters.
+  // They are differentiated here to clarify which all types can make, and which only some can.
+  // The same applies to `Uniques` and `Nfts`
+  buildAssetsAction(): ProxyAction[]
+  buildAssetsManagerAction(): ProxyAction[]
+  buildAssetsOwnerAction(): ProxyAction[]
+  buildAuctionAction(): ProxyAction[]
+  buildBalancesAction(): ProxyAction[]
+  buildBountyAction(): ProxyAction[]
+  buildCancelProxyAction(): ProxyAction[]
+  buildCollatorSelectionAction(): ProxyAction[]
+  buildCrowdloanAction(): ProxyAction[]
+  buildFastUnstakeAction(): ProxyAction[]
+  buildGovernanceAction(): ProxyAction[]
+  buildMultisigAction(): ProxyAction[]
+  buildNftsAction(): ProxyAction[]
+  buildNftsManagerAction(): ProxyAction[]
+  buildNftsOwnerAction(): ProxyAction[]
+  buildNominationPoolsAction(): ProxyAction[]
+  buildParasRegistrarAction(): ProxyAction[]
+  buildSlotsAction(): ProxyAction[]
+  buildSocietyAction(): ProxyAction[]
+  buildStakingAction(): ProxyAction[]
+  buildSystemAction(): ProxyAction[]
+  buildUniquesAction(): ProxyAction[]
+  buildUniquesManagerAction(): ProxyAction[]
+  buildUniquesOwnerAction(): ProxyAction[]
+  buildUtilityAction(): ProxyAction[]
+}
+
+class ProxyActionBuilderImpl<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> implements ProxyActionBuilder
+{
+  constructor(private client: Client<TCustom, TInitStorages>) {}
+
+  buildAssetsAction(): ProxyAction[] {
+    const assetsCalls: ProxyAction[] = []
+    if (this.client.api.tx.assets) {
+      assetsCalls.concat([...this.buildAssetsManagerAction(), ...this.buildAssetsOwnerAction()])
+    }
+
+    return assetsCalls
+  }
+
+  buildAssetsManagerAction(): ProxyAction[] {
+    const assetsCalls: ProxyAction[] = []
+    if (this.client.api.tx.assets) {
+      assetsCalls.concat([
+        {
+          pallet: 'assets',
+          extrinsic: 'mint',
+          call: this.client.api.tx.assets.mint(1, defaultAccountsSr25519.eve.address, 1e10),
+        },
+      ])
+    }
+
+    return assetsCalls
+  }
+
+  buildAssetsOwnerAction(): ProxyAction[] {
+    const assetsCalls: ProxyAction[] = []
+    if (this.client.api.tx.assets) {
+      assetsCalls.concat([
+        {
+          pallet: 'assets',
+          extrinsic: 'create',
+          call: this.client.api.tx.assets.create(1, defaultAccountsSr25519.eve.address, 1e10),
+        },
+      ])
+    }
+
+    return assetsCalls
+  }
+
+  buildAuctionAction(): ProxyAction[] {
+    const auctionCalls: ProxyAction[] = []
+    if (this.client.api.tx.auctions) {
+      auctionCalls.push({
+        pallet: 'auctions',
+        extrinsic: 'bid',
+        call: this.client.api.tx.auctions.bid(1000, 1, 1, 1, 100e10),
+      })
+    }
+
+    return auctionCalls
+  }
+
+  buildBalancesAction(): ProxyAction[] {
+    const balanceCalls: ProxyAction[] = []
+    if (this.client.api.tx.balances) {
+      balanceCalls.push({
+        pallet: 'balances',
+        extrinsic: 'transferKeepAlive',
+        call: this.client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10),
+      })
+    }
+
+    return balanceCalls
+  }
+
+  buildBountyAction(): ProxyAction[] {
+    const bountyCalls: ProxyAction[] = []
+    if (this.client.api.tx.bounties) {
+      bountyCalls.push({
+        pallet: 'bounties',
+        extrinsic: 'proposeBounty',
+        call: this.client.api.tx.bounties.proposeBounty(100e10, 'Test Bounty'),
+      })
+    }
+
+    return bountyCalls
+  }
+
+  buildCancelProxyAction(): ProxyAction[] {
+    const cancelProxyCalls: ProxyAction[] = []
+    const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
+    if (this.client.api.tx.proxy) {
+      cancelProxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'rejectAnnouncement',
+        call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
+      })
+    }
+
+    return cancelProxyCalls
+  }
+
+  buildCollatorSelectionAction(): ProxyAction[] {
+    const collatorSelectionCalls: ProxyAction[] = []
+    if (this.client.api.tx.collatorSelection) {
+      collatorSelectionCalls.push({
+        pallet: 'collatorSelection',
+        extrinsic: 'registerAsCandidate',
+        call: this.client.api.tx.collatorSelection.registerAsCandidate(),
+      })
+    }
+
+    return collatorSelectionCalls
+  }
+
+  buildCrowdloanAction(): ProxyAction[] {
+    const crowdloanCalls: ProxyAction[] = []
+    if (this.client.api.tx.crowdloan) {
+      crowdloanCalls.push({
+        pallet: 'crowdloan',
+        extrinsic: 'dissolve',
+        call: this.client.api.tx.crowdloan.dissolve(1),
+      })
+    }
+
+    return crowdloanCalls
+  }
+
+  buildFastUnstakeAction(): ProxyAction[] {
+    const fastUnstakeCalls: ProxyAction[] = []
+    if (this.client.api.tx.staking) {
+      fastUnstakeCalls.push({
+        pallet: 'staking',
+        extrinsic: 'registerFastUnstake',
+        call: this.client.api.tx.fastUnstake.registerFastUnstake(),
+      })
+    }
+
+    return fastUnstakeCalls
+  }
+
+  buildGovernanceAction(): ProxyAction[] {
+    const governanceCalls: ProxyAction[] = []
+    if (this.client.api.tx.referenda) {
+      governanceCalls.push({
+        pallet: 'referenda',
+        extrinsic: 'submit',
+        call: this.client.api.tx.referenda.submit(
+          {
+            Origins: 'SmallTipper',
+          } as any,
+          {
+            Inline: this.client.api.tx.system.remark('hello').method.toHex(),
+          },
+          {
+            After: 0,
+          },
+        ),
+      })
+    }
+
+    return governanceCalls
+  }
+
+  buildMultisigAction(): ProxyAction[] {
+    const testCall = this.client.api.tx.system.remark('hello').method.toHex()
+    const multisigCalls: ProxyAction[] = []
+    if (this.client.api.tx.multisig) {
+      multisigCalls.push({
+        pallet: 'multisig',
+        extrinsic: 'asMulti',
+        call: this.client.api.tx.multisig.asMulti(0, [], null, testCall, { refTime: 0, proofSize: 0 }),
+      })
+    }
+
+    return multisigCalls
+  }
+
+  buildNftsAction(): ProxyAction[] {
+    const nftsCalls: ProxyAction[] = []
+    if (this.client.api.tx.nfts) {
+      nftsCalls.concat([...this.buildNftsManagerAction(), ...this.buildNftsOwnerAction()])
+    }
+
+    return nftsCalls
+  }
+
+  buildNftsManagerAction(): ProxyAction[] {
+    const nftsCalls: ProxyAction[] = []
+    if (this.client.api.tx.nfts) {
+      nftsCalls.push({
+        pallet: 'nfts',
+        extrinsic: 'set_metadata',
+        call: this.client.api.tx.nfts.setMetadata(1, 1, 'test'),
+      })
+    }
+
+    return nftsCalls
+  }
+
+  buildNftsOwnerAction(): ProxyAction[] {
+    const nftsCalls: ProxyAction[] = []
+    if (this.client.api.tx.nfts) {
+      nftsCalls.push({
+        pallet: 'nfts',
+        extrinsic: 'destroy',
+        call: this.client.api.tx.nfts.destroy(1, {
+          item_metadatas: 1,
+          item_configs: 1,
+          attributes: 1,
+        } as any),
+      })
+    }
+
+    return nftsCalls
+  }
+  buildNominationPoolsAction(): ProxyAction[] {
+    const nominationPoolsCalls: ProxyAction[] = []
+    if (this.client.api.tx.nominationPools) {
+      nominationPoolsCalls.push({
+        pallet: 'nominationPools',
+        extrinsic: 'chill',
+        call: this.client.api.tx.nominationPools.chill(1),
+      })
+    }
+
+    return nominationPoolsCalls
+  }
+
+  buildParasRegistrarAction(): ProxyAction[] {
+    const parasRegistrarCalls: ProxyAction[] = []
+    if (this.client.api.tx.parasRegistrar) {
+      parasRegistrarCalls.concat([
+        {
+          pallet: 'parasRegistrar',
+          extrinsic: 'reserve',
+          call: this.client.api.tx.parasRegistrar.reserve(),
+        },
+        {
+          pallet: 'parasRegistrar',
+          extrinsic: 'register',
+          call: this.client.api.tx.parasRegistrar.register(1000, 'genesis head', 'validation code'),
+        },
+      ])
+    }
+
+    return parasRegistrarCalls
+  }
+
+  buildSlotsAction(): ProxyAction[] {
+    const slotsCalls: ProxyAction[] = []
+    if (this.client.api.tx.slots) {
+      slotsCalls.push({
+        pallet: 'slots',
+        extrinsic: 'triggerOnboard',
+        call: this.client.api.tx.slots.triggerOnboard(1000),
+      })
+    }
+
+    return slotsCalls
+  }
+
+  buildSocietyAction(): ProxyAction[] {
+    const societyCalls: ProxyAction[] = []
+    if (this.client.api.tx.society) {
+      societyCalls.push({
+        pallet: 'society',
+        extrinsic: 'bid',
+        call: this.client.api.tx.society.bid(100e10),
+      })
+    }
+
+    return societyCalls
+  }
+
+  buildStakingAction(): ProxyAction[] {
+    const stakingCalls: ProxyAction[] = []
+    if (this.client.api.tx.staking) {
+      stakingCalls.push({
+        pallet: 'staking',
+        extrinsic: 'bond',
+        call: this.client.api.tx.staking.bond(100e10, 'Staked'),
+      })
+    }
+
+    return stakingCalls
+  }
+
+  buildSystemAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'system',
+        extrinsic: 'remark',
+        call: this.client.api.tx.system.remark('hello'),
+      },
+      {
+        pallet: 'system',
+        extrinsic: 'remarkWithEvent',
+        call: this.client.api.tx.system.remarkWithEvent('hello'),
+      },
+    ]
+  }
+
+  buildUniquesAction(): ProxyAction[] {
+    const uniquesCalls: ProxyAction[] = []
+    if (this.client.api.tx.uniques) {
+      uniquesCalls.concat([...this.buildUniquesManagerAction(), ...this.buildUniquesOwnerAction()])
+    }
+
+    return uniquesCalls
+  }
+
+  buildUniquesManagerAction(): ProxyAction[] {
+    const uniquesCalls: ProxyAction[] = []
+    if (this.client.api.tx.uniques) {
+      uniquesCalls.push({
+        pallet: 'uniques',
+        extrinsic: 'mint',
+        call: this.client.api.tx.uniques.mint(1, 1, defaultAccountsSr25519.eve.address),
+      })
+    }
+
+    return uniquesCalls
+  }
+
+  buildUniquesOwnerAction(): ProxyAction[] {
+    const uniquesCalls: ProxyAction[] = []
+    if (this.client.api.tx.uniques) {
+      uniquesCalls.push({
+        pallet: 'uniques',
+        extrinsic: 'create',
+        call: this.client.api.tx.uniques.create(1, defaultAccountsSr25519.eve.address),
+      })
+    }
+
+    return uniquesCalls
+  }
+
+  buildUtilityAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'utility',
+        extrinsic: 'batch',
+        call: this.client.api.tx.utility.batch([]),
+      },
+      {
+        pallet: 'utility',
+        extrinsic: 'batchAll',
+        call: this.client.api.tx.utility.batchAll([]),
+      },
+      {
+        pallet: 'utility',
+        extrinsic: 'forceBatch',
+        call: this.client.api.tx.utility.forceBatch([]),
+      },
+    ]
+  }
+}
+
+/**
+ * Given a proxy type and a PJS client, create a list of actions that should/should not be valid for a given proxy
+ * type.
+ *
+ * Pattern matches on the proxy type (as string); if incorrect or nonexistent, the result is an empty list.
+ */
+function buildProxyAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(proxyType: string, client: Client<TCustom, TInitStorages>): ProxyAction[] {
+  const proxyActionBuilder = new ProxyActionBuilderImpl(client)
+
+  // Note the pattern used: if the network has a certain pallet available, the list returned by the proxy action
+  // builder won't be empty.
+  // Otherwise, it will be empty, and this is a no-op.
+  const result = match(proxyType)
+    // Common
+
+    .with('Any', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('NonTransfer', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('CancelProxy', () => [...proxyActionBuilder.buildCancelProxyAction()])
+
+    // Polkadot / Kusama
+
+    .with('Auction', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
+      ...proxyActionBuilder.buildCrowdloanAction(),
+      ...proxyActionBuilder.buildSlotsAction(),
+    ])
+    .with('Governance', () => [
+      ...proxyActionBuilder.buildBountyAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+    ])
+    .with('Staking', () => [
+      ...proxyActionBuilder.buildFastUnstakeAction(),
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('NominationPools', () => [
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+
+    .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
+    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
+    .with('ParaRegistration', () => [...proxyActionBuilder.buildParasRegistrarAction()])
+
+    // Asset Hubs
+
+    .with('Assets', () => [
+      ...proxyActionBuilder.buildAssetsAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildNftsAction(),
+      ...proxyActionBuilder.buildUniquesAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('AssetManager', () => [
+      ...proxyActionBuilder.buildAssetsManagerAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildNftsManagerAction(),
+      ...proxyActionBuilder.buildUniquesManagerAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('AssetOwner', () => [
+      ...proxyActionBuilder.buildAssetsOwnerAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildNftsOwnerAction(),
+      ...proxyActionBuilder.buildUniquesOwnerAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('Collator', () => [...proxyActionBuilder.buildCollatorSelectionAction()])
+
+    .otherwise(() => [])
+
+  return result
+}
+
+/**
+ * For a particular proxy type:
+ * 1. As Alice, add a proxy account of that type
+ * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed to execute
+ * 3. Verify that the actions were correctly executed
+ *     - The extrinsics are not required to be well-formed; the transaction can fail, though not because the call was
+ *       filtered over the proxy's lack of permission.
+ *
+ * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
+ */
+async function proxyCallFilteringSingleTestRunner<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+
+  const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  const proxyActions = buildProxyAction(proxyType, client)
+  if (proxyActions.length === 0) {
+    return
+  }
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[proxyAccount.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  let proxyAccountNonce = (await client.api.rpc.system.accountNextIndex(proxyAccount.address)).toNumber()
+
+  // Create a record to store transaction results
+  const transactionResults: Record<string, { events: Promise<Codec[]> }> = {}
+
+  // First, send all of the proxy extrinsics.
+  for (const proxyAction of proxyActions) {
+    // Recall that `proxyActions` is an array of extrinsics meant to be executed by the proxy, on behalf of the
+    // delegating account.
+    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
+
+    transactionResults[`${proxyAction.pallet}.${proxyAction.extrinsic}`] = await sendTransaction(
+      proxyTx.signAsync(proxyAccount, { nonce: proxyAccountNonce++ }),
+    )
+  }
+
+  // Advance through a single block.
+  await client.dev.newBlock()
+
+  // Then, for all of the emitted events, verify proxy call execution results.
+  for (const [actionKey, proxyActionEvents] of Object.entries(transactionResults)) {
+    const [pallet, extrinsic] = actionKey.split('.')
+
+    await checkEvents(proxyActionEvents, 'proxy', pallet).toMatchSnapshot(
+      `events for proxy action: proxy type ${proxyType}, pallet ${pallet}, call ${extrinsic}`,
+    )
+
+    const events = await client.api.query.system.events()
+    events
+      .filter((record) => {
+        const { event } = record
+        return event.section === 'proxy' && event.method === 'ProxyExecuted'
+      })
+      .forEach((record) => {
+        assert(client.api.events.proxy.ProxyExecuted.is(record.event))
+        const proxyExecutedData = record.event.data
+        if (proxyExecutedData.result.isErr) {
+          const error = proxyExecutedData.result.asErr
+          // The error must be a module error (`system` is where `CallFiltered` exists), and no other e.g. `BadOrigin`.
+          // It is assumed that the calls chosen can be executed with signed origins.
+          assert(error.isModule)
+
+          // A call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
+          // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
+          expect(client.api.errors.system.CallFiltered.is(error.asModule)).toBe(false)
+        } else {
+          // The call was executed successfully - nothing to check.
+          expect(proxyExecutedData.result.isOk).toBe(true)
+        }
+      })
+  }
+}
+
+/**
+ * Main test runner for proxy call filtering.
+ *
+ * 1. creates proxies of every type (available in the current network) for Alice
+ * 2. runs the test for each proxy type (if the proxy type is testable)
+ *
+ * To disable a proxy type from being tested, remove it from the `proxyTypesToTest` array.
+ */
+async function proxyCallFilteringTestRunner<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+  const kr = defaultAccountsSr25519.keyring
+
+  const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
+
+  const proxyTypesToTest = [
+    'Any',
+    'Governance',
+    'NonTransfer',
+    'Staking',
+    'NominationPools',
+    'CancelProxy',
+    'Auction',
+    'Society',
+    'Spokesperson',
+    'ParaRegistration',
+
+    'Assets',
+    'AssetOwner',
+    'AssetManager',
+    'Collator',
+  ]
+
+  for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
+    // In this network, there might be some proxy types that don't/cannot be tested.
+    if (!proxyTypesToTest.includes(proxyType)) {
+      continue
+    }
+
+    test(`proxy call filtering test for ${proxyType}`, async () => {
+      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType])
+    })
+  }
+}
+
+/// -------
+/// -------
+/// -------
+
+/**
  * Test to the process of adding and removing proxies to another account.
  *
  * 1. creates proxies of every type for an account
@@ -52,7 +695,9 @@ function createProxyAccounts(
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>, delay: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>, delay: number) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const kr = defaultAccountsSr25519.keyring
 
@@ -189,7 +834,9 @@ export async function addRemoveProxyTest<
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
 
   // Create pure proxies
@@ -320,12 +967,14 @@ export async function createKillPureProxyTest<
  *
  * 1. Alice adds Bob as their `Any` proxy, with no associated delay
  * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Charlie
- * 3. Charlie's balance is check, as is Alice's
+ * 3. Charlie's balance is checked, as is Alice's
  */
 export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -382,7 +1031,9 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -432,6 +1083,8 @@ export async function proxyAnnouncementLifecycleTest<
   const announcementDepositFactor = client.api.consts.proxy.announcementDepositFactor
   const announcementDepositTotal = announcementDeposit.add(announcementDepositFactor)
   assert(announcements[1].eq(announcementDepositTotal))
+
+  // Alice rejects the announcement
 
   const rejectAnnouncementTx = client.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
   const rejectAnnouncementEvents = await sendTransaction(rejectAnnouncementTx.signAsync(alice))
@@ -501,22 +1154,22 @@ export async function proxyE2ETests<
   proxyTypes: Record<string, number>,
 ) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('add proxies (with/without delay) to an account, and remove them', async () => {
-      await addRemoveProxyTest(client, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
+      await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
     })
 
     test('create and kill pure proxies', async () => {
-      await createKillPureProxyTest(client, testConfig.addressEncoding, proxyTypes)
+      await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes)
     })
 
     test('perform proxy call on behalf of delegator', async () => {
-      await proxyCallTest(client)
+      await proxyCallTest(chain)
     })
 
     test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(client, testConfig.addressEncoding)
+      await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
     })
+
+    proxyCallFilteringTestRunner(chain, proxyTypes)
   })
 }
