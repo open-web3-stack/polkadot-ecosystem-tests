@@ -61,12 +61,15 @@ interface ProxyAction {
  * The test for each proxy type is then free to combine these lists as required.
  */
 interface ProxyActionBuilder {
+  buildAuctionAction(): ProxyAction[]
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildCancelProxyAction(): ProxyAction[]
+  buildCrowdloanAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
+  buildSlotsAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
   buildUtilityAction(): ProxyAction[]
@@ -78,6 +81,19 @@ class ProxyActionBuilderImpl<
 > implements ProxyActionBuilder
 {
   constructor(private client: Client<TCustom, TInitStorages>) {}
+
+  buildAuctionAction(): ProxyAction[] {
+    const auctionCalls: ProxyAction[] = []
+    if (this.client.api.tx.auctions) {
+      auctionCalls.push({
+        pallet: 'auctions',
+        extrinsic: 'bid',
+        call: this.client.api.tx.auctions.bid(1000, 1, 1, 1, 100e10),
+      })
+    }
+
+    return auctionCalls
+  }
 
   buildBalancesAction(): ProxyAction[] {
     const balanceCalls: ProxyAction[] = []
@@ -117,6 +133,19 @@ class ProxyActionBuilderImpl<
     }
 
     return cancelProxyCalls
+  }
+
+  buildCrowdloanAction(): ProxyAction[] {
+    const crowdloanCalls: ProxyAction[] = []
+    if (this.client.api.tx.crowdloan) {
+      crowdloanCalls.push({
+        pallet: 'crowdloan',
+        extrinsic: 'dissolve',
+        call: this.client.api.tx.crowdloan.dissolve(1),
+      })
+    }
+
+    return crowdloanCalls
   }
 
   buildFastUnstakeAction(): ProxyAction[] {
@@ -166,6 +195,19 @@ class ProxyActionBuilderImpl<
     }
 
     return nominationPoolsCalls
+  }
+
+  buildSlotsAction(): ProxyAction[] {
+    const slotsCalls: ProxyAction[] = []
+    if (this.client.api.tx.slots) {
+      slotsCalls.push({
+        pallet: 'slots',
+        extrinsic: 'lease',
+        call: this.client.api.tx.slots.triggerOnboard(1000),
+      })
+    }
+
+    return slotsCalls
   }
 
   buildStakingAction(): ProxyAction[] {
@@ -219,6 +261,7 @@ function buildProxyAction<
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
     .with('Any', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildStakingAction(),
@@ -227,6 +270,7 @@ function buildProxyAction<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('NonTransfer', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildStakingAction(),
@@ -247,6 +291,11 @@ function buildProxyAction<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('CancelProxy', () => [...proxyActionBuilder.buildCancelProxyAction()])
+    .with('Auction', () => [
+      ...proxyActionBuilder.buildAuctionAction(),
+      ...proxyActionBuilder.buildCrowdloanAction(),
+      ...proxyActionBuilder.buildSlotsAction(),
+    ])
     .otherwise(() => [])
 
   return result
@@ -351,7 +400,7 @@ async function proxyCallFilteringTestRunner<
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools', 'CancelProxy']
+  const proxyTypesToTest = ['Any', 'Governance', 'NonTransfer', 'Staking', 'NominationPools', 'CancelProxy', 'Auction']
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // In this network, there might be some proxy types that don't/cannot be tested.

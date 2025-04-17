@@ -562,6 +562,63 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 ]
 `;
 
+exports[`Polkadot Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet auctions, call bid 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 72,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet crowdloan, call dissolve 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x08000000",
+            "index": 73,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet slots, call lease 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x06000000",
+            "index": 70,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call rejectAnnouncement 1`] = `
 [
   {
