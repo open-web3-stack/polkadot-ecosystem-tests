@@ -104,10 +104,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
           },
         },
       },
-      "task": [
-        "(rounded 26000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -115,7 +112,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
 ]
 `;
 
-exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > events when dispatching whitelisted call wtih bad origin 1`] = `
+exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
 [
   {
     "data": {
@@ -123,10 +120,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 26000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",

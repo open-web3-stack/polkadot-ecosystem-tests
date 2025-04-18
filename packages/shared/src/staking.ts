@@ -101,7 +101,8 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
 async function validateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // 1e7 is 1% commission
   const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
   await sendTransaction(validateTx.signAsync(defaultAccountsSr25519.alice))
@@ -134,7 +135,8 @@ async function validateNoBondedFundsFailureTest<
 async function nominateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
   const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25519.alice.address])
@@ -182,7 +184,8 @@ async function nominateNoBondedFundsFailureTest<
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   ///
   /// Generate validators, and fund them.
   ///
@@ -414,7 +417,8 @@ async function stakingLifecycleTest<
 async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
 
@@ -490,7 +494,8 @@ async function forceUnstakeTest<
 async function fastUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   const kr = defaultAccountsSr25519
   const alice = kr.alice
   const bob = kr.bob
@@ -568,7 +573,8 @@ async function fastUnstakeTest<
 async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -653,7 +659,8 @@ async function setMinCommission<
 async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -768,7 +775,8 @@ async function setStakingConfigsTest<
 async function forceApplyValidatorCommissionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Create some Sr25519 accounts and fund them
 
   const alice = defaultAccountsSr25519.alice
@@ -855,7 +863,8 @@ async function forceApplyValidatorCommissionTest<
 async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -972,7 +981,8 @@ async function modifyValidatorCountTest<
 async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Rquired information for this test, to set appropriate thresholds later
 
   const minNominatorBond = await client.api.query.staking.minNominatorBond()
@@ -1145,7 +1155,8 @@ async function chillOtherTest<
 async function unappliedSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -1281,7 +1292,8 @@ async function unappliedSlashTest<
 async function cancelDeferredSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, origin: any) {
+>(chain: Chain<TCustom, TInitStorages>, origin: any) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
@@ -1410,7 +1422,8 @@ async function cancelDeferredSlashTest<
 async function cancelDeferredSlashTestBadOrigin<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [0])
@@ -1453,8 +1466,8 @@ async function cancelDeferredSlashTestBadOrigin<
 async function cancelDeferredSlashTestAsRoot<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  await cancelDeferredSlashTest(client, { system: 'Root' })
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { system: 'Root' })
 }
 
 /**
@@ -1473,8 +1486,8 @@ async function cancelDeferredSlashTestAsRoot<
 async function cancelDeferredSlashTestAsAdmin<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  await cancelDeferredSlashTest(client, { Origins: 'StakingAdmin' })
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { Origins: 'StakingAdmin' })
 }
 
 /**
@@ -1483,7 +1496,8 @@ async function cancelDeferredSlashTestAsAdmin<
 async function setInvulnerablesTestBadOrigin<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   const setInvulnerablesTx = client.api.tx.staking.setInvulnerables([alice.address])
@@ -1513,9 +1527,9 @@ async function setInvulnerablesTestBadOrigin<
 
   await client.dev.newBlock()
 
-  await checkSystemEvents(client, 'scheduler').toMatchSnapshot(
-    'events when setting invulnerables with bad staking admin origin',
-  )
+  await checkSystemEvents(client, 'scheduler')
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('events when setting invulnerables with bad staking admin origin')
 
   events = await client.api.query.system.events()
 
@@ -1539,66 +1553,64 @@ export function stakingE2ETests<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('trying to become a validator with no bonded funds fails', async () => {
-      await validateNoBondedFundsFailureTest(client)
+      await validateNoBondedFundsFailureTest(chain)
     })
 
     test('trying to nominate with no bonded funds fails', async () => {
-      await nominateNoBondedFundsFailureTest(client)
+      await nominateNoBondedFundsFailureTest(chain)
     })
 
     test('staking lifecycle', async () => {
-      await stakingLifecycleTest(client, testConfig.addressEncoding)
+      await stakingLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('test force unstaking of nominator', async () => {
-      await forceUnstakeTest(client)
+      await forceUnstakeTest(chain)
     })
 
     test('test fast unstake', async () => {
-      await fastUnstakeTest(client, testConfig.addressEncoding)
+      await fastUnstakeTest(chain, testConfig.addressEncoding)
     })
 
     test('set minimum validator commission', async () => {
-      await setMinCommission(client)
+      await setMinCommission(chain)
     })
 
     test('set staking configs', async () => {
-      await setStakingConfigsTest(client)
+      await setStakingConfigsTest(chain)
     })
 
     test('force apply validator commission', async () => {
-      await forceApplyValidatorCommissionTest(client)
+      await forceApplyValidatorCommissionTest(chain)
     })
 
     test('modify validator count', async () => {
-      await modifyValidatorCountTest(client)
+      await modifyValidatorCountTest(chain)
     })
 
     test('chill other', async () => {
-      await chillOtherTest(client)
+      await chillOtherTest(chain)
     })
 
     test('unapplied slash', async () => {
-      await unappliedSlashTest(client)
+      await unappliedSlashTest(chain)
     })
 
     test('cancel deferred slash with bad origin', async () => {
-      await cancelDeferredSlashTestBadOrigin(client)
+      await cancelDeferredSlashTestBadOrigin(chain)
     })
 
     test('cancel deferred slash as root', async () => {
-      await cancelDeferredSlashTestAsRoot(client)
+      await cancelDeferredSlashTestAsRoot(chain)
     })
 
     test('cancel deferred slash as admin', async () => {
-      await cancelDeferredSlashTestAsAdmin(client)
+      await cancelDeferredSlashTestAsAdmin(chain)
     })
 
     test('set invulnerables with bad origin', async () => {
-      await setInvulnerablesTestBadOrigin(client)
+      await setInvulnerablesTestBadOrigin(chain)
     })
   })
 }

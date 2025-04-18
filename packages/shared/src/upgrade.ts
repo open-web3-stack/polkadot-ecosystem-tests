@@ -106,7 +106,7 @@ export async function authorizeUpgradeViaCollectives(
   await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), okOrigin)
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'scheduler')
-    .redact({ hash: false })
+    .redact({ hash: false, redactKeys: /task/ })
     .toMatchSnapshot('events when dispatching non-whitelisted call')
   await assertAuthorizedUpgradeUnchanged()
 
@@ -128,8 +128,8 @@ export async function authorizeUpgradeViaCollectives(
   await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), badOrigin)
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'scheduler')
-    .redact({ hash: false })
-    .toMatchSnapshot('events when dispatching whitelisted call wtih bad origin')
+    .redact({ hash: false, redactKeys: /task/ })
+    .toMatchSnapshot('events when dispatching whitelisted call with bad origin')
   await assertAuthorizedUpgradeUnchanged()
 
   // call is whitelisted, origin is ok - success expected
