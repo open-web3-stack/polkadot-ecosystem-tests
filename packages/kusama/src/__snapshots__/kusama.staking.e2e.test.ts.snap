@@ -294,10 +294,7 @@ exports[`Kusama Staking > set invulnerables with bad origin > events when settin
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 28000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
