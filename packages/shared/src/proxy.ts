@@ -76,6 +76,7 @@ interface ProxyActionBuilder {
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
+  buildFellowshipCoreAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
   buildMultisigAction(): ProxyAction[]
   buildNftsAction(): ProxyAction[]
@@ -185,7 +186,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.balances) {
       balanceCalls.push({
         pallet: 'balances',
-        extrinsic: 'transferKeepAlive',
+        extrinsic: 'transfer_keep_alive',
         call: this.client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10),
       })
     }
@@ -198,7 +199,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.bounties) {
       bountyCalls.push({
         pallet: 'bounties',
-        extrinsic: 'proposeBounty',
+        extrinsic: 'propose_bounty',
         call: this.client.api.tx.bounties.proposeBounty(100e10, 'Test Bounty'),
       })
     }
@@ -212,7 +213,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.proxy) {
       cancelProxyCalls.push({
         pallet: 'proxy',
-        extrinsic: 'rejectAnnouncement',
+        extrinsic: 'reject_announcement',
         call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
       })
     }
@@ -224,8 +225,8 @@ class ProxyActionBuilderImpl<
     const collatorSelectionCalls: ProxyAction[] = []
     if (this.client.api.tx.collatorSelection) {
       collatorSelectionCalls.push({
-        pallet: 'collatorSelection',
-        extrinsic: 'registerAsCandidate',
+        pallet: 'collator_selection',
+        extrinsic: 'register_as_candidate',
         call: this.client.api.tx.collatorSelection.registerAsCandidate(),
       })
     }
@@ -251,12 +252,25 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.staking) {
       fastUnstakeCalls.push({
         pallet: 'staking',
-        extrinsic: 'registerFastUnstake',
+        extrinsic: 'register_fast_unstake',
         call: this.client.api.tx.fastUnstake.registerFastUnstake(),
       })
     }
 
     return fastUnstakeCalls
+  }
+
+  buildFellowshipAction(): ProxyAction[] {
+    const fellowshipCalls: ProxyAction[] = []
+    if (this.client.api.tx.fellowshipCore) {
+      fellowshipCalls.push({
+        pallet: 'fellowship_core',
+        extrinsic: 'bump',
+        call: this.client.api.tx.fellowshipCore.bump(defaultAccountsSr25519.eve.address),
+      })
+    }
+
+    return fellowshipCalls
   }
 
   buildGovernanceAction(): ProxyAction[] {
@@ -288,7 +302,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.multisig) {
       multisigCalls.push({
         pallet: 'multisig',
-        extrinsic: 'asMulti',
+        extrinsic: 'as_multi',
         call: this.client.api.tx.multisig.asMulti(0, [], null, testCall, { refTime: 0, proofSize: 0 }),
       })
     }
@@ -334,11 +348,12 @@ class ProxyActionBuilderImpl<
 
     return nftsCalls
   }
+
   buildNominationPoolsAction(): ProxyAction[] {
     const nominationPoolsCalls: ProxyAction[] = []
     if (this.client.api.tx.nominationPools) {
       nominationPoolsCalls.push({
-        pallet: 'nominationPools',
+        pallet: 'nomination_pools',
         extrinsic: 'chill',
         call: this.client.api.tx.nominationPools.chill(1),
       })
@@ -352,12 +367,12 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.parasRegistrar) {
       parasRegistrarCalls.concat([
         {
-          pallet: 'parasRegistrar',
+          pallet: 'paras_registrar',
           extrinsic: 'reserve',
           call: this.client.api.tx.parasRegistrar.reserve(),
         },
         {
-          pallet: 'parasRegistrar',
+          pallet: 'paras_registrar',
           extrinsic: 'register',
           call: this.client.api.tx.parasRegistrar.register(1000, 'genesis head', 'validation code'),
         },
@@ -372,7 +387,7 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.slots) {
       slotsCalls.push({
         pallet: 'slots',
-        extrinsic: 'triggerOnboard',
+        extrinsic: 'trigger_onboard',
         call: this.client.api.tx.slots.triggerOnboard(1000),
       })
     }
@@ -415,7 +430,7 @@ class ProxyActionBuilderImpl<
       },
       {
         pallet: 'system',
-        extrinsic: 'remarkWithEvent',
+        extrinsic: 'remark_with_event',
         call: this.client.api.tx.system.remarkWithEvent('hello'),
       },
     ]
@@ -465,12 +480,12 @@ class ProxyActionBuilderImpl<
       },
       {
         pallet: 'utility',
-        extrinsic: 'batchAll',
+        extrinsic: 'batch_all',
         call: this.client.api.tx.utility.batchAll([]),
       },
       {
         pallet: 'utility',
-        extrinsic: 'forceBatch',
+        extrinsic: 'force_batch',
         call: this.client.api.tx.utility.forceBatch([]),
       },
     ]
@@ -575,6 +590,11 @@ function buildProxyAction<
     .with('Alliance', () => [
       ...proxyActionBuilder.buildAllianceAction(),
       ...proxyActionBuilder.buildAllianceMotionAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+    .with('Fellowship', () => [
+      ...proxyActionBuilder.buildFellowshipAction(),
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -705,6 +725,7 @@ async function proxyCallFilteringTestRunner<
     'Collator',
 
     'Alliance',
+    'Fellowship',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
