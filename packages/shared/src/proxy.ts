@@ -61,6 +61,8 @@ interface ProxyAction {
  * The test for each proxy type is then free to combine these lists as required.
  */
 interface ProxyActionBuilder {
+  buildAllianceAction(): ProxyAction[]
+  buildAllianceMotionAction(): ProxyAction[]
   // The `Asset, `AssetOwner` and `AssetManager` proxy types rely on the same pallets, but different call filters.
   // They are differentiated here to clarify which all types can make, and which only some can.
   // The same applies to `Uniques` and `Nfts`
@@ -97,6 +99,34 @@ class ProxyActionBuilderImpl<
 > implements ProxyActionBuilder
 {
   constructor(private client: Client<TCustom, TInitStorages>) {}
+
+  buildAllianceAction(): ProxyAction[] {
+    const allianceCalls: ProxyAction[] = []
+    if (this.client.api.tx.alliance) {
+      allianceCalls.push({
+        pallet: 'alliance',
+        extrinsic: 'join_alliance',
+        call: this.client.api.tx.alliance.joinAlliance(),
+      })
+    }
+
+    return allianceCalls
+  }
+
+  buildAllianceMotionAction(): ProxyAction[] {
+    const allianceMotionCalls: ProxyAction[] = []
+    if (this.client.api.tx.allianceMotion) {
+      const proposal = this.client.api.tx.system.remark('hello')
+
+      allianceMotionCalls.push({
+        pallet: 'collectives',
+        extrinsic: 'propose',
+        call: this.client.api.tx.allianceMotion.propose(1, proposal.method.toHex(), proposal.method.toHex().length),
+      })
+    }
+
+    return allianceMotionCalls
+  }
 
   buildAssetsAction(): ProxyAction[] {
     const assetsCalls: ProxyAction[] = []
@@ -512,6 +542,10 @@ function buildProxyAction<
     .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
     .with('ParaRegistration', () => [...proxyActionBuilder.buildParasRegistrarAction()])
 
+    // System Parachains
+
+    .with('Collator', () => [...proxyActionBuilder.buildCollatorSelectionAction()])
+
     // Asset Hubs
 
     .with('Assets', () => [
@@ -535,7 +569,15 @@ function buildProxyAction<
       ...proxyActionBuilder.buildUniquesOwnerAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
-    .with('Collator', () => [...proxyActionBuilder.buildCollatorSelectionAction()])
+
+    // Collectives
+
+    .with('Alliance', () => [
+      ...proxyActionBuilder.buildAllianceAction(),
+      ...proxyActionBuilder.buildAllianceMotionAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
 
     .otherwise(() => [])
 
@@ -661,6 +703,8 @@ async function proxyCallFilteringTestRunner<
     'AssetOwner',
     'AssetManager',
     'Collator',
+
+    'Alliance',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
