@@ -546,7 +546,7 @@ exports[`Polkadot Coretime Proxy > proxy call filtering test for Broker > events
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0f000000",
+            "error": "0x0b000000",
             "index": 50,
           },
         },
@@ -565,7 +565,7 @@ exports[`Polkadot Coretime Proxy > proxy call filtering test for Broker > events
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0d000000",
+            "error": "0x0b000000",
             "index": 50,
           },
         },
