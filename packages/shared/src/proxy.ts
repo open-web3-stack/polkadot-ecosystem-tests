@@ -871,7 +871,11 @@ async function proxyCallFilteringSingleTestRunner<
 
           // A call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
           // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
-          expect(client.api.errors.system.CallFiltered.is(error.asModule)).toBe(false)
+          expect(
+            client.api.errors.system.CallFiltered.is(error.asModule),
+            // Show failing pallet and extrinsic
+            `Call ${pallet}.${extrinsic} failed due to call filtering`,
+          ).toBe(false)
         } else {
           // The call was executed successfully - nothing to check.
           expect(proxyExecutedData.result.isOk).toBe(true)
