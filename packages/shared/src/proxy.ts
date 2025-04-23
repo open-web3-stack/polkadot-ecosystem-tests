@@ -56,7 +56,7 @@ interface ProxyAction {
  * type.
  * Returning lists allows for:
  * 1. no-ops in the form of empty lists, and
- * 2. providing multipled extrinsics of interest per pallet
+ * 2. providing multiple extrinsics of interest per pallet
  *
  * The test for each proxy type is then free to combine these lists as required.
  */
@@ -76,7 +76,10 @@ interface ProxyActionBuilder {
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
+  buildFellowshipCollectiveAction(): ProxyAction[]
   buildFellowshipCoreAction(): ProxyAction[]
+  buildFellowshipReferendaAction(): ProxyAction[]
+  buildFellowshipSalaryAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
   buildMultisigAction(): ProxyAction[]
   buildNftsAction(): ProxyAction[]
@@ -260,17 +263,56 @@ class ProxyActionBuilderImpl<
     return fastUnstakeCalls
   }
 
-  buildFellowshipAction(): ProxyAction[] {
+  buildFellowshipCollectiveAction(): ProxyAction[] {
+    const fellowshipCollectiveCalls: ProxyAction[] = []
+    if (this.client.api.tx.rankedCollective) {
+      fellowshipCollectiveCalls.push({
+        pallet: 'ranked_collective',
+        extrinsic: 'vote',
+        call: this.client.api.tx.rankedCollective.vote(1, true),
+      })
+    }
+
+    return fellowshipCollectiveCalls
+  }
+
+  buildFellowshipCoreAction(): ProxyAction[] {
     const fellowshipCalls: ProxyAction[] = []
     if (this.client.api.tx.fellowshipCore) {
       fellowshipCalls.push({
-        pallet: 'fellowship_core',
+        pallet: 'core_fellowship',
         extrinsic: 'bump',
         call: this.client.api.tx.fellowshipCore.bump(defaultAccountsSr25519.eve.address),
       })
     }
 
     return fellowshipCalls
+  }
+
+  buildFellowshipReferendaAction(): ProxyAction[] {
+    const fellowshipReferendaCalls: ProxyAction[] = []
+    if (this.client.api.tx.fellowshipReferenda) {
+      fellowshipReferendaCalls.push({
+        pallet: 'referenda',
+        extrinsic: 'place_decision_deposit',
+        call: this.client.api.tx.fellowshipReferenda.placeDecisionDeposit(1),
+      })
+    }
+
+    return fellowshipReferendaCalls
+  }
+
+  buildFellowshipSalaryAction(): ProxyAction[] {
+    const fellowshipSalaryCalls: ProxyAction[] = []
+    if (this.client.api.tx.fellowshipSalary) {
+      fellowshipSalaryCalls.push({
+        pallet: 'salary',
+        extrinsic: 'init',
+        call: this.client.api.tx.fellowshipSalary.init(),
+      })
+    }
+
+    return fellowshipSalaryCalls
   }
 
   buildGovernanceAction(): ProxyAction[] {
@@ -594,7 +636,10 @@ function buildProxyAction<
       ...proxyActionBuilder.buildMultisigAction(),
     ])
     .with('Fellowship', () => [
-      ...proxyActionBuilder.buildFellowshipAction(),
+      ...proxyActionBuilder.buildFellowshipCollectiveAction(),
+      ...proxyActionBuilder.buildFellowshipCoreAction(),
+      ...proxyActionBuilder.buildFellowshipReferendaAction(),
+      ...proxyActionBuilder.buildFellowshipSalaryAction(),
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
