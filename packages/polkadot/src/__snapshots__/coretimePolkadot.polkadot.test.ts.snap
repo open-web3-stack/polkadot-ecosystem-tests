@@ -112,6 +112,40 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
       },
       "success": true,
       "weightUsed": {
+        "proofSize": "(rounded 9200)",
+        "refTime": "(rounded 1000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 9200)",
+        "refTime": "(rounded 1000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
         "proofSize": "(rounded 7200)",
         "refTime": "(rounded 280000000)",
       },
