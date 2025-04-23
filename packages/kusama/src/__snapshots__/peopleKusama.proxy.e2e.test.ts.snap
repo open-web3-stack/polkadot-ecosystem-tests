@@ -349,7 +349,7 @@ exports[`People Kusama Proxy > proxy announcement lifecycle test > events when B
 
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
 
-exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transfer_keep_alive 1`] = `
+exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -360,7 +360,7 @@ exports[`People Kusama Proxy > proxy call filtering test for Any > events for pr
   },
   {
     "data": {
-      "amount": "(rounded 92000000)",
+      "amount": "(rounded 68000000)",
       "who": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
     },
     "method": "Withdraw",
@@ -368,19 +368,10 @@ exports[`People Kusama Proxy > proxy call filtering test for Any > events for pr
   },
   {
     "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "freeBalance": 1000000000000,
+      "amount": 1,
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
-    "method": "Endowed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 1000000000000,
-      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "to": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-    },
-    "method": "Transfer",
+    "method": "Burned",
     "section": "balances",
   },
   {
@@ -392,7 +383,7 @@ exports[`People Kusama Proxy > proxy call filtering test for Any > events for pr
   },
   {
     "data": {
-      "amount": "(rounded 92000000)",
+      "amount": "(rounded 68000000)",
       "who": "F3opxRUwkBj1LqjZ7DyiHCRh9Z4zVPLaVjoxfD5ddbip8mt",
     },
     "method": "Deposit",

@@ -245,8 +245,8 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.balances) {
       balanceCalls.push({
         pallet: 'balances',
-        extrinsic: 'transfer_keep_alive',
-        call: this.client.api.tx.balances.transferKeepAlive(defaultAccountsSr25519.eve.address, 100e10),
+        extrinsic: 'burn',
+        call: this.client.api.tx.balances.burn(1, false),
       })
     }
 
