@@ -104,10 +104,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
           },
         },
       },
-      "task": [
-        "(rounded 26000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -115,7 +112,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
 ]
 `;
 
-exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > events when dispatching whitelisted call wtih bad origin 1`] = `
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
 [
   {
     "data": {
@@ -123,10 +120,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 26000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",

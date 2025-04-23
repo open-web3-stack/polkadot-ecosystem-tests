@@ -294,10 +294,7 @@ exports[`Polkadot Staking > set invulnerables with bad origin > events when sett
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 26000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
