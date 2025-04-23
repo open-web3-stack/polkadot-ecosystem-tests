@@ -92,6 +92,16 @@ exports[`Kusama Proxy > add proxies (with/without delay) to an account, and remo
     "method": "ProxyAdded",
     "section": "proxy",
   },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "DAbUwtseJVK8571h1MgjeuPTBCW6NZt5G7moDa1iGJZQ8FL",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "ParaRegistration",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
 ]
 `;
 
@@ -189,6 +199,16 @@ exports[`Kusama Proxy > add proxies (with/without delay) to an account, and remo
     "method": "ProxyRemoved",
     "section": "proxy",
   },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "DAbUwtseJVK8571h1MgjeuPTBCW6NZt5G7moDa1iGJZQ8FL",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "ParaRegistration",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
 ]
 `;
 
@@ -270,6 +290,15 @@ exports[`Kusama Proxy > create and kill pure proxies > events when creating pure
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Spokesperson",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "ParaRegistration",
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "PureCreated",
@@ -442,6 +471,25 @@ exports[`Kusama Proxy > create and kill pure proxies > events when killing pure 
 ]
 `;
 
+exports[`Kusama Proxy > create and kill pure proxies > events when killing pure proxy of type 10 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
 [
   {
@@ -512,7 +560,7 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transferKeepAlive 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call transfer_keep_alive 1`] = `
 [
   {
     "data": {
@@ -565,7 +613,7 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet bounties, call proposeBounty 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet bounties, call propose_bounty 1`] = `
 [
   {
     "data": {
@@ -577,6 +625,25 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
   {
     "data": {
       "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 31,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -653,7 +720,7 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remarkWithEvent 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -704,7 +771,24 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call forceBatch 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -759,7 +843,7 @@ exports[`Kusama Proxy > proxy call filtering test for Auction > events for proxy
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet slots, call lease 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet slots, call trigger_onboard 1`] = `
 [
   {
     "data": {
@@ -778,26 +862,7 @@ exports[`Kusama Proxy > proxy call filtering test for Auction > events for proxy
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Auction > events for proxy action: proxy type Auction, pallet slots, call triggerOnboard 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 71,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call rejectAnnouncement 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -816,7 +881,7 @@ exports[`Kusama Proxy > proxy call filtering test for CancelProxy > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call proposeBounty 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Governance > events for proxy action: proxy type Governance, pallet bounties, call propose_bounty 1`] = `
 [
   {
     "data": {
@@ -858,26 +923,7 @@ exports[`Kusama Proxy > proxy call filtering test for Governance > events for pr
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet nominationPools, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet nominationPools, call chill 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet nomination_pools, call chill 1`] = `
 [
   {
     "data": {
@@ -913,7 +959,24 @@ exports[`Kusama Proxy > proxy call filtering test for NominationPools > events f
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet utility, call forceBatch 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NominationPools > events for proxy action: proxy type NominationPools, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -949,7 +1012,7 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet bounties, call proposeBounty 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet bounties, call propose_bounty 1`] = `
 [
   {
     "data": {
@@ -961,6 +1024,25 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
   {
     "data": {
       "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 31,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1037,7 +1119,7 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remarkWithEvent 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1067,6 +1149,57 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
     },
     "method": "ExtrinsicSuccess",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
   },
 ]
 `;
@@ -1117,7 +1250,7 @@ exports[`Kusama Proxy > proxy call filtering test for Spokesperson > events for 
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Spokesperson > events for proxy action: proxy type Spokesperson, pallet system, call remarkWithEvent 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Spokesperson > events for proxy action: proxy type Spokesperson, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1151,26 +1284,7 @@ exports[`Kusama Proxy > proxy call filtering test for Spokesperson > events for 
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet nominationPools, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet nominationPools, call chill 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet nomination_pools, call chill 1`] = `
 [
   {
     "data": {
@@ -1209,26 +1323,7 @@ exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet staking, call fastUnstake 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet staking, call registerFastUnstake 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
 [
   {
     "data": {
@@ -1264,7 +1359,24 @@ exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet utility, call forceBatch 1`] = `
+exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > proxy call filtering test for Staking > events for proxy action: proxy type Staking, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
