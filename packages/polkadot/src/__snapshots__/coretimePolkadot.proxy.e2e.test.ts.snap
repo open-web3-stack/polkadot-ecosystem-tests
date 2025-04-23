@@ -685,6 +685,95 @@ exports[`Polkadot Coretime Proxy > proxy call filtering test for Collator > even
 ]
 `;
 
+exports[`Polkadot Coretime Proxy > proxy call filtering test for CoretimeRenewer > events for proxy action: proxy type CoretimeRenewer, pallet broker, call renew 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0d000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for CoretimeRenewer > events for proxy action: proxy type CoretimeRenewer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for CoretimeRenewer > events for proxy action: proxy type CoretimeRenewer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for CoretimeRenewer > events for proxy action: proxy type CoretimeRenewer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for CoretimeRenewer > events for proxy action: proxy type CoretimeRenewer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
 [
   {
@@ -799,6 +888,76 @@ exports[`Polkadot Coretime Proxy > proxy call filtering test for NonTransfer > e
 `;
 
 exports[`Polkadot Coretime Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for OnDemandPurchaser > events for proxy action: proxy type OnDemandPurchaser, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for OnDemandPurchaser > events for proxy action: proxy type OnDemandPurchaser, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for OnDemandPurchaser > events for proxy action: proxy type OnDemandPurchaser, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > proxy call filtering test for OnDemandPurchaser > events for proxy action: proxy type OnDemandPurchaser, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},

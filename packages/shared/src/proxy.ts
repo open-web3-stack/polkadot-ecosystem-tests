@@ -77,6 +77,7 @@ interface ProxyActionBuilder {
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildBrokerAction(): ProxyAction[]
+  buildBrokerPurchaseCreditAction(): ProxyAction[]
   buildBrokerRenewerAction(): ProxyAction[]
   buildCancelProxyAction(): ProxyAction[]
   buildCollatorSelectionAction(): ProxyAction[]
@@ -269,7 +270,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildBrokerAction(): ProxyAction[] {
-    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction()]
+    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction(), ...this.buildBrokerPurchaseCreditAction()]
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
@@ -279,6 +280,22 @@ class ProxyActionBuilderImpl<
     }
 
     return brokerCalls
+  }
+
+  buildBrokerPurchaseCreditAction(): ProxyAction[] {
+    const brokerPurchaseCreditCalls: ProxyAction[] = []
+
+    // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
+    // Add this back in once the call is available.
+    /*     if (this.client.api.tx.broker) {
+      brokerPurchaseCreditCalls.push({
+        pallet: 'broker',
+        extrinsic: 'purchase_credit',
+        call: this.client.api.tx.broker.purchaseCredit(100e10, defaultAccountsSr25519.eve.address),
+      })
+    } */
+
+    return brokerPurchaseCreditCalls
   }
 
   buildBrokerRenewerAction(): ProxyAction[] {
@@ -750,6 +767,14 @@ function buildProxyAction<
       ...proxyActionBuilder.buildMultisigAction(),
     ])
 
+    .with('OnDemandPurchaser', () => [
+      // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
+      // Add this back in once the call is available.
+      //...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+
     .otherwise(() => [])
 
   return result
@@ -890,6 +915,7 @@ async function proxyCallFilteringTestRunner<
 
     'Broker',
     'CoretimeRenewer',
+    'OnDemandPurchaser',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
