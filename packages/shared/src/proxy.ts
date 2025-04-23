@@ -702,7 +702,11 @@ function buildProxyAction<
 
     // System Parachains
 
-    .with('Collator', () => [...proxyActionBuilder.buildCollatorSelectionAction()])
+    .with('Collator', () => [
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
 
     // Asset Hubs
 
