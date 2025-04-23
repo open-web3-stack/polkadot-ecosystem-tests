@@ -76,6 +76,7 @@ interface ProxyActionBuilder {
   buildAuctionAction(): ProxyAction[]
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
+  buildBrokerAction(): ProxyAction[]
   buildCancelProxyAction(): ProxyAction[]
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
@@ -264,6 +265,19 @@ class ProxyActionBuilderImpl<
     }
 
     return bountyCalls
+  }
+
+  buildBrokerAction(): ProxyAction[] {
+    const brokerCalls: ProxyAction[] = []
+    if (this.client.api.tx.broker) {
+      brokerCalls.push({
+        pallet: 'broker',
+        extrinsic: 'purchase',
+        call: this.client.api.tx.broker.purchase(100e10),
+      })
+    }
+
+    return brokerCalls
   }
 
   buildCancelProxyAction(): ProxyAction[] {
@@ -708,6 +722,14 @@ function buildProxyAction<
       ...proxyActionBuilder.buildMultisigAction(),
     ])
 
+    // Coretime
+
+    .with('Broker', () => [
+      ...proxyActionBuilder.buildBrokerAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+
     .otherwise(() => [])
 
   return result
@@ -836,6 +858,8 @@ async function proxyCallFilteringTestRunner<
     'Alliance',
     'Fellowship',
     'Ambassador',
+
+    'Broker',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
