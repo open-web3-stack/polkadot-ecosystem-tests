@@ -66,6 +66,10 @@ interface ProxyActionBuilder {
   // The `Asset, `AssetOwner` and `AssetManager` proxy types rely on the same pallets, but different call filters.
   // They are differentiated here to clarify which all types can make, and which only some can.
   // The same applies to `Uniques` and `Nfts`
+  buildAmbassadorCollectiveAction(): ProxyAction[]
+  buildAmbassadorCoreAction(): ProxyAction[]
+  buildAmbassadorReferendaAction(): ProxyAction[]
+  buildAmbassadorSalaryAction(): ProxyAction[]
   buildAssetsAction(): ProxyAction[]
   buildAssetsManagerAction(): ProxyAction[]
   buildAssetsOwnerAction(): ProxyAction[]
@@ -130,6 +134,58 @@ class ProxyActionBuilderImpl<
     }
 
     return allianceMotionCalls
+  }
+
+  buildAmbassadorCollectiveAction(): ProxyAction[] {
+    const ambassadorCollectiveCalls: ProxyAction[] = []
+    if (this.client.api.tx.ambassadorCollective) {
+      ambassadorCollectiveCalls.push({
+        pallet: 'ranked_collective',
+        extrinsic: 'vote',
+        call: this.client.api.tx.ambassadorCollective.vote(1, true),
+      })
+    }
+
+    return ambassadorCollectiveCalls
+  }
+
+  buildAmbassadorCoreAction(): ProxyAction[] {
+    const ambassadorCoreCalls: ProxyAction[] = []
+    if (this.client.api.tx.ambassadorCore) {
+      ambassadorCoreCalls.push({
+        pallet: 'core_fellowship',
+        extrinsic: 'bump',
+        call: this.client.api.tx.ambassadorCore.bump(defaultAccountsSr25519.eve.address),
+      })
+    }
+
+    return ambassadorCoreCalls
+  }
+
+  buildAmbassadorReferendaAction(): ProxyAction[] {
+    const ambassadorReferendaCalls: ProxyAction[] = []
+    if (this.client.api.tx.ambassadorReferenda) {
+      ambassadorReferendaCalls.push({
+        pallet: 'referenda',
+        extrinsic: 'place_decision_deposit',
+        call: this.client.api.tx.ambassadorReferenda.placeDecisionDeposit(1),
+      })
+    }
+
+    return ambassadorReferendaCalls
+  }
+
+  buildAmbassadorSalaryAction(): ProxyAction[] {
+    const ambassadorSalaryCalls: ProxyAction[] = []
+    if (this.client.api.tx.ambassadorSalary) {
+      ambassadorSalaryCalls.push({
+        pallet: 'salary',
+        extrinsic: 'init',
+        call: this.client.api.tx.ambassadorSalary.init(),
+      })
+    }
+
+    return ambassadorSalaryCalls
   }
 
   buildAssetsAction(): ProxyAction[] {
@@ -643,6 +699,14 @@ function buildProxyAction<
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
+    .with('Ambassador', () => [
+      ...proxyActionBuilder.buildAmbassadorCollectiveAction(),
+      ...proxyActionBuilder.buildAmbassadorCoreAction(),
+      ...proxyActionBuilder.buildAmbassadorReferendaAction(),
+      ...proxyActionBuilder.buildAmbassadorSalaryAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
 
     .otherwise(() => [])
 
@@ -771,6 +835,7 @@ async function proxyCallFilteringTestRunner<
 
     'Alliance',
     'Fellowship',
+    'Ambassador',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
