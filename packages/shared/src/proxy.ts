@@ -1,4 +1,4 @@
-import { sendTransaction } from '@acala-network/chopsticks-testing'
+import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
@@ -792,7 +792,16 @@ async function proxyCallFilteringSingleTestRunner<
   for (const [actionKey, proxyActionEvents] of Object.entries(transactionResults)) {
     const [pallet, extrinsic] = actionKey.split('.')
 
-    await checkEvents(proxyActionEvents, 'proxy', pallet).toMatchSnapshot(
+    // If the pallet being tested is `balances`, its events should not be included in the snapshot
+    // to avoid including block-specific fee events, which are unstable inbetween runs.
+    let eventChecker: Checker
+    if (pallet !== 'balances') {
+      eventChecker = checkEvents(proxyActionEvents, 'proxy', pallet)
+    } else {
+      eventChecker = checkEvents(proxyActionEvents, 'proxy')
+    }
+
+    await eventChecker.toMatchSnapshot(
       `events for proxy action: proxy type ${proxyType}, pallet ${pallet}, call ${extrinsic}`,
     )
 

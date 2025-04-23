@@ -564,42 +564,10 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 [
   {
     "data": {
-      "amount": "(rounded 530000000)",
-      "who": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 1,
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "amount": "(rounded 420000000)",
-      "who": "F3opxRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 110000000)",
-      "who": "FUqYp7AtDTKeeBW63rHEaoBdEf7xMaPJTY5bY6dNsx8jtU2",
-    },
-    "method": "Deposit",
-    "section": "balances",
   },
 ]
 `;
