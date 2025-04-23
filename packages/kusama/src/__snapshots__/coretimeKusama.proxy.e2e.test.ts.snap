@@ -558,6 +558,25 @@ exports[`Kusama Coretime Proxy > proxy call filtering test for Broker > events f
 ]
 `;
 
+exports[`Kusama Coretime Proxy > proxy call filtering test for Broker > events for proxy action: proxy type Broker, pallet broker, call renew 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0b000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Coretime Proxy > proxy call filtering test for Broker > events for proxy action: proxy type Broker, pallet multisig, call as_multi 1`] = `
 [
   {

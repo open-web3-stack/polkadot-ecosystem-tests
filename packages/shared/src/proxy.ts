@@ -77,6 +77,7 @@ interface ProxyActionBuilder {
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildBrokerAction(): ProxyAction[]
+  buildBrokerRenewerAction(): ProxyAction[]
   buildCancelProxyAction(): ProxyAction[]
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
@@ -268,7 +269,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildBrokerAction(): ProxyAction[] {
-    const brokerCalls: ProxyAction[] = []
+    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction()]
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
@@ -278,6 +279,19 @@ class ProxyActionBuilderImpl<
     }
 
     return brokerCalls
+  }
+
+  buildBrokerRenewerAction(): ProxyAction[] {
+    const brokerRenewerCalls: ProxyAction[] = []
+    if (this.client.api.tx.broker) {
+      brokerRenewerCalls.push({
+        pallet: 'broker',
+        extrinsic: 'renew',
+        call: this.client.api.tx.broker.renew(1),
+      })
+    }
+
+    return brokerRenewerCalls
   }
 
   buildCancelProxyAction(): ProxyAction[] {
@@ -730,6 +744,12 @@ function buildProxyAction<
       ...proxyActionBuilder.buildMultisigAction(),
     ])
 
+    .with('CoretimeRenewer', () => [
+      ...proxyActionBuilder.buildBrokerRenewerAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+
     .otherwise(() => [])
 
   return result
@@ -869,6 +889,7 @@ async function proxyCallFilteringTestRunner<
     'Ambassador',
 
     'Broker',
+    'CoretimeRenewer',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
