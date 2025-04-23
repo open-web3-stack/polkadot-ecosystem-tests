@@ -1,5 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 70000)",
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Staking > chill other > chill other bad origin events 1`] = `
 [
   {
@@ -247,6 +267,42 @@ exports[`Kusama Staking > modify validator count > scale validator count bad ori
 `;
 
 exports[`Kusama Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 230000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
 [
   {
     "data": {
@@ -605,6 +661,94 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+        5000000000000,
+      ],
+      "index": "0x0409",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+        10000000000000,
+      ],
+      "index": "0x0409",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+        10000000000000,
+      ],
+      "index": "0x0409",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+        5000000000000,
+      ],
+      "index": "0x0602",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+        10000000000000,
+      ],
+      "index": "0x0602",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+        10000000000000,
+      ],
+      "index": "0x0602",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
   },
 ]
 `;

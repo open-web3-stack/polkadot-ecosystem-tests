@@ -104,10 +104,7 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
           },
         },
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -115,7 +112,7 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
 ]
 `;
 
-exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > events when dispatching whitelisted call wtih bad origin 1`] = `
+exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
 [
   {
     "data": {
@@ -123,10 +120,7 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",

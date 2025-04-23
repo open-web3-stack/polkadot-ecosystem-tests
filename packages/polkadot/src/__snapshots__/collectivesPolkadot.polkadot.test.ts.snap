@@ -104,10 +104,7 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
           },
         },
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -115,7 +112,7 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
 ]
 `;
 
-exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching whitelisted call wtih bad origin 1`] = `
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
 [
   {
     "data": {
@@ -123,10 +120,7 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -314,10 +308,7 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > events w
           },
         },
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",
@@ -325,7 +316,7 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > events w
 ]
 `;
 
-exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching whitelisted call wtih bad origin 1`] = `
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching whitelisted call with bad origin 1`] = `
 [
   {
     "data": {
@@ -333,10 +324,7 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > events w
       "result": {
         "Err": "BadOrigin",
       },
-      "task": [
-        "(rounded 25000000)",
-        0,
-      ],
+      "task": "(redacted)",
     },
     "method": "Dispatched",
     "section": "scheduler",

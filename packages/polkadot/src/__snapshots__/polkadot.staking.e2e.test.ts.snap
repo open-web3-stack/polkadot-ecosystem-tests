@@ -1,5 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 70000)",
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
 [
   {
@@ -247,6 +267,42 @@ exports[`Polkadot Staking > modify validator count > scale validator count bad o
 `;
 
 exports[`Polkadot Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 210000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
 [
   {
     "data": {
@@ -605,6 +661,94 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+        5000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+        10000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+        10000000000000,
+      ],
+      "index": "0x0509",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+        5000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+        10000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+  {
+    "event": {
+      "data": [
+        "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+        10000000000000,
+      ],
+      "index": "0x0702",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
   },
 ]
 `;
