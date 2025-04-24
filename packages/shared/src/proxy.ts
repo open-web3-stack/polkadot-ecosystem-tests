@@ -301,6 +301,15 @@ class ProxyActionBuilderImpl<
   buildBrokerRenewerAction(): ProxyAction[] {
     const brokerRenewerCalls: ProxyAction[] = []
     if (this.client.api.tx.broker) {
+      // Coretime renewal can fail for different reasons at different times, and this can cause unstable snapshots.
+      // To control which failure occurs, the global Coretime parachain's `Configuration` is set to `null`,
+      // as this way the call to `renew` will predictably fail on the nonexistence of a configuration.
+      this.client.dev.setStorage({
+        Broker: {
+          Configuration: null,
+        },
+      })
+
       brokerRenewerCalls.push({
         pallet: 'broker',
         extrinsic: 'renew',
