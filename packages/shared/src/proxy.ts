@@ -88,6 +88,8 @@ interface ProxyActionBuilder {
   buildFellowshipReferendaAction(): ProxyAction[]
   buildFellowshipSalaryAction(): ProxyAction[]
   buildGovernanceAction(): ProxyAction[]
+  buildIdentityAction(): ProxyAction[]
+  buildIdentityJudgementAction(): ProxyAction[]
   buildMultisigAction(): ProxyAction[]
   buildNftsAction(): ProxyAction[]
   buildNftsManagerAction(): ProxyAction[]
@@ -322,8 +324,9 @@ class ProxyActionBuilderImpl<
 
   buildCancelProxyAction(): ProxyAction[] {
     const cancelProxyCalls: ProxyAction[] = []
-    const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
     if (this.client.api.tx.proxy) {
+      const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
       cancelProxyCalls.push({
         pallet: 'proxy',
         extrinsic: 'reject_announcement',
@@ -446,6 +449,34 @@ class ProxyActionBuilderImpl<
     }
 
     return governanceCalls
+  }
+
+  buildIdentityAction(): ProxyAction[] {
+    const identityCalls: ProxyAction[] = [...this.buildIdentityJudgementAction()]
+    if (this.client.api.tx.identity) {
+      identityCalls.push({
+        pallet: 'identity',
+        extrinsic: 'clear_identity',
+        call: this.client.api.tx.identity.clearIdentity(),
+      })
+    }
+
+    return identityCalls
+  }
+
+  buildIdentityJudgementAction(): ProxyAction[] {
+    const identityJudgementCalls: ProxyAction[] = []
+    if (this.client.api.tx.identity) {
+      const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+      identityJudgementCalls.push({
+        pallet: 'identity',
+        extrinsic: 'provide_judgement',
+        call: this.client.api.tx.identity.provideJudgement(0, defaultAccountsSr25519.eve.address, 'FeePaid', hash),
+      })
+    }
+
+    return identityJudgementCalls
   }
 
   buildMultisigAction(): ProxyAction[] {
@@ -788,6 +819,21 @@ function buildProxyAction<
       ...proxyActionBuilder.buildMultisigAction(),
     ])
 
+    // Identity
+
+    .with('Identity', () => [
+      ...proxyActionBuilder.buildIdentityAction(),
+      ...proxyActionBuilder.buildIdentityJudgementAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+
+    .with('IdentityJudgement', () => [
+      ...proxyActionBuilder.buildIdentityJudgementAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+    ])
+
     .otherwise(() => [])
 
   return result
@@ -933,6 +979,9 @@ async function proxyCallFilteringTestRunner<
     'Broker',
     'CoretimeRenewer',
     'OnDemandPurchaser',
+
+    'Identity',
+    'IdentityJudgement',
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
