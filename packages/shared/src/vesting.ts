@@ -442,7 +442,7 @@ export function vestingE2ETests<
 
     const c = await client.api.rpc.system.chain()
     // The vesting pallet will be disabled on Asset Hubs while the AHM is prepared/ongoing, so this ensures some tests
-    // using `vesting.vestedTrasnfer` are only run on relay chains.
+    // using `vesting.vestedTransfer` are only run on relay chains.
     // Furthermore, some tests use the `scheduler` pallet, which is not present on Asset Hubs, so they are put here
     // even if they do not include on vested transfers.
     if (!c.toString().includes('Asset Hub')) {
