@@ -321,7 +321,23 @@ exports[`People Kusama Proxy > perform proxy call on behalf of delegator > event
 
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
 
+exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 2`] = `[]`;
+
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "proxy": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "real": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 2`] = `
 [
   {
     "data": {
@@ -347,7 +363,21 @@ exports[`People Kusama Proxy > proxy announcement lifecycle test > events when B
 ]
 `;
 
+exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 2`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;
+
+exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 2`] = `[]`;
 
 exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet balances, call burn 1`] = `
 [
@@ -373,28 +403,6 @@ exports[`People Kusama Proxy > proxy call filtering test for Any > events for pr
           },
         },
       },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet proxy, call add_proxy 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "proxyType": "Any",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -544,57 +552,6 @@ exports[`People Kusama Proxy > proxy call filtering test for CancelProxy > event
           },
         },
       },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for CancelProxy > events for proxy action: proxy type CancelProxy, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",

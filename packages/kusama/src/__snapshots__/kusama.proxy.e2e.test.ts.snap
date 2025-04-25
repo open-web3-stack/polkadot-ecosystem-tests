@@ -629,28 +629,6 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 ]
 `;
 
-exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet proxy, call add_proxy 1`] = `
-[
-  {
-    "data": {
-      "delay": 0,
-      "delegatee": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "proxyType": "Any",
-    },
-    "method": "ProxyAdded",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
@@ -1365,25 +1343,6 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
   {
     "data": {
       "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > proxy call filtering test for ParaRegistration > events for proxy action: proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
