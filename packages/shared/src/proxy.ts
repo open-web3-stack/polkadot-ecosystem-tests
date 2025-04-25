@@ -6,7 +6,7 @@ import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
-import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
+import type { FrameSystemEventRecord, PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { Codec, ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, describe, expect, test } from 'vitest'
@@ -79,7 +79,6 @@ interface ProxyActionBuilder {
   buildBrokerAction(): ProxyAction[]
   buildBrokerPurchaseCreditAction(): ProxyAction[]
   buildBrokerRenewerAction(): ProxyAction[]
-  buildCancelProxyAction(): ProxyAction[]
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
   buildFastUnstakeAction(): ProxyAction[]
@@ -96,6 +95,9 @@ interface ProxyActionBuilder {
   buildNftsOwnerAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
   buildParasRegistrarAction(): ProxyAction[]
+  buildProxyAction(): ProxyAction[]
+  buildProxyRejectAnnouncementAction(): ProxyAction[]
+  buildProxyRemoveProxyAction(): ProxyAction[]
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
@@ -320,21 +322,6 @@ class ProxyActionBuilderImpl<
     }
 
     return brokerRenewerCalls
-  }
-
-  buildCancelProxyAction(): ProxyAction[] {
-    const cancelProxyCalls: ProxyAction[] = []
-    if (this.client.api.tx.proxy) {
-      const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
-
-      cancelProxyCalls.push({
-        pallet: 'proxy',
-        extrinsic: 'reject_announcement',
-        call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
-      })
-    }
-
-    return cancelProxyCalls
   }
 
   buildCollatorSelectionAction(): ProxyAction[] {
@@ -565,6 +552,56 @@ class ProxyActionBuilderImpl<
     return parasRegistrarCalls
   }
 
+  buildProxyAction(): ProxyAction[] {
+    const proxyCalls: ProxyAction[] = []
+    if (this.client.api.tx.proxy) {
+      proxyCalls.concat([
+        ...this.buildProxyRejectAnnouncementAction(),
+        // Can't include `remove_proxy` action, because the proxy type it will be called from may be a supertype of
+        // the calling proxy type.
+      ])
+
+      proxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'add_proxy',
+        call: this.client.api.tx.proxy.addProxy(defaultAccountsSr25519.eve.address, 'Any', 0),
+      })
+    }
+
+    return proxyCalls
+  }
+
+  buildProxyRejectAnnouncementAction(): ProxyAction[] {
+    const cancelProxyCalls: ProxyAction[] = []
+    if (this.client.api.tx.proxy) {
+      const hash = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+      cancelProxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'reject_announcement',
+        call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
+      })
+    }
+
+    return cancelProxyCalls
+  }
+
+  buildProxyRemoveProxyAction(): ProxyAction[] {
+    const proxyRemoveProxyCalls: ProxyAction[] = []
+    if (this.client.api.tx.proxy) {
+      proxyRemoveProxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'remove_proxy',
+        // Careful not to ellicit unintended call filtering by using a proxy type that is a supertype of
+        // of the calling proxy type.
+        // With the available data at this point, it is not possible to foresee which proxy type is making the call.
+        call: this.client.api.tx.proxy.removeProxy(defaultAccountsSr25519.eve.address, 9, 0),
+      })
+    }
+
+    return proxyRemoveProxyCalls
+  }
+
   buildSlotsAction(): ProxyAction[] {
     const slotsCalls: ProxyAction[] = []
     if (this.client.api.tx.slots) {
@@ -697,9 +734,11 @@ function buildProxyAction<
       ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildBountyAction(),
-      ...proxyActionBuilder.buildMultisigAction(),
-      ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildProxyAction(),
+      ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
@@ -709,10 +748,19 @@ function buildProxyAction<
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
       ...proxyActionBuilder.buildMultisigAction(),
+      ...proxyActionBuilder.buildNominationPoolsAction(),
+      ...proxyActionBuilder.buildProxyAction(),
       ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
-    .with('CancelProxy', () => [...proxyActionBuilder.buildCancelProxyAction()])
+    .with('CancelProxy', () => [
+      // TODO: utility and system calls should be callable by such proxies, but on relay chains this is
+      // currently not the case, pending a PR to the `runtimes` repository.
+      ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
 
     // Polkadot / Kusama
 
@@ -724,6 +772,7 @@ function buildProxyAction<
     .with('Governance', () => [
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('Staking', () => [
       ...proxyActionBuilder.buildFastUnstakeAction(),
@@ -738,7 +787,13 @@ function buildProxyAction<
 
     .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
     .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
-    .with('ParaRegistration', () => [...proxyActionBuilder.buildParasRegistrarAction()])
+    .with('ParaRegistration', () => [
+      ...proxyActionBuilder.buildParasRegistrarAction(),
+      ...proxyActionBuilder.buildProxyRemoveProxyAction(),
+      // This proxy type can only call batch extrinsics from `pallet_utility`, which happens to coincide with the
+      // current implementation of `buildUtilityAction`.
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
 
     // System Parachains
 
@@ -915,7 +970,7 @@ async function proxyCallFilteringSingleTestRunner<
         const { event } = record
         return event.section === 'proxy' && event.method === 'ProxyExecuted'
       })
-      .forEach((record) => {
+      .forEach((record: FrameSystemEventRecord) => {
         assert(client.api.events.proxy.ProxyExecuted.is(record.event))
         const proxyExecutedData = record.event.data
         if (proxyExecutedData.result.isErr) {

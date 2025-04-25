@@ -380,6 +380,28 @@ exports[`People Kusama Proxy > proxy call filtering test for Any > events for pr
 ]
 `;
 
+exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet proxy, call add_proxy 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Any",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Kusama Proxy > proxy call filtering test for Any > events for proxy action: proxy type Any, pallet system, call remark 1`] = `
 [
   {
@@ -796,25 +818,6 @@ exports[`People Kusama Proxy > proxy call filtering test for IdentityJudgement >
 ]
 `;
 
-exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {
@@ -837,91 +840,6 @@ exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > event
     },
     "method": "ExtrinsicSuccess",
     "section": "system",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 280000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy call filtering test for NonTransfer > events for proxy action: proxy type NonTransfer, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
   },
 ]
 `;
