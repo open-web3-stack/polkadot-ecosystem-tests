@@ -228,7 +228,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > fr
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -236,22 +236,20 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > fr
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x3": [
-                        {
-                          "parachain": 1000,
-                        },
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "x3": [
+                      {
+                        "parachain": 1000,
+                      },
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -266,22 +264,20 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > fr
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x3": [
-                        {
-                          "parachain": 1000,
-                        },
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "x3": [
+                      {
+                        "parachain": 1000,
+                      },
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -298,12 +294,14 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > fr
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
