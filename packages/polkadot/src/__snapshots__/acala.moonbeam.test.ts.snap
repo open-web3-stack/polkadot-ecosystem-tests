@@ -664,7 +664,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -672,17 +672,17 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -697,17 +697,17 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -724,12 +724,14 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -1119,7 +1121,7 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -1127,17 +1129,17 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -1152,17 +1154,17 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -1179,12 +1181,14 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
