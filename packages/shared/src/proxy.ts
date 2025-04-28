@@ -799,8 +799,8 @@ async function buildProxyAction<
         // current implementation of `buildUtilityAction`.
         ...proxyActionBuilder.buildUtilityAction(),
       ])
-      // TODO: `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-      // Pending a fix in `runtimes` repository, this can be re-enabled.
+      // TODO: In Kusama, `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
+      // Pending a fix in the `runtimes` repository, this can be re-enabled.
       if (!c.toString().includes('Kusama')) {
         paraRegistrationCalls.concat([...proxyActionBuilder.buildProxyRemoveProxyAction()])
       }
@@ -880,9 +880,7 @@ async function buildProxyAction<
     ])
 
     .with('OnDemandPurchaser', () => [
-      // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
-      // Add this back in once the call is available.
-      //...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
