@@ -102,6 +102,7 @@ interface ProxyActionBuilder {
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
+  buildVestingAction(): ProxyAction[]
   buildUniquesAction(): ProxyAction[]
   buildUniquesManagerAction(): ProxyAction[]
   buildUniquesOwnerAction(): ProxyAction[]
@@ -657,6 +658,23 @@ class ProxyActionBuilderImpl<
     ]
   }
 
+  buildVestingAction(): ProxyAction[] {
+    const vestingCalls: ProxyAction[] = []
+    if (this.client.api.tx.vesting) {
+      vestingCalls.push({
+        pallet: 'vesting',
+        extrinsic: 'vested_transfer',
+        call: this.client.api.tx.vesting.vestedTransfer(defaultAccountsSr25519.eve.address, {
+          locked: 100e10,
+          perBlock: 1e10,
+          startingBlock: 1,
+        }),
+      })
+    }
+
+    return vestingCalls
+  }
+
   buildUniquesAction(): ProxyAction[] {
     const uniquesCalls: ProxyAction[] = []
     if (this.client.api.tx.uniques) {
@@ -744,6 +762,7 @@ async function buildProxyAction<
       ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildVestingAction(),
     ])
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildAuctionAction(),
