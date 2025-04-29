@@ -86,8 +86,11 @@ These include:
 - E2E suite for proxy accounts:
   - proxy account creation, removal
   - pure proxy account creation, removal
-  - proxy calls
+  - execution of proxy calls
   - test delay in proxy actions, as well as announcement/removal, and executing of announced action
+  - proxy call filtering works both positively and negatively; in particular, for every proxy type in Polkadot/Kusama relay and system parachains, it is checked that:
+      - a proxy of a given type can always execute calls which that proxy type is allowed to execute
+      - a proxy of a given type can never execute calls that its proxy type disallowws it from running
 - E2E suite for vesting
   - normal (signed) and forced (root) vested transfers
   - forced (root) vesting schedule removal
