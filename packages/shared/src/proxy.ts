@@ -1036,6 +1036,8 @@ async function proxyCallFilteringSingleTestRunner<
 
   const alice = defaultAccountsSr25519.alice
 
+  // Add the proxy account, with the to-be-tested proxy type
+
   const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
   await sendTransaction(addProxyTx.signAsync(alice))
 
@@ -1052,12 +1054,12 @@ async function proxyCallFilteringSingleTestRunner<
     },
   })
 
-  let proxyAccountNonce = (await client.api.rpc.system.accountNextIndex(proxyAccount.address)).toNumber()
-
   // Execute each proxy action in its own block and check its results immediately
+
   for (const proxyAction of proxyActions) {
+    // Execute the proxy action
     const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
-    const result = await sendTransaction(proxyTx.signAsync(proxyAccount, { nonce: proxyAccountNonce++ }))
+    const result = await sendTransaction(proxyTx.signAsync(proxyAccount))
 
     // Advance to the next block to ensure events are processed
     await client.dev.newBlock()
@@ -1069,7 +1071,7 @@ async function proxyCallFilteringSingleTestRunner<
       return event.section === 'proxy' && event.method === 'ProxyExecuted'
     })
 
-    // We should have exactly one ProxyExecuted event for this call
+    // There should be exactly one `ProxyExecuted` event for this call
     expect(proxyExecutedEvents.length).toBe(1)
 
     // Check the result of this specific call
@@ -1077,6 +1079,7 @@ async function proxyCallFilteringSingleTestRunner<
     assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
     const proxyExecutedData = proxyExecutedEvent.event.data
 
+    // If the call failed, check that it was due to call filtering
     if (proxyExecutedData.result.isErr) {
       const error = proxyExecutedData.result.asErr
       // The error must be a module error (`system` is where `CallFiltered` exists), and no other e.g. `BadOrigin`.
@@ -1104,6 +1107,8 @@ async function proxyCallFilteringSingleTestRunner<
       // The call was executed successfully - nothing to check.
       expect(proxyExecutedData.result.isOk).toBe(true)
     }
+
+    // Snapshot the `Proxy.ProxyExecuted`event for the proxied call
 
     // If the pallet being tested is `balances`, its events should not be included in the snapshot
     // to avoid including block-specific fee events, which are unstable inbetween runs.
