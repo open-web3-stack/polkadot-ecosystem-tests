@@ -1,3 +1,6 @@
+/**
+ * Proxy types in the Polkadot relay chain.
+ */
 export const PolkadotProxyTypes = {
   Any: 0,
   NonTransfer: 1,
@@ -6,6 +9,7 @@ export const PolkadotProxyTypes = {
   CancelProxy: 6,
   Auction: 7,
   NominationPools: 8,
+  ParaRegistration: 9,
 }
 
 export const KusamaProxyTypes = {
@@ -18,6 +22,7 @@ export const KusamaProxyTypes = {
   Society: 7,
   NominationPools: 8,
   Spokesperson: 9,
+  ParaRegistration: 10,
 }
 
 export const AssetHubProxyTypes = {
