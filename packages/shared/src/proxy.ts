@@ -41,12 +41,103 @@ function createProxyAccounts(
 /**
  * Shorthand for a list of PJS-type fully-formed extrinsics.
  *
- * The pallet and extrinsic names are kept to better identify the correspoding snapshot.
+ * The pallet and extrinsic names are used to better identify the corresponding snapshot.
  */
 interface ProxyAction {
   pallet: string
   extrinsic: string
   call: SubmittableExtrinsic<'promise', ISubmittableResult>
+}
+
+/**
+ * Configuration for expected failures in proxy call filtering tests.
+ *
+ * Each entry specifies a combination of proxy type, pallet, and extrinsic that is expected to fail
+ * e.g. the planned (2025) AHM necessitating pallet functionality to be disabled.
+ */
+type ExpectedProxyCallFilteringFailures = {
+  [proxyType: string]: {
+    [pallet: string]: {
+      [extrinsic: string]: {
+        [network: string]: true
+      }
+    }
+  }
+}
+
+/**
+ * Known limitations in proxy call filtering across different networks.
+ *
+ * Expect this top-level object to change as proxy types' behavior is updated.
+ */
+const EXPECTED_FAILURES: ExpectedProxyCallFilteringFailures = {
+  Any: {
+    vesting: {
+      vested_transfer: {
+        assetHubPolkadot: true,
+        assetHubKusama: true,
+      },
+    },
+  },
+
+  // TODO: utility and system calls should be callable by cancel proxies, but on relay chains this is
+  // currently not the case, pending a PR to the `runtimes` repository.
+  CancelProxy: {
+    utility: {
+      batch: {
+        polkadot: true,
+        kusama: true,
+      },
+      batch_all: {
+        polkadot: true,
+        kusama: true,
+        peoplePolkadot: true,
+        peopleKusama: true,
+      },
+      force_batch: {
+        polkadot: true,
+        kusama: true,
+        peoplePolkadot: true,
+        peopleKusama: true,
+      },
+    },
+    multisig: {
+      as_multi: {
+        polkadot: true,
+        kusama: true,
+      },
+    },
+  },
+
+  // TODO: In Kusama, `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
+  // Pending a fix, this can be re-enabled.
+  ParaRegistration: {
+    proxy: {
+      remove_proxy: {
+        kusama: true,
+      },
+    },
+  },
+
+  // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
+  // Add this back in once the call is available.
+  Broker: {
+    broker: {
+      purchase_credit: {
+        coretimePolkadot: true,
+        coretimeKusama: true,
+      },
+    },
+  },
+
+  OnDemandPurchaser: {
+    broker: {
+      purchase_credit: {
+        coretimePolkadot: true,
+        coretimeKusama: true,
+      },
+    },
+  },
 }
 
 /**
@@ -74,35 +165,46 @@ interface ProxyActionBuilder {
   buildAssetsManagerAction(): ProxyAction[]
   buildAssetsOwnerAction(): ProxyAction[]
   buildAuctionAction(): ProxyAction[]
+
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildBrokerAction(): ProxyAction[]
   buildBrokerPurchaseCreditAction(): ProxyAction[]
   buildBrokerRenewerAction(): ProxyAction[]
+
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
+
   buildFastUnstakeAction(): ProxyAction[]
   buildFellowshipCollectiveAction(): ProxyAction[]
   buildFellowshipCoreAction(): ProxyAction[]
   buildFellowshipReferendaAction(): ProxyAction[]
   buildFellowshipSalaryAction(): ProxyAction[]
+
   buildGovernanceAction(): ProxyAction[]
+
   buildIdentityAction(): ProxyAction[]
   buildIdentityJudgementAction(): ProxyAction[]
+
   buildMultisigAction(): ProxyAction[]
+
   buildNftsAction(): ProxyAction[]
   buildNftsManagerAction(): ProxyAction[]
   buildNftsOwnerAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
+
   buildParasRegistrarAction(): ProxyAction[]
   buildProxyAction(): ProxyAction[]
   buildProxyRejectAnnouncementAction(): ProxyAction[]
   buildProxyRemoveProxyAction(): ProxyAction[]
+
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
+
   buildVestingAction(): ProxyAction[]
+
   buildUniquesAction(): ProxyAction[]
   buildUniquesManagerAction(): ProxyAction[]
   buildUniquesOwnerAction(): ProxyAction[]
@@ -292,13 +394,13 @@ class ProxyActionBuilderImpl<
 
     // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
     // Add this back in once the call is available.
-    /*     if (this.client.api.tx.broker) {
+    if (this.client.api.tx.broker) {
       brokerPurchaseCreditCalls.push({
         pallet: 'broker',
         extrinsic: 'purchase_credit',
         call: this.client.api.tx.broker.purchaseCredit(100e10, defaultAccountsSr25519.eve.address),
       })
-    } */
+    }
 
     return brokerPurchaseCreditCalls
   }
@@ -743,8 +845,6 @@ async function buildProxyAction<
 >(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
   const proxyActionBuilder = new ProxyActionBuilderImpl(client)
 
-  const c = await client.api.rpc.system.chain()
-
   // Note the pattern used: if the network has a certain pallet available, the list returned by the proxy action
   // builder won't be empty.
   // Otherwise, it will be empty, and this is a no-op.
@@ -777,11 +877,9 @@ async function buildProxyAction<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('CancelProxy', () => [
-      // TODO: utility and system calls should be callable by such proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
       ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
-      //...proxyActionBuilder.buildUtilityAction(),
-      //...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+      ...proxyActionBuilder.buildMultisigAction(),
     ])
 
     // Polkadot / Kusama
@@ -817,12 +915,8 @@ async function buildProxyAction<
         // This proxy type can only call batch extrinsics from `pallet_utility`, which happens to coincide with the
         // current implementation of `buildUtilityAction`.
         ...proxyActionBuilder.buildUtilityAction(),
+        ...proxyActionBuilder.buildProxyRemoveProxyAction(),
       ])
-      // TODO: In Kusama, `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-      // Pending a fix in the `runtimes` repository, this can be re-enabled.
-      if (!c.toString().includes('Kusama')) {
-        paraRegistrationCalls.concat([...proxyActionBuilder.buildProxyRemoveProxyAction()])
-      }
 
       return paraRegistrationCalls
     })
@@ -929,8 +1023,8 @@ async function buildProxyAction<
  * 1. As Alice, add a proxy account of that type
  * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed to execute
  * 3. Verify that the actions were correctly executed
- *     - The extrinsics are not required to be well-formed; the transaction can fail, though not because the call was
- *       filtered over the proxy's lack of permission.
+ *     - The extrinsics are not required to be well-formed; in other words, the transaction can fail, though not
+ *       because the call was filtered over the proxy's lack of permission.
  *
  * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
  */
@@ -989,13 +1083,23 @@ async function proxyCallFilteringSingleTestRunner<
       // It is assumed that the calls chosen can be executed with signed origins.
       assert(error.isModule)
 
-      // A call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
-      // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
-      expect(
-        client.api.errors.system.CallFiltered.is(error.asModule),
-        // Show failing pallet and extrinsic
-        `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
-      ).toBe(false)
+      // Check if this action is allowed to fail (e.g. temporarily disabled for the proxy type)
+      const isExpectedFailure =
+        EXPECTED_FAILURES[proxyType]?.[proxyAction.pallet]?.[proxyAction.extrinsic]?.[chain.name]
+
+      if (isExpectedFailure) {
+        // If this is an expected failure, a CallFiltered error is acceptable.
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Expected call ${proxyAction.pallet}.${proxyAction.extrinsic} to be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(true)
+      } else {
+        // If this is not an expected failure, the call should not be filtered
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
+        ).toBe(false)
+      }
     } else {
       // The call was executed successfully - nothing to check.
       expect(proxyExecutedData.result.isOk).toBe(true)
