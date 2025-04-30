@@ -556,7 +556,7 @@ exports[`Polkadot Proxy > proxy call filtering test for Any > events for proxy a
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -805,7 +805,7 @@ exports[`Polkadot Proxy > proxy call filtering test for Governance > events for 
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -1044,7 +1044,7 @@ exports[`Polkadot Proxy > proxy call filtering test for NonTransfer > events for
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
