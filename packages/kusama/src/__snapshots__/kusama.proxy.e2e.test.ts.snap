@@ -652,7 +652,7 @@ exports[`Kusama Proxy > proxy call filtering test for Any > events for proxy act
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -901,7 +901,7 @@ exports[`Kusama Proxy > proxy call filtering test for Governance > events for pr
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -1140,7 +1140,7 @@ exports[`Kusama Proxy > proxy call filtering test for NonTransfer > events for p
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },

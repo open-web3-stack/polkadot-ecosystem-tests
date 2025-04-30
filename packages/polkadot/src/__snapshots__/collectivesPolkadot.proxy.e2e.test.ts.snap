@@ -570,7 +570,7 @@ exports[`Polkadot Collectives Proxy > proxy call filtering test for Ambassador >
         "Err": {
           "Module": {
             "error": "0x00000000",
-            "index": 71,
+            "index": "(redacted)",
           },
         },
       },
@@ -959,7 +959,7 @@ exports[`Polkadot Collectives Proxy > proxy call filtering test for Fellowship >
         "Err": {
           "Module": {
             "error": "0x00000000",
-            "index": 61,
+            "index": "(redacted)",
           },
         },
       },
