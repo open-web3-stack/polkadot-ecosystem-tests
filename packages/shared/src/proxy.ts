@@ -834,12 +834,20 @@ class ProxyActionBuilderImpl<
 }
 
 /**
- * Given a proxy type and a PJS client, create a list of actions that should/should not be valid for a given proxy
- * type.
- *
- * Pattern matches on the proxy type (as string); if incorrect or nonexistent, the result is an empty list.
+ * The type of proxy call filtering test to run.
+ * - `Permitted`: Test that allowed proxy calls are *not* filtered
+ * - `Forbidden`: Test that disallowed proxy calls *are* filtered
  */
-async function buildProxyAction<
+enum ProxyCallFilteringTestType {
+  Permitted = 0,
+  Forbidden = 1,
+}
+
+/**
+ * Build a list of actions that should be allowed for a given proxy type.
+ * These are actions that the proxy type should be able to execute without being filtered.
+ */
+async function buildAllowedProxyActions<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
@@ -850,7 +858,6 @@ async function buildProxyAction<
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
     // Common
-
     .with('Any', () => [
       ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildBalancesAction(),
@@ -1019,31 +1026,95 @@ async function buildProxyAction<
 }
 
 /**
- * For a particular proxy type:
+ * Build a list of actions that should be disallowed for a given proxy type.
+ * These are actions that the proxy type should NOT be able to execute and should be filtered.
+ */
+async function buildDisallowedProxyActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
+  const proxyActionBuilder = new ProxyActionBuilderImpl(client)
+
+  // For each proxy type, we return actions that it should NOT be able to execute
+  const result = match(proxyType)
+    .with('Any', () => [
+      // Any proxy type should be able to execute all actions
+      // So we return an empty list as there are no disallowed actions
+    ])
+    .with('NonTransfer', () => [
+      // NonTransfer proxy type should not be able to execute balance transfers
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('CancelProxy', () => [
+      // CancelProxy should only be able to execute proxy-related actions
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('Staking', () => [
+      // Staking proxy type should not be able to execute non-staking actions
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    // ... add more cases for other proxy types ...
+    .otherwise(() => [])
+
+  return result
+}
+
+/**
+ * Build a list of proxy actions based on the test type.
+ * This function routes to either buildAllowedProxyActions or buildDisallowedProxyActions
+ * based on the testType parameter.
+ */
+async function buildProxyActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  proxyType: string,
+  client: Client<TCustom, TInitStorages>,
+  testType: ProxyCallFilteringTestType,
+): Promise<ProxyAction[]> {
+  return testType === ProxyCallFilteringTestType.Permitted
+    ? await buildAllowedProxyActions(proxyType, client)
+    : await buildDisallowedProxyActions(proxyType, client)
+}
+
+/**
+ * For a particular proxy type, and for a given test type ("allowed/disallowed"):
  * 1. As Alice, add a proxy account of that type
- * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed to execute
+ * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed/forbidden from execute
  * 3. Verify that the actions were correctly executed
- *     - The extrinsics are not required to be well-formed; in other words, the transaction can fail, though not
- *       because the call was filtered over the proxy's lack of permission.
+ *     - The extrinsics are not required to be well-formed; in other words, the transaction can fail, though:
+ *           - if the test type is "allowed", the transaction *must not* fail because of call filtering
+ *           - if the test type is "forbidden", the transaction *must* fail because of call filtering
  *
- * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
+ * To see which proxy-type-contingent actions are used, see `buildAllowedProxyActions` and `buildDisallowedProxyActions`.
  */
 async function proxyCallFilteringSingleTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  proxyType: string,
+  proxyTypeIx: number,
+  proxyAccount: KeyringPair,
+  testType: ProxyCallFilteringTestType = ProxyCallFilteringTestType.Permitted,
+) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
 
   // Add the proxy account, with the to-be-tested proxy type
-
   const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
   await sendTransaction(addProxyTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  const proxyActions = await buildProxyAction(proxyType, client)
+  // Get the appropriate list of actions based on test type
+  const proxyActions = await buildProxyActions(proxyType, client, testType)
+
   if (proxyActions.length === 0) {
     return
   }
@@ -1055,7 +1126,6 @@ async function proxyCallFilteringSingleTestRunner<
   })
 
   // Execute each proxy action in its own block and check its results immediately
-
   for (const proxyAction of proxyActions) {
     // Execute the proxy action
     const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
@@ -1080,36 +1150,48 @@ async function proxyCallFilteringSingleTestRunner<
     const proxyExecutedData = proxyExecutedEvent.event.data
 
     // If the call failed, check that it was due to call filtering
-    if (proxyExecutedData.result.isErr) {
-      const error = proxyExecutedData.result.asErr
-      // The error must be a module error (`system` is where `CallFiltered` exists), and no other e.g. `BadOrigin`.
-      // It is assumed that the calls chosen can be executed with signed origins.
-      assert(error.isModule)
-
-      // Check if this action is allowed to fail (e.g. temporarily disabled for the proxy type)
-      const isExpectedFailure =
-        EXPECTED_FAILURES[proxyType]?.[proxyAction.pallet]?.[proxyAction.extrinsic]?.[chain.name]
-
-      if (isExpectedFailure) {
-        // If this is an expected failure, a CallFiltered error is acceptable.
+    if (testType === ProxyCallFilteringTestType.Forbidden) {
+      // For forbidden calls, we expect them to be filtered
+      if (proxyExecutedData.result.isErr) {
+        const error = proxyExecutedData.result.asErr
+        assert(error.isModule)
         expect(
           client.api.errors.system.CallFiltered.is(error.asModule),
-          `Expected call ${proxyAction.pallet}.${proxyAction.extrinsic} to be filtered for ${proxyType} proxy on ${chain.name}`,
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
         ).toBe(true)
       } else {
-        // If this is not an expected failure, the call should not be filtered
+        // If not filtered, this is a failure
         expect(
-          client.api.errors.system.CallFiltered.is(error.asModule),
-          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
+          proxyExecutedData.result.isOk,
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
         ).toBe(false)
       }
     } else {
-      // The call was executed successfully - nothing to check.
-      expect(proxyExecutedData.result.isOk).toBe(true)
+      // For permitted calls
+      if (proxyExecutedData.result.isErr) {
+        const error = proxyExecutedData.result.asErr
+        assert(error.isModule)
+
+        if (EXPECTED_FAILURES[proxyType]?.[proxyAction.pallet]?.[proxyAction.extrinsic]?.[chain.name]) {
+          // If it's an expected failure, filtering is okay
+          expect(
+            client.api.errors.system.CallFiltered.is(error.asModule),
+            `Expected call ${proxyAction.pallet}.${proxyAction.extrinsic} to be filtered for ${proxyType} proxy on ${chain.name}`,
+          ).toBe(true)
+        } else {
+          // Otherwise, no filtering should occur
+          expect(
+            client.api.errors.system.CallFiltered.is(error.asModule),
+            `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
+          ).toBe(false)
+        }
+      } else {
+        // Success is acceptable for permitted calls
+        expect(proxyExecutedData.result.isOk).toBe(true)
+      }
     }
 
     // Snapshot the `Proxy.ProxyExecuted`event for the proxied call
-
     // If the pallet being tested is `balances`, its events should not be included in the snapshot
     // to avoid including block-specific fee events, which are unstable inbetween runs.
     let eventChecker: Checker
@@ -1136,7 +1218,7 @@ async function proxyCallFilteringSingleTestRunner<
 async function proxyCallFilteringTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, testType: ProxyCallFilteringTestType) {
   const kr = defaultAccountsSr25519.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
@@ -1176,8 +1258,8 @@ async function proxyCallFilteringTestRunner<
       continue
     }
 
-    test(`proxy call filtering test for ${proxyType}`, async () => {
-      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType])
+    test(`${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy call filtering test for ${proxyType}`, async () => {
+      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType], testType)
     })
   }
 }
@@ -1677,6 +1759,12 @@ export async function proxyE2ETests<
       await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
     })
 
-    proxyCallFilteringTestRunner(chain, proxyTypes)
+    describe('filtering tests for permitted proxy calls', () => {
+      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
+    })
+
+    describe('filtering tests for forbidden proxy calls', () => {
+      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
+    })
   })
 }
