@@ -30,7 +30,7 @@
 	"packageManager": "yarn@4.2.2",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
-		"@swc/core": "^1.11.5",
+		"@swc/core": "^1.11.24",
 		"lodash": "^4.17.21",
 		"ts-pattern": "^5.7.0",
 		"typescript": "^5.8.3",
