@@ -766,7 +766,9 @@ async function buildAllowedProxyActions<
   // builder won't be empty.
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
+
     // Common
+
     .with('Any', () => {
       const actions = [
         ...proxyActionBuilder.buildAuctionAction(),
@@ -844,7 +846,7 @@ async function buildAllowedProxyActions<
 
       paraRegistrationCalls.concat([
         ...proxyActionBuilder.buildParasRegistrarAction(),
-        // This proxy type can only call batch extrinsics from `pallet_utility`, which happens to coincide with the
+        // This proxy type can only call  batch extrinsics from `pallet_utility`, which happens to coincide with the
         // current implementation of `buildUtilityAction`.
         ...proxyActionBuilder.buildUtilityAction(),
         ...proxyActionBuilder.buildProxyRemoveProxyAction(),
@@ -962,6 +964,9 @@ async function buildDisallowedProxyActions<
 
   // For each proxy type, we return actions that it should NOT be able to execute
   const result = match(proxyType)
+
+    // Common
+
     .with('Any', () => {
       const actions: ProxyAction[] = []
       // `vesting.vested_transfer` is currently disabled on asset hubs, pending the AHM.
@@ -999,6 +1004,11 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+    ])
+    .with('Governance', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('Staking', () => [...proxyActionBuilder.buildBalancesAction(), ...proxyActionBuilder.buildSystemAction()])
     .with('ParaRegistration', () => {
@@ -1210,7 +1220,7 @@ async function proxyCallFilteringTestRunner<
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
-    // In this network, there might be some proxy types that don't/cannot be tested.
+    // In this network, there might be some proxy types that should not/cannot be tested.
     if (!proxyTypesToTest.includes(proxyType)) {
       continue
     }
