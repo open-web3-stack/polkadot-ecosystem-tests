@@ -50,97 +50,6 @@ interface ProxyAction {
 }
 
 /**
- * Configuration for expected failures in proxy call filtering tests.
- *
- * Each entry specifies a combination of proxy type, pallet, and extrinsic that is expected to fail
- * e.g. the planned (2025) AHM necessitating pallet functionality to be disabled.
- */
-type ExpectedProxyCallFilteringFailures = {
-  [proxyType: string]: {
-    [pallet: string]: {
-      [extrinsic: string]: {
-        [network: string]: true
-      }
-    }
-  }
-}
-
-/**
- * Known limitations in proxy call filtering across different networks.
- *
- * Expect this top-level object to change as proxy types' behavior is updated.
- */
-const EXPECTED_FAILURES: ExpectedProxyCallFilteringFailures = {
-  Any: {
-    vesting: {
-      vested_transfer: {
-        assetHubPolkadot: true,
-        assetHubKusama: true,
-      },
-    },
-  },
-
-  // TODO: utility and system calls should be callable by cancel proxies, but on relay chains this is
-  // currently not the case, pending a PR to the `runtimes` repository.
-  CancelProxy: {
-    utility: {
-      batch: {
-        polkadot: true,
-        kusama: true,
-      },
-      batch_all: {
-        polkadot: true,
-        kusama: true,
-        peoplePolkadot: true,
-        peopleKusama: true,
-      },
-      force_batch: {
-        polkadot: true,
-        kusama: true,
-        peoplePolkadot: true,
-        peopleKusama: true,
-      },
-    },
-    multisig: {
-      as_multi: {
-        polkadot: true,
-        kusama: true,
-      },
-    },
-  },
-
-  // TODO: In Kusama, `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-  // Pending a fix, this can be re-enabled.
-  ParaRegistration: {
-    proxy: {
-      remove_proxy: {
-        kusama: true,
-      },
-    },
-  },
-
-  // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
-  // Add this back in once the call is available.
-  Broker: {
-    broker: {
-      purchase_credit: {
-        coretimePolkadot: true,
-        coretimeKusama: true,
-      },
-    },
-  },
-
-  OnDemandPurchaser: {
-    broker: {
-      purchase_credit: {
-        coretimePolkadot: true,
-        coretimeKusama: true,
-      },
-    },
-  },
-}
-
-/**
  * A builder for proxy action lists.
  *
  * Each builder method returns a list of actions from a certain pallet that should/should not bevalid for a given proxy
@@ -377,7 +286,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildBrokerAction(): ProxyAction[] {
-    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction(), ...this.buildBrokerPurchaseCreditAction()]
+    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction()]
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
@@ -850,7 +759,7 @@ enum ProxyCallFilteringTestType {
 async function buildAllowedProxyActions<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
+>(proxyType: string, client: Client<TCustom, TInitStorages>, chainName: string): Promise<ProxyAction[]> {
   const proxyActionBuilder = new ProxyActionBuilderImpl(client)
 
   // Note the pattern used: if the network has a certain pallet available, the list returned by the proxy action
@@ -858,19 +767,28 @@ async function buildAllowedProxyActions<
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
     // Common
-    .with('Any', () => [
-      ...proxyActionBuilder.buildAuctionAction(),
-      ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildBountyAction(),
-      ...proxyActionBuilder.buildGovernanceAction(),
-      ...proxyActionBuilder.buildMultisigAction(),
-      ...proxyActionBuilder.buildNominationPoolsAction(),
-      ...proxyActionBuilder.buildProxyAction(),
-      ...proxyActionBuilder.buildStakingAction(),
-      ...proxyActionBuilder.buildSystemAction(),
-      ...proxyActionBuilder.buildUtilityAction(),
-      ...proxyActionBuilder.buildVestingAction(),
-    ])
+    .with('Any', () => {
+      const actions = [
+        ...proxyActionBuilder.buildAuctionAction(),
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildBountyAction(),
+        ...proxyActionBuilder.buildGovernanceAction(),
+        ...proxyActionBuilder.buildMultisigAction(),
+        ...proxyActionBuilder.buildNominationPoolsAction(),
+        ...proxyActionBuilder.buildProxyAction(),
+        ...proxyActionBuilder.buildStakingAction(),
+        ...proxyActionBuilder.buildSystemAction(),
+        ...proxyActionBuilder.buildUtilityAction(),
+      ]
+
+      // `vesting.vested_transfer` is currently disabled on asset hubs in run-up to AHM:
+      // TODO: This is a temporary limitation that should be removed once the call is available again.
+      if (!['assetHubPolkadot', 'assetHubKusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildVestingAction())
+      }
+
+      return actions
+    })
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildSystemAction(),
@@ -883,11 +801,18 @@ async function buildAllowedProxyActions<
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
-    .with('CancelProxy', () => [
-      ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
-      ...proxyActionBuilder.buildUtilityAction(),
-      ...proxyActionBuilder.buildMultisigAction(),
-    ])
+    .with('CancelProxy', () => {
+      const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
+
+      // `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
+      // currently not the case, pending a PR to the `runtimes` repository.
+      if (!['polkadot', 'kusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildUtilityAction())
+        actions.push(...proxyActionBuilder.buildMultisigAction())
+      }
+
+      return actions
+    })
 
     // Polkadot / Kusama
 
@@ -1000,7 +925,8 @@ async function buildAllowedProxyActions<
     ])
 
     .with('OnDemandPurchaser', () => [
-      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      // TODO: Purchase credit call disabled due to AHM.
+      // Re-enable it once it is available again.
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -1032,32 +958,65 @@ async function buildAllowedProxyActions<
 async function buildDisallowedProxyActions<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
+>(proxyType: string, client: Client<TCustom, TInitStorages>, chainName: string): Promise<ProxyAction[]> {
   const proxyActionBuilder = new ProxyActionBuilderImpl(client)
 
   // For each proxy type, we return actions that it should NOT be able to execute
   const result = match(proxyType)
-    .with('Any', () => [
-      // Any proxy type should be able to execute all actions
-      // So we return an empty list as there are no disallowed actions
-    ])
+    .with('Any', () => {
+      const actions: ProxyAction[] = []
+      // `vesting.vested_transfer` is currently disabled on asset hubs, pending the AHM.
+      // TODO: This is a temporary limitation that should be removed once the call is available
+      if (['assetHubPolkadot', 'assetHubKusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildVestingAction())
+      }
+      return actions
+    })
     .with('NonTransfer', () => [
-      // NonTransfer proxy type should not be able to execute balance transfers
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildVestingAction(),
     ])
-    .with('CancelProxy', () => [
-      // CancelProxy should only be able to execute proxy-related actions
-      ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildStakingAction(),
-      ...proxyActionBuilder.buildSystemAction(),
-    ])
+    .with('CancelProxy', () => {
+      const actions = [
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildStakingAction(),
+        ...proxyActionBuilder.buildSystemAction(),
+      ]
+
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
+      // currently not the case, pending a PR to the `runtimes` repository.
+      if (['polkadot', 'kusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildUtilityAction())
+        actions.push(...proxyActionBuilder.buildMultisigAction())
+      }
+
+      return actions
+    })
     .with('Staking', () => [
       // Staking proxy type should not be able to execute non-staking actions
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
-    // ... add more cases for other proxy types ...
+    .with('ParaRegistration', () => {
+      const actions: ProxyAction[] = []
+      // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
+      // Pending a fix, this can be re-enabled.
+      if (chainName === 'kusama') {
+        actions.push(...proxyActionBuilder.buildProxyRemoveProxyAction())
+      }
+      return actions
+    })
+    .with('Broker', () => [
+      // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
+      // Add this back in once the call is available.
+      // This is disabled on all networks where the Broker proxy type exists
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+    ])
+    .with('OnDemandPurchaser', () => [
+      // TODO: Call disabled due to AHM.
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+    ])
     .otherwise(() => [])
 
   return result
@@ -1075,10 +1034,11 @@ async function buildProxyActions<
   proxyType: string,
   client: Client<TCustom, TInitStorages>,
   testType: ProxyCallFilteringTestType,
+  chainName: string,
 ): Promise<ProxyAction[]> {
   return testType === ProxyCallFilteringTestType.Permitted
-    ? await buildAllowedProxyActions(proxyType, client)
-    : await buildDisallowedProxyActions(proxyType, client)
+    ? await buildAllowedProxyActions(proxyType, client, chainName)
+    : await buildDisallowedProxyActions(proxyType, client, chainName)
 }
 
 /**
@@ -1113,7 +1073,7 @@ async function proxyCallFilteringSingleTestRunner<
   await client.dev.newBlock()
 
   // Get the appropriate list of actions based on test type
-  const proxyActions = await buildProxyActions(proxyType, client, testType)
+  const proxyActions = await buildProxyActions(proxyType, client, testType, chain.name)
 
   if (proxyActions.length === 0) {
     return
@@ -1149,9 +1109,9 @@ async function proxyCallFilteringSingleTestRunner<
     assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
     const proxyExecutedData = proxyExecutedEvent.event.data
 
-    // If the call failed, check that it was due to call filtering
+    // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
-      // For forbidden calls, we expect them to be filtered
+      // For forbidden calls, they are expected to have been filtered
       if (proxyExecutedData.result.isErr) {
         const error = proxyExecutedData.result.asErr
         assert(error.isModule)
@@ -1160,31 +1120,24 @@ async function proxyCallFilteringSingleTestRunner<
           `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
         ).toBe(true)
       } else {
-        // If not filtered, this is a failure
+        // If not filtered, fail the test.
         expect(
           proxyExecutedData.result.isOk,
           `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
         ).toBe(false)
       }
-    } else {
-      // For permitted calls
+    }
+    // Path taken for permitted calls
+    else {
+      // If the call failed, check that it was *not* due to call filtering
       if (proxyExecutedData.result.isErr) {
         const error = proxyExecutedData.result.asErr
         assert(error.isModule)
 
-        if (EXPECTED_FAILURES[proxyType]?.[proxyAction.pallet]?.[proxyAction.extrinsic]?.[chain.name]) {
-          // If it's an expected failure, filtering is okay
-          expect(
-            client.api.errors.system.CallFiltered.is(error.asModule),
-            `Expected call ${proxyAction.pallet}.${proxyAction.extrinsic} to be filtered for ${proxyType} proxy on ${chain.name}`,
-          ).toBe(true)
-        } else {
-          // Otherwise, no filtering should occur
-          expect(
-            client.api.errors.system.CallFiltered.is(error.asModule),
-            `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
-          ).toBe(false)
-        }
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
+        ).toBe(false)
       } else {
         // Success is acceptable for permitted calls
         expect(proxyExecutedData.result.isOk).toBe(true)
@@ -1202,7 +1155,7 @@ async function proxyCallFilteringSingleTestRunner<
     }
 
     await eventChecker.toMatchSnapshot(
-      `events for proxy action: proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+      `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
     )
   }
 }
@@ -1258,7 +1211,7 @@ async function proxyCallFilteringTestRunner<
       continue
     }
 
-    test(`${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy call filtering test for ${proxyType}`, async () => {
+    test(`${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`, async () => {
       await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType], testType)
     })
   }

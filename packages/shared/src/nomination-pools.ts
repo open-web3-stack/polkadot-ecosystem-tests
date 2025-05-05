@@ -587,6 +587,8 @@ async function nominationPoolLifecycleTest<
     'unbond (depositor) events',
   )
 
+  await client.pause()
+
   /// Process events to look for the expected extrinsic error.
 
   events = await client.api.query.system.events()
