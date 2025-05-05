@@ -779,25 +779,6 @@ exports[`People Kusama Proxy > filtering tests for permitted proxy calls > allow
 ]
 `;
 
-exports[`People Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet identity, call provide_judgement 2`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x08000000",
-            "index": 50,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`People Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet multisig, call as_multi 1`] = `
 [
   {

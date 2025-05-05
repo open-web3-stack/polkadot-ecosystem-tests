@@ -935,7 +935,6 @@ async function buildAllowedProxyActions<
 
     .with('Identity', () => [
       ...proxyActionBuilder.buildIdentityAction(),
-      ...proxyActionBuilder.buildIdentityJudgementAction(),
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -992,11 +991,16 @@ async function buildDisallowedProxyActions<
 
       return actions
     })
-    .with('Staking', () => [
-      // Staking proxy type should not be able to execute non-staking actions
+
+    // Polkadot / Kusama
+
+    .with('Auction', () => [
       ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
     ])
+    .with('Staking', () => [...proxyActionBuilder.buildBalancesAction(), ...proxyActionBuilder.buildSystemAction()])
     .with('ParaRegistration', () => {
       const actions: ProxyAction[] = []
       // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
