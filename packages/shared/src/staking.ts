@@ -1255,10 +1255,10 @@ async function unappliedSlashTest<
     const { event } = record
     if (event.section === 'staking' && event.method === 'Slashed') {
       assert(client.api.events.staking.Slashed.is(event))
-      stakingSlashEvents.push(record)
+      stakingSlashEvents.push(record.event.data)
     } else if (event.section === 'balances' && event.method === 'Slashed') {
       assert(client.api.events.balances.Slashed.is(event))
-      balancesSlashEvents.push(record)
+      balancesSlashEvents.push(record.event.data)
     }
   }
 

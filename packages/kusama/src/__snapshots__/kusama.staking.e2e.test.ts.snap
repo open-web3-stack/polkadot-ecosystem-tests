@@ -667,88 +667,34 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
 
 exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
 [
-  {
-    "event": {
-      "data": [
-        "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-        5000000000000,
-      ],
-      "index": "0x0409",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
-  {
-    "event": {
-      "data": [
-        "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-        10000000000000,
-      ],
-      "index": "0x0409",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
-  {
-    "event": {
-      "data": [
-        "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-        10000000000000,
-      ],
-      "index": "0x0409",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
+  [
+    "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    5000000000000,
+  ],
+  [
+    "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    10000000000000,
+  ],
+  [
+    "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    10000000000000,
+  ],
 ]
 `;
 
 exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
 [
-  {
-    "event": {
-      "data": [
-        "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-        5000000000000,
-      ],
-      "index": "0x0602",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
-  {
-    "event": {
-      "data": [
-        "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-        10000000000000,
-      ],
-      "index": "0x0602",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
-  {
-    "event": {
-      "data": [
-        "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-        10000000000000,
-      ],
-      "index": "0x0602",
-    },
-    "phase": {
-      "initialization": null,
-    },
-    "topics": [],
-  },
+  [
+    "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    5000000000000,
+  ],
+  [
+    "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    10000000000000,
+  ],
+  [
+    "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    10000000000000,
+  ],
 ]
 `;
