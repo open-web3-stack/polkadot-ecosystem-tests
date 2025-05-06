@@ -1215,9 +1215,18 @@ async function proxyCallFilteringSingleTestRunner<
       eventChecker = checkEvents(result, 'proxy')
     }
 
-    await eventChecker.toMatchSnapshot(
-      `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
-    )
+    let redactKeys: RegExp | undefined
+    if (proxyAction.pallet === 'referenda') {
+      redactKeys = /^index$/
+    }
+
+    await eventChecker
+      .redact({
+        redactKeys,
+      })
+      .toMatchSnapshot(
+        `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+      )
   }
 }
 
