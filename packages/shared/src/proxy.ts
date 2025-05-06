@@ -1054,7 +1054,11 @@ async function buildDisallowedProxyActions<
     ])
 
     .with('ParaRegistration', () => {
-      const actions: ProxyAction[] = []
+      const actions: ProxyAction[] = [
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildProxyAction(),
+        ...proxyActionBuilder.buildSystemAction(),
+      ]
       // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
       // Pending a fix, this can be re-enabled.
       if (chainName === 'kusama') {
