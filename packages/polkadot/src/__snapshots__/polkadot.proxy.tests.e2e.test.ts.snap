@@ -421,7 +421,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
@@ -965,7 +965,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
@@ -1315,7 +1315,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
@@ -1555,7 +1555,7 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -1856,7 +1856,7 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -2095,7 +2095,7 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
 [
   {
     "data": {
-      "index": "(rounded 1500)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },

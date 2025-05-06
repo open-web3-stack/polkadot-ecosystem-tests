@@ -1954,7 +1954,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -2255,7 +2255,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },
@@ -2494,7 +2494,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": "(rounded 520)",
+      "index": "(redacted)",
       "proposal": {
         "Inline": "0x00001468656c6c6f",
       },

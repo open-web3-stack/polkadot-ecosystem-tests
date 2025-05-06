@@ -656,7 +656,7 @@ exports[`Polkadot Collectives Proxy > filtering tests for permitted proxy calls 
         "Err": {
           "Module": {
             "error": "0x00000000",
-            "index": 71,
+            "index": "(redacted)",
           },
         },
       },
@@ -1148,7 +1148,7 @@ exports[`Polkadot Collectives Proxy > filtering tests for permitted proxy calls 
         "Err": {
           "Module": {
             "error": "0x00000000",
-            "index": 61,
+            "index": "(redacted)",
           },
         },
       },
