@@ -517,7 +517,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
@@ -1061,7 +1061,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
@@ -1714,7 +1714,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": 0,
+            "index": "(redacted)",
           },
         },
       },
