@@ -111,6 +111,8 @@ interface ProxyActionBuilder {
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
+  buildSystemNonRemarkAction(): ProxyAction[]
+  buildSystemRemarkAction(): ProxyAction[]
 
   buildVestingAction(): ProxyAction[]
 
@@ -655,6 +657,20 @@ class ProxyActionBuilderImpl<
   }
 
   buildSystemAction(): ProxyAction[] {
+    return [...this.buildSystemNonRemarkAction(), ...this.buildSystemRemarkAction()]
+  }
+
+  buildSystemNonRemarkAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'system',
+        extrinsic: 'apply_authorized_upgrade',
+        call: this.client.api.tx.system.applyAuthorizedUpgrade('code'),
+      },
+    ]
+  }
+
+  buildSystemRemarkAction(): ProxyAction[] {
     return [
       {
         pallet: 'system',
@@ -779,7 +795,7 @@ async function buildAllowedProxyActions<
         ...proxyActionBuilder.buildNominationPoolsAction(),
         ...proxyActionBuilder.buildProxyAction(),
         ...proxyActionBuilder.buildStakingAction(),
-        ...proxyActionBuilder.buildSystemAction(),
+        ...proxyActionBuilder.buildSystemRemarkAction(),
         ...proxyActionBuilder.buildUtilityAction(),
       ]
 
@@ -793,14 +809,13 @@ async function buildAllowedProxyActions<
     })
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildAuctionAction(),
-      ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
       ...proxyActionBuilder.buildMultisigAction(),
       ...proxyActionBuilder.buildNominationPoolsAction(),
       ...proxyActionBuilder.buildProxyAction(),
       ...proxyActionBuilder.buildStakingAction(),
-      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildSystemRemarkAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('CancelProxy', () => {
@@ -840,7 +855,7 @@ async function buildAllowedProxyActions<
     ])
 
     .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
-    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
+    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemRemarkAction()])
     .with('ParaRegistration', () => {
       const paraRegistrationCalls: ProxyAction[] = []
 
@@ -1030,6 +1045,13 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
+    .with('Spokesperson', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      // This proxy type can only call remark functions from the system pallet.
+      // All other system calls are disallowed, an instance of which is in `buildSystemNonRemarkAction`.
+      ...proxyActionBuilder.buildSystemNonRemarkAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
 
     .with('ParaRegistration', () => {
       const actions: ProxyAction[] = []
@@ -1048,7 +1070,8 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
     ])
     .with('OnDemandPurchaser', () => [
-      // TODO: Call disabled due to AHM.
+      // TODO: Call disabled due to AHM. Once reenabled, remove it from this list, and readd it to
+      // `buildAllowedProxyActions`.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
     ])
     .otherwise(() => [])
