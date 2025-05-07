@@ -78,7 +78,7 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
     }
     eraAtNextBlock = (await apiAtNext.query.staking.activeEra()).unwrap().index.toNumber()
 
-    // If we found the transition point, return it
+    // If the transition point was found, return it
     if (eraAtMidBlock !== eraAtNextBlock) {
       return mid
     }
@@ -94,7 +94,7 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
     }
   }
 
-  // If we get here, we didn't find a transition point
+  // If arrived here, a transition point was not found.
   return undefined
 }
 
