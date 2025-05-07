@@ -1100,6 +1100,15 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildUniquesManagerAction(),
     ])
 
+    // Collectives
+
+    .with('Alliance', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+
     // Coretime
 
     .with('Broker', () => [
