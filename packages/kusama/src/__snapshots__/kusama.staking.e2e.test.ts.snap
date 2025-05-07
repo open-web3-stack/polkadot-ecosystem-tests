@@ -669,7 +669,7 @@ exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
 [
   {
     "data": {
-      "amount": 5000000000000,
+      "amount": 50000000000000,
       "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "Slashed",
@@ -677,7 +677,7 @@ exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
   },
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "Slashed",
@@ -685,7 +685,7 @@ exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
   },
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "who": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
     },
     "method": "Slashed",
@@ -698,7 +698,7 @@ exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
 [
   {
     "data": {
-      "amount": 5000000000000,
+      "amount": 50000000000000,
       "staker": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "Slashed",
@@ -706,7 +706,7 @@ exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
   },
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "staker": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
     },
     "method": "Slashed",
@@ -714,7 +714,7 @@ exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
   },
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "staker": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
     },
     "method": "Slashed",
