@@ -1083,6 +1083,14 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
+    .with('AssetManager', () => [
+      ...proxyActionBuilder.buildAssetsOwnerAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildNftsOwnerAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUniquesOwnerAction(),
+    ])
 
     // Coretime
 

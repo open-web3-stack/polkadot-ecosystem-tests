@@ -365,6 +365,162 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call destroy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 6400)",
+          "refTime": "(rounded 120000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 4700)",
+          "refTime": "(rounded 300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
 [
   {
