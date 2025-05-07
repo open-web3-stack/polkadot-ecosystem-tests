@@ -94,6 +94,7 @@ interface ProxyActionBuilder {
 
   buildIdentityAction(): ProxyAction[]
   buildIdentityJudgementAction(): ProxyAction[]
+  buildIdentityNonJudgementAction(): ProxyAction[]
 
   buildMultisigAction(): ProxyAction[]
 
@@ -453,16 +454,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildIdentityAction(): ProxyAction[] {
-    const identityCalls: ProxyAction[] = [...this.buildIdentityJudgementAction()]
-    if (this.client.api.tx.identity) {
-      identityCalls.push({
-        pallet: 'identity',
-        extrinsic: 'clear_identity',
-        call: this.client.api.tx.identity.clearIdentity(),
-      })
-    }
-
-    return identityCalls
+    return [...this.buildIdentityJudgementAction(), ...this.buildIdentityNonJudgementAction()]
   }
 
   buildIdentityJudgementAction(): ProxyAction[] {
@@ -478,6 +470,20 @@ class ProxyActionBuilderImpl<
     }
 
     return identityJudgementCalls
+  }
+
+  buildIdentityNonJudgementAction(): ProxyAction[] {
+    const identityNonJudgementCalls: ProxyAction[] = []
+
+    if (this.client.api.tx.identity) {
+      identityNonJudgementCalls.push({
+        pallet: 'identity',
+        extrinsic: 'clear_identity',
+        call: this.client.api.tx.identity.clearIdentity(),
+      })
+    }
+
+    return identityNonJudgementCalls
   }
 
   buildMultisigAction(): ProxyAction[] {
@@ -1171,6 +1177,18 @@ async function buildDisallowedProxyActions<
     ])
 
     // Identity
+
+    .with('Identity', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('IdentityJudgement', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildIdentityNonJudgementAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
 
     .otherwise(() => [])
 
