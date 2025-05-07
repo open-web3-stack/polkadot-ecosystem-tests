@@ -1156,9 +1156,12 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('OnDemandPurchaser', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
       // TODO: Call disabled due to AHM. Once reenabled, remove it from this list, and readd it to
       // `buildAllowedProxyActions`.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
     ])
 
     // Identity
