@@ -1074,6 +1074,7 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildGovernanceAction(),
       ...proxyActionBuilder.buildStakingAction(),
       ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildVestingAction(),
     ])
 
     // Asset Hubs
@@ -1104,8 +1105,16 @@ async function buildDisallowedProxyActions<
 
     .with('Alliance', () => [
       ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildGovernanceAction(),
-      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildFellowshipCollectiveAction(),
+      ...proxyActionBuilder.buildFellowshipCoreAction(),
+      ...proxyActionBuilder.buildFellowshipReferendaAction(),
+      ...proxyActionBuilder.buildFellowshipSalaryAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('Fellowship', () => [
+      ...proxyActionBuilder.buildAllianceAction(),
+      ...proxyActionBuilder.buildAllianceMotionAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
 
