@@ -2,8 +2,8 @@
 	"name": "@e2e-test/shared",
 	"type": "module",
 	"dependencies": {
-		"@acala-network/chopsticks": "^1.0.3",
-		"@acala-network/chopsticks-testing": "^1.0.3",
+		"@acala-network/chopsticks": "^1.0.6-1",
+		"@acala-network/chopsticks-testing": "^1.0.6-1",
 		"@e2e-test/networks": "workspace:*",
 		"@polkadot/api": "^15.0",
 		"@polkadot/types": "^15.9",
