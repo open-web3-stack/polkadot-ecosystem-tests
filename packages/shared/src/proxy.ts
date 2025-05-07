@@ -1104,7 +1104,15 @@ async function buildDisallowedProxyActions<
     // Collectives
 
     .with('Alliance', () => [
+      // Check that ambassador actions are forbidden
+      ...proxyActionBuilder.buildAmbassadorCollectiveAction(),
+      ...proxyActionBuilder.buildAmbassadorCoreAction(),
+      ...proxyActionBuilder.buildAmbassadorReferendaAction(),
+      ...proxyActionBuilder.buildAmbassadorSalaryAction(),
+
       ...proxyActionBuilder.buildBalancesAction(),
+
+      // and fellowship's as well.
       ...proxyActionBuilder.buildFellowshipCollectiveAction(),
       ...proxyActionBuilder.buildFellowshipCoreAction(),
       ...proxyActionBuilder.buildFellowshipReferendaAction(),
@@ -1112,8 +1120,16 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('Fellowship', () => [
+      // Check that alliance actions are forbidden
       ...proxyActionBuilder.buildAllianceAction(),
       ...proxyActionBuilder.buildAllianceMotionAction(),
+
+      // Check that ambassador actions are forbidden
+      ...proxyActionBuilder.buildAmbassadorCollectiveAction(),
+      ...proxyActionBuilder.buildAmbassadorCoreAction(),
+      ...proxyActionBuilder.buildAmbassadorReferendaAction(),
+      ...proxyActionBuilder.buildAmbassadorSalaryAction(),
+
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])

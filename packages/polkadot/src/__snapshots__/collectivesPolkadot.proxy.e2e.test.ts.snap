@@ -384,6 +384,44 @@ exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls 
 ]
 `;
 
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet core_fellowship, call bump 2`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet ranked_collective, call vote 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet referenda, call place_decision_deposit 1`] = `
 [
   {
@@ -403,7 +441,45 @@ exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls 
 ]
 `;
 
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet referenda, call place_decision_deposit 2`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": "(redacted)",
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet salary, call init 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet salary, call init 2`] = `
 [
   {
     "data": {
@@ -1009,6 +1085,82 @@ exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls 
 `;
 
 exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet collectives, call propose 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet core_fellowship, call bump 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet ranked_collective, call vote 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet referenda, call place_decision_deposit 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": "(redacted)",
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet salary, call init 1`] = `
 [
   {
     "data": {
