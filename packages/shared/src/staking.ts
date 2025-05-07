@@ -1226,9 +1226,9 @@ async function unappliedSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
-  assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
-  assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+  expect(aliceFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
 
   await client.dev.setStorage({
     ParasDisputes: {
@@ -1247,23 +1247,8 @@ async function unappliedSlashTest<
 
   await client.dev.newBlock()
 
-  const stakingSlashEvents: any[] = []
-  const balancesSlashEvents: any[] = []
-
-  const events = await client.api.query.system.events()
-  for (const record of events) {
-    const { event } = record
-    if (event.section === 'staking' && event.method === 'Slashed') {
-      assert(client.api.events.staking.Slashed.is(event))
-      stakingSlashEvents.push(record.event.data)
-    } else if (event.section === 'balances' && event.method === 'Slashed') {
-      assert(client.api.events.balances.Slashed.is(event))
-      balancesSlashEvents.push(record.event.data)
-    }
-  }
-
-  await check(stakingSlashEvents).toMatchSnapshot('staking slash events')
-  await check(balancesSlashEvents).toMatchSnapshot('balances slash events')
+  await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
 
   const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
