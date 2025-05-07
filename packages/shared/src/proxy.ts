@@ -1117,6 +1117,16 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
+    .with('Ambassador', () => [
+      ...proxyActionBuilder.buildAllianceAction(),
+      ...proxyActionBuilder.buildAllianceMotionAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildFellowshipCollectiveAction(),
+      ...proxyActionBuilder.buildFellowshipCoreAction(),
+      ...proxyActionBuilder.buildFellowshipReferendaAction(),
+      ...proxyActionBuilder.buildFellowshipSalaryAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
 
     // Coretime
 
