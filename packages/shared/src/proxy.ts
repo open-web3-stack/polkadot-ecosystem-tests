@@ -1066,6 +1066,18 @@ async function buildDisallowedProxyActions<
       }
       return actions
     })
+
+    // System Parachains
+
+    .with('Collator', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+
+    // Coretime
+
     .with('Broker', () => [
       // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
       // Add this back in once the call is available.
@@ -1078,6 +1090,9 @@ async function buildDisallowedProxyActions<
       // `buildAllowedProxyActions`.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
     ])
+
+    // Identity
+
     .otherwise(() => [])
 
   return result
