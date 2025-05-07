@@ -1164,10 +1164,10 @@ async function unappliedSlashTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
-  const dave = defaultAccountsSr25519.dave
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
 
   const eraChangeBlock = await locateEraChange(client)
   if (eraChangeBlock === undefined) {
