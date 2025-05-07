@@ -1152,6 +1152,8 @@ async function buildDisallowedProxyActions<
       // This is disabled on all networks where the Broker proxy type exists
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('OnDemandPurchaser', () => [
       // TODO: Call disabled due to AHM. Once reenabled, remove it from this list, and readd it to
