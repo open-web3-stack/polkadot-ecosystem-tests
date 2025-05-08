@@ -41,7 +41,7 @@ function createProxyAccounts(
 /**
  * Shorthand for a list of PJS-type fully-formed extrinsics.
  *
- * The pallet and extrinsic names are kept to better identify the correspoding snapshot.
+ * The pallet and extrinsic names are used to better identify the corresponding snapshot.
  */
 interface ProxyAction {
   pallet: string
@@ -74,34 +74,49 @@ interface ProxyActionBuilder {
   buildAssetsManagerAction(): ProxyAction[]
   buildAssetsOwnerAction(): ProxyAction[]
   buildAuctionAction(): ProxyAction[]
+
   buildBalancesAction(): ProxyAction[]
   buildBountyAction(): ProxyAction[]
   buildBrokerAction(): ProxyAction[]
   buildBrokerPurchaseCreditAction(): ProxyAction[]
   buildBrokerRenewerAction(): ProxyAction[]
+
   buildCollatorSelectionAction(): ProxyAction[]
   buildCrowdloanAction(): ProxyAction[]
+
   buildFastUnstakeAction(): ProxyAction[]
   buildFellowshipCollectiveAction(): ProxyAction[]
   buildFellowshipCoreAction(): ProxyAction[]
   buildFellowshipReferendaAction(): ProxyAction[]
   buildFellowshipSalaryAction(): ProxyAction[]
+
   buildGovernanceAction(): ProxyAction[]
+
   buildIdentityAction(): ProxyAction[]
   buildIdentityJudgementAction(): ProxyAction[]
+  buildIdentityNonJudgementAction(): ProxyAction[]
+
   buildMultisigAction(): ProxyAction[]
+
   buildNftsAction(): ProxyAction[]
   buildNftsManagerAction(): ProxyAction[]
   buildNftsOwnerAction(): ProxyAction[]
   buildNominationPoolsAction(): ProxyAction[]
+
   buildParasRegistrarAction(): ProxyAction[]
   buildProxyAction(): ProxyAction[]
   buildProxyRejectAnnouncementAction(): ProxyAction[]
   buildProxyRemoveProxyAction(): ProxyAction[]
+
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
   buildStakingAction(): ProxyAction[]
   buildSystemAction(): ProxyAction[]
+  buildSystemNonRemarkAction(): ProxyAction[]
+  buildSystemRemarkAction(): ProxyAction[]
+
+  buildVestingAction(): ProxyAction[]
+
   buildUniquesAction(): ProxyAction[]
   buildUniquesManagerAction(): ProxyAction[]
   buildUniquesOwnerAction(): ProxyAction[]
@@ -274,7 +289,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildBrokerAction(): ProxyAction[] {
-    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction(), ...this.buildBrokerPurchaseCreditAction()]
+    const brokerCalls: ProxyAction[] = [...this.buildBrokerRenewerAction()]
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
@@ -291,13 +306,13 @@ class ProxyActionBuilderImpl<
 
     // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
     // Add this back in once the call is available.
-    /*     if (this.client.api.tx.broker) {
+    if (this.client.api.tx.broker) {
       brokerPurchaseCreditCalls.push({
         pallet: 'broker',
         extrinsic: 'purchase_credit',
         call: this.client.api.tx.broker.purchaseCredit(100e10, defaultAccountsSr25519.eve.address),
       })
-    } */
+    }
 
     return brokerPurchaseCreditCalls
   }
@@ -439,16 +454,7 @@ class ProxyActionBuilderImpl<
   }
 
   buildIdentityAction(): ProxyAction[] {
-    const identityCalls: ProxyAction[] = [...this.buildIdentityJudgementAction()]
-    if (this.client.api.tx.identity) {
-      identityCalls.push({
-        pallet: 'identity',
-        extrinsic: 'clear_identity',
-        call: this.client.api.tx.identity.clearIdentity(),
-      })
-    }
-
-    return identityCalls
+    return [...this.buildIdentityJudgementAction(), ...this.buildIdentityNonJudgementAction()]
   }
 
   buildIdentityJudgementAction(): ProxyAction[] {
@@ -464,6 +470,20 @@ class ProxyActionBuilderImpl<
     }
 
     return identityJudgementCalls
+  }
+
+  buildIdentityNonJudgementAction(): ProxyAction[] {
+    const identityNonJudgementCalls: ProxyAction[] = []
+
+    if (this.client.api.tx.identity) {
+      identityNonJudgementCalls.push({
+        pallet: 'identity',
+        extrinsic: 'clear_identity',
+        call: this.client.api.tx.identity.clearIdentity(),
+      })
+    }
+
+    return identityNonJudgementCalls
   }
 
   buildMultisigAction(): ProxyAction[] {
@@ -643,6 +663,20 @@ class ProxyActionBuilderImpl<
   }
 
   buildSystemAction(): ProxyAction[] {
+    return [...this.buildSystemNonRemarkAction(), ...this.buildSystemRemarkAction()]
+  }
+
+  buildSystemNonRemarkAction(): ProxyAction[] {
+    return [
+      {
+        pallet: 'system',
+        extrinsic: 'apply_authorized_upgrade',
+        call: this.client.api.tx.system.applyAuthorizedUpgrade('code'),
+      },
+    ]
+  }
+
+  buildSystemRemarkAction(): ProxyAction[] {
     return [
       {
         pallet: 'system',
@@ -655,6 +689,23 @@ class ProxyActionBuilderImpl<
         call: this.client.api.tx.system.remarkWithEvent('hello'),
       },
     ]
+  }
+
+  buildVestingAction(): ProxyAction[] {
+    const vestingCalls: ProxyAction[] = []
+    if (this.client.api.tx.vesting) {
+      vestingCalls.push({
+        pallet: 'vesting',
+        extrinsic: 'vested_transfer',
+        call: this.client.api.tx.vesting.vestedTransfer(defaultAccountsSr25519.eve.address, {
+          locked: 100e10,
+          perBlock: 1e10,
+          startingBlock: 1,
+        }),
+      })
+    }
+
+    return vestingCalls
   }
 
   buildUniquesAction(): ProxyAction[] {
@@ -714,56 +765,77 @@ class ProxyActionBuilderImpl<
 }
 
 /**
- * Given a proxy type and a PJS client, create a list of actions that should/should not be valid for a given proxy
- * type.
- *
- * Pattern matches on the proxy type (as string); if incorrect or nonexistent, the result is an empty list.
+ * The type of proxy call filtering test to run.
+ * - `Permitted`: Test that allowed proxy calls are *not* filtered
+ * - `Forbidden`: Test that disallowed proxy calls *are* filtered
  */
-async function buildProxyAction<
+enum ProxyCallFilteringTestType {
+  Permitted = 0,
+  Forbidden = 1,
+}
+
+/**
+ * Build a list of actions that should be allowed for a given proxy type.
+ * These are actions that the proxy type should be able to execute without being filtered.
+ */
+async function buildAllowedProxyActions<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(proxyType: string, client: Client<TCustom, TInitStorages>): Promise<ProxyAction[]> {
+>(proxyType: string, client: Client<TCustom, TInitStorages>, chainName: string): Promise<ProxyAction[]> {
   const proxyActionBuilder = new ProxyActionBuilderImpl(client)
-
-  const c = await client.api.rpc.system.chain()
 
   // Note the pattern used: if the network has a certain pallet available, the list returned by the proxy action
   // builder won't be empty.
   // Otherwise, it will be empty, and this is a no-op.
   const result = match(proxyType)
+
     // Common
 
-    .with('Any', () => [
-      ...proxyActionBuilder.buildAuctionAction(),
-      ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildBountyAction(),
-      ...proxyActionBuilder.buildGovernanceAction(),
-      ...proxyActionBuilder.buildMultisigAction(),
-      ...proxyActionBuilder.buildNominationPoolsAction(),
-      ...proxyActionBuilder.buildProxyAction(),
-      ...proxyActionBuilder.buildStakingAction(),
-      ...proxyActionBuilder.buildSystemAction(),
-      ...proxyActionBuilder.buildUtilityAction(),
-    ])
+    .with('Any', () => {
+      const actions = [
+        ...proxyActionBuilder.buildAuctionAction(),
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildBountyAction(),
+        ...proxyActionBuilder.buildGovernanceAction(),
+        ...proxyActionBuilder.buildMultisigAction(),
+        ...proxyActionBuilder.buildNominationPoolsAction(),
+        ...proxyActionBuilder.buildProxyAction(),
+        ...proxyActionBuilder.buildStakingAction(),
+        ...proxyActionBuilder.buildSystemRemarkAction(),
+        ...proxyActionBuilder.buildUtilityAction(),
+      ]
+
+      // `vesting.vested_transfer` is currently disabled on asset hubs in run-up to AHM:
+      // TODO: This is a temporary limitation that should be removed once the call is available again.
+      if (!['assetHubPolkadot', 'assetHubKusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildVestingAction())
+      }
+
+      return actions
+    })
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildAuctionAction(),
-      ...proxyActionBuilder.buildSystemAction(),
       ...proxyActionBuilder.buildBountyAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
       ...proxyActionBuilder.buildMultisigAction(),
       ...proxyActionBuilder.buildNominationPoolsAction(),
       ...proxyActionBuilder.buildProxyAction(),
       ...proxyActionBuilder.buildStakingAction(),
-      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildSystemRemarkAction(),
       ...proxyActionBuilder.buildUtilityAction(),
     ])
-    .with('CancelProxy', () => [
-      // TODO: utility and system calls should be callable by such proxies, but on relay chains this is
+    .with('CancelProxy', () => {
+      const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
+
+      // `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
       // currently not the case, pending a PR to the `runtimes` repository.
-      ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
-      //...proxyActionBuilder.buildUtilityAction(),
-      //...proxyActionBuilder.buildSystemAction(),
-    ])
+      if (!['polkadot', 'kusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildUtilityAction())
+        actions.push(...proxyActionBuilder.buildMultisigAction())
+      }
+
+      return actions
+    })
 
     // Polkadot / Kusama
 
@@ -789,21 +861,17 @@ async function buildProxyAction<
     ])
 
     .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
-    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemAction()])
+    .with('Spokesperson', () => [...proxyActionBuilder.buildSystemRemarkAction()])
     .with('ParaRegistration', () => {
       const paraRegistrationCalls: ProxyAction[] = []
 
       paraRegistrationCalls.concat([
         ...proxyActionBuilder.buildParasRegistrarAction(),
-        // This proxy type can only call batch extrinsics from `pallet_utility`, which happens to coincide with the
+        // This proxy type can only call  batch extrinsics from `pallet_utility`, which happens to coincide with the
         // current implementation of `buildUtilityAction`.
         ...proxyActionBuilder.buildUtilityAction(),
+        ...proxyActionBuilder.buildProxyRemoveProxyAction(),
       ])
-      // TODO: In Kusama, `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-      // Pending a fix in the `runtimes` repository, this can be re-enabled.
-      if (!c.toString().includes('Kusama')) {
-        paraRegistrationCalls.concat([...proxyActionBuilder.buildProxyRemoveProxyAction()])
-      }
 
       return paraRegistrationCalls
     })
@@ -880,7 +948,8 @@ async function buildProxyAction<
     ])
 
     .with('OnDemandPurchaser', () => [
-      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      // TODO: Purchase credit call disabled due to AHM.
+      // Re-enable it once it is available again.
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -889,7 +958,6 @@ async function buildProxyAction<
 
     .with('Identity', () => [
       ...proxyActionBuilder.buildIdentityAction(),
-      ...proxyActionBuilder.buildIdentityJudgementAction(),
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -906,29 +974,280 @@ async function buildProxyAction<
 }
 
 /**
- * For a particular proxy type:
+ * Build a list of actions that should be disallowed for a given proxy type.
+ * These are actions that the proxy type should NOT be able to execute and should be filtered.
+ */
+async function buildDisallowedProxyActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(proxyType: string, client: Client<TCustom, TInitStorages>, chainName: string): Promise<ProxyAction[]> {
+  const proxyActionBuilder = new ProxyActionBuilderImpl(client)
+
+  // For each proxy type, we return actions that it should NOT be able to execute
+  const result = match(proxyType)
+
+    // Common
+
+    .with('Any', () => {
+      const actions: ProxyAction[] = []
+      // `vesting.vested_transfer` is currently disabled on asset hubs, pending the AHM.
+      // TODO: This is a temporary limitation that should be removed once the call is available
+      if (['assetHubPolkadot', 'assetHubKusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildVestingAction())
+      }
+      return actions
+    })
+    .with('NonTransfer', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('CancelProxy', () => {
+      const actions = [
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildStakingAction(),
+        ...proxyActionBuilder.buildSystemAction(),
+      ]
+
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
+      // currently not the case, pending a PR to the `runtimes` repository.
+      if (['polkadot', 'kusama'].includes(chainName)) {
+        actions.push(...proxyActionBuilder.buildUtilityAction())
+        actions.push(...proxyActionBuilder.buildMultisigAction())
+      }
+
+      return actions
+    })
+
+    // Polkadot / Kusama
+
+    .with('Auction', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('Governance', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('Staking', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('NominationPools', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+    .with('Society', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+    .with('Spokesperson', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      // This proxy type can only call remark functions from the system pallet.
+      // All other system calls are disallowed, an instance of which is in `buildSystemNonRemarkAction`.
+      ...proxyActionBuilder.buildSystemNonRemarkAction(),
+      ...proxyActionBuilder.buildUtilityAction(),
+    ])
+
+    .with('ParaRegistration', () => {
+      const actions: ProxyAction[] = [
+        ...proxyActionBuilder.buildBalancesAction(),
+        ...proxyActionBuilder.buildProxyAction(),
+        ...proxyActionBuilder.buildSystemAction(),
+      ]
+      // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
+      // Pending a fix, this can be re-enabled.
+      if (chainName === 'kusama') {
+        actions.push(...proxyActionBuilder.buildProxyRemoveProxyAction())
+      }
+      return actions
+    })
+
+    // System Parachains
+
+    .with('Collator', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildVestingAction(),
+    ])
+
+    // Asset Hubs
+
+    .with('Assets', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('AssetManager', () => [
+      ...proxyActionBuilder.buildAssetsOwnerAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildNftsOwnerAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUniquesOwnerAction(),
+    ])
+    .with('AssetOwner', () => [
+      ...proxyActionBuilder.buildAssetsManagerAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildNftsManagerAction(),
+      ...proxyActionBuilder.buildStakingAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+      ...proxyActionBuilder.buildUniquesManagerAction(),
+    ])
+
+    // Collectives
+
+    .with('Alliance', () => [
+      // Check that ambassador actions are forbidden
+      ...proxyActionBuilder.buildAmbassadorCollectiveAction(),
+      ...proxyActionBuilder.buildAmbassadorCoreAction(),
+      ...proxyActionBuilder.buildAmbassadorReferendaAction(),
+      ...proxyActionBuilder.buildAmbassadorSalaryAction(),
+
+      ...proxyActionBuilder.buildBalancesAction(),
+
+      // and fellowship's as well.
+      ...proxyActionBuilder.buildFellowshipCollectiveAction(),
+      ...proxyActionBuilder.buildFellowshipCoreAction(),
+      ...proxyActionBuilder.buildFellowshipReferendaAction(),
+      ...proxyActionBuilder.buildFellowshipSalaryAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('Fellowship', () => [
+      // Check that alliance actions are forbidden
+      ...proxyActionBuilder.buildAllianceAction(),
+      ...proxyActionBuilder.buildAllianceMotionAction(),
+
+      // Check that ambassador actions are forbidden
+      ...proxyActionBuilder.buildAmbassadorCollectiveAction(),
+      ...proxyActionBuilder.buildAmbassadorCoreAction(),
+      ...proxyActionBuilder.buildAmbassadorReferendaAction(),
+      ...proxyActionBuilder.buildAmbassadorSalaryAction(),
+
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('Ambassador', () => [
+      ...proxyActionBuilder.buildAllianceAction(),
+      ...proxyActionBuilder.buildAllianceMotionAction(),
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildFellowshipCollectiveAction(),
+      ...proxyActionBuilder.buildFellowshipCoreAction(),
+      ...proxyActionBuilder.buildFellowshipReferendaAction(),
+      ...proxyActionBuilder.buildFellowshipSalaryAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+
+    // Coretime
+
+    .with('Broker', () => [
+      // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
+      // Add this back in once the call is available.
+      // This is disabled on all networks where the Broker proxy type exists
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('CoretimeRenewer', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('OnDemandPurchaser', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      // TODO: Call disabled due to AHM. Once reenabled, remove it from this list, and readd it to
+      // `buildAllowedProxyActions`.
+      ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+
+    // Identity
+
+    .with('Identity', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+    .with('IdentityJudgement', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildCollatorSelectionAction(),
+      ...proxyActionBuilder.buildIdentityNonJudgementAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
+
+    .otherwise(() => [])
+
+  return result
+}
+
+/**
+ * Build a list of proxy actions based on the test type.
+ * This function routes to either buildAllowedProxyActions or buildDisallowedProxyActions
+ * based on the testType parameter.
+ */
+async function buildProxyActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  proxyType: string,
+  client: Client<TCustom, TInitStorages>,
+  testType: ProxyCallFilteringTestType,
+  chainName: string,
+): Promise<ProxyAction[]> {
+  return testType === ProxyCallFilteringTestType.Permitted
+    ? await buildAllowedProxyActions(proxyType, client, chainName)
+    : await buildDisallowedProxyActions(proxyType, client, chainName)
+}
+
+/**
+ * For a particular proxy type, and for a given test type ("allowed/disallowed"):
  * 1. As Alice, add a proxy account of that type
- * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed to execute
+ * 2. As the proxy account, execute actions - on behalf of Alice - that such a proxy type is allowed/forbidden from execute
  * 3. Verify that the actions were correctly executed
- *     - The extrinsics are not required to be well-formed; the transaction can fail, though not because the call was
- *       filtered over the proxy's lack of permission.
+ *     - The extrinsics are not required to be well-formed; in other words, the transaction can fail, though:
+ *           - if the test type is "allowed", the transaction *must not* fail because of call filtering
+ *           - if the test type is "forbidden", the transaction *must* fail because of call filtering
  *
- * To see which proxy-type-contingent actions are used, see `buildProxyAction`.
+ * To see which proxy-type-contingent actions are used, see `buildAllowedProxyActions` and `buildDisallowedProxyActions`.
  */
 async function proxyCallFilteringSingleTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: string, proxyTypeIx: number, proxyAccount: KeyringPair) {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  proxyType: string,
+  proxyTypeIx: number,
+  proxyAccount: KeyringPair,
+  testType: ProxyCallFilteringTestType = ProxyCallFilteringTestType.Permitted,
+) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
 
+  // Add the proxy account, with the to-be-tested proxy type
   const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
   await sendTransaction(addProxyTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  const proxyActions = await buildProxyAction(proxyType, client)
+  // Get the appropriate list of actions based on test type
+  const proxyActions = await buildProxyActions(proxyType, client, testType, chain.name)
+
   if (proxyActions.length === 0) {
     return
   }
@@ -939,12 +1258,11 @@ async function proxyCallFilteringSingleTestRunner<
     },
   })
 
-  let proxyAccountNonce = (await client.api.rpc.system.accountNextIndex(proxyAccount.address)).toNumber()
-
   // Execute each proxy action in its own block and check its results immediately
   for (const proxyAction of proxyActions) {
+    // Execute the proxy action
     const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
-    const result = await sendTransaction(proxyTx.signAsync(proxyAccount, { nonce: proxyAccountNonce++ }))
+    const result = await sendTransaction(proxyTx.signAsync(proxyAccount))
 
     // Advance to the next block to ensure events are processed
     await client.dev.newBlock()
@@ -956,7 +1274,7 @@ async function proxyCallFilteringSingleTestRunner<
       return event.section === 'proxy' && event.method === 'ProxyExecuted'
     })
 
-    // We should have exactly one ProxyExecuted event for this call
+    // There should be exactly one `ProxyExecuted` event for this call
     expect(proxyExecutedEvents.length).toBe(1)
 
     // Check the result of this specific call
@@ -964,24 +1282,42 @@ async function proxyCallFilteringSingleTestRunner<
     assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
     const proxyExecutedData = proxyExecutedEvent.event.data
 
-    if (proxyExecutedData.result.isErr) {
-      const error = proxyExecutedData.result.asErr
-      // The error must be a module error (`system` is where `CallFiltered` exists), and no other e.g. `BadOrigin`.
-      // It is assumed that the calls chosen can be executed with signed origins.
-      assert(error.isModule)
+    // This path is taken for forbidden calls
+    if (testType === ProxyCallFilteringTestType.Forbidden) {
+      // For forbidden calls, they are expected to have been filtered
+      if (proxyExecutedData.result.isErr) {
+        const error = proxyExecutedData.result.asErr
+        assert(error.isModule)
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(true)
+      } else {
+        // If not filtered, fail the test.
+        expect(
+          proxyExecutedData.result.isOk,
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(false)
+      }
+    }
+    // Path taken for permitted calls
+    else {
+      // If the call failed, check that it was *not* due to call filtering
+      if (proxyExecutedData.result.isErr) {
+        const error = proxyExecutedData.result.asErr
+        assert(error.isModule)
 
-      // A call can have failed due to e.g. being semantically incorrect, but it can *never* have failed
-      // due to having been filtered, as each proxy type is only given calls it is allowed to execute.
-      expect(
-        client.api.errors.system.CallFiltered.is(error.asModule),
-        // Show failing pallet and extrinsic
-        `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
-      ).toBe(false)
-    } else {
-      // The call was executed successfully - nothing to check.
-      expect(proxyExecutedData.result.isOk).toBe(true)
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} failed due to call filtering`,
+        ).toBe(false)
+      } else {
+        // Success is acceptable for permitted calls
+        expect(proxyExecutedData.result.isOk).toBe(true)
+      }
     }
 
+    // Snapshot the `Proxy.ProxyExecuted`event for the proxied call
     // If the pallet being tested is `balances`, its events should not be included in the snapshot
     // to avoid including block-specific fee events, which are unstable inbetween runs.
     let eventChecker: Checker
@@ -1001,7 +1337,7 @@ async function proxyCallFilteringSingleTestRunner<
         redactKeys,
       })
       .toMatchSnapshot(
-        `events for proxy action: proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+        `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
       )
   }
 }
@@ -1017,7 +1353,7 @@ async function proxyCallFilteringSingleTestRunner<
 async function proxyCallFilteringTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, testType: ProxyCallFilteringTestType) {
   const kr = defaultAccountsSr25519.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
@@ -1052,13 +1388,13 @@ async function proxyCallFilteringTestRunner<
   ]
 
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
-    // In this network, there might be some proxy types that don't/cannot be tested.
+    // In this network, there might be some proxy types that should not/cannot be tested.
     if (!proxyTypesToTest.includes(proxyType)) {
       continue
     }
 
-    test(`proxy call filtering test for ${proxyType}`, async () => {
-      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType])
+    test(`${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`, async () => {
+      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType], testType)
     })
   }
 }
@@ -1558,6 +1894,12 @@ export async function proxyE2ETests<
       await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
     })
 
-    proxyCallFilteringTestRunner(chain, proxyTypes)
+    describe('filtering tests for permitted proxy calls', () => {
+      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
+    })
+
+    describe('filtering tests for forbidden proxy calls', () => {
+      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
+    })
   })
 }
