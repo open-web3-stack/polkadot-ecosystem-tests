@@ -45,7 +45,7 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
 
   // It is assumed that the active era changes at most this amount of blocks after the estimate provided
   // by `api.derive.session.progress`. Adjust as needed.
-  const MAX = 100
+  const MAX = 512
 
   // Initial bounds for binary search.
   let lo = initialBlockNumber - eraProgress.toNumber() - 1
@@ -55,40 +55,47 @@ async function locateEraChange(client: Client<any, any>): Promise<number | undef
   let mid!: number
   let midBlockHash: BlockHash | undefined
   let eraAtMidBlock: number | undefined
+  let eraAtNextBlock: number | undefined
 
-  while (lo < hi) {
+  while (lo <= hi) {
     mid = lo + Math.floor((hi - lo) / 2)
 
     midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
     const apiAt = await client.api.at(midBlockHash)
+    if (apiAt === undefined) {
+      console.warn('locateEraChange: apiAt is undefined for block ', mid)
+      return undefined
+    }
+
     eraAtMidBlock = (await apiAt.query.staking.activeEra()).unwrap().index.toNumber()
 
+    // Check the next block to see if this is the transition point
+    const nextBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
+    const apiAtNext = await client.api.at(nextBlockHash)
+    if (apiAtNext === undefined) {
+      console.warn('locateEraChange: apiAtNext is undefined for block ', mid + 1)
+      return undefined
+    }
+    eraAtNextBlock = (await apiAtNext.query.staking.activeEra()).unwrap().index.toNumber()
+
+    // If the transition point was found, return it
+    if (eraAtMidBlock !== eraAtNextBlock) {
+      return mid
+    }
+
+    // Otherwise continue binary search
     if (eraAtMidBlock === activeEra) {
       hi = mid - 1
     } else if (eraAtMidBlock === previousEra) {
       lo = mid + 1
     } else {
       // This really should never happen
-      return undefined
+      throw new Error('locateEraChange: eraAtMidBlock is neither activeEra nor previousEra')
     }
   }
 
-  // Disambiguate to which side of the divide the found block is.
-
-  const midDescendantBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
-  const midParentBlockHash = await client.api.rpc.chain.getBlockHash(mid - 1)
-  const apiAfter = await client.api.at(midDescendantBlockHash)
-  const apiBefore = await client.api.at(midParentBlockHash)
-
-  const eraAtMidDescendantBlock = (await apiAfter.query.staking.activeEra()).unwrap().index.toNumber()
-  if (eraAtMidDescendantBlock !== eraAtMidBlock) {
-    return mid
-  }
-
-  const eraAtMidParentBlock = (await apiBefore.query.staking.activeEra()).unwrap().index.toNumber()
-  if (eraAtMidParentBlock !== eraAtMidBlock) {
-    return mid - 1
-  }
+  // If arrived here, a transition point was not found.
+  return undefined
 }
 
 /// -------
@@ -1157,14 +1164,15 @@ async function unappliedSlashTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
-  const dave = defaultAccountsSr25519.dave
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
 
   const eraChangeBlock = await locateEraChange(client)
   if (eraChangeBlock === undefined) {
     // This test only makes sense to run if there's an active era.
+    console.warn('Unable to find era change block, skipping unapplied slash test')
     return
   }
 
@@ -1173,17 +1181,18 @@ async function unappliedSlashTest<
   // If this isn't done, the slash will not be applied.
   await client.dev.setHead(eraChangeBlock - 1)
 
+  const balances = 10000e10
   await client.dev.setStorage({
     System: {
       account: [
-        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
-        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
-        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[alice.address], { providers: 1, data: { free: balances } }],
+        [[bob.address], { providers: 1, data: { free: balances } }],
+        [[charlie.address], { providers: 1, data: { free: balances } }],
       ],
     },
   })
 
-  const bondAmount = 1000e10
+  const bondAmount = balances / 10
   const slashAmount = bondAmount / 2
 
   const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })

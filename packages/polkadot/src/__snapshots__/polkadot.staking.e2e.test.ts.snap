@@ -670,7 +670,7 @@ exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
   {
     "data": {
       "amount": 5000000000000,
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Slashed",
     "section": "balances",
@@ -678,7 +678,7 @@ exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
   {
     "data": {
       "amount": 10000000000000,
-      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "Slashed",
     "section": "balances",
@@ -686,7 +686,7 @@ exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
   {
     "data": {
       "amount": 10000000000000,
-      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
     },
     "method": "Slashed",
     "section": "balances",
@@ -699,7 +699,7 @@ exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
   {
     "data": {
       "amount": 5000000000000,
-      "staker": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "staker": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Slashed",
     "section": "staking",
@@ -707,7 +707,7 @@ exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
   {
     "data": {
       "amount": 10000000000000,
-      "staker": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "staker": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "Slashed",
     "section": "staking",
@@ -715,7 +715,7 @@ exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
   {
     "data": {
       "amount": 10000000000000,
-      "staker": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      "staker": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
     },
     "method": "Slashed",
     "section": "staking",
