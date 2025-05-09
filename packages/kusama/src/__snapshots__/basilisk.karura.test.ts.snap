@@ -29,7 +29,7 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -37,14 +37,14 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
                   "fungible": 1000000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalIndex": 0,
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -59,14 +59,14 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
                   "fungible": 1000000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalIndex": 0,
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -78,23 +78,22 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
                       },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
@@ -210,7 +209,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > balance on to cha
 exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v3": [
       {
         "withdrawAsset": [
           {
@@ -255,7 +254,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
         "depositReserveAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "dest": {
@@ -266,7 +265,6 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
             },
             "parents": 0,
           },
-          "maxAssets": 1,
           "xcm": [
             {
               "buyExecution": {
@@ -292,7 +290,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
               "depositAsset": {
                 "assets": {
                   "wild": {
-                    "all": null,
+                    "allCounted": 1,
                   },
                 },
                 "beneficiary": {
@@ -300,15 +298,12 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
                     "x1": {
                       "accountId32": {
                         "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": {
-                          "any": null,
-                        },
+                        "network": null,
                       },
                     },
                   },
                   "parents": 0,
                 },
-                "maxAssets": 1,
               },
             },
           ],
