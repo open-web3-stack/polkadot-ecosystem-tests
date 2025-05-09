@@ -12,9 +12,16 @@ const custom = {
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
   },
+  assetHubWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+    usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
+    usdtIndex: 1984,
+  },
 }
 
-const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => ({
+const getInitStorages = (
+  config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubWestend,
+) => ({
   System: {
     account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
   },
@@ -39,4 +46,12 @@ export const assetHubKusama = defineChain({
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
+})
+
+export const assetHubWestend = defineChain({
+  name: 'assetHubWestend',
+  endpoint: 'wss://westend-asset-hub-rpc.polkadot.io',
+  paraId: 1000,
+  custom: custom.assetHubWestend,
+  initStorages: getInitStorages(custom.assetHubWestend),
 })
