@@ -1538,6 +1538,66 @@ async function setInvulnerablesTestBadOrigin<
   assert(e.result.asErr.isBadOrigin)
 }
 
+/**
+ * Test setting invulnerables with the correct Root origin.
+ */
+async function setInvulnerablesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+
+  // Fund the accounts
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  // Bond funds for each validator
+  const bondAmount = 1000e10
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Set them as validators
+  const minCommission = await client.api.query.staking.minCommission()
+  const validateTx = client.api.tx.staking.validate({ commission: minCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+  await sendTransaction(validateTx.signAsync(bob))
+  await sendTransaction(validateTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Sort the addresses to make the test simpler.
+
+  const invulnerables = [alice.address, bob.address, charlie.address]
+  invulnerables.sort()
+
+  // Set them as invulnerable using Root origin
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables(invulnerables)
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  // Verify the invulnerables were set correctly
+  const queriedInvulnerables = (await client.api.query.staking.invulnerables()).map((addr) =>
+    encodeAddress(addr.toString(), addressEncoding),
+  )
+
+  expect(queriedInvulnerables).toEqual(invulnerables)
+}
+
 /// --------------
 /// --------------
 /// --------------
@@ -1605,6 +1665,10 @@ export function stakingE2ETests<
 
     test('set invulnerables with bad origin', async () => {
       await setInvulnerablesTestBadOrigin(chain)
+    })
+
+    test('set invulnerables with root origin', async () => {
+      await setInvulnerablesTest(chain)
     })
   })
 }
