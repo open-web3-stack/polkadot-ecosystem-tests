@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > destination chain events 1`] = `
+exports[`collectives westend & asset hub westend > whitelisting a call by fellowship > destination chain events 1`] = `
 [
   {
     "data": {
@@ -27,7 +27,7 @@ exports[`collectives westend & asset hub next westend > whitelisting a call by f
 ]
 `;
 
-exports[`collectives westend & asset hub next westend > whitelisting a call by fellowship > source chain events 1`] = `
+exports[`collectives westend & asset hub westend > whitelisting a call by fellowship > source chain events 1`] = `
 [
   {
     "data": {
@@ -35,7 +35,7 @@ exports[`collectives westend & asset hub next westend > whitelisting a call by f
         "interior": {
           "X1": [
             {
-              "Parachain": 1100,
+              "Parachain": 1000,
             },
           ],
         },
@@ -51,7 +51,7 @@ exports[`collectives westend & asset hub next westend > whitelisting a call by f
         {
           "Transact": {
             "call": {
-              "encoded": "0x5f000101010101010101010101010101010101010101010101010101010101010101",
+              "encoded": "0x5d000101010101010101010101010101010101010101010101010101010101010101",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
