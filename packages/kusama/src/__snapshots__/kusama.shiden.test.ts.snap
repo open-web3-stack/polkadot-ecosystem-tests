@@ -70,7 +70,7 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 301000000)",
+            "refTime": "(rounded 304000000)",
           },
         },
       },
@@ -209,12 +209,12 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > balance on to chain 1
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 1000000000000)",
+    "free": 0,
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 1,
+  "providers": 0,
   "sufficients": 0,
 }
 `;
@@ -295,19 +295,15 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > to chain ump events 1
 [
   {
     "data": {
+      "error": "Corrupt",
       "id": "(hash)",
       "origin": {
         "Ump": {
           "Para": "(rounded 2000)",
         },
       },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 320000000)",
-      },
     },
-    "method": "Processed",
+    "method": "ProcessingFailed",
     "section": "messageQueue",
   },
 ]

@@ -321,7 +321,7 @@ exports[`kusama & coretimeKusama > kusama transfer KSM to coretimeKusama > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 165000000)",
+            "refTime": "(rounded 166000000)",
           },
         },
       },

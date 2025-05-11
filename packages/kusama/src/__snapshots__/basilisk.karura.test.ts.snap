@@ -209,7 +209,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > balance on to cha
 exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump messages 1`] = `
 [
   {
-    "v3": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -217,12 +217,10 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -237,12 +235,10 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
               "fungible": 500000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -259,9 +255,11 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2090,
-              },
+              "x1": [
+                {
+                  "parachain": 2090,
+                },
+              ],
             },
             "parents": 0,
           },
@@ -273,12 +271,10 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
                     "fungible": 500000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -295,12 +291,14 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": null,
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                          "network": null,
+                        },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
