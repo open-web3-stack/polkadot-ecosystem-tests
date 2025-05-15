@@ -1,4 +1,4 @@
-import { defaultAccounts } from '../defaultAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -6,11 +6,39 @@ const custom = {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    eth: {
+      parents: 2,
+      interior: {
+        X1: [
+          {
+            GlobalConsensus: {
+              Ethereum: {
+                chainId: 1,
+              },
+            },
+          },
+        ],
+      },
+    },
   },
   assetHubKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    eth: {
+      parents: 2,
+      interior: {
+        X1: [
+          {
+            GlobalConsensus: {
+              Ethereum: {
+                chainId: 1,
+              },
+            },
+          },
+        ],
+      },
+    },
   },
   assetHubWestend: {
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
@@ -23,11 +51,20 @@ const getInitStorages = (
   config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubWestend,
 ) => ({
   System: {
-    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+    account: [
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+    ],
   },
   Assets: {
     account: [
       [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
+    ],
+  },
+  ForeignAssets: {
+    account: [
+      [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
+      [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
     ],
   },
 })

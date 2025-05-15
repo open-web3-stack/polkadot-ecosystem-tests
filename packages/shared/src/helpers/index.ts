@@ -150,7 +150,7 @@ export async function scheduleLookupCallWithOrigin(
  * @param requireWeightAtMost Reftime/proof size parameters that `send::Transact` may require (only in XCM v4);
  *        sensible defaults are given.
  */
-export async function xcmSendTransact(
+export function createXcmTransactSend(
   client: {
     api: ApiPromise
     dev: {
@@ -159,9 +159,9 @@ export async function xcmSendTransact(
   },
   dest: any,
   call: HexString,
-  origin: { origin: any; originKind: string },
+  originKind: string,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
-): Promise<any> {
+) {
   // The message being sent to the parachain, containing a call to be executed in the parachain:
   const message = {
     V4: [
@@ -176,18 +176,14 @@ export async function xcmSendTransact(
           call: {
             encoded: call,
           },
-          originKind: origin.originKind,
+          originKind,
           requireWeightAtMost,
         },
       },
     ],
   }
 
-  const xcmTx = (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
-  const encodedRelayCallData = xcmTx.method.toHex()
-
-  /// See `scheduleCallWithOrigin` for more.
-  await scheduleCallWithOrigin(client, { Inline: encodedRelayCallData }, origin.origin)
+  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
 }
 
 /**

@@ -19,6 +19,7 @@ describe('polkadot & peoplePolkadot', async () => {
       balance: query.balances,
       toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, peoplePolkadot.paraId!)),
+      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
     }
   })
 
@@ -29,6 +30,7 @@ describe('polkadot & peoplePolkadot', async () => {
       balance: query.balances,
       toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(peopleDOT, 1e12, tx.xcmPallet.relaychainV4),
+      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
     }
   })
 })

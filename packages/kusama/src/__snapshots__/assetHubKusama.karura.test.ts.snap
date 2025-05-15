@@ -25,7 +25,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -33,22 +33,20 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x3": [
-                        {
-                          "parachain": 1000,
-                        },
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "x3": [
+                      {
+                        "parachain": 1000,
+                      },
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -63,22 +61,20 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x3": [
-                        {
-                          "parachain": 1000,
-                        },
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "x3": [
+                      {
+                        "parachain": 1000,
+                      },
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -95,12 +91,14 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -317,7 +315,7 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -325,19 +323,17 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 0,
+                  "interior": {
+                    "x2": [
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -352,19 +348,17 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
                   "fungible": 1000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "palletInstance": 50,
-                        },
-                        {
-                          "generalIndex": 1984,
-                        },
-                      ],
-                    },
-                    "parents": 0,
+                  "interior": {
+                    "x2": [
+                      {
+                        "palletInstance": 50,
+                      },
+                      {
+                        "generalIndex": 1984,
+                      },
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -376,23 +370,22 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
                       },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],

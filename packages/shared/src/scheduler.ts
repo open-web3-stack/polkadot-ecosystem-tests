@@ -1,4 +1,4 @@
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
@@ -660,17 +660,8 @@ async function scheduleLookupCall<
 
   await client.dev.newBlock()
 
-  // In the collectives chain, dispatch of lookup calls does not work at present.
-  // Fix: https://github.com/polkadot-fellows/runtimes/pull/614
-  // Check if `parachainInfo` pallet exists to distinguish between collectives and other chains.
-  const parachainInfo = client.api.query.parachainInfo
-  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
-    const newTotalIssuance = await client.api.query.balances.totalIssuance()
-    assert(newTotalIssuance.eq(oldTotalIssuance))
-  } else {
-    const newTotalIssuance = await client.api.query.balances.totalIssuance()
-    assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
-  }
+  const newTotalIssuance = await client.api.query.balances.totalIssuance()
+  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
 
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
@@ -730,8 +721,7 @@ export async function schedulePreimagedCall<
   let scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
   assert(scheduled.length === 1)
   assert(scheduled[0].isSome)
-  const scheduledTask = scheduled[0].unwrap()
-  await check(scheduledTask).toMatchObject({
+  expect(scheduled[0].toJSON()).toMatchObject({
     maybeId: null,
     priority: 0,
     call: {
@@ -759,20 +749,13 @@ export async function schedulePreimagedCall<
   await client.dev.newBlock()
 
   scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
-  // See above note regarding `runtimes#614`
-  const parachainInfo = client.api.query.parachainInfo
-  if (parachainInfo && (await parachainInfo.parachainId()).eq(1001)) {
-    assert(scheduled.length === 1)
-    assert(scheduled[0].isNone)
-  } else {
-    assert(scheduled.length === 1)
-    assert(scheduled[0].isSome)
-    const scheduledTask = scheduled[0].unwrap()
-    await check(scheduledTask).toMatchObject({
-      maybeId: null,
-      priority: 0,
-    })
-  }
+
+  assert(scheduled.length === 1)
+  assert(scheduled[0].isSome)
+  expect(scheduled[0].toJSON()).toMatchObject({
+    maybeId: null,
+    priority: 0,
+  })
 
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({

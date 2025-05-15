@@ -1,5 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 70000)",
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
 [
   {
@@ -247,6 +267,42 @@ exports[`Polkadot Staking > modify validator count > scale validator count bad o
 `;
 
 exports[`Polkadot Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 210000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
 [
   {
     "data": {
@@ -605,6 +661,64 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Slashed",
+    "section": "staking",
   },
 ]
 `;

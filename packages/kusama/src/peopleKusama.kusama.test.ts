@@ -19,6 +19,7 @@ describe('kusama & peopleKusama', async () => {
       balance: query.balances,
       toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, peopleKusama.paraId!)),
+      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })
 
@@ -29,6 +30,7 @@ describe('kusama & peopleKusama', async () => {
       balance: query.balances,
       toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.teleportAssetsV3(peopleKSM, 1e12, tx.xcmPallet.relaychainV4),
+      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })
 })

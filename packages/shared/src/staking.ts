@@ -8,13 +8,95 @@ import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } f
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 /// -------
 /// Helpers
 /// -------
+
+/**
+ * Locate the block number at which the current era ends.
+ *
+ * This is done by binary-searching through blocks, starting at the estimate obtained from
+ * `api.derive.session.progress`, and stopping when `api.query.staking.activeEra` changes.
+ *
+ * Complexity: in essence, `O(1)` since `MAX` is fixed, but in practice,
+ * `ceil(log_2(MAX))`.
+ *
+ * @returns The block number at which the current era ends, and following which a `staking.EraPaid` event
+ * is emitted.
+ */
+async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const activeEraOpt = await client.api.query.staking.activeEra()
+  if (activeEraOpt.isNone) {
+    // Nothing to do if there is no active era.
+    return undefined
+  }
+  const activeEra = activeEraOpt.unwrap().index.toNumber()
+  const previousEra = activeEra - 1
+
+  // Estimate of active era start block.
+  const eraProgress = await client.api.derive.session.eraProgress()
+
+  // It is assumed that the active era changes at most this amount of blocks after the estimate provided
+  // by `api.derive.session.progress`. Adjust as needed.
+  const MAX = 512
+
+  // Initial bounds for binary search.
+  let lo = initialBlockNumber - eraProgress.toNumber() - 1
+  let hi = lo + MAX
+  assert(lo < hi)
+
+  let mid!: number
+  let midBlockHash: BlockHash | undefined
+  let eraAtMidBlock: number | undefined
+  let eraAtNextBlock: number | undefined
+
+  while (lo <= hi) {
+    mid = lo + Math.floor((hi - lo) / 2)
+
+    midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
+    const apiAt = await client.api.at(midBlockHash)
+    if (apiAt === undefined) {
+      console.warn('locateEraChange: apiAt is undefined for block ', mid)
+      return undefined
+    }
+
+    eraAtMidBlock = (await apiAt.query.staking.activeEra()).unwrap().index.toNumber()
+
+    // Check the next block to see if this is the transition point
+    const nextBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
+    const apiAtNext = await client.api.at(nextBlockHash)
+    if (apiAtNext === undefined) {
+      console.warn('locateEraChange: apiAtNext is undefined for block ', mid + 1)
+      return undefined
+    }
+    eraAtNextBlock = (await apiAtNext.query.staking.activeEra()).unwrap().index.toNumber()
+
+    // If the transition point was found, return it
+    if (eraAtMidBlock !== eraAtNextBlock) {
+      return mid
+    }
+
+    // Otherwise continue binary search
+    if (eraAtMidBlock === activeEra) {
+      hi = mid - 1
+    } else if (eraAtMidBlock === previousEra) {
+      lo = mid + 1
+    } else {
+      // This really should never happen
+      throw new Error('locateEraChange: eraAtMidBlock is neither activeEra nor previousEra')
+    }
+  }
+
+  // If arrived here, a transition point was not found.
+  return undefined
+}
 
 /// -------
 /// -------
@@ -26,7 +108,8 @@ import { assert, describe, test } from 'vitest'
 async function validateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // 1e7 is 1% commission
   const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
   await sendTransaction(validateTx.signAsync(defaultAccountsSr25519.alice))
@@ -59,7 +142,8 @@ async function validateNoBondedFundsFailureTest<
 async function nominateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
   const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25519.alice.address])
@@ -107,7 +191,8 @@ async function nominateNoBondedFundsFailureTest<
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   ///
   /// Generate validators, and fund them.
   ///
@@ -339,7 +424,8 @@ async function stakingLifecycleTest<
 async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
 
@@ -415,7 +501,8 @@ async function forceUnstakeTest<
 async function fastUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   const kr = defaultAccountsSr25519
   const alice = kr.alice
   const bob = kr.bob
@@ -493,7 +580,8 @@ async function fastUnstakeTest<
 async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -578,7 +666,8 @@ async function setMinCommission<
 async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -693,7 +782,8 @@ async function setStakingConfigsTest<
 async function forceApplyValidatorCommissionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Create some Sr25519 accounts and fund them
 
   const alice = defaultAccountsSr25519.alice
@@ -780,7 +870,8 @@ async function forceApplyValidatorCommissionTest<
 async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   const alice = defaultAccountsSr25519.alice
 
   await client.dev.setStorage({
@@ -808,7 +899,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -897,7 +988,8 @@ async function modifyValidatorCountTest<
 async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Rquired information for this test, to set appropriate thresholds later
 
   const minNominatorBond = await client.api.query.staking.minNominatorBond()
@@ -1052,51 +1144,467 @@ async function chillOtherTest<
   assert(nominatorPrefs.isNone)
 }
 
+/// --------------
+/// Slashing tests
+/// --------------
+
+/**
+ * Test that an unapplied slash to valid validators/nominators, scheduled for a certain era `n + 1`, is applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to the block just before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Bond funds from each of the accounts that will be slashed.
+ * 4. Insert a slash into storage, with the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is applied.
+ */
+async function unappliedSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
+
+  const eraChangeBlock = await locateEraChange(client)
+  if (eraChangeBlock === undefined) {
+    // This test only makes sense to run if there's an active era.
+    console.warn('Unable to find era change block, skipping unapplied slash test')
+    return
+  }
+
+  // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
+  // accounts that will be slashed.
+  // If this isn't done, the slash will not be applied.
+  await client.dev.setHead(eraChangeBlock - 1)
+
+  const balances = 10000e10
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: balances } }],
+        [[bob.address], { providers: 1, data: { free: balances } }],
+        [[charlie.address], { providers: 1, data: { free: balances } }],
+      ],
+    },
+  })
+
+  const bondAmount = balances / 10
+  const slashAmount = bondAmount / 2
+
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+
+  // Insert a slash into storage. The accounts named here as validators/nominators need not have called
+  // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra + 1],
+          [
+            {
+              validator: alice.address,
+              // Less than the bonded funds.
+              own: slashAmount,
+              others: [
+                // Exactly the bonded funds.
+                [bob.address, slashAmount * 2],
+                // More than the bonded funds.
+                [charlie.address, slashAmount * 3],
+              ],
+              reporters: [dave.address],
+              payout: bondAmount,
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+
+  await client.dev.setStorage({
+    ParasDisputes: {
+      $removePrefix: ['disputes', 'included'],
+    },
+    Dmp: {
+      $removePrefix: ['downwardMessageQueues'],
+    },
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+    },
+    Session: {
+      $removePrefix: ['nextKeys'],
+    },
+  })
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  // First, verify that all acounts' frozen funds have been slashed
+
+  expect(aliceFundsPostSlash.data.frozen.toNumber()).toBe(bondAmount - slashAmount)
+  // Recall that `bondAmount - slashAmount * 2` is zero.
+  expect(bobFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
+  // to what it bonded.
+  // Thus, also zero.
+  expect(charlieFundsPostSlash.data.frozen.toNumber()).toBe(0)
+
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
+  // Recall again that even though Charlie's slash is 1.5 times his bond, the slash can at msot tax all he has
+  // bonded, and not one unit more.
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
+}
+
+/**
+ * Test cancelling unapplied slashes, using different origins.
+ */
+async function cancelDeferredSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, origin: any) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  const eraChangeBlock = await locateEraChange(client)
+  if (eraChangeBlock === undefined) {
+    // This test only makes sense to run if there's an active era.
+    return
+  }
+
+  // Go to a block before the one in which the era changes. In the two blocks before it changes,
+  // 1. the call to `cancel_deferred_slash` will be scheduled
+  // 2. the stakers in question will call `bond`
+  await client.dev.setHead(eraChangeBlock - 2)
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const bondAmount = 1000e10
+  const slashAmount = bondAmount / 2
+
+  // Insert a slash into storage.
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra + 1],
+          [
+            {
+              validator: alice.address,
+              own: slashAmount,
+              others: [
+                [bob.address, slashAmount],
+                [charlie.address, slashAmount],
+              ],
+              reporters: [dave.address],
+              payout: bondAmount,
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  // Fund validators
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Two blocks away from the era change.
+
+  let slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
+  assert(slash.length === 1)
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
+  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin)
+
+  // Check stakers' bonded funds before the slash would be applied.
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
+  assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+
+  await client.dev.newBlock()
+
+  // And the slash should have been cancelled.
+
+  slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
+  assert(slash.length === 0)
+
+  // Era-boundary block creation tends to be slow.
+  await client.dev.setStorage({
+    ParasDisputes: {
+      $removePrefix: ['disputes', 'included'],
+    },
+    Dmp: {
+      $removePrefix: ['downwardMessageQueues'],
+    },
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+    },
+    Session: {
+      $removePrefix: ['nextKeys'],
+    },
+  })
+
+  // This new block marks the start of the new era.
+  await client.dev.newBlock()
+
+  // The era should have changed.
+
+  const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  assert(newActiveEra === activeEra + 1)
+
+  // None of the validators' funds should have been slashed.
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  assert(aliceFundsPostSlash.eq(aliceFundsPreSlash))
+  assert(bobFundsPostSlash.eq(bobFundsPreSlash))
+  assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
+}
+
+/**
+ * Test the cancellation of a slash with an incorrect origin.
+ */
+async function cancelDeferredSlashTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.alice
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [0])
+  const cancelDeferredSlashEvents = await sendTransaction(cancelDeferredSlashTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(cancelDeferredSlashEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('cancel deferred slash events with bad origin')
+
+  // Scrutinize events
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `Root` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsRoot<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { system: 'Root' })
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `StakingAdmin` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsAdmin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { Origins: 'StakingAdmin' })
+}
+
+/**
+ * Test setting invulnerables with a bad origin.
+ */
+async function setInvulnerablesTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.alice
+
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables([alice.address])
+  const setInvulnerablesEvents = await sendTransaction(setInvulnerablesTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(setInvulnerablesEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('set invulnerables events with bad signed origin')
+
+  let events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+
+  // Try it with `StakingAdmin` origin, which is still not enough on Polkadot/Kusama.
+
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { Origins: 'StakingAdmin' })
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'scheduler')
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('events when setting invulnerables with bad staking admin origin')
+
+  events = await client.api.query.system.events()
+
+  const [ev_] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev_.event))
+  const e = ev_.event.data
+  assert(e.result.isErr)
+  assert(e.result.asErr.isBadOrigin)
+}
+
+/// --------------
+/// --------------
+/// --------------
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('trying to become a validator with no bonded funds fails', async () => {
-      await validateNoBondedFundsFailureTest(client)
+      await validateNoBondedFundsFailureTest(chain)
     })
 
     test('trying to nominate with no bonded funds fails', async () => {
-      await nominateNoBondedFundsFailureTest(client)
+      await nominateNoBondedFundsFailureTest(chain)
     })
 
     test('staking lifecycle', async () => {
-      await stakingLifecycleTest(client, testConfig.addressEncoding)
+      await stakingLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('test force unstaking of nominator', async () => {
-      await forceUnstakeTest(client)
+      await forceUnstakeTest(chain)
     })
 
     test('test fast unstake', async () => {
-      await fastUnstakeTest(client, testConfig.addressEncoding)
+      await fastUnstakeTest(chain, testConfig.addressEncoding)
     })
 
     test('set minimum validator commission', async () => {
-      await setMinCommission(client)
+      await setMinCommission(chain)
     })
 
     test('set staking configs', async () => {
-      await setStakingConfigsTest(client)
+      await setStakingConfigsTest(chain)
     })
 
     test('force apply validator commission', async () => {
-      await forceApplyValidatorCommissionTest(client)
+      await forceApplyValidatorCommissionTest(chain)
     })
 
     test('modify validator count', async () => {
-      await modifyValidatorCountTest(client)
+      await modifyValidatorCountTest(chain)
     })
 
     test('chill other', async () => {
-      await chillOtherTest(client)
+      await chillOtherTest(chain)
+    })
+
+    test('unapplied slash', async () => {
+      await unappliedSlashTest(chain)
+    })
+
+    test('cancel deferred slash with bad origin', async () => {
+      await cancelDeferredSlashTestBadOrigin(chain)
+    })
+
+    test('cancel deferred slash as root', async () => {
+      await cancelDeferredSlashTestAsRoot(chain)
+    })
+
+    test('cancel deferred slash as admin', async () => {
+      await cancelDeferredSlashTestAsAdmin(chain)
+    })
+
+    test('set invulnerables with bad origin', async () => {
+      await setInvulnerablesTestBadOrigin(chain)
     })
   })
 }
