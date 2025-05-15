@@ -44,8 +44,14 @@ const custom = {
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    eth: null,
   },
 }
+
+const accountList = [
+  [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+  [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+]
 
 const getInitStorages = (
   config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubWestend,
@@ -62,10 +68,7 @@ const getInitStorages = (
     ],
   },
   ForeignAssets: {
-    account: [
-      [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
-      [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
-    ],
+    account: config.eth ? accountList : [],
   },
 })
 

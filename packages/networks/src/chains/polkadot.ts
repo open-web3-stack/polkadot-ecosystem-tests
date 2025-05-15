@@ -8,6 +8,9 @@ const custom = {
   kusama: {
     ksm: { Concrete: { parents: 0, interior: 'Here' } },
   },
+  westend: {
+    wnd: { Concrete: { parents: 0, interior: 'Here' } },
+  },
 }
 
 const getInitStorages = () => ({
@@ -39,6 +42,14 @@ export const kusama = defineChain({
   name: 'kusama',
   endpoint: 'wss://kusama.dotters.network',
   custom: custom.kusama,
+  initStorages: getInitStorages(),
+  isRelayChain: true,
+})
+
+export const westend = defineChain({
+  name: 'westend',
+  endpoint: 'wss://westend-asset-hub-rpc.polkadot.io',
+  custom: custom.westend,
   initStorages: getInitStorages(),
   isRelayChain: true,
 })
