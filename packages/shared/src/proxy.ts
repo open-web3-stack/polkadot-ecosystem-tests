@@ -1328,7 +1328,7 @@ async function proxyCallFilteringSingleTestRunner<
     }
 
     let redactKeys: RegExp | undefined
-    if (proxyAction.pallet === 'referenda') {
+    if (['referenda', 'bounties'].includes(proxyAction.pallet)) {
       redactKeys = /^index$/
     }
 
