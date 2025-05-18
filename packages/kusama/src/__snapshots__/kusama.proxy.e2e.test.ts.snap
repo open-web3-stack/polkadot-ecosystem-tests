@@ -1878,7 +1878,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
@@ -2203,7 +2203,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
@@ -2385,7 +2385,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
