@@ -1286,8 +1286,6 @@ async function proxyCallFilteringSingleTestRunner<
         const error = proxyExecutedData.result.asErr
         expect(error.isModule).toBe(true)
 
-        console.log('error', error.toHuman())
-
         expect(
           client.api.errors.system.CallFiltered.is(error.asModule),
           `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
