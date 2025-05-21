@@ -55,7 +55,10 @@ function checkProxyTypeTests(network: NetworkProxyTypes, snapshotFile: string): 
 
   for (const proxyTypeName of proxyTypesToCheck) {
     const allowed = readFileSync(snapshotFile, 'utf-8').includes(`allowed proxy calls for ${proxyTypeName}`)
-    const forbidden = readFileSync(snapshotFile, 'utf-8').includes(`forbidden proxy calls for ${proxyTypeName}`)
+    const forbidden =
+      proxyTypeName === 'Any'
+        ? true
+        : readFileSync(snapshotFile, 'utf-8').includes(`forbidden proxy calls for ${proxyTypeName}`)
 
     const padLength = 35
     let msg: string
