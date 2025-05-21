@@ -296,9 +296,6 @@ class ProxyActionBuilderImpl<
 
   buildBrokerPurchaseCreditAction(): ProxyAction[] {
     const brokerPurchaseCreditCalls: ProxyAction[] = []
-
-    // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
-    // Add this back in once the call is available.
     if (this.client.api.tx.broker) {
       brokerPurchaseCreditCalls.push({
         pallet: 'broker',
@@ -819,7 +816,7 @@ async function buildAllowedProxyActions<
     .with('CancelProxy', () => {
       const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
 
-      // `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
       // currently not the case, pending a PR to the `runtimes` repository.
       if (!['polkadot', 'kusama'].includes(chainName)) {
         actions.push(...proxyActionBuilder.buildUtilityAction())
@@ -946,8 +943,6 @@ async function buildAllowedProxyActions<
     ])
 
     .with('OnDemandPurchaser', () => [
-      // TODO: Purchase credit call disabled due to AHM.
-      // Re-enable it once it is available again.
       ...proxyActionBuilder.buildUtilityAction(),
       ...proxyActionBuilder.buildMultisigAction(),
     ])
@@ -1143,24 +1138,23 @@ async function buildDisallowedProxyActions<
     // Coretime
 
     .with('Broker', () => [
-      // TODO: Call disabled due to AHM. Credit must be purchased through the relay chain.
-      // Add this back in once the call is available.
-      // This is disabled on all networks where the Broker proxy type exists
       ...proxyActionBuilder.buildBalancesAction(),
+      // TODO: credit purchase call disabled due to AHM. Credit must be purchased through the relay chain.
+      // Add this back to `buildAllowedProxyActions` once the call is available.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
       ...proxyActionBuilder.buildCollatorSelectionAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('CoretimeRenewer', () => [
       ...proxyActionBuilder.buildBalancesAction(),
+      // TODO: call disabled due to AHM.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
       ...proxyActionBuilder.buildCollatorSelectionAction(),
       ...proxyActionBuilder.buildSystemAction(),
     ])
     .with('OnDemandPurchaser', () => [
       ...proxyActionBuilder.buildBalancesAction(),
-      // TODO: Call disabled due to AHM. Once reenabled, remove it from this list, and readd it to
-      // `buildAllowedProxyActions`.
+      // TODO: call disabled due to AHM.
       ...proxyActionBuilder.buildBrokerPurchaseCreditAction(),
       ...proxyActionBuilder.buildCollatorSelectionAction(),
       ...proxyActionBuilder.buildSystemAction(),
