@@ -365,6 +365,25 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet balances, call burn 1`] = `
 [
   {
@@ -503,6 +522,25 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 `;
 
 exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
 [
   {
     "data": {
@@ -1119,6 +1157,25 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
@@ -1249,6 +1306,22 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Token": "BelowMinimum",
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet multisig, call as_multi 1`] = `
 [
   {
@@ -1350,6 +1423,25 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
   {
     "data": {
       "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 50,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1465,6 +1557,41 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Token": "BelowMinimum",
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet multisig, call as_multi 1`] = `
 [
   {
@@ -1474,6 +1601,82 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
           "Module": {
             "error": "0x00000000",
             "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call destroy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call set_metadata 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 51,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 51,
           },
         },
       },
@@ -1722,6 +1925,25 @@ exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > a
           "Module": {
             "error": "0x00000000",
             "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
           },
         },
       },
