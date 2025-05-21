@@ -18,15 +18,15 @@ interface NetworkProxyTypes {
 }
 
 const networks: NetworkProxyTypes[] = [
-  { name: 'Polkadot', proxyTypes: PolkadotProxyTypes },
-  { name: 'Kusama', proxyTypes: KusamaProxyTypes },
-  { name: 'AssetHubPolkadot', proxyTypes: AssetHubProxyTypes },
-  { name: 'AssetHubKusama', proxyTypes: AssetHubProxyTypes },
-  { name: 'CollectivesPolkadot', proxyTypes: CollectivesProxyTypes },
-  { name: 'CoretimePolkadot', proxyTypes: CoretimeProxyTypes },
-  { name: 'CoretimeKusama', proxyTypes: CoretimeProxyTypes },
-  { name: 'PeoplePolkadot', proxyTypes: PeopleProxyTypes },
-  { name: 'PeopleKusama', proxyTypes: PeopleProxyTypes },
+  { name: 'polkadot', proxyTypes: PolkadotProxyTypes },
+  { name: 'kusama', proxyTypes: KusamaProxyTypes },
+  { name: 'assetHubPolkadot', proxyTypes: AssetHubProxyTypes },
+  { name: 'assetHubKusama', proxyTypes: AssetHubProxyTypes },
+  { name: 'collectivesPolkadot', proxyTypes: CollectivesProxyTypes },
+  { name: 'coretimePolkadot', proxyTypes: CoretimeProxyTypes },
+  { name: 'coretimeKusama', proxyTypes: CoretimeProxyTypes },
+  { name: 'peoplePolkadot', proxyTypes: PeopleProxyTypes },
+  { name: 'peopleKusama', proxyTypes: PeopleProxyTypes },
 ]
 
 function findProxyTestSnapshots(dir: string): string[] {
@@ -45,7 +45,7 @@ function findProxyTestSnapshots(dir: string): string[] {
   return files
 }
 
-function checkProxyTypeTests(network: NetworkProxyTypes, snapshotFiles: string[]): void {
+function checkProxyTypeTests(network: NetworkProxyTypes, snapshotFile: string): void {
   console.log(`\nChecking ${network.name} proxy type test coverage:`)
 
   const proxyTypes = network.proxyTypes
@@ -53,26 +53,30 @@ function checkProxyTypeTests(network: NetworkProxyTypes, snapshotFiles: string[]
 
   const proxyTypesToCheck = Object.keys(proxyTypes)
 
-  // Filter snapshots for this network
-  const networkSnapshots = snapshotFiles.filter((file) => file.includes(network.name))
-
   for (const proxyTypeName of proxyTypesToCheck) {
-    const allowed = networkSnapshots.some((file) =>
-      readFileSync(file, 'utf-8').includes(`allowed proxy calls for ${proxyTypeName}`),
-    )
-    const forbidden = networkSnapshots.some((file) =>
-      readFileSync(file, 'utf-8').includes(`forbidden proxy calls for ${proxyTypeName}`),
-    )
+    const allowed = readFileSync(snapshotFile, 'utf-8').includes(`allowed proxy calls for ${proxyTypeName}`)
+    const forbidden = readFileSync(snapshotFile, 'utf-8').includes(`forbidden proxy calls for ${proxyTypeName}`)
 
-    if (!allowed) missingTests.push(`${proxyTypeName} (allowed tests missing)`)
-    if (!forbidden) missingTests.push(`${proxyTypeName} (forbidden tests missing)`)
+    const padLength = 35
+    let msg: string
+    msg = `${proxyTypeName} allowed tests:`
+    msg = msg.padEnd(padLength, ' ')
+    if (!allowed) {
+      missingTests.push(`${msg} ❌`)
+    } else {
+      missingTests.push(`${msg} ✅`)
+    }
+    msg = `${proxyTypeName} forbidden tests:`
+    msg = msg.padEnd(padLength, ' ')
+    if (!forbidden) {
+      missingTests.push(`${msg} ❌`)
+    } else {
+      missingTests.push(`${msg} ✅`)
+    }
   }
 
-  if (missingTests.length === 0) {
-    console.log('✅ All proxy types have both allowed and forbidden test coverage')
-  } else {
-    console.log('❌ Missing test coverage for:')
-    missingTests.forEach((test) => console.log(`  - ${test}`))
+  for (const test of missingTests) {
+    console.log(test)
   }
 }
 
@@ -85,7 +89,16 @@ function main() {
   console.log('===============================')
 
   for (const network of networks) {
-    checkProxyTypeTests(network, snapshotFiles)
+    // Filter snapshots for this network
+    const networkSnapshot = snapshotFiles.find((file) => file.split('/').pop()?.startsWith(network.name))
+    if (!networkSnapshot) {
+      console.log(`No snapshots found for ${network.name}`)
+      continue
+    }
+
+    console.log(networkSnapshot)
+
+    checkProxyTypeTests(network, networkSnapshot!)
   }
 }
 
