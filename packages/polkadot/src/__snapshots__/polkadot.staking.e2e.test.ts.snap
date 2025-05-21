@@ -322,6 +322,64 @@ exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerable
 ]
 `;
 
+exports[`Polkadot Staking > set invulnerables with root origin > balances slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
 [
   {
