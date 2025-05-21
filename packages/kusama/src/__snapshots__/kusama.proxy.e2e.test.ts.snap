@@ -2668,6 +2668,25 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 ]
 `;
 
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch 1`] = `
 [
   {

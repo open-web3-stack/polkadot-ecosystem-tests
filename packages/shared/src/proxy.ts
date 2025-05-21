@@ -1,6 +1,6 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Client, KusamaProxyTypes, PolkadotProxyTypes, setupNetworks } from '@e2e-test/shared'
 
 import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -106,7 +106,7 @@ interface ProxyActionBuilder {
   buildParasRegistrarAction(): ProxyAction[]
   buildProxyAction(): ProxyAction[]
   buildProxyRejectAnnouncementAction(): ProxyAction[]
-  buildProxyRemoveProxyAction(): ProxyAction[]
+  buildProxyRemoveProxyAction(proxyType?: number): ProxyAction[]
 
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
@@ -599,7 +599,7 @@ class ProxyActionBuilderImpl<
     return cancelProxyCalls
   }
 
-  buildProxyRemoveProxyAction(): ProxyAction[] {
+  buildProxyRemoveProxyAction(proxyType?: number): ProxyAction[] {
     const proxyRemoveProxyCalls: ProxyAction[] = []
     if (this.client.api.tx.proxy) {
       proxyRemoveProxyCalls.push({
@@ -608,7 +608,7 @@ class ProxyActionBuilderImpl<
         // Careful not to elicit unintended call filtering by using a proxy type that is a supertype of
         // of the calling proxy type.
         // With the available data at this point, it is not possible to foresee which proxy type is making the call.
-        call: this.client.api.tx.proxy.removeProxy(defaultAccountsSr25519.eve.address, 9, 0),
+        call: this.client.api.tx.proxy.removeProxy(defaultAccountsSr25519.eve.address, proxyType!, 0),
       })
     }
 
@@ -855,19 +855,20 @@ async function buildAllowedProxyActions<
     .with('Society', () => [...proxyActionBuilder.buildSocietyAction()])
     .with('Spokesperson', () => [...proxyActionBuilder.buildSystemRemarkAction()])
     .with('ParaRegistration', () => {
-      const paraRegistrationCalls: ProxyAction[] = []
-
-      paraRegistrationCalls.push(
+      const paraRegistrationCalls: ProxyAction[] = [
         ...proxyActionBuilder.buildParasRegistrarAction(),
         // This proxy type can only call  batch extrinsics from `pallet_utility`, which happens to coincide with the
         // current implementation of `buildUtilityAction`.
         ...proxyActionBuilder.buildUtilityAction(),
-      )
+      ]
 
-      // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-      // Pending a fix, this can be re-enabled.
-      if (chainName !== 'kusama') {
-        paraRegistrationCalls.push(...proxyActionBuilder.buildProxyRemoveProxyAction())
+      if (chainName === 'polkadot') {
+        paraRegistrationCalls.push(
+          ...proxyActionBuilder.buildProxyRemoveProxyAction(PolkadotProxyTypes.ParaRegistration),
+        )
+      }
+      if (chainName === 'kusama') {
+        paraRegistrationCalls.push(...proxyActionBuilder.buildProxyRemoveProxyAction(KusamaProxyTypes.ParaRegistration))
       }
 
       return paraRegistrationCalls
@@ -1056,19 +1057,11 @@ async function buildDisallowedProxyActions<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
 
-    .with('ParaRegistration', () => {
-      const actions: ProxyAction[] = [
-        ...proxyActionBuilder.buildBalancesAction(),
-        ...proxyActionBuilder.buildProxyAction(),
-        ...proxyActionBuilder.buildSystemAction(),
-      ]
-      // TODO: In Kusama, the `ParaRegistration` proxy type cannot call `remove_proxy`, cause unknown.
-      // Pending a fix, this can be re-enabled.
-      if (chainName === 'kusama') {
-        actions.push(...proxyActionBuilder.buildProxyRemoveProxyAction())
-      }
-      return actions
-    })
+    .with('ParaRegistration', () => [
+      ...proxyActionBuilder.buildBalancesAction(),
+      ...proxyActionBuilder.buildProxyAction(),
+      ...proxyActionBuilder.buildSystemAction(),
+    ])
 
     // System Parachains
 
