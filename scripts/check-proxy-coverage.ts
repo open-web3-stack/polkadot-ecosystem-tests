@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { createReadStream, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import * as readline from 'node:readline'
 import { fileURLToPath } from 'node:url'
 import {
   AssetHubProxyTypes,
@@ -16,6 +17,9 @@ interface NetworkProxyTypes {
   name: string
   proxyTypes: ProxyTypeMap
 }
+
+const padLength = 40
+type ProxyTestResult = Record<string, Record<'allowed' | 'forbidden', string>>
 
 const networks: NetworkProxyTypes[] = [
   { name: 'polkadot', proxyTypes: PolkadotProxyTypes },
@@ -45,42 +49,53 @@ function findProxyTestSnapshots(dir: string): string[] {
   return files
 }
 
-function checkProxyTypeTests(network: NetworkProxyTypes, snapshotFile: string): void {
+function checkProxyTypeTests(network: NetworkProxyTypes, networkSnapshotFilename: string): ProxyTestResult {
   console.log(`\nChecking ${network.name} proxy type test coverage:`)
 
   const proxyTypes = network.proxyTypes
-  const missingTests: string[] = []
+  const proxyTestResults: ProxyTestResult = {}
 
-  const proxyTypesToCheck = Object.keys(proxyTypes)
-
-  for (const proxyTypeName of proxyTypesToCheck) {
-    const allowed = readFileSync(snapshotFile, 'utf-8').includes(`allowed proxy calls for ${proxyTypeName}`)
-    const forbidden =
-      proxyTypeName === 'Any'
-        ? true
-        : readFileSync(snapshotFile, 'utf-8').includes(`forbidden proxy calls for ${proxyTypeName}`)
-
-    const padLength = 35
-    let msg: string
-    msg = `${proxyTypeName} allowed tests:`
-    msg = msg.padEnd(padLength, ' ')
-    if (!allowed) {
-      missingTests.push(`${msg} ❌`)
-    } else {
-      missingTests.push(`${msg} ✅`)
+  Object.keys(proxyTypes).forEach((proxyTypeName) => {
+    proxyTestResults[proxyTypeName] = { allowed: '', forbidden: '' }
+    for (const testType of ['allowed', 'forbidden']) {
+      const msg = `${proxyTypeName} ${testType} tests:`.padEnd(padLength, ' ')
+      proxyTestResults[proxyTypeName][testType] = `${msg} ❌ (not found)`
     }
-    msg = `${proxyTypeName} forbidden tests:`
-    msg = msg.padEnd(padLength, ' ')
-    if (!forbidden) {
-      missingTests.push(`${msg} ❌`)
-    } else {
-      missingTests.push(`${msg} ✅`)
-    }
-  }
+  })
 
-  for (const test of missingTests) {
-    console.log(test)
-  }
+  const fileStream = readline.createInterface({
+    input: createReadStream(networkSnapshotFilename),
+    crlfDelay: Number.POSITIVE_INFINITY,
+  })
+
+  let lineNumber = 0
+
+  fileStream.on('line', (line) => {
+    lineNumber++
+    for (const proxyTypeName of Object.keys(proxyTypes)) {
+      const allowedPattern = new RegExp(`allowed proxy calls for ${proxyTypeName}`)
+      const forbiddenPattern = new RegExp(`forbidden proxy calls for ${proxyTypeName}`)
+
+      let msg: string
+      if (allowedPattern.test(line)) {
+        msg = `${proxyTypeName} allowed tests:`
+        msg = msg.padEnd(padLength, ' ')
+        proxyTestResults[proxyTypeName]['allowed'] = `${msg} ✅ (line ${lineNumber})`
+      }
+
+      if (forbiddenPattern.test(line)) {
+        if (proxyTypeName !== 'Any') {
+          msg = `${proxyTypeName} forbidden tests:`
+          msg = msg.padEnd(padLength, ' ')
+          proxyTestResults[proxyTypeName]['forbidden'] = `${msg} ✅ (line ${lineNumber})`
+        }
+      }
+    }
+  })
+
+  fileStream.on('end', () => {})
+
+  return proxyTestResults
 }
 
 function main() {
@@ -93,15 +108,21 @@ function main() {
 
   for (const network of networks) {
     // Filter snapshots for this network
-    const networkSnapshot = snapshotFiles.find((file) => file.split('/').pop()?.startsWith(network.name))
-    if (!networkSnapshot) {
+    const networkSnapshotFilename = snapshotFiles.find((file) => file.split('/').pop()?.startsWith(network.name))
+    if (!networkSnapshotFilename) {
       console.log(`No snapshots found for ${network.name}`)
       continue
     }
 
-    console.log(networkSnapshot)
+    console.log(networkSnapshotFilename)
 
-    checkProxyTypeTests(network, networkSnapshot!)
+    const proxyTestResults = checkProxyTypeTests(network, networkSnapshotFilename!)
+
+    for (const [_, v] of Object.entries(proxyTestResults)) {
+      for (const [_, j] of Object.entries(v)) {
+        console.log(j)
+      }
+    }
   }
 }
 
