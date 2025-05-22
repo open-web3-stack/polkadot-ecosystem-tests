@@ -42,6 +42,27 @@ import {
 const PAD_LENGTH = 40
 
 /**
+ * Generate a unique background color for a network's filepath when logged.
+ * A simple hash function is used to convert the network name into a number between 16 and 231
+ * (the range of 6x6x6 color cube in ANSI colors).
+ *
+ * @param networkName The name of the network
+ * @returns ANSI escape code for a background color
+ */
+function getNetworkBackgroundColor(networkName: string): string {
+  // Simple hash function to get a number from a string
+  let hash = 0
+  for (let i = 0; i < networkName.length; i++) {
+    hash = (hash << 5) - hash + networkName.charCodeAt(i)
+  }
+
+  // Map the hash to a color in the ANSI 6 x 6 x 6 color cube (colors from 16 to 231).
+  const color = (Math.abs(hash) % 216) + 16
+
+  return `\x1b[48;5;${color}m`
+}
+
+/**
  * An object with a chain's name and its proxy types.
  * The name used must correspond with the name of the chain's snapshot file; for example,
  * if Polkadot's proxy E2E test snapshots are in `polkadot.proxy.e2e.test.ts.snap`, then the name
@@ -200,7 +221,7 @@ async function main() {
     const searchResults = await findProxyFilteringTests(network, networkSnapshotFilename)
 
     console.log(`\nProxy call filtering test coverage for network: ${network.name}`)
-    console.log(`Snapshot filepath: \x1b[48;5;20m${networkSnapshotFilename}\x1b[0m`)
+    console.log(`Snapshot filepath: ${getNetworkBackgroundColor(network.name)}${networkSnapshotFilename}\x1b[0m`)
     for (const [_, msgPerTestType] of Object.entries(searchResults)) {
       for (const [_, searchResult] of Object.entries(msgPerTestType)) {
         console.log(searchResult)
