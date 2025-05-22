@@ -1,7 +1,10 @@
+/// A map of proxy type names to their corresponding numeric values, for a given network.
+export type ProxyTypeMap = Record<string, number>
+
 /**
  * Proxy types in the Polkadot relay chain.
  */
-export const PolkadotProxyTypes = {
+export const PolkadotProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   Governance: 2,
@@ -12,7 +15,7 @@ export const PolkadotProxyTypes = {
   ParaRegistration: 9,
 }
 
-export const KusamaProxyTypes = {
+export const KusamaProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   Governance: 2,
@@ -25,7 +28,7 @@ export const KusamaProxyTypes = {
   ParaRegistration: 10,
 }
 
-export const AssetHubProxyTypes = {
+export const AssetHubProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   CancelProxy: 2,
@@ -35,7 +38,7 @@ export const AssetHubProxyTypes = {
   Collator: 6,
 }
 
-export const CollectivesProxyTypes = {
+export const CollectivesProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   CancelProxy: 2,
@@ -45,7 +48,7 @@ export const CollectivesProxyTypes = {
   Ambassador: 6,
 }
 
-export const CoretimeProxyTypes = {
+export const CoretimeProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   CancelProxy: 2,
@@ -55,7 +58,7 @@ export const CoretimeProxyTypes = {
   Collator: 6,
 }
 
-export const PeopleProxyTypes = {
+export const PeopleProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   CancelProxy: 2,
