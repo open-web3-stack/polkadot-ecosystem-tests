@@ -91,6 +91,7 @@ These include:
   - proxy call filtering works both positively and negatively; in particular, for every proxy type in Polkadot/Kusama relay and system parachains, it is checked that:
       - a proxy of a given type can always execute calls which that proxy type is allowed to execute
       - a proxy of a given type can never execute calls that its proxy type disallowws it from running
+        - see the section below for more
 - E2E suite for vesting
   - normal (signed) and forced (root) vested transfers
   - forced (root) vesting schedule removal
@@ -129,6 +130,15 @@ Note that since block execution throughput in `chopsticks` on a local developmen
 to roughly `1-10` blocks/second, not all scenarios are testable in practice e.g. referenda
 confirmation, or the unbonding of staked funds.
 Consider placing such tests elsewhere, or using different tools (e.g. XCM emulator).
+
+#### Proxy call filtering checker
+
+The proxy E2E test suite contains checks to proxy types' allowed and disallowed calls - for many chains.
+Because these tests are extensive and hard to manually verify (the test code itself and the snapshots), there exists a
+coverage checking script (`scripts/check-proxy-coverage.ts`)
+It searches for allowed/forbidden call coverage for a chain's proxy types.
+
+Run it with `yarn check-proxy-coverage` to see which proxy types need test coverage.
 
 ### Test Guidelines
 - Write network-agnostic tests where possible
