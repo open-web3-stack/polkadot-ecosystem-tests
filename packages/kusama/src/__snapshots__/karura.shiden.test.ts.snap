@@ -32,7 +32,7 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -40,22 +40,20 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": {
-                            "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
-                            "length": 2,
-                          },
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -70,22 +68,20 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": {
-                            "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
-                            "length": 2,
-                          },
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -102,12 +98,14 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -132,7 +130,7 @@ exports[`karura & shiden > karura transfer KAR to shiden > to chain xcm events 1
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 9300)",
-        "refTime": "(rounded 880000000)",
+        "refTime": "(rounded 890000000)",
       },
     },
     "method": "Processed",
@@ -245,7 +243,7 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v3": [
           {
             "withdrawAsset": [
               {
@@ -256,7 +254,10 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
                   "concrete": {
                     "interior": {
                       "x1": {
-                        "generalKey": "0x0080",
+                        "generalKey": {
+                          "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
                       },
                     },
                     "parents": 0,
@@ -278,7 +279,10 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
                   "concrete": {
                     "interior": {
                       "x1": {
-                        "generalKey": "0x0080",
+                        "generalKey": {
+                          "data": "0x0080000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
                       },
                     },
                     "parents": 0,
@@ -294,7 +298,7 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
@@ -302,15 +306,12 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
                   "x1": {
                     "accountId32": {
                       "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
-                      },
+                      "network": null,
                     },
                   },
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
