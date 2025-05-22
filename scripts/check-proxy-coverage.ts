@@ -49,9 +49,7 @@ function findProxyTestSnapshots(dir: string): string[] {
   return files
 }
 
-function checkProxyTypeTests(network: NetworkProxyTypes, networkSnapshotFilename: string): ProxyTestResult {
-  console.log(`\nChecking ${network.name} proxy type test coverage:`)
-
+function checkProxyTypeTests(network: NetworkProxyTypes, networkSnapshotFilename: string): Promise<ProxyTestResult> {
   const proxyTypes = network.proxyTypes
   const proxyTestResults: ProxyTestResult = {}
 
@@ -63,61 +61,63 @@ function checkProxyTypeTests(network: NetworkProxyTypes, networkSnapshotFilename
     }
   })
 
-  const fileStream = readline.createInterface({
-    input: createReadStream(networkSnapshotFilename),
-    crlfDelay: Number.POSITIVE_INFINITY,
-  })
+  const reader = createReadStream(networkSnapshotFilename)
+  reader.read
 
-  let lineNumber = 0
+  return new Promise((resolve) => {
+    const fileStream = readline.createInterface({
+      input: createReadStream(networkSnapshotFilename),
+      crlfDelay: Number.POSITIVE_INFINITY,
+    })
 
-  fileStream.on('line', (line) => {
-    lineNumber++
-    for (const proxyTypeName of Object.keys(proxyTypes)) {
-      const allowedPattern = new RegExp(`allowed proxy calls for ${proxyTypeName}`)
-      const forbiddenPattern = new RegExp(`forbidden proxy calls for ${proxyTypeName}`)
+    let lineNumber = 0
 
-      let msg: string
-      if (allowedPattern.test(line)) {
-        msg = `${proxyTypeName} allowed tests:`
-        msg = msg.padEnd(padLength, ' ')
-        proxyTestResults[proxyTypeName]['allowed'] = `${msg} ✅ (line ${lineNumber})`
-      }
+    fileStream.on('line', (line) => {
+      lineNumber++
+      for (const proxyTypeName of Object.keys(proxyTypes)) {
+        const allowedPattern = new RegExp(`allowed proxy calls for ${proxyTypeName}`)
+        const forbiddenPattern = new RegExp(`forbidden proxy calls for ${proxyTypeName}`)
 
-      if (forbiddenPattern.test(line)) {
-        if (proxyTypeName !== 'Any') {
-          msg = `${proxyTypeName} forbidden tests:`
+        let msg: string
+        if (allowedPattern.test(line)) {
+          msg = `${proxyTypeName} allowed tests:`
           msg = msg.padEnd(padLength, ' ')
-          proxyTestResults[proxyTypeName]['forbidden'] = `${msg} ✅ (line ${lineNumber})`
+          proxyTestResults[proxyTypeName]['allowed'] = `${msg} ✅ (line ${lineNumber})`
+        }
+
+        if (forbiddenPattern.test(line)) {
+          if (proxyTypeName !== 'Any') {
+            msg = `${proxyTypeName} forbidden tests:`
+            msg = msg.padEnd(padLength, ' ')
+            proxyTestResults[proxyTypeName]['forbidden'] = `${msg} ✅ (line ${lineNumber})`
+          }
         }
       }
-    }
+    })
+
+    fileStream.on('close', () => {
+      resolve(proxyTestResults)
+    })
   })
-
-  fileStream.on('end', () => {})
-
-  return proxyTestResults
 }
-
-function main() {
+async function main() {
   const rootDir = join(dirname(fileURLToPath(import.meta.url)), '..')
   const snapshotFiles = findProxyTestSnapshots(rootDir)
-  console.log(snapshotFiles)
 
   console.log('Proxy Type Test Coverage Checker')
   console.log('===============================')
 
   for (const network of networks) {
-    // Filter snapshots for this network
     const networkSnapshotFilename = snapshotFiles.find((file) => file.split('/').pop()?.startsWith(network.name))
     if (!networkSnapshotFilename) {
       console.log(`No snapshots found for ${network.name}`)
       continue
     }
 
-    console.log(networkSnapshotFilename)
+    const proxyTestResults = await checkProxyTypeTests(network, networkSnapshotFilename)
 
-    const proxyTestResults = checkProxyTypeTests(network, networkSnapshotFilename!)
-
+    console.log(`\nProxy call filtering test coverage for network: ${network.name}`)
+    console.log(`Snapshot filepath: ${networkSnapshotFilename}`)
     for (const [_, v] of Object.entries(proxyTestResults)) {
       for (const [_, j] of Object.entries(v)) {
         console.log(j)
@@ -126,4 +126,4 @@ function main() {
   }
 }
 
-main()
+main().catch(console.error)
