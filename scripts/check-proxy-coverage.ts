@@ -1,3 +1,27 @@
+/**
+ * This module checks the coverage of proxy filtering tests across different chains.
+ * Such tests are used to ensure that proxy types:
+ * 1. *can* make calls they are allowed to: (referred to as"allowed" tests in this module)
+ * 2. *cannot* make calls they are forbidden from making: (referred to as "forbidden" tests)
+ *
+ * This [issue](https://github.com/paritytech/polkadot-ecosystem-tests/pull/266) showed that some proxy types were
+ * not covered by proxy filtering tests, despite being present in the test module.
+ * This was due to an oversight when building each proxy type's actions for tests.
+ *
+ * Due to the wide scope of the tests and the considerable size of each snapshot file, it is not effective to manually
+ * check each proxy type's coverage.
+ *
+ * This script is thus used to check the coverage of proxy filtering tests for all proxy types in all chains.
+ *
+ * For each chain (Polkadot, Kusama, etc.), it:
+ * 1. Finds the chain's proxy E2E test snapshot file
+ * 2. Searches for both "allowed" and "forbidden" proxy call tests for each proxy type
+ * 3. Reports which proxy types have tests, and which don't
+ *
+ * This helps ensure that all proxy types have proper test coverage for both allowed and forbidden
+ * proxy call scenarios.
+ */
+
 import { createReadStream, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import * as readline from 'node:readline'
@@ -12,7 +36,9 @@ import {
   type ProxyTypeMap,
 } from '../packages/shared/src/helpers/proxyTypes.js'
 
-/// When printing the results for each network's proxy type, pad the output to this length.
+/**
+ * When printing the results for each network's proxy type, pad the output to this length.
+ */
 const PAD_LENGTH = 40
 
 /**
@@ -64,6 +90,24 @@ type TestTypes = {
 type SearchResult = Record<string, TestTypes>
 
 /**
+ * Creates a new SearchResult with all proxy types initialized to "not found" status.
+ *
+ * @param proxyTypes The proxy types to initialize results for
+ * @returns A SearchResult with all proxy types initialized
+ */
+function createSearchResult(proxyTypes: ProxyTypeMap): SearchResult {
+  return Object.fromEntries(
+    Object.keys(proxyTypes).map((proxyTypeName) => [
+      proxyTypeName,
+      {
+        allowed: `${`${proxyTypeName} allowed tests:`.padEnd(PAD_LENGTH, ' ')} ❌ (not found)`,
+        forbidden: `${`${proxyTypeName} forbidden tests:`.padEnd(PAD_LENGTH, ' ')} ❌ (not found)`,
+      },
+    ]),
+  )
+}
+
+/**
  * Find proxy filtering tests for all proxy types in a given chain.
  * The search is done in the given file, which must be an E2E test snapshot file.
  *
@@ -73,16 +117,7 @@ type SearchResult = Record<string, TestTypes>
  */
 function findProxyFilteringTests(chain: ChainAndProxyTypes, networkSnapshotFilename: string): Promise<SearchResult> {
   const proxyTypes = chain.proxyTypes
-  const proxyTestResults: SearchResult = {}
-
-  // Initialize the search results for each proxy type with negative messages.
-  Object.keys(proxyTypes).forEach((proxyTypeName) => {
-    proxyTestResults[proxyTypeName] = { allowed: '', forbidden: '' }
-    for (const testType of ['allowed', 'forbidden']) {
-      const msg = `${proxyTypeName} ${testType} tests:`.padEnd(PAD_LENGTH, ' ')
-      proxyTestResults[proxyTypeName][testType] = `${msg} ❌ (not found)`
-    }
-  })
+  const proxyTestResults = createSearchResult(proxyTypes)
 
   return new Promise((resolve) => {
     // Open the chain's snapshot file.
@@ -127,6 +162,7 @@ function findProxyFilteringTests(chain: ChainAndProxyTypes, networkSnapshotFilen
 
 /**
  * Recursively find all proxy E2E test snapshot files in the given directory.
+ *
  * @param dir The directory to search for snapshot files.
  * @returns A list of paths to all proxy E2E test snapshot files.
  */
@@ -164,7 +200,7 @@ async function main() {
     const searchResults = await findProxyFilteringTests(network, networkSnapshotFilename)
 
     console.log(`\nProxy call filtering test coverage for network: ${network.name}`)
-    console.log(`Snapshot filepath: ${networkSnapshotFilename}`)
+    console.log(`Snapshot filepath: \x1b[48;5;20m${networkSnapshotFilename}\x1b[0m`)
     for (const [_, msgPerTestType] of Object.entries(searchResults)) {
       for (const [_, searchResult] of Object.entries(msgPerTestType)) {
         console.log(searchResult)
@@ -173,4 +209,6 @@ async function main() {
   }
 }
 
-main().catch(console.error)
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0))
