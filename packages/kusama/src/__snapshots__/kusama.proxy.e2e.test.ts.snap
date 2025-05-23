@@ -1304,25 +1304,6 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
 ]
 `;
 
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {

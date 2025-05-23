@@ -53,7 +53,7 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > to chain dmp events 1
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 9300)",
-        "refTime": "(rounded 880000000)",
+        "refTime": "(rounded 900000000)",
       },
     },
     "method": "Processed",
@@ -209,12 +209,12 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > balance on to chain 1
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 1000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
@@ -222,7 +222,7 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > balance on to chain 1
 exports[`kusama & shiden > shiden transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v3": [
       {
         "withdrawAsset": [
           {
@@ -267,7 +267,7 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > from chain ump messag
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
@@ -275,15 +275,12 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > from chain ump messag
               "x1": {
                 "accountId32": {
                   "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
-                  },
+                  "network": null,
                 },
               },
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
       },
     ],
@@ -295,15 +292,19 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > to chain ump events 1
 [
   {
     "data": {
-      "error": "Corrupt",
       "id": "(hash)",
       "origin": {
         "Ump": {
           "Para": "(rounded 2000)",
         },
       },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 320000000)",
+      },
     },
-    "method": "ProcessingFailed",
+    "method": "Processed",
     "section": "messageQueue",
   },
 ]
