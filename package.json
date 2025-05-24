@@ -8,7 +8,8 @@
 		"test:ui": "vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
 		"update-known-good": "tsx scripts/update-env.ts --update-known-good",
-		"postinstall": "husky install"
+		"postinstall": "husky install",
+		"check-proxy-coverage": "tsx scripts/check-proxy-coverage.ts"
 	},
 	"type": "module",
 	"workspaces": [
