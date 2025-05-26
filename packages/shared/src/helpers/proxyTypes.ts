@@ -35,6 +35,23 @@ export const AssetHubProxyTypes = {
   Collator: 6,
 }
 
+export const AssetHubWestendProxyTypes = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Assets: 3,
+  AssetOwner: 4,
+  AssetManager: 5,
+  Collator: 6,
+  Governance: 7,
+  Staking: 8,
+  NominationPools: 9,
+  OldSudoBalances: 10,
+  OldIdentityJudgement: 11,
+  OldAuction: 12,
+  OldParaRegistration: 13,
+}
+
 export const CollectivesProxyTypes = {
   Any: 0,
   NonTransfer: 1,

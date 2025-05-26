@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 760000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > schedule task with wrong origin > events when scheduling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `[]`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a named task after a delay is possible > events when scheduling task with delay 1`] = `[]`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `[]`;

@@ -1672,11 +1672,11 @@ export async function createKillPureProxyTest<
     // At present, only `Any` pure proxies can successfully call `proxy.killPure`.
     // Pending a fix (see #8056), this may be updated to check that all pure proxy types can be killed.
     if (eventData.proxyType.toNumber() === proxyTypes['Any']) {
-      assert(pureProxy[0].length === 0)
-      assert(pureProxy[1].eq(0))
+      expect(pureProxy[0].length).toBe(0)
+      expect(pureProxy[1].eq(0)).toBe(true)
     } else {
-      assert(pureProxy[0].length === 1)
-      assert(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding)))
+      expect(pureProxy[0].length).toBe(1)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1690,8 +1690,8 @@ export async function createKillPureProxyTest<
  * Test a simple proxy scenario.
  *
  * 1. Alice adds Bob as their `Any` proxy, with no associated delay
- * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Charlie
- * 3. Charlie's balance is checked, as is Alice's
+ * 2. Bob performs a proxy call on behalf of Alice to transfer some funds to Dave
+ * 3. Dave's balance is checked, as is Alice's
  */
 export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1701,7 +1701,7 @@ export async function proxyCallTest<
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -1716,29 +1716,29 @@ export async function proxyCallTest<
 
   await client.dev.newBlock()
 
-  // Bob performs a proxy call to transfer funds to Charlie
+  // Bob performs a proxy call to transfer funds to Dave
   const transferAmount: number = 100e10
-  const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
   const proxyTx = client.api.tx.proxy.proxy(alice.address, null, transferCall)
 
   const proxyEvents = await sendTransaction(proxyTx.signAsync(bob))
 
-  // Check Charlie's balances beforehand
+  // Check Dave's balances beforehand
   const oldAliceBalance = (await client.api.query.system.account(alice.address)).data.free
-  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  assert(charlieBalance.eq(0), 'Charlie should have no funds')
+  let daveBalance = (await client.api.query.system.account(dave.address)).data.free
+  assert(daveBalance.eq(0), 'Dave should have no funds')
 
   await client.dev.newBlock()
 
   await checkEvents(proxyEvents, 'proxy', { section: 'balances', method: 'Transfer' }).toMatchSnapshot(
-    "events when Bob transfers funds to Charlie as Alice's proxy",
+    "events when Bob transfers funds to Dave as Alice's proxy",
   )
 
-  // Check Alice's and Charlie's balances
+  // Check Alice's and Dave's balances
   const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free
   assert(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds')
-  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  assert(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds')
+  daveBalance = (await client.api.query.system.account(dave.address)).data.free
+  assert(daveBalance.eq(transferAmount), 'Dave should have the transferred funds')
 }
 
 /**
@@ -1754,15 +1754,16 @@ export async function proxyCallTest<
  */
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(relay: Chain<TCustom, TInitStoragesRelay>, assetHub: Chain<TCustom, TInitStoragesPara>, addressEncoding: number) {
+  const [relayClient, ahClient] = await setupNetworks(relay, assetHub)
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
   const charlie = defaultAccountsSr25519.charlie
 
-  await client.dev.setStorage({
+  await ahClient.dev.setStorage({
     System: {
       account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
     },
@@ -1770,95 +1771,97 @@ export async function proxyAnnouncementLifecycleTest<
 
   // Alice adds Bob as a 0-delay proxy
 
-  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  const addProxyTx = ahClient.api.tx.proxy.addProxy(bob.address, 'Any', 0)
   await sendTransaction(addProxyTx.signAsync(alice))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
+  // The relay chain also needs to advance, since AH uses it as a block provider.
+  // If this is not done, the announcement check will fail due to the relay block number drifting.
+  await relayClient.dev.newBlock()
 
   // Bob announces an intent to transfer funds to Charlie
   const transferAmount: number = 100e10
-  const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
+  const transferCall = ahClient.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
-  await client.dev.newBlock()
-
-  const announceTx = client.api.tx.proxy.announce(alice.address, transferCall.method.hash)
+  const announceTx = ahClient.api.tx.proxy.announce(alice.address, transferCall.method.hash)
   const announcementEvents = await sendTransaction(announceTx.signAsync(bob))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
+  await relayClient.dev.newBlock()
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currRelayBlockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
   const announcementObject = {
     real: encodeAddress(alice.address, addressEncoding),
     callHash: transferCall.method.hash.toHex(),
-    height: currBlockNumber,
+    height: currRelayBlockNumber,
   }
 
   // Sanity check - the announcement should be associated to Bob and not their delegator, Alice
-  let announcements = await client.api.query.proxy.announcements(alice.address)
+  let announcements = await ahClient.api.query.proxy.announcements(alice.address)
   assert(announcements[0].length === 0)
   assert(announcements[1].eq(0))
-  announcements = await client.api.query.proxy.announcements(bob.address)
+  announcements = await ahClient.api.query.proxy.announcements(bob.address)
   assert(announcements[0].length === 1)
   await check(announcements[0][0]).toMatchObject(announcementObject)
 
-  const announcementDeposit = client.api.consts.proxy.announcementDepositBase
-  const announcementDepositFactor = client.api.consts.proxy.announcementDepositFactor
+  const announcementDeposit = ahClient.api.consts.proxy.announcementDepositBase
+  const announcementDepositFactor = ahClient.api.consts.proxy.announcementDepositFactor
   const announcementDepositTotal = announcementDeposit.add(announcementDepositFactor)
   assert(announcements[1].eq(announcementDepositTotal))
 
   // Alice rejects the announcement
 
-  const rejectAnnouncementTx = client.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
+  const rejectAnnouncementTx = ahClient.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
   const rejectAnnouncementEvents = await sendTransaction(rejectAnnouncementTx.signAsync(alice))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
 
   // Rejection of announcements emits no events, this should be empty.
   await checkEvents(rejectAnnouncementEvents, 'proxy').toMatchSnapshot(
     "events when Alice rejects Bob's proxy call announcement",
   )
 
-  announcements = await client.api.query.proxy.announcements(bob.address)
+  announcements = await ahClient.api.query.proxy.announcements(bob.address)
   assert(announcements[0].length === 0)
   assert(announcements[1].eq(0))
 
   // Bob reannounces the intent
   await sendTransaction(announceTx.signAsync(bob))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
 
-  announcements = await client.api.query.proxy.announcements(bob.address)
+  announcements = await ahClient.api.query.proxy.announcements(bob.address)
   assert(announcements[0].length === 1)
-  announcementObject.height = currBlockNumber + 2
+  announcementObject.height = currRelayBlockNumber + 2
   await check(announcements[0][0]).toMatchObject(announcementObject)
   assert(announcements[1].eq(announcementDepositTotal))
 
   // Bob cancels the intent themselves
-  const removeAnnouncementTx = client.api.tx.proxy.removeAnnouncement(alice.address, transferCall.method.hash)
+  const removeAnnouncementTx = ahClient.api.tx.proxy.removeAnnouncement(alice.address, transferCall.method.hash)
   const removeAnnouncementEvents = await sendTransaction(removeAnnouncementTx.signAsync(bob))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
 
   // Removal of announcements emits no events, this should also be empty.
   await checkEvents(removeAnnouncementEvents, 'proxy').toMatchSnapshot(
     'events when Bob removes their proxy call announcement',
   )
 
-  announcements = await client.api.query.proxy.announcements(bob.address)
+  announcements = await ahClient.api.query.proxy.announcements(bob.address)
   assert(announcements[0].length === 0)
   assert(announcements[1].eq(0))
 
   // Bob reannounces the intent once more
   await sendTransaction(announceTx.signAsync(bob))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
 
-  const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(bob.address, alice.address, null, transferCall)
+  const proxyAnnouncedTx = ahClient.api.tx.proxy.proxyAnnounced(bob.address, alice.address, null, transferCall)
   const proxyAnnouncedEvents = await sendTransaction(proxyAnnouncedTx.signAsync(bob))
 
-  await client.dev.newBlock()
+  await ahClient.dev.newBlock()
 
   await checkEvents(proxyAnnouncedEvents, 'proxy').toMatchSnapshot('events when Bob performs the announced proxy call')
 }
@@ -1871,35 +1874,37 @@ export async function proxyAnnouncementLifecycleTest<
  */
 export async function proxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  relay: Chain<TCustom, TInitStoragesRelay>,
+  assetHub: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
 ) {
   describe(testConfig.testSuiteName, async () => {
     test('add proxies (with/without delay) to an account, and remove them', async () => {
-      await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
+      await addRemoveProxyTest(assetHub, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
     })
 
     test('create and kill pure proxies', async () => {
-      await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes)
+      await createKillPureProxyTest(assetHub, testConfig.addressEncoding, proxyTypes)
     })
 
     test('perform proxy call on behalf of delegator', async () => {
-      await proxyCallTest(chain)
+      await proxyCallTest(assetHub)
     })
 
     test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
+      await proxyAnnouncementLifecycleTest(relay, assetHub, testConfig.addressEncoding)
     })
 
     describe('filtering tests for permitted proxy calls', () => {
-      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
+      proxyCallFilteringTestRunner(assetHub, proxyTypes, ProxyCallFilteringTestType.Permitted)
     })
 
     describe('filtering tests for forbidden proxy calls', () => {
-      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
+      proxyCallFilteringTestRunner(assetHub, proxyTypes, ProxyCallFilteringTestType.Forbidden)
     })
   })
 }

@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominator bond events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominator bond extra events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 0 bond events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 0 validate events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 1 bond events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 1 validate events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 2 bond events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 2 validate events 1`] = `[]`;

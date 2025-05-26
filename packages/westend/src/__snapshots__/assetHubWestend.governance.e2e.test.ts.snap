@@ -1,0 +1,89 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Governance > preimage submission, query and removal works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Governance > preimage submission, query and removal works > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info before decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x5e030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 30000000000,
+      "who": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Westend Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 980000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

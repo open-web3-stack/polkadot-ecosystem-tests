@@ -48,7 +48,7 @@ export const kusama = defineChain({
 
 export const westend = defineChain({
   name: 'westend',
-  endpoint: 'wss://westend-asset-hub-rpc.polkadot.io',
+  endpoint: 'wss://rpc.ibp.network/westend',
   custom: custom.westend,
   initStorages: getInitStorages(),
   isRelayChain: true,
