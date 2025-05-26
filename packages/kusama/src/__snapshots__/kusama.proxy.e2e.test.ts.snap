@@ -569,8 +569,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -602,8 +602,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -635,8 +635,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -744,8 +744,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -777,8 +777,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -810,8 +810,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -938,8 +938,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -971,8 +971,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1004,8 +1004,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1113,8 +1113,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -1146,8 +1146,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1179,8 +1179,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1266,7 +1266,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
 ]
 `;
 
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_announcement 1`] = `
+exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -1285,7 +1285,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
 ]
 `;
 
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
+exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -1326,8 +1326,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -1359,8 +1359,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1392,8 +1392,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1444,8 +1444,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -1477,8 +1477,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1510,8 +1510,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1619,8 +1619,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -1747,8 +1747,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 120000000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 210000000000)",
         },
       },
     },
@@ -1780,8 +1780,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1813,8 +1813,8 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -1878,7 +1878,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
@@ -1921,6 +1921,25 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
           "Module": {
             "error": "0x0b000000",
             "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 30,
           },
         },
       },
@@ -2008,8 +2027,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -2042,8 +2061,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -2203,7 +2222,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
@@ -2385,7 +2404,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 [
   {
     "data": {
-      "index": 35,
+      "index": "(redacted)",
     },
     "method": "BountyProposed",
     "section": "bounties",
@@ -2428,6 +2447,25 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
           "Module": {
             "error": "0x0b000000",
             "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 30,
           },
         },
       },
@@ -2515,8 +2553,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -2549,8 +2587,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -2611,6 +2649,76 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 ]
 `;
 
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Society > events for proxy type Society, pallet society, call bid 1`] = `
 [
   {
@@ -2646,8 +2754,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },
@@ -2680,8 +2788,8 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4700)",
-          "refTime": "(rounded 300000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 640000000)",
         },
       },
     },

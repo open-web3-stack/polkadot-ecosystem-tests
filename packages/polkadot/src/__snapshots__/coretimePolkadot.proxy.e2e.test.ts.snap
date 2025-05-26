@@ -1100,6 +1100,25 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
 ]
 `;
 
+exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
@@ -1237,7 +1256,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0f000000",
+            "error": "0x0b000000",
             "index": 50,
           },
         },
@@ -1614,6 +1633,25 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
           "Module": {
             "error": "0x00000000",
             "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
           },
         },
       },

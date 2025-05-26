@@ -22,8 +22,8 @@ exports[`Kusama Vesting > signed-origin force-vested transfer fails > force vest
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },

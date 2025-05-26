@@ -1538,6 +1538,174 @@ async function setInvulnerablesTestBadOrigin<
   assert(e.result.asErr.isBadOrigin)
 }
 
+/**
+ * Test setting invulnerables with the correct Root origin.
+ *
+ * 1. Travel to a few blocks before the last era change
+ * 2. Fund accounts, bund said funds, and express intent to validate
+ * 3. Set them as invulnerables
+ * 4. Insert a slash into storage
+ * 5. Advance to the block in which the era changes
+ * 6. Observe that the slash is applied
+ *
+ * Invulnerable validators are slashed, because being invulnerable does not protect against slashes that have
+ * already been scheduled.
+ */
+async function setInvulnerablesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  //
+  // Locate era change
+  //
+
+  const eraChangeBlock = await locateEraChange(client)
+  if (eraChangeBlock === undefined) {
+    // This test only makes sense to run if there's an active era.
+    console.warn('Unable to find era change block, skipping unapplied slash test')
+    return
+  }
+
+  // Go to a block before the era change - accounts need to bond, start validating, and invulnerables still need to be
+  // set.
+  await client.dev.setHead(eraChangeBlock - 3)
+
+  //
+  // Fund accounts
+  //
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  const balances = 10000e10
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: balances } }],
+        [[bob.address], { providers: 1, data: { free: balances } }],
+        [[charlie.address], { providers: 1, data: { free: balances } }],
+      ],
+    },
+  })
+
+  // Bond funds for each validator
+  const bondAmount = balances / 10
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Set them as validators
+  const minCommission = await client.api.query.staking.minCommission()
+  const validateTx = client.api.tx.staking.validate({ commission: minCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+  await sendTransaction(validateTx.signAsync(bob))
+  await sendTransaction(validateTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Sort the addresses to make the test simpler.
+
+  const invulnerables = [alice.address, bob.address, charlie.address].map((addr) =>
+    encodeAddress(addr.toString(), addressEncoding),
+  )
+  invulnerables.sort()
+
+  // Set them as invulnerable using Root origin
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables(invulnerables)
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  // Verify the invulnerables were set correctly
+  const queriedInvulnerables = (await client.api.query.staking.invulnerables()).map((addr) =>
+    encodeAddress(addr.toString(), addressEncoding),
+  )
+
+  expect(queriedInvulnerables).toEqual(invulnerables)
+
+  //
+  // Slash the invulnerable accounts
+  //
+
+  // Insert the slash
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+
+  const slashAmount = bondAmount / 2
+
+  // Insert a slash into storage. The accounts named here as validators/nominators need not have called
+  // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
+  await client.dev.setStorage({
+    ParasDisputes: {
+      $removePrefix: ['disputes', 'included'],
+    },
+    Dmp: {
+      $removePrefix: ['downwardMessageQueues'],
+    },
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      UnappliedSlashes: [
+        [
+          [activeEra + 1],
+          [
+            {
+              validator: alice.address,
+              // Less than the bonded funds.
+              own: slashAmount,
+              others: [
+                // Exactly the bonded funds.
+                [bob.address, slashAmount * 2],
+                // More than the bonded funds.
+                [charlie.address, slashAmount * 3],
+              ],
+              reporters: [dave.address],
+              payout: bondAmount,
+            },
+          ],
+        ],
+      ],
+    },
+    Session: {
+      $removePrefix: ['nextKeys'],
+    },
+  })
+
+  // Pre-slash balance checks
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+
+  // With this block, the slash will have been applied.
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPostSlash.data.frozen.toNumber()).toBe(bondAmount - slashAmount)
+  expect(bobFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  expect(charlieFundsPostSlash.data.frozen.toNumber()).toBe(0)
+
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
+}
+
 /// --------------
 /// --------------
 /// --------------
@@ -1605,6 +1773,10 @@ export function stakingE2ETests<
 
     test('set invulnerables with bad origin', async () => {
       await setInvulnerablesTestBadOrigin(chain)
+    })
+
+    test('set invulnerables with root origin', async () => {
+      await setInvulnerablesTest(chain, testConfig.addressEncoding)
     })
   })
 }

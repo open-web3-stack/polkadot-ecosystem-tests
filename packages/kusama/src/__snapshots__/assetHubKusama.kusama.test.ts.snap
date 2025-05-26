@@ -321,7 +321,7 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 165000000)",
+            "refTime": "(rounded 166000000)",
           },
         },
       },
