@@ -119,7 +119,7 @@ exports[`acala & assetHubPolkadot > acala transfer ETH to assetHubPolkadot > to 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 11000)",
-        "refTime": "(rounded 490000000)",
+        "refTime": "(rounded 480000000)",
       },
     },
     "method": "Processed",
@@ -386,7 +386,7 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > to
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 330000000)",
+        "refTime": "(rounded 320000000)",
       },
     },
     "method": "Processed",

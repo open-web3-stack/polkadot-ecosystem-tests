@@ -22,8 +22,8 @@ exports[`Polkadot Asset Hub Vesting > signed-origin force-vested transfer fails 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 660000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },

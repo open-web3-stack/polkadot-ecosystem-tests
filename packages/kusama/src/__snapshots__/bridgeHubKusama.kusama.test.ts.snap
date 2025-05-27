@@ -33,7 +33,7 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > bal
 exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {

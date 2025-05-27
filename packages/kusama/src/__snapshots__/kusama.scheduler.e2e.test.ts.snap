@@ -154,7 +154,7 @@ exports[`Kusama Scheduler > schedule named task with wrong origin > events when 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 770000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },

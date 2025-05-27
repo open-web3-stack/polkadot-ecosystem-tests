@@ -22,7 +22,7 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > balance on 
 exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain ump messages 1`] = `
 [
   {
-    "v3": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -30,12 +30,10 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
               "fungible": 2000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -50,12 +48,10 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -72,9 +68,11 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2004,
-              },
+              "x1": [
+                {
+                  "parachain": 2004,
+                },
+              ],
             },
             "parents": 0,
           },
@@ -86,12 +84,10 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
                     "fungible": 1000000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -108,12 +104,14 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > from chain 
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountKey20": {
-                        "key": "0xf24ff3a9cf04c71dbc94d0b566f7a27b94566cac",
-                        "network": null,
+                    "x1": [
+                      {
+                        "accountKey20": {
+                          "key": "0xf24ff3a9cf04c71dbc94d0b566f7a27b94566cac",
+                          "network": null,
+                        },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
@@ -143,7 +141,7 @@ exports[`hydration & moonbeam > hydration transfer DOT to moonbeam > route chain
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",
@@ -433,7 +431,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > balance on 
 exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain ump messages 1`] = `
 [
   {
-    "v3": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -441,12 +439,10 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
               "fungible": 20000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -461,12 +457,10 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
               "fungible": 10000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -483,9 +477,11 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2034,
-              },
+              "x1": [
+                {
+                  "parachain": 2034,
+                },
+              ],
             },
             "parents": 0,
           },
@@ -497,12 +493,10 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
                     "fungible": 10000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -519,12 +513,14 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > from chain 
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": null,
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                          "network": null,
+                        },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
@@ -554,7 +550,7 @@ exports[`hydration & moonbeam > moonbeam transfer DOT to hydration > route chain
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",

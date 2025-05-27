@@ -9,8 +9,8 @@ exports[`Kusama Asset Hub Vesting > signed-origin force-vested transfer fails > 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 8500)",
-          "refTime": "(rounded 780000000)",
+          "proofSize": "(rounded 18000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
