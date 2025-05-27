@@ -86,14 +86,17 @@ export async function scheduleCallWithOrigin(
         }
       },
   origin: any,
+  isSystemParachain?: boolean,
 ) {
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const number = isSystemParachain
+    ? (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
+    : (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
 
   await client.dev.setStorage({
     Scheduler: {
       agenda: [
         [
-          [number + 1],
+          [number],
           [
             {
               call,
@@ -119,8 +122,9 @@ export async function scheduleInlineCallWithOrigin(
   },
   encodedCall: HexString,
   origin: any,
+  isSystemParachain?: boolean,
 ) {
-  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin)
+  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, isSystemParachain)
 }
 
 /**

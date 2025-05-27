@@ -20,44 +20,44 @@ import { assert, describe, expect, test } from 'vitest'
 async function testVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(assetHub: Chain<TCustom, TInitStoragesPara>, addressEncoding: number) {
-  const [ahClient] = await setupNetworks(assetHub)
+>(chain: Chain<TCustom, TInitStoragesPara>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
 
   const bobBalance = 100e10
 
-  await ahClient.dev.setStorage({
+  await client.dev.setStorage({
     System: {
       account: [[[bob.address], { providers: 1, data: { free: bobBalance } }]],
     },
   })
 
-  const currBlockNumber = (await ahClient.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
+  const currBlockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
 
-  const locked = ahClient.api.consts.vesting.minVestedTransfer.toNumber()
+  const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
 
-  const vestedTransferTx = ahClient.api.tx.vesting.vestedTransfer(bob.address, {
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(bob.address, {
     perBlock,
     locked,
     startingBlock: currBlockNumber - 1,
   })
   const vestedTransferEvents = await sendTransaction(vestedTransferTx.signAsync(alice))
 
-  await ahClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(vestedTransferEvents, 'vesting').toMatchSnapshot('vest events')
 
-  let events = await ahClient.api.query.system.events()
+  let events = await client.api.query.system.events()
 
   const [ev1] = events.filter((record) => {
     const { event } = record
     return event.section === 'vesting' && event.method === 'VestingUpdated'
   })
 
-  assert(ahClient.api.events.vesting.VestingUpdated.is(ev1.event))
+  assert(client.api.events.vesting.VestingUpdated.is(ev1.event))
   let vestingUpdatedEvent = ev1.event.data
   assert(vestingUpdatedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
@@ -67,7 +67,7 @@ async function testVestedTransfer<
   // The act of vesting does not change the `Vesting` storage item - to see how much was unlocked, events
   // must be queried.
 
-  const vestingBalance = await ahClient.api.query.vesting.vesting(bob.address)
+  const vestingBalance = await client.api.query.vesting.vesting(bob.address)
   assert(vestingBalance.isSome)
   assert(vestingBalance.unwrap().length === 1)
   assert(vestingBalance.unwrap()[0].locked.eq(locked))
@@ -76,52 +76,52 @@ async function testVestedTransfer<
 
   // Check Bob's free and frozen balances
 
-  let bobAccount = await ahClient.api.query.system.account(bob.address)
+  let bobAccount = await client.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toNumber()).toBe(bobBalance + locked)
   expect(bobAccount.data.frozen.toNumber()).toBe(vestingUpdatedEvent.unvested.toNumber())
 
   // As Alice, advance the vesting schedule in Bob's stead
 
-  const vestOtherTx = ahClient.api.tx.vesting.vestOther(bob.address)
+  const vestOtherTx = client.api.tx.vesting.vestOther(bob.address)
   const vestOtherEvents = await sendTransaction(vestOtherTx.signAsync(alice))
 
-  await ahClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(vestOtherEvents, 'vesting').toMatchSnapshot('vest other events')
 
   // Same as above regarding storage.
 
-  const vestingBalance2 = await ahClient.api.query.vesting.vesting(bob.address)
+  const vestingBalance2 = await client.api.query.vesting.vesting(bob.address)
   assert(vestingBalance2.eq(vestingBalance))
 
-  events = await ahClient.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const [ev2] = events.filter((record) => {
     const { event } = record
     return event.section === 'vesting' && event.method === 'VestingUpdated'
   })
 
-  assert(ahClient.api.events.vesting.VestingUpdated.is(ev2.event))
+  assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
   assert(vestingUpdatedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
   assert(vestingUpdatedEvent.unvested.eq(locked - perBlock * 3))
 
   // Check Bob's free and frozen balances after Alice's vesting
 
-  bobAccount = await ahClient.api.query.system.account(bob.address)
+  bobAccount = await client.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toNumber()).toBe(bobBalance + locked)
   expect(bobAccount.data.frozen.toNumber()).toBe(vestingUpdatedEvent.unvested.toNumber())
 
   // As Bob advance his own vesting schedule
 
-  const vestTx = ahClient.api.tx.vesting.vest()
+  const vestTx = client.api.tx.vesting.vest()
   const vestEvents = await sendTransaction(vestTx.signAsync(bob))
 
-  await ahClient.dev.newBlock()
+  await client.dev.newBlock()
 
   await checkEvents(vestEvents, 'vesting').toMatchSnapshot('vest events')
 
-  events = await ahClient.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const vestingEvents: FrameSystemEventRecord[] = []
   const balanceWithdrawalEvents: FrameSystemEventRecord[] = []
@@ -139,22 +139,22 @@ async function testVestedTransfer<
   const [ev3] = vestingEvents
   const [balEv] = balanceWithdrawalEvents
 
-  assert(ahClient.api.events.vesting.VestingCompleted.is(ev3.event))
+  assert(client.api.events.vesting.VestingCompleted.is(ev3.event))
   const vestingCompletedEvent = ev3.event.data
   assert(vestingCompletedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
 
-  const vestingBalance3 = await ahClient.api.query.vesting.vesting(bob.address)
+  const vestingBalance3 = await client.api.query.vesting.vesting(bob.address)
   assert(vestingBalance3.isNone)
 
   // Final check to Bob's balance data
 
-  assert(ahClient.api.events.balances.Withdraw.is(balEv.event))
+  assert(client.api.events.balances.Withdraw.is(balEv.event))
   const balanceWithdrawalEvent = balEv.event.data
   assert(balanceWithdrawalEvent.who.eq(encodeAddress(bob.address, addressEncoding)))
 
   // Net of the fees from having called `vest` once, Bob's balance should the the vested amount, plus his initial
   // balance.
-  bobAccount = await ahClient.api.query.system.account(bob.address)
+  bobAccount = await client.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toNumber()).toBe(bobBalance + locked - balanceWithdrawalEvent.amount.toNumber())
   expect(bobAccount.data.frozen.toNumber()).toBe(0)
 }
@@ -215,11 +215,13 @@ async function testForceVestedTransfer<
 async function testForceRemoveVestedSchedule<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const charlie = defaultAccountsSr25519.charlie
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
@@ -263,11 +265,13 @@ async function testForceRemoveVestedSchedule<
 async function testForceVestedTransferAndRemoval<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const dave = defaultAccountsSr25519.dave
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perBlock = Math.floor(locked / 4)
@@ -278,7 +282,7 @@ async function testForceVestedTransferAndRemoval<
     startingBlock: currBlockNumber - 1,
   })
 
-  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' }, true)
 
   await client.dev.newBlock()
 
@@ -313,7 +317,7 @@ async function testForceVestedTransferAndRemoval<
   // Forcibly remove the vesting schedule.
 
   const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(dave.address, 0)
-  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' }, true)
 
   await client.dev.newBlock()
 
@@ -354,7 +358,9 @@ async function testForceVestedTransferAndRemoval<
 async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const eve = defaultAccountsSr25519.eve
 
@@ -364,7 +370,7 @@ async function testMergeVestingSchedules<
     },
   })
 
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  let currBlockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
   const initialBlockNumber = currBlockNumber
 
   const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber() * 3
@@ -461,20 +467,20 @@ export function vestingE2ETests<
       await testVestedTransfer(assetHub, testConfig.addressEncoding)
     })
 
+    test('signed-origin force-vested transfer fails', async () => {
+      await testForceVestedTransfer(assetHub)
+    })
+
     test('signed-origin forced removal of vesting schedule fails', async () => {
-      await testForceRemoveVestedSchedule(ahClient)
+      await testForceRemoveVestedSchedule(assetHub)
     })
 
     test('forced vested transfer and forced removal of vesting schedule work', async () => {
-      await testForceVestedTransferAndRemoval(ahClient)
+      await testForceVestedTransferAndRemoval(assetHub)
     })
 
     test('test merger of two vesting schedules', async () => {
-      await testMergeVestingSchedules(ahClient)
-    })
-
-    test('signed-origin force-vested transfer fails', async () => {
-      await testForceVestedTransfer(ahClient)
+      await testMergeVestingSchedules(assetHub)
     })
   })
 }
