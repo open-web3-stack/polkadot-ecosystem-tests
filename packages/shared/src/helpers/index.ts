@@ -112,6 +112,10 @@ export async function scheduleCallWithOrigin(
 /**
  * Given a PJS client and an inline call with a given origin, modify the
  * `scheduler` pallet's `agenda` storage to execute the call in the next block.
+ *
+ * @param isSystemParachain Whether the storage being modified is on a system parachain.
+ *        If true, the block number that will serve as key in the scheduler pallet's agenda storage
+ *        is the last relay chain block number, and not that parachain's block number.
  */
 export async function scheduleInlineCallWithOrigin(
   client: {
@@ -140,8 +144,9 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
+  isSystemParachain?: boolean,
 ) {
-  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin)
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, isSystemParachain)
 }
 
 /**
