@@ -10,7 +10,7 @@ exports[`Kusama Staking > cancel deferred slash with bad origin > cancel deferre
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 77000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 1700000000)",
         },
       },
     },
@@ -216,7 +216,7 @@ exports[`Kusama Staking > force apply validator commission > force apply min com
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 11000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 630000000)",
         },
       },
     },
@@ -469,7 +469,7 @@ exports[`Kusama Staking > staking lifecycle > events when attempting to nominate
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 21000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 1500000000)",
         },
       },
     },
