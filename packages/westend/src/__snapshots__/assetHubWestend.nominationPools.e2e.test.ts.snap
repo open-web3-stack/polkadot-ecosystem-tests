@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 0,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join nomination pool events 1`] = `[]`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 0,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `[]`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `[]`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;

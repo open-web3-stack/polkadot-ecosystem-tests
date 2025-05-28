@@ -19,7 +19,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import { type Option, u32 } from '@polkadot/types'
 import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
 import type { Codec } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 /// -------
 /// Helpers
@@ -315,7 +315,7 @@ async function nominationPoolLifecycleTest<
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after commission is changed')
 
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
 
   const nominationPoolWithCommission = poolData.unwrap()
 
