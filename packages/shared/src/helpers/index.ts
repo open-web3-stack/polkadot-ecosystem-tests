@@ -1,4 +1,5 @@
 import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
+import { match } from 'ts-pattern'
 import { assert, expect } from 'vitest'
 
 import type { StorageValues } from '@acala-network/chopsticks'
@@ -64,6 +65,13 @@ export function objectCmp(
 }
 
 /**
+ * This enum is used when scheduling calls, to know whether the scheduling is:
+ * 1. on a relay chain, using an RPC call to get the current block number, or
+ * 2. on a system parachain, using that parachain's last known relay chain block number.
+ */
+export type RelayOrSysPara = 'Relay' | 'SysPara'
+
+/**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
  *
@@ -86,11 +94,12 @@ export async function scheduleCallWithOrigin(
         }
       },
   origin: any,
-  isSystemParachain?: boolean,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
-  const number = isSystemParachain
-    ? (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
-    : (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
+  const number = await match(isSystemParachain)
+    .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('SysPara', async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
+    .exhaustive()
 
   await client.dev.setStorage({
     Scheduler: {
@@ -126,7 +135,7 @@ export async function scheduleInlineCallWithOrigin(
   },
   encodedCall: HexString,
   origin: any,
-  isSystemParachain?: boolean,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
   await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, isSystemParachain)
 }
@@ -144,7 +153,7 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
-  isSystemParachain?: boolean,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
   await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, isSystemParachain)
 }
