@@ -26,7 +26,7 @@ exports[`karura & kusama > karura transfer KSM to kusama > balance on to chain 1
 exports[`karura & kusama > karura transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -34,12 +34,10 @@ exports[`karura & kusama > karura transfer KSM to kusama > from chain ump messag
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -54,12 +52,10 @@ exports[`karura & kusama > karura transfer KSM to kusama > from chain ump messag
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -71,23 +67,22 @@ exports[`karura & kusama > karura transfer KSM to kusama > from chain ump messag
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
             "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
                   },
                 },
-              },
+              ],
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
       },
     ],
@@ -188,7 +183,7 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > b
 exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -196,12 +191,10 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > f
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -216,16 +209,17 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > f
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
-            "limited": 500000000,
+            "limited": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
           },
         },
       },
@@ -233,23 +227,22 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > f
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
             "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
                   },
                 },
-              },
+              ],
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
       },
     ],
@@ -391,7 +384,7 @@ exports[`karura & kusama > kusama transfer KSM to karura > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 301000000)",
+            "refTime": "(rounded 304000000)",
           },
         },
       },

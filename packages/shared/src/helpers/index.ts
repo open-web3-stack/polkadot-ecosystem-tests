@@ -1,4 +1,5 @@
 import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
+import { match } from 'ts-pattern'
 import { assert, expect } from 'vitest'
 
 import type { StorageValues } from '@acala-network/chopsticks'
@@ -64,6 +65,13 @@ export function objectCmp(
 }
 
 /**
+ * This enum is used when scheduling calls, to know whether the scheduling is:
+ * 1. on a relay chain, using an RPC call to get the current block number, or
+ * 2. on a system parachain, using that parachain's last known relay chain block number.
+ */
+export type RelayOrSysPara = 'Relay' | 'SysPara'
+
+/**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
  *
@@ -86,14 +94,18 @@ export async function scheduleCallWithOrigin(
         }
       },
   origin: any,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const number = await match(isSystemParachain)
+    .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('SysPara', async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
+    .exhaustive()
 
   await client.dev.setStorage({
     Scheduler: {
       agenda: [
         [
-          [number + 1],
+          [number],
           [
             {
               call,
@@ -109,6 +121,10 @@ export async function scheduleCallWithOrigin(
 /**
  * Given a PJS client and an inline call with a given origin, modify the
  * `scheduler` pallet's `agenda` storage to execute the call in the next block.
+ *
+ * @param isSystemParachain Whether the storage being modified is on a system parachain.
+ *        If on a system parachain, the block number that will serve as key in the scheduler pallet's agenda storage
+ *        is the last relay chain block number, and not that parachain's block number.
  */
 export async function scheduleInlineCallWithOrigin(
   client: {
@@ -119,8 +135,9 @@ export async function scheduleInlineCallWithOrigin(
   },
   encodedCall: HexString,
   origin: any,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
-  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin)
+  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, isSystemParachain)
 }
 
 /**
@@ -136,8 +153,9 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
+  isSystemParachain: RelayOrSysPara = 'Relay',
 ) {
-  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin)
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, isSystemParachain)
 }
 
 /**
@@ -150,7 +168,7 @@ export async function scheduleLookupCallWithOrigin(
  * @param requireWeightAtMost Reftime/proof size parameters that `send::Transact` may require (only in XCM v4);
  *        sensible defaults are given.
  */
-export async function xcmSendTransact(
+export function createXcmTransactSend(
   client: {
     api: ApiPromise
     dev: {
@@ -159,9 +177,9 @@ export async function xcmSendTransact(
   },
   dest: any,
   call: HexString,
-  origin: { origin: any; originKind: string },
+  originKind: string,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
-): Promise<any> {
+) {
   // The message being sent to the parachain, containing a call to be executed in the parachain:
   const message = {
     V4: [
@@ -176,18 +194,14 @@ export async function xcmSendTransact(
           call: {
             encoded: call,
           },
-          originKind: origin.originKind,
+          originKind,
           requireWeightAtMost,
         },
       },
     ],
   }
 
-  const xcmTx = (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
-  const encodedRelayCallData = xcmTx.method.toHex()
-
-  /// See `scheduleCallWithOrigin` for more.
-  await scheduleCallWithOrigin(client, { Inline: encodedRelayCallData }, origin.origin)
+  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
 }
 
 /**

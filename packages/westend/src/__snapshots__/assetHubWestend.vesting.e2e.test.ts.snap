@@ -1,0 +1,135 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
+[
+  "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+  750000000000,
+]
+`;
+
+exports[`Westend Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vesting removal event 1`] = `
+[
+  "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+]
+`;
+
+exports[`Westend Asset Hub Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > test merger of two vesting schedules > vesting events 1 1`] = `
+[
+  {
+    "data": {
+      "account": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      "unvested": "(rounded 2500000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
+[
+  {
+    "data": {
+      "account": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      "scheduleIndex": 1,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      "unvested": "(rounded 7600000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > test merger of two vesting schedules > vesting schedules merger events 1`] = `
+[
+  {
+    "data": {
+      "account": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+      "unvested": "(rounded 7000000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > vesting schedule lifecycle > vest events 1`] = `
+[
+  {
+    "data": {
+      "account": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+      "unvested": 500000000000,
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > vesting schedule lifecycle > vest events 2`] = `
+[
+  {
+    "data": {
+      "account": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+    },
+    "method": "VestingCompleted",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Vesting > vesting schedule lifecycle > vest other events 1`] = `
+[
+  {
+    "data": {
+      "account": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+      "unvested": 250000000000,
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;

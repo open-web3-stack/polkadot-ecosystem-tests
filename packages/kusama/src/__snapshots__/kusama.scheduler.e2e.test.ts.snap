@@ -9,8 +9,8 @@ exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > even
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 540000000)",
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 880000000)",
         },
       },
     },
@@ -29,8 +29,8 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 500000000)",
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 850000000)",
         },
       },
     },
@@ -153,8 +153,8 @@ exports[`Kusama Scheduler > schedule named task with wrong origin > events when 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 430000000)",
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 770000000)",
         },
       },
     },
@@ -173,8 +173,8 @@ exports[`Kusama Scheduler > schedule task with wrong origin > events when schedu
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 42000)",
-          "refTime": "(rounded 290000000)",
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 630000000)",
         },
       },
     },

@@ -17,6 +17,7 @@ describe('kusama & coretimeKusama', async () => {
       toChain: coretimeClient,
       balance: query.balances,
       tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, coretimeKusama.paraId!)),
+      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })
 
@@ -26,6 +27,7 @@ describe('kusama & coretimeKusama', async () => {
       toChain: kusamaClient,
       balance: query.balances,
       tx: tx.xcmPallet.teleportAssetsV3(coretimeKSM, 1e12, tx.xcmPallet.relaychainV4),
+      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
     }
   })
 })

@@ -1,0 +1,205 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > collectives events emitted when sending xcm 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17008097b9f2e0aa4ab3b2b40d8912071ce5fd27e15432afcd3b204548d56468f21b",
+            },
+            "originKind": "Xcm",
+            "requireWeightAtMost": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > events after notePreimge 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 23,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x8097b9f2e0aa4ab3b2b40d8912071ce5fd27e15432afcd3b204548d56468f21b",
+      "result": {
+        "Ok": {
+          "actualWeight": {
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 300000000)",
+          },
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x8097b9f2e0aa4ab3b2b40d8912071ce5fd27e15432afcd3b204548d56468f21b",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 10000,
+        "refTime": "(rounded 510000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
+[
+  {
+    "data": {
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "UpgradeAuthorized",
+    "section": "system",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 500000,
+        "refTime": "(rounded 5000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;

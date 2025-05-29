@@ -32,7 +32,7 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v3": [
           {
             "reserveAssetDeposited": [
               {
@@ -47,7 +47,10 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                           "parachain": 2000,
                         },
                         {
-                          "generalKey": "0x0000",
+                          "generalKey": {
+                            "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "length": 2,
+                          },
                         },
                       ],
                     },
@@ -74,7 +77,10 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                           "parachain": 2000,
                         },
                         {
-                          "generalKey": "0x0000",
+                          "generalKey": {
+                            "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                            "length": 2,
+                          },
                         },
                       ],
                     },
@@ -91,7 +97,7 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
@@ -99,15 +105,12 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                   "x1": {
                     "accountId32": {
                       "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
-                      },
+                      "network": null,
                     },
                   },
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],

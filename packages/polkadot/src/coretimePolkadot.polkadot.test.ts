@@ -17,6 +17,7 @@ describe('polkadot & coretimePolkadot', async () => {
       toChain: coretimeClient,
       balance: query.balances,
       tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, coretimePolkadot.paraId!)),
+      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
     }
   })
 
@@ -26,6 +27,7 @@ describe('polkadot & coretimePolkadot', async () => {
       toChain: polkadotClient,
       balance: query.balances,
       tx: tx.xcmPallet.teleportAssetsV3(coretimeDOT, 1e12, tx.xcmPallet.relaychainV4),
+      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
     }
   })
 })

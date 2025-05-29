@@ -1,8 +1,8 @@
 import { BN } from 'bn.js'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
@@ -105,7 +105,9 @@ function referendumCmp(
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -181,7 +183,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPreDecDep.enactment.asAfter.eq(1))
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
   assert(ongoingRefPreDecDep.track.eq(smallTipper[0]))
   await check(ongoingRefPreDecDep.origin).toMatchObject({
     origins: 'SmallTipper',
@@ -274,7 +276,7 @@ export async function referendumLifecycleTest<
     refPre = refPost
   }
 
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 2 })
 
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   const refNowDeciding = referendumDataOpt.unwrap().asOngoing
@@ -287,7 +289,9 @@ export async function referendumLifecycleTest<
 
   const decisionPeriodStartBlock = ongoingRefPreDecDep.submitted.add(smallTipper[1].preparePeriod)
 
-  assert(refNowDeciding.alarm.unwrap()[0].eq(smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock)))
+  expect(refNowDeciding.alarm.unwrap()[0].toNumber()).toBe(
+    smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock).toNumber(),
+  )
 
   assert(
     refNowDeciding.deciding.eq({
@@ -525,7 +529,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -705,7 +709,9 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -745,7 +751,7 @@ export async function referendumLifecycleKillTest<
    */
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
 
   /**
    * Place decision deposit
@@ -771,7 +777,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -820,9 +826,9 @@ export async function referendumLifecycleKillTest<
   assert(referendumDataOpt.unwrap().isKilled, 'referendum should be cancelled!')
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  assert(killedRef.eq(blockNumber))
+  assert(killedRef.eq(blockNumber - 1))
 }
 
 /**
@@ -832,7 +838,9 @@ export async function referendumLifecycleKillTest<
 export async function preimageTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(devAccounts.alice))
@@ -878,18 +886,16 @@ export function governanceE2ETests<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(client, testConfig.addressEncoding)
+      await referendumLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
-      await referendumLifecycleKillTest(client, testConfig.addressEncoding)
+      await referendumLifecycleKillTest(chain, testConfig.addressEncoding)
     })
 
     test('preimage submission, query and removal works', async () => {
-      await preimageTest(client)
+      await preimageTest(chain)
     })
   })
 }

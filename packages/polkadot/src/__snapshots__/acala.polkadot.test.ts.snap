@@ -26,7 +26,7 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > balance on to chain
 exports[`acala & polkadot > acala transfer DOT to polkadot > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -34,12 +34,10 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > from chain ump mess
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -54,12 +52,10 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > from chain ump mess
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -71,23 +67,22 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > from chain ump mess
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
             "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
                   },
                 },
-              },
+              ],
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
       },
     ],
@@ -188,7 +183,7 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on 
 exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -196,12 +191,10 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain 
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -216,16 +209,17 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain 
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
-            "limited": 5000000000,
+            "limited": {
+              "proofSize": 10000,
+              "refTime": 5000000000,
+            },
           },
         },
       },
@@ -233,23 +227,22 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain 
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
             "interior": {
-              "x1": {
-                "accountId32": {
-                  "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
                   },
                 },
-              },
+              ],
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
       },
     ],

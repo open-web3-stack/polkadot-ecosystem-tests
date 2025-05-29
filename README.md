@@ -83,6 +83,19 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 This repository contains E2E tests for the Polkadot/Kusama networks.
 
 These include:
+- E2E suite for proxy accounts:
+  - proxy account creation, removal
+  - pure proxy account creation, removal
+  - execution of proxy calls
+  - test delay in proxy actions, as well as announcement/removal, and executing of announced action
+  - proxy call filtering works both positively and negatively; in particular, for every proxy type in Polkadot/Kusama relay and system parachains, it is checked that:
+      - a proxy of a given type can always execute calls which that proxy type is allowed to execute
+      - a proxy of a given type can never execute calls that its proxy type disallowws it from running
+        - see the section below for more
+- E2E suite for vesting
+  - normal (signed) and forced (root) vested transfers
+  - forced (root) vesting schedule removal
+  - merger of vesting schedules
 - E2E suite for nomination pools:
   - Creating a pool, joining it, bonding extra
   - Setting a pool's state, metadata, roles and commission data
@@ -107,7 +120,6 @@ These include:
   - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
   - Adding, modifying, and removing subidentities for an account
 
-
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
 
@@ -118,6 +130,15 @@ Note that since block execution throughput in `chopsticks` on a local developmen
 to roughly `1-10` blocks/second, not all scenarios are testable in practice e.g. referenda
 confirmation, or the unbonding of staked funds.
 Consider placing such tests elsewhere, or using different tools (e.g. XCM emulator).
+
+#### Proxy call filtering checker
+
+The proxy E2E test suite contains checks to proxy types' allowed and disallowed calls - for many chains.
+Because these tests are extensive and hard to manually verify (the test code itself and the snapshots), there exists a
+coverage checking script (`scripts/check-proxy-coverage.ts`)
+It searches for allowed/forbidden call coverage for a chain's proxy types.
+
+Run it with `yarn check-proxy-coverage` to see which proxy types need test coverage.
 
 ### Test Guidelines
 - Write network-agnostic tests where possible
@@ -201,8 +222,8 @@ permission-restricted extrinsics with the appropriate origin e.g. `Root`-gated g
 for staking and nomination pools
 
 4. **Send XCM `Transact`s to execute extrinsics with given origin in parachain**
-In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `xcmSendTransact` to
-perform the technique in 3. in the desired parachain.
+In parachains where `pallet-scheduler` is not available, but whose relay chain has it, use `createXcmTransactSend` 
+along with `scheduleCallWithOrigin` to prepare and schedule sending of an XCM to perform the technique in 3. in the desired parachain.
 
     4.1. Take care to adjust the parameters in accordance with the destination parachain, in particular
          `refTime/proofSize`

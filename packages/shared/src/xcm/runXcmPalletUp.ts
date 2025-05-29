@@ -1,10 +1,10 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import { it } from 'vitest'
+import { assert, it } from 'vitest'
 
 import { type Client, defaultAccounts } from '@e2e-test/networks'
 import { check, checkEvents, checkSystemEvents, checkUmp } from '../helpers/index.js'
-import type { GetBalance, Tx } from './types.js'
+import type { GetBalance, GetTotalIssuance, Tx } from './types.js'
 
 export const runXcmPalletUp = (
   name: string,
@@ -17,6 +17,7 @@ export const runXcmPalletUp = (
     fromAccount?: KeyringPair
     toAccount?: KeyringPair
     precision?: number
+    totalIssuanceProvider?: GetTotalIssuance
   }>,
   options: { only?: boolean } = {},
 ) => {
@@ -32,7 +33,11 @@ export const runXcmPalletUp = (
         fromAccount = defaultAccounts.alice,
         toAccount = defaultAccounts.bob,
         precision = 3,
+        totalIssuanceProvider = undefined,
       } = await setup()
+
+      const totalIssuanceBefore = await totalIssuanceProvider?.()
+
       const tx0 = await sendTransaction(tx(fromChain, toAccount.addressRaw).signAsync(fromAccount))
 
       await fromChain.chain.newBlock()
@@ -51,6 +56,13 @@ export const runXcmPalletUp = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on to chain')
       await checkSystemEvents(toChain, 'ump', 'messageQueue').toMatchSnapshot('to chain ump events')
+
+      const totalIssuanceAfter = await totalIssuanceProvider?.()
+
+      assert(
+        !totalIssuanceProvider || totalIssuanceBefore.eq(totalIssuanceAfter),
+        'Expecting total issuance to stay the same despite transfers',
+      )
     },
     240000,
   )

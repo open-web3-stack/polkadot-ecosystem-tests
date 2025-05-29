@@ -39,4 +39,53 @@ describe('acala & assetHubPolkadot', async () => {
       precision: 1,
     }
   })
+
+  runXcmPalletHorizontal('assetHubPolkadot transfer ETH to acala', async () => {
+    return {
+      fromChain: assetHubPolkadotClient,
+      toChain: acalaClient,
+      fromBalance: query.foreignAssets(assetHubPolkadot.custom.eth),
+      toBalance: query.tokens(acala.custom.eth),
+      tx: tx.xcmPallet.transferAssetsUsingType(
+        tx.xcmPallet.parachainV4(1, acala.paraId!),
+        [
+          {
+            id: assetHubPolkadot.custom.eth,
+            fun: { Fungible: 10n ** 17n },
+          },
+        ],
+        'LocalReserve',
+        assetHubPolkadot.custom.eth,
+        'LocalReserve',
+      ),
+    }
+  })
+
+  runXcmPalletHorizontal('acala transfer ETH to assetHubPolkadot', async () => {
+    await acalaClient.dev.setStorage({
+      Tokens: {
+        Accounts: [[[defaultAccounts.alice.address, acala.custom.eth], { free: 10n ** 18n }]],
+        TotalIssuance: [[[acala.custom.eth], 10n ** 19n]],
+      },
+    })
+
+    return {
+      fromChain: acalaClient,
+      toChain: assetHubPolkadotClient,
+      fromBalance: query.tokens(acala.custom.eth),
+      toBalance: query.foreignAssets(assetHubPolkadot.custom.eth),
+      tx: tx.xcmPallet.transferAssetsUsingType(
+        tx.xcmPallet.parachainV4(1, assetHubPolkadot.paraId!),
+        [
+          {
+            id: assetHubPolkadot.custom.eth,
+            fun: { Fungible: 10n ** 17n },
+          },
+        ],
+        'DestinationReserve',
+        assetHubPolkadot.custom.eth,
+        'DestinationReserve',
+      ),
+    }
+  })
 })

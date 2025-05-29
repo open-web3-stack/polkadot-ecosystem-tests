@@ -33,8 +33,8 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 650000000)",
+          "proofSize": "(rounded 91000)",
+          "refTime": "(rounded 980000000)",
         },
       },
     },
@@ -507,7 +507,14 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   },
   {
     "data": {
-      "amount": "(rounded 590000000)",
+      "amount": 0,
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 600000000)",
     },
     "method": "Deposit",
     "section": "balances",
@@ -534,7 +541,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 150000)",
-          "refTime": "(rounded 1400000000)",
+          "refTime": "(rounded 1800000000)",
         },
       },
     },
@@ -553,8 +560,8 @@ exports[`Kusama Governance > referendum lifecycle test 2 - submission, decision 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 84000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 91000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },

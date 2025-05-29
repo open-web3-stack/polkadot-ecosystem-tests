@@ -37,6 +37,7 @@ export function defineChain<
     timeout: 60_000,
     port: 0,
     allowUnresolvedImports: true,
+    saveBlock: false,
     ...rest,
   } as ChainConfig<TCustom, TInitStorages>
 
