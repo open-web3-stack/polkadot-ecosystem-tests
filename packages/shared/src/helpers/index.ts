@@ -123,7 +123,7 @@ export async function scheduleCallWithOrigin(
  * `scheduler` pallet's `agenda` storage to execute the call in the next block.
  *
  * @param isSystemParachain Whether the storage being modified is on a system parachain.
- *        If true, the block number that will serve as key in the scheduler pallet's agenda storage
+ *        If on a system parachain, the block number that will serve as key in the scheduler pallet's agenda storage
  *        is the last relay chain block number, and not that parachain's block number.
  */
 export async function scheduleInlineCallWithOrigin(
