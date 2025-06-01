@@ -262,7 +262,7 @@ __metadata:
     "@e2e-test/networks": "workspace:*"
     "@polkadot/api": "npm:^15.9.3"
     "@polkadot/types": "npm:^15.9.3"
-    "@polkadot/types-augment": "npm:^15.9.3"
+    "@polkadot/types-augment": "npm:^16.1.1"
   languageName: unknown
   linkType: soft
 
