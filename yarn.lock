@@ -1580,7 +1580,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/pluginutils@npm:^5.1.0":
+"@rollup/pluginutils@npm:^5.1.4":
   version: 5.1.4
   resolution: "@rollup/pluginutils@npm:5.1.4"
   dependencies:
@@ -2262,12 +2262,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.14.0":
-  version: 8.14.0
-  resolution: "acorn@npm:8.14.0"
+"acorn@npm:^8.14.1":
+  version: 8.14.1
+  resolution: "acorn@npm:8.14.1"
   bin:
     acorn: bin/acorn
-  checksum: 10c0/6d4ee461a7734b2f48836ee0fbb752903606e576cc100eb49340295129ca0b452f3ba91ddd4424a1d4406a98adfb2ebb6bd0ff4c49d7a0930c10e462719bbfd7
+  checksum: 10c0/dbd36c1ed1d2fa3550140000371fcf721578095b18777b85a79df231ca093b08edc6858d75d6e48c73e431c174dcf9214edbd7e6fa5911b93bd8abfa54e47123
   languageName: node
   linkType: hard
 
@@ -2985,7 +2985,7 @@ __metadata:
     ts-pattern: "npm:^5.7.0"
     tsx: "npm:^4.19.4"
     typescript: "npm:^5.8.3"
-    unplugin-swc: "npm:^1.5.2"
+    unplugin-swc: "npm:^1.5.4"
     vite-tsconfig-paths: "npm:^5.1.4"
     vitest: "npm:^3.1.3"
   languageName: unknown
@@ -6405,26 +6405,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin-swc@npm:^1.5.2":
-  version: 1.5.2
-  resolution: "unplugin-swc@npm:1.5.2"
+"unplugin-swc@npm:^1.5.4":
+  version: 1.5.4
+  resolution: "unplugin-swc@npm:1.5.4"
   dependencies:
-    "@rollup/pluginutils": "npm:^5.1.0"
+    "@rollup/pluginutils": "npm:^5.1.4"
     load-tsconfig: "npm:^0.2.5"
-    unplugin: "npm:^1.11.0"
+    unplugin: "npm:^2.3.5"
   peerDependencies:
     "@swc/core": ^1.2.108
-  checksum: 10c0/79b9ad27783c69cf236e96a0542e78e7af10fc2f34a11645a75253b6816d584e6a382dbaf0287d8fb8ae683fe34d981b2406a0f00b5764c330bdc3a9c42bc802
+  checksum: 10c0/4c7ea00af3c6843e3aeea2e1a84aedbede39b8e2a5e7dda2e51af2fd34f326008d95a68620c49f76cc638120ae52ec19e995e2b22b84ab663bdd5ec1f46b6799
   languageName: node
   linkType: hard
 
-"unplugin@npm:^1.11.0":
-  version: 1.16.1
-  resolution: "unplugin@npm:1.16.1"
+"unplugin@npm:^2.3.5":
+  version: 2.3.5
+  resolution: "unplugin@npm:2.3.5"
   dependencies:
-    acorn: "npm:^8.14.0"
+    acorn: "npm:^8.14.1"
+    picomatch: "npm:^4.0.2"
     webpack-virtual-modules: "npm:^0.6.2"
-  checksum: 10c0/dd5f8c5727d0135847da73cf03fb199107f1acf458167034886fda3405737dab871ad3926431b4f70e1e82cdac482ac1383cea4019d782a68515c8e3e611b6cc
+  checksum: 10c0/42d172be9b52cc139c69a8baefab6c44e99d7fbdafb9e5738348bc60f6c1302b9913543641f69b76bb07c6ff7d01fde3d8a67c9d3d7a976cc17d972c1ff88081
   languageName: node
   linkType: hard
 
