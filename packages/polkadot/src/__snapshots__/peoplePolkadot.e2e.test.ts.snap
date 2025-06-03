@@ -37,8 +37,8 @@ exports[`Polkadot People > adding a registrar as root from the relay chain works
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 3000)",
-          "refTime": "(rounded 200000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -342,7 +342,18 @@ exports[`Polkadot People > setting on-chain identity, adding sub-identities, rem
 ]
 `;
 
-exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `[]`;
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `
+[
+  {
+    "data": {
+      "main": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "sub": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "SubIdentityRenamed",
+    "section": "identity",
+  },
+]
+`;
 
 exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set identity events 1`] = `
 [
@@ -356,7 +367,19 @@ exports[`Polkadot People > setting on-chain identity, adding sub-identities, rem
 ]
 `;
 
-exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `[]`;
+exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `
+[
+  {
+    "data": {
+      "main": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "newDeposit": "(rounded 4000000000)",
+      "numberOfSubs": 2,
+    },
+    "method": "SubIdentitiesSet",
+    "section": "identity",
+  },
+]
+`;
 
 exports[`Polkadot People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > subidentity data after 1st subid removal 1`] = `
 [

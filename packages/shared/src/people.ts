@@ -16,13 +16,19 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
-import type { u128 } from '@polkadot/types'
+import type { Option, u128 } from '@polkadot/types'
 import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
 import { encodeAddress } from '@polkadot/util-crypto'
 import type { HexString } from '@polkadot/util/types'
 
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, xcmSendTransact } from './helpers/index.js'
+import {
+  check,
+  checkEvents,
+  checkSystemEvents,
+  createXcmTransactSend,
+  scheduleCallWithOrigin,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -56,7 +62,7 @@ async function sendXcmFromRelayToPeople(
   call: HexString,
   requireWeightAtMost?: { proofSize: string; refTime: string },
 ): Promise<any> {
-  await xcmSendTransact(
+  const xcmTx = createXcmTransactSend(
     relayClient,
     {
       parents: 0,
@@ -69,9 +75,11 @@ async function sendXcmFromRelayToPeople(
       },
     },
     call,
-    { origin: { system: 'Root' }, originKind: 'SuperUser' },
+    'SuperUser',
     requireWeightAtMost,
   )
+
+  await scheduleCallWithOrigin(relayClient, { Inline: xcmTx.method.toHex() }, { system: 'Root' })
 }
 
 /// -------
@@ -107,7 +115,8 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
-  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
+
+  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()
   const registrationIdentityInfo: PalletIdentityLegacyIdentityInfo = registrationInfo.info
 
   check(registrationIdentityInfo).toMatchSnapshot('identity right after set identity')
@@ -133,9 +142,11 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   await checkEvents(reqJudgEvents, 'identity').toMatchSnapshot('judgement request events')
 
-  const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
+  const provisionalIdentityInfoReply: Option<PalletIdentityRegistration> = await querier.identity.identityOf(
+    defaultAccountsSr25519.bob.address,
+  )
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
-  const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
+  const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()
 
   const provisionalIdentityInfo: PalletIdentityLegacyIdentityInfo = provisionalRegistrationInfo.info
 
@@ -176,7 +187,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 
   const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
-  const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
+  const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()
 
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
   await check(judgedIdentityInfo.toJSON()).toMatchObject(provisionalIdentityInfo.toJSON())
@@ -226,7 +237,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.eve.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
-  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
+  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()
 
   const identityInfo = registrationInfo.info
   await check(registrationInfo.info).toMatchSnapshot('identity right after set identity')
@@ -270,7 +281,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   const judgedIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.eve.address)
   assert(judgedIdentityInfoReply.isSome, 'Failed to query identity after judgement')
-  const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()[0]
+  const judgedRegistrationInfo = judgedIdentityInfoReply.unwrap()
   const judgedIdentityInfo: PalletIdentityLegacyIdentityInfo = judgedRegistrationInfo.info
 
   await check(judgedIdentityInfo.toHuman()).toMatchObject(identity)
@@ -311,7 +322,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   const resetIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.eve.address)
   assert(resetIdentityInfoReply.isSome, 'Failed to query identity after new identity request')
-  const resetRegistrationInfo = resetIdentityInfoReply.unwrap()[0]
+  const resetRegistrationInfo = resetIdentityInfoReply.unwrap()
   const resetIdentityInfo: PalletIdentityLegacyIdentityInfo = resetRegistrationInfo.info
 
   await check(resetIdentityInfo.toJSON()).toMatchObject(judgedIdentityInfo.toJSON())
@@ -355,7 +366,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
 
   const identityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
   assert(identityInfoReply.isSome, 'Failed to query set identity')
-  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()[0]
+  const registrationInfo: PalletIdentityRegistration = identityInfoReply.unwrap()
 
   await check(registrationInfo.judgements).toMatchObject([])
 
@@ -376,7 +387,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
 
   const provisionalIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
   assert(provisionalIdentityInfoReply.isSome, 'Failed to query identity after judgement')
-  const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()[0]
+  const provisionalRegistrationInfo = provisionalIdentityInfoReply.unwrap()
 
   // Recall that Alice is the 0th registrar, with a minimum fee of 1.
   await check(provisionalRegistrationInfo.judgements.toJSON()).toMatchObject([
@@ -401,7 +412,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
 
   const newIdentityInfoReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
   assert(newIdentityInfoReply.isSome, 'Failed to query identity after judgement cancellation')
-  const newRegistrationInfo: PalletIdentityRegistration = newIdentityInfoReply.unwrap()[0]
+  const newRegistrationInfo: PalletIdentityRegistration = newIdentityInfoReply.unwrap()
 
   await check(newRegistrationInfo.judgements.toJSON()).toMatchObject([])
 

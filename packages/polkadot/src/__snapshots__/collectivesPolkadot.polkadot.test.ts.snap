@@ -1,5 +1,841 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > collectives events emitted when sending xcm 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17001f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+            },
+            "fallbackMaxWeight": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
+            "originKind": "Xcm",
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events after notePreimge 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 23,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > events when dispatching whitelisted call with bad origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x1f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+      "result": {
+        "Ok": {
+          "actualWeight": {
+            "proofSize": "(rounded 3500)",
+            "refTime": "(rounded 290000000)",
+          },
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x1f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
+[
+  {
+    "data": {
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "UpgradeAuthorized",
+    "section": "system",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": "(rounded 140000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > collectives events emitted when sending xcm 1`] = `
+[
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 300000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "Transact": {
+            "call": {
+              "encoded": "0x17003812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+            },
+            "fallbackMaxWeight": {
+              "proofSize": 10000,
+              "refTime": 500000000,
+            },
+            "originKind": "Xcm",
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events after notePreimge 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching non-whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 23,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > events when dispatching whitelisted call with bad origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > governing chain events about dispatching whitelisted call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x3812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+      "result": {
+        "Ok": {
+          "actualWeight": null,
+          "paysFee": "Yes",
+        },
+      },
+    },
+    "method": "WhitelistedCallDispatched",
+    "section": "whitelist",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > governing chain events emitted on receiving xcm from collectives 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x3812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > Relay authorizes upgrade for itself > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
+[
+  {
+    "data": {
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "UpgradeAuthorized",
+    "section": "system",
+  },
+]
+`;
+
+exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 9000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 1000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > from chain ump messages 1`] = `
+[
+  {
+    "v5": [
+      {
+        "receiveTeleportedAsset": [
+          {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+        ],
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 1000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositAsset": {
+          "assets": {
+            "wild": {
+              "allCounted": 1,
+            },
+          },
+          "beneficiary": {
+            "interior": {
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      {
+        "setTopic": "(redacted)",
+      },
+    ],
+  },
+]
+`;
+
+exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > to chain ump events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 280000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 3590)",
+            "refTime": "(rounded 168000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 305000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [
+        {
+          "ReceiveTeleportedAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 0,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 9000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 11000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > to chain dmp events 1`] = `
+[
+  {
+    "data": {
+      "count": 1,
+    },
+    "method": "DownwardMessagesReceived",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "dmqHead": "(hash)",
+      "weightUsed": {
+        "proofSize": "(rounded 3500)",
+        "refTime": "(rounded 760000000)",
+      },
+    },
+    "method": "DownwardMessagesProcessed",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 160000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 3590)",
+            "refTime": "(rounded 149000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "xcmPallet",
+  },
+  {
+    "data": {
+      "fees": [
+        {
+          "fun": {
+            "Fungible": 397000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      ],
+      "paying": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "xcmPallet",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": "(rounded 1000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "message": [
+        {
+          "ReceiveTeleportedAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 1,
+              },
+            },
+          ],
+        },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 1,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "xcmPallet",
+  },
+]
+`;
+
 exports[`collectives & polkadot > whitelisting a call by fellowship > destination chain events 1`] = `
 [
   {
@@ -19,8 +855,8 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > destinatio
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 1000000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -79,11 +915,11 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > source cha
             "call": {
               "encoded": "0x17000101010101010101010101010101010101010101010101010101010101010101",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 1000000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],

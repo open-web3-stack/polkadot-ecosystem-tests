@@ -9,8 +9,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 160000)",
-          "refTime": "(rounded 540000000)",
+          "proofSize": "(rounded 170000)",
+          "refTime": "(rounded 1600000000)",
         },
       },
     },
@@ -29,8 +29,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 160000)",
-          "refTime": "(rounded 510000000)",
+          "proofSize": "(rounded 170000)",
+          "refTime": "(rounded 1600000000)",
         },
       },
     },
@@ -88,7 +88,27 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > note preimage events 1`] = `
 [
@@ -133,8 +153,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wro
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 160000)",
-          "refTime": "(rounded 420000000)",
+          "proofSize": "(rounded 170000)",
+          "refTime": "(rounded 1500000000)",
         },
       },
     },
@@ -153,8 +173,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 160000)",
-          "refTime": "(rounded 290000000)",
+          "proofSize": "(rounded 170000)",
+          "refTime": "(rounded 1400000000)",
         },
       },
     },
@@ -186,7 +206,18 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `[]`;
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
 [

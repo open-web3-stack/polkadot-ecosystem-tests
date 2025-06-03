@@ -1,0 +1,541 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 81,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": 100000000000,
+      "joined": true,
+      "member": "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join second nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 81,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 2800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs events 1`] = `
+{
+  "event": {
+    "data": [
+      100000000001,
+      1000000000001,
+      513,
+      524289,
+      2,
+      1,
+    ],
+    "index": "0x5116",
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs events 2`] = `
+{
+  "event": {
+    "data": [
+      100000000002,
+      1000000000002,
+      514,
+      524290,
+      3,
+      2,
+    ],
+    "index": "0x5116",
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 100000000000)",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": "(rounded 100000000000)",
+      "joined": false,
+      "member": "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
+[
+  {
+    "data": {},
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "caller": "5H8fas8CfaD8W22Ss2MtzdniKb1RuSLtec88361xzXmW3FZB",
+    },
+    "method": "PoolNominatorChilled",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1a000000",
+          "index": 81,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 830000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
+[
+  {
+    "data": {
+      "current": [
+        "0.10%",
+        "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+      ],
+    },
+    "method": "PoolCommissionUpdated",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "maxCommission": "1.00%",
+    },
+    "method": "PoolMaxCommissionUpdated",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "changeRate": {
+        "maxIncrease": "100.00%",
+        "minDelay": 10,
+      },
+    },
+    "method": "PoolCommissionChangeRateUpdated",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "permission": "Permissionless",
+    },
+    "method": "PoolCommissionClaimPermissionUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 1000000000000,
+      "joined": true,
+      "member": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > join nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": 100000000000,
+      "joined": true,
+      "member": "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
+[
+  {
+    "data": {
+      "caller": "5H8fas8CfaD8W22Ss2MtzdniKb1RuSLtec88361xzXmW3FZB",
+    },
+    "method": "PoolNominationMade",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Blocked",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > set state to destroying events 1`] = `
+[
+  {
+    "data": {
+      "newState": "Destroying",
+    },
+    "method": "StateChanged",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > unbond (depositor) events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 81,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 2200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > unbond (kick) events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000,
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 100000000000,
+      "member": "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+      "points": 100000000000,
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 100000000000)",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": "(rounded 100000000000)",
+      "member": "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+      "points": "(rounded 100000000000)",
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "5C7hu8tNUA8i3Nk1eTiFzk1dm882nvhnk72L2zZaQp955VzU",
+      "nominator": "5H8fas8CfaD8W22Ss2MtzdniKb1RuSLtec88361xzXmW3FZB",
+      "root": "5DccikQ4tfVw31MDA8eqag4KGwtvWuhZ19h34zJB6C5vt76X",
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 1000000000000,
+      "joined": true,
+      "member": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool metadata test > set metadata events 1`] = `
+[
+  {
+    "data": {
+      "caller": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+      "poolId": "(rounded 400)",
+    },
+    "method": "MetadataUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
+[
+  {
+    "event": {
+      "data": [
+        "5H8fas8CfaD8W22Ss2MtzdniKb1RuSLtec88361xzXmW3FZB",
+        "5E4nuRK4Fe7ATSdfKCDuosNvm9pJDzj7G93dzt3vmJVoJdqd",
+        "5C7hu8tNUA8i3Nk1eTiFzk1dm882nvhnk72L2zZaQp955VzU",
+      ],
+      "index": "0x5108",
+    },
+    "phase": {
+      "initialization": null,
+    },
+    "topics": [],
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pools update roles test > update roles events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "5DccikQ4tfVw31MDA8eqag4KGwtvWuhZ19h34zJB6C5vt76X",
+      "nominator": "5C7hu8tNUA8i3Nk1eTiFzk1dm882nvhnk72L2zZaQp955VzU",
+      "root": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pools update roles test > update roles failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x11000000",
+          "index": 81,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 610000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pools update roles test > update roles remove self events 1`] = `
+[
+  {
+    "data": {
+      "bouncer": "5DccikQ4tfVw31MDA8eqag4KGwtvWuhZ19h34zJB6C5vt76X",
+      "nominator": "5C7hu8tNUA8i3Nk1eTiFzk1dm882nvhnk72L2zZaQp955VzU",
+      "root": null,
+    },
+    "method": "RolesUpdated",
+    "section": "nominationPools",
+  },
+]
+`;

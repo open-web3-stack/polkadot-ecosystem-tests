@@ -32,7 +32,7 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -40,19 +40,20 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0000",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -67,19 +68,20 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0000",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -91,23 +93,22 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
                       },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
@@ -128,8 +129,8 @@ exports[`acala & astar > acala transfer ACA to astar > to chain xcm events 1`] =
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9300)",
-        "refTime": "(rounded 880000000)",
+        "proofSize": "(rounded 9400)",
+        "refTime": "(rounded 900000000)",
       },
     },
     "method": "Processed",
@@ -226,7 +227,7 @@ exports[`acala & astar > astar transfer ACA to acala > balance on to chain 1`] =
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 993000000000)",
+    "free": "(rounded 991000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -242,7 +243,7 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v3": [
           {
             "withdrawAsset": [
               {
@@ -253,7 +254,10 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
                   "concrete": {
                     "interior": {
                       "x1": {
-                        "generalKey": "0x0000",
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
                       },
                     },
                     "parents": 0,
@@ -275,7 +279,10 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
                   "concrete": {
                     "interior": {
                       "x1": {
-                        "generalKey": "0x0000",
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
+                        },
                       },
                     },
                     "parents": 0,
@@ -291,7 +298,7 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
@@ -299,16 +306,16 @@ exports[`acala & astar > astar transfer ACA to acala > from chain hrmp messages 
                   "x1": {
                     "accountId32": {
                       "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": {
-                        "any": null,
-                      },
+                      "network": null,
                     },
                   },
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
@@ -329,7 +336,7 @@ exports[`acala & astar > astar transfer ACA to acala > to chain xcm events 1`] =
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 800000000,
+        "refTime": 1000000000,
       },
     },
     "method": "Processed",

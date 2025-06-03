@@ -1,0 +1,111 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
+[
+  "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+  16666666650,
+]
+`;
+
+exports[`Kusama Vesting > forced vested transfer and forced removal of vesting schedule work > forced vesting removal event 1`] = `
+[
+  "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+]
+`;
+
+exports[`Kusama Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 1 1`] = `
+[
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "unvested": "(rounded 85000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
+[
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "unvested": "(rounded 250000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Kusama Vesting > test merger of two vesting schedules > vesting schedules merger events 1`] = `
+[
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "unvested": "(rounded 230000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Kusama Vesting > vesting schedule lifecycle > vest events 1`] = `
+[
+  {
+    "data": {
+      "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "unvested": "(rounded 17000000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Kusama Vesting > vesting schedule lifecycle > vest events 2`] = `
+[
+  {
+    "data": {
+      "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "VestingCompleted",
+    "section": "vesting",
+  },
+]
+`;
+
+exports[`Kusama Vesting > vesting schedule lifecycle > vest other events 1`] = `
+[
+  {
+    "data": {
+      "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "unvested": "(rounded 8300000000)",
+    },
+    "method": "VestingUpdated",
+    "section": "vesting",
+  },
+]
+`;

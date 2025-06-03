@@ -33,7 +33,7 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
 exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {
@@ -321,7 +321,7 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 144000000)",
+            "refTime": "(rounded 149000000)",
           },
         },
       },

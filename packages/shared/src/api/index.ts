@@ -1,5 +1,7 @@
 import type { ApiPromise } from '@polkadot/api'
 
+export type TransferType = 'Teleport' | 'LocalReserve' | 'DestinationReserve' | 'RemoteReserve'
+
 export const xtokens = {
   relaychainV3: (acc: any) => ({
     V3: {
@@ -100,6 +102,14 @@ export const xcmPallet = {
       parents,
       interior: {
         X1: { Parachain: paraId },
+      },
+    },
+  }),
+  parachainV4: (parents: number, paraId: any) => ({
+    V4: {
+      parents,
+      interior: {
+        X1: [{ Parachain: paraId }],
       },
     },
   }),
@@ -220,6 +230,34 @@ export const xcmPallet = {
         0,
         'Unlimited',
       ),
+  transferAssetsUsingType:
+    (dest: any, tokens: any[], assetTransferType: TransferType, remoteFeesId: any, feesTransferType: TransferType) =>
+    ({ api }: { api: ApiPromise }, acc: any) =>
+      (api.tx.xcmPallet || api.tx.polkadotXcm).transferAssetsUsingTypeAndThen(
+        dest,
+        { V4: tokens },
+        assetTransferType,
+        { V4: remoteFeesId },
+        feesTransferType,
+        {
+          V4: [
+            {
+              DepositAsset: {
+                assets: {
+                  Wild: {
+                    AllCounted: 2,
+                  },
+                },
+                beneficiary: {
+                  parents: 0,
+                  interior: { X1: [{ AccountId32: { id: acc } }] },
+                },
+              },
+            },
+          ],
+        },
+        'Unlimited',
+      ),
 }
 
 export const tx = {
@@ -229,6 +267,7 @@ export const tx = {
 
 export const query = {
   balances: ({ api }: { api: ApiPromise }, address: string) => api.query.system.account(address),
+  totalIssuance: ({ api }: { api: ApiPromise }) => api.query.balances.totalIssuance(),
   tokens:
     (token: any) =>
     ({ api }: { api: ApiPromise }, address: string) =>
@@ -237,6 +276,10 @@ export const query = {
     (token: number | bigint) =>
     ({ api }: { api: ApiPromise }, address: string) =>
       api.query.assets.account(token, address),
+  foreignAssets:
+    (token: any) =>
+    ({ api }: { api: ApiPromise }, address: string) =>
+      api.query.foreignAssets.account(token, address),
   evm:
     (contract: string, slot: string) =>
     ({ api }: { api: ApiPromise }, _address: string) =>

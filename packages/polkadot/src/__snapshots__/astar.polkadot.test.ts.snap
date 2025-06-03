@@ -29,7 +29,7 @@ exports[`astar & polkadot > astar transfer DOT to polkadot > balance on to chain
 exports[`astar & polkadot > astar transfer DOT to polkadot > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v3": [
       {
         "withdrawAsset": [
           {
@@ -74,7 +74,7 @@ exports[`astar & polkadot > astar transfer DOT to polkadot > from chain ump mess
         "depositAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "beneficiary": {
@@ -82,16 +82,16 @@ exports[`astar & polkadot > astar transfer DOT to polkadot > from chain ump mess
               "x1": {
                 "accountId32": {
                   "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                  "network": {
-                    "any": null,
-                  },
+                  "network": null,
                 },
               },
             },
             "parents": 0,
           },
-          "maxAssets": 1,
         },
+      },
+      {
+        "setTopic": "0x75d5c493071e3aa38c8d5beb2caf960a46eeb70fbc257a55e3157a628ecf3999",
       },
     ],
   },
@@ -217,8 +217,8 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > to chain dmp events
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9300)",
-        "refTime": "(rounded 890000000)",
+        "proofSize": "(rounded 9400)",
+        "refTime": "(rounded 900000000)",
       },
     },
     "method": "Processed",
@@ -235,7 +235,7 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 259000000)",
+            "refTime": "(rounded 265000000)",
           },
         },
       },

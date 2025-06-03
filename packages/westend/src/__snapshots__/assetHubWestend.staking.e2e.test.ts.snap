@@ -1,0 +1,717 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 620000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 2`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 3`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 4`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 5`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 6`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other bad origin events 7`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x13000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > chill other > chill other events 1`] = `
+[
+  {
+    "data": {
+      "stash": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > force apply validator commission > force apply min commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 650000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > modify validator count > increase validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 580000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > modify validator count > scale validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 580000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 580000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 580000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 570000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set staking configs > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > set staking configs > set staking configs event 1`] = `
+{
+  "event": {
+    "data": [
+      {
+        "class": "Mandatory",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1500)",
+          "refTime": "(rounded 280000000)",
+        },
+      },
+    ],
+    "index": "0x0000",
+  },
+  "phase": {
+    "applyExtrinsic": 0,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > chill events 1`] = `
+[
+  {
+    "data": {
+      "stash": "5EtRedtmy3HcGPZU1BYRa4P7PiaNAeH9gME9vRDyr2S16A32",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x12000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > kick events 1`] = `
+[
+  {
+    "data": {
+      "nominator": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "stash": "5EtRedtmy3HcGPZU1BYRa4P7PiaNAeH9gME9vRDyr2S16A32",
+    },
+    "method": "Kicked",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > nominator bond extra events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > unbond events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validate (blocked) events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": true,
+        "commission": "0.00%",
+      },
+      "stash": "5EtRedtmy3HcGPZU1BYRa4P7PiaNAeH9gME9vRDyr2S16A32",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 0 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "5EtRedtmy3HcGPZU1BYRa4P7PiaNAeH9gME9vRDyr2S16A32",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 0 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "0.00%",
+      },
+      "stash": "5EtRedtmy3HcGPZU1BYRa4P7PiaNAeH9gME9vRDyr2S16A32",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 1 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "5GP5GRyw5gC2Z6DKcNkx1LkMaYSavJFGCicKZEcAfhvGNuxg",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 1 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "0.00%",
+      },
+      "stash": "5GP5GRyw5gC2Z6DKcNkx1LkMaYSavJFGCicKZEcAfhvGNuxg",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 2 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "5ELp7TfqMPH65Auv2frN5UBA11mVKJEN7QUfUYNejDXeTtxF",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > staking lifecycle > validator 2 validate events 1`] = `
+[
+  {
+    "data": {
+      "prefs": {
+        "blocked": false,
+        "commission": "0.00%",
+      },
+      "stash": "5ELp7TfqMPH65Auv2frN5UBA11mVKJEN7QUfUYNejDXeTtxF",
+    },
+    "method": "ValidatorPrefsSet",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > test fast unstake > nominate events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > test fast unstake > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > test fast unstake > register fast unstake events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 2100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+]
+`;

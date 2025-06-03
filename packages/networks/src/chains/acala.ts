@@ -15,6 +15,7 @@ const custom = {
     ausd: { Token: 'AUSD' },
     aca: { Token: 'ACA' },
     lcdot: { LiquidCrowdloan: 13 },
+    eth: { ForeignAsset: 21 },
   },
   karura: {
     relayToken: 'KSM',
@@ -59,7 +60,7 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
   },
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster
-    $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],
+    $removePrefix: ['versionNotifyTargets', 'versionNotifiers'],
   },
 })
 

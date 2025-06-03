@@ -1,5 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 77000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
 [
   {
@@ -14,8 +34,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 1`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -39,8 +59,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 2`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -64,8 +84,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 3`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -89,8 +109,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 4`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -114,8 +134,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 5`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -139,8 +159,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 6`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -164,8 +184,8 @@ exports[`Polkadot Staking > chill other > chill other bad origin events 7`] = `
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 980000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -195,8 +215,8 @@ exports[`Polkadot Staking > force apply validator commission > force apply min c
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 3500)",
-          "refTime": "(rounded 270000000)",
+          "proofSize": "(rounded 11000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -215,8 +235,8 @@ exports[`Polkadot Staking > modify validator count > increase validator count ba
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 210000000)",
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 530000000)",
         },
       },
     },
@@ -235,8 +255,8 @@ exports[`Polkadot Staking > modify validator count > scale validator count bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 210000000)",
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 530000000)",
         },
       },
     },
@@ -255,13 +275,107 @@ exports[`Polkadot Staking > modify validator count > set validator count bad ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 210000000)",
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 530000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 530000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > balances slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Slashed",
+    "section": "staking",
   },
 ]
 `;
@@ -275,8 +389,8 @@ exports[`Polkadot Staking > set minimum validator commission > set staking confi
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 210000000)",
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 530000000)",
         },
       },
     },
@@ -295,8 +409,8 @@ exports[`Polkadot Staking > set staking configs > set staking configs bad origin
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 720000000)",
+          "proofSize": "(rounded 7200)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -315,7 +429,7 @@ exports[`Polkadot Staking > set staking configs > set staking configs event 1`] 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 260000000)",
+          "refTime": "(rounded 270000000)",
         },
       },
     ],
@@ -354,8 +468,8 @@ exports[`Polkadot Staking > staking lifecycle > events when attempting to nomina
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 21000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -548,8 +662,8 @@ exports[`Polkadot Staking > test force unstaking of nominator > force unstake ba
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 6200)",
-          "refTime": "(rounded 1600000000)",
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 1900000000)",
         },
       },
     },
@@ -573,8 +687,8 @@ exports[`Polkadot Staking > trying to become a validator with no bonded funds fa
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 4600)",
-          "refTime": "(rounded 850000000)",
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },
@@ -598,13 +712,71 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 8800)",
-          "refTime": "(rounded 990000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Slashed",
+    "section": "staking",
   },
 ]
 `;

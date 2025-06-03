@@ -2,7 +2,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import BN from 'bn.js'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
@@ -10,7 +10,7 @@ import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 /// -------
 /// Helpers
@@ -26,7 +26,8 @@ import { assert, describe, test } from 'vitest'
 async function validateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // 1e7 is 1% commission
   const validateTx = client.api.tx.staking.validate({ commission: 1e7, blocked: false })
   await sendTransaction(validateTx.signAsync(defaultAccountsSr25519.alice))
@@ -59,7 +60,8 @@ async function validateNoBondedFundsFailureTest<
 async function nominateNoBondedFundsFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // The empty list of targets is only checked *after* the extrinsic's origin, as it should,
   // so anything can be given here.
   const nominateTx = client.api.tx.staking.nominate([defaultAccountsSr25519.alice.address])
@@ -107,7 +109,8 @@ async function nominateNoBondedFundsFailureTest<
 async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   ///
   /// Generate validators, and fund them.
   ///
@@ -166,7 +169,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -339,9 +342,10 @@ async function stakingLifecycleTest<
 async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   await client.dev.setStorage({
     System: {
@@ -378,9 +382,6 @@ async function forceUnstakeTest<
   /// Force unstake Bob, first with a signed origin (which *must* fail), and then a `Root` origin.
   ///
 
-  const slashingSpans = await client.api.query.staking.slashingSpans(bob.address)
-  assert(slashingSpans.isNone)
-
   // Bob can have no slashing spans recorded as a fresh nominator, so `force_unstake`'s second argument is 0.
   const forceUnstakeTx = client.api.tx.staking.forceUnstake(bob.address, 0)
 
@@ -397,7 +398,7 @@ async function forceUnstakeTest<
   let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isSome)
 
-  scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -415,7 +416,8 @@ async function forceUnstakeTest<
 async function fastUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   const kr = defaultAccountsSr25519
   const alice = kr.alice
   const bob = kr.bob
@@ -493,8 +495,9 @@ async function fastUnstakeTest<
 async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25519.alice
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -544,7 +547,7 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
+    scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin, 'SysPara')
 
     await client.dev.newBlock()
 
@@ -578,8 +581,9 @@ async function setMinCommission<
 async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25519.alice
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -640,7 +644,7 @@ async function setStakingConfigsTest<
 
   const inc = 10
 
-  scheduleInlineCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -693,11 +697,12 @@ async function setStakingConfigsTest<
 async function forceApplyValidatorCommissionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Create some Sr25519 accounts and fund them
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   await client.dev.setStorage({
     System: {
@@ -746,7 +751,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
   )
 
-  scheduleInlineCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -780,8 +785,9 @@ async function forceApplyValidatorCommissionTest<
 async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
-  const alice = defaultAccountsSr25519.alice
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -808,7 +814,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -842,7 +848,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -871,7 +877,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -897,7 +903,8 @@ async function modifyValidatorCountTest<
 async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   /// Rquired information for this test, to set appropriate thresholds later
 
   const minNominatorBond = await client.api.query.staking.minNominatorBond()
@@ -927,9 +934,9 @@ async function chillOtherTest<
 
   /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
 
   await client.dev.setStorage({
     System: {
@@ -1037,7 +1044,7 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1052,51 +1059,598 @@ async function chillOtherTest<
   assert(nominatorPrefs.isNone)
 }
 
+/// --------------
+/// Slashing tests
+/// --------------
+
+/**
+ * Test that an unapplied slash to valid validators/nominators, scheduled for a certain era `n + 1`, is applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * 1. Bond funds from each of the accounts that will be slashed.
+ * 2. Insert a slash into storage, with the accounts that will be slashed.
+ * 3. Manually apply the slash.
+ * 4. Observe that the slash is applied.
+ */
+async function unappliedSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
+
+  const balances = 10000e10
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: balances } }],
+        [[bob.address], { providers: 1, data: { free: balances } }],
+        [[charlie.address], { providers: 1, data: { free: balances } }],
+      ],
+    },
+  })
+
+  const bondAmount = balances / 10
+  const slashAmount = bondAmount / 2
+
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
+
+  // Insert a slash into storage. The accounts named here as validators/nominators need not have called
+  // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra, slashKey],
+          {
+            validator: alice.address,
+            // Less than the bonded funds.
+            own: slashAmount,
+            others: [
+              // Exactly the bonded funds.
+              [bob.address, slashAmount * 2],
+              // More than the bonded funds.
+              [charlie.address, slashAmount * 3],
+            ],
+            reporter: dave.address,
+            payout: bondAmount,
+          },
+        ],
+      ],
+    },
+  })
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+
+  // Manually apply the slash.
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  // First, verify that all acounts' frozen funds have been slashed
+
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
+  // Recall that `bondAmount - slashAmount * 2` is zero.
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
+  // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
+  // to what it bonded.
+  // Thus, also zero.
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
+
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+}
+
+/**
+ * Test cancelling unapplied slashes, using different origins.
+ */
+async function cancelDeferredSlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, origin: any) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
+  const bondAmount = 1000e10
+  const slashAmount = bondAmount / 2
+
+  // Fund validators
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  const slashData = {
+    validator: alice.address,
+    // Less than the bonded funds.
+    own: slashAmount,
+    others: [
+      // Exactly the bonded funds.
+      [bob.address, slashAmount * 2],
+      // More than the bonded funds.
+      [charlie.address, slashAmount * 3],
+    ],
+    reporter: dave.address,
+    payout: bondAmount,
+  }
+
+  // Insert a slash into storage.
+
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [[[activeEra, slashKey], slashData]],
+    },
+  })
+
+  let slash = await client.api.query.staking.unappliedSlashes(activeEra, slashKey)
+
+  await check(slash).toMatchObject(slashData)
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra, [slashKey])
+  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin, 'SysPara')
+
+  await client.dev.newBlock()
+
+  // Check stakers' bonded funds before the slash would be applied.
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+
+  // Attempt to manually apply the just-removed slash.
+
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
+
+  await client.dev.newBlock()
+
+  // The slash should have been cancelled, and so no effect should be observable.
+
+  slash = await client.api.query.staking.unappliedSlashes(activeEra, slashKey)
+  expect(slash.toJSON()).toBeNull()
+
+  // None of the validators' funds should have been slashed.
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPostSlash).toStrictEqual(aliceFundsPreSlash)
+  assert(bobFundsPostSlash.eq(bobFundsPreSlash))
+  assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
+}
+
+/**
+ * Test the cancellation of a slash with an incorrect origin.
+ */
+async function cancelDeferredSlashTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [slashKey])
+  const cancelDeferredSlashEvents = await sendTransaction(cancelDeferredSlashTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(cancelDeferredSlashEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('cancel deferred slash events with bad origin')
+
+  // Scrutinize events
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `Root` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsRoot<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { system: 'Root' })
+}
+
+/**
+ * Test that when cancelling an unapplied slash scheduled for a certain era `n + 1`, is *not* applied
+ * when transitioning from era `n` to `n + 1`.
+ *
+ * Use a `StakingAdmin` origin to call `cancel_deferred_slash`.
+ *
+ * 1. Calculate the block number at which the era will change.
+ * 2. Go to a block before that one, and modify the staking ledger to include the accounts that will be slashed.
+ * 3. Insert a slash into storage.
+ * 4. Bond funds from each of the accounts that will be slashed.
+ * 5. Advance to the block in which the era changes.
+ * 6. Observe that the slash is *not* applied.
+ */
+async function cancelDeferredSlashTestAsAdmin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  await cancelDeferredSlashTest(chain, { Origins: 'StakingAdmin' })
+}
+
+/**
+ * Test setting invulnerables with a bad origin.
+ */
+async function setInvulnerablesTestBadOrigin<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables([alice.address])
+  const setInvulnerablesEvents = await sendTransaction(setInvulnerablesTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(setInvulnerablesEvents, 'staking', {
+    section: 'system',
+    method: 'ExtrinsicFailed',
+  }).toMatchSnapshot('set invulnerables events with bad signed origin')
+
+  let events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+
+  // Try it with `StakingAdmin` origin, which is still not enough on Polkadot/Kusama.
+
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { Origins: 'StakingAdmin' }, 'SysPara')
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'scheduler')
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('events when setting invulnerables with bad staking admin origin')
+
+  events = await client.api.query.system.events()
+
+  const [ev_] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev_.event))
+  const e = ev_.event.data
+  assert(e.result.isErr)
+  assert(e.result.asErr.isBadOrigin)
+}
+
+/**
+ * Test setting invulnerables with the correct Root origin.
+ *
+ * 1. Travel to a few blocks before the last era change
+ * 2. Fund accounts, bund said funds, and express intent to validate
+ * 3. Set them as invulnerables
+ * 4. Insert a slash into storage
+ * 5. Advance to the block in which the era changes
+ * 6. Observe that the slash is applied
+ *
+ * Invulnerable validators are slashed, because being invulnerable does not protect against slashes that have
+ * already been scheduled.
+ */
+async function setInvulnerablesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  //
+  // Fund accounts
+  //
+
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
+
+  const balances = 10000e10
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[alice.address], { providers: 1, data: { free: balances } }],
+        [[bob.address], { providers: 1, data: { free: balances } }],
+        [[charlie.address], { providers: 1, data: { free: balances } }],
+      ],
+    },
+  })
+
+  // Bond funds for each validator
+  const bondAmount = balances / 10
+  const bondTx = client.api.tx.staking.bond(bondAmount, { Staked: null })
+  await sendTransaction(bondTx.signAsync(alice))
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Set them as validators
+  const minCommission = await client.api.query.staking.minCommission()
+  const validateTx = client.api.tx.staking.validate({ commission: minCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(alice))
+  await sendTransaction(validateTx.signAsync(bob))
+  await sendTransaction(validateTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Sort the addresses to make the test simpler.
+
+  const invulnerables = [alice.address, bob.address, charlie.address].map((addr) =>
+    encodeAddress(addr.toString(), addressEncoding),
+  )
+  invulnerables.sort()
+
+  // Set them as invulnerable using Root origin
+  const setInvulnerablesTx = client.api.tx.staking.setInvulnerables(invulnerables)
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { system: 'Root' }, 'SysPara')
+
+  await client.dev.newBlock()
+
+  // Verify the invulnerables were set correctly
+  const queriedInvulnerables = (await client.api.query.staking.invulnerables()).map((addr) =>
+    encodeAddress(addr.toString(), addressEncoding),
+  )
+
+  expect(queriedInvulnerables).toEqual(invulnerables)
+
+  //
+  // Slash the invulnerable accounts
+  //
+
+  // Insert the slash
+
+  const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
+
+  const slashAmount = bondAmount / 2
+
+  // Insert a slash into storage. The accounts named here as validators/nominators need not have called
+  // `validate`/`nominate` - they need only exist in the staking ledger as having bonded.
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [
+        [
+          [activeEra, slashKey],
+          {
+            validator: alice.address,
+            // Less than the bonded funds.
+            own: slashAmount,
+            others: [
+              // Exactly the bonded funds.
+              [bob.address, slashAmount * 2],
+              // More than the bonded funds.
+              [charlie.address, slashAmount * 3],
+            ],
+            reporters: [dave.address],
+            payout: bondAmount,
+          },
+        ],
+      ],
+    },
+  })
+
+  // Pre-slash balance checks
+
+  const aliceFundsPreSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPreSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+
+  // Apply the slash
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
+
+  const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
+  const bobFundsPostSlash = await client.api.query.system.account(bob.address)
+  const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
+
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
+
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+}
+
+/// --------------
+/// --------------
+/// --------------
+
 export function stakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('trying to become a validator with no bonded funds fails', async () => {
-      await validateNoBondedFundsFailureTest(client)
+      await validateNoBondedFundsFailureTest(chain)
     })
 
     test('trying to nominate with no bonded funds fails', async () => {
-      await nominateNoBondedFundsFailureTest(client)
+      await nominateNoBondedFundsFailureTest(chain)
     })
 
     test('staking lifecycle', async () => {
-      await stakingLifecycleTest(client, testConfig.addressEncoding)
+      await stakingLifecycleTest(chain, testConfig.addressEncoding)
     })
 
     test('test force unstaking of nominator', async () => {
-      await forceUnstakeTest(client)
+      await forceUnstakeTest(chain)
     })
 
     test('test fast unstake', async () => {
-      await fastUnstakeTest(client, testConfig.addressEncoding)
+      await fastUnstakeTest(chain, testConfig.addressEncoding)
     })
 
     test('set minimum validator commission', async () => {
-      await setMinCommission(client)
+      await setMinCommission(chain)
     })
 
     test('set staking configs', async () => {
-      await setStakingConfigsTest(client)
+      await setStakingConfigsTest(chain)
     })
 
     test('force apply validator commission', async () => {
-      await forceApplyValidatorCommissionTest(client)
+      await forceApplyValidatorCommissionTest(chain)
     })
 
     test('modify validator count', async () => {
-      await modifyValidatorCountTest(client)
+      await modifyValidatorCountTest(chain)
     })
 
     test('chill other', async () => {
-      await chillOtherTest(client)
+      await chillOtherTest(chain)
+    })
+
+    test('unapplied slash', async () => {
+      await unappliedSlashTest(chain)
+    })
+
+    test('cancel deferred slash with bad origin', async () => {
+      await cancelDeferredSlashTestBadOrigin(chain)
+    })
+
+    test('cancel deferred slash as root', async () => {
+      await cancelDeferredSlashTestAsRoot(chain)
+    })
+
+    test('cancel deferred slash as admin', async () => {
+      await cancelDeferredSlashTestAsAdmin(chain)
+    })
+
+    test('set invulnerables with bad origin', async () => {
+      await setInvulnerablesTestBadOrigin(chain)
+    })
+
+    test('set invulnerables with root origin', async () => {
+      await setInvulnerablesTest(chain, testConfig.addressEncoding)
     })
   })
 }

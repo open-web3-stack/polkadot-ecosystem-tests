@@ -1,0 +1,2136 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Any",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "DfeV9UQE55S368Ym2LfgJJpXcfkF5MmjnwFDvAe9VKMBpAy",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Assets",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "EwHAaLmkR3hm3Yu2ULBtfASxRT8L8Hhn5m1VYciJ7RVr5F4",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "AssetOwner",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "Eio83Zh4aVyhpaTTYr9wEp2pjiX1qTN4xngG9FKo5xoPwRQ",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "AssetManager",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyAdded",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when removing all proxies from Alice 1`] = `[]`;
+
+exports[`Kusama AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
+[
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "DfeV9UQE55S368Ym2LfgJJpXcfkF5MmjnwFDvAe9VKMBpAy",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Assets",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "EwHAaLmkR3hm3Yu2ULBtfASxRT8L8Hhn5m1VYciJ7RVr5F4",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "AssetOwner",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "Eio83Zh4aVyhpaTTYr9wEp2pjiX1qTN4xngG9FKo5xoPwRQ",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "AssetManager",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 0,
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
+      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "NonTransfer",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "CancelProxy",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Assets",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "AssetOwner",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "AssetManager",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Collator",
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call destroy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 190000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call set_metadata 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 190000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 190000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 190000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 190000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet vesting, call vested_transfer 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet vesting, call vested_transfer 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Token": "BelowMinimum",
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call set_metadata 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 51,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call destroy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 51,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Token": "BelowMinimum",
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call destroy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call set_metadata 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 52,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call create 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 51,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call mint 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x02000000",
+            "index": 51,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x08000000",
+            "index": 21,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "to": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
+
+exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "proxy": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "real": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;

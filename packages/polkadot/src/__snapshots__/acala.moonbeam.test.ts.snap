@@ -32,7 +32,7 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > from chain hrmp mes
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -40,19 +40,20 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0000",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -67,19 +68,20 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0000",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -91,23 +93,22 @@ exports[`acala & moonbeam > acala transfer ACA to moonbeam > from chain hrmp mes
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountKey20": {
-                      "key": "0x3cd0a705a2dc65e5b1e1205896baa2be8a07c6e0",
-                      "network": {
-                        "any": null,
+                  "x1": [
+                    {
+                      "accountKey20": {
+                        "key": "0x3cd0a705a2dc65e5b1e1205896baa2be8a07c6e0",
+                        "network": null,
                       },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
@@ -232,7 +233,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > balance on to chain
 exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump messages 1`] = `
 [
   {
-    "v2": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -240,12 +241,10 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump mess
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -260,12 +259,10 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump mess
               "fungible": 500000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -277,18 +274,19 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump mess
         "depositReserveAsset": {
           "assets": {
             "wild": {
-              "all": null,
+              "allCounted": 1,
             },
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2004,
-              },
+              "x1": [
+                {
+                  "parachain": 2004,
+                },
+              ],
             },
             "parents": 0,
           },
-          "maxAssets": 1,
           "xcm": [
             {
               "buyExecution": {
@@ -297,12 +295,10 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump mess
                     "fungible": 500000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -314,23 +310,22 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > from chain ump mess
               "depositAsset": {
                 "assets": {
                   "wild": {
-                    "all": null,
+                    "allCounted": 1,
                   },
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountKey20": {
-                        "key": "0xf24ff3a9cf04c71dbc94d0b566f7a27b94566cac",
-                        "network": {
-                          "any": null,
+                    "x1": [
+                      {
+                        "accountKey20": {
+                          "key": "0xf24ff3a9cf04c71dbc94d0b566f7a27b94566cac",
+                          "network": null,
                         },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
-                "maxAssets": 1,
               },
             },
           ],
@@ -354,7 +349,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",
@@ -454,7 +449,7 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > from chain hrmp me
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v4": [
           {
             "reserveAssetDeposited": [
               {
@@ -462,19 +457,20 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0003",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -489,19 +485,20 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x2": [
-                        {
-                          "parachain": 2000,
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2000,
+                      },
+                      {
+                        "generalKey": {
+                          "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
+                          "length": 2,
                         },
-                        {
-                          "generalKey": "0x0003",
-                        },
-                      ],
-                    },
-                    "parents": 1,
+                      },
+                    ],
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -513,23 +510,22 @@ exports[`acala & moonbeam > acala transfer LDOT to moonbeam > from chain hrmp me
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountKey20": {
-                      "key": "0x3cd0a705a2dc65e5b1e1205896baa2be8a07c6e0",
-                      "network": {
-                        "any": null,
+                  "x1": [
+                    {
+                      "accountKey20": {
+                        "key": "0x3cd0a705a2dc65e5b1e1205896baa2be8a07c6e0",
+                        "network": null,
                       },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
@@ -664,7 +660,7 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -672,17 +668,17 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -697,17 +693,17 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -724,12 +720,14 @@ exports[`acala & moonbeam > moonbeam transfer ACA to acala > from chain hrmp mes
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -927,7 +925,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > balance on to chain
 exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump messages 1`] = `
 [
   {
-    "v3": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -935,12 +933,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -955,12 +951,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
               "fungible": 500000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -977,9 +971,11 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2000,
-              },
+              "x1": [
+                {
+                  "parachain": 2000,
+                },
+              ],
             },
             "parents": 0,
           },
@@ -991,12 +987,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
                     "fungible": 500000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -1013,12 +1007,14 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountId32": {
-                        "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-                        "network": null,
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                          "network": null,
+                        },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
@@ -1048,7 +1044,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",
@@ -1119,7 +1115,7 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -1127,17 +1123,17 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
             ],
@@ -1152,17 +1148,17 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "x1": {
+                  "interior": {
+                    "x1": [
+                      {
                         "generalKey": {
                           "data": "0x0003000000000000000000000000000000000000000000000000000000000000",
                           "length": 2,
                         },
                       },
-                    },
-                    "parents": 0,
+                    ],
                   },
+                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -1179,12 +1175,14 @@ exports[`acala & moonbeam > moonbeam transfer LDOT to acala > from chain hrmp me
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
