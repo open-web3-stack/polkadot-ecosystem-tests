@@ -227,7 +227,7 @@ exports[`karura & shiden > shiden transfer KAR to karura > balance on to chain 1
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 993000000000)",
+    "free": "(rounded 991000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -314,6 +314,9 @@ exports[`karura & shiden > shiden transfer KAR to karura > from chain hrmp messa
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -333,7 +336,7 @@ exports[`karura & shiden > shiden transfer KAR to karura > to chain xcm events 1
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 800000000,
+        "refTime": 1000000000,
       },
     },
     "method": "Processed",

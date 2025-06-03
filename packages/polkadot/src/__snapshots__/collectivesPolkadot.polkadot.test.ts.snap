@@ -50,11 +50,11 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
             "call": {
               "encoded": "0x17001f316948a52772e24450da99383b0e57b75770f95e916e945b6fd91163ce05dd",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 500000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],
@@ -136,8 +136,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 3500)",
+            "refTime": "(rounded 290000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +168,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 510000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -194,8 +194,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": 500000,
-        "refTime": "(rounded 5000000000)",
+        "proofSize": 0,
+        "refTime": "(rounded 140000000)",
       },
     },
     "method": "Processed",
@@ -254,11 +254,11 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > collecti
             "call": {
               "encoded": "0x17003812e839c2f2db66069c9ee359bbc78e7ec08cb657d0a735742e68c5c0668a84",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 500000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],
@@ -369,8 +369,8 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > governin
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 510000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -425,7 +425,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
 exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {
@@ -713,7 +713,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 144000000)",
+            "refTime": "(rounded 149000000)",
           },
         },
       },
@@ -855,8 +855,8 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > destinatio
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 1000000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -915,11 +915,11 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > source cha
             "call": {
               "encoded": "0x17000101010101010101010101010101010101010101010101010101010101010101",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 1000000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],

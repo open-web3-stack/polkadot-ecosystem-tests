@@ -33,7 +33,7 @@ exports[`kusama & coretimeKusama > coretimeKusama transfer KSM to kusama > balan
 exports[`kusama & coretimeKusama > coretimeKusama transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {

@@ -151,7 +151,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commis
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 920000000)",
+          "refTime": "(rounded 910000000)",
         },
       },
     },
@@ -258,7 +258,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination p
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 52000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1900000000)",
         },
       },
     },

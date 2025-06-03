@@ -349,7 +349,7 @@ exports[`acala & moonbeam > acala transfer DOT to moonbeam > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",
@@ -925,7 +925,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > balance on to chain
 exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump messages 1`] = `
 [
   {
-    "v3": [
+    "v4": [
       {
         "withdrawAsset": [
           {
@@ -933,12 +933,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
               "fungible": 1000000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
         ],
@@ -953,12 +951,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
               "fungible": 500000000000,
             },
             "id": {
-              "concrete": {
-                "interior": {
-                  "here": null,
-                },
-                "parents": 0,
+              "interior": {
+                "here": null,
               },
+              "parents": 0,
             },
           },
           "weightLimit": {
@@ -975,9 +971,11 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
           },
           "dest": {
             "interior": {
-              "x1": {
-                "parachain": 2000,
-              },
+              "x1": [
+                {
+                  "parachain": 2000,
+                },
+              ],
             },
             "parents": 0,
           },
@@ -989,12 +987,10 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
                     "fungible": 500000000000,
                   },
                   "id": {
-                    "concrete": {
-                      "interior": {
-                        "here": null,
-                      },
-                      "parents": 1,
+                    "interior": {
+                      "here": null,
                     },
+                    "parents": 1,
                   },
                 },
                 "weightLimit": {
@@ -1011,12 +1007,14 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > from chain ump mess
                 },
                 "beneficiary": {
                   "interior": {
-                    "x1": {
-                      "accountId32": {
-                        "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-                        "network": null,
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+                          "network": null,
+                        },
                       },
-                    },
+                    ],
                   },
                   "parents": 0,
                 },
@@ -1046,7 +1044,7 @@ exports[`acala & moonbeam > moonbeam transfer DOT to acala > route chain xcm eve
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 580000000)",
+        "refTime": "(rounded 590000000)",
       },
     },
     "method": "Processed",

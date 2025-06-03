@@ -58,7 +58,7 @@ exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to 
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 197000000)",
+            "refTime": "(rounded 191000000)",
           },
         },
       },
@@ -224,7 +224,7 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 170000000)",
+        "refTime": "(rounded 160000000)",
       },
     },
     "method": "Processed",

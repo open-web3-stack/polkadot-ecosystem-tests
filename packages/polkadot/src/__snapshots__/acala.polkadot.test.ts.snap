@@ -384,7 +384,7 @@ exports[`acala & polkadot > polkadot transfer DOT to acala > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 259000000)",
+            "refTime": "(rounded 265000000)",
           },
         },
       },

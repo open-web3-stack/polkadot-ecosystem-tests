@@ -33,7 +33,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balanc
 exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {
@@ -130,7 +130,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx eve
         "Complete": {
           "used": {
             "proofSize": "(rounded 363000)",
-            "refTime": "(rounded 41400000000)",
+            "refTime": "(rounded 42500000000)",
           },
         },
       },
@@ -185,7 +185,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 770000000)",
+        "refTime": "(rounded 740000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -198,7 +198,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 170000000)",
+        "refTime": "(rounded 160000000)",
       },
     },
     "method": "Processed",
@@ -215,7 +215,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
         "Complete": {
           "used": {
             "proofSize": "(rounded 7190)",
-            "refTime": "(rounded 557000000)",
+            "refTime": "(rounded 587000000)",
           },
         },
       },

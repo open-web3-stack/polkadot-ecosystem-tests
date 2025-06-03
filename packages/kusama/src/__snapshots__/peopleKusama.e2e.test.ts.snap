@@ -37,8 +37,8 @@ exports[`Kusama People > adding a registrar as root from the relay chain works >
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 3000)",
-          "refTime": "(rounded 200000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -342,7 +342,18 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 ]
 `;
 
-exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `[]`;
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > rename subidentity events 1`] = `
+[
+  {
+    "data": {
+      "main": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sub": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "SubIdentityRenamed",
+    "section": "identity",
+  },
+]
+`;
 
 exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set identity events 1`] = `
 [
@@ -356,7 +367,19 @@ exports[`Kusama People > setting on-chain identity, adding sub-identities, remov
 ]
 `;
 
-exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `[]`;
+exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > set subidentities events 1`] = `
+[
+  {
+    "data": {
+      "main": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "newDeposit": "(rounded 13000000000)",
+      "numberOfSubs": 2,
+    },
+    "method": "SubIdentitiesSet",
+    "section": "identity",
+  },
+]
+`;
 
 exports[`Kusama People > setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work > subidentity data after 1st subid removal 1`] = `
 [

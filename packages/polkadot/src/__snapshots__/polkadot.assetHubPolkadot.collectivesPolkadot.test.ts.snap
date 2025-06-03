@@ -50,11 +50,11 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
             "call": {
               "encoded": "0x170089ba36353c2150427d20dc71ab18e6762c07f560a6e485f64c26a608abecb473",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 500000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],
@@ -136,8 +136,8 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 3500)",
+            "refTime": "(rounded 290000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +168,8 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 510000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -194,8 +194,8 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": 500000,
-        "refTime": "(rounded 5000000000)",
+        "proofSize": 0,
+        "refTime": "(rounded 120000000)",
       },
     },
     "method": "Processed",

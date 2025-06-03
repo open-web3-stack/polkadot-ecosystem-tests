@@ -230,7 +230,7 @@ exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > balance o
 exports[`kusama & peopleKusama > peopleKusama transfer KSM to kusama > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "receiveTeleportedAsset": [
           {

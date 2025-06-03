@@ -50,11 +50,11 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
             "call": {
               "encoded": "0x1700bec38f9174094d5d36794d04bd0b9d4a4da7ad1db83473bce75b31b465d95a7b",
             },
-            "originKind": "Xcm",
-            "requireWeightAtMost": {
+            "fallbackMaxWeight": {
               "proofSize": 10000,
               "refTime": 500000000,
             },
+            "originKind": "Xcm",
           },
         },
       ],
@@ -136,8 +136,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 3500)",
+            "refTime": "(rounded 290000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +168,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 10000,
-        "refTime": "(rounded 510000000)",
+        "proofSize": "(rounded 3600)",
+        "refTime": "(rounded 270000000)",
       },
     },
     "method": "Processed",
@@ -194,8 +194,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": 500000,
-        "refTime": "(rounded 5000000000)",
+        "proofSize": 0,
+        "refTime": "(rounded 140000000)",
       },
     },
     "method": "Processed",
