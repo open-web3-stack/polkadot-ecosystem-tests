@@ -98,8 +98,7 @@ export async function scheduleCallWithOrigin(
 ) {
   const number = await match(isSystemParachain)
     .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('SysPara', async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
-    .exhaustive()
+    .otherwise(async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
 
   await client.dev.setStorage({
     Scheduler: {
