@@ -2,13 +2,12 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import BN from 'bn.js'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { assert, describe, expect, test } from 'vitest'
@@ -16,87 +15,6 @@ import { assert, describe, expect, test } from 'vitest'
 /// -------
 /// Helpers
 /// -------
-
-/**
- * Locate the block number at which the current era ends.
- *
- * This is done by binary-searching through blocks, starting at the estimate obtained from
- * `api.derive.session.progress`, and stopping when `api.query.staking.activeEra` changes.
- *
- * Complexity: in essence, `O(1)` since `MAX` is fixed, but in practice,
- * `ceil(log_2(MAX))`.
- *
- * @returns The block number at which the current era ends, and following which a `staking.EraPaid` event
- * is emitted.
- */
-async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
-  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  const activeEraOpt = await client.api.query.staking.activeEra()
-  if (activeEraOpt.isNone) {
-    // Nothing to do if there is no active era.
-    return undefined
-  }
-  const activeEra = activeEraOpt.unwrap().index.toNumber()
-  const previousEra = activeEra - 1
-
-  // Estimate of active era start block.
-  const eraProgress = await client.api.derive.session.eraProgress()
-
-  // It is assumed that the active era changes at most this amount of blocks after the estimate provided
-  // by `api.derive.session.progress`. Adjust as needed.
-  const MAX = 512
-
-  // Initial bounds for binary search.
-  let lo = initialBlockNumber - eraProgress.toNumber() - 1
-  let hi = lo + MAX
-  assert(lo < hi)
-
-  let mid!: number
-  let midBlockHash: BlockHash | undefined
-  let eraAtMidBlock: number | undefined
-  let eraAtNextBlock: number | undefined
-
-  while (lo <= hi) {
-    mid = lo + Math.floor((hi - lo) / 2)
-
-    midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
-    const apiAt = await client.api.at(midBlockHash)
-    if (apiAt === undefined) {
-      console.warn('locateEraChange: apiAt is undefined for block ', mid)
-      return undefined
-    }
-
-    eraAtMidBlock = (await apiAt.query.staking.activeEra()).unwrap().index.toNumber()
-
-    // Check the next block to see if this is the transition point
-    const nextBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
-    const apiAtNext = await client.api.at(nextBlockHash)
-    if (apiAtNext === undefined) {
-      console.warn('locateEraChange: apiAtNext is undefined for block ', mid + 1)
-      return undefined
-    }
-    eraAtNextBlock = (await apiAtNext.query.staking.activeEra()).unwrap().index.toNumber()
-
-    // If the transition point was found, return it
-    if (eraAtMidBlock !== eraAtNextBlock) {
-      return mid
-    }
-
-    // Otherwise continue binary search
-    if (eraAtMidBlock === activeEra) {
-      hi = mid - 1
-    } else if (eraAtMidBlock === previousEra) {
-      lo = mid + 1
-    } else {
-      // This really should never happen
-      throw new Error('locateEraChange: eraAtMidBlock is neither activeEra nor previousEra')
-    }
-  }
-
-  // If arrived here, a transition point was not found.
-  return undefined
-}
 
 /// -------
 /// -------
@@ -251,7 +169,7 @@ async function stakingLifecycleTest<
   /// Bond another account's funds
   ///
 
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -426,8 +344,8 @@ async function forceUnstakeTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   await client.dev.setStorage({
     System: {
@@ -464,9 +382,6 @@ async function forceUnstakeTest<
   /// Force unstake Bob, first with a signed origin (which *must* fail), and then a `Root` origin.
   ///
 
-  const slashingSpans = await client.api.query.staking.slashingSpans(bob.address)
-  assert(slashingSpans.isNone)
-
   // Bob can have no slashing spans recorded as a fresh nominator, so `force_unstake`'s second argument is 0.
   const forceUnstakeTx = client.api.tx.staking.forceUnstake(bob.address, 0)
 
@@ -483,7 +398,7 @@ async function forceUnstakeTest<
   let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isSome)
 
-  scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -582,7 +497,7 @@ async function setMinCommission<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -632,7 +547,7 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin)
+    scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin, 'SysPara')
 
     await client.dev.newBlock()
 
@@ -668,7 +583,7 @@ async function setStakingConfigsTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -729,7 +644,7 @@ async function setStakingConfigsTest<
 
   const inc = 10
 
-  scheduleInlineCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsCall(inc).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -786,8 +701,8 @@ async function forceApplyValidatorCommissionTest<
   const [client] = await setupNetworks(chain)
   /// Create some Sr25519 accounts and fund them
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   await client.dev.setStorage({
     System: {
@@ -836,7 +751,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
   )
 
-  scheduleInlineCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setStakingConfigsTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -872,7 +787,7 @@ async function modifyValidatorCountTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
   await client.dev.setStorage({
     System: {
@@ -899,7 +814,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  await scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setValidatorCountCall(100).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -933,7 +848,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, increaseValidatorCountCall(100).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -962,7 +877,7 @@ async function modifyValidatorCountTest<
 
   /// Run the call with a `Root` origin
 
-  scheduleInlineCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, scaleValidatorCountCall(10).method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1019,9 +934,9 @@ async function chillOtherTest<
 
   /// Setup a validator and a nominator, as the account that'll be calling `chill_other`
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
 
   await client.dev.setStorage({
     System: {
@@ -1129,7 +1044,7 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1152,12 +1067,10 @@ async function chillOtherTest<
  * Test that an unapplied slash to valid validators/nominators, scheduled for a certain era `n + 1`, is applied
  * when transitioning from era `n` to `n + 1`.
  *
- * 1. Calculate the block number at which the era will change.
- * 2. Go to the block just before that one, and modify the staking ledger to include the accounts that will be slashed.
- * 3. Bond funds from each of the accounts that will be slashed.
- * 4. Insert a slash into storage, with the accounts that will be slashed.
- * 5. Advance to the block in which the era changes.
- * 6. Observe that the slash is applied.
+ * 1. Bond funds from each of the accounts that will be slashed.
+ * 2. Insert a slash into storage, with the accounts that will be slashed.
+ * 3. Manually apply the slash.
+ * 4. Observe that the slash is applied.
  */
 async function unappliedSlashTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1168,18 +1081,6 @@ async function unappliedSlashTest<
   const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
   const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
   const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
-
-  const eraChangeBlock = await locateEraChange(client)
-  if (eraChangeBlock === undefined) {
-    // This test only makes sense to run if there's an active era.
-    console.warn('Unable to find era change block, skipping unapplied slash test')
-    return
-  }
-
-  // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
-  // accounts that will be slashed.
-  // If this isn't done, the slash will not be applied.
-  await client.dev.setHead(eraChangeBlock - 1)
 
   const balances = 10000e10
   await client.dev.setStorage({
@@ -1203,6 +1104,13 @@ async function unappliedSlashTest<
   await client.dev.newBlock()
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
 
   // Insert a slash into storage. The accounts named here as validators/nominators need not have called
   // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
@@ -1210,22 +1118,20 @@ async function unappliedSlashTest<
     Staking: {
       UnappliedSlashes: [
         [
-          [activeEra + 1],
-          [
-            {
-              validator: alice.address,
-              // Less than the bonded funds.
-              own: slashAmount,
-              others: [
-                // Exactly the bonded funds.
-                [bob.address, slashAmount * 2],
-                // More than the bonded funds.
-                [charlie.address, slashAmount * 3],
-              ],
-              reporters: [dave.address],
-              payout: bondAmount,
-            },
-          ],
+          [activeEra, slashKey],
+          {
+            validator: alice.address,
+            // Less than the bonded funds.
+            own: slashAmount,
+            others: [
+              // Exactly the bonded funds.
+              [bob.address, slashAmount * 2],
+              // More than the bonded funds.
+              [charlie.address, slashAmount * 3],
+            ],
+            reporter: dave.address,
+            payout: bondAmount,
+          },
         ],
       ],
     },
@@ -1235,24 +1141,13 @@ async function unappliedSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
-  expect(bobFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
-  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
 
-  await client.dev.setStorage({
-    ParasDisputes: {
-      $removePrefix: ['disputes', 'included'],
-    },
-    Dmp: {
-      $removePrefix: ['downwardMessageQueues'],
-    },
-    Staking: {
-      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-    },
-    Session: {
-      $removePrefix: ['nextKeys'],
-    },
-  })
+  // Manually apply the slash.
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1265,19 +1160,17 @@ async function unappliedSlashTest<
 
   // First, verify that all acounts' frozen funds have been slashed
 
-  expect(aliceFundsPostSlash.data.frozen.toNumber()).toBe(bondAmount - slashAmount)
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
   // Recall that `bondAmount - slashAmount * 2` is zero.
-  expect(bobFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
   // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
   // to what it bonded.
   // Thus, also zero.
-  expect(charlieFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
-  // Recall again that even though Charlie's slash is 1.5 times his bond, the slash can at msot tax all he has
-  // bonded, and not one unit more.
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
 }
 
 /**
@@ -1288,48 +1181,22 @@ async function cancelDeferredSlashTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, origin: any) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
-  const dave = defaultAccountsSr25519.dave
-
-  const eraChangeBlock = await locateEraChange(client)
-  if (eraChangeBlock === undefined) {
-    // This test only makes sense to run if there's an active era.
-    return
-  }
-
-  // Go to a block before the one in which the era changes. In the two blocks before it changes,
-  // 1. the call to `cancel_deferred_slash` will be scheduled
-  // 2. the stakers in question will call `bond`
-  await client.dev.setHead(eraChangeBlock - 2)
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
   const bondAmount = 1000e10
   const slashAmount = bondAmount / 2
-
-  // Insert a slash into storage.
-  await client.dev.setStorage({
-    Staking: {
-      UnappliedSlashes: [
-        [
-          [activeEra + 1],
-          [
-            {
-              validator: alice.address,
-              own: slashAmount,
-              others: [
-                [bob.address, slashAmount],
-                [charlie.address, slashAmount],
-              ],
-              reporters: [dave.address],
-              payout: bondAmount,
-            },
-          ],
-        ],
-      ],
-    },
-  })
 
   // Fund validators
 
@@ -1350,13 +1217,36 @@ async function cancelDeferredSlashTest<
 
   await client.dev.newBlock()
 
-  // Two blocks away from the era change.
+  const slashData = {
+    validator: alice.address,
+    // Less than the bonded funds.
+    own: slashAmount,
+    others: [
+      // Exactly the bonded funds.
+      [bob.address, slashAmount * 2],
+      // More than the bonded funds.
+      [charlie.address, slashAmount * 3],
+    ],
+    reporter: dave.address,
+    payout: bondAmount,
+  }
 
-  let slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  assert(slash.length === 1)
+  // Insert a slash into storage.
 
-  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
-  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin)
+  await client.dev.setStorage({
+    Staking: {
+      UnappliedSlashes: [[[activeEra, slashKey], slashData]],
+    },
+  })
+
+  let slash = await client.api.query.staking.unappliedSlashes(activeEra, slashKey)
+
+  await check(slash).toMatchObject(slashData)
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra, [slashKey])
+  scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin, 'SysPara')
+
+  await client.dev.newBlock()
 
   // Check stakers' bonded funds before the slash would be applied.
 
@@ -1364,40 +1254,21 @@ async function cancelDeferredSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  assert(aliceFundsPreSlash.data.frozen.eq(bondAmount))
-  assert(bobFundsPreSlash.data.frozen.eq(bondAmount))
-  assert(charlieFundsPreSlash.data.frozen.eq(bondAmount))
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+
+  // Attempt to manually apply the just-removed slash.
+
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
-  // And the slash should have been cancelled.
+  // The slash should have been cancelled, and so no effect should be observable.
 
-  slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  assert(slash.length === 0)
-
-  // Era-boundary block creation tends to be slow.
-  await client.dev.setStorage({
-    ParasDisputes: {
-      $removePrefix: ['disputes', 'included'],
-    },
-    Dmp: {
-      $removePrefix: ['downwardMessageQueues'],
-    },
-    Staking: {
-      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-    },
-    Session: {
-      $removePrefix: ['nextKeys'],
-    },
-  })
-
-  // This new block marks the start of the new era.
-  await client.dev.newBlock()
-
-  // The era should have changed.
-
-  const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-  assert(newActiveEra === activeEra + 1)
+  slash = await client.api.query.staking.unappliedSlashes(activeEra, slashKey)
+  expect(slash.toJSON()).toBeNull()
 
   // None of the validators' funds should have been slashed.
 
@@ -1405,7 +1276,7 @@ async function cancelDeferredSlashTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  assert(aliceFundsPostSlash.eq(aliceFundsPreSlash))
+  expect(aliceFundsPostSlash).toStrictEqual(aliceFundsPreSlash)
   assert(bobFundsPostSlash.eq(bobFundsPreSlash))
   assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
 }
@@ -1418,9 +1289,23 @@ async function cancelDeferredSlashTestBadOrigin<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
 
-  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [0])
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
+
+  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(0, [slashKey])
   const cancelDeferredSlashEvents = await sendTransaction(cancelDeferredSlashTx.signAsync(alice))
 
   await client.dev.newBlock()
@@ -1492,7 +1377,13 @@ async function setInvulnerablesTestBadOrigin<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-  const alice = defaultAccountsSr25519.alice
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
 
   const setInvulnerablesTx = client.api.tx.staking.setInvulnerables([alice.address])
   const setInvulnerablesEvents = await sendTransaction(setInvulnerablesTx.signAsync(alice))
@@ -1517,7 +1408,7 @@ async function setInvulnerablesTestBadOrigin<
 
   // Try it with `StakingAdmin` origin, which is still not enough on Polkadot/Kusama.
 
-  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { Origins: 'StakingAdmin' })
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { Origins: 'StakingAdmin' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1558,28 +1449,13 @@ async function setInvulnerablesTest<
   const [client] = await setupNetworks(chain)
 
   //
-  // Locate era change
-  //
-
-  const eraChangeBlock = await locateEraChange(client)
-  if (eraChangeBlock === undefined) {
-    // This test only makes sense to run if there's an active era.
-    console.warn('Unable to find era change block, skipping unapplied slash test')
-    return
-  }
-
-  // Go to a block before the era change - accounts need to bond, start validating, and invulnerables still need to be
-  // set.
-  await client.dev.setHead(eraChangeBlock - 3)
-
-  //
   // Fund accounts
   //
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
-  const dave = defaultAccountsSr25519.dave
+  const alice = defaultAccountsSr25519.keyring.createFromUri('//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const charlie = defaultAccountsSr25519.keyring.createFromUri('//fresh_charlie')
+  const dave = defaultAccountsSr25519.keyring.createFromUri('//fresh_dave')
 
   const balances = 10000e10
   await client.dev.setStorage({
@@ -1619,7 +1495,7 @@ async function setInvulnerablesTest<
 
   // Set them as invulnerable using Root origin
   const setInvulnerablesTx = client.api.tx.staking.setInvulnerables(invulnerables)
-  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { system: 'Root' })
+  scheduleInlineCallWithOrigin(client, setInvulnerablesTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -1637,43 +1513,38 @@ async function setInvulnerablesTest<
   // Insert the slash
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+  const slashKey = [
+    alice.address,
+    // perbill, not relevant for the test
+    0,
+    // page index, not relevant either
+    0,
+  ]
 
   const slashAmount = bondAmount / 2
 
   // Insert a slash into storage. The accounts named here as validators/nominators need not have called
-  // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
+  // `validate`/`nominate` - they need only exist in the staking ledger as having bonded.
   await client.dev.setStorage({
-    ParasDisputes: {
-      $removePrefix: ['disputes', 'included'],
-    },
-    Dmp: {
-      $removePrefix: ['downwardMessageQueues'],
-    },
     Staking: {
-      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
       UnappliedSlashes: [
         [
-          [activeEra + 1],
-          [
-            {
-              validator: alice.address,
-              // Less than the bonded funds.
-              own: slashAmount,
-              others: [
-                // Exactly the bonded funds.
-                [bob.address, slashAmount * 2],
-                // More than the bonded funds.
-                [charlie.address, slashAmount * 3],
-              ],
-              reporters: [dave.address],
-              payout: bondAmount,
-            },
-          ],
+          [activeEra, slashKey],
+          {
+            validator: alice.address,
+            // Less than the bonded funds.
+            own: slashAmount,
+            others: [
+              // Exactly the bonded funds.
+              [bob.address, slashAmount * 2],
+              // More than the bonded funds.
+              [charlie.address, slashAmount * 3],
+            ],
+            reporters: [dave.address],
+            payout: bondAmount,
+          },
         ],
       ],
-    },
-    Session: {
-      $removePrefix: ['nextKeys'],
     },
   })
 
@@ -1683,11 +1554,14 @@ async function setInvulnerablesTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
-  expect(bobFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
-  expect(charlieFundsPreSlash.data.frozen.toNumber()).toBe(bondAmount)
+  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
 
-  // With this block, the slash will have been applied.
+  // Apply the slash
+  const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
+  await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, 'SysPara')
+
   await client.dev.newBlock()
 
   await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
@@ -1697,13 +1571,13 @@ async function setInvulnerablesTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPostSlash.data.frozen.toNumber()).toBe(bondAmount - slashAmount)
-  expect(bobFundsPostSlash.data.frozen.toNumber()).toBe(0)
-  expect(charlieFundsPostSlash.data.frozen.toNumber()).toBe(0)
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber() - slashAmount)
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber() - bondAmount)
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber() - bondAmount)
+  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
+  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
+  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
 }
 
 /// --------------

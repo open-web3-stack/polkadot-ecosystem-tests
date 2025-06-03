@@ -90,7 +90,7 @@ export const assetHubKusama = defineChain({
 
 export const assetHubWestend = defineChain({
   name: 'assetHubWestend',
-  endpoint: 'wss://sys.ibp.network/asset-hub-westend',
+  endpoint: 'wss://westend-asset-hub-rpc.polkadot.io',
   paraId: 1000,
   custom: custom.assetHubWestend,
   initStorages: getInitStorages(custom.assetHubWestend),

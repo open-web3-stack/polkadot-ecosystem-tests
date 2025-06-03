@@ -98,8 +98,6 @@ async function nominationPoolCreationFailureTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStoragesRelay>) {
   const alice = defaultAccountsSr25519.keyring.addFromUri('//AAlice')
-  const bob = defaultAccountsSr25519.keyring.addFromUri('//BBob')
-  const charlie = defaultAccountsSr25519.keyring.addFromUri('//CCharlie')
 
   await client.dev.setStorage({
     System: {
