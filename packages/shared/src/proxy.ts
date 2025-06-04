@@ -805,7 +805,6 @@ async function buildAllowedProxyActions<
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildAuctionAction(),
       ...proxyActionBuilder.buildBountyAction(),
-      ...proxyActionBuilder.buildGovernanceAction(),
       ...proxyActionBuilder.buildMultisigAction(),
       ...proxyActionBuilder.buildNominationPoolsAction(),
       ...proxyActionBuilder.buildProxyAction(),
@@ -993,6 +992,7 @@ async function buildDisallowedProxyActions<
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildBalancesAction(),
       ...proxyActionBuilder.buildVestingAction(),
+      ...proxyActionBuilder.buildGovernanceAction(),
     ])
     .with('CancelProxy', () => {
       const actions = [
@@ -1626,7 +1626,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1778,7 +1778,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currRelayBlockNumber = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+  const currRelayBlockNumber = (await ahClient.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
   const announcementObject = {
     real: encodeAddress(alice.address, addressEncoding),
     callHash: transferCall.method.hash.toHex(),
