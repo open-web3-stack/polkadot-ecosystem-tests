@@ -1807,8 +1807,8 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
       "result": {
         "Err": {
           "Module": {
-            "error": "0x06000000",
-            "index": 70,
+            "error": "0x00000000",
+            "index": 71,
           },
         },
       },
