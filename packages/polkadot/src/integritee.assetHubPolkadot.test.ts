@@ -1,23 +1,25 @@
 import { describe } from 'vitest'
 
-import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, integriteePolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
 describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)
 
-  const integriteeDOT = integriteePolkadot.custom.dot
+  const integriteeDOT = 0
   const polkadotDOT = assetHubPolkadot.custom.dot
 
-  runXcmPalletDown('assetHubPolkadot transfer DOT to integriteePolkadot', async () => {
+  const integriteeTEER = integriteePolkadot.custom.teer
+  const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteePolkadot.paraId! }] } } }
+
+  runXcmPalletHorizontal('assetHubPolkadot transfer DOT to integriteePolkadot', async () => {
     return {
       fromChain: assetHubPolkadotClient,
       toChain: integriteePolkadotClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
+      fromBalance: query.balances,
+      toBalance: query.assets(integriteeDOT),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         polkadotDOT,
         1e12,
@@ -26,16 +28,44 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
     }
   })
 
-  runXcmPalletUp('integriteePolkadot transfer DOT to assetHubPolkadot', async () => {
+  runXcmPalletHorizontal('integriteePolkadot transfer DOT to assetHubPolkadot', async () => {
     return {
       fromChain: integriteePolkadotClient,
       toChain: assetHubPolkadotClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
+      fromBalance: query.assets(integriteeDOT),
+      toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteeDOT,
         1e12,
-        tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
+        tx.xcmPallet.parachainV3(1, assetHubPolkadot.paraId!),
+      ),
+    }
+  })
+
+  runXcmPalletHorizontal('integriteePolkadot transfer TEER to assetHubPolkadot', async () => {
+    return {
+      fromChain: integriteePolkadotClient,
+      toChain: assetHubPolkadotClient,
+      fromBalance: query.balances,
+      toBalance: query.foreignAssets(assetHubTEER),
+      tx: tx.xcmPallet.limitedTeleportAssets(
+        integriteeTEER,
+        1e12,
+        tx.xcmPallet.parachainV3(1, assetHubPolkadot.paraId!),
+      ),
+    }
+  })
+
+  runXcmPalletHorizontal('assetHubPolkadot transfer TEER to integriteePolkadot', async () => {
+    return {
+      fromChain: assetHubPolkadotClient,
+      toChain: integriteePolkadotClient,
+      fromBalance: query.foreignAssets(assetHubTEER),
+      toBalance: query.balances,
+      tx: tx.xcmPallet.limitedTeleportAssets(
+        assetHubTEER,
+        1e12,
+        tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!),
       ),
     }
   })
