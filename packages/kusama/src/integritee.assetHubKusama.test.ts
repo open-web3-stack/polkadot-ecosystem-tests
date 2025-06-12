@@ -9,7 +9,7 @@ describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)
 
   const integriteeKSM = integriteeKusama.custom.relayNative
-  const integriteeRelayNativeAssetId = 0
+  const integriteeRelayNativeAssetId = integriteeKusama.custom.relayNativeAssetId
   const kusamaKSM = assetHubKusama.custom.ksm
 
   const integriteeTEER = integriteeKusama.custom.teerK

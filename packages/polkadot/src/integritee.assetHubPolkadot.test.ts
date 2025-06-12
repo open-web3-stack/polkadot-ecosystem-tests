@@ -9,7 +9,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)
 
   const integriteeDOT = integriteePolkadot.custom.relayNative
-  const integriteeRelayNativeAssetId = 0
+  const integriteeRelayNativeAssetId = integriteePolkadot.custom.relayNativeAssetId
   const polkadotDOT = assetHubPolkadot.custom.dot
 
   const integriteeTEER = integriteePolkadot.custom.teerP
