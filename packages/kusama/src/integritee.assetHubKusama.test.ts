@@ -1,6 +1,6 @@
 import { describe } from 'vitest'
 
-import { assetHubKusama, integriteeKusama, integriteePolkadot } from '@e2e-test/networks/chains'
+import { assetHubKusama, integriteeKusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
