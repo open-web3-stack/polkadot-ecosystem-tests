@@ -9,6 +9,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)
 
   const integriteeDOT = integriteePolkadot.custom.relayNative
+  const integriteeRelayNativeAssetId = 0
   const polkadotDOT = assetHubPolkadot.custom.dot
 
   const integriteeTEER = integriteePolkadot.custom.teerP
@@ -19,7 +20,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
       fromChain: assetHubPolkadotClient,
       toChain: integriteePolkadotClient,
       fromBalance: query.balances,
-      toBalance: query.assets(integriteeDOT),
+      toBalance: query.assets(integriteeRelayNativeAssetId),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         polkadotDOT,
         1e12,
@@ -32,7 +33,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
     return {
       fromChain: integriteePolkadotClient,
       toChain: assetHubPolkadotClient,
-      fromBalance: query.assets(integriteeDOT),
+      fromBalance: query.assets(integriteeRelayNativeAssetId),
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteeDOT,

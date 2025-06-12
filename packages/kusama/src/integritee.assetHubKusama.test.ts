@@ -9,6 +9,7 @@ describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)
 
   const integriteeKSM = integriteeKusama.custom.relayNative
+  const integriteeRelayNativeAssetId = 0
   const kusamaKSM = assetHubKusama.custom.ksm
 
   const integriteeTEER = integriteeKusama.custom.teerK
@@ -19,7 +20,7 @@ describe('integriteeKusama & assetHubKusama', async () => {
       fromChain: assetHubKusamaClient,
       toChain: integriteeKusamaClient,
       fromBalance: query.balances,
-      toBalance: query.assets(integriteeKSM),
+      toBalance: query.assets(integriteeRelayNativeAssetId),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         kusamaKSM,
         1e12,
@@ -32,7 +33,7 @@ describe('integriteeKusama & assetHubKusama', async () => {
     return {
       fromChain: integriteeKusamaClient,
       toChain: assetHubKusamaClient,
-      fromBalance: query.assets(integriteeKSM),
+      fromBalance: query.assets(integriteeRelayNativeAssetId),
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteeKSM,

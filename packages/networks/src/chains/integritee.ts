@@ -4,11 +4,11 @@ import { defineChain } from '../defineChain.js'
 const custom = {
   integriteePolkadot: {
     teerP: { Concrete: { parents: 0, interior: 'Here' } },
-    relayNative: 0,
+    relayNative: { Concrete: { parents: 1, interior: 'Here' } },
   },
   integriteeKusama: {
     teerK: { Concrete: { parents: 0, interior: 'Here' } },
-    relayNative: 0,
+    relayNative: { Concrete: { parents: 1, interior: 'Here' } },
   },
 }
 
@@ -32,7 +32,7 @@ export const integriteePolkadot = defineChain({
 export const integriteeKusama = defineChain({
   name: 'integritee-kusama',
   paraId: 2015,
-  endpoint: 'wss://polkadot.api.integritee.network',
+  endpoint: 'wss://kusama.api.integritee.network',
   custom: custom.integriteeKusama,
   initStorages: getInitStorages(custom.integriteeKusama),
 })
