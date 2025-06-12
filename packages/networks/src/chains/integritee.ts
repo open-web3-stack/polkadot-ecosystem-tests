@@ -4,17 +4,20 @@ import { defineChain } from '../defineChain.js'
 const custom = {
   integriteePolkadot: {
     teerP: { Concrete: { parents: 0, interior: 'Here' } },
-    dot: { Concrete: { parents: 1, interior: 'Here' } },
+    relayNative: 0,
   },
   integriteeKusama: {
     teerK: { Concrete: { parents: 0, interior: 'Here' } },
-    ksm: { Concrete: { parents: 1, interior: 'Here' } },
+    relayNative: 0,
   },
 }
 
 const getInitStorages = (config: typeof custom.integriteePolkadot | typeof custom.integriteeKusama) => ({
   System: {
     account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+  },
+  Assets: {
+    account: [[[config.relayNative, defaultAccounts.alice.address], { balance: 1000e12 }]],
   },
 })
 

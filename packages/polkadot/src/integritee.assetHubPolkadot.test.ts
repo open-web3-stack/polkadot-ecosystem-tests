@@ -8,10 +8,10 @@ import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)
 
-  const integriteeDOT = 0
+  const integriteeDOT = integriteePolkadot.custom.relayNative
   const polkadotDOT = assetHubPolkadot.custom.dot
 
-  const integriteeTEER = integriteePolkadot.custom.teer
+  const integriteeTEER = integriteePolkadot.custom.teerP
   const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteePolkadot.paraId! }] } } }
 
   runXcmPalletHorizontal('assetHubPolkadot transfer DOT to integriteePolkadot', async () => {

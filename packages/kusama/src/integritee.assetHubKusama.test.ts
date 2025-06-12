@@ -1,6 +1,6 @@
 import { describe } from 'vitest'
 
-import { assetHubKusama, integriteeKusama } from '@e2e-test/networks/chains'
+import { assetHubKusama, integriteeKusama, integriteePolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
@@ -8,10 +8,10 @@ import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)
 
-  const integriteeKSM = 0
+  const integriteeKSM = integriteeKusama.custom.relayNative
   const kusamaKSM = assetHubKusama.custom.ksm
 
-  const integriteeTEER = integriteeKusama.custom.teer
+  const integriteeTEER = integriteeKusama.custom.teerK
   const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteeKusama.paraId! }] } } }
 
   runXcmPalletHorizontal('assetHubKusama transfer KSM to integriteeKusama', async () => {
