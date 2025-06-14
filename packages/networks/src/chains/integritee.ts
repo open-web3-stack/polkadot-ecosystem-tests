@@ -3,14 +3,14 @@ import { defineChain } from '../defineChain.js'
 
 const custom = {
   integriteePolkadot: {
-    teerP: { Concrete: { parents: 0, interior: 'Here' } },
-    relayNative: { Concrete: { parents: 1, interior: 'Here' } },
-    relayNativeAssetId: 0,
+    xcmTeer: { Concrete: { parents: 0, interior: 'Here' } },
+    xcmRelayNative: { Concrete: { parents: 1, interior: 'Here' } },
+    assetIdRelayNative: 0,
   },
   integriteeKusama: {
-    teerK: { Concrete: { parents: 0, interior: 'Here' } },
-    relayNative: { Concrete: { parents: 1, interior: 'Here' } },
-    relayNativeAssetId: 0,
+    xcmTeer: { Concrete: { parents: 0, interior: 'Here' } },
+    xcmRelayNative: { Concrete: { parents: 1, interior: 'Here' } },
+    assetIdRelayNative: 0,
   },
 }
 
@@ -19,7 +19,7 @@ const getInitStorages = (config: typeof custom.integriteePolkadot | typeof custo
     account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
   },
   Assets: {
-    account: [[[config.relayNativeAssetId, defaultAccounts.alice.address], { balance: 1000e12 }]],
+    account: [[[config.relayNative, defaultAccounts.alice.address], { balance: 1000e12 }]],
   },
 })
 
