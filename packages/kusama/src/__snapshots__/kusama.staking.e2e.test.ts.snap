@@ -539,7 +539,7 @@ exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `
     "data": {
       "prefs": {
         "blocked": true,
-        "commission": "10.00%",
+        "commission": "15.00%",
       },
       "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
@@ -568,7 +568,7 @@ exports[`Kusama Staking > staking lifecycle > validator 0 validate events 1`] = 
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "10.00%",
+        "commission": "15.00%",
       },
       "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
@@ -597,7 +597,7 @@ exports[`Kusama Staking > staking lifecycle > validator 1 validate events 1`] = 
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "10.00%",
+        "commission": "15.00%",
       },
       "stash": "GtgvkKoi3CxJk2mP5ZzuJ7Mj8ipiy4Sf6T4wtt89W8m8FNa",
     },
@@ -626,7 +626,7 @@ exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = 
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "10.00%",
+        "commission": "15.00%",
       },
       "stash": "ErRmn1hykJ1ppjMoNfQyRYA9c3j7y3YZnKQsCecD1k9D42B",
     },
