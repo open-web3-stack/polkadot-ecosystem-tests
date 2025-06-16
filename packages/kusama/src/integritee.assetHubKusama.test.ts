@@ -8,21 +8,14 @@ import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)
 
-  const integriteeKSM = integriteeKusama.custom.xcmRelayNative
-  const integriteeRelayNativeAssetId = integriteeKusama.custom.assetIdRelayNative
-  const kusamaKSM = assetHubKusama.custom.ksm
-
-  const integriteeTEER = integriteeKusama.custom.xcmTeer
-  const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteeKusama.paraId! }] } } }
-
   runXcmPalletHorizontal('assetHubKusama transfer KSM to integriteeKusama', async () => {
     return {
       fromChain: assetHubKusamaClient,
       toChain: integriteeKusamaClient,
       fromBalance: query.balances,
-      toBalance: query.assets(integriteeRelayNativeAssetId),
+      toBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        kusamaKSM,
+        assetHubKusama.custom.ksm,
         1e12,
         tx.xcmPallet.parachainV3(1, integriteeKusama.paraId!),
       ),
@@ -33,33 +26,13 @@ describe('integriteeKusama & assetHubKusama', async () => {
     return {
       fromChain: integriteeKusamaClient,
       toChain: assetHubKusamaClient,
-      fromBalance: query.assets(integriteeRelayNativeAssetId),
+      fromBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        integriteeKSM,
+        integriteeKusama.custom.xcmRelayNative,
         1e12,
         tx.xcmPallet.parachainV3(1, assetHubKusama.paraId!),
       ),
     }
   })
-
-  // runXcmPalletHorizontal('integriteeKusama transfer TEER to assetHubKusama', async () => {
-  //   return {
-  //     fromChain: integriteeKusamaClient,
-  //     toChain: assetHubKusamaClient,
-  //     fromBalance: query.balances,
-  //     toBalance: query.foreignAssets(assetHubTEER),
-  //     tx: tx.xcmPallet.transferAssetsV3(integriteeTEER, 1e12, tx.xcmPallet.parachainV3(1, assetHubKusama.paraId!)),
-  //   }
-  // })
-  //
-  // runXcmPalletHorizontal('assetHubKusama transfer TEER to integriteeKusama', async () => {
-  //   return {
-  //     fromChain: assetHubKusamaClient,
-  //     toChain: integriteeKusamaClient,
-  //     fromBalance: query.foreignAssets(assetHubTEER),
-  //     toBalance: query.balances,
-  //     tx: tx.xcmPallet.transferAssetsV3(assetHubTEER, 1e12, tx.xcmPallet.parachainV3(1, integriteeKusama.paraId!)),
-  //   }
-  // })
 })
