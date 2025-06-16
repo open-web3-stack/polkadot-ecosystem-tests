@@ -13,7 +13,7 @@ describe('integriteeKusama & assetHubKusama', async () => {
   const kusamaKSM = assetHubKusama.custom.ksm
 
   const integriteeTEER = integriteeKusama.custom.xcmTeer
-  const assetHubTEER = { parents: 1, interior: { X1: [{ Parachain: integriteeKusama.paraId! }] } }
+  const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteeKusama.paraId! }] } } }
 
   runXcmPalletHorizontal('assetHubKusama transfer KSM to integriteeKusama', async () => {
     return {

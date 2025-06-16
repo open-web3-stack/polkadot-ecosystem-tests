@@ -13,7 +13,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
   const polkadotDOT = assetHubPolkadot.custom.dot
 
   const integriteeTEER = integriteePolkadot.custom.xcmTeer
-  const assetHubTEER = { parents: 1, interior: { X1: [{ Parachain: integriteePolkadot.paraId! }] } }
+  const assetHubTEER = { Concrete: { parents: 1, interior: { X1: [{ Parachain: integriteePolkadot.paraId! }] } } }
 
   runXcmPalletHorizontal('assetHubPolkadot transfer DOT to integriteePolkadot', async () => {
     return {
@@ -82,7 +82,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
     return {
       fromChain: assetHubPolkadotClient,
       toChain: integriteePolkadotClient,
-      fromBalance: query.foreignAssets(assetHubTEER),
+      fromBalance: query.foreignAssets(assetHubTEER.Concrete),
       toBalance: query.balances,
       tx: tx.xcmPallet.transferAssetsV3(assetHubTEER, 1e12, tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!)),
     }
