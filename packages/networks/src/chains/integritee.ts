@@ -19,7 +19,7 @@ const getInitStorages = (config: typeof custom.integriteePolkadot | typeof custo
     account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
   },
   Assets: {
-    account: [[[config.relayNative, defaultAccounts.alice.address], { balance: 1000e12 }]],
+    account: [[[config.assetIdRelayNative, defaultAccounts.alice.address], { balance: 1000e12 }]],
   },
 })
 
