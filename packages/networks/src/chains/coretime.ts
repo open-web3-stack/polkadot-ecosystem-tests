@@ -8,9 +8,14 @@ const custom = {
   coretimeKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  coretimeWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
-const getInitStorages = (_config: typeof custom.coretimePolkadot | typeof custom.coretimeKusama) => ({
+const getInitStorages = (
+  _config: typeof custom.coretimePolkadot | typeof custom.coretimeKusama | typeof custom.coretimeWestend,
+) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
@@ -33,4 +38,12 @@ export const coretimeKusama = defineChain({
   paraId: 1005,
   custom: custom.coretimeKusama,
   initStorages: getInitStorages(custom.coretimeKusama),
+})
+
+export const coretimeWestend = defineChain({
+  name: 'coretimeWestend',
+  endpoint: 'wss://westend-coretime-rpc.polkadot.io',
+  paraId: 1005,
+  custom: custom.coretimeWestend,
+  initStorages: getInitStorages(custom.coretimeWestend),
 })
