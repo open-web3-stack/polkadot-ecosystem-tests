@@ -8,6 +8,9 @@ const custom = {
   peopleKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
+  peopleWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
 const aliceRegistrar = {
@@ -22,7 +25,9 @@ const bobRegistrar = {
   fields: 0,
 }
 
-const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.peopleKusama) => ({
+const getInitStorages = (
+  _config: typeof custom.peoplePolkadot | typeof custom.peopleKusama | typeof custom.peopleWestend,
+) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
@@ -51,4 +56,12 @@ export const peopleKusama = defineChain({
   paraId: 1004,
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),
+})
+
+export const peopleWestend = defineChain({
+  name: 'peopleWestend',
+  endpoint: 'wss://westend-people-rpc.polkadot.io',
+  paraId: 1004,
+  custom: custom.peopleWestend,
+  initStorages: getInitStorages(custom.peopleWestend),
 })
