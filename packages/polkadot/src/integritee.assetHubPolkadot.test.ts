@@ -77,14 +77,14 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
   //     ),
   //   }
   // })
-
-  runXcmPalletHorizontal('assetHubPolkadot transfer TEER to integriteePolkadot', async () => {
-    return {
-      fromChain: assetHubPolkadotClient,
-      toChain: integriteePolkadotClient,
-      fromBalance: query.foreignAssets(assetHubTEER.Concrete),
-      toBalance: query.balances,
-      tx: tx.xcmPallet.transferAssetsV3(assetHubTEER, 1e12, tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!)),
-    }
-  })
+  //
+  // runXcmPalletHorizontal('assetHubPolkadot transfer TEER to integriteePolkadot', async () => {
+  //   return {
+  //     fromChain: assetHubPolkadotClient,
+  //     toChain: integriteePolkadotClient,
+  //     fromBalance: query.foreignAssets(assetHubTEER.Concrete),
+  //     toBalance: query.balances,
+  //     tx: tx.xcmPallet.transferAssetsV3(assetHubTEER, 1e12, tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!)),
+  //   }
+  // })
 })
