@@ -3,8 +3,9 @@ import { assetHubWestend, collectivesWestend } from '@e2e-test/networks/chains'
 import { collectivesChainE2ETests } from '@e2e-test/shared'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
+import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
-import { describe } from 'vitest'
+import { describe, test } from 'vitest'
 
 collectivesChainE2ETests(assetHubWestend, collectivesWestend, {
   testSuiteName: 'collectives westend & asset hub westend',
@@ -38,5 +39,9 @@ describe('assetHubWestend & collectivesWestend', async () => {
         tx.xcmPallet.parachainV3(1, assetHubWestendClient.config.paraId!),
       ),
     }
+  })
+
+  test('Asset Hub authorizes People upgrade via Collectives', async () => {
+    await authorizeUpgradeViaCollectives(assetHubWestendClient, assetHubWestendClient, collectivesClient)
   })
 })
