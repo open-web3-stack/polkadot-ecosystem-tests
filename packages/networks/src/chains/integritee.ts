@@ -1,4 +1,4 @@
-import { defaultAccounts } from '../defaultAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
 
 const custom = {
@@ -16,10 +16,24 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.integriteePolkadot | typeof custom.integriteeKusama) => ({
   System: {
-    account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }]],
+    account: [
+      // legacy. not needed for own tests
+      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e12 } }],
+      // this is what will be used (for easier debugging in PJS)
+      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e12 } }],
+    ],
   },
   Assets: {
-    account: [[[config.assetIdRelayNative, defaultAccounts.alice.address], { balance: 1000e12 }]],
+    account: [
+      // legacy. not needed for own tests
+      [[config.assetIdRelayNative, defaultAccounts.alice.address], { balance: 1000e12 }],
+      // this is what will be used (for easier debugging in PJS)
+      [[config.assetIdRelayNative, defaultAccountsSr25519.alice.address], { balance: 1000e12 }],
+    ],
+  },
+  PolkadotXcm: {
+    // avoid sending xcm version change notifications to makes things faster
+    $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],
   },
 })
 

@@ -1,5 +1,6 @@
 import { describe } from 'vitest'
 
+import { defaultAccountsSr25519 } from '@e2e-test/networks'
 import { assetHubPolkadot, integriteePolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
@@ -12,6 +13,8 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
     return {
       fromChain: assetHubPolkadotClient,
       toChain: integriteePolkadotClient,
+      fromAccount: defaultAccountsSr25519.alice,
+      toAccount: defaultAccountsSr25519.bob,
       fromBalance: query.balances,
       toBalance: query.assets(integriteePolkadot.custom.assetIdRelayNative),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
@@ -26,11 +29,13 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
     return {
       fromChain: integriteePolkadotClient,
       toChain: assetHubPolkadotClient,
+      fromAccount: defaultAccountsSr25519.alice,
+      toAccount: defaultAccountsSr25519.bob,
       fromBalance: query.assets(integriteePolkadot.custom.assetIdRelayNative),
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteePolkadot.custom.xcmRelayNative,
-        1e12,
+        1e9,
         tx.xcmPallet.parachainV3(1, assetHubPolkadot.paraId!),
       ),
     }

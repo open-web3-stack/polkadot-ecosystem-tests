@@ -1,5 +1,6 @@
 import { describe } from 'vitest'
 
+import { defaultAccountsSr25519 } from '@e2e-test/networks'
 import { assetHubKusama, integriteeKusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
@@ -12,6 +13,8 @@ describe('integriteeKusama & assetHubKusama', async () => {
     return {
       fromChain: assetHubKusamaClient,
       toChain: integriteeKusamaClient,
+      fromAccount: defaultAccountsSr25519.alice,
+      toAccount: defaultAccountsSr25519.bob,
       fromBalance: query.balances,
       toBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
@@ -26,11 +29,13 @@ describe('integriteeKusama & assetHubKusama', async () => {
     return {
       fromChain: integriteeKusamaClient,
       toChain: assetHubKusamaClient,
+      fromAccount: defaultAccountsSr25519.alice,
+      toAccount: defaultAccountsSr25519.bob,
       fromBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteeKusama.custom.xcmRelayNative,
-        1e12,
+        1e9,
         tx.xcmPallet.parachainV3(1, assetHubKusama.paraId!),
       ),
     }
