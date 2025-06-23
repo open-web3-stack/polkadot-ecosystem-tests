@@ -34,6 +34,13 @@ exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to 
 [
   {
     "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "UpwardMessageSent",
+    "section": "parachainSystem",
+  },
+  {
+    "data": {
       "id": "(hash)",
       "origin": {
         "Sibling": 1000,
@@ -211,7 +218,37 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
 }
 `;
 
-exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > from chain ump messages 1`] = `[]`;
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > from chain ump messages 1`] = `
+[
+  {
+    "v5": [
+      {
+        "unpaidExecution": {
+          "checkOrigin": null,
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "transact": {
+          "call": {
+            "encoded": "0x4a02506e9501",
+          },
+          "fallbackMaxWeight": {
+            "proofSize": 9216,
+            "refTime": 1000000000,
+          },
+          "originKind": "Native",
+        },
+      },
+      {
+        "setTopic": "(redacted)",
+      },
+    ],
+  },
+]
+`;
 
 exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > to chain ump events 1`] = `
 [
