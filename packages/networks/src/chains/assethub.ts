@@ -3,6 +3,7 @@ import { defineChain } from '../defineChain.js'
 
 const custom = {
   assetHubPolkadot: {
+    units: 1e10,
     dot: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
@@ -22,6 +23,7 @@ const custom = {
     },
   },
   assetHubKusama: {
+    units: 1e10,
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
@@ -41,6 +43,7 @@ const custom = {
     },
   },
   assetHubWestend: {
+    units: 1e12,
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
@@ -55,22 +58,27 @@ const accountList = [
 
 const getInitStorages = (
   config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubWestend,
-) => ({
-  System: {
-    account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-    ],
-  },
-  Assets: {
-    account: [
-      [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
-    ],
-  },
-  ForeignAssets: {
-    account: config.eth ? accountList : [],
-  },
-})
+) => {
+  const baseAmount = 1000
+  const amount = BigInt(baseAmount) * BigInt(config.units)
+
+  return {
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: amount } }],
+      ],
+    },
+    Assets: {
+      account: [
+        [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
+      ],
+    },
+    ForeignAssets: {
+      account: config.eth ? accountList : [],
+    },
+  }
+}
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
