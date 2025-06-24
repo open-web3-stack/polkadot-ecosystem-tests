@@ -50,11 +50,12 @@ async function basicMultisigTest<
   const otherSignatories = [bob.address, charlie.address].sort()
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
 
+  // First and last approvals require encoded call; the following approvals - the non-final ones - require a hash.
   const asMultiTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
     null, // No timepoint for first approval
-    transferCall.method.toHex(), // First approval requires encoded call, following approvals require hash
+    transferCall.method.toHex(),
     maxWeight,
   )
 
@@ -193,7 +194,7 @@ async function multisigCancellationTest<
     threshold,
     otherSignatories,
     null, // No timepoint for first approval
-    transferCall.method.toHex(), // First approval requires encoded call, following approvals require hash
+    transferCall.method.toHex(),
     maxWeight,
   )
 
