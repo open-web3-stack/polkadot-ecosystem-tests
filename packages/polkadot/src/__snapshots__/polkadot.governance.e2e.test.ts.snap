@@ -570,3 +570,69 @@ exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decisio
   },
 ]
 `;
+
+exports[`Polkadot Governance > referendum submission > referendum info after submission 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x00001468656c6c6f",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Governance > referendum submission > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Governance > referendum submission > refund submission deposit events 1`] = `[]`;
+
+exports[`Polkadot Governance > referendum submission > timed-out referendum event 1`] = `
+{
+  "event": {
+    "data": [
+      1584,
+      {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    ],
+    "index": "0x150a",
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
