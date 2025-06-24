@@ -271,12 +271,12 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 964000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
@@ -287,7 +287,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v2": [
+        "v3": [
           {
             "withdrawAsset": [
               {
@@ -332,7 +332,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
             "depositAsset": {
               "assets": {
                 "wild": {
-                  "all": null,
+                  "allCounted": 1,
                 },
               },
               "beneficiary": {
@@ -340,15 +340,12 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
                   "x1": {
                     "accountId32": {
                       "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
-                      "network": {
-                        "any": null,
-                      },
+                      "network": null,
                     },
                   },
                 },
                 "parents": 0,
               },
-              "maxAssets": 1,
             },
           },
         ],
@@ -359,7 +356,25 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `[]`;
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 320000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
 
 exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > tx events 1`] = `
 [

@@ -35,6 +35,7 @@ describe('integriteePolkadot & assetHubPolkadot', async () => {
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
         integriteePolkadot.custom.xcmRelayNative,
+        // if its too much, it exhausts the sibling reserve. if its too little assets will be trapped because fees are higher than amount
         1e9,
         tx.xcmPallet.parachainV3(1, assetHubPolkadot.paraId!),
       ),

@@ -31,6 +31,7 @@ const getInitStorages = (config: typeof custom.integriteePolkadot | typeof custo
       [[config.assetIdRelayNative, defaultAccountsSr25519.alice.address], { balance: 1000e12 }],
     ],
   },
+  // this acceleration can cause mismatches. use with care!
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],
