@@ -17,9 +17,11 @@ import { checkEvents } from './helpers/index.js'
 /**
  * Test basic multisig creation and execution.
  *
- * 1. Alice creates a multisig with Bob and Charlie as other signatories
- * 2. Alice calls as_multi to create the multisig operation
- * 3. Verify the multisig is created and events are emitted
+ * 1. Alice creates a 2-of-3 multisig operation with Bob and Charlie as other signatories
+ *   - the operation is to send funds to Dave
+ * 2. Verify that Alice makes a deposit for the multisig creation
+ * 3. Bob approves the multisig operation (with correct parameters passed to `multisig.asMulti`)
+ * 4. Verify that the operation was performed
  */
 async function basicMultisigTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -156,7 +158,7 @@ export function multisigE2ETests<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    test('basic multisig creation', async () => {
+    test('basic 2-of-3 multisig creation and execution', async () => {
       await basicMultisigTest(chain, testConfig.addressEncoding)
     })
   })

@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PeopleKusama Multisig > basic multisig creation > events when Alice approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(rounded 4600000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeopleKusama Multisig > basic multisig creation > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
