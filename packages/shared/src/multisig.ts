@@ -270,6 +270,122 @@ async function multisigCancellationTest<
   expect(multisigCancelledEventData.callHash.toString()).toBe(multisigCallHash.toString())
 }
 
+/**
+ * Test multisig creation with too few signatories (0) fails with `TooFewSignatories`.
+ *
+ * 1. Alice attempts to create a multisig with 0 other signatories
+ * 2. Verify that the transaction fails with `TooFewSignatories` error
+ */
+async function tooFewSignatoriesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const dave = defaultAccountsSr25519.dave
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice attempts to create a multisig with 0 other signatories (threshold: 1)
+  const threshold = 2
+  const otherSignatories: string[] = [] // Empty array - too few signatories
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  // Send the transaction - it will succeed but the extrinsic will fail
+  await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check the event for the failed multisig creation
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.TooFewSignatories.is(dispatchError.asModule))
+}
+
+/**
+ * Test multisig creation with too many signatories fails with `TooManySignatories`.
+ *
+ * 1. Alice attempts to create a multisig with more signatories than allowed by `consts.multisig.maxSignatories`
+ * 2. Verify that the transaction fails with `TooManySignatories` error
+ */
+async function tooManySignatoriesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const dave = defaultAccountsSr25519.dave
+
+  // Get the maximum allowed signatories from chain constants
+  const maxSignatories = client.api.consts.multisig.maxSignatories.toNumber()
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Create an array with too many signatories (maxSignatories + 1)
+  // Use the keyring to generate valid addresses
+  const { Keyring } = await import('@polkadot/keyring')
+  const keyring = new Keyring({ type: 'sr25519' })
+
+  const tooManySignatories = Array.from({ length: maxSignatories + 1 }, (_, i) => {
+    const pair = keyring.addFromUri(`//test${i}`)
+    return pair.address
+  })
+
+  // Alice attempts to create a multisig with too many signatories
+  const threshold = 2
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    tooManySignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  // Send the transaction - it will succeed but the extrinsic will fail
+  await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check the event for the failed multisig creation
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -281,6 +397,14 @@ export function multisigE2ETests<
 
     test('multisig cancellation', async () => {
       await multisigCancellationTest(chain, testConfig.addressEncoding)
+    })
+
+    test('multisig creation with too few signatories fails', async () => {
+      await tooFewSignatoriesTest(chain, testConfig.addressEncoding)
+    })
+
+    test('multisig creation with too many signatories fails', async () => {
+      await tooManySignatoriesTest(chain, testConfig.addressEncoding)
     })
   })
 }
