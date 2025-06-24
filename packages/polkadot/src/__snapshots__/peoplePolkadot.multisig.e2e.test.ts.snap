@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PeoplePolkadot Multisig > basic multisig creation > events when Alice approves multisig call 1`] = `
+exports[`PeoplePolkadot Multisig > basic 2-of-3 multisig creation and execution > events when Alice approves multisig call 1`] = `
 [
   {
     "data": {
@@ -19,7 +19,39 @@ exports[`PeoplePolkadot Multisig > basic multisig creation > events when Alice a
 ]
 `;
 
-exports[`PeoplePolkadot Multisig > basic multisig creation > events when Alice creates multisig 1`] = `
+exports[`PeoplePolkadot Multisig > basic 2-of-3 multisig creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig cancellation > events when Alice cancels multisig 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "timepoint": {
+        "height": "(rounded 2400000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigCancelled",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig cancellation > events when Alice creates multisig for cancellation 1`] = `
 [
   {
     "data": {

@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PeopleKusama Multisig > basic multisig creation > events when Alice approves multisig call 1`] = `
+exports[`PeopleKusama Multisig > basic 2-of-3 multisig creation and execution > events when Alice approves multisig call 1`] = `
 [
   {
     "data": {
@@ -19,7 +19,39 @@ exports[`PeopleKusama Multisig > basic multisig creation > events when Alice app
 ]
 `;
 
-exports[`PeopleKusama Multisig > basic multisig creation > events when Alice creates multisig 1`] = `
+exports[`PeopleKusama Multisig > basic 2-of-3 multisig creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeopleKusama Multisig > multisig cancellation > events when Alice cancels multisig 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "cancelling": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+      "timepoint": {
+        "height": "(rounded 4600000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigCancelled",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeopleKusama Multisig > multisig cancellation > events when Alice creates multisig for cancellation 1`] = `
 [
   {
     "data": {

@@ -153,6 +153,122 @@ async function basicMultisigTest<
   expect(multisigExecutedEventData.callHash.toString()).toBe(multisigCallHash.toString())
 }
 
+/**
+ * Test multisig cancellation.
+ *
+ * 1. Alice creates a 2-of-3 multisig operation with Bob and Charlie as other signatories
+ *   - the operation is to send funds to Dave
+ * 2. Verify that Alice makes a deposit for the multisig creation
+ * 3. Alice cancels the multisig operation using `multisig.cancelAsMulti`
+ * 4. Verify that the operation was cancelled, and the deposit was refunded
+ */
+async function multisigCancellationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave from the 2-of-3 multisig
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob and Charlie (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address, charlie.address].sort()
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(), // First approval requires encoded call, following approvals require hash
+    maxWeight,
+  )
+
+  const multisigEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was created successfully
+  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig for cancellation')
+
+  // Check that Alice's multisig creation deposit was reserved
+  const multisigBaseDeposit = client.api.consts.multisig.depositBase
+  const multisigDepositFactor = client.api.consts.multisig.depositFactor
+  let aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.reserved.toNumber(), 'Alice should have reserved funds for multisig deposit').toBe(
+    multisigBaseDeposit.add(multisigDepositFactor.muln(threshold)).toNumber(),
+  )
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  const newMultisigEventData = multisigEvent.event.data
+  expect(newMultisigEventData.approving.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  const multisigAddress = newMultisigEventData.multisig
+  const multisigCallHash = newMultisigEventData.callHash
+
+  // Alice cancels the multisig operation
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    otherSignatories,
+    {
+      height: currBlockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  const cancelEvents = await sendTransaction(cancelTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was cancelled successfully
+  await checkEvents(cancelEvents, 'multisig').toMatchSnapshot('events when Alice cancels multisig')
+
+  // Check that Alice's deposit was refunded
+  aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.reserved.toNumber(), "Alice's deposit should have been refunded after cancellation").toBe(0)
+
+  // Verify that Dave still has no funds (the transfer was cancelled)
+  const daveAccount = await client.api.query.system.account(dave.address)
+  expect(daveAccount.data.free.toNumber(), 'Dave should have no funds after multisig cancellation').toBe(0)
+
+  // Check the emitted cancellation event
+  events = await client.api.query.system.events()
+  const [multisigCancelledEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+  assert(client.api.events.multisig.MultisigCancelled.is(multisigCancelledEvent.event))
+  const multisigCancelledEventData = multisigCancelledEvent.event.data
+  expect(multisigCancelledEventData.cancelling.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(multisigCancelledEventData.timepoint.height.toNumber()).toBe(currBlockNumber + 1)
+  expect(multisigCancelledEventData.multisig.toString()).toBe(multisigAddress.toString())
+  expect(multisigCancelledEventData.callHash.toString()).toBe(multisigCallHash.toString())
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -160,6 +276,10 @@ export function multisigE2ETests<
   describe(testConfig.testSuiteName, async () => {
     test('basic 2-of-3 multisig creation and execution', async () => {
       await basicMultisigTest(chain, testConfig.addressEncoding)
+    })
+
+    test('multisig cancellation', async () => {
+      await multisigCancellationTest(chain, testConfig.addressEncoding)
     })
   })
 }
