@@ -3,22 +3,29 @@ import { defineChain } from '../defineChain.js'
 
 const custom = {
   collectivesPolkadot: {
+    units: 1e10,
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
   collectivesWestend: {
+    units: 1e12,
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
   },
 }
 
-const getInitStorages = (_config: typeof custom.collectivesPolkadot | typeof custom.collectivesWestend) => ({
-  System: {
-    account: [
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
-    ],
-  },
-})
+const getInitStorages = (config: typeof custom.collectivesPolkadot | typeof custom.collectivesWestend) => {
+  const baseAmount = 1000
+  const amount = BigInt(baseAmount) * BigInt(config.units)
+
+  return {
+    System: {
+      account: [
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: amount } }],
+      ],
+    },
+  }
+}
 
 export const collectivesPolkadot = defineChain({
   name: 'collectivesPolkadot',

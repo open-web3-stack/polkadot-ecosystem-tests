@@ -3,12 +3,15 @@ import { defineChain } from '../defineChain.js'
 
 const custom = {
   peoplePolkadot: {
+    units: 1e10,
     dot: { Concrete: { parents: 1, interior: 'Here' } },
   },
   peopleKusama: {
+    units: 1e10,
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
   },
   peopleWestend: {
+    units: 1e12,
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
   },
 }
@@ -26,21 +29,26 @@ const bobRegistrar = {
 }
 
 const getInitStorages = (
-  _config: typeof custom.peoplePolkadot | typeof custom.peopleKusama | typeof custom.peopleWestend,
-) => ({
-  System: {
-    account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 1000e10 } }],
-    ],
-  },
-  // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
-  Identity: {
-    Registrars: [aliceRegistrar, bobRegistrar],
-  },
-})
+  config: typeof custom.peoplePolkadot | typeof custom.peopleKusama | typeof custom.peopleWestend,
+) => {
+  const baseAmount = 1000
+  const amount = BigInt(baseAmount) * BigInt(config.units)
+
+  return {
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccounts.bob.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: amount } }],
+        [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: amount } }],
+      ],
+    },
+    // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
+    Identity: {
+      Registrars: [aliceRegistrar, bobRegistrar],
+    },
+  }
+}
 
 export const peoplePolkadot = defineChain({
   name: 'peoplePolkadot',

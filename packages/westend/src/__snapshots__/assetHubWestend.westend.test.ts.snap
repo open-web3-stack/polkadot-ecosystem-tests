@@ -1,11 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > balance on from chain 1`] = `
+exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9870000000000)",
+    "free": "(rounded 900000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -15,7 +15,175 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
 }
 `;
 
-exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > balance on to chain 1`] = `
+exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > from chain ump messages 1`] = `
+[
+  {
+    "v5": [
+      {
+        "receiveTeleportedAsset": [
+          {
+            "fun": {
+              "fungible": 100000000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+        ],
+      },
+      {
+        "clearOrigin": null,
+      },
+      {
+        "buyExecution": {
+          "fees": {
+            "fun": {
+              "fungible": 500000000000,
+            },
+            "id": {
+              "interior": {
+                "here": null,
+              },
+              "parents": 0,
+            },
+          },
+          "weightLimit": {
+            "unlimited": null,
+          },
+        },
+      },
+      {
+        "depositAsset": {
+          "assets": {
+            "wild": {
+              "allCounted": 1,
+            },
+          },
+          "beneficiary": {
+            "interior": {
+              "x1": [
+                {
+                  "accountId32": {
+                    "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      {
+        "setTopic": "(redacted)",
+      },
+    ],
+  },
+]
+`;
+
+exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > to chain ump events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": 1000,
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 320000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > tx events 1`] = `
+[
+  {
+    "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": {
+                  "ByGenesis": "(hash)",
+                },
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 393000)",
+            "refTime": "(rounded 16800000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`asset hub westend & westend > Teleport WND from Westend to Asset Hub > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 900000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`asset hub westend & westend > Teleport WND from Westend to Asset Hub > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -30,7 +198,7 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
 }
 `;
 
-exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > to chain dmp events 1`] = `
+exports[`asset hub westend & westend > Teleport WND from Westend to Asset Hub > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -44,7 +212,7 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 930000000)",
+        "refTime": "(rounded 550000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -54,10 +222,10 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
     "data": {
       "id": "(hash)",
       "origin": "Parent",
-      "success": false,
+      "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 140000000)",
+        "proofSize": "(rounded 7300)",
+        "refTime": "(rounded 220000000)",
       },
     },
     "method": "Processed",
@@ -66,7 +234,7 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
 ]
 `;
 
-exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > tx events 1`] = `
+exports[`asset hub westend & westend > Teleport WND from Westend to Asset Hub > tx events 1`] = `
 [
   {
     "data": {
@@ -114,174 +282,6 @@ exports[`asset hub westend & westend > Teleport DOT from Westend to Asset Hub > 
     },
     "method": "Attempted",
     "section": "xcmPallet",
-  },
-]
-`;
-
-exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > balance on from chain 1`] = `
-{
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9860000000000)",
-    "frozen": 0,
-    "reserved": 0,
-  },
-  "nonce": 1,
-  "providers": 1,
-  "sufficients": 0,
-}
-`;
-
-exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > balance on to chain 1`] = `
-{
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": 0,
-    "frozen": 0,
-    "reserved": 0,
-  },
-  "nonce": 0,
-  "providers": 0,
-  "sufficients": 0,
-}
-`;
-
-exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > from chain ump messages 1`] = `
-[
-  {
-    "v5": [
-      {
-        "receiveTeleportedAsset": [
-          {
-            "fun": {
-              "fungible": 70000000000,
-            },
-            "id": {
-              "interior": {
-                "here": null,
-              },
-              "parents": 0,
-            },
-          },
-        ],
-      },
-      {
-        "clearOrigin": null,
-      },
-      {
-        "buyExecution": {
-          "fees": {
-            "fun": {
-              "fungible": 500000000000,
-            },
-            "id": {
-              "interior": {
-                "here": null,
-              },
-              "parents": 0,
-            },
-          },
-          "weightLimit": {
-            "unlimited": null,
-          },
-        },
-      },
-      {
-        "depositAsset": {
-          "assets": {
-            "wild": {
-              "allCounted": 1,
-            },
-          },
-          "beneficiary": {
-            "interior": {
-              "x1": [
-                {
-                  "accountId32": {
-                    "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                    "network": null,
-                  },
-                },
-              ],
-            },
-            "parents": 0,
-          },
-        },
-      },
-      {
-        "setTopic": "(redacted)",
-      },
-    ],
-  },
-]
-`;
-
-exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > to chain ump events 1`] = `
-[
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 1000,
-        },
-      },
-      "success": false,
-      "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
-
-exports[`asset hub westend & westend > Teleport WND from Asset Hub Westend to Westend > tx events 1`] = `
-[
-  {
-    "data": {
-      "destination": {
-        "interior": "Here",
-        "parents": 1,
-      },
-      "message": [],
-      "messageId": "(hash)",
-      "origin": {
-        "interior": {
-          "X1": [
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": {
-                  "ByGenesis": "(hash)",
-                },
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "Sent",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
-      "outcome": {
-        "Complete": {
-          "used": {
-            "proofSize": "(rounded 393000)",
-            "refTime": "(rounded 31300000000)",
-          },
-        },
-      },
-    },
-    "method": "Attempted",
-    "section": "polkadotXcm",
   },
 ]
 `;

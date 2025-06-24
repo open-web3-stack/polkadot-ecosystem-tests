@@ -18,7 +18,11 @@ describe('assetHubWestend & coretimeWestend', async () => {
       toChain: coretimeClient,
       balance: query.balances,
       toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.limitedTeleportAssets(westendWND, 1e12, tx.xcmPallet.parachainV3(1, coretimeWestend.paraId!)),
+      tx: tx.xcmPallet.limitedTeleportAssets(
+        westendWND,
+        100 * assetHubWestend.custom.units,
+        tx.xcmPallet.parachainV3(1, coretimeWestend.paraId!),
+      ),
     }
   })
 
@@ -30,7 +34,7 @@ describe('assetHubWestend & coretimeWestend', async () => {
       toAccount: defaultAccounts.dave,
       tx: tx.xcmPallet.limitedTeleportAssets(
         coretimeWND,
-        1e12,
+        100 * coretimeWestend.custom.units,
         tx.xcmPallet.parachainV3(1, assetHubWestendClient.config.paraId!),
       ),
     }

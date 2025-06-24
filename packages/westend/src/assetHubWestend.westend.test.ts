@@ -24,7 +24,7 @@ describe('asset hub westend & westend', async () => {
                     parents: 1,
                     interior: 'Here',
                   },
-                  fun: { Fungible: 7e12 },
+                  fun: { Fungible: 100 * westend.custom.units },
                 },
               ],
             },
@@ -70,7 +70,7 @@ describe('asset hub westend & westend', async () => {
                           x1: [
                             {
                               accountId32: {
-                                id: defaultAccounts.bob.addressRaw,
+                                id: defaultAccounts.dave.addressRaw,
                                 network: null,
                               },
                             },
@@ -89,7 +89,7 @@ describe('asset hub westend & westend', async () => {
     }
   })
 
-  runXcmPalletDown('Teleport DOT from Westend to Asset Hub', async () => {
+  runXcmPalletDown('Teleport WND from Westend to Asset Hub', async () => {
     return {
       fromChain: westendClient,
       toChain: ahClient,
@@ -104,7 +104,7 @@ describe('asset hub westend & westend', async () => {
                     parents: 0,
                     interior: 'Here',
                   },
-                  fun: { Fungible: 7e12 },
+                  fun: { Fungible: 100 * assetHubWestend.custom.units },
                 },
               ],
             },
@@ -156,7 +156,7 @@ describe('asset hub westend & westend', async () => {
                           x1: [
                             {
                               accountId32: {
-                                id: defaultAccounts.bob.addressRaw,
+                                id: defaultAccounts.dave.addressRaw,
                                 network: null,
                               },
                             },
