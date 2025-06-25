@@ -279,7 +279,7 @@ async function multisigCancellationTest<
 async function tooFewSignatoriesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -331,7 +331,7 @@ async function tooFewSignatoriesTest<
 async function tooManySignatoriesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -371,7 +371,7 @@ async function tooManySignatoriesTest<
 
   await client.dev.newBlock()
 
-  // Check the event for the failed multisig creation
+  // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
 
   const [ev] = events.filter((record) => {
@@ -400,11 +400,11 @@ export function multisigE2ETests<
     })
 
     test('multisig creation with too few signatories fails', async () => {
-      await tooFewSignatoriesTest(chain, testConfig.addressEncoding)
+      await tooFewSignatoriesTest(chain)
     })
 
     test('multisig creation with too many signatories fails', async () => {
-      await tooManySignatoriesTest(chain, testConfig.addressEncoding)
+      await tooManySignatoriesTest(chain)
     })
   })
 }
