@@ -752,6 +752,8 @@ async function approveAsMultiDoesNotExecuteTest<
  * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
  * 2. Bob calls `approveAsMulti` to approve the operation
  * 3. Verify that the multisig operation has not executed
+ * 4. Alice calls `asMulti` again to execute the operation
+ * 5. Verify that the transfer was executed
  */
 async function approveAsMultiAlreadyApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -776,7 +778,7 @@ async function approveAsMultiAlreadyApprovedTest<
 
   // Alice creates a multisig with Bob (threshold: 2)
   const threshold = 2
-  const otherSignatories = [bob.address].sort()
+  const otherSignatories = [bob.address]
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -814,10 +816,11 @@ async function approveAsMultiAlreadyApprovedTest<
     },
   })
 
-  // Bob calls approveAsMulti to approve the operation (first time)
+  // Bob calls approveAsMulti to approve the operation (but not execute it), thereby passing final approval
+  // back to Alice.
   const approveTx = client.api.tx.multisig.approveAsMulti(
     threshold,
-    [alice.address].sort(),
+    [alice.address],
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -828,6 +831,10 @@ async function approveAsMultiAlreadyApprovedTest<
 
   // This'll hold a `MultisigApproved` but not `MultisigExecuted`
   const approveEvents = await sendTransaction(approveTx.signAsync(bob))
+
+  // Check Dave's account balance
+  let daveAccount = await client.api.query.system.account(dave.address)
+  expect(daveAccount.data.free.toNumber(), "Dave still has no funds after Bob's final approval").toBe(0)
 
   await client.dev.newBlock()
 
@@ -848,6 +855,27 @@ async function approveAsMultiAlreadyApprovedTest<
       return event.section === 'multisig' && event.method === 'MultisigExecuted'
     }).length,
   ).toBe(0)
+
+  // Alice calls `asMulti` to execute the operation
+
+  const executeTx = client.api.tx.multisig.asMulti(
+    threshold,
+    [bob.address],
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(executeTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check that the transfer was executed
+  daveAccount = await client.api.query.system.account(dave.address)
+  expect(daveAccount.data.free.toNumber(), 'Dave should have received funds').toBe(transferAmount)
 }
 
 export function multisigE2ETests<
