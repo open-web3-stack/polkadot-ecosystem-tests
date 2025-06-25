@@ -878,6 +878,114 @@ async function finalApprovalApproveAsMultiTest<
   expect(daveAccount.data.free.toNumber(), 'Dave should have received funds').toBe(transferAmount)
 }
 
+/**
+ * Test that in a 2-of-2 multisig, the second signatory calling `approveAsMulti` twice results in `AlreadyApproved`.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
+ * 2. Bob calls `approveAsMulti` to approve the operation (first time)
+ * 3. Bob calls `approveAsMulti` again (second time) - this should fail with `AlreadyApproved`
+ */
+async function approveAsMultiAlreadyApprovedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  const newMultisigEventData = multisigEvent.event.data
+  const multisigCallHash = newMultisigEventData.callHash
+
+  // Bob calls approveAsMulti to approve the operation
+  const approveTx = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address],
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  await sendTransaction(approveTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Bob calls approveAsMulti again (second time) - this should fail with` AlreadyApproved`
+  const approveTx2 = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address],
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  // Send the transaction - it will succeed but the extrinsic will fail
+  await sendTransaction(approveTx2.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -913,6 +1021,10 @@ export function multisigE2ETests<
 
     test('final approval with `approveAsMulti` does not lead to execution', async () => {
       await finalApprovalApproveAsMultiTest(chain)
+    })
+
+    test('repeated approval with `approveAsMulti` fails', async () => {
+      await approveAsMultiAlreadyApprovedTest(chain)
     })
   })
 }
