@@ -386,6 +386,195 @@ async function tooManySignatoriesTest<
   assert(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule))
 }
 
+/**
+ * Test multisig approval with remaining signatories out of order fails.
+ *
+ * 1. Alice creates a 2-of-3 multisig with Bob and Charlie (in correct order)
+ * 2. Bob attempts to approve but passes the remaining signatories out of order
+ * 3. Verify that the approval fails with an appropriate error
+ */
+async function signatoriesOutOfOrderTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob and Charlie (threshold: 2) in correct order
+  const threshold = 2
+  const otherSignatories = [bob.address, charlie.address].sort() // Correct order
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const multisigEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was created successfully
+  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig for ordering test')
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  // Bob attempts to approve but passes remaining signatories out of order
+  const finalApprovalTx = client.api.tx.multisig.asMulti(
+    threshold,
+    [charlie.address, alice.address]
+      .sort()
+      .reverse(), // Out of alphabetical order
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(finalApprovalTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Check events for the failed multisig approval
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+}
+
+/**
+ * Test multisig cancellation with remaining signatories out of order fails.
+ *
+ * 1. Alice creates a 2-of-3 multisig with Bob and Charlie (in correct order)
+ * 2. Alice attempts to cancel but passes the remaining signatories out of order
+ * 3. Verify that the cancellation fails with an appropriate error
+ */
+async function cancelWithSignatoriesOutOfOrderTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob and Charlie (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address, charlie.address].sort()
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const multisigEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was created successfully
+  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot(
+    'events when Alice creates multisig for cancel ordering test',
+  )
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
+
+  // Alice attempts to cancel but passes remaining signatories out of order
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    [charlie.address, bob.address], // Out of order - should be [bob.address, charlie.address]
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  // Send the transaction - it will succeed but the extrinsic will fail
+  await sendTransaction(cancelTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -405,6 +594,14 @@ export function multisigE2ETests<
 
     test('multisig creation with too many signatories fails', async () => {
       await tooManySignatoriesTest(chain)
+    })
+
+    test('multisig approval with remaining signatories out of order fails', async () => {
+      await signatoriesOutOfOrderTest(chain)
+    })
+
+    test('multisig cancellation with remaining signatories out of order fails', async () => {
+      await cancelWithSignatoriesOutOfOrderTest(chain)
     })
   })
 }

@@ -33,6 +33,20 @@ exports[`PeoplePolkadot Multisig > basic 2-of-3 multisig creation and execution 
 ]
 `;
 
+exports[`PeoplePolkadot Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
 exports[`PeoplePolkadot Multisig > multisig cancellation > events when Alice cancels multisig 1`] = `
 [
   {
@@ -52,6 +66,20 @@ exports[`PeoplePolkadot Multisig > multisig cancellation > events when Alice can
 `;
 
 exports[`PeoplePolkadot Multisig > multisig cancellation > events when Alice creates multisig for cancellation 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
 [
   {
     "data": {
