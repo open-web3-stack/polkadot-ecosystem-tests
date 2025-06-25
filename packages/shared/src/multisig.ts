@@ -575,6 +575,159 @@ async function cancelWithSignatoriesOutOfOrderTest<
   expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
 }
 
+/**
+ * Test that approveAsMulti does not lead to execution.
+ *
+ * 1. Alice creates a 2-of-3 multisig with Bob and Charlie
+ * 2. Bob calls `approveAsMulti` (not `asMulti`) to approve the operation
+ * 3. Verify that the operation is not executed, only approved
+ */
+async function approveAsMultiDoesNotExecuteTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob and Charlie (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address, charlie.address].sort()
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const multisigEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was created successfully
+  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot(
+    'events when Alice creates multisig for approveAsMulti test',
+  )
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  const newMultisigEventData = multisigEvent.event.data
+  const multisigAddress = newMultisigEventData.multisig
+  const multisigCallHash = newMultisigEventData.callHash
+
+  // Funds the multisig account to execute the call
+  const multisigFunds = 101e10
+  await client.dev.setStorage({
+    System: {
+      account: [[[multisigAddress], { providers: 1, data: { free: multisigFunds } }]],
+    },
+  })
+
+  // Bob calls approveAsMulti (not asMulti) to approve the operation
+  const approveTx = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address, charlie.address].sort(),
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  let approveEvents = await sendTransaction(approveTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Check that the approval was successful but execution did not occur
+  await checkEvents(approveEvents, 'multisig').toMatchSnapshot('events when Bob approves with approveAsMulti')
+
+  // Verify that Dave still has no funds (the transfer was not executed)
+  let daveAccount = await client.api.query.system.account(dave.address)
+  expect(daveAccount.data.free.toNumber(), 'Dave should have no funds after approveAsMulti').toBe(0)
+
+  // Verify that the multisig account still has its funds (no execution occurred)
+  const multisigAccount = await client.api.query.system.account(multisigAddress)
+  expect(multisigAccount.data.free.toNumber(), 'Multisig account should still have its funds').toBe(multisigFunds)
+
+  // Check for `MultisigApproval` event (not `MultisigExecuted`)
+  events = await client.api.query.system.events()
+  const [multisigApprovalEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig' && event.method === 'MultisigApproval'
+  })
+
+  assert(client.api.events.multisig.MultisigApproval.is(multisigApprovalEvent.event))
+  const multisigApprovalEventData = multisigApprovalEvent.event.data
+  expect(multisigApprovalEventData.approving.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(multisigApprovalEventData.timepoint.height.toNumber()).toBe(blockNumber + 1)
+  expect(multisigApprovalEventData.multisig.toString()).toBe(multisigAddress.toString())
+  expect(multisigApprovalEventData.callHash.toString()).toBe(multisigCallHash.toString())
+
+  // Cabally verify that no `MultisigExecuted` event was emitted
+  const executedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig' && event.method === 'MultisigExecuted'
+  })
+  expect(executedEvents.length).toBe(0)
+
+  // Have Charlie provide the final approval with `approveAsMulti`
+  await client.dev.setStorage({
+    System: {
+      account: [[[charlie.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  const approveTx2 = client.api.tx.multisig.asMulti(
+    threshold,
+    [bob.address, alice.address].sort(),
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  approveEvents = await sendTransaction(approveTx2.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  // Check that the multisig was executed successfully
+  await checkEvents(approveEvents, 'multisig').toMatchSnapshot('events when Charlie provides final approval')
+
+  // Check that the transfer was executed
+  daveAccount = await client.api.query.system.account(dave.address)
+  expect(daveAccount.data.free.toNumber(), 'Dave should have received funds').toBe(transferAmount)
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -602,6 +755,10 @@ export function multisigE2ETests<
 
     test('multisig cancellation with remaining signatories out of order fails', async () => {
       await cancelWithSignatoriesOutOfOrderTest(chain)
+    })
+
+    test('second approval (with `approveAsMulti`) in 2-of-3 multisig does not lead to execution', async () => {
+      await approveAsMultiDoesNotExecuteTest(chain, testConfig.addressEncoding)
     })
   })
 }

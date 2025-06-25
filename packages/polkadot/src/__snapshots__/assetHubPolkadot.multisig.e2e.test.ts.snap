@@ -92,3 +92,54 @@ exports[`AssetHubPolkadot Multisig > multisig cancellation with remaining signat
   },
 ]
 `;
+
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
+[
+  {
+    "data": {
+      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "timepoint": {
+        "height": "(rounded 9100000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigApproval",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Charlie provides final approval 1`] = `
+[
+  {
+    "data": {
+      "approving": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(rounded 9100000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
