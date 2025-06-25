@@ -374,7 +374,6 @@ async function tooManySignatoriesTest<
     maxWeight,
   )
 
-  // Send the transaction - it will succeed but the extrinsic will fail
   await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
@@ -563,7 +562,6 @@ async function cancelWithSignatoriesOutOfOrderTest<
     multisigCallHash,
   )
 
-  // Send the transaction - it will succeed but the extrinsic will fail
   await sendTransaction(cancelTx.signAsync(alice))
 
   await client.dev.newBlock()
@@ -966,7 +964,6 @@ async function approveAsMultiAlreadyApprovedTest<
     maxWeight,
   )
 
-  // Send the transaction - it will succeed but the extrinsic will fail
   await sendTransaction(approveTx2.signAsync(bob))
 
   await client.dev.newBlock()
@@ -984,6 +981,97 @@ async function approveAsMultiAlreadyApprovedTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+}
+
+/**
+ * Test that in a 2-of-2 multisig, the first signatory's approval after the second signatory has already approved
+ * the call results in `NoApprovalsNeeded`.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
+ * 2. Bob calls `approveAsMulti` to approve the operation
+ * 3. Alice calls `approveAsMulti` to try to approve again - this should fail with `NoApprovalsNeeded`
+ */
+async function senderInSignatoriesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  const newMultisigEventData = multisigEvent.event.data
+  const multisigCallHash = newMultisigEventData.callHash
+
+  // Bob calls approveAsMulti to approve the operation, including himself in the signatories.
+  const approveTx = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address, bob.address].sort(),
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  await sendTransaction(approveTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
 }
 
 export function multisigE2ETests<
@@ -1025,6 +1113,10 @@ export function multisigE2ETests<
 
     test('repeated approval with `approveAsMulti` fails', async () => {
       await approveAsMultiAlreadyApprovedTest(chain)
+    })
+
+    test('a redundant approval fails', async () => {
+      await senderInSignatoriesTest(chain)
     })
   })
 }
