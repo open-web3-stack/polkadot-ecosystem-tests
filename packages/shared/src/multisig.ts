@@ -587,12 +587,12 @@ async function cancelWithSignatoriesOutOfOrderTest<
  * Test that `approveAsMulti` does not lead to execution.
  *
  * 1. Alice creates a 2-of-3 multisig with Bob and Charlie
- * 2. Bob calls `approveAsMulti` (not `asMulti`) to approve the operation
+ * 2. Bob calls `approveAsMulti` (not `asMulti`) to provide final required approval for the operation
  * 3. Verify that the operation is not executed, only approved by Bob
  * 4. Charlie provides the final approval with `asMulti`
  * 5. Verify that the operation is executed
  */
-async function approveAsMultiDoesNotExecuteTest<
+async function approveAsMulti2Of3DoesNotExecuteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
@@ -755,7 +755,7 @@ async function approveAsMultiDoesNotExecuteTest<
  * 4. Alice calls `asMulti` again to execute the operation
  * 5. Verify that the transfer was executed
  */
-async function approveAsMultiAlreadyApprovedTest<
+async function finalApprovalApproveAsMultiTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -908,11 +908,11 @@ export function multisigE2ETests<
     })
 
     test('second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution', async () => {
-      await approveAsMultiDoesNotExecuteTest(chain, testConfig.addressEncoding)
+      await approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding)
     })
 
-    test('final approval with `approveAsMulti` fails', async () => {
-      await approveAsMultiAlreadyApprovedTest(chain)
+    test('final approval with `approveAsMulti` does not lead to execution', async () => {
+      await finalApprovalApproveAsMultiTest(chain)
     })
   })
 }
