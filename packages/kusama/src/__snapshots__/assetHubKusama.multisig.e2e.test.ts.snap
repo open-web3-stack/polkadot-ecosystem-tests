@@ -33,6 +33,42 @@ exports[`AssetHubKusama Multisig > basic 2-of-3 multisig creation and execution 
 ]
 `;
 
+exports[`AssetHubKusama Multisig > final approval with \`approveAsMulti\` fails > events when Bob approves with approveAsMulti 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
+      "timepoint": {
+        "height": "(rounded 9800000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigApproval",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`AssetHubKusama Multisig > final approval with \`approveAsMulti\` fails > events when Bob makes final approval with approveAsMulti 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
+      "timepoint": {
+        "height": "(rounded 9800000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigApproval",
+    "section": "multisig",
+  },
+]
+`;
+
 exports[`AssetHubKusama Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
 [
   {

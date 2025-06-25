@@ -33,6 +33,42 @@ exports[`BridgeHubPolkadot Multisig > basic 2-of-3 multisig creation and executi
 ]
 `;
 
+exports[`BridgeHubPolkadot Multisig > final approval with \`approveAsMulti\` fails > events when Bob approves with approveAsMulti 1`] = `
+[
+  {
+    "data": {
+      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "callHash": "(hash)",
+      "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
+      "timepoint": {
+        "height": "(rounded 5400000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigApproval",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`BridgeHubPolkadot Multisig > final approval with \`approveAsMulti\` fails > events when Bob makes final approval with approveAsMulti 1`] = `
+[
+  {
+    "data": {
+      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "callHash": "(hash)",
+      "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
+      "timepoint": {
+        "height": "(rounded 5400000)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigApproval",
+    "section": "multisig",
+  },
+]
+`;
+
 exports[`BridgeHubPolkadot Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
 [
   {
