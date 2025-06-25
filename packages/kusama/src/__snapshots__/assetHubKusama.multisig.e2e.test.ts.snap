@@ -9,7 +9,7 @@ exports[`AssetHubKusama Multisig > basic 2-of-3 multisig creation and execution 
       "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 9800000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -55,7 +55,7 @@ exports[`AssetHubKusama Multisig > multisig cancellation > events when Alice can
       "cancelling": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "timepoint": {
-        "height": "(rounded 9800000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -115,7 +115,7 @@ exports[`AssetHubKusama Multisig > second approval (with \`approveAsMulti\`) in 
       "callHash": "(hash)",
       "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "timepoint": {
-        "height": "(rounded 9800000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -134,7 +134,7 @@ exports[`AssetHubKusama Multisig > second approval (with \`approveAsMulti\`) in 
       "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 9800000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },

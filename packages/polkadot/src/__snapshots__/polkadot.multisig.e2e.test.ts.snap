@@ -9,7 +9,7 @@ exports[`Polkadot Multisig > basic 2-of-3 multisig creation and execution > even
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 27000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -55,7 +55,7 @@ exports[`Polkadot Multisig > multisig cancellation > events when Alice cancels m
       "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "timepoint": {
-        "height": "(rounded 27000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -115,7 +115,7 @@ exports[`Polkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3
       "callHash": "(hash)",
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "timepoint": {
-        "height": "(rounded 27000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -134,7 +134,7 @@ exports[`Polkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 27000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },

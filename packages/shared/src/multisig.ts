@@ -121,7 +121,11 @@ async function basicMultisigTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(finalApprovalEvents, 'multisig').toMatchSnapshot('events when Alice approves multisig call')
+  await checkEvents(finalApprovalEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Alice approves multisig call')
 
   // Dave should now have some funds
   daveAccount = await client.api.query.system.account(dave.address)
@@ -246,7 +250,11 @@ async function multisigCancellationTest<
   await client.dev.newBlock()
 
   // Check that the multisig was cancelled successfully
-  await checkEvents(cancelEvents, 'multisig').toMatchSnapshot('events when Alice cancels multisig')
+  await checkEvents(cancelEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Alice cancels multisig')
 
   // Check that Alice's deposit was refunded
   aliceAccount = await client.api.query.system.account(alice.address)
@@ -667,7 +675,11 @@ async function approveAsMultiDoesNotExecuteTest<
   await client.dev.newBlock()
 
   // Check that the approval was successful but execution did not occur
-  await checkEvents(approveEvents, 'multisig').toMatchSnapshot('events when Bob approves with approveAsMulti')
+  await checkEvents(approveEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Bob approves with approveAsMulti')
 
   // Verify that Dave still has no funds (the transfer was not executed)
   let daveAccount = await client.api.query.system.account(dave.address)
@@ -721,7 +733,11 @@ async function approveAsMultiDoesNotExecuteTest<
   await client.dev.newBlock()
 
   // Check that the multisig was executed successfully
-  await checkEvents(approveEvents, 'multisig').toMatchSnapshot('events when Charlie provides final approval')
+  await checkEvents(approveEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Charlie provides final approval')
 
   // Check that the transfer was executed
   daveAccount = await client.api.query.system.account(dave.address)

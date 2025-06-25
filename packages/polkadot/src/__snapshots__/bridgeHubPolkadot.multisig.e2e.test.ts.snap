@@ -9,7 +9,7 @@ exports[`BridgeHubPolkadot Multisig > basic 2-of-3 multisig creation and executi
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 5400000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -55,7 +55,7 @@ exports[`BridgeHubPolkadot Multisig > multisig cancellation > events when Alice 
       "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "timepoint": {
-        "height": "(rounded 5400000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -115,7 +115,7 @@ exports[`BridgeHubPolkadot Multisig > second approval (with \`approveAsMulti\`) 
       "callHash": "(hash)",
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "timepoint": {
-        "height": "(rounded 5400000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -134,7 +134,7 @@ exports[`BridgeHubPolkadot Multisig > second approval (with \`approveAsMulti\`) 
       "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 5400000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
