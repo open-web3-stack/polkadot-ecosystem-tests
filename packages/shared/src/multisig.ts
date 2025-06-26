@@ -1284,6 +1284,77 @@ async function approveAsMultiFirstTest<
   expect(multisigExecutedEventData.callHash.toString()).toBe(multisigCallHash.toString())
 }
 
+/**
+ * Test that in a 2-of-2 multisig, passing a timepoint with the first call fails.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti` but passes a timepoint
+ * 2. This should fail with `UnexpectedTimepoint` error
+ */
+async function unexpectedTimepointTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // Alice calls asMulti but passes a timepoint (which should be null for first call)
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    {
+      height: blockNumber,
+      index: 0,
+    }, // Timepoint should be null for first call
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const approveEvents = await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(approveEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Alice starts multisig operation with `approveAsMulti`')
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1335,6 +1406,10 @@ export function multisigE2ETests<
 
     test('beginning multisig approval with `approveAsMulti` works', async () => {
       await approveAsMultiFirstTest(chain, testConfig.addressEncoding)
+    })
+
+    test('first call with unexpected timepoint fails', async () => {
+      await unexpectedTimepointTest(chain)
     })
   })
 }

@@ -135,6 +135,8 @@ exports[`AssetHubPolkadot Multisig > final approval with \`approveAsMulti\` fail
 ]
 `;
 
+exports[`AssetHubPolkadot Multisig > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
+
 exports[`AssetHubPolkadot Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
 [
   {

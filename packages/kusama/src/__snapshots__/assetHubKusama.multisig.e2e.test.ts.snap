@@ -135,6 +135,8 @@ exports[`AssetHubKusama Multisig > final approval with \`approveAsMulti\` fails 
 ]
 `;
 
+exports[`AssetHubKusama Multisig > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
+
 exports[`AssetHubKusama Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
 [
   {
