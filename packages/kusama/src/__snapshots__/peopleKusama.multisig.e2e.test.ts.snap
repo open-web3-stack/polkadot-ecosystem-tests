@@ -1,39 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PeopleKusama Multisig > approval with incorrect call hash fails > events when Alice starts multisig with \`approveAsMulti\` 1`] = `
-[
-  {
-    "data": {
-      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "callHash": "(hash)",
-      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
-    },
-    "method": "NewMultisig",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`PeopleKusama Multisig > approval with incorrect call hash fails > events when Bob executes with \`asMulti\` 1`] = `
-[
-  {
-    "data": {
-      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "callHash": "(hash)",
-      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
-      "result": "Ok",
-      "timepoint": {
-        "height": "(redacted)",
-        "index": 2,
-      },
-    },
-    "method": "MultisigExecuted",
-    "section": "multisig",
-  },
-]
-`;
-
 exports[`PeopleKusama Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+
+exports[`PeopleKusama Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
+
+exports[`PeopleKusama Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong extrinsic index 1`] = `[]`;
 
 exports[`PeopleKusama Multisig > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
@@ -103,25 +74,7 @@ exports[`PeopleKusama Multisig > beginning multisig approval with \`approveAsMul
 ]
 `;
 
-exports[`PeopleKusama Multisig > final approval with \`approveAsMulti\` fails > events when Bob approves with approveAsMulti 1`] = `
-[
-  {
-    "data": {
-      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "callHash": "(hash)",
-      "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
-      "timepoint": {
-        "height": "(rounded 4600000)",
-        "index": 2,
-      },
-    },
-    "method": "MultisigApproval",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`PeopleKusama Multisig > final approval with \`approveAsMulti\` fails > events when Bob makes final approval with approveAsMulti 1`] = `
+exports[`PeopleKusama Multisig > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
 [
   {
     "data": {
@@ -201,7 +154,7 @@ exports[`PeopleKusama Multisig > multisig cancellation with remaining signatorie
 ]
 `;
 
-exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
+exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
 [
   {
     "data": {
@@ -215,7 +168,7 @@ exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-
 ]
 `;
 
-exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
+exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
 [
   {
     "data": {
@@ -233,7 +186,7 @@ exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-
 ]
 `;
 
-exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Charlie provides final approval 1`] = `
+exports[`PeopleKusama Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Charlie provides final approval 1`] = `
 [
   {
     "data": {

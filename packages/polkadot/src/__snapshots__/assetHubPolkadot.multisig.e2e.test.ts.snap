@@ -1,39 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AssetHubPolkadot Multisig > approval with incorrect call hash fails > events when Alice starts multisig with \`approveAsMulti\` 1`] = `
-[
-  {
-    "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
-    },
-    "method": "NewMultisig",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`AssetHubPolkadot Multisig > approval with incorrect call hash fails > events when Bob executes with \`asMulti\` 1`] = `
-[
-  {
-    "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
-      "result": "Ok",
-      "timepoint": {
-        "height": "(redacted)",
-        "index": 2,
-      },
-    },
-    "method": "MultisigExecuted",
-    "section": "multisig",
-  },
-]
-`;
-
 exports[`AssetHubPolkadot Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+
+exports[`AssetHubPolkadot Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
+
+exports[`AssetHubPolkadot Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong extrinsic index 1`] = `[]`;
 
 exports[`AssetHubPolkadot Multisig > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
@@ -103,25 +74,7 @@ exports[`AssetHubPolkadot Multisig > beginning multisig approval with \`approveA
 ]
 `;
 
-exports[`AssetHubPolkadot Multisig > final approval with \`approveAsMulti\` fails > events when Bob approves with approveAsMulti 1`] = `
-[
-  {
-    "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "callHash": "(hash)",
-      "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
-      "timepoint": {
-        "height": "(rounded 9100000)",
-        "index": 2,
-      },
-    },
-    "method": "MultisigApproval",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`AssetHubPolkadot Multisig > final approval with \`approveAsMulti\` fails > events when Bob makes final approval with approveAsMulti 1`] = `
+exports[`AssetHubPolkadot Multisig > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
 [
   {
     "data": {
@@ -201,7 +154,7 @@ exports[`AssetHubPolkadot Multisig > multisig cancellation with remaining signat
 ]
 `;
 
-exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
 [
   {
     "data": {
@@ -215,7 +168,7 @@ exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) i
 ]
 `;
 
-exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
 [
   {
     "data": {
@@ -233,7 +186,7 @@ exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) i
 ]
 `;
 
-exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig does not lead to execution > events when Charlie provides final approval 1`] = `
+exports[`AssetHubPolkadot Multisig > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Charlie provides final approval 1`] = `
 [
   {
     "data": {
