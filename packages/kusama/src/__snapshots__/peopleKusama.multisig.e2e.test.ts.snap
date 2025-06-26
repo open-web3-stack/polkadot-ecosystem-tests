@@ -33,6 +33,8 @@ exports[`PeopleKusama Multisig > approval with incorrect call hash fails > event
 ]
 `;
 
+exports[`PeopleKusama Multisig > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
+
 exports[`PeopleKusama Multisig > basic 2-of-3 multisig creation and execution > events when Alice approves multisig call 1`] = `
 [
   {
