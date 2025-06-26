@@ -2,6 +2,7 @@ export * from './setup.js'
 
 export * from './collectives.js'
 export * from './governance.js'
+export * from './multisig.js'
 export * from './nomination-pools.js'
 export * from './people.js'
 export * from './proxy.js'
