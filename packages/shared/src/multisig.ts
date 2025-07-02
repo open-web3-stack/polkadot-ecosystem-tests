@@ -1658,6 +1658,126 @@ async function wrongTimepointTest<
   assert(client.api.errors.multisig.WrongTimepoint.is(dispatchError2.asModule))
 }
 
+/**
+ * Test that multisig cancellation with threshold < 2 fails.
+ *
+ * 1. Alice attempts to cancel a multisig with threshold = 1
+ * 2. Verify that the transaction fails with the appropriate error
+ */
+async function minimumThresholdCancelTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice attempts to cancel a multisig with threshold = 1 (invalid)
+  const threshold = 1 // Invalid threshold - should be >= 2
+  const otherSignatories = [bob.address]
+  const callHash = transferCall.method.hash
+
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    otherSignatories,
+    {
+      height: 1,
+      index: 0,
+    },
+    callHash,
+  )
+
+  await sendTransaction(cancelTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+}
+
+/**
+ * Test that as_multi with threshold < 2 fails.
+ *
+ * 1. Alice attempts to create a multisig with threshold = 1 using as_multi
+ * 2. Verify that the transaction fails with the appropriate error
+ */
+async function minimumThresholdAsMultiTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice attempts to create a multisig with threshold = 1 (invalid)
+  const threshold = 1 // Invalid threshold - should be >= 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1725,6 +1845,14 @@ export function multisigE2ETests<
 
     test('approval with wrong timepoint fails', async () => {
       await wrongTimepointTest(chain)
+    })
+
+    test('multisig cancellation with threshold < 2 fails', async () => {
+      await minimumThresholdCancelTest(chain)
+    })
+
+    test('creating a multisig with threshold < 2 fails', async () => {
+      await minimumThresholdAsMultiTest(chain)
     })
   })
 }
