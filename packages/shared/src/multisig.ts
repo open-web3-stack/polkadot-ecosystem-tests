@@ -374,9 +374,13 @@ async function tooManySignatoriesTest<
     maxWeight,
   )
 
-  await sendTransaction(asMultiTx.signAsync(alice))
+  const failedTxEvents = await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when creating multisig with too many signatories fails',
+  )
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -468,9 +472,13 @@ async function signatoriesOutOfOrderTest<
     maxWeight,
   )
 
-  await sendTransaction(finalApprovalTx.signAsync(bob))
+  const failedTxEvents = await sendTransaction(finalApprovalTx.signAsync(bob))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when multisig approval with signatories out of order fails',
+  )
 
   // Check events for the failed multisig approval
   events = await client.api.query.system.events()
@@ -562,9 +570,13 @@ async function cancelWithSignatoriesOutOfOrderTest<
     multisigCallHash,
   )
 
-  await sendTransaction(cancelTx.signAsync(alice))
+  const failedTxEvents = await sendTransaction(cancelTx.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when multisig cancellation with signatories out of order fails',
+  )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -964,9 +976,13 @@ async function approveAsMultiAlreadyApprovedTest<
     maxWeight,
   )
 
-  await sendTransaction(approveTx2.signAsync(bob))
+  const failedTxEvents = await sendTransaction(approveTx2.signAsync(bob))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when repeated approval with approveAsMulti fails',
+  )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1055,9 +1071,13 @@ async function senderInSignatoriesTest<
     maxWeight,
   )
 
-  await sendTransaction(approveTx.signAsync(bob))
+  const failedTxEvents = await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when redundant approval fails',
+  )
 
   events = await client.api.query.system.events()
 
@@ -1145,9 +1165,13 @@ async function signatoriesOutOfOrderInApprovalTest<
     maxWeight,
   )
 
-  await sendTransaction(approveTx.signAsync(bob))
+  const failedTxEvents = await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when approval with signatories out of order fails',
+  )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1700,9 +1724,13 @@ async function minimumThresholdCancelTest<
     callHash,
   )
 
-  await sendTransaction(cancelTx.signAsync(alice))
+  const failedTxEvents = await sendTransaction(cancelTx.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when multisig cancellation with threshold < 2 fails',
+  )
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -1791,9 +1819,13 @@ async function notFoundCancelTest<
     multisigCallHash,
   )
 
-  await sendTransaction(cancelTx1.signAsync(alice))
+  const failedTxEvents1 = await sendTransaction(cancelTx1.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents1, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when cancelling multisig with wrong signatories fails',
+  )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1822,9 +1854,13 @@ async function notFoundCancelTest<
     bogusCallHash,
   )
 
-  await sendTransaction(cancelTx2.signAsync(alice))
+  const failedTxEvents2 = await sendTransaction(cancelTx2.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when cancelling multisig with bogus call hash fails',
+  )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1881,9 +1917,13 @@ async function minimumThresholdAsMultiTest<
     maxWeight,
   )
 
-  await sendTransaction(asMultiTx.signAsync(alice))
+  const failedTxEvents = await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when creating multisig with threshold < 2 fails',
+  )
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()

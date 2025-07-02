@@ -1,6 +1,56 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`PeoplePolkadot Multisig > a redundant approval fails > events when redundant approval fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`PeoplePolkadot Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+
+exports[`PeoplePolkadot Multisig > approval with signatories out of order fails > events when approval with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
 
 exports[`PeoplePolkadot Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
 
@@ -74,6 +124,81 @@ exports[`PeoplePolkadot Multisig > beginning multisig approval with \`approveAsM
 ]
 `;
 
+exports[`PeoplePolkadot Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with wrong signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > creating a multisig with threshold < 2 fails > events when creating multisig with threshold < 2 fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`PeoplePolkadot Multisig > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
 [
   {
@@ -104,6 +229,31 @@ exports[`PeoplePolkadot Multisig > multisig approval with remaining signatories 
     },
     "method": "NewMultisig",
     "section": "multisig",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig approval with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -150,6 +300,106 @@ exports[`PeoplePolkadot Multisig > multisig cancellation with remaining signator
     },
     "method": "NewMultisig",
     "section": "multisig",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig cancellation with remaining signatories out of order fails > events when multisig cancellation with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig cancellation with threshold < 2 fails > events when multisig cancellation with threshold < 2 fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > multisig creation with too many signatories fails > events when creating multisig with too many signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`PeoplePolkadot Multisig > repeated approval with \`approveAsMulti\` fails > events when repeated approval with approveAsMulti fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 2400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;

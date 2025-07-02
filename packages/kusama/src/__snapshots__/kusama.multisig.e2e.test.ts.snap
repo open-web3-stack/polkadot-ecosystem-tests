@@ -1,6 +1,56 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Multisig > a redundant approval fails > events when redundant approval fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+
+exports[`Kusama Multisig > approval with signatories out of order fails > events when approval with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
 
 exports[`Kusama Multisig > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
 
@@ -74,6 +124,81 @@ exports[`Kusama Multisig > beginning multisig approval with \`approveAsMulti\` w
 ]
 `;
 
+exports[`Kusama Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with wrong signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > creating a multisig with threshold < 2 fails > events when creating multisig with threshold < 2 fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Multisig > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
 [
   {
@@ -104,6 +229,31 @@ exports[`Kusama Multisig > multisig approval with remaining signatories out of o
     },
     "method": "NewMultisig",
     "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama Multisig > multisig approval with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -150,6 +300,106 @@ exports[`Kusama Multisig > multisig cancellation with remaining signatories out 
     },
     "method": "NewMultisig",
     "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama Multisig > multisig cancellation with remaining signatories out of order fails > events when multisig cancellation with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > multisig cancellation with threshold < 2 fails > events when multisig cancellation with threshold < 2 fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > multisig creation with too many signatories fails > events when creating multisig with too many signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > repeated approval with \`approveAsMulti\` fails > events when repeated approval with approveAsMulti fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
