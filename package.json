@@ -28,7 +28,7 @@
 		"@polkadot/types-create": "^16.0",
 		"@polkadot/types-known": "^16.0"
 	},
-	"packageManager": "yarn@4.9.1",
+	"packageManager": "yarn@4.9.2",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
 		"@swc/core": "^1.11.24",
