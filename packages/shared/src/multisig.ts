@@ -1720,6 +1720,128 @@ async function minimumThresholdCancelTest<
 }
 
 /**
+ * Test that attempting to cancel a non-existent multisig operation fails.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob
+ * 2. Alice attempts to cancel it with wrong signatories (Charlie instead of Bob)
+ * 3. Alice attempts to cancel it with a bogus call hash
+ * 4. Verify that both attempts fail with the appropriate error
+ */
+async function notFoundCancelTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a 2-of-2 multisig with Bob
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
+
+  // First attempt: Alice tries to cancel with wrong signatories (Charlie instead of Bob)
+
+  const cancelTx1 = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    [charlie.address], // Wrong signatory - should be [bob.address]
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  await sendTransaction(cancelTx1.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev1] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev1.event))
+  const dispatchError1 = ev1.event.data.dispatchError
+
+  assert(dispatchError1.isModule)
+  assert(client.api.errors.multisig.NotFound.is(dispatchError1.asModule))
+
+  // Second attempt: Alice tries to cancel with a bogus call hash
+
+  const bogusCallHash = new Uint8Array(32).fill(0) // All zeros
+  const cancelTx2 = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    otherSignatories, // Correct signatories
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    bogusCallHash,
+  )
+
+  await sendTransaction(cancelTx2.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev2] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev2.event))
+  const dispatchError2 = ev2.event.data.dispatchError
+
+  assert(dispatchError2.isModule)
+  assert(client.api.errors.multisig.NotFound.is(dispatchError2.asModule))
+}
+
+/**
  * Test that as_multi with threshold < 2 fails.
  *
  * 1. Alice attempts to create a multisig with threshold = 1 using as_multi
@@ -1853,6 +1975,10 @@ export function multisigE2ETests<
 
     test('creating a multisig with threshold < 2 fails', async () => {
       await minimumThresholdAsMultiTest(chain)
+    })
+
+    test('cancelling a non-existent multisig operation fails', async () => {
+      await notFoundCancelTest(chain)
     })
   })
 }
