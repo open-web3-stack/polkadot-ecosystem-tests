@@ -984,12 +984,11 @@ async function approveAsMultiAlreadyApprovedTest<
 }
 
 /**
- * Test that in a 2-of-2 multisig, the first signatory's approval after the second signatory has already approved
- * the call results in `NoApprovalsNeeded`.
+ * Test that in a 2-of-2 multisig, a signatory including themselves in the signatory list will cause an error.
  *
  * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
- * 2. Bob calls `approveAsMulti` to approve the operation
- * 3. Alice calls `approveAsMulti` to try to approve again - this should fail with `NoApprovalsNeeded`
+ * 2. Bob calls `approveAsMulti` to approve the operation, but includes himself in the signatory list
+ * 3. Verify that the multisig operation has not executed
  */
 async function senderInSignatoriesTest<
   TCustom extends Record<string, unknown> | undefined,
