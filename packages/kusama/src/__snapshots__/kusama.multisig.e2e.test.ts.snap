@@ -207,7 +207,7 @@ exports[`Kusama Multisig > final approval with \`approveAsMulti\` does not lead 
       "callHash": "(hash)",
       "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
       "timepoint": {
-        "height": "(rounded 29000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },

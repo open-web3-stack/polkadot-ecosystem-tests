@@ -207,7 +207,7 @@ exports[`AssetHubPolkadot Multisig > final approval with \`approveAsMulti\` does
       "callHash": "(hash)",
       "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
       "timepoint": {
-        "height": "(rounded 9100000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },

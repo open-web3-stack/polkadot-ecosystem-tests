@@ -207,7 +207,7 @@ exports[`PeopleKusama Multisig > final approval with \`approveAsMulti\` does not
       "callHash": "(hash)",
       "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
       "timepoint": {
-        "height": "(rounded 4600000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },

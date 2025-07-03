@@ -848,9 +848,9 @@ async function finalApprovalApproveAsMultiTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig').toMatchSnapshot(
-    'events when Bob makes final approval with approveAsMulti',
-  )
+  await checkEvents(approveEvents, 'multisig')
+    .redact({ redactKeys: /height/ })
+    .toMatchSnapshot('events when Bob makes final approval with approveAsMulti')
 
   events = await client.api.query.system.events()
   expect(

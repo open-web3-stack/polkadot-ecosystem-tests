@@ -207,7 +207,7 @@ exports[`PeoplePolkadot Multisig > final approval with \`approveAsMulti\` does n
       "callHash": "(hash)",
       "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
       "timepoint": {
-        "height": "(rounded 2400000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
