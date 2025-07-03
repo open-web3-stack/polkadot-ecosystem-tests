@@ -1,7 +1,7 @@
 import { BN } from 'bn.js'
 import { assert, describe, test } from 'vitest'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, type Client as NetworkClient, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
@@ -892,4 +892,57 @@ export function governanceE2ETests<
       await preimageTest(client)
     })
   })
+}
+
+export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, assetHubClient: NetworkClient) {
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        // give Alice some DOTs so that she can sign a payout transaction.
+        [[devAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+  const balanceBefore = await assetHubClient.api.query.assets.account(devAccounts.alice.address)
+
+  // amount is encoded into the call
+  const amount = 123123123123n
+  const treasurySpendCall =
+    '0x130504000100a10f0002043205011f07b3c3b5aa1c0400010100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00'
+
+  const nextBlock = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+  await relayClient.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [nextBlock + 1],
+          [
+            {
+              call: {
+                // spend USDT to Alice
+                Inline: treasurySpendCall,
+              },
+              origin: {
+                System: 'Root',
+              },
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await relayClient.dev.newBlock()
+
+  // find index to payout from the events
+  let index = 0
+  const events = await relayClient.api.query.system.events()
+  console.log(`Events after spend block:`)
+  for (const event of events) {
+    if (event.event.section === 'treasury' && event.event.method === 'AssetSpendApproved') {
+      index = (event.event.data[0] as any).toNumber()
+      console.log('AssetSpendApproved index:', index)
+      break
+    }
+  }
 }
