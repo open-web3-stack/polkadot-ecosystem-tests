@@ -957,9 +957,8 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
 
   // verify that Alice's balance is increased by the `amount`
   const balanceAfter = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
-  assert(balanceAfter.isSome && balanceBefore.isSome, 'Expected both balances to exist')
-  const balanceAfterAmount = balanceAfter.unwrap().balance.toBigInt()
-  const balanceBeforeAmount = balanceBefore.unwrap().balance.toBigInt()
+  const balanceAfterAmount = balanceAfter.isNone ? 0n : balanceAfter.unwrap().balance.toBigInt()
+  const balanceBeforeAmount = balanceBefore.isNone ? 0n : balanceBefore.unwrap().balance.toBigInt()
   assert(
     balanceAfterAmount - balanceBeforeAmount === amount,
     `Expected balance difference to be ${amount}, but got ${balanceAfterAmount - balanceBeforeAmount}`,
