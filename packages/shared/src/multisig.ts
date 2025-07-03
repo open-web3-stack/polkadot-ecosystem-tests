@@ -1940,17 +1940,110 @@ async function minimumThresholdAsMultiTest<
   assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
 }
 
+/**
+ * Test that only the original depositor can cancel a multisig operation.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob
+ * 2. Bob attempts to cancel the multisig operation (but he's not the depositor)
+ * 3. Verify that the cancellation fails with `NotOwner` error
+ */
+async function notOwnerCancelTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a 2-of-2 multisig with Bob
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
+
+  // Bob attempts to cancel the multisig operation (but he's not the depositor)
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    [alice.address], // Correct signatories for when *Bob* tries to cancel
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  const failedTxEvents = await sendTransaction(cancelTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when non-depositor tries to cancel multisig fails',
+  )
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.NotOwner.is(dispatchError.asModule))
+}
+
 export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
     // Success tests
+
     test('basic 2-of-3 multisig creation and execution', async () => {
       await basicMultisigTest(chain, testConfig.addressEncoding)
     })
 
-    test('multisig cancellation', async () => {
+    test('multisig cancellation works', async () => {
       await multisigCancellationTest(chain, testConfig.addressEncoding)
     })
 
@@ -1967,6 +2060,7 @@ export function multisigE2ETests<
     })
 
     // Failure tests
+
     test('multisig creation with too few signatories fails', async () => {
       await tooFewSignatoriesTest(chain)
     })
@@ -2021,6 +2115,10 @@ export function multisigE2ETests<
 
     test('cancelling a non-existent multisig operation fails', async () => {
       await notFoundCancelTest(chain)
+    })
+
+    test('non-depositor tries to cancel multisig fails', async () => {
+      await notOwnerCancelTest(chain)
     })
   })
 }

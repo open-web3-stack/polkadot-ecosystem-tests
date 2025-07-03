@@ -379,6 +379,31 @@ exports[`CollectivesPolkadot Multisig > multisig creation with too many signator
 ]
 `;
 
+exports[`CollectivesPolkadot Multisig > non-depositor tries to cancel multisig fails > events when non-depositor tries to cancel multisig fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x08000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`CollectivesPolkadot Multisig > repeated approval with \`approveAsMulti\` fails > events when repeated approval with approveAsMulti fails 1`] = `
 [
   {
