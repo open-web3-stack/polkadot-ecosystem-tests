@@ -225,3 +225,72 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
   },
 ]
 `;
+
+exports[`polkadot & assetHub > Spend foreign asset from Relay treasury, make sure changes are reflected on AssetHub > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 150)",
+      "paymentId": "(rounded 200)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`polkadot & assetHub > Spend foreign asset from Relay treasury, make sure changes are reflected on AssetHub > relay chain events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 120000000000)",
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": 1000,
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": 0,
+        },
+      },
+      "expireAt": "(rounded 28000000)",
+      "validFrom": "(rounded 26000000)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;

@@ -895,8 +895,6 @@ export function governanceE2ETests<
 }
 
 export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, assetHubClient: NetworkClient) {
-  const USDT_ID = 1984
-
   await relayClient.dev.setStorage({
     System: {
       account: [
@@ -905,8 +903,9 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
       ],
     },
   })
-  const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
 
+  const USDT_ID = 1984
+  const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
   // amount is encoded into the call
   const amount = 123123123123n
   const treasurySpendCall =
@@ -933,29 +932,31 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
       ],
     },
   })
-
   await relayClient.dev.newBlock()
+  await checkSystemEvents(relayClient, 'treasury', 'AssetSpendApproved')
+    // changes from time to time, better remove it
+    .redact({ removeKeys: /index/ })
+    .toMatchSnapshot('relay chain events')
 
-  // find index to payout from the events
+  // filter events to find an index to payout
   let index = 0
   const events = await relayClient.api.query.system.events()
-  console.log(`Events after spend block:`)
   for (const event of events) {
     if (event.event.section === 'treasury' && event.event.method === 'AssetSpendApproved') {
       index = (event.event.data[0] as any).toNumber()
-      console.log('AssetSpendApproved index:', index)
       break
     }
   }
 
   // payout
-  await relayClient.api.tx.treasury.payout(index).signAndSend(defaultAccountsSr25519.alice)
+  const spendEvents = await sendTransaction(relayClient.api.tx.treasury.payout(index).signAsync(devAccounts.alice))
 
   // create blocks on RC and AH to ensure that payout is properly processed
   await relayClient.dev.newBlock()
-  await assetHubClient.dev.newBlock()
+  await checkEvents(spendEvents, 'treasury', 'paid').toMatchSnapshot('payout events')
 
-  // verify that Alice's balance is increased by the `amount`
+  // treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
+  await assetHubClient.dev.newBlock()
   const balanceAfter = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
   const balanceAfterAmount = balanceAfter.isNone ? 0n : balanceAfter.unwrap().balance.toBigInt()
   const balanceBeforeAmount = balanceBefore.isNone ? 0n : balanceBefore.unwrap().balance.toBigInt()
