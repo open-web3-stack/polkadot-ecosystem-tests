@@ -3,8 +3,8 @@ import { describe, test } from 'vitest'
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
+import { treasurySpendForeignAssetTest } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
-import { treasurySpendForeignAssetTest } from '@e2e-test/shared/governance'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 describe('polkadot & assetHub', async () => {
