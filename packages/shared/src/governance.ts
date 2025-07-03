@@ -903,10 +903,11 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
       ],
     },
   })
-  const balanceBefore = await assetHubClient.api.query.assets.account(devAccounts.alice.address)
+  // const balanceBefore = await assetHubClient.api.query.assets.account(devAccounts.alice.address)
+  await assetHubClient.api.query.assets.account(devAccounts.alice.address)
 
   // amount is encoded into the call
-  const amount = 123123123123n
+  // const amount = 123123123123n
   const treasurySpendCall =
     '0x130504000100a10f0002043205011f07b3c3b5aa1c0400010100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00'
 
