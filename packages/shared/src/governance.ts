@@ -933,9 +933,9 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
     },
   })
   await relayClient.dev.newBlock()
-  await checkSystemEvents(relayClient, 'treasury', 'AssetSpendApproved')
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
     // changes from time to time, better remove it
-    .redact({ removeKeys: /index/ })
+    .redact({ hash: false, redactKeys: /data/ })
     .toMatchSnapshot('relay chain events')
 
   // filter events to find an index to payout
@@ -953,7 +953,7 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
 
   // create blocks on RC and AH to ensure that payout is properly processed
   await relayClient.dev.newBlock()
-  await checkEvents(spendEvents, 'treasury', 'paid').toMatchSnapshot('payout events')
+  await checkEvents(spendEvents, { section: 'treasury', method: 'Paid' }).toMatchSnapshot('payout events')
 
   // treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
   await assetHubClient.dev.newBlock()
