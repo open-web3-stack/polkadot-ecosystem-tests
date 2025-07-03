@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > balance on from chain 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,39 +15,37 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > balance on to chain 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > balance on to chain 1`] = `
 {
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 1000000000000)",
-    "frozen": 0,
-    "reserved": 0,
+  "balance": "(rounded 1000000000000)",
+  "extra": null,
+  "reason": {
+    "sufficient": null,
   },
-  "nonce": 0,
-  "providers": 1,
-  "sufficients": 0,
+  "status": "Liquid",
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > from chain hrmp messages 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > from chain hrmp messages 1`] = `
 [
   {
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v5": [
+        "v3": [
           {
-            "receiveTeleportedAsset": [
+            "reserveAssetDeposited": [
               {
                 "fun": {
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "interior": {
-                    "here": null,
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 1,
                 },
               },
             ],
@@ -62,10 +60,12 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "interior": {
-                    "here": null,
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -82,14 +82,12 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
               },
               "beneficiary": {
                 "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                      "network": null,
                     },
-                  ],
+                  },
                 },
                 "parents": 0,
               },
@@ -101,12 +99,12 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
         ],
       },
     ],
-    "recipient": 1004,
+    "recipient": 2039,
   },
 ]
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > to chain xcm events 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -116,8 +114,8 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 5100)",
+        "refTime": 5000000,
       },
     },
     "method": "Processed",
@@ -126,15 +124,15 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
 ]
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > tx events 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > tx events 1`] = `
 [
   {
     "data": {
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 190000000)",
+            "proofSize": "(rounded 6200)",
+            "refTime": "(rounded 310000000)",
           },
         },
       },
@@ -178,7 +176,7 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
         "interior": {
           "X1": [
             {
-              "Parachain": "(rounded 1000)",
+              "Parachain": "(rounded 2000)",
             },
           ],
         },
@@ -186,7 +184,7 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
       },
       "message": [
         {
-          "ReceiveTeleportedAsset": [
+          "ReserveAssetDeposited": [
             {
               "fun": {
                 "Fungible": 1000000000000,
@@ -257,27 +255,23 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
 ]
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
 {
-  "consumers": 0,
-  "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
-    "frozen": 0,
-    "reserved": 0,
+  "balance": "(rounded 1000000000000000)",
+  "extra": null,
+  "reason": {
+    "consumer": null,
   },
-  "nonce": 1,
-  "providers": 1,
-  "sufficients": 0,
+  "status": "Liquid",
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > balance on to chain 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 1000000000000)",
+    "free": "(rounded 964000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -287,24 +281,26 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
 [
   {
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v5": [
+        "v3": [
           {
-            "receiveTeleportedAsset": [
+            "withdrawAsset": [
               {
                 "fun": {
-                  "fungible": 1000000000000,
+                  "fungible": 1000000000,
                 },
                 "id": {
-                  "interior": {
-                    "here": null,
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 1,
                 },
               },
             ],
@@ -316,13 +312,15 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
             "buyExecution": {
               "fees": {
                 "fun": {
-                  "fungible": 1000000000000,
+                  "fungible": 1000000000,
                 },
                 "id": {
-                  "interior": {
-                    "here": null,
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -339,21 +337,16 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
               },
               "beneficiary": {
                 "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                      "network": null,
                     },
-                  ],
+                  },
                 },
                 "parents": 0,
               },
             },
-          },
-          {
-            "setTopic": "(redacted)",
           },
         ],
       },
@@ -363,18 +356,18 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
 ]
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
 [
   {
     "data": {
       "id": "(hash)",
       "origin": {
-        "Sibling": "(rounded 1000)",
+        "Sibling": "(rounded 2000)",
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 7200)",
+        "refTime": "(rounded 320000000)",
       },
     },
     "method": "Processed",
@@ -383,15 +376,15 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
 ]
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > tx events 1`] = `
+exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > tx events 1`] = `
 [
   {
     "data": {
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 170000000)",
+            "proofSize": "(rounded 2000)",
+            "refTime": 2000000,
           },
         },
       },
@@ -401,17 +394,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
   },
   {
     "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 310000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
+      "fees": [],
       "paying": {
         "interior": {
           "X1": [
@@ -443,10 +426,10 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
       },
       "message": [
         {
-          "ReceiveTeleportedAsset": [
+          "WithdrawAsset": [
             {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 1000000000,
               },
               "id": {
                 "interior": "Here",
@@ -460,7 +443,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 1000000000,
               },
               "id": {
                 "interior": "Here",

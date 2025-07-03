@@ -1,25 +1,32 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > balance on from chain 1`] = `
+exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to integriteeKusama > balance on from chain 1`] = `
 {
-  "balance": 999000000,
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 9000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to integriteeKusama > balance on to chain 1`] = `
+{
+  "balance": "(rounded 1000000000000)",
   "extra": null,
   "reason": {
-    "consumer": null,
+    "sufficient": null,
   },
   "status": "Liquid",
 }
 `;
 
-exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > balance on to chain 1`] = `
-{
-  "free": "(rounded 999000)",
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from chain hrmp messages 1`] = `
+exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to integriteeKusama > from chain hrmp messages 1`] = `
 [
   {
     "data": [
@@ -30,21 +37,11 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
             "reserveAssetDeposited": [
               {
                 "fun": {
-                  "fungible": 1000000,
+                  "fungible": 1000000000000,
                 },
                 "id": {
                   "interior": {
-                    "x3": [
-                      {
-                        "parachain": 1000,
-                      },
-                      {
-                        "palletInstance": 50,
-                      },
-                      {
-                        "generalIndex": 1984,
-                      },
-                    ],
+                    "here": null,
                   },
                   "parents": 1,
                 },
@@ -58,21 +55,11 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
             "buyExecution": {
               "fees": {
                 "fun": {
-                  "fungible": 1000000,
+                  "fungible": 1000000000000,
                 },
                 "id": {
                   "interior": {
-                    "x3": [
-                      {
-                        "parachain": 1000,
-                      },
-                      {
-                        "palletInstance": 50,
-                      },
-                      {
-                        "generalIndex": 1984,
-                      },
-                    ],
+                    "here": null,
                   },
                   "parents": 1,
                 },
@@ -94,7 +81,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
                   "x1": [
                     {
                       "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
                         "network": null,
                       },
                     },
@@ -110,12 +97,12 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
         ],
       },
     ],
-    "recipient": 2000,
+    "recipient": 2015,
   },
 ]
 `;
 
-exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > to chain xcm events 1`] = `
+exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to integriteeKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -125,8 +112,8 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > to c
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 0,
-        "refTime": 1000000000,
+        "proofSize": "(rounded 5100)",
+        "refTime": 5000000,
       },
     },
     "method": "Processed",
@@ -135,7 +122,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > to c
 ]
 `;
 
-exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx events 1`] = `
+exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to integriteeKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -187,7 +174,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
         "interior": {
           "X1": [
             {
-              "Parachain": 2000,
+              "Parachain": "(rounded 2000)",
             },
           ],
         },
@@ -198,22 +185,10 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
           "ReserveAssetDeposited": [
             {
               "fun": {
-                "Fungible": 1000000,
+                "Fungible": 1000000000000,
               },
               "id": {
-                "interior": {
-                  "X3": [
-                    {
-                      "Parachain": 1000,
-                    },
-                    {
-                      "PalletInstance": 50,
-                    },
-                    {
-                      "GeneralIndex": "(rounded 2000)",
-                    },
-                  ],
-                },
+                "interior": "Here",
                 "parents": 1,
               },
             },
@@ -224,22 +199,10 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000,
+                "Fungible": 1000000000000,
               },
               "id": {
-                "interior": {
-                  "X3": [
-                    {
-                      "Parachain": 1000,
-                    },
-                    {
-                      "PalletInstance": 50,
-                    },
-                    {
-                      "GeneralIndex": "(rounded 2000)",
-                    },
-                  ],
-                },
+                "interior": "Here",
                 "parents": 1,
               },
             },
@@ -290,50 +253,52 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
 ]
 `;
 
-exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > balance on from chain 1`] = `
+exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to assetHubKusama > balance on from chain 1`] = `
 {
-  "free": 9000000,
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > balance on to chain 1`] = `
-{
-  "balance": "(rounded 1000000)",
+  "balance": "(rounded 1000000000000000)",
   "extra": null,
   "reason": {
-    "sufficient": null,
+    "consumer": null,
   },
   "status": "Liquid",
 }
 `;
 
-exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from chain hrmp messages 1`] = `
+exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to assetHubKusama > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 760000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to assetHubKusama > from chain hrmp messages 1`] = `
 [
   {
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v3": [
           {
             "withdrawAsset": [
               {
                 "fun": {
-                  "fungible": 1000000,
+                  "fungible": 1000000000,
                 },
                 "id": {
-                  "interior": {
-                    "x2": [
-                      {
-                        "palletInstance": 50,
-                      },
-                      {
-                        "generalIndex": 1984,
-                      },
-                    ],
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 0,
                 },
               },
             ],
@@ -345,20 +310,15 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
             "buyExecution": {
               "fees": {
                 "fun": {
-                  "fungible": 1000000,
+                  "fungible": 1000000000,
                 },
                 "id": {
-                  "interior": {
-                    "x2": [
-                      {
-                        "palletInstance": 50,
-                      },
-                      {
-                        "generalIndex": 1984,
-                      },
-                    ],
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
                   },
-                  "parents": 0,
                 },
               },
               "weightLimit": {
@@ -375,14 +335,12 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
               },
               "beneficiary": {
                 "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": null,
-                      },
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                      "network": null,
                     },
-                  ],
+                  },
                 },
                 "parents": 0,
               },
@@ -396,13 +354,13 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
 ]
 `;
 
-exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > to chain xcm events 1`] = `
+exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to assetHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
       "id": "(hash)",
       "origin": {
-        "Sibling": 2000,
+        "Sibling": "(rounded 2000)",
       },
       "success": true,
       "weightUsed": {
@@ -416,74 +374,123 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > to c
 ]
 `;
 
-exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > tx events 1`] = `
+exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to assetHubKusama > tx events 1`] = `
 [
   {
     "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000,
-          },
-          "id": {
-            "interior": {
-              "X3": [
-                {
-                  "Parachain": 1000,
-                },
-                {
-                  "PalletInstance": 50,
-                },
-                {
-                  "GeneralIndex": "(rounded 2000)",
-                },
-              ],
-            },
-            "parents": 1,
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 2000)",
+            "refTime": 2000000,
           },
         },
-      ],
-      "dest": {
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "fees": [],
+      "paying": {
         "interior": {
-          "X2": [
-            {
-              "Parachain": 1000,
-            },
+          "X1": [
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": null,
+                "network": "Kusama",
               },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 1000,
             },
           ],
         },
         "parents": 1,
       },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000,
+      "message": [
+        {
+          "WithdrawAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000,
+              },
+              "id": {
+                "interior": "Here",
+                "parents": 1,
+              },
+            },
+          ],
         },
-        "id": {
-          "interior": {
-            "X3": [
-              {
-                "Parachain": 1000,
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000,
               },
-              {
-                "PalletInstance": 50,
+              "id": {
+                "interior": "Here",
+                "parents": 1,
               },
-              {
-                "GeneralIndex": "(rounded 2000)",
-              },
-            ],
+            },
+            "weightLimit": "Unlimited",
           },
-          "parents": 1,
         },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Kusama",
+              },
+            },
+          ],
+        },
+        "parents": 0,
       },
-      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
     },
-    "method": "TransferredAssets",
-    "section": "xTokens",
+    "method": "Sent",
+    "section": "polkadotXcm",
   },
 ]
 `;
