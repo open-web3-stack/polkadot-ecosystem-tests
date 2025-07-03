@@ -889,11 +889,11 @@ async function finalApprovalApproveAsMultiTest<
 }
 
 /**
- * Test that in a 2-of-2 multisig, the second signatory calling `approveAsMulti` twice results in `AlreadyApproved`.
+ * Test that in a 2-of-2 multisig, the second signatory calling `approveAsMulti` twice results in an error.
  *
  * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
  * 2. Bob calls `approveAsMulti` to approve the operation (first time)
- * 3. Bob calls `approveAsMulti` again (second time) - this should fail with `AlreadyApproved`
+ * 3. Bob calls `approveAsMulti` again (second time) - this should fail
  */
 async function approveAsMultiAlreadyApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1945,6 +1945,7 @@ export function multisigE2ETests<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
+    // Success tests
     test('basic 2-of-3 multisig creation and execution', async () => {
       await basicMultisigTest(chain, testConfig.addressEncoding)
     })
@@ -1953,6 +1954,19 @@ export function multisigE2ETests<
       await multisigCancellationTest(chain, testConfig.addressEncoding)
     })
 
+    test('second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution', async () => {
+      await approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding)
+    })
+
+    test('final approval with `approveAsMulti` does not lead to execution', async () => {
+      await finalApprovalApproveAsMultiTest(chain)
+    })
+
+    test('beginning multisig approval with `approveAsMulti` works', async () => {
+      await approveAsMultiFirstTest(chain, testConfig.addressEncoding)
+    })
+
+    // Failure tests
     test('multisig creation with too few signatories fails', async () => {
       await tooFewSignatoriesTest(chain)
     })
@@ -1969,14 +1983,6 @@ export function multisigE2ETests<
       await cancelWithSignatoriesOutOfOrderTest(chain)
     })
 
-    test('second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution', async () => {
-      await approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding)
-    })
-
-    test('final approval with `approveAsMulti` does not lead to execution', async () => {
-      await finalApprovalApproveAsMultiTest(chain)
-    })
-
     test('repeated approval with `approveAsMulti` fails', async () => {
       await approveAsMultiAlreadyApprovedTest(chain)
     })
@@ -1987,10 +1993,6 @@ export function multisigE2ETests<
 
     test('approval with signatories out of order fails', async () => {
       await signatoriesOutOfOrderInApprovalTest(chain)
-    })
-
-    test('beginning multisig approval with `approveAsMulti` works', async () => {
-      await approveAsMultiFirstTest(chain, testConfig.addressEncoding)
     })
 
     test('first call with unexpected timepoint fails', async () => {
