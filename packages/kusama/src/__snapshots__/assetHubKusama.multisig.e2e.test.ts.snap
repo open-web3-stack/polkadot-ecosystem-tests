@@ -131,15 +131,15 @@ exports[`AssetHubKusama Multisig > cancelling a non-existent multisig operation 
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -156,15 +156,15 @@ exports[`AssetHubKusama Multisig > cancelling a non-existent multisig operation 
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -279,15 +279,15 @@ exports[`AssetHubKusama Multisig > multisig cancellation with remaining signator
       "dispatchError": {
         "Module": {
           "error": "0x05000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -304,15 +304,15 @@ exports[`AssetHubKusama Multisig > multisig cancellation with threshold < 2 fail
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -386,15 +386,15 @@ exports[`AssetHubKusama Multisig > non-depositor tries to cancel multisig fails 
       "dispatchError": {
         "Module": {
           "error": "0x08000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

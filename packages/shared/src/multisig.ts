@@ -746,9 +746,11 @@ async function minimumThresholdCancelTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when multisig cancellation with threshold < 2 fails',
-  )
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events when multisig cancellation with threshold < 2 fails')
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -1235,9 +1237,11 @@ async function cancelWithSignatoriesOutOfOrderTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when multisig cancellation with signatories out of order fails',
-  )
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events when multisig cancellation with signatories out of order fails')
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1519,9 +1523,11 @@ async function notFoundCancelTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents1, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when cancelling multisig with wrong signatories fails',
-  )
+  await checkEvents(failedTxEvents1, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events when cancelling multisig with wrong signatories fails')
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1554,9 +1560,11 @@ async function notFoundCancelTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when cancelling multisig with bogus call hash fails',
-  )
+  await checkEvents(failedTxEvents2, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events when cancelling multisig with bogus call hash fails')
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -1646,9 +1654,11 @@ async function notOwnerCancelTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when non-depositor tries to cancel multisig fails',
-  )
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events when non-depositor tries to cancel multisig fails')
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()

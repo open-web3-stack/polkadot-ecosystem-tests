@@ -131,15 +131,15 @@ exports[`AssetHubPolkadot Multisig > cancelling a non-existent multisig operatio
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 620000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -156,15 +156,15 @@ exports[`AssetHubPolkadot Multisig > cancelling a non-existent multisig operatio
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 620000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -279,15 +279,15 @@ exports[`AssetHubPolkadot Multisig > multisig cancellation with remaining signat
       "dispatchError": {
         "Module": {
           "error": "0x05000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 620000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -304,15 +304,15 @@ exports[`AssetHubPolkadot Multisig > multisig cancellation with threshold < 2 fa
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 620000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -386,15 +386,15 @@ exports[`AssetHubPolkadot Multisig > non-depositor tries to cancel multisig fail
       "dispatchError": {
         "Module": {
           "error": "0x08000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 620000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

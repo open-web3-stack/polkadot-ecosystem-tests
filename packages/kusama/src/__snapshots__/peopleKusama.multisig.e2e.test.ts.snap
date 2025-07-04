@@ -131,15 +131,15 @@ exports[`PeopleKusama Multisig > cancelling a non-existent multisig operation fa
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -156,15 +156,15 @@ exports[`PeopleKusama Multisig > cancelling a non-existent multisig operation fa
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -279,15 +279,15 @@ exports[`PeopleKusama Multisig > multisig cancellation with remaining signatorie
       "dispatchError": {
         "Module": {
           "error": "0x05000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -304,15 +304,15 @@ exports[`PeopleKusama Multisig > multisig cancellation with threshold < 2 fails 
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -386,15 +386,15 @@ exports[`PeopleKusama Multisig > non-depositor tries to cancel multisig fails > 
       "dispatchError": {
         "Module": {
           "error": "0x08000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
