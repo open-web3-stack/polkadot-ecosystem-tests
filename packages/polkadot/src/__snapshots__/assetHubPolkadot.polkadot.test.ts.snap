@@ -226,7 +226,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
 ]
 `;
 
-exports[`polkadot & assetHub > Spend foreign asset from Relay treasury, make sure changes are reflected on AssetHub > payout events 1`] = `
+exports[`polkadot & assetHub > Foreign asset spend from Relay treasury is reflected on AssetHub > payout events 1`] = `
 [
   {
     "data": {
@@ -239,7 +239,7 @@ exports[`polkadot & assetHub > Spend foreign asset from Relay treasury, make sur
 ]
 `;
 
-exports[`polkadot & assetHub > Spend foreign asset from Relay treasury, make sure changes are reflected on AssetHub > relay chain events 1`] = `
+exports[`polkadot & assetHub > Foreign asset spend from Relay treasury is reflected on AssetHub > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",

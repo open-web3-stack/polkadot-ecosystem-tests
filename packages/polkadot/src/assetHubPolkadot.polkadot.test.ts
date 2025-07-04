@@ -10,7 +10,7 @@ import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 describe('polkadot & assetHub', async () => {
   const [polkadotClient, assetHubClient] = await setupNetworks(polkadot, assetHubPolkadot)
 
-  test('Spend foreign asset from Relay treasury, make sure changes are reflected on AssetHub', async () => {
+  test('Foreign asset spend from Relay treasury is reflected on AssetHub', async () => {
     await treasurySpendForeignAssetTest(polkadotClient, assetHubClient)
   })
 })
