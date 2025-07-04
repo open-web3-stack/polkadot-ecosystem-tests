@@ -924,6 +924,7 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
     ({ event }) => event.section === 'treasury' && event.method === 'AssetSpendApproved',
   )
   expect(spendEvents.length).toBe(1)
+  assert(relayClient.api.events.treasury.AssetSpendApproved.is(spendEvents[0].event))
   const spendEvent = spendEvents[0]
   const spendIndex = (spendEvent.event.data[0] as any).toNumber()
 
@@ -939,6 +940,7 @@ export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, 
     ({ event }) => event.section === 'treasury' && event.method === 'Paid',
   )
   expect(events.length).toBe(1)
+  assert(relayClient.api.events.treasury.Paid.is(events[0].event))
   const payoutEvent = events[0]
   const payoutIndex = (payoutEvent.event.data[0] as any).toNumber()
   expect(payoutIndex).toBe(spendIndex)
