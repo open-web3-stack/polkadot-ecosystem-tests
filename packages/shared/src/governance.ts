@@ -1,7 +1,7 @@
 import { BN } from 'bn.js'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, type Client as NetworkClient, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
@@ -892,4 +892,63 @@ export function governanceE2ETests<
       await preimageTest(client)
     })
   })
+}
+
+export async function treasurySpendForeignAssetTest(relayClient: NetworkClient, assetHubClient: NetworkClient) {
+  await relayClient.dev.setStorage({
+    System: {
+      account: [
+        // give Alice some DOTs so that she can sign a payout transaction.
+        [[devAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+  const USDT_ID = 1984
+  const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
+
+  // amount is encoded into the call
+  const amount = 123123123123n
+  const treasurySpendCall =
+    '0x130504000100a10f0002043205011f07b3c3b5aa1c0400010100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00'
+  await scheduleInlineCallWithOrigin(relayClient, treasurySpendCall, { system: 'Root' })
+  await relayClient.dev.newBlock()
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
+    // values (e.g. index) inside data increase over time,
+    // PET framework often rounds them.
+    // Tests will be flaky if we don't redact them.
+    .redact({ hash: false, redactKeys: /data/ })
+    .toMatchSnapshot('treasury spend approval events')
+
+  // filter events to find an index to payout
+  const spendEvents = (await relayClient.api.query.system.events()).filter(
+    ({ event }) => event.section === 'treasury' && event.method === 'AssetSpendApproved',
+  )
+  expect(spendEvents.length).toBe(1)
+  assert(relayClient.api.events.treasury.AssetSpendApproved.is(spendEvents[0].event))
+  const spendEvent = spendEvents[0]
+  const spendIndex = (spendEvent.event.data[0] as any).toNumber()
+
+  // payout
+  const payoutEvents = await sendTransaction(
+    relayClient.api.tx.treasury.payout(spendIndex).signAsync(devAccounts.alice),
+  )
+
+  // create blocks on RC and AH to ensure that payout is properly processed
+  await relayClient.dev.newBlock()
+  await checkEvents(payoutEvents, { section: 'treasury', method: 'Paid' }).toMatchSnapshot('payout events')
+  const events = (await relayClient.api.query.system.events()).filter(
+    ({ event }) => event.section === 'treasury' && event.method === 'Paid',
+  )
+  expect(events.length).toBe(1)
+  assert(relayClient.api.events.treasury.Paid.is(events[0].event))
+  const payoutEvent = events[0]
+  const payoutIndex = (payoutEvent.event.data[0] as any).toNumber()
+  expect(payoutIndex).toBe(spendIndex)
+
+  // treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
+  await assetHubClient.dev.newBlock()
+  const balanceAfter = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
+  const balanceAfterAmount = balanceAfter.isNone ? 0n : balanceAfter.unwrap().balance.toBigInt()
+  const balanceBeforeAmount = balanceBefore.isNone ? 0n : balanceBefore.unwrap().balance.toBigInt()
+  expect(balanceAfterAmount - balanceBeforeAmount).toBe(amount)
 }

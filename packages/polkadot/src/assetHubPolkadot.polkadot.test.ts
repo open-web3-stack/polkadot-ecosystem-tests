@@ -1,10 +1,19 @@
-import { describe } from 'vitest'
+import { describe, test } from 'vitest'
 
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
+import { treasurySpendForeignAssetTest } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+
+describe('polkadot & assetHub', async () => {
+  const [polkadotClient, assetHubClient] = await setupNetworks(polkadot, assetHubPolkadot)
+
+  test('Foreign asset spend from Relay treasury is reflected on AssetHub', async () => {
+    await treasurySpendForeignAssetTest(polkadotClient, assetHubClient)
+  })
+})
 
 describe('asset hub & polkadot', async () => {
   const [polkadotClient, ahClient] = await setupNetworks(polkadot, assetHubPolkadot)

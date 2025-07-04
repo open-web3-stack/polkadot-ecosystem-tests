@@ -225,3 +225,26 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
   },
 ]
 `;
+
+exports[`polkadot & assetHub > Foreign asset spend from Relay treasury is reflected on AssetHub > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(rounded 160)",
+      "paymentId": "(rounded 210)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`polkadot & assetHub > Foreign asset spend from Relay treasury is reflected on AssetHub > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
