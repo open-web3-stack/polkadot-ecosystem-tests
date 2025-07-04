@@ -766,6 +766,180 @@ async function minimumThresholdCancelTest<
 }
 
 /**
+ * Test that as_multi with threshold < 2 fails.
+ *
+ * 1. Alice attempts to create a multisig with threshold = 1 using as_multi
+ * 2. Verify that the transaction fails with the appropriate error
+ */
+async function minimumThresholdAsMultiTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice attempts to create a multisig with threshold = 1 (invalid)
+  const threshold = 1 // Invalid threshold - should be >= 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const failedTxEvents = await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when creating multisig with threshold < 2 fails',
+  )
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+}
+
+/**
+ * Test that in a 2-of-2 multisig, the second signatory calling `approveAsMulti` twice results in an error.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
+ * 2. Bob calls `approveAsMulti` to approve the operation (first time)
+ * 3. Bob calls `approveAsMulti` again (second time) - this should fail
+ */
+async function approveAsMultiAlreadyApprovedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+
+  const newMultisigEventData = multisigEvent.event.data
+  const multisigCallHash = newMultisigEventData.callHash
+
+  // Bob calls approveAsMulti to approve the operation
+  const approveTx = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address],
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  await sendTransaction(approveTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Bob calls approveAsMulti again (second time) - this should fail with` AlreadyApproved`
+  const approveTx2 = client.api.tx.multisig.approveAsMulti(
+    threshold,
+    [alice.address],
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+    maxWeight,
+  )
+
+  const failedTxEvents = await sendTransaction(approveTx2.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when repeated approval with approveAsMulti fails',
+  )
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+}
+
+/**
  * Test multisig creation with too few signatories (0) fails with `TooFewSignatories`.
  *
  * 1. Alice attempts to create a multisig with 0 other signatories
@@ -1081,13 +1255,12 @@ async function cancelWithSignatoriesOutOfOrderTest<
 }
 
 /**
- * Test that in a 2-of-2 multisig, the second signatory calling `approveAsMulti` twice results in an error.
+ * Test that in a 2-of-3 multisig, passing signatories out of order during approval results in `SignatoriesOutOfOrder`.
  *
- * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
- * 2. Bob calls `approveAsMulti` to approve the operation (first time)
- * 3. Bob calls `approveAsMulti` again (second time) - this should fail
+ * 1. Alice creates a 2-of-3 multisig with Bob and Charlie using `asMulti`
+ * 2. Bob calls `approveAsMulti` but passes the remaining signatories out of order - this should fail with `SignatoriesOutOfOrder`
  */
-async function approveAsMultiAlreadyApprovedTest<
+async function signatoriesOutOfOrderInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1095,6 +1268,7 @@ async function approveAsMultiAlreadyApprovedTest<
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
+  const charlie = defaultAccountsSr25519.charlie
   const dave = defaultAccountsSr25519.dave
 
   // Fund test accounts
@@ -1108,9 +1282,9 @@ async function approveAsMultiAlreadyApprovedTest<
   const transferAmount = 10e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
-  // Alice creates a multisig with Bob (threshold: 2)
+  // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = [bob.address]
+  const otherSignatories = [bob.address, charlie.address].sort()
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1140,10 +1314,10 @@ async function approveAsMultiAlreadyApprovedTest<
   const newMultisigEventData = multisigEvent.event.data
   const multisigCallHash = newMultisigEventData.callHash
 
-  // Bob calls approveAsMulti to approve the operation
+  // Bob calls `approveAsMulti` but passes the remaining signatories out of order.
   const approveTx = client.api.tx.multisig.approveAsMulti(
     threshold,
-    [alice.address],
+    [alice.address, charlie.address].sort().reverse(),
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1152,28 +1326,12 @@ async function approveAsMultiAlreadyApprovedTest<
     maxWeight,
   )
 
-  await sendTransaction(approveTx.signAsync(bob))
-
-  await client.dev.newBlock()
-
-  // Bob calls approveAsMulti again (second time) - this should fail with` AlreadyApproved`
-  const approveTx2 = client.api.tx.multisig.approveAsMulti(
-    threshold,
-    [alice.address],
-    {
-      height: blockNumber + 1,
-      index: multisigExtrinsicIndex,
-    },
-    multisigCallHash,
-    maxWeight,
-  )
-
-  const failedTxEvents = await sendTransaction(approveTx2.signAsync(bob))
+  const failedTxEvents = await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
   await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when repeated approval with approveAsMulti fails',
+    'events when approval with signatories out of order fails',
   )
 
   // Check for ExtrinsicFailed event
@@ -1188,7 +1346,7 @@ async function approveAsMultiAlreadyApprovedTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+  assert(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
 }
 
 /**
@@ -1286,12 +1444,14 @@ async function senderInSignatoriesTest<
 }
 
 /**
- * Test that in a 2-of-3 multisig, passing signatories out of order during approval results in `SignatoriesOutOfOrder`.
+ * Test that attempting to cancel a non-existent multisig operation fails.
  *
- * 1. Alice creates a 2-of-3 multisig with Bob and Charlie using `asMulti`
- * 2. Bob calls `approveAsMulti` but passes the remaining signatories out of order - this should fail with `SignatoriesOutOfOrder`
+ * 1. Alice creates a 2-of-2 multisig with Bob
+ * 2. Alice attempts to cancel it with wrong signatories (Charlie instead of Bob)
+ * 3. Alice attempts to cancel it with a bogus call hash
+ * 4. Verify that both attempts fail with the appropriate error
  */
-async function signatoriesOutOfOrderInApprovalTest<
+async function notFoundCancelTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1310,12 +1470,12 @@ async function signatoriesOutOfOrderInApprovalTest<
   })
 
   // Create a simple call to transfer funds to Dave
-  const transferAmount = 10e10
+  const transferAmount = 100e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
-  // Alice creates a multisig with Bob and Charlie (threshold: 2)
+  // Alice creates a 2-of-2 multisig with Bob
   const threshold = 2
-  const otherSignatories = [bob.address, charlie.address].sort()
+  const otherSignatories = [bob.address]
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1341,52 +1501,86 @@ async function signatoriesOutOfOrderInApprovalTest<
 
   assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
   const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
 
-  const newMultisigEventData = multisigEvent.event.data
-  const multisigCallHash = newMultisigEventData.callHash
+  // First attempt: Alice tries to cancel with wrong signatories (Charlie instead of Bob)
 
-  // Bob calls `approveAsMulti` but passes the remaining signatories out of order.
-  const approveTx = client.api.tx.multisig.approveAsMulti(
+  const cancelTx1 = client.api.tx.multisig.cancelAsMulti(
     threshold,
-    [alice.address, charlie.address].sort().reverse(),
+    [charlie.address], // Wrong signatory - should be [bob.address]
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
     },
     multisigCallHash,
-    maxWeight,
   )
 
-  const failedTxEvents = await sendTransaction(approveTx.signAsync(bob))
+  const failedTxEvents1 = await sendTransaction(cancelTx1.signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when approval with signatories out of order fails',
+  await checkEvents(failedTxEvents1, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when cancelling multisig with wrong signatories fails',
   )
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
 
-  const [ev] = events.filter((record) => {
+  const [ev1] = events.filter((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
-  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
-  const dispatchError = ev.event.data.dispatchError
+  assert(client.api.events.system.ExtrinsicFailed.is(ev1.event))
+  const dispatchError1 = ev1.event.data.dispatchError
 
-  assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  assert(dispatchError1.isModule)
+  assert(client.api.errors.multisig.NotFound.is(dispatchError1.asModule))
+
+  // Second attempt: Alice tries to cancel with a bogus call hash
+
+  const bogusCallHash = new Uint8Array(32).fill(0) // All zeros
+  const cancelTx2 = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    otherSignatories, // Correct signatories
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    bogusCallHash,
+  )
+
+  const failedTxEvents2 = await sendTransaction(cancelTx2.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when cancelling multisig with bogus call hash fails',
+  )
+
+  // Check for ExtrinsicFailed event
+  events = await client.api.query.system.events()
+
+  const [ev2] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev2.event))
+  const dispatchError2 = ev2.event.data.dispatchError
+
+  assert(dispatchError2.isModule)
+  assert(client.api.errors.multisig.NotFound.is(dispatchError2.asModule))
 }
 
 /**
- * Test that in a 2-of-2 multisig, passing a timepoint with the first call fails.
+ * Test that only the original depositor can cancel a multisig operation.
  *
- * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti` but passes a timepoint
- * 2. This should fail with `UnexpectedTimepoint` error
+ * 1. Alice creates a 2-of-2 multisig with Bob
+ * 2. Bob attempts to cancel the multisig operation (but he's not the depositor)
+ * 3. Verify that the cancellation fails with `NotOwner` error
  */
-async function unexpectedTimepointTest<
+async function notOwnerCancelTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1404,40 +1598,60 @@ async function unexpectedTimepointTest<
   })
 
   // Create a simple call to transfer funds to Dave
-  const transferAmount = 10e10
+  const transferAmount = 100e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
-  // Alice creates a multisig with Bob (threshold: 2)
+  // Alice creates a 2-of-2 multisig with Bob
   const threshold = 2
   const otherSignatories = [bob.address]
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  // Alice calls asMulti but passes a timepoint (which should be null for first call)
   const asMultiTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
-    {
-      height: blockNumber,
-      index: 0,
-    }, // Timepoint should be null for first call
+    null, // No timepoint for first approval
     transferCall.method.toHex(),
     maxWeight,
   )
 
-  const approveEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Alice starts multisig operation with `approveAsMulti`')
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
+
+  // Bob attempts to cancel the multisig operation (but he's not the depositor)
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    [alice.address], // Correct signatories for when *Bob* tries to cancel
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  const failedTxEvents = await sendTransaction(cancelTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when non-depositor tries to cancel multisig fails',
+  )
 
   // Check for ExtrinsicFailed event
-  const events = await client.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const [ev] = events.filter((record) => {
     const { event } = record
@@ -1448,7 +1662,7 @@ async function unexpectedTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule))
+  assert(client.api.errors.multisig.NotOwner.is(dispatchError.asModule))
 }
 
 /**
@@ -1528,100 +1742,6 @@ async function noTimepointTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.multisig.NoTimepoint.is(dispatchError.asModule))
-}
-
-/**
- * Test that in a 2-of-2 multisig, passing a max weight that is too low results will cause the call to fail.
- *
- * 1. Alice creates a 2-of-2 multisig with Bob
- * 2. Bob approves it, but passing an insufficient max weight
- * 3. Verify that the multisig operation fails
- */
-async function maxWeightTooLowTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const dave = defaultAccountsSr25519.dave
-
-  // Fund test accounts
-  await client.dev.setStorage({
-    System: {
-      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
-    },
-  })
-
-  // Create a simple call to transfer funds to Dave
-  const transferAmount = 10e10
-  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
-
-  // Alice creates a multisig with Bob (threshold: 2)
-  const threshold = 2
-  const otherSignatories = [bob.address]
-  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
-
-  const asMultiTx = client.api.tx.multisig.asMulti(
-    threshold,
-    otherSignatories,
-    null, // No timepoint for first approval
-    transferCall.method.toHex(),
-    maxWeight,
-  )
-
-  await sendTransaction(asMultiTx.signAsync(alice))
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-
-  await client.dev.newBlock()
-
-  // Get the multisig creation event to extract multisig account address and call hash
-  let events = await client.api.query.system.events()
-
-  const [multisigEvent] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'multisig'
-  })
-
-  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
-  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
-
-  // Bob calls asMulti to approve it (final operation) but passes max weight of (1, 1)
-  const approveTx = client.api.tx.multisig.asMulti(
-    threshold,
-    [alice.address],
-    {
-      height: blockNumber + 1,
-      index: multisigExtrinsicIndex,
-    },
-    transferCall.method.toHex(),
-    { refTime: 1, proofSize: 1 }, // Max weight too low
-  )
-
-  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
-
-  await client.dev.newBlock()
-
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with low weight')
-
-  // Check for ExtrinsicFailed event
-  events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
-  const dispatchError = ev.event.data.dispatchError
-
-  assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule))
 }
 
 /**
@@ -1756,14 +1876,12 @@ async function wrongTimepointTest<
 }
 
 /**
- * Test that attempting to cancel a non-existent multisig operation fails.
+ * Test that in a 2-of-2 multisig, passing a timepoint with the first call fails.
  *
- * 1. Alice creates a 2-of-2 multisig with Bob
- * 2. Alice attempts to cancel it with wrong signatories (Charlie instead of Bob)
- * 3. Alice attempts to cancel it with a bogus call hash
- * 4. Verify that both attempts fail with the appropriate error
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti` but passes a timepoint
+ * 2. This should fail with `UnexpectedTimepoint` error
  */
-async function notFoundCancelTest<
+async function unexpectedTimepointTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1771,7 +1889,6 @@ async function notFoundCancelTest<
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
   const dave = defaultAccountsSr25519.dave
 
   // Fund test accounts
@@ -1782,156 +1899,37 @@ async function notFoundCancelTest<
   })
 
   // Create a simple call to transfer funds to Dave
-  const transferAmount = 100e10
+  const transferAmount = 10e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
-  // Alice creates a 2-of-2 multisig with Bob
+  // Alice creates a multisig with Bob (threshold: 2)
   const threshold = 2
   const otherSignatories = [bob.address]
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
-  const asMultiTx = client.api.tx.multisig.asMulti(
-    threshold,
-    otherSignatories,
-    null, // No timepoint for first approval
-    transferCall.method.toHex(),
-    maxWeight,
-  )
-
-  await sendTransaction(asMultiTx.signAsync(alice))
   const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
-  await client.dev.newBlock()
-
-  // Get the multisig creation event to extract multisig account address and call hash
-  let events = await client.api.query.system.events()
-
-  const [multisigEvent] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'multisig'
-  })
-
-  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
-  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
-  const multisigCallHash = multisigEvent.event.data.callHash
-
-  // First attempt: Alice tries to cancel with wrong signatories (Charlie instead of Bob)
-
-  const cancelTx1 = client.api.tx.multisig.cancelAsMulti(
-    threshold,
-    [charlie.address], // Wrong signatory - should be [bob.address]
-    {
-      height: blockNumber + 1,
-      index: multisigExtrinsicIndex,
-    },
-    multisigCallHash,
-  )
-
-  const failedTxEvents1 = await sendTransaction(cancelTx1.signAsync(alice))
-
-  await client.dev.newBlock()
-
-  await checkEvents(failedTxEvents1, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when cancelling multisig with wrong signatories fails',
-  )
-
-  // Check for ExtrinsicFailed event
-  events = await client.api.query.system.events()
-
-  const [ev1] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  assert(client.api.events.system.ExtrinsicFailed.is(ev1.event))
-  const dispatchError1 = ev1.event.data.dispatchError
-
-  assert(dispatchError1.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError1.asModule))
-
-  // Second attempt: Alice tries to cancel with a bogus call hash
-
-  const bogusCallHash = new Uint8Array(32).fill(0) // All zeros
-  const cancelTx2 = client.api.tx.multisig.cancelAsMulti(
-    threshold,
-    otherSignatories, // Correct signatories
-    {
-      height: blockNumber + 1,
-      index: multisigExtrinsicIndex,
-    },
-    bogusCallHash,
-  )
-
-  const failedTxEvents2 = await sendTransaction(cancelTx2.signAsync(alice))
-
-  await client.dev.newBlock()
-
-  await checkEvents(failedTxEvents2, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when cancelling multisig with bogus call hash fails',
-  )
-
-  // Check for ExtrinsicFailed event
-  events = await client.api.query.system.events()
-
-  const [ev2] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  assert(client.api.events.system.ExtrinsicFailed.is(ev2.event))
-  const dispatchError2 = ev2.event.data.dispatchError
-
-  assert(dispatchError2.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError2.asModule))
-}
-
-/**
- * Test that as_multi with threshold < 2 fails.
- *
- * 1. Alice attempts to create a multisig with threshold = 1 using as_multi
- * 2. Verify that the transaction fails with the appropriate error
- */
-async function minimumThresholdAsMultiTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const dave = defaultAccountsSr25519.dave
-
-  // Fund test accounts
-  await client.dev.setStorage({
-    System: {
-      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
-    },
-  })
-
-  // Create a simple call to transfer funds to Dave
-  const transferAmount = 100e10
-  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
-
-  // Alice attempts to create a multisig with threshold = 1 (invalid)
-  const threshold = 1 // Invalid threshold - should be >= 2
-  const otherSignatories = [bob.address]
-  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
-
+  // Alice calls asMulti but passes a timepoint (which should be null for first call)
   const asMultiTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
-    null, // No timepoint for first approval
+    {
+      height: blockNumber,
+      index: 0,
+    }, // Timepoint should be null for first call
     transferCall.method.toHex(),
     maxWeight,
   )
 
-  const failedTxEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  const approveEvents = await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when creating multisig with threshold < 2 fails',
-  )
+  await checkEvents(approveEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Alice starts multisig operation with `approveAsMulti`')
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -1945,17 +1943,17 @@ async function minimumThresholdAsMultiTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+  assert(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule))
 }
 
 /**
- * Test that only the original depositor can cancel a multisig operation.
+ * Test that in a 2-of-2 multisig, passing a max weight that is too low results will cause the call to fail.
  *
  * 1. Alice creates a 2-of-2 multisig with Bob
- * 2. Bob attempts to cancel the multisig operation (but he's not the depositor)
- * 3. Verify that the cancellation fails with `NotOwner` error
+ * 2. Bob approves it, but passing an insufficient max weight
+ * 3. Verify that the multisig operation fails
  */
-async function notOwnerCancelTest<
+async function maxWeightTooLowTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1973,10 +1971,10 @@ async function notOwnerCancelTest<
   })
 
   // Create a simple call to transfer funds to Dave
-  const transferAmount = 100e10
+  const transferAmount = 10e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
-  // Alice creates a 2-of-2 multisig with Bob
+  // Alice creates a multisig with Bob (threshold: 2)
   const threshold = 2
   const otherSignatories = [bob.address]
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
@@ -2004,26 +2002,28 @@ async function notOwnerCancelTest<
 
   assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
   const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
-  const multisigCallHash = multisigEvent.event.data.callHash
 
-  // Bob attempts to cancel the multisig operation (but he's not the depositor)
-  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+  // Bob calls asMulti to approve it (final operation) but passes max weight of (1, 1)
+  const approveTx = client.api.tx.multisig.asMulti(
     threshold,
-    [alice.address], // Correct signatories for when *Bob* tries to cancel
+    [alice.address],
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
     },
-    multisigCallHash,
+    transferCall.method.toHex(),
+    { refTime: 1, proofSize: 1 }, // Max weight too low
   )
 
-  const failedTxEvents = await sendTransaction(cancelTx.signAsync(bob))
+  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when non-depositor tries to cancel multisig fails',
-  )
+  await checkEvents(approveEvents, 'multisig')
+    .redact({
+      redactKeys: /height/,
+    })
+    .toMatchSnapshot('events when Bob executes multisig operation with low weight')
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2037,7 +2037,7 @@ async function notOwnerCancelTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.NotOwner.is(dispatchError.asModule))
+  assert(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule))
 }
 
 export function multisigE2ETests<
