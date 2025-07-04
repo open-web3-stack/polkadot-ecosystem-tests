@@ -258,38 +258,6 @@ exports[`BridgeHubPolkadot Multisig > multisig approval with remaining signatori
 ]
 `;
 
-exports[`BridgeHubPolkadot Multisig > multisig cancellation > events when Alice cancels multisig 1`] = `
-[
-  {
-    "data": {
-      "callHash": "(hash)",
-      "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
-      "timepoint": {
-        "height": "(redacted)",
-        "index": 2,
-      },
-    },
-    "method": "MultisigCancelled",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`BridgeHubPolkadot Multisig > multisig cancellation > events when Alice creates multisig for cancellation 1`] = `
-[
-  {
-    "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
-    },
-    "method": "NewMultisig",
-    "section": "multisig",
-  },
-]
-`;
-
 exports[`BridgeHubPolkadot Multisig > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
 [
   {
@@ -350,6 +318,38 @@ exports[`BridgeHubPolkadot Multisig > multisig cancellation with threshold < 2 f
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`BridgeHubPolkadot Multisig > multisig cancellation works > events when Alice cancels multisig 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigCancelled",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`BridgeHubPolkadot Multisig > multisig cancellation works > events when Alice creates multisig for cancellation 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
   },
 ]
 `;
