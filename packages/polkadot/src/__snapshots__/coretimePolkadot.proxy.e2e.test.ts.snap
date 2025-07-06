@@ -1256,7 +1256,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0f000000",
+            "error": "0x09000000",
             "index": 50,
           },
         },
