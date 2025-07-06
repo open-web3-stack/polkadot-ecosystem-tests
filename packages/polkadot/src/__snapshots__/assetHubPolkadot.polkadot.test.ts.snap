@@ -230,7 +230,7 @@ exports[`polkadot & assetHub > Foreign asset spend from Relay treasury is reflec
 [
   {
     "data": {
-      "index": "(rounded 160)",
+      "index": 160,
       "paymentId": "(rounded 210)",
     },
     "method": "Paid",
