@@ -8,6 +8,7 @@ export * from './people.js'
 export * from './proxy.js'
 export * from './scheduler.js'
 export * from './staking.js'
+export * from './treasury.js'
 export * from './vesting.js'
 
 export * from './types.js'
