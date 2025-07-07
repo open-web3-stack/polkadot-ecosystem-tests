@@ -1,55 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AssetHubKusama Multisig > a approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x06000000",
-          "index": 41,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`AssetHubKusama Multisig > a redundant approval fails > events when redundant approval fails 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x06000000",
-          "index": 41,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
 exports[`AssetHubKusama Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
 
 exports[`AssetHubKusama Multisig > approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
@@ -199,31 +149,6 @@ exports[`AssetHubKusama Multisig > cancellation with sender in signatories fails
 ]
 `;
 
-exports[`AssetHubKusama Multisig > cancellation with sender in signatories fails > events when cancellation with sender in signatories fails 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x06000000",
-          "index": 41,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 740000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
 exports[`AssetHubKusama Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
 [
   {
@@ -344,45 +269,6 @@ exports[`AssetHubKusama Multisig > final approval with \`approveAsMulti\` does n
 
 exports[`AssetHubKusama Multisig > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
-exports[`AssetHubKusama Multisig > multisig approval with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
-[
-  {
-    "data": {
-      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "callHash": "(hash)",
-      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
-    },
-    "method": "NewMultisig",
-    "section": "multisig",
-  },
-]
-`;
-
-exports[`AssetHubKusama Multisig > multisig approval with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x05000000",
-          "index": 41,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1900000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
 exports[`AssetHubKusama Multisig > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
 [
   {
@@ -486,6 +372,45 @@ exports[`AssetHubKusama Multisig > multisig creation with too many signatories f
       "dispatchError": {
         "Module": {
           "error": "0x04000000",
+          "index": 41,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`AssetHubKusama Multisig > multisig execution with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`AssetHubKusama Multisig > multisig execution with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x05000000",
           "index": 41,
         },
       },
