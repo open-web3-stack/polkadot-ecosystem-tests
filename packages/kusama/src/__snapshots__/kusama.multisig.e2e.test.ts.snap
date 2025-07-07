@@ -1,5 +1,30 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Multisig > a approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Multisig > a redundant approval fails > events when redundant approval fails 1`] = `
 [
   {
@@ -26,6 +51,31 @@ exports[`Kusama Multisig > a redundant approval fails > events when redundant ap
 `;
 
 exports[`Kusama Multisig > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+
+exports[`Kusama Multisig > approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
 
 exports[`Kusama Multisig > approval with signatories out of order fails > events when approval with signatories out of order fails 1`] = `
 [
@@ -124,6 +174,56 @@ exports[`Kusama Multisig > beginning multisig approval with \`approveAsMulti\` w
 ]
 `;
 
+exports[`Kusama Multisig > cancellation with sender in signatories fails > events for cancellation with sender in signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > cancellation with sender in signatories fails > events when cancellation with sender in signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Multisig > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
 [
   {
@@ -181,6 +281,31 @@ exports[`Kusama Multisig > creating a multisig with threshold < 2 fails > events
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
+          "index": 31,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 1000000)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Multisig > execution with sender in signatories fails > events when creation with sender in signatories fails 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
           "index": 31,
         },
       },

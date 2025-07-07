@@ -1061,13 +1061,13 @@ async function tooManySignatoriesTest<
 }
 
 /**
- * Test multisig approval with remaining signatories out of order fails.
+ * Test multisig execution with remaining signatories out of order fails.
  *
  * 1. Alice creates a 2-of-3 multisig with Bob and Charlie (in correct order)
- * 2. Bob attempts to approve but passes the remaining signatories out of order
- * 3. Verify that the approval fails with an appropriate error
+ * 2. Bob attempts to execute the oepration but passes the remaining signatories out of order
+ * 3. Verify that the execution fails with an appropriate error
  */
-async function signatoriesOutOfOrderTest<
+async function signatoriesOutOfOrderInExecutionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1121,7 +1121,7 @@ async function signatoriesOutOfOrderTest<
   assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
   const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
 
-  // Bob attempts to approve but passes remaining signatories out of order
+  // Bob attempts to execute but passes remaining signatories out of order
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
     [charlie.address, alice.address]
@@ -1354,13 +1354,166 @@ async function signatoriesOutOfOrderInApprovalTest<
 }
 
 /**
+ * Test that in a 2-of-2 multisig creation, including the sender in the signatories list will cause an error.
+ *
+ * 1. Alice calls `asMulti` to create a 2-of-2 multisig with Bob, but includes herself in the signatories list
+ * 2. Verify that the multisig creation fails with `SenderInSignatories` error
+ */
+async function senderInSignatoriesInExecutionTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice attempts to create a multisig with Bob (threshold: 2), but includes herself in the signatories
+  const threshold = 2
+  const otherSignatories = [alice.address, bob.address].sort() // Alice includes herself!
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  const failedTxEvents = await sendTransaction(asMultiTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events when creation with sender in signatories fails',
+  )
+
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+}
+
+/**
+ * Test that in a 2-of-2 multisig cancellation, including the sender in the signatories list will cause an error.
+ *
+ * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
+ * 2. Alice calls `cancelAsMulti` to cancel the operation, but includes herself in the signatories list
+ * 3. Verify that the multisig cancellation fails with `SenderInSignatories` error
+ */
+async function senderInSignatoriesInCancellationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
+  const dave = defaultAccountsSr25519.dave
+
+  // Fund test accounts
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  // Create a simple call to transfer funds to Dave
+  const transferAmount = 10e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
+
+  // Alice creates a multisig with Bob (threshold: 2)
+  const threshold = 2
+  const otherSignatories = [bob.address]
+  const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
+
+  const asMultiTx = client.api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    null, // No timepoint for first approval
+    transferCall.method.toHex(),
+    maxWeight,
+  )
+
+  await sendTransaction(asMultiTx.signAsync(alice))
+  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  await client.dev.newBlock()
+
+  // Get the multisig creation event to extract multisig account address and call hash
+  let events = await client.api.query.system.events()
+
+  const [multisigEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'multisig'
+  })
+
+  assert(client.api.events.multisig.NewMultisig.is(multisigEvent.event))
+  const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
+  const multisigCallHash = multisigEvent.event.data.callHash
+
+  // Alice calls cancelAsMulti to cancel the operation, but includes herself in the signatories.
+  const cancelTx = client.api.tx.multisig.cancelAsMulti(
+    threshold,
+    [alice.address, bob.address].sort(), // Alice includes herself!
+    {
+      height: blockNumber + 1,
+      index: multisigExtrinsicIndex,
+    },
+    multisigCallHash,
+  )
+
+  const failedTxEvents = await sendTransaction(cancelTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'events for cancellation with sender in signatories fails',
+  )
+
+  events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+}
+
+/**
  * Test that in a 2-of-2 multisig, a signatory including themselves in the signatory list will cause an error.
  *
  * 1. Alice creates a 2-of-2 multisig with Bob using `asMulti`
  * 2. Bob calls `approveAsMulti` to approve the operation, but includes himself in the signatory list
  * 3. Verify that the multisig operation has not executed
  */
-async function senderInSignatoriesTest<
+async function senderInSignatoriesInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -1430,7 +1583,7 @@ async function senderInSignatoriesTest<
   await client.dev.newBlock()
 
   await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events when redundant approval fails',
+    'events when approval with sender in signatories fails',
   )
 
   events = await client.api.query.system.events()
@@ -2099,8 +2252,8 @@ export function multisigE2ETests<
       await tooManySignatoriesTest(chain)
     })
 
-    test('multisig approval with remaining signatories out of order fails', async () => {
-      await signatoriesOutOfOrderTest(chain)
+    test('multisig execution with remaining signatories out of order fails', async () => {
+      await signatoriesOutOfOrderInExecutionTest(chain)
     })
 
     test('multisig cancellation with remaining signatories out of order fails', async () => {
@@ -2111,8 +2264,16 @@ export function multisigE2ETests<
       await signatoriesOutOfOrderInApprovalTest(chain)
     })
 
-    test('a redundant approval fails', async () => {
-      await senderInSignatoriesTest(chain)
+    test('execution with sender in signatories fails', async () => {
+      await senderInSignatoriesInExecutionTest(chain)
+    })
+
+    test('cancellation with sender in signatories fails', async () => {
+      await senderInSignatoriesInCancellationTest(chain)
+    })
+
+    test('approval with sender in signatories fails', async () => {
+      await senderInSignatoriesInApprovalTest(chain)
     })
 
     test('cancelling a non-existent multisig operation fails', async () => {
