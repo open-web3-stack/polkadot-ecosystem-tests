@@ -138,8 +138,8 @@ exports[`Polkadot Multisig > cancellation with sender in signatories fails > eve
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

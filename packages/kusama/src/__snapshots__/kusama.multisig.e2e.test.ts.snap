@@ -131,15 +131,15 @@ exports[`Kusama Multisig > cancellation with sender in signatories fails > event
       "dispatchError": {
         "Module": {
           "error": "0x06000000",
-          "index": 31,
+          "index": "(rounded 30)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 630000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

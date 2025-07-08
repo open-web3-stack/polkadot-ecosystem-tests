@@ -131,15 +131,15 @@ exports[`BridgeHubPolkadot Multisig > cancellation with sender in signatories fa
       "dispatchError": {
         "Module": {
           "error": "0x06000000",
-          "index": 41,
+          "index": "(rounded 40)",
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

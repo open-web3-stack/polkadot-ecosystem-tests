@@ -1488,9 +1488,11 @@ async function senderInSignatoriesInCancellationTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'events for cancellation with sender in signatories fails',
-  )
+  await checkEvents(failedTxEvents, { section: 'system', method: 'ExtrinsicFailed' })
+    .redact({
+      number: 1,
+    })
+    .toMatchSnapshot('events for cancellation with sender in signatories fails')
 
   events = await client.api.query.system.events()
 
