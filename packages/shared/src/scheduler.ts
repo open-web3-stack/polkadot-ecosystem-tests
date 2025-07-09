@@ -672,7 +672,7 @@ async function scheduleLookupCall<
     client,
     { hash: preimageHash, len: encodedProposal.encodedLength },
     { system: 'Root' },
-    true,
+    'SysPara',
   )
 
   const agenda = await client.api.query.scheduler.agenda(currBlockNumber)
@@ -1407,12 +1407,40 @@ export function schedulerE2ETests<
       await scheduleNamedPeriodicTask(chain)
     })
 
+    test('scheduling a periodic task is possible', async () => {
+      await schedulePeriodicTask(chain)
+    })
+
+    test('scheduling a named periodic task that executes multiple times', async () => {
+      await scheduleNamedPeriodicTask(chain)
+    })
+
     test('scheduling a named task after a delay is possible', async () => {
       await scheduleNamedTaskAfterDelay(chain)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
       await scheduledOverweightCallFails(chain)
+    })
+
+    test('execution of scheduled preimage lookup call works', async () => {
+      await scheduleLookupCall(chain)
+    })
+
+    test('scheduling a call using a preimage that gets removed', async () => {
+      await schedulePreimagedCall(chain)
+    })
+
+    test('priority-based execution of weighted tasks works correctly', async () => {
+      await schedulePriorityWeightedTasks(chain)
+    })
+
+    test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
+      await scheduleWithRetryConfig(chain)
+    })
+
+    test('setting and canceling retry configuration for named scheduled tasks', async () => {
+      await scheduleNamedWithRetryConfig(chain)
     })
 
     test('execution of scheduled preimage lookup call works', async () => {

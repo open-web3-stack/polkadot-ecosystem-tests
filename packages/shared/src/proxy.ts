@@ -991,8 +991,8 @@ async function buildDisallowedProxyActions<
     })
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildVestingAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildVestingAction(),
     ])
     .with('CancelProxy', () => {
       const actions = [
