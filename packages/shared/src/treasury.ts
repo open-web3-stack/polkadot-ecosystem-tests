@@ -35,7 +35,7 @@ export async function treasurySpendForeignAssetTest<
   const amount = 123123123123n
   const treasurySpendCall =
     '0x130504000100a10f0002043205011f07b3c3b5aa1c0400010100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00'
-  await scheduleInlineCallWithOrigin(relayClient, treasurySpendCall, { system: 'Root' })
+  await scheduleInlineCallWithOrigin(relayClient, treasurySpendCall, { Origins: 'BigSpender' })
   await relayClient.dev.newBlock()
   await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
     // values (e.g. index) inside data increase over time,
