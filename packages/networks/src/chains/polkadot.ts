@@ -37,7 +37,7 @@ export const polkadot = defineChain({
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: 'wss://kusama.dotters.network',
+  endpoint: 'wss://rpc.ibp.network/kusama',
   custom: custom.kusama,
   initStorages: getInitStorages(),
   isRelayChain: true,
