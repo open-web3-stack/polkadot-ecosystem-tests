@@ -1363,9 +1363,9 @@ async function cancelDeferredSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  assert(aliceFundsPreSlash.data.reserved.eq(bondAmount))
-  assert(bobFundsPreSlash.data.reserved.eq(bondAmount))
-  assert(charlieFundsPreSlash.data.reserved.eq(bondAmount))
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
 
   await client.dev.newBlock()
 
