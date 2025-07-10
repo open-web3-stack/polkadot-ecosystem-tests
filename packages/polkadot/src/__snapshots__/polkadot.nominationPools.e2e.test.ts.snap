@@ -91,6 +91,10 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > settin
 ]
 `;
 
+exports[`Polkadot Nomination Pools > nomination pool global config test > system events 1`] = `[]`;
+
+exports[`Polkadot Nomination Pools > nomination pool global config test > system events 2`] = `[]`;
+
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
 [
   {
