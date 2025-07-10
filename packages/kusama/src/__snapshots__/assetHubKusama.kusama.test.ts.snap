@@ -113,7 +113,7 @@ exports[`kusama & assetHubKusama > assetHubKusama transfer KSM to kusama > to ch
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 320000000)",
+        "refTime": "(rounded 330000000)",
       },
     },
     "method": "Processed",
@@ -321,7 +321,7 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 166000000)",
+            "refTime": "(rounded 172000000)",
           },
         },
       },

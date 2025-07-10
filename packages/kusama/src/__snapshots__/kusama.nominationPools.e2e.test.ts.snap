@@ -15,7 +15,7 @@ exports[`Kusama Nomination Pools > nomination pool creation with insufficient fu
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 3800000000)",
+          "refTime": "(rounded 3700000000)",
         },
       },
     },
@@ -121,6 +121,13 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events
   },
   {
     "data": {
+      "caller": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "PoolNominatorChilled",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
@@ -151,7 +158,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commis
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 910000000)",
+          "refTime": "(rounded 940000000)",
         },
       },
     },
@@ -253,12 +260,19 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination p
 [
   {
     "data": {
+      "caller": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "PoolNominationMade",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 52000)",
-          "refTime": "(rounded 1900000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -401,7 +415,18 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
 ]
 `;
 
-exports[`Kusama Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;
+exports[`Kusama Nomination Pools > nomination pool metadata test > set metadata events 1`] = `
+[
+  {
+    "data": {
+      "caller": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "poolId": "(rounded 220)",
+    },
+    "method": "MetadataUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
 
 exports[`Kusama Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
 [
@@ -451,7 +476,7 @@ exports[`Kusama Nomination Pools > nomination pools update roles test > update r
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 11000)",
-          "refTime": "(rounded 680000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
