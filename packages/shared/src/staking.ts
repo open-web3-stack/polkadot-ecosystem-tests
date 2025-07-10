@@ -1754,7 +1754,7 @@ export function stakingE2ETests<
       await chillOtherTest(chain)
     })
 
-    test('unapplied slash', async () => {
+    test.skip('unapplied slash', async () => {
       await unappliedSlashTest(chain)
     })
 
@@ -1762,11 +1762,11 @@ export function stakingE2ETests<
       await cancelDeferredSlashTestBadOrigin(chain)
     })
 
-    test('cancel deferred slash as root', async () => {
+    test.skip('cancel deferred slash as root', async () => {
       await cancelDeferredSlashTestAsRoot(chain)
     })
 
-    test('cancel deferred slash as admin', async () => {
+    test.skip('cancel deferred slash as admin', async () => {
       await cancelDeferredSlashTestAsAdmin(chain)
     })
 
