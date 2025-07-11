@@ -3,6 +3,7 @@ import { assert, describe, expect, test } from 'vitest'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
+import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
@@ -28,14 +29,59 @@ export async function treasurySpendForeignAssetTest<
       ],
     },
   })
+  const ASSET_HUB_PARA_ID = 1000
+  const ASSETS_PALLET_ID = 50
   const USDT_ID = 1984
   const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, devAccounts.alice.address)
 
   // amount is encoded into the call
   const amount = 123123123123n
-  const treasurySpendCall =
-    '0x130504000100a10f0002043205011f07b3c3b5aa1c0400010100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d00'
-  await scheduleInlineCallWithOrigin(relayClient, treasurySpendCall, { Origins: 'BigSpender' })
+  const assetKind = {
+    v4: {
+      location: {
+        parents: 0,
+        interior: {
+          x1: [
+            {
+              parachain: ASSET_HUB_PARA_ID,
+            },
+          ],
+        },
+      },
+      assetId: {
+        parents: 0,
+        interior: {
+          x2: [
+            {
+              palletInstance: ASSETS_PALLET_ID,
+            },
+            {
+              generalIndex: USDT_ID,
+            },
+          ],
+        },
+      },
+    },
+  } as unknown as FrameSupportTokensFungibleUnionOfNativeOrWithId
+  const beneficiary = {
+    v4: {
+      parents: 0,
+      interior: {
+        x1: [
+          {
+            accountId32: {
+              network: null,
+              id: devAccounts.alice.addressRaw,
+            },
+          },
+        ],
+      },
+    },
+  } as unknown as XcmVersionedLocation
+  // validFrom - null, which means immediately.
+  const call = relayClient.api.tx.treasury.spend(assetKind, amount, beneficiary, null)
+  const hexCall = call.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexCall, { Origins: 'BigSpender' })
   await relayClient.dev.newBlock()
   await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
     // values (e.g. index) inside data increase over time,
