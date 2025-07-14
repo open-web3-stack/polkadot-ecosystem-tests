@@ -2,12 +2,12 @@
 	"name": "@e2e-test/shared",
 	"type": "module",
 	"dependencies": {
-		"@acala-network/chopsticks": "^1.1.0",
-		"@acala-network/chopsticks-testing": "^1.1.0",
+		"@acala-network/chopsticks": "^1.2.0",
+		"@acala-network/chopsticks-testing": "^1.2.0",
 		"@e2e-test/networks": "workspace:*",
-		"@polkadot/api": "^16.1.1",
-		"@polkadot/types": "^16.1.1",
-		"@polkadot/types-augment": "^16.1.1"
+		"@polkadot/api": "^16.4.1",
+		"@polkadot/types": "^16.4.1",
+		"@polkadot/types-augment": "^16.4.1"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
