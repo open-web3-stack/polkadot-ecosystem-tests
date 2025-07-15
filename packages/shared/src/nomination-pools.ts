@@ -869,21 +869,7 @@ async function nominationPoolGlobalConfigTest<
 
     await client.dev.newBlock()
 
-    // Because this extrinsic was executed via the scheduler technique, its events won't be available
-    // through `checkEvents` - hence the need for this event extraction process.
-    const events = await client.api.query.system.events()
-
-    const nomPoolsEvents = events.filter((record) => {
-      const { event } = record
-      return event.section === 'nominationPools'
-    })
-
-    // TODO: `set_configs` does not emit events at this point. Fix this, after making a PR to `polkadot-sdk` and it flows downstream :)
-    assert(nomPoolsEvents.length === 1, 'setting global nomination pool configs should emit 1 event')
-
-    const nomPoolsEvent = nomPoolsEvents[0]
-    assert(client.api.events.nominationPools.GlobalParamsUpdated.is(nomPoolsEvent.event))
-    await check(nomPoolsEvent).toMatchSnapshot('setting global nomination pool configs events')
+    checkSystemEvents(client, 'nominationPools').toMatchSnapshot()
 
     const postMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
     const postMinCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()

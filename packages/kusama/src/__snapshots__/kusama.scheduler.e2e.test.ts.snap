@@ -10,7 +10,7 @@ exports[`Kusama Scheduler > cancel named scheduled task with wrong origin > even
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 880000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 850000000)",
+          "refTime": "(rounded 870000000)",
         },
       },
     },
@@ -141,6 +141,13 @@ exports[`Kusama Scheduler > priority-based execution of weighted tasks works cor
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(rounded 29000000)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -154,7 +161,7 @@ exports[`Kusama Scheduler > schedule named task with wrong origin > events when 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 760000000)",
+          "refTime": "(rounded 780000000)",
         },
       },
     },
@@ -174,7 +181,7 @@ exports[`Kusama Scheduler > schedule task with wrong origin > events when schedu
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 630000000)",
+          "refTime": "(rounded 650000000)",
         },
       },
     },

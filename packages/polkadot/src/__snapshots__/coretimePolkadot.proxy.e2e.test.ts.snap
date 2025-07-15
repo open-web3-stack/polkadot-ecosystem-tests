@@ -346,6 +346,39 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > balances.burn: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > broker.purchase_credit: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > collator_selection.register_as_candidate: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet balances, call burn 1`] = `
 [
   {
@@ -425,7 +458,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 16000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -458,8 +491,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -491,8 +524,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -500,6 +533,50 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.apply_authorized_upgrade: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.remark: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.remark_with_event: Broker 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
@@ -543,7 +620,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 16000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -576,8 +653,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -609,8 +686,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -618,6 +695,50 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > balances.burn: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
@@ -661,7 +782,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 16000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -694,8 +815,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -727,8 +848,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -736,6 +857,72 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.apply_authorized_upgrade: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark_with_event: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > balances.burn: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > broker.purchase_credit: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > collator_selection.register_as_candidate: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet balances, call burn 1`] = `
@@ -817,7 +1004,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 16000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -850,8 +1037,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -883,8 +1070,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -892,6 +1079,50 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.apply_authorized_upgrade: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.remark: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.remark_with_event: CoretimeRenewer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
@@ -911,6 +1142,39 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > balances.burn: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > broker.purchase_credit: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > collator_selection.register_as_candidate: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet balances, call burn 1`] = `
@@ -992,7 +1256,7 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 16000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -1025,8 +1289,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -1058,8 +1322,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -1067,6 +1331,39 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.apply_authorized_upgrade: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.remark: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.remark_with_event: OnDemandPurchaser 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
@@ -1153,8 +1450,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -1187,8 +1484,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -1696,8 +1993,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },
@@ -1730,8 +2027,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 750000000)",
         },
       },
     },

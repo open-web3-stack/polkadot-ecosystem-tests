@@ -139,7 +139,7 @@ exports[`Kusama Multisig > cancellation with sender in signatories fails > event
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -164,7 +164,7 @@ exports[`Kusama Multisig > cancelling a non-existent multisig operation fails > 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -189,7 +189,7 @@ exports[`Kusama Multisig > cancelling a non-existent multisig operation fails > 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -298,7 +298,7 @@ exports[`Kusama Multisig > multisig cancellation with remaining signatories out 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -323,7 +323,7 @@ exports[`Kusama Multisig > multisig cancellation with threshold < 2 fails > even
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -444,7 +444,7 @@ exports[`Kusama Multisig > non-depositor tries to cancel multisig fails > events
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

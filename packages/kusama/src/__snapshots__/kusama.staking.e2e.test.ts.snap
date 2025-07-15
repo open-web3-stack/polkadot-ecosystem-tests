@@ -10,7 +10,7 @@ exports[`Kusama Staking > cancel deferred slash with bad origin > cancel deferre
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 77000)",
-          "refTime": "(rounded 1700000000)",
+          "refTime": "(rounded 1800000000)",
         },
       },
     },
@@ -216,7 +216,7 @@ exports[`Kusama Staking > force apply validator commission > force apply min com
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 11000)",
-          "refTime": "(rounded 630000000)",
+          "refTime": "(rounded 650000000)",
         },
       },
     },
@@ -236,7 +236,7 @@ exports[`Kusama Staking > modify validator count > increase validator count bad 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -256,7 +256,7 @@ exports[`Kusama Staking > modify validator count > scale validator count bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -276,7 +276,7 @@ exports[`Kusama Staking > modify validator count > set validator count bad origi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -312,70 +312,12 @@ exports[`Kusama Staking > set invulnerables with bad origin > set invulnerables 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Staking > set invulnerables with root origin > balances slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Kusama Staking > set invulnerables with root origin > staking slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "staker": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-    },
-    "method": "Slashed",
-    "section": "staking",
   },
 ]
 `;
@@ -390,7 +332,7 @@ exports[`Kusama Staking > set minimum validator commission > set staking configs
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -469,7 +411,7 @@ exports[`Kusama Staking > staking lifecycle > events when attempting to nominate
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 21000)",
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 1600000000)",
         },
       },
     },
@@ -663,7 +605,7 @@ exports[`Kusama Staking > test force unstaking of nominator > force unstake bad 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 2200000000)",
+          "refTime": "(rounded 2300000000)",
         },
       },
     },
@@ -719,64 +661,6 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "staker": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
-    },
-    "method": "Slashed",
-    "section": "staking",
   },
 ]
 `;
