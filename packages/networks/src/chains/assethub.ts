@@ -48,9 +48,9 @@ const custom = {
   },
 }
 
-const accountList = [
-  [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-  [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+const accountList = (ethConfig: any) => [
+  [[ethConfig, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
+  [[ethConfig, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
 ]
 
 const getInitStorages = (
@@ -68,7 +68,7 @@ const getInitStorages = (
     ],
   },
   ForeignAssets: {
-    account: config.eth ? accountList : [],
+    account: config.eth ? accountList(config.eth) : [],
   },
 })
 

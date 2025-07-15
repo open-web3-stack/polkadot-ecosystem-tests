@@ -92,6 +92,10 @@ These include:
       - a proxy of a given type can always execute calls which that proxy type is allowed to execute
       - a proxy of a given type can never execute calls that its proxy type disallowws it from running
         - see the section below for more
+  - E2E suite for multisig accounts and operations
+    - multisig creation, approval and execution
+    - multisig cancellation, and deposit refunding
+    - diverse failure modes tested (wrong timepoints, malformed execution/approval calls)
 - E2E suite for vesting
   - normal (signed) and forced (root) vested transfers
   - forced (root) vesting schedule removal

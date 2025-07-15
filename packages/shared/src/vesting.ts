@@ -282,7 +282,7 @@ async function testForceVestedTransferAndRemoval<
     startingBlock: currBlockNumber - 1,
   })
 
-  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' }, true)
+  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -317,7 +317,7 @@ async function testForceVestedTransferAndRemoval<
   // Forcibly remove the vesting schedule.
 
   const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(dave.address, 0)
-  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' }, true)
+  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 

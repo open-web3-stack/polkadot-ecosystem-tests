@@ -109,6 +109,28 @@ exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup ca
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 2`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup call works > note preimage events 1`] = `
 [
   {
@@ -121,7 +143,48 @@ exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup ca
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > execution of scheduled preimage lookup call works > note preimage events 2`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "when": "(rounded 26000000)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 2`] = `
 [
   {
     "data": {
@@ -225,7 +288,32 @@ exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that g
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 2`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a call using a preimage that gets removed > note preimage events 2`] = `
 [
   {
     "data": {
@@ -289,6 +377,36 @@ exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that exe
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 1 2`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 1`] = `
 [
   {
@@ -319,7 +437,59 @@ exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that exe
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 2`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 2`] = `
 [
   {
     "data": {
@@ -415,6 +585,36 @@ exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > 
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 1 2`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 2 1`] = `
 [
   {
@@ -445,7 +645,59 @@ exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > 
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 2 2`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 3 2`] = `
 [
   {
     "data": {
@@ -548,7 +800,52 @@ exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for named scheduled tasks > events for failed named task execution 2`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 8,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 2`] = `
 [
   {
     "data": {
@@ -593,7 +890,53 @@ exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration
 ]
 `;
 
+exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 2`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "RetryCancelled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 2`] = `
 [
   {
     "data": {

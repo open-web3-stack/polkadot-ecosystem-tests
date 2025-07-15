@@ -10,7 +10,7 @@ exports[`Westend Asset Hub Staking > cancel deferred slash with bad origin > can
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 620000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -35,7 +35,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -60,7 +60,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -85,7 +85,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -110,7 +110,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -135,7 +135,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -160,7 +160,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -185,7 +185,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -216,7 +216,7 @@ exports[`Westend Asset Hub Staking > force apply validator commission > force ap
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 650000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -236,7 +236,7 @@ exports[`Westend Asset Hub Staking > modify validator count > increase validator
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -256,7 +256,7 @@ exports[`Westend Asset Hub Staking > modify validator count > scale validator co
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -276,7 +276,7 @@ exports[`Westend Asset Hub Staking > modify validator count > set validator coun
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -312,7 +312,7 @@ exports[`Westend Asset Hub Staking > set invulnerables with bad origin > set inv
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -363,7 +363,7 @@ exports[`Westend Asset Hub Staking > set minimum validator commission > set stak
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -383,7 +383,7 @@ exports[`Westend Asset Hub Staking > set staking configs > set staking configs b
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1200000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -402,7 +402,7 @@ exports[`Westend Asset Hub Staking > set staking configs > set staking configs e
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 280000000)",
+          "refTime": "(rounded 190000000)",
         },
       },
     ],
@@ -442,7 +442,7 @@ exports[`Westend Asset Hub Staking > staking lifecycle > events when attempting 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 910000000)",
         },
       },
     },
@@ -625,7 +625,7 @@ exports[`Westend Asset Hub Staking > test force unstaking of nominator > force u
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2100000000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },
@@ -650,7 +650,7 @@ exports[`Westend Asset Hub Staking > trying to become a validator with no bonded
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1300000000)",
+          "refTime": "(rounded 740000000)",
         },
       },
     },
@@ -675,7 +675,7 @@ exports[`Westend Asset Hub Staking > trying to nominate with no bonded funds fai
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 870000000)",
         },
       },
     },

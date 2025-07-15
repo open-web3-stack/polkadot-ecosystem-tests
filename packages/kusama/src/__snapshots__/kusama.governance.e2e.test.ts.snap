@@ -34,7 +34,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 91000)",
-          "refTime": "(rounded 980000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -480,7 +480,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
 [
   {
     "data": {
-      "amount": "(rounded 740000000)",
+      "amount": "(rounded 750000000)",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -507,13 +507,6 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   },
   {
     "data": {
-      "amount": 0,
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
       "amount": "(rounded 600000000)",
     },
     "method": "Deposit",
@@ -528,7 +521,7 @@ exports[`Kusama Governance > referendum lifecycle test - submission, decision de
   },
   {
     "data": {
-      "actualFee": "(rounded 740000000)",
+      "actualFee": "(rounded 750000000)",
       "tip": 0,
     },
     "method": "TransactionFeePaid",

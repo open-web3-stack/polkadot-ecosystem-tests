@@ -183,7 +183,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPreDecDep.enactment.asAfter.eq(1))
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
   assert(ongoingRefPreDecDep.track.eq(smallTipper[0]))
   await check(ongoingRefPreDecDep.origin).toMatchObject({
     origins: 'SmallTipper',
@@ -751,7 +751,7 @@ export async function referendumLifecycleKillTest<
    */
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
   /**
    * Place decision deposit

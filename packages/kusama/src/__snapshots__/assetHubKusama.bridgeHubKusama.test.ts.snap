@@ -30,7 +30,85 @@ exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridg
 }
 `;
 
-exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridgeHubKusama > to chain dmp events 1`] = `
+exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridgeHubKusama > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v3": [
+          {
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                      "network": null,
+                    },
+                  },
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1002,
+  },
+]
+`;
+
+exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridgeHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -57,8 +135,8 @@ exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridg
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 189000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -71,7 +149,7 @@ exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridg
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 1030000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",
@@ -211,9 +289,85 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
 }
 `;
 
-exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to assetHubKusama > from chain ump messages 1`] = `[]`;
+exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to assetHubKusama > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v3": [
+          {
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                      "network": null,
+                    },
+                  },
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
 
-exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to assetHubKusama > to chain ump events 1`] = `
+exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to assetHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -224,7 +378,7 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "refTime": "(rounded 170000000)",
       },
     },
     "method": "Processed",
@@ -240,8 +394,8 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 168000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 170000000)",
           },
         },
       },
@@ -254,7 +408,7 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 1030000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",

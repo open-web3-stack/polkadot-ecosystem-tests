@@ -130,7 +130,7 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 165000000)",
+            "refTime": "(rounded 169000000)",
           },
         },
       },
@@ -291,7 +291,7 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 770000000)",
+        "refTime": "(rounded 780000000)",
       },
     },
     "method": "DownwardMessagesProcessed",

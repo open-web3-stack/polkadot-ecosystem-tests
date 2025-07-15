@@ -365,6 +365,39 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Any > vesting.vested_transfer: Any 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > assets.create: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > balances.burn: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
 [
   {
@@ -445,7 +478,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 130000000000)",
         },
       },
     },
@@ -511,7 +544,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -538,6 +571,83 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > nfts.destroy: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.apply_authorized_upgrade: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.remark: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.remark_with_event: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > uniques.create: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > assets.mint: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > balances.burn: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
@@ -620,7 +730,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 130000000000)",
         },
       },
     },
@@ -686,7 +796,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -713,6 +823,72 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > nfts.set_metadata: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.apply_authorized_upgrade: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.remark: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.remark_with_event: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > uniques.mint: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > balances.burn: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
@@ -757,7 +933,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 130000000000)",
         },
       },
     },
@@ -823,7 +999,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -831,6 +1007,50 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "system",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.apply_authorized_upgrade: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.remark: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.remark_with_event: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
@@ -875,7 +1095,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 130000000000)",
         },
       },
     },
@@ -941,7 +1161,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -949,6 +1169,50 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "system",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > balances.burn: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
@@ -993,7 +1257,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 130000000000)",
         },
       },
     },
@@ -1059,7 +1323,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -1086,6 +1350,61 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.apply_authorized_upgrade: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark_with_event: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > vesting.vested_transfer: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
@@ -1124,6 +1443,17 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > vesting.vested_transfer: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
@@ -1245,7 +1575,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -2023,7 +2353,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for permitted proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },

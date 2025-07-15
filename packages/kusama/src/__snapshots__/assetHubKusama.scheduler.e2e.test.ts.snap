@@ -10,7 +10,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancel named scheduled task with
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 880000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > cancel scheduled task with wrong
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 850000000)",
+          "refTime": "(rounded 870000000)",
         },
       },
     },
@@ -141,6 +141,13 @@ exports[`Asset Hub Kusama Scheduler E2E tests > priority-based execution of weig
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(rounded 29000000)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -154,7 +161,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > schedule named task with wrong o
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 760000000)",
+          "refTime": "(rounded 780000000)",
         },
       },
     },
@@ -174,7 +181,7 @@ exports[`Asset Hub Kusama Scheduler E2E tests > schedule task with wrong origin 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 630000000)",
+          "refTime": "(rounded 650000000)",
         },
       },
     },
