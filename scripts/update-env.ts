@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 const __filename = fileURLToPath(import.meta.url)
 import * as chains from '@e2e-test/networks/chains'
@@ -19,6 +20,8 @@ const readEnvFile = () => {
 }
 
 const main = async () => {
+  await cryptoWaitReady()
+
   let envFile = readEnvFile()
 
   // comment out current ones
