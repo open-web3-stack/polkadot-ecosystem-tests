@@ -425,7 +425,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 18000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -458,8 +458,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -491,8 +491,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -543,7 +543,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 18000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -576,8 +576,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -609,8 +609,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -661,7 +661,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 18000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -694,8 +694,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -727,8 +727,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -817,7 +817,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 18000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -850,8 +850,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -883,8 +883,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -992,7 +992,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 19000)",
+          "proofSize": "(rounded 18000)",
           "refTime": "(rounded 130000000000)",
         },
       },
@@ -1025,8 +1025,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -1058,8 +1058,8 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -1153,8 +1153,8 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -1187,8 +1187,8 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -1256,7 +1256,7 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0f000000",
+            "error": "0x0b000000",
             "index": 50,
           },
         },
@@ -1696,8 +1696,8 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -1730,8 +1730,8 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },

@@ -130,7 +130,7 @@ exports[`kusama & coretimeKusama > coretimeKusama transfer KSM to kusama > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 164000000)",
+            "refTime": "(rounded 167000000)",
           },
         },
       },
@@ -291,7 +291,7 @@ exports[`kusama & coretimeKusama > kusama transfer KSM to coretimeKusama > to ch
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 770000000)",
+        "refTime": "(rounded 780000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
