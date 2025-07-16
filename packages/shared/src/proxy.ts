@@ -286,8 +286,8 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
-        extrinsic: 'purchase',
-        call: this.client.api.tx.broker.purchase(100e10),
+        extrinsic: 'drop_history',
+        call: this.client.api.tx.broker.dropHistory(0),
       })
     }
 
