@@ -1269,7 +1269,14 @@ async function proxyCallFilteringSingleTestRunner<
     // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
       // Forbidden calls are expected to have failed *only* due to filtering.
-      expect(proxyExecutedData.result).toMatchSnapshot(`${proxyAction.pallet}.${proxyAction.extrinsic}: ${proxyType}`)
+      assert(proxyExecutedData.result.isErr)
+      const error = proxyExecutedData.result.asErr
+      if (error.isModule) {
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(true)
+      }
     }
     // Path taken for permitted calls
     else {
