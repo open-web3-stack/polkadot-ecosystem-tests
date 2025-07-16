@@ -394,17 +394,6 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when killing pur
 ]
 `;
 
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > balances.burn: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet balances, call burn 1`] = `
 [
   {
@@ -578,83 +567,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
     "section": "proxy",
   },
 ]
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > referenda.submit: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > staking.bond: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > system.apply_authorized_upgrade: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > system.remark: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > system.remark_with_event: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > vesting.vested_transfer: Auction 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
@@ -870,105 +782,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 ]
 `;
 
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > multisig.as_multi: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > staking.bond: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.batch: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.batch_all: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.force_batch: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > balances.burn: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet balances, call burn 1`] = `
 [
   {
@@ -1123,72 +936,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
     "section": "proxy",
   },
 ]
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > staking.bond: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.apply_authorized_upgrade: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.remark: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.remark_with_event: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > vesting.vested_transfer: Governance 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > balances.burn: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet balances, call burn 1`] = `
@@ -1366,83 +1113,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 ]
 `;
 
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > referenda.submit: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > staking.bond: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.apply_authorized_upgrade: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.remark: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.remark_with_event: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > vesting.vested_transfer: NominationPools 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
 [
   {
@@ -1479,28 +1149,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
     "section": "proxy",
   },
 ]
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > vesting.vested_transfer: NonTransfer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > balances.burn: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet balances, call burn 1`] = `
@@ -1659,72 +1307,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 ]
 `;
 
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > proxy.reject_announcement: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > proxy.remove_announcement: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > system.apply_authorized_upgrade: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > system.remark: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > system.remark_with_event: ParaRegistration 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > balances.burn: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet balances, call burn 1`] = `
 [
   {
@@ -1879,61 +1461,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
     "section": "proxy",
   },
 ]
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > referenda.submit: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.apply_authorized_upgrade: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.remark: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.remark_with_event: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > vesting.vested_transfer: Staking 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet auctions, call bid 1`] = `
