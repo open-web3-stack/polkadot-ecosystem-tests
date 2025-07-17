@@ -816,9 +816,10 @@ async function buildAllowedProxyActions<
     .with('CancelProxy', () => {
       const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
 
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (!['polkadot', 'kusama'].includes(chainName)) {
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on Polkadot, this is
+      // currently not the case. Kusama has already had a runtime upgrade with this.
+      // PR: https://github.com/polkadot-fellows/runtimes/pull/740
+      if (!['polkadot'].includes(chainName)) {
         actions.push(...proxyActionBuilder.buildUtilityAction())
         actions.push(...proxyActionBuilder.buildMultisigAction())
       }
@@ -1001,9 +1002,10 @@ async function buildDisallowedProxyActions<
         ...proxyActionBuilder.buildSystemAction(),
       ]
 
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (['polkadot', 'kusama'].includes(chainName)) {
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on Polkadot, this is
+      // currently not the case. Kusama has already had a runtime upgrade with this.
+      // PR: https://github.com/polkadot-fellows/runtimes/pull/740
+      if (['polkadot'].includes(chainName)) {
         actions.push(...proxyActionBuilder.buildUtilityAction())
         actions.push(...proxyActionBuilder.buildMultisigAction())
       }
