@@ -103,7 +103,7 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > to chain ump events
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -263,7 +263,7 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > to chain um
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -384,7 +384,7 @@ exports[`acala & polkadot > polkadot transfer DOT to acala > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 265000000)",
+            "refTime": "(rounded 273000000)",
           },
         },
       },

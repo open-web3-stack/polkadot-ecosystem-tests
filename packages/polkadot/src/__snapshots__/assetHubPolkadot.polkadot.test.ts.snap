@@ -113,7 +113,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to cha
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -211,11 +211,42 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
 [
   {
     "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 1000,
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "message": [],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "xcmPallet",
+  },
+  {
+    "data": {
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 7190)",
-            "refTime": "(rounded 587000000)",
+            "proofSize": "(rounded 7240)",
+            "refTime": "(rounded 636000000)",
           },
         },
       },

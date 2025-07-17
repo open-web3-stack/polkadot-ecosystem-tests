@@ -113,7 +113,7 @@ exports[`polkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to polkad
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -321,7 +321,7 @@ exports[`polkadot & bridgeHubPolkadot > polkadot transfer DOT to bridgeHubPolkad
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 149000000)",
+            "refTime": "(rounded 153000000)",
           },
         },
       },

@@ -485,7 +485,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -551,7 +551,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -683,8 +683,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
       "result": {
         "Err": {
           "Module": {
-            "error": "0x05000000",
-            "index": 0,
+            "error": "0x00000000",
+            "index": 30,
           },
         },
       },
@@ -737,7 +737,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -803,7 +803,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -816,15 +816,13 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
 [
   {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -835,15 +833,13 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
 [
   {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -854,15 +850,13 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
 [
   {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -874,8 +868,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 {
   "err": {
     "module": {
-      "error": "0x05000000",
-      "index": 0,
+      "error": "0x00000000",
+      "index": 30,
     },
   },
 }
@@ -927,34 +921,19 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.batch: CancelProxy 1`] = `
 {
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
+  "ok": null,
 }
 `;
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.batch_all: CancelProxy 1`] = `
 {
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
+  "ok": null,
 }
 `;
 
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > utility.force_batch: CancelProxy 1`] = `
 {
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
+  "ok": null,
 }
 `;
 
@@ -1030,7 +1009,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1096,7 +1075,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -1271,7 +1250,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1337,7 +1316,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -1583,7 +1562,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1649,7 +1628,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -1786,7 +1765,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 190000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1852,7 +1831,7 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -2155,7 +2134,7 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
@@ -2681,7 +2660,7 @@ exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "refTime": "(rounded 580000000)",
         },
       },
     },
