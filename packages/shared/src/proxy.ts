@@ -286,8 +286,8 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
-        extrinsic: 'purchase',
-        call: this.client.api.tx.broker.purchase(100e10),
+        extrinsic: 'drop_history',
+        call: this.client.api.tx.broker.dropHistory(0),
       })
     }
 
@@ -816,9 +816,10 @@ async function buildAllowedProxyActions<
     .with('CancelProxy', () => {
       const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
 
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (!['polkadot', 'kusama'].includes(chainName)) {
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on Polkadot, this is
+      // currently not the case. Kusama has already had a runtime upgrade with this.
+      // PR: https://github.com/polkadot-fellows/runtimes/pull/740
+      if (!['polkadot'].includes(chainName)) {
         actions.push(...proxyActionBuilder.buildUtilityAction())
         actions.push(...proxyActionBuilder.buildMultisigAction())
       }
@@ -1001,9 +1002,10 @@ async function buildDisallowedProxyActions<
         ...proxyActionBuilder.buildSystemAction(),
       ]
 
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (['polkadot', 'kusama'].includes(chainName)) {
+      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on Polkadot, this is
+      // currently not the case. Kusama has already had a runtime upgrade with this.
+      // PR: https://github.com/polkadot-fellows/runtimes/pull/740
+      if (['polkadot'].includes(chainName)) {
         actions.push(...proxyActionBuilder.buildUtilityAction())
         actions.push(...proxyActionBuilder.buildMultisigAction())
       }
@@ -1269,7 +1271,14 @@ async function proxyCallFilteringSingleTestRunner<
     // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
       // Forbidden calls are expected to have failed *only* due to filtering.
-      expect(proxyExecutedData.result).toMatchSnapshot(`${proxyAction.pallet}.${proxyAction.extrinsic}: ${proxyType}`)
+      assert(proxyExecutedData.result.isErr)
+      const error = proxyExecutedData.result.asErr
+      if (error.isModule) {
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(true)
+      }
     }
     // Path taken for permitted calls
     else {
