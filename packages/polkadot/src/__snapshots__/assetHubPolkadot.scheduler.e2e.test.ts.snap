@@ -10,7 +10,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancel named scheduled task wi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 790000000)",
+          "refTime": "(rounded 780000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > cancel scheduled task with wro
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 770000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -141,6 +141,13 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > priority-based execution of we
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(rounded 27000000)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -154,7 +161,7 @@ exports[`Asset Hub Polkadot Scheduler E2E tests > schedule named task with wrong
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },

@@ -111,7 +111,7 @@ exports[`astar & polkadot > astar transfer DOT to polkadot > to chain ump events
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -235,7 +235,7 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 265000000)",
+            "refTime": "(rounded 273000000)",
           },
         },
       },
