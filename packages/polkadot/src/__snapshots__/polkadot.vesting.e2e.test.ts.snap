@@ -23,7 +23,7 @@ exports[`Polkadot Vesting > signed-origin force-vested transfer fails > force ve
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 980000000)",
+          "refTime": "(rounded 960000000)",
         },
       },
     },
