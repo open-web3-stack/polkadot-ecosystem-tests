@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Staking > cancel deferred slash as admin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > cancel deferred slash as admin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > cancel deferred slash as admin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > cancel deferred slash as root > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > cancel deferred slash as root > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > cancel deferred slash as root > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Kusama Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
 [
   {
@@ -318,6 +372,91 @@ exports[`Kusama Staking > set invulnerables with bad origin > set invulnerables 
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+
+exports[`Kusama Staking > set invulnerables with root origin > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999112324871,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > set invulnerables with root origin > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "Slashed",
+    "section": "staking",
   },
 ]
 `;
@@ -661,6 +800,91 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Kusama Staking > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "staking",
   },
 ]
 `;
