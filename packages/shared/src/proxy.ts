@@ -1728,10 +1728,9 @@ export async function proxyCallTest<
  */
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relay: Chain<TCustom, TInitStoragesRelay>, assetHub: Chain<TCustom, TInitStoragesPara>, addressEncoding: number) {
-  const [relayClient, ahClient] = await setupNetworks(relay, assetHub)
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(assetHub: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [ahClient] = await setupNetworks(assetHub)
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
@@ -1749,9 +1748,6 @@ export async function proxyAnnouncementLifecycleTest<
   await sendTransaction(addProxyTx.signAsync(alice))
 
   await ahClient.dev.newBlock()
-  // The relay chain also needs to advance, since AH uses it as a block provider.
-  // If this is not done, the announcement check will fail due to the relay block number drifting.
-  await relayClient.dev.newBlock()
 
   // Bob announces an intent to transfer funds to Charlie
   const transferAmount: number = 100e10
@@ -1761,7 +1757,6 @@ export async function proxyAnnouncementLifecycleTest<
   const announcementEvents = await sendTransaction(announceTx.signAsync(bob))
 
   await ahClient.dev.newBlock()
-  await relayClient.dev.newBlock()
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
@@ -1848,11 +1843,9 @@ export async function proxyAnnouncementLifecycleTest<
  */
 export async function proxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  relay: Chain<TCustom, TInitStoragesRelay>,
-  assetHub: Chain<TCustom, TInitStoragesPara>,
+  assetHub: Chain<TCustom, TInitStorages>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
 ) {
@@ -1870,7 +1863,7 @@ export async function proxyE2ETests<
     })
 
     test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(relay, assetHub, testConfig.addressEncoding)
+      await proxyAnnouncementLifecycleTest(assetHub, testConfig.addressEncoding)
     })
 
     describe('filtering tests for permitted proxy calls', () => {
