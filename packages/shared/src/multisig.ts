@@ -6,6 +6,10 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, describe, expect, test } from 'vitest'
 import { checkEvents } from './helpers/index.js'
 
+// Rose-tree runner utilities
+import { runNode } from './types.js'
+import type { Node } from './types.js'
+
 /// -------
 /// Helpers
 /// -------
@@ -2209,97 +2213,127 @@ export function multisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    // Success tests
+  const suite: Node = {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      // ------------------ Success tests ------------------
+      {
+        kind: 'test',
+        label: 'basic 2-of-3 multisig creation and execution',
+        testFn: () => basicMultisigTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'multisig cancellation works',
+        testFn: () => multisigCancellationTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label:
+          'second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution',
+        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'final approval with `approveAsMulti` does not lead to execution',
+        testFn: () => finalApprovalApproveAsMultiTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'beginning multisig approval with `approveAsMulti` works',
+        testFn: () => approveAsMultiFirstTest(chain, testConfig.addressEncoding),
+      },
 
-    test('basic 2-of-3 multisig creation and execution', async () => {
-      await basicMultisigTest(chain, testConfig.addressEncoding)
-    })
+      // ------------------ Failure tests ------------------
+      {
+        kind: 'test',
+        label: 'multisig cancellation with threshold < 2 fails',
+        testFn: () => minimumThresholdCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'creating a multisig with threshold < 2 fails',
+        testFn: () => minimumThresholdAsMultiTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'repeated approval with `approveAsMulti` fails',
+        testFn: () => approveAsMultiAlreadyApprovedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig creation with too few signatories fails',
+        testFn: () => tooFewSignatoriesTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig creation with too many signatories fails',
+        testFn: () => tooManySignatoriesTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig execution with remaining signatories out of order fails',
+        testFn: () => signatoriesOutOfOrderInExecutionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig cancellation with remaining signatories out of order fails',
+        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with signatories out of order fails',
+        testFn: () => signatoriesOutOfOrderInApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'execution with sender in signatories fails',
+        testFn: () => senderInSignatoriesInExecutionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancellation with sender in signatories fails',
+        testFn: () => senderInSignatoriesInCancellationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with sender in signatories fails',
+        testFn: () => senderInSignatoriesInApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancelling a non-existent multisig operation fails',
+        testFn: () => notFoundCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'non-depositor tries to cancel multisig fails',
+        testFn: () => notOwnerCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval without timepoint fails',
+        testFn: () => noTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with wrong timepoint fails',
+        testFn: () => wrongTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'first call with unexpected timepoint fails',
+        testFn: () => unexpectedTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with max weight too low fails',
+        testFn: () => maxWeightTooLowTest(chain),
+      },
+    ],
+  }
 
-    test('multisig cancellation works', async () => {
-      await multisigCancellationTest(chain, testConfig.addressEncoding)
-    })
-
-    test('second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution', async () => {
-      await approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding)
-    })
-
-    test('final approval with `approveAsMulti` does not lead to execution', async () => {
-      await finalApprovalApproveAsMultiTest(chain)
-    })
-
-    test('beginning multisig approval with `approveAsMulti` works', async () => {
-      await approveAsMultiFirstTest(chain, testConfig.addressEncoding)
-    })
-
-    // Failure tests (ordered by error enum variants)
-
-    test('multisig cancellation with threshold < 2 fails', async () => {
-      await minimumThresholdCancelTest(chain)
-    })
-
-    test('creating a multisig with threshold < 2 fails', async () => {
-      await minimumThresholdAsMultiTest(chain)
-    })
-
-    test('repeated approval with `approveAsMulti` fails', async () => {
-      await approveAsMultiAlreadyApprovedTest(chain)
-    })
-
-    test('multisig creation with too few signatories fails', async () => {
-      await tooFewSignatoriesTest(chain)
-    })
-
-    test('multisig creation with too many signatories fails', async () => {
-      await tooManySignatoriesTest(chain)
-    })
-
-    test('multisig execution with remaining signatories out of order fails', async () => {
-      await signatoriesOutOfOrderInExecutionTest(chain)
-    })
-
-    test('multisig cancellation with remaining signatories out of order fails', async () => {
-      await cancelWithSignatoriesOutOfOrderTest(chain)
-    })
-
-    test('approval with signatories out of order fails', async () => {
-      await signatoriesOutOfOrderInApprovalTest(chain)
-    })
-
-    test('execution with sender in signatories fails', async () => {
-      await senderInSignatoriesInExecutionTest(chain)
-    })
-
-    test('cancellation with sender in signatories fails', async () => {
-      await senderInSignatoriesInCancellationTest(chain)
-    })
-
-    test('approval with sender in signatories fails', async () => {
-      await senderInSignatoriesInApprovalTest(chain)
-    })
-
-    test('cancelling a non-existent multisig operation fails', async () => {
-      await notFoundCancelTest(chain)
-    })
-
-    test('non-depositor tries to cancel multisig fails', async () => {
-      await notOwnerCancelTest(chain)
-    })
-
-    test('approval without timepoint fails', async () => {
-      await noTimepointTest(chain)
-    })
-
-    test('approval with wrong timepoint fails', async () => {
-      await wrongTimepointTest(chain)
-    })
-
-    test('first call with unexpected timepoint fails', async () => {
-      await unexpectedTimepointTest(chain)
-    })
-
-    test('approval with max weight too low fails', async () => {
-      await maxWeightTooLowTest(chain)
-    })
-  })
+  // Register the tree with Vitest
+  runNode(suite)
 }
