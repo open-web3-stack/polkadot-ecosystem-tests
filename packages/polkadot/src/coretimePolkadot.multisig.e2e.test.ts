@@ -1,4 +1,8 @@
 import { coretimePolkadot } from '@e2e-test/networks/chains'
-import { multisigE2ETests } from '@e2e-test/shared'
 
-multisigE2ETests(coretimePolkadot, { testSuiteName: 'CoretimePolkadot Multisig', addressEncoding: 0 })
+import { baseMultisigE2Etests } from '@e2e-test/shared'
+import { registerTestTree } from '@e2e-test/shared/types'
+
+registerTestTree(
+  baseMultisigE2Etests(coretimePolkadot, { testSuiteName: 'CoretimePolkadot Multisig', addressEncoding: 0 }),
+)
