@@ -3,12 +3,9 @@ import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 import { checkEvents } from './helpers/index.js'
-
-// Rose-tree runner utilities
-import { runNode } from './types.js'
-import type { Node } from './types.js'
+import type { TestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -2209,15 +2206,14 @@ async function maxWeightTooLowTest<
   assert(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule))
 }
 
-export function multisigE2ETests<
+export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  const suite: Node = {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+  return {
     kind: 'describe',
-    label: testConfig.testSuiteName,
+    label: 'success tests',
     children: [
-      // ------------------ Success tests ------------------
       {
         kind: 'test',
         label: 'basic 2-of-3 multisig creation and execution',
@@ -2244,8 +2240,18 @@ export function multisigE2ETests<
         label: 'beginning multisig approval with `approveAsMulti` works',
         testFn: () => approveAsMultiFirstTest(chain, testConfig.addressEncoding),
       },
+    ],
+  }
+}
 
-      // ------------------ Failure tests ------------------
+export function failureMultisigE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): TestTree {
+  return {
+    kind: 'describe',
+    label: 'failure tests',
+    children: [
       {
         kind: 'test',
         label: 'multisig cancellation with threshold < 2 fails',
@@ -2333,7 +2339,26 @@ export function multisigE2ETests<
       },
     ],
   }
+}
 
-  // Register the tree with Vitest
-  runNode(suite)
+/**
+ * Default set of multisig end-to-end tests.
+ *
+ * Includes both success and failure cases.
+ * A test tree structure allows some extensibility in case a chain needs to
+ * change/add/remove default tests.
+ *
+ * @param chain - The chain to test.
+ * @param testConfig - Test configuration data - address encoding, top-level test suite name, etc.
+ * @returns A test tree structure.
+ */
+export function baseMultisigE2Etests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [successMultisigE2ETests(chain, testConfig), failureMultisigE2ETests(chain)],
+  }
 }
