@@ -21,7 +21,7 @@ const getInitStorages = (_config: typeof custom.bridgeHubPolkadot | typeof custo
 
 export const bridgeHubPolkadot = defineChain({
   name: 'bridgeHubPolkadot',
-  endpoint: 'wss://polkadot-bridge-hub-rpc.polkadot.io',
+  endpoint: 'wss://sys.ibp.network/bridgehub-polkadot',
   paraId: 1002,
   custom: custom.bridgeHubPolkadot,
   initStorages: getInitStorages(custom.bridgeHubPolkadot),
