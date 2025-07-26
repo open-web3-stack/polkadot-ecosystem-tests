@@ -1,7 +1,7 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
@@ -20,7 +20,9 @@ import { assert, describe, expect, test } from 'vitest'
 async function testVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
 
@@ -163,7 +165,9 @@ async function testVestedTransfer<
 async function testForceVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const charlie = defaultAccountsSr25519.charlie
 
@@ -211,7 +215,9 @@ async function testForceVestedTransfer<
 async function testForceRemoveVestedSchedule<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const charlie = defaultAccountsSr25519.charlie
 
@@ -259,7 +265,9 @@ async function testForceRemoveVestedSchedule<
 async function testForceVestedTransferAndRemoval<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const dave = defaultAccountsSr25519.dave
 
@@ -350,7 +358,9 @@ async function testForceVestedTransferAndRemoval<
 async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const alice = defaultAccountsSr25519.alice
   const eve = defaultAccountsSr25519.eve
 
@@ -447,24 +457,24 @@ export function vestingE2ETests<
     // even if they do not include on vested transfers.
     if (!c.toString().includes('Asset Hub')) {
       test('vesting schedule lifecycle', async () => {
-        await testVestedTransfer(client, testConfig.addressEncoding)
+        await testVestedTransfer(chain, testConfig.addressEncoding)
       })
 
       test('signed-origin forced removal of vesting schedule fails', async () => {
-        await testForceRemoveVestedSchedule(client)
+        await testForceRemoveVestedSchedule(chain)
       })
 
       test('forced vested transfer and forced removal of vesting schedule work', async () => {
-        await testForceVestedTransferAndRemoval(client)
+        await testForceVestedTransferAndRemoval(chain)
       })
 
       test('test merger of two vesting schedules', async () => {
-        await testMergeVestingSchedules(client)
+        await testMergeVestingSchedules(chain)
       })
     }
 
     test('signed-origin force-vested transfer fails', async () => {
-      await testForceVestedTransfer(client)
+      await testForceVestedTransfer(chain)
     })
   })
 }

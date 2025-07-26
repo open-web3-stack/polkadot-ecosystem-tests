@@ -75,7 +75,9 @@ const REPETITIONS = 3
 export async function scheduleBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const call = client.api.tx.system.remark('test').method.toHex()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber, null, 0, call)
@@ -89,7 +91,9 @@ export async function scheduleBadOriginTest<
 export async function scheduleNamedBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const call = client.api.tx.system.remark('test').method.toHex()
 
@@ -112,7 +116,9 @@ export async function scheduleNamedBadOriginTest<
 export async function cancelScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const call = client.api.tx.system.remark('test').method.toHex()
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, call)
@@ -153,7 +159,9 @@ export async function cancelScheduledTaskBadOriginTest<
 export async function cancelNamedScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const call = client.api.tx.system.remark('test').method.toHex()
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -198,7 +206,9 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 export async function scheduledCallExecutes<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -255,7 +265,9 @@ export async function scheduledCallExecutes<
 export async function scheduledNamedCallExecutes<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const taskId = sha256AsU8a('task_id')
@@ -314,7 +326,9 @@ export async function scheduledNamedCallExecutes<
 export async function cancelScheduledTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -366,7 +380,9 @@ export async function cancelScheduledTask<
 export async function cancelScheduledNamedTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const taskId = sha256AsU8a('task_id')
@@ -412,7 +428,9 @@ export async function cancelScheduledNamedTask<
 export async function scheduleTaskAfterDelay<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -475,7 +493,9 @@ export async function scheduleTaskAfterDelay<
 export async function scheduleNamedTaskAfterDelay<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
 
@@ -547,7 +567,8 @@ export async function scheduleNamedTaskAfterDelay<
 export async function scheduledOverweightCallFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // Call whose weight will be artifically inflated
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -622,7 +643,9 @@ export async function scheduledOverweightCallFails<
 async function scheduleLookupCall<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(defaultAccountsSr25519.alice))
@@ -681,7 +704,9 @@ async function scheduleLookupCall<
 export async function schedulePreimagedCall<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
 
   // Note the preimage
@@ -779,10 +804,12 @@ async function testPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  client: Client<TCustom, TInitStorages>,
+  chain: Chain<TCustom, TInitStorages>,
   scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
   taskId: Uint8Array | null,
 ) {
+  const [client] = await setupNetworks(chain)
+
   scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
@@ -877,7 +904,9 @@ async function testPeriodicTask<
 export async function schedulePeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -888,7 +917,7 @@ export async function schedulePeriodicTask<
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(client, scheduleTx, null)
+  await testPeriodicTask(chain, scheduleTx, null)
 }
 
 /**
@@ -901,7 +930,9 @@ export async function schedulePeriodicTask<
 export async function scheduleNamedPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -914,7 +945,7 @@ export async function scheduleNamedPeriodicTask<
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(client, scheduleNamedTx, taskId)
+  await testPeriodicTask(chain, scheduleNamedTx, taskId)
 }
 
 /**
@@ -930,7 +961,9 @@ export async function scheduleNamedPeriodicTask<
 export async function schedulePriorityWeightedTasks<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
   const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -1058,7 +1091,8 @@ export async function schedulePriorityWeightedTasks<
 export async function scheduleWithRetryConfig<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -1173,7 +1207,8 @@ export async function scheduleWithRetryConfig<
 export async function scheduleNamedWithRetryConfig<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const taskId = sha256AsU8a('retry_task')
@@ -1320,78 +1355,76 @@ export function schedulerE2ETests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
   describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
     test('schedule task with wrong origin', async () => {
-      await scheduleBadOriginTest(client)
+      await scheduleBadOriginTest(chain)
     })
 
     test('schedule named task with wrong origin', async () => {
-      await scheduleNamedBadOriginTest(client)
+      await scheduleNamedBadOriginTest(chain)
     })
 
     test('cancel scheduled task with wrong origin', async () => {
-      await cancelScheduledTaskBadOriginTest(client)
+      await cancelScheduledTaskBadOriginTest(chain)
     })
 
     test('cancel named scheduled task with wrong origin', async () => {
-      await cancelNamedScheduledTaskBadOriginTest(client)
+      await cancelNamedScheduledTaskBadOriginTest(chain)
     })
 
     test('scheduling a call is possible, and the call itself succeeds', async () => {
-      await scheduledCallExecutes(client)
+      await scheduledCallExecutes(chain)
     })
 
     test('scheduling a named call is possible, and the call itself succeeds', async () => {
-      await scheduledNamedCallExecutes(client)
+      await scheduledNamedCallExecutes(chain)
     })
 
     test('cancelling a scheduled task is possible', async () => {
-      await cancelScheduledTask(client)
+      await cancelScheduledTask(chain)
     })
 
     test('cancelling a named scheduled task is possible', async () => {
-      await cancelScheduledNamedTask(client)
+      await cancelScheduledNamedTask(chain)
     })
 
     test('scheduling a task after a delay is possible', async () => {
-      await scheduleTaskAfterDelay(client)
+      await scheduleTaskAfterDelay(chain)
     })
 
     test('scheduling a periodic task is possible', async () => {
-      await schedulePeriodicTask(client)
+      await schedulePeriodicTask(chain)
     })
 
     test('scheduling a named periodic task that executes multiple times', async () => {
-      await scheduleNamedPeriodicTask(client)
+      await scheduleNamedPeriodicTask(chain)
     })
 
     test('scheduling a named task after a delay is possible', async () => {
-      await scheduleNamedTaskAfterDelay(client)
+      await scheduleNamedTaskAfterDelay(chain)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
-      await scheduledOverweightCallFails(client)
+      await scheduledOverweightCallFails(chain)
     })
 
     test('execution of scheduled preimage lookup call works', async () => {
-      await scheduleLookupCall(client)
+      await scheduleLookupCall(chain)
     })
 
     test('scheduling a call using a preimage that gets removed', async () => {
-      await schedulePreimagedCall(client)
+      await schedulePreimagedCall(chain)
     })
 
     test('priority-based execution of weighted tasks works correctly', async () => {
-      await schedulePriorityWeightedTasks(client)
+      await schedulePriorityWeightedTasks(chain)
     })
 
     test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
-      await scheduleWithRetryConfig(client)
+      await scheduleWithRetryConfig(chain)
     })
 
     test('setting and canceling retry configuration for named scheduled tasks', async () => {
-      await scheduleNamedWithRetryConfig(client)
+      await scheduleNamedWithRetryConfig(chain)
     })
   })
 }
