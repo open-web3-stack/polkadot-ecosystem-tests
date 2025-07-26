@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
+exports[`CoretimeKusama Multisig > failure tests > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
 [
   {
     "data": {
@@ -17,7 +17,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > approval with sender in 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2400000000)",
+          "refTime": "(rounded 2100000000)",
         },
       },
     },
@@ -27,7 +27,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > approval with sender in 
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval with signatories out of order fails > events when approval with signatories out of order fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > approval with signatories out of order fails > events when approval with signatories out of order fails 1`] = `
 [
   {
     "data": {
@@ -42,7 +42,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > approval with signatorie
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2400000000)",
+          "refTime": "(rounded 2100000000)",
         },
       },
     },
@@ -52,13 +52,13 @@ exports[`CollectivesPolkadot Multisig > failure tests > approval with signatorie
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
+exports[`CoretimeKusama Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong extrinsic index 1`] = `[]`;
+exports[`CoretimeKusama Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong extrinsic index 1`] = `[]`;
 
-exports[`CollectivesPolkadot Multisig > failure tests > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
+exports[`CoretimeKusama Multisig > failure tests > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
-exports[`CollectivesPolkadot Multisig > failure tests > cancellation with sender in signatories fails > events for cancellation with sender in signatories fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > cancellation with sender in signatories fails > events for cancellation with sender in signatories fails 1`] = `
 [
   {
     "data": {
@@ -83,7 +83,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > cancellation with sender
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > cancelling a non-existent multisig operation fails > events when cancelling multisig with bogus call hash fails 1`] = `
 [
   {
     "data": {
@@ -108,7 +108,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > cancelling a non-existen
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > cancelling a non-existent multisig operation fails > events when cancelling multisig with wrong signatories fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > cancelling a non-existent multisig operation fails > events when cancelling multisig with wrong signatories fails 1`] = `
 [
   {
     "data": {
@@ -133,7 +133,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > cancelling a non-existen
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > creating a multisig with threshold < 2 fails > events when creating multisig with threshold < 2 fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > creating a multisig with threshold < 2 fails > events when creating multisig with threshold < 2 fails 1`] = `
 [
   {
     "data": {
@@ -148,7 +148,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > creating a multisig with
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2500000000)",
+          "refTime": "(rounded 2300000000)",
         },
       },
     },
@@ -158,7 +158,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > creating a multisig with
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > execution with sender in signatories fails > events when creation with sender in signatories fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > execution with sender in signatories fails > events when creation with sender in signatories fails 1`] = `
 [
   {
     "data": {
@@ -173,7 +173,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > execution with sender in
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2500000000)",
+          "refTime": "(rounded 2300000000)",
         },
       },
     },
@@ -183,15 +183,15 @@ exports[`CollectivesPolkadot Multisig > failure tests > execution with sender in
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
+exports[`CoretimeKusama Multisig > failure tests > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -199,7 +199,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation wi
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation with remaining signatories out of order fails > events when multisig cancellation with signatories out of order fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig cancellation with remaining signatories out of order fails > events when multisig cancellation with signatories out of order fails 1`] = `
 [
   {
     "data": {
@@ -224,7 +224,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation wi
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation with threshold < 2 fails > events when multisig cancellation with threshold < 2 fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig cancellation with threshold < 2 fails > events when multisig cancellation with threshold < 2 fails 1`] = `
 [
   {
     "data": {
@@ -249,7 +249,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig cancellation wi
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig creation with too many signatories fails > events when creating multisig with too many signatories fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig creation with too many signatories fails > events when creating multisig with too many signatories fails 1`] = `
 [
   {
     "data": {
@@ -264,7 +264,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig creation with t
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2500000000)",
+          "refTime": "(rounded 2300000000)",
         },
       },
     },
@@ -274,13 +274,13 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig creation with t
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig execution with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig execution with remaining signatories out of order fails > events when Alice creates multisig for ordering test 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -288,7 +288,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig execution with 
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > multisig execution with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > multisig execution with remaining signatories out of order fails > events when multisig approval with signatories out of order fails 1`] = `
 [
   {
     "data": {
@@ -303,7 +303,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig execution with 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2500000000)",
+          "refTime": "(rounded 2300000000)",
         },
       },
     },
@@ -313,7 +313,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > multisig execution with 
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > non-depositor tries to cancel multisig fails > events when non-depositor tries to cancel multisig fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > non-depositor tries to cancel multisig fails > events when non-depositor tries to cancel multisig fails 1`] = `
 [
   {
     "data": {
@@ -338,7 +338,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > non-depositor tries to c
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > failure tests > repeated approval with \`approveAsMulti\` fails > events when repeated approval with approveAsMulti fails 1`] = `
+exports[`CoretimeKusama Multisig > failure tests > repeated approval with \`approveAsMulti\` fails > events when repeated approval with approveAsMulti fails 1`] = `
 [
   {
     "data": {
@@ -353,7 +353,7 @@ exports[`CollectivesPolkadot Multisig > failure tests > repeated approval with \
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 2400000000)",
+          "refTime": "(rounded 2100000000)",
         },
       },
     },
@@ -363,13 +363,13 @@ exports[`CollectivesPolkadot Multisig > failure tests > repeated approval with \
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > basic 2-of-3 multisig creation and execution > events when Alice approves multisig call 1`] = `
+exports[`CoretimeKusama Multisig > success tests > basic 2-of-3 multisig creation and execution > events when Alice approves multisig call 1`] = `
 [
   {
     "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -382,13 +382,13 @@ exports[`CollectivesPolkadot Multisig > success tests > basic 2-of-3 multisig cr
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > basic 2-of-3 multisig creation and execution > events when Alice creates multisig 1`] = `
+exports[`CoretimeKusama Multisig > success tests > basic 2-of-3 multisig creation and execution > events when Alice creates multisig 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -396,13 +396,13 @@ exports[`CollectivesPolkadot Multisig > success tests > basic 2-of-3 multisig cr
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > beginning multisig approval with \`approveAsMulti\` works > events when Alice starts multisig with \`approveAsMulti\` 1`] = `
+exports[`CoretimeKusama Multisig > success tests > beginning multisig approval with \`approveAsMulti\` works > events when Alice starts multisig with \`approveAsMulti\` 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -410,13 +410,13 @@ exports[`CollectivesPolkadot Multisig > success tests > beginning multisig appro
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > beginning multisig approval with \`approveAsMulti\` works > events when Bob executes with \`asMulti\` 1`] = `
+exports[`CoretimeKusama Multisig > success tests > beginning multisig approval with \`approveAsMulti\` works > events when Bob executes with \`asMulti\` 1`] = `
 [
   {
     "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -429,13 +429,13 @@ exports[`CollectivesPolkadot Multisig > success tests > beginning multisig appro
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
+exports[`CoretimeKusama Multisig > success tests > final approval with \`approveAsMulti\` does not lead to execution > events when Bob makes final approval with approveAsMulti 1`] = `
 [
   {
     "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
       "callHash": "(hash)",
-      "multisig": "13yhdvhAzML3u5MENoG8WCT9bTVT5H3C6pjdMpy4PZNisgbS",
+      "multisig": "FZ29umykw5WDCAABs2BFzyztRn3BeJEUhqtbCFfKGZhS2kc",
       "timepoint": {
         "height": "(redacted)",
         "index": 2,
@@ -447,13 +447,13 @@ exports[`CollectivesPolkadot Multisig > success tests > final approval with \`ap
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > multisig cancellation works > events when Alice cancels multisig 1`] = `
+exports[`CoretimeKusama Multisig > success tests > multisig cancellation works > events when Alice cancels multisig 1`] = `
 [
   {
     "data": {
       "callHash": "(hash)",
-      "cancelling": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "cancelling": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "timepoint": {
         "height": "(redacted)",
         "index": 2,
@@ -465,13 +465,13 @@ exports[`CollectivesPolkadot Multisig > success tests > multisig cancellation wo
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > multisig cancellation works > events when Alice creates multisig for cancellation 1`] = `
+exports[`CoretimeKusama Multisig > success tests > multisig cancellation works > events when Alice creates multisig for cancellation 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -479,13 +479,13 @@ exports[`CollectivesPolkadot Multisig > success tests > multisig cancellation wo
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
+exports[`CoretimeKusama Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Alice creates multisig for approveAsMulti test 1`] = `
 [
   {
     "data": {
-      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -493,13 +493,13 @@ exports[`CollectivesPolkadot Multisig > success tests > second approval (with \`
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
+exports[`CoretimeKusama Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Bob approves with approveAsMulti 1`] = `
 [
   {
     "data": {
-      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "timepoint": {
         "height": "(redacted)",
         "index": 2,
@@ -511,13 +511,13 @@ exports[`CollectivesPolkadot Multisig > success tests > second approval (with \`
 ]
 `;
 
-exports[`CollectivesPolkadot Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Charlie provides final approval 1`] = `
+exports[`CoretimeKusama Multisig > success tests > second approval (with \`approveAsMulti\`) in 2-of-3 multisig is successful and does not lead to execution > events when Charlie provides final approval 1`] = `
 [
   {
     "data": {
-      "approving": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      "approving": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
       "callHash": "(hash)",
-      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
