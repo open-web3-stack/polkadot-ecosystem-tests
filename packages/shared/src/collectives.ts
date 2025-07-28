@@ -20,7 +20,12 @@ import { setupNetworks } from './setup.js'
  * @param destClient The destination chain that is intented to execute whitelist call
  * @param collectivesClient Collectives parachain
  */
-export async function fellowshipWhitelistCall(destClient: Client, collectivesClient: Client) {
+export async function fellowshipWhitelistCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesDest extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(destChain: Chain<TCustom, TInitStoragesDest>, collectivesChain: Chain<TCustom, TInitStoragesPara>) {
+  const [destClient, collectivesClient] = await setupNetworks(destChain, collectivesChain)
   /**
    * Example 32 byte call hash; value is not important for the test
    */
@@ -100,10 +105,8 @@ export function collectivesChainE2ETests<
   testConfig: { testSuiteName: string },
 ) {
   describe(testConfig.testSuiteName, async () => {
-    const [relayClient, collectivesClient] = await setupNetworks(relayChain, collectivesChain)
-
     test('whitelisting a call by fellowship', async () => {
-      await fellowshipWhitelistCall(relayClient, collectivesClient)
+      await fellowshipWhitelistCall(relayChain, collectivesChain)
     })
   })
 }
