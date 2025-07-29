@@ -112,6 +112,40 @@ exports[`kusama & coretimeKusama > coretimeKusama transfer KSM to kusama > to ch
       },
       "success": true,
       "weightUsed": {
+        "proofSize": "(rounded 6400)",
+        "refTime": "(rounded 840000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 6400)",
+        "refTime": "(rounded 840000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
         "proofSize": "(rounded 7200)",
         "refTime": "(rounded 330000000)",
       },
