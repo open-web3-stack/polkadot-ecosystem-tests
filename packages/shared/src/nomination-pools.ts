@@ -660,8 +660,9 @@ async function nominationPoolSetMetadataTest<
 
   await client.dev.newBlock()
 
-  /// TODO: no events are emitted here pending a PR to `pallet_nomination_pools`.
-  await checkEvents(setMetadataEvents, 'nominationPools').toMatchSnapshot('set metadata events')
+  await checkEvents(setMetadataEvents, 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('set metadata events')
 
   /// Check the set metadata
 
