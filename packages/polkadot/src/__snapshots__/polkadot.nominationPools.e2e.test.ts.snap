@@ -454,7 +454,6 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadat
   {
     "data": {
       "caller": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "poolId": "(rounded 330)",
     },
     "method": "MetadataUpdated",
     "section": "nominationPools",
