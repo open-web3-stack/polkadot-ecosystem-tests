@@ -1,4 +1,4 @@
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
@@ -16,6 +16,7 @@ import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkado
 import type { ISubmittableResult } from '@polkadot/types/types'
 
 import { sha256AsU8a } from '@polkadot/util-crypto'
+import type { TestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -1350,81 +1351,104 @@ export async function scheduleNamedWithRetryConfig<
   assert(retryOpt.isNone)
 }
 
-export function schedulerE2ETests<
+export function baseSchedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    test('schedule task with wrong origin', async () => {
-      await scheduleBadOriginTest(chain)
-    })
-
-    test('schedule named task with wrong origin', async () => {
-      await scheduleNamedBadOriginTest(chain)
-    })
-
-    test('cancel scheduled task with wrong origin', async () => {
-      await cancelScheduledTaskBadOriginTest(chain)
-    })
-
-    test('cancel named scheduled task with wrong origin', async () => {
-      await cancelNamedScheduledTaskBadOriginTest(chain)
-    })
-
-    test('scheduling a call is possible, and the call itself succeeds', async () => {
-      await scheduledCallExecutes(chain)
-    })
-
-    test('scheduling a named call is possible, and the call itself succeeds', async () => {
-      await scheduledNamedCallExecutes(chain)
-    })
-
-    test('cancelling a scheduled task is possible', async () => {
-      await cancelScheduledTask(chain)
-    })
-
-    test('cancelling a named scheduled task is possible', async () => {
-      await cancelScheduledNamedTask(chain)
-    })
-
-    test('scheduling a task after a delay is possible', async () => {
-      await scheduleTaskAfterDelay(chain)
-    })
-
-    test('scheduling a periodic task is possible', async () => {
-      await schedulePeriodicTask(chain)
-    })
-
-    test('scheduling a named periodic task that executes multiple times', async () => {
-      await scheduleNamedPeriodicTask(chain)
-    })
-
-    test('scheduling a named task after a delay is possible', async () => {
-      await scheduleNamedTaskAfterDelay(chain)
-    })
-
-    test('scheduling an overweight call is possible, but the call itself fails', async () => {
-      await scheduledOverweightCallFails(chain)
-    })
-
-    test('execution of scheduled preimage lookup call works', async () => {
-      await scheduleLookupCall(chain)
-    })
-
-    test('scheduling a call using a preimage that gets removed', async () => {
-      await schedulePreimagedCall(chain)
-    })
-
-    test('priority-based execution of weighted tasks works correctly', async () => {
-      await schedulePriorityWeightedTasks(chain)
-    })
-
-    test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
-      await scheduleWithRetryConfig(chain)
-    })
-
-    test('setting and canceling retry configuration for named scheduled tasks', async () => {
-      await scheduleNamedWithRetryConfig(chain)
-    })
-  })
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string }): TestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'scheduling a call is possible, and the call itself succeeds',
+        testFn: async () => await scheduledCallExecutes(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a named call is possible, and the call itself succeeds',
+        testFn: async () => await scheduledNamedCallExecutes(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancelling a scheduled task is possible',
+        testFn: async () => await cancelScheduledTask(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancelling a named scheduled task is possible',
+        testFn: async () => await cancelScheduledNamedTask(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a task after a delay is possible',
+        testFn: async () => await scheduleTaskAfterDelay(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a periodic task is possible',
+        testFn: async () => await schedulePeriodicTask(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a named periodic task that executes multiple times',
+        testFn: async () => await scheduleNamedPeriodicTask(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a named task after a delay is possible',
+        testFn: async () => await scheduleNamedTaskAfterDelay(chain),
+      },
+      {
+        kind: 'test',
+        label: 'execution of scheduled preimage lookup call works',
+        testFn: async () => await scheduleLookupCall(chain),
+      },
+      {
+        kind: 'test',
+        label: 'priority-based execution of weighted tasks works correctly',
+        testFn: async () => await schedulePriorityWeightedTasks(chain),
+      },
+      {
+        kind: 'test',
+        label: 'schedule task with wrong origin',
+        testFn: async () => await scheduleBadOriginTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'schedule named task with wrong origin',
+        testFn: async () => await scheduleNamedBadOriginTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel scheduled task with wrong origin',
+        testFn: async () => await cancelScheduledTaskBadOriginTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel named scheduled task with wrong origin',
+        testFn: async () => await cancelNamedScheduledTaskBadOriginTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling an overweight call is possible, but the call itself fails',
+        testFn: async () => await scheduledOverweightCallFails(chain),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling a call using a preimage that gets removed',
+        testFn: async () => await schedulePreimagedCall(chain),
+      },
+      {
+        kind: 'test',
+        label: 'setting and canceling retry configuration for unnamed scheduled tasks',
+        testFn: async () => await scheduleWithRetryConfig(chain),
+      },
+      {
+        kind: 'test',
+        label: 'setting and canceling retry configuration for named scheduled tasks',
+        testFn: async () => await scheduleNamedWithRetryConfig(chain),
+      },
+    ],
+  }
 }
