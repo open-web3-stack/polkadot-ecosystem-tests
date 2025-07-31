@@ -1,12 +1,16 @@
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, type Client, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { DispatchError } from '@polkadot/types/interfaces'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
-import { assert, describe, expect, test } from 'vitest'
+import type { ISubmittableResult } from '@polkadot/types/types'
+import { assert, expect } from 'vitest'
+import type { TestTree } from './types.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -443,38 +447,131 @@ async function testMergeVestingSchedules<
   )
 }
 
-export function vestingE2ETests<
+/** Simple helper: submit a tx that is expected to be filtered and assert `CallFiltered` error. */
+async function expectFiltered(
+  client: Client,
+  tx: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  signer = defaultAccountsSr25519.alice,
+) {
+  const events = await sendTransaction(tx.signAsync(signer))
+
+  await client.dev.newBlock()
+
+  // Ensure we got an ExtrinsicFailed (filtered) event
+  await checkEvents(events, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'filtered vesting call events',
+  )
+
+  const sysEvents = await client.api.query.system.events()
+  const failed = sysEvents.find((e) => e.event.section === 'system' && e.event.method === 'ExtrinsicFailed')
+  assert(failed, 'Expected ExtrinsicFailed')
+
+  const dispatchErr = failed!.event.data[0] as DispatchError
+  assert(dispatchErr.isModule)
+  assert(client.api.errors.system.CallFiltered.is(dispatchErr.asModule))
+}
+
+async function testForceRemoveVestingScheduleFiltered<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const bob = defaultAccountsSr25519.bob
 
-    const c = await client.api.rpc.system.chain()
-    // The vesting pallet will be disabled on Asset Hubs while the AHM is prepared/ongoing, so this ensures some tests
-    // using `vesting.vestedTransfer` are only run on relay chains.
-    // Furthermore, some tests use the `scheduler` pallet, which is not present on Asset Hubs, so they are put here
-    // even if they do not include on vested transfers.
-    if (!c.toString().includes('Asset Hub')) {
-      test('vesting schedule lifecycle', async () => {
-        await testVestedTransfer(chain, testConfig.addressEncoding)
-      })
+  const tx = client.api.tx.vesting.forceRemoveVestingSchedule(bob.address, 0)
+  await expectFiltered(client, tx)
+}
 
-      test('signed-origin forced removal of vesting schedule fails', async () => {
-        await testForceRemoveVestedSchedule(chain)
-      })
+async function testVestedTransferFiltered<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
 
-      test('forced vested transfer and forced removal of vesting schedule work', async () => {
-        await testForceVestedTransferAndRemoval(chain)
-      })
+  const bob = defaultAccountsSr25519.bob
 
-      test('test merger of two vesting schedules', async () => {
-        await testMergeVestingSchedules(chain)
-      })
-    }
+  const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
+  const perBlock = Math.floor(locked / 4)
 
-    test('signed-origin force-vested transfer fails', async () => {
-      await testForceVestedTransfer(chain)
-    })
+  const tx = client.api.tx.vesting.vestedTransfer(bob.address, {
+    perBlock,
+    locked,
+    startingBlock: 0,
   })
+
+  await expectFiltered(client, tx)
+}
+
+async function testMergeSchedulesFiltered<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const tx = client.api.tx.vesting.mergeSchedules(0, 1)
+  await expectFiltered(client, tx)
+}
+
+export function baseVestingE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'vesting schedule lifecycle',
+        testFn: () => testVestedTransfer(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'signed-origin forced removal of vesting schedule fails',
+        testFn: () => testForceRemoveVestedSchedule(chain),
+      },
+      {
+        kind: 'test',
+        label: 'forced vested transfer and forced removal of vesting schedule work',
+        testFn: () => testForceVestedTransferAndRemoval(chain),
+      },
+      {
+        kind: 'test',
+        label: 'test merger of two vesting schedules',
+        testFn: () => testMergeVestingSchedules(chain),
+      },
+      {
+        kind: 'test',
+        label: 'signed-origin force-vested transfer fails',
+        testFn: () => testForceVestedTransfer(chain),
+      },
+    ],
+  }
+}
+
+export function assetHubVestingE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string }): TestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'vested transfer is filtered',
+        testFn: () => testVestedTransferFiltered(chain),
+      },
+      {
+        kind: 'test',
+        label: 'forced removal of vesting schedule is filtered',
+        testFn: () => testForceRemoveVestingScheduleFiltered(chain),
+      },
+      {
+        kind: 'test',
+        label: 'vesting schedule merger is filtered',
+        testFn: () => testMergeSchedulesFiltered(chain),
+      },
+    ],
+  }
 }
