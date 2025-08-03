@@ -50,6 +50,8 @@
 							":BLANK_LINE:",
 							["@polkadot/**"],
 							":BLANK_LINE:",
+							["vitest", "vitest/**"],
+							":BLANK_LINE:",
 							":ALIAS:",
 							":BLANK_LINE:"
 						]
