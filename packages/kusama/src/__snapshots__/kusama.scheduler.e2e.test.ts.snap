@@ -143,7 +143,7 @@ exports[`Kusama Scheduler > priority-based execution of weighted tasks works cor
   },
   {
     "data": {
-      "when": "(rounded 29000000)",
+      "when": "(rounded 30000000)",
     },
     "method": "AgendaIncomplete",
     "section": "scheduler",
