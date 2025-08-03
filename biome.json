@@ -37,7 +37,27 @@
 			"!**/node_modules/**"
 		]
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							["@acala-network/**"],
+							":BLANK_LINE:",
+							["@e2e-test/**"],
+							":BLANK_LINE:",
+							["@polkadot/**"],
+							":BLANK_LINE:",
+							":ALIAS:",
+							":BLANK_LINE:"
+						]
+					}
+				}
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
