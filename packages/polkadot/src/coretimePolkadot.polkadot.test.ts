@@ -1,9 +1,9 @@
-import { describe } from 'vitest'
-
 import { coretimePolkadot, polkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('polkadot & coretimePolkadot', async () => {
   const [polkadotClient, coretimeClient] = await setupNetworks(polkadot, coretimePolkadot)

@@ -1,10 +1,10 @@
-import { describe } from 'vitest'
-
 import { defaultAccounts } from '@e2e-test/networks'
 import { kusama, peopleKusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('kusama & peopleKusama', async () => {
   const [kusamaClient, peopleClient] = await setupNetworks(kusama, peopleKusama)

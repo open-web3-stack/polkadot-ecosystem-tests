@@ -1,17 +1,19 @@
-import { encodeAddress } from '@polkadot/util-crypto'
-import BN from 'bn.js'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
+
+import BN from 'bn.js'
+import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /// -------
 /// Helpers

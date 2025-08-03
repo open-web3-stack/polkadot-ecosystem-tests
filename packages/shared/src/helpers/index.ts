@@ -1,12 +1,14 @@
-import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
-import { assert, expect } from 'vitest'
-
 import type { StorageValues } from '@acala-network/chopsticks'
+import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
+
 import { defaultAccounts } from '@e2e-test/networks'
+
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { HexString } from '@polkadot/util/types'
+
+import { assert, expect } from 'vitest'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
   toMatchSnapshot(msg?: string): void {

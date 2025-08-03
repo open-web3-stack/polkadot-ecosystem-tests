@@ -1,8 +1,11 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { it } from 'vitest'
 
 import { type Client, defaultAccounts } from '@e2e-test/networks'
+
+import type { KeyringPair } from '@polkadot/keyring/types'
+
+import { it } from 'vitest'
+
 import { check, checkEvents, checkSystemEvents, checkUmp } from '../helpers/index.js'
 import type { GetBalance, Tx } from './types.js'
 
