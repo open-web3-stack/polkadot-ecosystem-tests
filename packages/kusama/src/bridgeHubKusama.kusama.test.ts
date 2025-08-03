@@ -1,10 +1,10 @@
-import { describe } from 'vitest'
-
 import { defaultAccounts } from '@e2e-test/networks'
 import { bridgeHubKusama, kusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('kusama & bridgeHubKusama', async () => {
   const [kusamaClient, bridgeHubClient] = await setupNetworks(kusama, bridgeHubKusama)

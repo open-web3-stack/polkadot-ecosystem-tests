@@ -8,9 +8,9 @@
  * @module
  */
 
-import { describe, test } from 'vitest'
-
 import type { Chain, Client } from '@e2e-test/networks'
+
+import { describe, test } from 'vitest'
 
 import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'

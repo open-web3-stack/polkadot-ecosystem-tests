@@ -1,7 +1,17 @@
-import { encodeAddress } from '@polkadot/util-crypto'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
+
+import type { ApiPromise } from '@polkadot/api'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type Option, u32 } from '@polkadot/types'
+import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
+import type { Codec } from '@polkadot/types/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
+import { assert, describe, test } from 'vitest'
+
 import {
   check,
   checkEvents,
@@ -12,14 +22,6 @@ import {
   scheduleInlineCallWithOrigin,
   setValidatorsStorage,
 } from './helpers/index.js'
-
-import { sendTransaction } from '@acala-network/chopsticks-testing'
-import type { ApiPromise } from '@polkadot/api'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { type Option, u32 } from '@polkadot/types'
-import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
-import type { Codec } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
 
 /// -------
 /// Helpers
