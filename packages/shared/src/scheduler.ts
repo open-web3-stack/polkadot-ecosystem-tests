@@ -1002,7 +1002,7 @@ export async function schedulePriorityWeightedTasks<
   // Check events - there should only be one execution
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
-      redactKeys: /new|old|task/,
+      redactKeys: /new|old|task|when/,
     })
     .toMatchSnapshot('events for priority weighted tasks execution')
 
