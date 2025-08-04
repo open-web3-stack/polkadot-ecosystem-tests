@@ -143,7 +143,7 @@ exports[`Polkadot Scheduler > priority-based execution of weighted tasks works c
   },
   {
     "data": {
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "AgendaIncomplete",
     "section": "scheduler",
