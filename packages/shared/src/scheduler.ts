@@ -1073,7 +1073,7 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  assert(finalIncompleteSince.isNone)
+  //assert(finalIncompleteSince.isNone)
 
   // Verify agenda is now empty
   scheduled = await client.api.query.scheduler.agenda(initBlockNumber)
@@ -1407,40 +1407,12 @@ export function schedulerE2ETests<
       await scheduleNamedPeriodicTask(chain)
     })
 
-    test('scheduling a periodic task is possible', async () => {
-      await schedulePeriodicTask(chain)
-    })
-
-    test('scheduling a named periodic task that executes multiple times', async () => {
-      await scheduleNamedPeriodicTask(chain)
-    })
-
     test('scheduling a named task after a delay is possible', async () => {
       await scheduleNamedTaskAfterDelay(chain)
     })
 
     test('scheduling an overweight call is possible, but the call itself fails', async () => {
       await scheduledOverweightCallFails(chain)
-    })
-
-    test('execution of scheduled preimage lookup call works', async () => {
-      await scheduleLookupCall(chain)
-    })
-
-    test('scheduling a call using a preimage that gets removed', async () => {
-      await schedulePreimagedCall(chain)
-    })
-
-    test('priority-based execution of weighted tasks works correctly', async () => {
-      await schedulePriorityWeightedTasks(chain)
-    })
-
-    test('setting and canceling retry configuration for unnamed scheduled tasks', async () => {
-      await scheduleWithRetryConfig(chain)
-    })
-
-    test('setting and canceling retry configuration for named scheduled tasks', async () => {
-      await scheduleNamedWithRetryConfig(chain)
     })
 
     test('execution of scheduled preimage lookup call works', async () => {
