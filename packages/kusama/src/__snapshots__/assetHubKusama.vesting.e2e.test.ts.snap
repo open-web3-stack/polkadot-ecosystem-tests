@@ -25,70 +25,6 @@ exports[`Kusama Asset Hub Vesting > attempt to merge when no vesting schedules e
 ]
 `;
 
-exports[`Kusama Asset Hub Vesting > force vested transfer is filtered > filtered vesting call events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 18000)",
-          "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Vesting > forced removal of vesting schedule is filtered > filtered vesting call events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1100000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Vesting > merge schedules  > vesting schedules merger events 1`] = `
-[
-  {
-    "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-    },
-    "method": "VestingCompleted",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Vesting > merge schedules (seeded into storage) > vesting schedules merger events 1`] = `
-[
-  {
-    "data": {
-      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-    },
-    "method": "VestingCompleted",
-    "section": "vesting",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
 [
   {
@@ -100,56 +36,6 @@ exports[`Kusama Asset Hub Vesting > signed-origin force-vested transfer fails > 
         "weight": {
           "proofSize": "(rounded 18000)",
           "refTime": "(rounded 1200000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Vesting > vested transfer is filtered > filtered vesting call events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x05000000",
-          "index": 0,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 1100000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Vesting > vesting schedule merger is filtered > filtered vesting call events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 14,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 930000000)",
         },
       },
     },

@@ -6,7 +6,7 @@ import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/inde
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { DispatchError } from '@polkadot/types/interfaces'
-import type { FrameSystemAccountInfo, FrameSystemEventRecord } from '@polkadot/types/lookup'
+import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
 import { assert, expect } from 'vitest'
 import type { TestTree } from './types.js'
 
@@ -341,7 +341,7 @@ async function testForceVestedTransferAndRemoval<
 async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, performVestedTransfer: boolean) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -380,64 +380,34 @@ async function testMergeVestingSchedules<
     startingBlock: currBlockNumber - 2,
   }
 
-  if (performVestedTransfer) {
-    const vestingTx1 = client.api.tx.vesting.vestedTransfer(eve.address, vestingSchedule1)
-    const vestingTx2 = client.api.tx.vesting.vestedTransfer(eve.address, vestingSchedule2)
+  // Perform vested transfers to Eve, to create two vesting schedules.
 
-    let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+  const vestingTx1 = client.api.tx.vesting.vestedTransfer(eve.address, vestingSchedule1)
+  const vestingTx2 = client.api.tx.vesting.vestedTransfer(eve.address, vestingSchedule2)
 
-    const vestingEvents1 = await sendTransaction(vestingTx1.signAsync(alice, { nonce: aliceNonce++ }))
-    const vestingEvents2 = await sendTransaction(vestingTx2.signAsync(alice, { nonce: aliceNonce++ }))
+  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
-    await client.dev.newBlock()
+  const vestingEvents1 = await sendTransaction(vestingTx1.signAsync(alice, { nonce: aliceNonce++ }))
+  const vestingEvents2 = await sendTransaction(vestingTx2.signAsync(alice, { nonce: aliceNonce++ }))
 
-    await checkEvents(vestingEvents1, 'vesting').toMatchSnapshot('vesting events 1')
-    await checkEvents(vestingEvents2, 'vesting').toMatchSnapshot('vesting events 2')
-  } else {
-    const eveAccount = await client.api.query.system.account(eve.address)
-    const eveAccountWritable = eveAccount.toJSON() as any
-    eveAccountWritable.data.frozen = perBlock1 * 2 + perBlock2 * 3
-    eveAccountWritable.consumers += 1
+  await client.dev.newBlock()
 
-    await client.dev.setStorage({})
-
-    await client.dev.setStorage({
-      Balances: {
-        Locks: [
-          [
-            [eve.address],
-            [
-              {
-                id: 'vesting ',
-                amount: (perBlock1 * 2 + perBlock2 * 3).toString(),
-                reasons: 'Misc',
-              },
-            ],
-          ],
-        ],
-      },
-      Vesting: {
-        Vesting: [[[eve.address], [vestingSchedule1, vestingSchedule2, vestingSchedule2]]],
-      },
-      System: {
-        account: [[[eve.address], eveAccountWritable]],
-      },
-    })
-
-    await client.dev.newBlock()
-  }
+  await checkEvents(vestingEvents1, 'vesting').toMatchSnapshot('vesting events 1')
+  await checkEvents(vestingEvents2, 'vesting').toMatchSnapshot('vesting events 2')
 
   currBlockNumber += 1
 
-  await client.pause()
+  // Check that two vesting schedules were created.
 
   const vestingBalance = await client.api.query.vesting.vesting(eve.address)
   assert(vestingBalance.isSome)
   expect(vestingBalance.unwrap().length).toBe(2)
 
+  // Merge the two vesting schedules.
+
   const mergeVestingTx = client.api.tx.vesting.mergeSchedules(0, 1)
 
-  //const mergeVestingEvents = await sendTransaction(mergeVestingTx.signAsync(eve))
+  const mergeVestingEvents = await sendTransaction(mergeVestingTx.signAsync(eve))
 
   await client.dev.newBlock()
 
@@ -501,8 +471,6 @@ async function testMergeSchedulesNoSchedule<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await client.pause()
-
   const charlie = defaultAccountsSr25519.charlie
 
   await client.dev.setStorage({
@@ -562,7 +530,7 @@ export function relayVestingE2ETests<
       {
         kind: 'test',
         label: 'test merger of two vesting schedules',
-        testFn: () => testMergeVestingSchedules(chain, true),
+        testFn: () => testMergeVestingSchedules(chain),
       },
       {
         kind: 'test',
@@ -600,11 +568,6 @@ export function assetHubVestingE2ETests<
         kind: 'test',
         label: 'attempt to merge when no vesting schedules exist fails',
         testFn: () => testMergeSchedulesNoSchedule(chain),
-      },
-      {
-        kind: 'test',
-        label: 'merge schedules (seeded into storage)',
-        testFn: () => testMergeVestingSchedules(chain, false),
       },
     ],
   }
