@@ -8,12 +8,11 @@
  * @module
  */
 
-import { describe, test } from 'vitest'
-
 import type { Chain, Client } from '@e2e-test/networks'
 
 import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
+import type { RootTestTree } from './types.js'
 /**
  * Test the process of whitelisting a call
  *
@@ -95,7 +94,7 @@ export async function sendWhitelistCallViaXcmTransact(
  * @param relayClient The relay chain to be used by these tests
  * @param collectivesClient The collectives's chain associated to the previous `relayChain`
  */
-export function collectivesChainE2ETests<
+export function baseCollectivesChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
@@ -103,10 +102,16 @@ export function collectivesChainE2ETests<
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   collectivesChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string },
-) {
-  describe(testConfig.testSuiteName, async () => {
-    test('whitelisting a call by fellowship', async () => {
-      await fellowshipWhitelistCall(relayChain, collectivesChain)
-    })
-  })
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'whitelisting a call by fellowship',
+        testFn: async () => await fellowshipWhitelistCall(relayChain, collectivesChain),
+      },
+    ],
+  }
 }
