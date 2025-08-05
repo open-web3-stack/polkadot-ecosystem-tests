@@ -16,7 +16,7 @@ import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkado
 import type { ISubmittableResult } from '@polkadot/types/types'
 
 import { sha256AsU8a } from '@polkadot/util-crypto'
-import type { TestTree } from './types.js'
+import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -1354,7 +1354,7 @@ export async function scheduleNamedWithRetryConfig<
 export function baseSchedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string }): TestTree {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string }): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,

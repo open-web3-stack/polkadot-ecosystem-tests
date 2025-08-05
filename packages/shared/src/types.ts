@@ -49,7 +49,7 @@ export type TestNode = {
 export type DescribeNode = {
   kind: 'describe'
   label: string
-  children: TestTree[]
+  children: TestTreeChild[]
   beforeAll?: () => Promise<void>
   afterAll?: () => Promise<void>
   flags?: { only?: boolean; skip?: boolean }
@@ -57,9 +57,16 @@ export type DescribeNode = {
 }
 
 /**
- * A test tree, used to represent an E2E test suite.
+ * A test sub-tree - it can be a single `test`, or a `describe` node with its own children.
  */
-export type TestTree = TestNode | DescribeNode
+type TestTreeChild = TestNode | DescribeNode
+
+/**
+ * A test tree, used to represent an E2E test suite.
+ *
+ * Vitest does not require it, but PET's E2E suites begin with a root `describe` node.
+ */
+export type RootTestTree = DescribeNode
 
 /**
  * Create an end-to-end test tree, to be used in an E2E test suite.
@@ -77,8 +84,8 @@ export type TestTree = TestNode | DescribeNode
  * `vitest.describe` / `vitest.test` immediately so that Vitest picks the tests
  * up during collection.
  */
-export function registerTestTree(node: TestTree) {
-  match(node)
+export function registerTestTree(testTree: TestTreeChild) {
+  match(testTree)
     .with({ kind: 'test' }, (testNode) => {
       const t = testNode.flags?.only ? test.only : testNode.flags?.skip ? test.skip : test
 

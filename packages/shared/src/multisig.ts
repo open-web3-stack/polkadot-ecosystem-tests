@@ -5,7 +5,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 import { checkEvents } from './helpers/index.js'
-import type { TestTree } from './types.js'
+import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -2209,7 +2209,7 @@ async function maxWeightTooLowTest<
 export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
@@ -2247,7 +2247,7 @@ export function successMultisigE2ETests<
 export function failureMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): TestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -2355,7 +2355,7 @@ export function failureMultisigE2ETests<
 export function baseMultisigE2Etests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,

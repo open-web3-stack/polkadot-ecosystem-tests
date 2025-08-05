@@ -8,7 +8,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { DispatchError } from '@polkadot/types/interfaces'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
 import { assert, expect } from 'vitest'
-import type { TestTree } from './types.js'
+import type { RootTestTree } from './types.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -502,7 +502,7 @@ async function testMergeSchedulesNoSchedule<
 export function relayVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): TestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -544,7 +544,7 @@ export function relayVestingE2ETests<
 export function assetHubVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string }): TestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string }): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
