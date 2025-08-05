@@ -1,9 +1,10 @@
 import { BN } from 'bn.js'
-import { assert, describe, test } from 'vitest'
+import { assert } from 'vitest'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import type { RootTestTree } from './types.js'
 
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
@@ -878,21 +879,41 @@ export async function preimageTest<
   assert(preimage.isNone)
 }
 
-export function governanceE2ETests<
+export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(chain, testConfig.addressEncoding)
-    })
-
-    test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
-      await referendumLifecycleKillTest(chain, testConfig.addressEncoding)
-    })
-
-    test('preimage submission, query and removal works', async () => {
-      await preimageTest(chain)
-    })
-  })
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'describe',
+        label: 'referenda tests',
+        children: [
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+            testFn: async () => await referendumLifecycleTest(chain, testConfig.addressEncoding),
+          },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+            testFn: async () => await referendumLifecycleKillTest(chain, testConfig.addressEncoding),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'preimage tests',
+        children: [
+          {
+            kind: 'test',
+            label: 'preimage submission, query and removal works',
+            testFn: async () => await preimageTest(chain),
+          },
+        ],
+      },
+    ],
+  }
 }

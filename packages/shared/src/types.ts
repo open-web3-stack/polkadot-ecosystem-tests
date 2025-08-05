@@ -76,7 +76,7 @@ export type RootTestTree = DescribeNode
  *
  * Call this exactly once per suite at module scope:
  * ```ts
- * const suite: TestTree = { … }
+ * const suite: TestTreeChild = { … }
  * registerTestTree(suite)
  * ```
  *
