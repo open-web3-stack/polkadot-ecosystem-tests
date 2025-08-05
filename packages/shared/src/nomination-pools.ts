@@ -19,7 +19,8 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import { type Option, u32 } from '@polkadot/types'
 import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
 import type { Codec } from '@polkadot/types/types'
-import { assert, describe, test } from 'vitest'
+import { assert } from 'vitest'
+import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -1057,33 +1058,47 @@ async function nominationPoolsUpdateRolesTest<
   })
 }
 
-export function nominationPoolsE2ETests<
+export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    test('nomination pool lifecycle test', async () => {
-      await nominationPoolLifecycleTest(chain, testConfig.addressEncoding)
-    })
-
-    test('nomination pool creation with insufficient funds', async () => {
-      await nominationPoolCreationFailureTest(chain)
-    })
-
-    test('nomination pool metadata test', async () => {
-      await nominationPoolSetMetadataTest(chain)
-    })
-
-    test('nomination pool double join test: an account can only ever be in one pool at a time', async () => {
-      await nominationPoolDoubleJoinError(chain)
-    })
-
-    test('nomination pool global config test', async () => {
-      await nominationPoolGlobalConfigTest(chain)
-    })
-
-    test('nomination pools update roles test', async () => {
-      await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding)
-    })
-  })
+>(
+  chain: Chain<TCustom, TInitStoragesRelay>,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'nomination pool lifecycle test',
+        testFn: async () => await nominationPoolLifecycleTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool creation with insufficient funds',
+        testFn: async () => await nominationPoolCreationFailureTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool metadata test',
+        testFn: async () => await nominationPoolSetMetadataTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool double join test: an account can only ever be in one pool at a time',
+        testFn: async () => await nominationPoolDoubleJoinError(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool global config test',
+        testFn: async () => await nominationPoolGlobalConfigTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pools update roles test',
+        testFn: async () => await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
 }
