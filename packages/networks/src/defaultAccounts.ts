@@ -1,7 +1,7 @@
 import { testingPairs } from '@acala-network/chopsticks-testing'
+
 import type { Keyring } from '@polkadot/keyring'
 import type { KeyringInstance, KeyringPair } from '@polkadot/keyring/types'
-
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 /**

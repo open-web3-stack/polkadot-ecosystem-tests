@@ -1,7 +1,15 @@
-import { assert, expect } from 'vitest'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
+import type { ISubmittableResult } from '@polkadot/types/types'
+import { sha256AsU8a } from '@polkadot/util-crypto'
+
+import { assert, expect } from 'vitest'
+
 import {
   check,
   checkEvents,
@@ -9,14 +17,6 @@ import {
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
 } from './helpers/index.js'
-
-import { sendTransaction } from '@acala-network/chopsticks-testing'
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
-import type { ISubmittableResult } from '@polkadot/types/types'
-
-import { sha256AsU8a } from '@polkadot/util-crypto'
-import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -1035,7 +1035,7 @@ export async function schedulePriorityWeightedTasks<
   // Check events - there should only be one execution
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
-      redactKeys: /new|old|task/,
+      redactKeys: /new|old|task|when/,
     })
     .toMatchSnapshot('events for priority weighted tasks execution')
 

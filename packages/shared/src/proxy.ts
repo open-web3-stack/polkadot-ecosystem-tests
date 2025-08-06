@@ -1,6 +1,15 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, KusamaProxyTypes, PolkadotProxyTypes, setupNetworks } from '@e2e-test/shared'
+import {
+  type Client,
+  type DescribeNode,
+  KusamaProxyTypes,
+  PolkadotProxyTypes,
+  type RootTestTree,
+  setupNetworks,
+  type TestNode,
+} from '@e2e-test/shared'
 
 import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -9,13 +18,12 @@ import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, expect } from 'vitest'
-import { check, checkEvents } from './helpers/index.js'
-import type { DescribeNode, RootTestTree, TestNode } from './types.js'
 
 import BN from 'bn.js'
-
 import { match } from 'ts-pattern'
+import { check, checkEvents } from './helpers/index.js'
 
 /// -------
 /// Helpers

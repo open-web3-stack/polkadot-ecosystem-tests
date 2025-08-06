@@ -1,9 +1,9 @@
-import { describe } from 'vitest'
-
 import { karura, shiden } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('karura & shiden', async () => {
   const [shidenClient, karuraClient] = await setupNetworks(shiden, karura)

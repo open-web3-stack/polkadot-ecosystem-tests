@@ -1,9 +1,12 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
+
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
+
 import { checkEvents } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 

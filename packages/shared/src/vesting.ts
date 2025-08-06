@@ -1,14 +1,15 @@
-import { encodeAddress } from '@polkadot/util-crypto'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { DispatchError } from '@polkadot/types/interfaces'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, expect } from 'vitest'
-import type { RootTestTree } from './types.js'
+
+import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /**
  * Test that a vested transfer works as expected.

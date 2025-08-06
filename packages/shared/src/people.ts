@@ -8,21 +8,20 @@
  * @module
  */
 
-import { assert } from 'vitest'
-import type { RootTestTree } from './types.js'
-
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { Option, u128 } from '@polkadot/types'
 import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } from '@polkadot/types/lookup'
-import { encodeAddress } from '@polkadot/util-crypto'
 import type { HexString } from '@polkadot/util/types'
+import { encodeAddress } from '@polkadot/util-crypto'
 
-import { setupNetworks } from '@e2e-test/shared'
+import { assert } from 'vitest'
+
 import {
   check,
   checkEvents,

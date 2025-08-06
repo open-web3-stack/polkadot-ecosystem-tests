@@ -1,9 +1,11 @@
-import { assert, expect } from 'vitest'
-
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
+
 import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
+
+import { assert, expect } from 'vitest'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import type { RootTestTree } from './types.js'

@@ -1,9 +1,9 @@
 import { collectivesPolkadot, polkadot } from '@e2e-test/networks/chains'
-
 import { baseCollectivesChainE2ETests, registerTestTree, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
+
 import { describe, test } from 'vitest'
 
 registerTestTree(
