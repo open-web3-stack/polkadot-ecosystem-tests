@@ -1,6 +1,8 @@
 import { peopleKusama } from '@e2e-test/networks/chains'
 
-import { proxyE2ETests } from '@e2e-test/shared'
+import { baseProxyE2ETests, registerTestTree } from '@e2e-test/shared'
 import { PeopleProxyTypes } from '@e2e-test/shared'
 
-proxyE2ETests(peopleKusama, { testSuiteName: 'People Kusama Proxy', addressEncoding: 2 }, PeopleProxyTypes)
+registerTestTree(
+  baseProxyE2ETests(peopleKusama, { testSuiteName: 'People Kusama Proxy', addressEncoding: 2 }, PeopleProxyTypes),
+)
