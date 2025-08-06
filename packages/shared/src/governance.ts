@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { Option, u32 } from '@polkadot/types'
 import type {
@@ -14,7 +14,7 @@ import type {
 import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, test } from 'vitest'
+import { assert } from 'vitest'
 
 import { BN } from 'bn.js'
 import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
@@ -106,7 +106,9 @@ function referendumCmp(
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -706,7 +708,8 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -833,7 +836,9 @@ export async function referendumLifecycleKillTest<
 export async function preimageTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
   const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(devAccounts.alice))
@@ -874,23 +879,41 @@ export async function preimageTest<
   assert(preimage.isNone)
 }
 
-export function governanceE2ETests<
+export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
-    test('referendum lifecycle test - submission, decision deposit, various voting should all work', async () => {
-      await referendumLifecycleTest(client, testConfig.addressEncoding)
-    })
-
-    test('referendum lifecycle test 2 - submission, decision deposit, and killing should work', async () => {
-      await referendumLifecycleKillTest(client, testConfig.addressEncoding)
-    })
-
-    test('preimage submission, query and removal works', async () => {
-      await preimageTest(client)
-    })
-  })
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'describe',
+        label: 'referenda tests',
+        children: [
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+            testFn: async () => await referendumLifecycleTest(chain, testConfig.addressEncoding),
+          },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+            testFn: async () => await referendumLifecycleKillTest(chain, testConfig.addressEncoding),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'preimage tests',
+        children: [
+          {
+            kind: 'test',
+            label: 'preimage submission, query and removal works',
+            testFn: async () => await preimageTest(chain),
+          },
+        ],
+      },
+    ],
+  }
 }

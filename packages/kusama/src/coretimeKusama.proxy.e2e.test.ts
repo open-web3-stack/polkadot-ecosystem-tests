@@ -1,4 +1,6 @@
 import { coretimeKusama } from '@e2e-test/networks/chains'
-import { CoretimeProxyTypes, proxyE2ETests } from '@e2e-test/shared'
+import { CoretimeProxyTypes, fullProxyE2ETests, registerTestTree } from '@e2e-test/shared'
 
-proxyE2ETests(coretimeKusama, { testSuiteName: 'Kusama Coretime Proxy', addressEncoding: 2 }, CoretimeProxyTypes)
+registerTestTree(
+  fullProxyE2ETests(coretimeKusama, { testSuiteName: 'Kusama Coretime Proxy', addressEncoding: 2 }, CoretimeProxyTypes),
+)

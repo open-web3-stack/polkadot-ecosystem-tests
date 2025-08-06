@@ -10,17 +10,21 @@
 
 import type { Chain, Client } from '@e2e-test/networks'
 
-import { describe, test } from 'vitest'
-
 import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
+import type { RootTestTree } from './types.js'
 /**
  * Test the process of whitelisting a call
  *
  * @param destClient The destination chain that is intented to execute whitelist call
  * @param collectivesClient Collectives parachain
  */
-export async function fellowshipWhitelistCall(destClient: Client, collectivesClient: Client) {
+export async function fellowshipWhitelistCall<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesDest extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(destChain: Chain<TCustom, TInitStoragesDest>, collectivesChain: Chain<TCustom, TInitStoragesPara>) {
+  const [destClient, collectivesClient] = await setupNetworks(destChain, collectivesChain)
   /**
    * Example 32 byte call hash; value is not important for the test
    */
@@ -90,7 +94,7 @@ export async function sendWhitelistCallViaXcmTransact(
  * @param relayClient The relay chain to be used by these tests
  * @param collectivesClient The collectives's chain associated to the previous `relayChain`
  */
-export function collectivesChainE2ETests<
+export function baseCollectivesChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
@@ -98,12 +102,16 @@ export function collectivesChainE2ETests<
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   collectivesChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string },
-) {
-  describe(testConfig.testSuiteName, async () => {
-    const [relayClient, collectivesClient] = await setupNetworks(relayChain, collectivesChain)
-
-    test('whitelisting a call by fellowship', async () => {
-      await fellowshipWhitelistCall(relayClient, collectivesClient)
-    })
-  })
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'whitelisting a call by fellowship',
+        testFn: async () => await fellowshipWhitelistCall(relayChain, collectivesChain),
+      },
+    ],
+  }
 }

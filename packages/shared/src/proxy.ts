@@ -1,7 +1,15 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, KusamaProxyTypes, PolkadotProxyTypes, setupNetworks } from '@e2e-test/shared'
+import {
+  type Client,
+  type DescribeNode,
+  KusamaProxyTypes,
+  PolkadotProxyTypes,
+  type RootTestTree,
+  setupNetworks,
+  type TestNode,
+} from '@e2e-test/shared'
 
 import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -11,7 +19,7 @@ import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
 import { match } from 'ts-pattern'
@@ -1322,10 +1330,14 @@ async function proxyCallFilteringSingleTestRunner<
  *
  * To disable a proxy type from being tested, remove it from the `proxyTypesToTest` array.
  */
-async function proxyCallFilteringTestRunner<
+function proxyCallFilteringTestTree<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, testType: ProxyCallFilteringTestType) {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  proxyTypes: Record<string, number>,
+  testType: ProxyCallFilteringTestType,
+): DescribeNode {
   const kr = defaultAccountsSr25519.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
@@ -1359,15 +1371,25 @@ async function proxyCallFilteringTestRunner<
     'IdentityJudgement',
   ]
 
+  const children: TestNode[] = []
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
     // In this network, there might be some proxy types that should not/cannot be tested.
     if (!proxyTypesToTest.includes(proxyType)) {
       continue
     }
 
-    test(`${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`, async () => {
-      await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType], testType)
+    children.push({
+      kind: 'test' as const,
+      label: `${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`,
+      testFn: async () =>
+        await proxyCallFilteringSingleTestRunner(chain, proxyType, proxyTypeIx, proxyAccounts[proxyType], testType),
     })
+  }
+
+  return {
+    kind: 'describe',
+    label: `filtering tests for ${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls`,
+    children,
   }
 }
 
@@ -1841,37 +1863,55 @@ export async function proxyAnnouncementLifecycleTest<
  * - Executing calls through proxies
  * - Proxy types and filtering
  */
-export async function proxyE2ETests<
+export function baseProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
   chain: Chain<TCustom, TInitStorages>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
-) {
-  describe(testConfig.testSuiteName, async () => {
-    test('add proxies (with/without delay) to an account, and remove them', async () => {
-      await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY)
-    })
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'add proxies (with/without delay) to an account, and remove them',
+        testFn: async () => await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY),
+      },
+      {
+        kind: 'test',
+        label: 'create and kill pure proxies',
+        testFn: async () => await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes),
+      },
+      {
+        kind: 'test',
+        label: 'perform proxy call on behalf of delegator',
+        testFn: async () => await proxyCallTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'proxy announcement lifecycle test',
+        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
+}
 
-    test('create and kill pure proxies', async () => {
-      await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes)
-    })
+export function fullProxyE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+  proxyTypes: Record<string, number>,
+): RootTestTree {
+  const allowedFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
+  const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
 
-    test('perform proxy call on behalf of delegator', async () => {
-      await proxyCallTest(chain)
-    })
+  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyTypes)
+  baseTestTree.children.push(allowedFilteringTests, forbiddenFilteringTests)
 
-    test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding)
-    })
-
-    describe('filtering tests for permitted proxy calls', () => {
-      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
-    })
-
-    describe('filtering tests for forbidden proxy calls', () => {
-      proxyCallFilteringTestRunner(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
-    })
-  })
+  return baseTestTree
 }

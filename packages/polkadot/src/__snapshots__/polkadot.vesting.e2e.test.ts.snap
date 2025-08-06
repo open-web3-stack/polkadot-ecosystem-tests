@@ -13,6 +13,31 @@ exports[`Polkadot Vesting > forced vested transfer and forced removal of vesting
 ]
 `;
 
+exports[`Polkadot Vesting > merging vesting schedules when none exist fails > merge schedules extrinsic failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 25,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 12000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
 [
   {

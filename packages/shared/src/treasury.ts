@@ -5,9 +5,10 @@ import { setupNetworks } from '@e2e-test/shared'
 
 import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
 
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import type { RootTestTree } from './types.js'
 
 /**
  * Test that a foreign asset spend from the Relay treasury is reflected on the AssetHub.
@@ -129,7 +130,7 @@ export async function treasurySpendForeignAssetTest<
   expect(balanceAfterAmount - balanceBeforeAmount).toBe(amount)
 }
 
-export function treasuryE2ETests<
+export function baseTreasuryE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
@@ -137,10 +138,16 @@ export function treasuryE2ETests<
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   ahChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string; addressEncoding: number },
-) {
-  describe(testConfig.testSuiteName, () => {
-    test('Foreign asset spend from Relay treasury is reflected on AssetHub', async () => {
-      await treasurySpendForeignAssetTest(relayChain, ahChain)
-    })
-  })
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'Foreign asset spend from Relay treasury is reflected on AssetHub',
+        testFn: async () => await treasurySpendForeignAssetTest(relayChain, ahChain),
+      },
+    ],
+  }
 }

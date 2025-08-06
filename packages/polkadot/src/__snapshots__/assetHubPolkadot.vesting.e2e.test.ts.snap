@@ -1,15 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
+exports[`Polkadot Asset Hub Vesting > attempt to merge when no vesting schedules exist fails > merge schedules extrinsic failed 1`] = `
 [
-  "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
-  5000000000,
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vesting removal event 1`] = `
-[
-  "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 14,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 17000)",
+          "refTime": "(rounded 810000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
 ]
 `;
 
@@ -22,90 +34,13 @@ exports[`Polkadot Asset Hub Vesting > signed-origin force-vested transfer fails 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 960000000)",
+          "proofSize": "(rounded 18000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting events 1 1`] = `
-[
-  {
-    "data": {
-      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 25000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
-[
-  {
-    "data": {
-      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 76000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > vesting schedules merger events 1`] = `
-[
-  {
-    "data": {
-      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 70000000000)",
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest events 1`] = `
-[
-  {
-    "data": {
-      "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 5000000000,
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest events 2`] = `
-[
-  {
-    "data": {
-      "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-    },
-    "method": "VestingCompleted",
-    "section": "vesting",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest other events 1`] = `
-[
-  {
-    "data": {
-      "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 2500000000,
-    },
-    "method": "VestingUpdated",
-    "section": "vesting",
   },
 ]
 `;

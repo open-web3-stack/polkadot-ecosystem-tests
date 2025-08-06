@@ -37,6 +37,11 @@
 			"import": "./dist/esm/xcm/index.js",
 			"default": "./dist/esm/xcm/index.js"
 		},
+		"./types": {
+			"require": "./dist/cjs/types.js",
+			"import": "./dist/esm/types.js",
+			"default": "./dist/esm/types.js"
+		},
 		"./*": {
 			"require": "./dist/cjs/*.js",
 			"import": "./dist/esm/*.js",

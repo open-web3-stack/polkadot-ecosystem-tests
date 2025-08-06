@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -10,7 +10,7 @@ import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/looku
 import type { Codec } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, test } from 'vitest'
+import { assert } from 'vitest'
 
 import {
   check,
@@ -98,7 +98,8 @@ async function createNominationPool(
 async function nominationPoolCreationFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
   const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
@@ -168,7 +169,8 @@ async function nominationPoolCreationFailureTest<
 async function nominationPoolLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   const ferdie = defaultAccountsSr25519.keyring.addFromUri('//Ferdie')
 
   // Fund test accounts not already provisioned in the test chain spec.
@@ -259,7 +261,7 @@ async function nominationPoolLifecycleTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(updateRolesEvents, 'staking', 'nominationPools').toMatchSnapshot('update roles events')
+  await checkEvents(updateRolesEvents, 'nominationPools').toMatchSnapshot('update roles events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   assert(poolData.isSome, 'Pool should still exist after roles are updated')
@@ -622,7 +624,9 @@ async function nominationPoolLifecycleTest<
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
   const createNomPoolEvents = await createNominationPool(
@@ -680,7 +684,9 @@ async function nominationPoolSetMetadataTest<
 async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const firstPoolId = preLastPoolId + 1
 
@@ -805,7 +811,9 @@ async function nominationPoolDoubleJoinError<
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const one = new u32(client.api.registry, 1)
 
   const preMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
@@ -881,7 +889,9 @@ async function nominationPoolGlobalConfigTest<
 async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
 
@@ -1050,35 +1060,47 @@ async function nominationPoolsUpdateRolesTest<
   })
 }
 
-export function nominationPoolsE2ETests<
+export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
-    test('nomination pool lifecycle test', async () => {
-      await nominationPoolLifecycleTest(client, testConfig.addressEncoding)
-    })
-
-    test('nomination pool creation with insufficient funds', async () => {
-      await nominationPoolCreationFailureTest(client)
-    })
-
-    test('nomination pool metadata test', async () => {
-      await nominationPoolSetMetadataTest(client)
-    })
-
-    test('nomination pool double join test: an account can only ever be in one pool at a time', async () => {
-      await nominationPoolDoubleJoinError(client)
-    })
-
-    test('nomination pool global config test', async () => {
-      await nominationPoolGlobalConfigTest(client)
-    })
-
-    test('nomination pools update roles test', async () => {
-      await nominationPoolsUpdateRolesTest(client, testConfig.addressEncoding)
-    })
-  })
+>(
+  chain: Chain<TCustom, TInitStoragesRelay>,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'nomination pool lifecycle test',
+        testFn: async () => await nominationPoolLifecycleTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool creation with insufficient funds',
+        testFn: async () => await nominationPoolCreationFailureTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool metadata test',
+        testFn: async () => await nominationPoolSetMetadataTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool double join test: an account can only ever be in one pool at a time',
+        testFn: async () => await nominationPoolDoubleJoinError(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool global config test',
+        testFn: async () => await nominationPoolGlobalConfigTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pools update roles test',
+        testFn: async () => await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
 }
