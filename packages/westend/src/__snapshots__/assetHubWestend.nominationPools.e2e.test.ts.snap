@@ -15,7 +15,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool creation with insu
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 3700000000)",
+          "refTime": "(rounded 1600000000)",
         },
       },
     },
@@ -61,7 +61,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool double join test: 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2800000000)",
+          "refTime": "(rounded 1300000000)",
         },
       },
     },
@@ -69,46 +69,6 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool double join test: 
     "section": "system",
   },
 ]
-`;
-
-exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs events 1`] = `
-{
-  "event": {
-    "data": [
-      100000000001,
-      1000000000001,
-      513,
-      524289,
-      2,
-      1,
-    ],
-    "index": "0x5116",
-  },
-  "phase": {
-    "initialization": null,
-  },
-  "topics": [],
-}
-`;
-
-exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs events 2`] = `
-{
-  "event": {
-    "data": [
-      100000000002,
-      1000000000002,
-      514,
-      524290,
-      3,
-      2,
-    ],
-    "index": "0x5116",
-  },
-  "phase": {
-    "initialization": null,
-  },
-  "topics": [],
-}
 `;
 
 exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
@@ -121,12 +81,46 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool global config test
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1100000000)",
+          "refTime": "(rounded 490000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > system events 1`] = `
+[
+  {
+    "data": {
+      "globalMaxCommission": "0.00%",
+      "maxMembers": "(rounded 520000)",
+      "maxMembersPerPool": 2,
+      "maxPools": "(rounded 510)",
+      "minCreateBond": "(rounded 1000000000000)",
+      "minJoinBond": "(rounded 100000000000)",
+    },
+    "method": "GlobalParamsUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Nomination Pools > nomination pool global config test > system events 2`] = `
+[
+  {
+    "data": {
+      "globalMaxCommission": "0.00%",
+      "maxMembers": "(rounded 520000)",
+      "maxMembersPerPool": 3,
+      "maxPools": "(rounded 510)",
+      "minCreateBond": "(rounded 1000000000000)",
+      "minJoinBond": "(rounded 100000000000)",
+    },
+    "method": "GlobalParamsUpdated",
+    "section": "nominationPools",
   },
 ]
 `;
@@ -173,7 +167,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > c
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1300000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -198,7 +192,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > c
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 830000000)",
+          "refTime": "(rounded 470000000)",
         },
       },
     },
@@ -312,7 +306,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > n
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1900000000)",
+          "refTime": "(rounded 960000000)",
         },
       },
     },
@@ -361,7 +355,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool lifecycle test > u
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2200000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -516,7 +510,7 @@ exports[`Westend Asset Hub Nomination Pools > nomination pools update roles test
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 610000000)",
+          "refTime": "(rounded 360000000)",
         },
       },
     },

@@ -429,7 +429,7 @@ exports[`Westend Asset Hub Proxy > create and kill pure proxies > events when ki
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "5EEoW3xQdgn9L6JeyKsKx8FC9L85E8QvYpEX1G9CUrj4S8Jf",
+      "pure": "5FYBLJ3tp5zZFYWSGPD2SZJcsyufGKxBGPDHrS6TYoa1Ug1K",
       "spawner": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
     },
     "method": "PureKilled",
@@ -692,6 +692,28 @@ exports[`Westend Asset Hub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > assets.create: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > balances.burn: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
 [
   {
@@ -824,7 +846,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -857,7 +879,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -884,6 +906,94 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > nfts.destroy: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > staking.bond: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.apply_authorized_upgrade: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.remark: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > system.remark_with_event: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > uniques.create: AssetManager 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > assets.mint: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > balances.burn: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
@@ -1018,7 +1128,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1051,7 +1161,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1078,6 +1188,83 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > nfts.set_metadata: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > staking.bond: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.apply_authorized_upgrade: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.remark: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > system.remark_with_event: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > uniques.mint: AssetOwner 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > balances.burn: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
@@ -1174,7 +1361,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1207,7 +1394,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1215,6 +1402,61 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > staking.bond: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.apply_authorized_upgrade: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.remark: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > system.remark_with_event: Assets 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
@@ -1311,7 +1553,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1344,7 +1586,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1352,6 +1594,61 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "system",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > staking.bond: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > balances.burn: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
@@ -1467,7 +1764,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1500,7 +1797,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1527,6 +1824,83 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > referenda.submit: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > staking.bond: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.apply_authorized_upgrade: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark_with_event: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > vesting.vested_transfer: Collator 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > balances.burn: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet balances, call burn 1`] = `
@@ -1623,7 +1997,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1656,7 +2030,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1683,6 +2057,72 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > staking.bond: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.apply_authorized_upgrade: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.remark: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > system.remark_with_event: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > vesting.vested_transfer: Governance 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > balances.burn: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet balances, call burn 1`] = `
@@ -1798,7 +2238,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -1831,7 +2271,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -1858,6 +2298,83 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > referenda.submit: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > staking.bond: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.apply_authorized_upgrade: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.remark: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > system.remark_with_event: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > vesting.vested_transfer: NominationPools 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
@@ -1915,6 +2432,39 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > referenda.submit: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > vesting.vested_transfer: NonTransfer 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > balances.burn: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet balances, call burn 1`] = `
@@ -2011,7 +2561,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -2044,7 +2594,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -2071,6 +2621,61 @@ exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > f
     "section": "proxy",
   },
 ]
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > referenda.submit: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.apply_authorized_upgrade: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.remark: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > system.remark_with_event: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
+`;
+
+exports[`Westend Asset Hub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > vesting.vested_transfer: Staking 1`] = `
+{
+  "err": {
+    "module": {
+      "error": "0x05000000",
+      "index": 0,
+    },
+  },
+}
 `;
 
 exports[`Westend Asset Hub Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
@@ -2220,7 +2825,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for permitted proxy calls > a
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -2254,7 +2859,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for permitted proxy calls > a
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },
@@ -3208,7 +3813,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for permitted proxy calls > a
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -3242,7 +3847,7 @@ exports[`Westend Asset Hub Proxy > filtering tests for permitted proxy calls > a
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 380000000)",
         },
       },
     },

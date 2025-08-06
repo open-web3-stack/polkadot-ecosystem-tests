@@ -2180,6 +2180,27 @@ exports[`Polkadot Coretime Proxy > perform proxy call on behalf of delegator > e
 ]
 `;
 
+exports[`Polkadot Coretime Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Dave as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "to": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
 
 exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
