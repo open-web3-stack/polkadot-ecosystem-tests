@@ -8,7 +8,8 @@
  * @module
  */
 
-import { assert, describe, test } from 'vitest'
+import { assert } from 'vitest'
+import type { RootTestTree } from './types.js'
 
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
@@ -717,11 +718,11 @@ export async function addRegistrarViaRelayAsRoot<
  * Tests that are meant to be run in a people chain *must* be added to as a `vitest.test` to the
  * `describe` runner this function creates.
  *
- * @param topLevelDescription A description of this test runner e.g. "Polkadot People E2E tests"
  * @param relayChain The relay chain to be used by these tests
  * @param peopleChain The people's chain associated to the previous `relayChain`
+ * @param testConfig Configuration including test suite name and address encoding
  */
-export function peopleChainE2ETests<
+export function basePeopleChainE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
@@ -729,26 +730,39 @@ export function peopleChainE2ETests<
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   peopleChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string; addressEncoding: number },
-) {
-  describe(testConfig.testSuiteName, async () => {
-    test('setting on-chain identity and requesting judgement should work', async () => {
-      await setIdentityThenRequestAndProvideJudgement(peopleChain)
-    })
-
-    test('setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work', async () => {
-      await setIdentityRequestJudgementTwiceThenResetIdentity(peopleChain)
-    })
-
-    test('setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work', async () => {
-      await setIdentityThenRequesThenCancelThenClear(peopleChain)
-    })
-
-    test('setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work', async () => {
-      await setIdentityThenAddSubsThenRemove(peopleChain, testConfig.addressEncoding)
-    })
-
-    test('adding a registrar as root from the relay chain works', async () => {
-      await addRegistrarViaRelayAsRoot(relayChain, peopleChain, testConfig.addressEncoding)
-    })
-  })
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'setting on-chain identity and requesting judgement should work',
+        testFn: async () => await setIdentityThenRequestAndProvideJudgement(peopleChain),
+      },
+      {
+        kind: 'test',
+        label:
+          'setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work',
+        testFn: async () => await setIdentityRequestJudgementTwiceThenResetIdentity(peopleChain),
+      },
+      {
+        kind: 'test',
+        label:
+          'setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work',
+        testFn: async () => await setIdentityThenRequesThenCancelThenClear(peopleChain),
+      },
+      {
+        kind: 'test',
+        label:
+          'setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work',
+        testFn: async () => await setIdentityThenAddSubsThenRemove(peopleChain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'adding a registrar as root from the relay chain works',
+        testFn: async () => await addRegistrarViaRelayAsRoot(relayChain, peopleChain, testConfig.addressEncoding),
+      },
+    ],
+  }
 }
