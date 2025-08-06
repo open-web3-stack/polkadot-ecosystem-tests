@@ -136,8 +136,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3500)",
-            "refTime": "(rounded 290000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 330000000)",
           },
           "paysFee": "Yes",
         },

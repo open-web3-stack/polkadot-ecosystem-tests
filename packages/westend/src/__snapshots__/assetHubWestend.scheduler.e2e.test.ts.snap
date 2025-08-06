@@ -10,7 +10,7 @@ exports[`Westend Asset Hub Scheduler > cancel named scheduled task with wrong or
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 770000000)",
+          "refTime": "(rounded 430000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Westend Asset Hub Scheduler > cancel scheduled task with wrong origin >
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 740000000)",
+          "refTime": "(rounded 410000000)",
         },
       },
     },
@@ -142,7 +142,7 @@ exports[`Westend Asset Hub Scheduler > priority-based execution of weighted task
   },
   {
     "data": {
-      "when": "(rounded 26000000)",
+      "when": "(redacted)",
     },
     "method": "AgendaIncomplete",
     "section": "scheduler",
@@ -160,7 +160,7 @@ exports[`Westend Asset Hub Scheduler > schedule named task with wrong origin > e
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 760000000)",
+          "refTime": "(rounded 420000000)",
         },
       },
     },
@@ -180,7 +180,7 @@ exports[`Westend Asset Hub Scheduler > schedule task with wrong origin > events 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 630000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },

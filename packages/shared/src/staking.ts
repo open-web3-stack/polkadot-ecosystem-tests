@@ -1,20 +1,104 @@
-import { encodeAddress } from '@polkadot/util-crypto'
-import BN from 'bn.js'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { type Client, setupNetworks } from '@e2e-test/shared'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
+
+import BN from 'bn.js'
+import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /// -------
 /// Helpers
 /// -------
+
+/**
+ * Locate the block number at which the current era ends.
+ *
+ * This is done by binary-searching through blocks, starting at the estimate obtained from
+ * `api.derive.session.progress`, and stopping when `api.query.staking.activeEra` changes.
+ *
+ * Complexity: in essence, `O(1)` since `MAX` is fixed, but in practice,
+ * `ceil(log_2(MAX))`.
+ *
+ * @returns The block number at which the current era ends, and following which a `staking.EraPaid` event
+ * is emitted.
+ */
+async function locateEraChange(client: Client<any, any>): Promise<number | undefined> {
+  const initialBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const activeEraOpt = await client.api.query.staking.activeEra()
+  if (activeEraOpt.isNone) {
+    // Nothing to do if there is no active era.
+    return undefined
+  }
+  const activeEra = activeEraOpt.unwrap().index.toNumber()
+  const previousEra = activeEra - 1
+
+  // Estimate of active era start block.
+  const eraProgress = await client.api.derive.session.eraProgress()
+
+  // It is assumed that the active era changes at most this amount of blocks after the estimate provided
+  // by `api.derive.session.progress`. Adjust as needed.
+  const MAX = 512
+
+  // Initial bounds for binary search.
+  let lo = initialBlockNumber - eraProgress.toNumber() - 1
+  let hi = Math.min(lo + MAX, initialBlockNumber)
+  assert(lo < hi)
+
+  let mid!: number
+  let midBlockHash: BlockHash | undefined
+  let eraAtMidBlock: number | undefined
+  let eraAtNextBlock: number | undefined
+
+  while (lo <= hi) {
+    mid = lo + Math.floor((hi - lo) / 2)
+
+    midBlockHash = await client.api.rpc.chain.getBlockHash(mid)
+    const apiAt = await client.api.at(midBlockHash)
+    if (apiAt === undefined) {
+      console.warn('locateEraChange: apiAt is undefined for block ', mid)
+      return undefined
+    }
+
+    eraAtMidBlock = (await apiAt.query.staking.activeEra()).unwrap().index.toNumber()
+
+    // Check the next block to see if this is the transition point
+    const nextBlockHash = await client.api.rpc.chain.getBlockHash(mid + 1)
+    const apiAtNext = await client.api.at(nextBlockHash)
+    if (apiAtNext === undefined) {
+      console.warn('locateEraChange: apiAtNext is undefined for block ', mid + 1)
+      return undefined
+    }
+    eraAtNextBlock = (await apiAtNext.query.staking.activeEra()).unwrap().index.toNumber()
+
+    // If the transition point was found, return it
+    if (eraAtMidBlock !== eraAtNextBlock) {
+      return mid
+    }
+
+    // Otherwise continue binary search
+    if (eraAtMidBlock === activeEra) {
+      hi = mid - 1
+    } else if (eraAtMidBlock === previousEra) {
+      lo = mid + 1
+    } else {
+      // This really should never happen
+      throw new Error('locateEraChange: eraAtMidBlock is neither activeEra nor previousEra')
+    }
+  }
+
+  // If arrived here, a transition point was not found.
+  return undefined
+}
 
 /// -------
 /// -------
@@ -425,19 +509,39 @@ async function fastUnstakeTest<
 
   await client.dev.setStorage({
     System: {
-      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
+      account: [
+        [[alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[bob.address], { providers: 1, data: { free: 100000e10 } }],
+        [[charlie.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
     },
   })
 
+  // Validate as Bob and Charlie, and nominate them as Alice.
+
+  // First, bond funds for all of them
+
   const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
 
+  await sendTransaction(bondTx.signAsync(bob))
+  await sendTransaction(bondTx.signAsync(charlie))
   const bondEvents = await sendTransaction(bondTx.signAsync(alice))
 
   await client.dev.newBlock()
 
   await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
 
-  /// Nominate some validators
+  // Then, validate as Bob and Charlie
+
+  const minCommission = (await client.api.query.staking.minCommission()).toNumber()
+
+  const validateTx = client.api.tx.staking.validate({ commission: minCommission, blocked: false })
+  await sendTransaction(validateTx.signAsync(bob))
+  await sendTransaction(validateTx.signAsync(charlie))
+
+  await client.dev.newBlock()
+
+  /// Then, nominate Bob and Charlie as Alice
 
   let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
@@ -467,9 +571,13 @@ async function fastUnstakeTest<
   /// Fast unstake
 
   const registerFastUnstakeTx = client.api.tx.fastUnstake.registerFastUnstake()
-  const registerFastUnstakeEvents = await sendTransaction(
-    registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }),
-  )
+  const registerFastUnstakeEvents = await sendTransaction(registerFastUnstakeTx.signAsync(alice))
+
+  await client.dev.setStorage({
+    Staking: {
+      $removePrefix: ['erasStakersOverview', 'erasStakersPaged'],
+    },
+  })
 
   await client.dev.newBlock()
 
@@ -1141,9 +1249,9 @@ async function unappliedSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Manually apply the slash.
   const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
@@ -1158,19 +1266,22 @@ async function unappliedSlashTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  // First, verify that all acounts' frozen funds have been slashed
-
-  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
+  // First, verify that all acounts' reserved funds have been slashed
   // Recall that `bondAmount - slashAmount * 2` is zero.
-  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
   // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
   // to what it bonded.
   // Thus, also zero.
-  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
+  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
+  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
+  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(aliceFundsPreSlash.data.reserved.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(bobFundsPreSlash.data.reserved.toNumber() - bondAmount)
+  // Recall again that even though Charlie's slash is 1.5 times his bond, the slash can, at most, tax all he has
+  // bonded, and not one unit more.
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(
+    charlieFundsPreSlash.data.reserved.toNumber() - bondAmount,
+  )
 }
 
 /**
@@ -1254,9 +1365,9 @@ async function cancelDeferredSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Attempt to manually apply the just-removed slash.
 
@@ -1370,7 +1481,7 @@ async function cancelDeferredSlashTestAsAdmin<
 }
 
 /**
- * Test setting invulnerables with a bad origin.
+ * Test setting invulnerables with a bad, `StakingAdmin` origin.
  */
 async function setInvulnerablesTestBadOrigin<
   TCustom extends Record<string, unknown> | undefined,
@@ -1554,9 +1665,9 @@ async function setInvulnerablesTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(bobFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
-  expect(charlieFundsPreSlash.data.reserved.toNumber()).toBe(bondAmount)
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Apply the slash
   const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
@@ -1571,13 +1682,15 @@ async function setInvulnerablesTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(bondAmount - slashAmount)
-  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(0)
-  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(0)
+  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
+  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
+  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(aliceFundsPreSlash.data.reserved.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(bobFundsPreSlash.data.reserved.toNumber() - bondAmount)
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(
+    charlieFundsPreSlash.data.reserved.toNumber() - bondAmount,
+  )
 }
 
 /// --------------

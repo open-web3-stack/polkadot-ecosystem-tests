@@ -1590,6 +1590,27 @@ exports[`People Kusama Proxy > perform proxy call on behalf of delegator > event
 ]
 `;
 
+exports[`People Kusama Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Dave as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "to": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
 
 exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `

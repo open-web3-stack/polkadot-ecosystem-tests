@@ -15,7 +15,7 @@ exports[`Polkadot Nomination Pools > nomination pool creation with insufficient 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 3200000000)",
+          "refTime": "(rounded 3100000000)",
         },
       },
     },
@@ -81,12 +81,46 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > settin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 950000000)",
+          "refTime": "(rounded 940000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool global config test > system events 1`] = `
+[
+  {
+    "data": {
+      "globalMaxCommission": "10.00%",
+      "maxMembers": 2,
+      "maxMembersPerPool": 2,
+      "maxPools": 2,
+      "minCreateBond": "(rounded 5000000000000)",
+      "minJoinBond": "(rounded 10000000000)",
+    },
+    "method": "GlobalParamsUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Nomination Pools > nomination pool global config test > system events 2`] = `
+[
+  {
+    "data": {
+      "globalMaxCommission": "10.00%",
+      "maxMembers": 3,
+      "maxMembersPerPool": 3,
+      "maxPools": 3,
+      "minCreateBond": "(rounded 5000000000000)",
+      "minJoinBond": "(rounded 10000000000)",
+    },
+    "method": "GlobalParamsUpdated",
+    "section": "nominationPools",
   },
 ]
 `;
@@ -118,6 +152,13 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > chill even
     "data": {},
     "method": "Chilled",
     "section": "staking",
+  },
+  {
+    "data": {
+      "caller": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "PoolNominatorChilled",
+    "section": "nominationPools",
   },
   {
     "data": {
@@ -251,6 +292,13 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
 
 exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
 [
+  {
+    "data": {
+      "caller": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "PoolNominationMade",
+    "section": "nominationPools",
+  },
   {
     "data": {
       "dispatchInfo": {
@@ -401,7 +449,17 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadata events 1`] = `[]`;
+exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadata events 1`] = `
+[
+  {
+    "data": {
+      "caller": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "MetadataUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
 
 exports[`Polkadot Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
 [

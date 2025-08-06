@@ -1,12 +1,14 @@
-import { encodeAddress } from '@polkadot/util-crypto'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
+
+import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -282,7 +284,7 @@ async function testForceVestedTransferAndRemoval<
     startingBlock: currBlockNumber - 1,
   })
 
-  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' }, true)
+  scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 
@@ -317,7 +319,7 @@ async function testForceVestedTransferAndRemoval<
   // Forcibly remove the vesting schedule.
 
   const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(dave.address, 0)
-  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' }, true)
+  scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' }, 'SysPara')
 
   await client.dev.newBlock()
 

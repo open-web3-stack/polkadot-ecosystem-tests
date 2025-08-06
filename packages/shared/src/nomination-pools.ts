@@ -1,7 +1,17 @@
-import { encodeAddress } from '@polkadot/util-crypto'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
+
+import type { ApiPromise } from '@polkadot/api'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { type Option, u32 } from '@polkadot/types'
+import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
+import type { Codec } from '@polkadot/types/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
+import { assert, describe, expect, test } from 'vitest'
+
 import {
   check,
   checkEvents,
@@ -12,14 +22,6 @@ import {
   scheduleInlineCallWithOrigin,
   setValidatorsStorage,
 } from './helpers/index.js'
-
-import { sendTransaction } from '@acala-network/chopsticks-testing'
-import type { ApiPromise } from '@polkadot/api'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import { type Option, u32 } from '@polkadot/types'
-import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/lookup'
-import type { Codec } from '@polkadot/types/types'
-import { assert, describe, expect, test } from 'vitest'
 
 /// -------
 /// Helpers
@@ -676,8 +678,9 @@ async function nominationPoolSetMetadataTest<
 
   await client.dev.newBlock()
 
-  /// TODO: no events are emitted here pending a PR to `pallet_nomination_pools`.
-  await checkEvents(setMetadataEvents, 'nominationPools').toMatchSnapshot('set metadata events')
+  await checkEvents(setMetadataEvents, 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('set metadata events')
 
   /// Check the set metadata
 
@@ -869,21 +872,7 @@ async function nominationPoolGlobalConfigTest<
 
     await client.dev.newBlock()
 
-    // Because this extrinsic was executed via the scheduler technique, its events won't be available
-    // through `checkEvents` - hence the need for this event extraction process.
-    const events = await client.api.query.system.events()
-
-    const nomPoolsEvents = events.filter((record) => {
-      const { event } = record
-      return event.section === 'nominationPools'
-    })
-
-    // TODO: `set_configs` does not emit events at this point. Fix this, after making a PR to `polkadot-sdk` and it flows downstream :)
-    assert(nomPoolsEvents.length === 1, 'setting global nomination pool configs should emit 1 event')
-
-    const nomPoolsEvent = nomPoolsEvents[0]
-    assert(client.api.events.nominationPools.GlobalParamsUpdated.is(nomPoolsEvent.event))
-    await check(nomPoolsEvent).toMatchSnapshot('setting global nomination pool configs events')
+    checkSystemEvents(client, 'nominationPools').toMatchSnapshot()
 
     const postMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
     const postMinCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()

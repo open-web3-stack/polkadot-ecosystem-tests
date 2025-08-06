@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
 [
   {
@@ -10,7 +64,7 @@ exports[`Westend Asset Hub Staking > cancel deferred slash with bad origin > can
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 620000000)",
+          "refTime": "(rounded 370000000)",
         },
       },
     },
@@ -35,7 +89,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -60,7 +114,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -85,7 +139,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -110,7 +164,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -135,7 +189,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -160,7 +214,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -185,7 +239,7 @@ exports[`Westend Asset Hub Staking > chill other > chill other bad origin events
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 860000000)",
         },
       },
     },
@@ -216,7 +270,7 @@ exports[`Westend Asset Hub Staking > force apply validator commission > force ap
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 650000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -236,7 +290,7 @@ exports[`Westend Asset Hub Staking > modify validator count > increase validator
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -256,7 +310,7 @@ exports[`Westend Asset Hub Staking > modify validator count > scale validator co
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -276,7 +330,7 @@ exports[`Westend Asset Hub Staking > modify validator count > set validator coun
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -312,7 +366,7 @@ exports[`Westend Asset Hub Staking > set invulnerables with bad origin > set inv
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 580000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -322,7 +376,61 @@ exports[`Westend Asset Hub Staking > set invulnerables with bad origin > set inv
 ]
 `;
 
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
 
 exports[`Westend Asset Hub Staking > set invulnerables with root origin > staking slash events 1`] = `
 [
@@ -363,7 +471,7 @@ exports[`Westend Asset Hub Staking > set minimum validator commission > set stak
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 570000000)",
+          "refTime": "(rounded 330000000)",
         },
       },
     },
@@ -383,7 +491,7 @@ exports[`Westend Asset Hub Staking > set staking configs > set staking configs b
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1200000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -402,7 +510,7 @@ exports[`Westend Asset Hub Staking > set staking configs > set staking configs e
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 280000000)",
+          "refTime": "(rounded 190000000)",
         },
       },
     ],
@@ -442,7 +550,7 @@ exports[`Westend Asset Hub Staking > staking lifecycle > events when attempting 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 910000000)",
         },
       },
     },
@@ -625,7 +733,7 @@ exports[`Westend Asset Hub Staking > test force unstaking of nominator > force u
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2100000000)",
+          "refTime": "(rounded 1100000000)",
         },
       },
     },
@@ -650,7 +758,7 @@ exports[`Westend Asset Hub Staking > trying to become a validator with no bonded
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1300000000)",
+          "refTime": "(rounded 740000000)",
         },
       },
     },
@@ -675,7 +783,7 @@ exports[`Westend Asset Hub Staking > trying to nominate with no bonded funds fai
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1500000000)",
+          "refTime": "(rounded 870000000)",
         },
       },
     },
@@ -685,7 +793,61 @@ exports[`Westend Asset Hub Staking > trying to nominate with no bonded funds fai
 ]
 `;
 
+exports[`Westend Asset Hub Staking > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
 
 exports[`Westend Asset Hub Staking > unapplied slash > staking slash events 1`] = `
 [

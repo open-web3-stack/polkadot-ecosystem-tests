@@ -1,11 +1,7 @@
-import { BN } from 'bn.js'
-import { assert, describe, expect, test } from 'vitest'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
-
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import type { Option, u32 } from '@polkadot/types'
 import type {
@@ -17,6 +13,11 @@ import type {
 } from '@polkadot/types/lookup'
 import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
+import { assert, describe, expect, test } from 'vitest'
+
+import { BN } from 'bn.js'
+import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -183,7 +184,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPreDecDep.enactment.asAfter.eq(1))
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
   assert(ongoingRefPreDecDep.track.eq(smallTipper[0]))
   await check(ongoingRefPreDecDep.origin).toMatchObject({
     origins: 'SmallTipper',
@@ -751,7 +752,7 @@ export async function referendumLifecycleKillTest<
    */
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.startsWith('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
   /**
    * Place decision deposit

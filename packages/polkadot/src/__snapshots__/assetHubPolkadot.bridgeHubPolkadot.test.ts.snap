@@ -30,7 +30,85 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
 }
 `;
 
-exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to bridgeHubPolkadot > to chain dmp events 1`] = `
+exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to bridgeHubPolkadot > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v3": [
+          {
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                      "network": null,
+                    },
+                  },
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1002,
+  },
+]
+`;
+
+exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to bridgeHubPolkadot > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -57,8 +135,8 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 191000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 190000000)",
           },
         },
       },
@@ -71,7 +149,7 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 305000000)",
+            "Fungible": "(rounded 300000000)",
           },
           "id": {
             "interior": "Here",
@@ -211,9 +289,83 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
 }
 `;
 
-exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to assetHubPolkadot > from chain ump messages 1`] = `[]`;
+exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
 
-exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to assetHubPolkadot > to chain ump events 1`] = `
+exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -240,8 +392,8 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 167000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 170000000)",
           },
         },
       },
@@ -254,7 +406,7 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 305000000)",
+            "Fungible": "(rounded 300000000)",
           },
           "id": {
             "interior": "Here",

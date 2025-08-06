@@ -1,8 +1,8 @@
-import swc from 'unplugin-swc'
 import { defineConfig } from 'vitest/config'
 
 import { resolve } from 'node:path'
 import dotenv from 'dotenv'
+import swc from 'unplugin-swc'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 dotenv.config()

@@ -4,7 +4,7 @@
  * 1. *can* make calls they are allowed to: (referred to as"allowed" tests in this module)
  * 2. *cannot* make calls they are forbidden from making: (referred to as "forbidden" tests)
  *
- * This [issue](https://github.com/paritytech/polkadot-ecosystem-tests/pull/266) showed that some proxy types were
+ * This [issue](https://github.com/open-web3-stack/polkadot-ecosystem-tests/pull/266) showed that some proxy types were
  * not covered by proxy filtering tests, despite being present in the test module.
  * This was due to an oversight when building each proxy type's actions for tests.
  *

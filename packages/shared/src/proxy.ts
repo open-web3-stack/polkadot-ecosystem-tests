@@ -1,4 +1,5 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, KusamaProxyTypes, PolkadotProxyTypes, setupNetworks } from '@e2e-test/shared'
 
@@ -9,12 +10,12 @@ import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
-import { check, checkEvents } from './helpers/index.js'
 
 import BN from 'bn.js'
-
 import { match } from 'ts-pattern'
+import { check, checkEvents } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -286,8 +287,8 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
-        extrinsic: 'purchase',
-        call: this.client.api.tx.broker.purchase(100e10),
+        extrinsic: 'drop_history',
+        call: this.client.api.tx.broker.dropHistory(0),
       })
     }
 
@@ -813,14 +814,11 @@ async function buildAllowedProxyActions<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('CancelProxy', () => {
-      const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
-
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (!['polkadot', 'kusama'].includes(chainName)) {
-        actions.push(...proxyActionBuilder.buildUtilityAction())
-        actions.push(...proxyActionBuilder.buildMultisigAction())
-      }
+      const actions = [
+        ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
+        ...proxyActionBuilder.buildUtilityAction(),
+        ...proxyActionBuilder.buildMultisigAction(),
+      ]
 
       return actions
     })
@@ -991,8 +989,8 @@ async function buildDisallowedProxyActions<
     })
     .with('NonTransfer', () => [
       ...proxyActionBuilder.buildBalancesAction(),
-      ...proxyActionBuilder.buildVestingAction(),
       ...proxyActionBuilder.buildGovernanceAction(),
+      ...proxyActionBuilder.buildVestingAction(),
     ])
     .with('CancelProxy', () => {
       const actions = [
@@ -1000,13 +998,6 @@ async function buildDisallowedProxyActions<
         ...proxyActionBuilder.buildStakingAction(),
         ...proxyActionBuilder.buildSystemAction(),
       ]
-
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (['polkadot', 'kusama'].includes(chainName)) {
-        actions.push(...proxyActionBuilder.buildUtilityAction())
-        actions.push(...proxyActionBuilder.buildMultisigAction())
-      }
 
       return actions
     })
@@ -1269,19 +1260,13 @@ async function proxyCallFilteringSingleTestRunner<
     // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
       // Forbidden calls are expected to have failed *only* due to filtering.
-      if (proxyExecutedData.result.isErr) {
-        const error = proxyExecutedData.result.asErr
-        expect(error.isModule).toBe(true)
-
+      assert(proxyExecutedData.result.isErr)
+      const error = proxyExecutedData.result.asErr
+      if (error.isModule) {
         expect(
           client.api.errors.system.CallFiltered.is(error.asModule),
           `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
         ).toBe(true)
-      } else {
-        // If the call failed for any other reason, fail the test.
-        expect.fail(
-          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} for ${proxyType} proxy on ${chain.name} failed, but not due to`,
-        )
       }
     }
     // Path taken for permitted calls
@@ -1741,10 +1726,9 @@ export async function proxyCallTest<
  */
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relay: Chain<TCustom, TInitStoragesRelay>, assetHub: Chain<TCustom, TInitStoragesPara>, addressEncoding: number) {
-  const [relayClient, ahClient] = await setupNetworks(relay, assetHub)
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(assetHub: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [ahClient] = await setupNetworks(assetHub)
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
@@ -1762,9 +1746,6 @@ export async function proxyAnnouncementLifecycleTest<
   await sendTransaction(addProxyTx.signAsync(alice))
 
   await ahClient.dev.newBlock()
-  // The relay chain also needs to advance, since AH uses it as a block provider.
-  // If this is not done, the announcement check will fail due to the relay block number drifting.
-  await relayClient.dev.newBlock()
 
   // Bob announces an intent to transfer funds to Charlie
   const transferAmount: number = 100e10
@@ -1774,7 +1755,6 @@ export async function proxyAnnouncementLifecycleTest<
   const announcementEvents = await sendTransaction(announceTx.signAsync(bob))
 
   await ahClient.dev.newBlock()
-  await relayClient.dev.newBlock()
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
@@ -1861,11 +1841,9 @@ export async function proxyAnnouncementLifecycleTest<
  */
 export async function proxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  relay: Chain<TCustom, TInitStoragesRelay>,
-  assetHub: Chain<TCustom, TInitStoragesPara>,
+  assetHub: Chain<TCustom, TInitStorages>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
 ) {
@@ -1883,7 +1861,7 @@ export async function proxyE2ETests<
     })
 
     test('proxy announcement lifecycle test', async () => {
-      await proxyAnnouncementLifecycleTest(relay, assetHub, testConfig.addressEncoding)
+      await proxyAnnouncementLifecycleTest(assetHub, testConfig.addressEncoding)
     })
 
     describe('filtering tests for permitted proxy calls', () => {

@@ -18,7 +18,7 @@ exports[`collectives westend & asset hub westend > whitelisting a call by fellow
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 120000000)",
       },
     },
     "method": "Processed",

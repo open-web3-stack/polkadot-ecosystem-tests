@@ -570,7 +570,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -603,7 +603,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -636,7 +636,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -666,25 +666,6 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
 `;
 
 exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -745,7 +726,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -778,7 +759,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -811,69 +792,12 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
     "method": "ExtrinsicSuccess",
     "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
   },
 ]
 `;
@@ -939,7 +863,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -972,7 +896,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -1005,7 +929,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -1114,7 +1038,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1147,7 +1071,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -1180,7 +1104,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -1221,6 +1145,29 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
           },
         },
       },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1327,7 +1274,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1360,7 +1307,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -1393,7 +1340,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -1445,7 +1392,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1478,7 +1425,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -1511,7 +1458,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -1620,7 +1567,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1748,7 +1695,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 210000000000)",
+          "refTime": "(rounded 140000000000)",
         },
       },
     },
@@ -1781,7 +1728,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -1814,7 +1761,7 @@ exports[`Kusama Proxy > filtering tests for forbidden proxy calls > forbidden pr
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -2028,7 +1975,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -2062,7 +2009,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -2199,6 +2146,25 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
 ]
 `;
 
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 31,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
 [
   {
@@ -2211,6 +2177,57 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
           },
         },
       },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -2554,7 +2571,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -2588,7 +2605,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -2755,7 +2772,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 680000000)",
         },
       },
     },
@@ -2789,7 +2806,7 @@ exports[`Kusama Proxy > filtering tests for permitted proxy calls > allowed prox
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 640000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },
@@ -2915,6 +2932,27 @@ exports[`Kusama Proxy > perform proxy call on behalf of delegator > events when 
       "amount": 1000000000000,
       "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
       "to": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Dave as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "to": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
     },
     "method": "Transfer",
     "section": "balances",

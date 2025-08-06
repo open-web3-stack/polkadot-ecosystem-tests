@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Staking > cancel deferred slash as admin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > cancel deferred slash as admin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > cancel deferred slash as admin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > cancel deferred slash as root > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > cancel deferred slash as root > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > cancel deferred slash as root > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Polkadot Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
 [
   {
@@ -10,7 +64,7 @@ exports[`Polkadot Staking > cancel deferred slash with bad origin > cancel defer
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 77000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 1900000000)",
         },
       },
     },
@@ -236,7 +290,7 @@ exports[`Polkadot Staking > modify validator count > increase validator count ba
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 530000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -256,7 +310,7 @@ exports[`Polkadot Staking > modify validator count > scale validator count bad o
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 530000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -276,7 +330,7 @@ exports[`Polkadot Staking > modify validator count > set validator count bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 530000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -312,7 +366,7 @@ exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerable
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 530000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -322,33 +376,60 @@ exports[`Polkadot Staking > set invulnerables with bad origin > set invulnerable
 ]
 `;
 
-exports[`Polkadot Staking > set invulnerables with root origin > balances slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-]
+exports[`Polkadot Staking > set invulnerables with root origin > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Polkadot Staking > set invulnerables with root origin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999739445778,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
 `;
 
 exports[`Polkadot Staking > set invulnerables with root origin > staking slash events 1`] = `
@@ -390,7 +471,7 @@ exports[`Polkadot Staking > set minimum validator commission > set staking confi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 530000000)",
+          "refTime": "(rounded 520000000)",
         },
       },
     },
@@ -429,7 +510,7 @@ exports[`Polkadot Staking > set staking configs > set staking configs event 1`] 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 270000000)",
+          "refTime": "(rounded 260000000)",
         },
       },
     ],
@@ -688,7 +769,7 @@ exports[`Polkadot Staking > trying to become a validator with no bonded funds fa
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 1100000000)",
+          "refTime": "(rounded 1200000000)",
         },
       },
     },
@@ -723,33 +804,60 @@ exports[`Polkadot Staking > trying to nominate with no bonded funds fails > even
 ]
 `;
 
-exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "who": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
-    },
-    "method": "Slashed",
-    "section": "balances",
-  },
-]
+exports[`Polkadot Staking > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Polkadot Staking > unapplied slash > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Polkadot Staking > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Polkadot Staking > unapplied slash > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Polkadot Staking > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Polkadot Staking > unapplied slash > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999867589258,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
 `;
 
 exports[`Polkadot Staking > unapplied slash > staking slash events 1`] = `
