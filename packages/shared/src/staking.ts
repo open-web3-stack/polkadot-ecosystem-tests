@@ -11,7 +11,8 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
+import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -1713,73 +1714,120 @@ async function setInvulnerablesTest<
 /// --------------
 /// --------------
 
-export function stakingE2ETests<
+export function slashingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    test('trying to become a validator with no bonded funds fails', async () => {
-      await validateNoBondedFundsFailureTest(chain)
-    })
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'slashing tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'unapplied slash',
+        testFn: async () => await unappliedSlashTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash with bad origin',
+        testFn: async () => await cancelDeferredSlashTestBadOrigin(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash as root',
+        testFn: async () => await cancelDeferredSlashTestAsRoot(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash as admin',
+        testFn: async () => await cancelDeferredSlashTestAsAdmin(chain),
+      },
+    ],
+  }
+}
 
-    test('trying to nominate with no bonded funds fails', async () => {
-      await nominateNoBondedFundsFailureTest(chain)
-    })
+export function baseStakingE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'base staking tests',
+    children: [
+      {
+        kind: 'test' as const,
+        label: 'trying to become a validator with no bonded funds fails',
+        testFn: async () => await validateNoBondedFundsFailureTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'trying to nominate with no bonded funds fails',
+        testFn: async () => await nominateNoBondedFundsFailureTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'staking lifecycle',
+        testFn: async () => await stakingLifecycleTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test' as const,
+        label: 'test force unstaking of nominator',
+        testFn: async () => await forceUnstakeTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'test fast unstake',
+        testFn: async () => await fastUnstakeTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set minimum validator commission',
+        testFn: async () => await setMinCommission(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set staking configs',
+        testFn: async () => await setStakingConfigsTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'force apply validator commission',
+        testFn: async () => await forceApplyValidatorCommissionTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'modify validator count',
+        testFn: async () => await modifyValidatorCountTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'chill other',
+        testFn: async () => await chillOtherTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set invulnerables with bad origin',
+        testFn: async () => await setInvulnerablesTestBadOrigin(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set invulnerables with root origin',
+        testFn: async () => await setInvulnerablesTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
+}
 
-    test('staking lifecycle', async () => {
-      await stakingLifecycleTest(chain, testConfig.addressEncoding)
-    })
+export function fullStakingTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  const basalTestTree = baseStakingE2ETests(chain, testConfig)
+  const slashingTestTree = slashingTests(chain)
 
-    test('test force unstaking of nominator', async () => {
-      await forceUnstakeTest(chain)
-    })
-
-    test('test fast unstake', async () => {
-      await fastUnstakeTest(chain, testConfig.addressEncoding)
-    })
-
-    test('set minimum validator commission', async () => {
-      await setMinCommission(chain)
-    })
-
-    test('set staking configs', async () => {
-      await setStakingConfigsTest(chain)
-    })
-
-    test('force apply validator commission', async () => {
-      await forceApplyValidatorCommissionTest(chain)
-    })
-
-    test('modify validator count', async () => {
-      await modifyValidatorCountTest(chain)
-    })
-
-    test('chill other', async () => {
-      await chillOtherTest(chain)
-    })
-
-    test('unapplied slash', async () => {
-      await unappliedSlashTest(chain)
-    })
-
-    test('cancel deferred slash with bad origin', async () => {
-      await cancelDeferredSlashTestBadOrigin(chain)
-    })
-
-    test('cancel deferred slash as root', async () => {
-      await cancelDeferredSlashTestAsRoot(chain)
-    })
-
-    test('cancel deferred slash as admin', async () => {
-      await cancelDeferredSlashTestAsAdmin(chain)
-    })
-
-    test('set invulnerables with bad origin', async () => {
-      await setInvulnerablesTestBadOrigin(chain)
-    })
-
-    test('set invulnerables with root origin', async () => {
-      await setInvulnerablesTest(chain, testConfig.addressEncoding)
-    })
-  })
+  return {
+    kind: 'describe' as const,
+    label: testConfig.testSuiteName,
+    children: [basalTestTree, slashingTestTree],
+  }
 }

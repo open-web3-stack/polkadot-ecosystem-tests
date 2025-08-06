@@ -1,80 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Staking > cancel deferred slash as admin > alice funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash as admin > bob funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash as admin > charlie funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash as root > alice funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash as root > bob funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash as root > charlie funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Kusama Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 77000)",
-          "refTime": "(rounded 1800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Staking > chill other > chill other bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 1`] = `
 [
   {
     "data": {
@@ -99,7 +25,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 2`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 2`] = `
 [
   {
     "data": {
@@ -124,7 +50,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 2`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 3`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 3`] = `
 [
   {
     "data": {
@@ -149,7 +75,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 3`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 4`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 4`] = `
 [
   {
     "data": {
@@ -174,7 +100,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 4`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 5`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 5`] = `
 [
   {
     "data": {
@@ -199,7 +125,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 5`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 6`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 6`] = `
 [
   {
     "data": {
@@ -224,7 +150,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 6`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other bad origin events 7`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other bad origin events 7`] = `
 [
   {
     "data": {
@@ -249,7 +175,7 @@ exports[`Kusama Staking > chill other > chill other bad origin events 7`] = `
 ]
 `;
 
-exports[`Kusama Staking > chill other > chill other events 1`] = `
+exports[`Kusama Staking > base staking tests > chill other > chill other events 1`] = `
 [
   {
     "data": {
@@ -261,7 +187,7 @@ exports[`Kusama Staking > chill other > chill other events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > force apply validator commission > force apply min commission events 1`] = `
+exports[`Kusama Staking > base staking tests > force apply validator commission > force apply min commission events 1`] = `
 [
   {
     "data": {
@@ -280,7 +206,7 @@ exports[`Kusama Staking > force apply validator commission > force apply min com
 ]
 `;
 
-exports[`Kusama Staking > modify validator count > increase validator count bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > modify validator count > increase validator count bad origin events 1`] = `
 [
   {
     "data": {
@@ -300,7 +226,7 @@ exports[`Kusama Staking > modify validator count > increase validator count bad 
 ]
 `;
 
-exports[`Kusama Staking > modify validator count > scale validator count bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > modify validator count > scale validator count bad origin events 1`] = `
 [
   {
     "data": {
@@ -320,7 +246,7 @@ exports[`Kusama Staking > modify validator count > scale validator count bad ori
 ]
 `;
 
-exports[`Kusama Staking > modify validator count > set validator count bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > modify validator count > set validator count bad origin events 1`] = `
 [
   {
     "data": {
@@ -340,7 +266,7 @@ exports[`Kusama Staking > modify validator count > set validator count bad origi
 ]
 `;
 
-exports[`Kusama Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
 [
   {
     "data": {
@@ -356,7 +282,7 @@ exports[`Kusama Staking > set invulnerables with bad origin > events when settin
 ]
 `;
 
-exports[`Kusama Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
 [
   {
     "data": {
@@ -376,7 +302,7 @@ exports[`Kusama Staking > set invulnerables with bad origin > set invulnerables 
 ]
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > alice funds post slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > alice funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -385,7 +311,7 @@ exports[`Kusama Staking > set invulnerables with root origin > alice funds post 
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > alice funds pre slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -394,9 +320,9 @@ exports[`Kusama Staking > set invulnerables with root origin > alice funds pre s
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > balances slash events 1`] = `[]`;
 
-exports[`Kusama Staking > set invulnerables with root origin > bob funds post slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > bob funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -405,7 +331,7 @@ exports[`Kusama Staking > set invulnerables with root origin > bob funds post sl
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > bob funds pre slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -414,7 +340,7 @@ exports[`Kusama Staking > set invulnerables with root origin > bob funds pre sla
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > charlie funds post slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > charlie funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -423,7 +349,7 @@ exports[`Kusama Staking > set invulnerables with root origin > charlie funds pos
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > charlie funds pre slash 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999112324871,
@@ -432,7 +358,7 @@ exports[`Kusama Staking > set invulnerables with root origin > charlie funds pre
 }
 `;
 
-exports[`Kusama Staking > set invulnerables with root origin > staking slash events 1`] = `
+exports[`Kusama Staking > base staking tests > set invulnerables with root origin > staking slash events 1`] = `
 [
   {
     "data": {
@@ -461,7 +387,7 @@ exports[`Kusama Staking > set invulnerables with root origin > staking slash eve
 ]
 `;
 
-exports[`Kusama Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > set minimum validator commission > set staking configs bad origin events 1`] = `
 [
   {
     "data": {
@@ -481,7 +407,7 @@ exports[`Kusama Staking > set minimum validator commission > set staking configs
 ]
 `;
 
-exports[`Kusama Staking > set staking configs > set staking configs bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > set staking configs > set staking configs bad origin events 1`] = `
 [
   {
     "data": {
@@ -501,7 +427,7 @@ exports[`Kusama Staking > set staking configs > set staking configs bad origin e
 ]
 `;
 
-exports[`Kusama Staking > set staking configs > set staking configs event 1`] = `
+exports[`Kusama Staking > base staking tests > set staking configs > set staking configs event 1`] = `
 {
   "event": {
     "data": [
@@ -523,7 +449,7 @@ exports[`Kusama Staking > set staking configs > set staking configs event 1`] = 
 }
 `;
 
-exports[`Kusama Staking > staking lifecycle > chill events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > chill events 1`] = `
 [
   {
     "data": {
@@ -535,7 +461,7 @@ exports[`Kusama Staking > staking lifecycle > chill events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > events when attempting to nominate a blocked validator 1`] = `
 [
   {
     "data": {
@@ -560,7 +486,7 @@ exports[`Kusama Staking > staking lifecycle > events when attempting to nominate
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > kick events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > kick events 1`] = `
 [
   {
     "data": {
@@ -573,9 +499,9 @@ exports[`Kusama Staking > staking lifecycle > kick events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > nominate events 1`] = `[]`;
+exports[`Kusama Staking > base staking tests > staking lifecycle > nominate events 1`] = `[]`;
 
-exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > nominator bond events 1`] = `
 [
   {
     "data": {
@@ -588,7 +514,7 @@ exports[`Kusama Staking > staking lifecycle > nominator bond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > nominator bond extra events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > nominator bond extra events 1`] = `
 [
   {
     "data": {
@@ -601,7 +527,7 @@ exports[`Kusama Staking > staking lifecycle > nominator bond extra events 1`] = 
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > unbond events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > unbond events 1`] = `
 [
   {
     "data": {
@@ -614,7 +540,7 @@ exports[`Kusama Staking > staking lifecycle > unbond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validate (blocked) events 1`] = `
 [
   {
     "data": {
@@ -630,7 +556,7 @@ exports[`Kusama Staking > staking lifecycle > validate (blocked) events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 0 bond events 1`] = `
 [
   {
     "data": {
@@ -643,7 +569,7 @@ exports[`Kusama Staking > staking lifecycle > validator 0 bond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 0 validate events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 0 validate events 1`] = `
 [
   {
     "data": {
@@ -659,7 +585,7 @@ exports[`Kusama Staking > staking lifecycle > validator 0 validate events 1`] = 
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 1 bond events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 1 bond events 1`] = `
 [
   {
     "data": {
@@ -672,7 +598,7 @@ exports[`Kusama Staking > staking lifecycle > validator 1 bond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 1 validate events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 1 validate events 1`] = `
 [
   {
     "data": {
@@ -688,7 +614,7 @@ exports[`Kusama Staking > staking lifecycle > validator 1 validate events 1`] = 
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 2 bond events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 2 bond events 1`] = `
 [
   {
     "data": {
@@ -701,7 +627,7 @@ exports[`Kusama Staking > staking lifecycle > validator 2 bond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = `
+exports[`Kusama Staking > base staking tests > staking lifecycle > validator 2 validate events 1`] = `
 [
   {
     "data": {
@@ -717,9 +643,9 @@ exports[`Kusama Staking > staking lifecycle > validator 2 validate events 1`] = 
 ]
 `;
 
-exports[`Kusama Staking > test fast unstake > nominate events 1`] = `[]`;
+exports[`Kusama Staking > base staking tests > test fast unstake > nominate events 1`] = `[]`;
 
-exports[`Kusama Staking > test fast unstake > nominator bond events 1`] = `
+exports[`Kusama Staking > base staking tests > test fast unstake > nominator bond events 1`] = `
 [
   {
     "data": {
@@ -732,9 +658,9 @@ exports[`Kusama Staking > test fast unstake > nominator bond events 1`] = `
 ]
 `;
 
-exports[`Kusama Staking > test fast unstake > register fast unstake events 1`] = `[]`;
+exports[`Kusama Staking > base staking tests > test fast unstake > register fast unstake events 1`] = `[]`;
 
-exports[`Kusama Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
+exports[`Kusama Staking > base staking tests > test force unstaking of nominator > force unstake bad origin events 1`] = `
 [
   {
     "data": {
@@ -754,7 +680,7 @@ exports[`Kusama Staking > test force unstaking of nominator > force unstake bad 
 ]
 `;
 
-exports[`Kusama Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+exports[`Kusama Staking > base staking tests > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
 [
   {
     "data": {
@@ -779,7 +705,7 @@ exports[`Kusama Staking > trying to become a validator with no bonded funds fail
 ]
 `;
 
-exports[`Kusama Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
+exports[`Kusama Staking > base staking tests > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
 [
   {
     "data": {
@@ -804,7 +730,81 @@ exports[`Kusama Staking > trying to nominate with no bonded funds fails > events
 ]
 `;
 
-exports[`Kusama Staking > unapplied slash > alice funds post slash 1`] = `
+exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999554590223,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 77000)",
+          "refTime": "(rounded 1800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -813,7 +813,7 @@ exports[`Kusama Staking > unapplied slash > alice funds post slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > alice funds pre slash 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -822,9 +822,9 @@ exports[`Kusama Staking > unapplied slash > alice funds pre slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > balances slash events 1`] = `[]`;
+exports[`Kusama Staking > slashing tests > unapplied slash > balances slash events 1`] = `[]`;
 
-exports[`Kusama Staking > unapplied slash > bob funds post slash 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -833,7 +833,7 @@ exports[`Kusama Staking > unapplied slash > bob funds post slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > bob funds pre slash 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -842,7 +842,7 @@ exports[`Kusama Staking > unapplied slash > bob funds pre slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > charlie funds post slash 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -851,7 +851,7 @@ exports[`Kusama Staking > unapplied slash > charlie funds post slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > charlie funds pre slash 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": 89999554590223,
@@ -860,7 +860,7 @@ exports[`Kusama Staking > unapplied slash > charlie funds pre slash 1`] = `
 }
 `;
 
-exports[`Kusama Staking > unapplied slash > staking slash events 1`] = `
+exports[`Kusama Staking > slashing tests > unapplied slash > staking slash events 1`] = `
 [
   {
     "data": {
