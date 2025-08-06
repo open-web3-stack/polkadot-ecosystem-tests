@@ -1,10 +1,10 @@
-import { describe } from 'vitest'
-
 import { defaultAccountsSr25519 } from '@e2e-test/networks'
 import { assetHubPolkadot, integriteePolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)

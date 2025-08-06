@@ -142,7 +142,7 @@ exports[`Westend Asset Hub Scheduler > priority-based execution of weighted task
   },
   {
     "data": {
-      "when": "(rounded 27000000)",
+      "when": "(redacted)",
     },
     "method": "AgendaIncomplete",
     "section": "scheduler",

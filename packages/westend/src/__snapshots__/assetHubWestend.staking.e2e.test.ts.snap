@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as admin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > cancel deferred slash as root > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
 [
   {
@@ -322,7 +376,61 @@ exports[`Westend Asset Hub Staking > set invulnerables with bad origin > set inv
 ]
 `;
 
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > set invulnerables with root origin > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > set invulnerables with root origin > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89994687454536,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
 
 exports[`Westend Asset Hub Staking > set invulnerables with root origin > staking slash events 1`] = `
 [
@@ -685,7 +793,61 @@ exports[`Westend Asset Hub Staking > trying to nominate with no bonded funds fai
 ]
 `;
 
+exports[`Westend Asset Hub Staking > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
 exports[`Westend Asset Hub Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Westend Asset Hub Staking > unapplied slash > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89997313727268,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
 
 exports[`Westend Asset Hub Staking > unapplied slash > staking slash events 1`] = `
 [

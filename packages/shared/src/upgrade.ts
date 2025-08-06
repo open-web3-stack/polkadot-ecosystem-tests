@@ -1,9 +1,12 @@
-import { assert } from 'vitest'
-
 import { sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, type Client, defaultAccounts } from '@e2e-test/networks'
 import { sendWhitelistCallViaXcmTransact } from '@e2e-test/shared'
+
 import type { HexString } from '@polkadot/util/types'
+
+import { assert } from 'vitest'
+
 import { checkEvents, checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /**

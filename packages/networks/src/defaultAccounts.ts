@@ -1,9 +1,15 @@
 import { testingPairs } from '@acala-network/chopsticks-testing'
+
 import type { Keyring } from '@polkadot/keyring'
 import type { KeyringInstance, KeyringPair } from '@polkadot/keyring/types'
-
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 
+/**
+ * Type of object containing dev accounts that are used in tests.
+ *
+ * The keyrings are used to create fresh accounts: in some networks (e.g. testnets), dev accounts may have
+ * already been used, and can thus alter the result of testing.
+ */
 export type DefaultAccounts = {
   alice: KeyringPair
   bob: KeyringPair
@@ -19,7 +25,7 @@ export type DefaultAccounts = {
   keyringEth: KeyringInstance
 }
 
-export const defaultAccounts: DefaultAccounts = testingPairs()
+export const defaultAccounts: DefaultAccounts = testingPairs() as DefaultAccounts
 
 /**
  * Sr25519 keyring pairs for use in tests.

@@ -1,10 +1,10 @@
-import { describe } from 'vitest'
-
 import { defaultAccountsSr25519 } from '@e2e-test/networks'
 import { assetHubKusama, integriteeKusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)

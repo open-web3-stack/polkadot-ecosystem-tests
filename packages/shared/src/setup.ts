@@ -1,6 +1,6 @@
-import { afterAll, beforeEach } from 'vitest'
-
 import { type Chain, captureSnapshot, createNetworks } from '@e2e-test/networks'
+
+import { afterAll, beforeEach } from 'vitest'
 
 /**
  * Sets up blockchain networks for testing with automatic snapshot restore and cleanup.

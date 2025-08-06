@@ -346,39 +346,6 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > balances.burn: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > broker.purchase_credit: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > collator_selection.register_as_candidate: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet balances, call burn 1`] = `
 [
   {
@@ -535,50 +502,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.apply_authorized_upgrade: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.remark: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > system.remark_with_event: Broker 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
@@ -697,50 +620,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > balances.burn: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
 [
   {
@@ -857,72 +736,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
     "section": "system",
   },
 ]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.apply_authorized_upgrade: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark_with_event: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > balances.burn: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > broker.purchase_credit: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > collator_selection.register_as_candidate: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet balances, call burn 1`] = `
@@ -1081,50 +894,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.apply_authorized_upgrade: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.remark: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > system.remark_with_event: CoretimeRenewer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
 [
   {
@@ -1142,39 +911,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
     "section": "proxy",
   },
 ]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > balances.burn: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > broker.purchase_credit: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > collator_selection.register_as_candidate: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet balances, call burn 1`] = `
@@ -1331,39 +1067,6 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
     "section": "system",
   },
 ]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.apply_authorized_upgrade: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.remark: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > system.remark_with_event: OnDemandPurchaser 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
@@ -1546,14 +1249,14 @@ exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > all
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call purchase 1`] = `
+exports[`Kusama Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call drop_history 1`] = `
 [
   {
     "data": {
       "result": {
         "Err": {
           "Module": {
-            "error": "0x0b000000",
+            "error": "0x0e000000",
             "index": 50,
           },
         },

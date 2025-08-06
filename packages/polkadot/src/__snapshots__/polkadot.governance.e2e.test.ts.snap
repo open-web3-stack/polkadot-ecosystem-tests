@@ -34,7 +34,7 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 91000)",
-          "refTime": "(rounded 880000000)",
+          "refTime": "(rounded 870000000)",
         },
       },
     },
@@ -507,13 +507,6 @@ exports[`Polkadot Governance > referendum lifecycle test - submission, decision 
   },
   {
     "data": {
-      "amount": 0,
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
       "amount": "(rounded 180000000)",
     },
     "method": "Deposit",
@@ -561,7 +554,7 @@ exports[`Polkadot Governance > referendum lifecycle test 2 - submission, decisio
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 91000)",
-          "refTime": "(rounded 970000000)",
+          "refTime": "(rounded 950000000)",
         },
       },
     },

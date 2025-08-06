@@ -298,17 +298,6 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when killin
 ]
 `;
 
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > balances.burn: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
@@ -427,50 +416,6 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
 ]
 `;
 
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.apply_authorized_upgrade: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > system.remark_with_event: CancelProxy 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > balances.burn: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
 exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
 [
   {
@@ -587,61 +532,6 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
     "section": "system",
   },
 ]
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.apply_authorized_upgrade: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > system.remark_with_event: Collator 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > balances.burn: Identity 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > collator_selection.register_as_candidate: Identity 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet balances, call burn 1`] = `
@@ -779,61 +669,6 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
     "section": "system",
   },
 ]
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > system.apply_authorized_upgrade: Identity 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > system.remark: Identity 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > system.remark_with_event: Identity 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > balances.burn: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > collator_selection.register_as_candidate: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet balances, call burn 1`] = `
@@ -990,61 +825,6 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
     "section": "system",
   },
 ]
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > identity.clear_identity: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > system.apply_authorized_upgrade: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > system.remark: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > system.remark_with_event: IdentityJudgement 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
-`;
-
-exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > balances.burn: NonTransfer 1`] = `
-{
-  "err": {
-    "module": {
-      "error": "0x05000000",
-      "index": 0,
-    },
-  },
-}
 `;
 
 exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `

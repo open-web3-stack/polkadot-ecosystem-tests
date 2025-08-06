@@ -454,7 +454,6 @@ exports[`Westend Asset Hub Nomination Pools > nomination pool metadata test > se
   {
     "data": {
       "caller": "5FZTwAWBpZxkNPXfjh5mtU2i5MqY9t1ZwvprJbn9knWgTnVK",
-      "poolId": "(rounded 400)",
     },
     "method": "MetadataUpdated",
     "section": "nominationPools",

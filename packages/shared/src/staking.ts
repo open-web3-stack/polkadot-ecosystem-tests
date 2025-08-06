@@ -1,17 +1,19 @@
-import { encodeAddress } from '@polkadot/util-crypto'
-import BN from 'bn.js'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
-import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
-import { sendTransaction } from '@acala-network/chopsticks-testing'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { BlockHash } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
+
+import BN from 'bn.js'
+import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1247,9 +1249,9 @@ async function unappliedSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Manually apply the slash.
   const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
@@ -1269,13 +1271,17 @@ async function unappliedSlashTest<
   // Note that `bondAmount - slashAmount * 3` is negative, and an account's slashable funds are limited
   // to what it bonded.
   // Thus, also zero.
-  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
+  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
+  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(aliceFundsPreSlash.data.reserved.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(bobFundsPreSlash.data.reserved.toNumber() - bondAmount)
+  // Recall again that even though Charlie's slash is 1.5 times his bond, the slash can, at most, tax all he has
+  // bonded, and not one unit more.
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(
+    charlieFundsPreSlash.data.reserved.toNumber() - bondAmount,
+  )
 }
 
 /**
@@ -1359,9 +1365,9 @@ async function cancelDeferredSlashTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Attempt to manually apply the just-removed slash.
 
@@ -1475,7 +1481,7 @@ async function cancelDeferredSlashTestAsAdmin<
 }
 
 /**
- * Test setting invulnerables with a bad origin.
+ * Test setting invulnerables with a bad, `StakingAdmin` origin.
  */
 async function setInvulnerablesTestBadOrigin<
   TCustom extends Record<string, unknown> | undefined,
@@ -1659,9 +1665,9 @@ async function setInvulnerablesTest<
   const bobFundsPreSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPreSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
+  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
+  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // Apply the slash
   const applySlashTx = client.api.tx.staking.applySlash(activeEra, slashKey)
@@ -1676,13 +1682,15 @@ async function setInvulnerablesTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot()
-  expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot()
+  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
+  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
+  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
 
-  expect(aliceFundsPostSlash.data.free.toNumber()).toBe(aliceFundsPreSlash.data.free.toNumber())
-  expect(bobFundsPostSlash.data.free.toNumber()).toBe(bobFundsPreSlash.data.free.toNumber())
-  expect(charlieFundsPostSlash.data.free.toNumber()).toBe(charlieFundsPreSlash.data.free.toNumber())
+  expect(aliceFundsPostSlash.data.reserved.toNumber()).toBe(aliceFundsPreSlash.data.reserved.toNumber() - slashAmount)
+  expect(bobFundsPostSlash.data.reserved.toNumber()).toBe(bobFundsPreSlash.data.reserved.toNumber() - bondAmount)
+  expect(charlieFundsPostSlash.data.reserved.toNumber()).toBe(
+    charlieFundsPreSlash.data.reserved.toNumber() - bondAmount,
+  )
 }
 
 /// --------------
@@ -1734,8 +1742,7 @@ export function stakingE2ETests<
       await chillOtherTest(chain)
     })
 
-    // TODO: restore this test
-    test.skip('unapplied slash', async () => {
+    test('unapplied slash', async () => {
       await unappliedSlashTest(chain)
     })
 
@@ -1743,13 +1750,11 @@ export function stakingE2ETests<
       await cancelDeferredSlashTestBadOrigin(chain)
     })
 
-    // TODO: restore this test
-    test.skip('cancel deferred slash as root', async () => {
+    test('cancel deferred slash as root', async () => {
       await cancelDeferredSlashTestAsRoot(chain)
     })
 
-    // TODO: restore this test
-    test.skip('cancel deferred slash as admin', async () => {
+    test('cancel deferred slash as admin', async () => {
       await cancelDeferredSlashTestAsAdmin(chain)
     })
 
@@ -1757,8 +1762,7 @@ export function stakingE2ETests<
       await setInvulnerablesTestBadOrigin(chain)
     })
 
-    // TODO: restore this test
-    test.skip('set invulnerables with root origin', async () => {
+    test('set invulnerables with root origin', async () => {
       await setInvulnerablesTest(chain, testConfig.addressEncoding)
     })
   })

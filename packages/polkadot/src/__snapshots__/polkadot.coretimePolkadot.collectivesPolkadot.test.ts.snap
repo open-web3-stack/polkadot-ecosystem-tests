@@ -136,8 +136,8 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3500)",
-            "refTime": "(rounded 290000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 330000000)",
           },
           "paysFee": "Yes",
         },

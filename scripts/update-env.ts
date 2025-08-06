@@ -1,9 +1,13 @@
+import { cryptoWaitReady } from '@polkadot/util-crypto'
+
 import fs from 'node:fs'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
+
 import * as chains from '@e2e-test/networks/chains'
+
 import { ApiPromise, HttpProvider, WsProvider } from '@polkadot/api'
 
 const isUpdateKnownGood = process.argv.includes('--update-known-good')
@@ -19,6 +23,8 @@ const readEnvFile = () => {
 }
 
 const main = async () => {
+  await cryptoWaitReady()
+
   let envFile = readEnvFile()
 
   // comment out current ones

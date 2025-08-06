@@ -136,8 +136,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3500)",
-            "refTime": "(rounded 290000000)",
+            "proofSize": "(rounded 3600)",
+            "refTime": "(rounded 330000000)",
           },
           "paysFee": "Yes",
         },
@@ -505,7 +505,7 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 280000000)",
+        "refTime": "(rounded 290000000)",
       },
     },
     "method": "Processed",
@@ -713,7 +713,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
         "Complete": {
           "used": {
             "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 149000000)",
+            "refTime": "(rounded 153000000)",
           },
         },
       },

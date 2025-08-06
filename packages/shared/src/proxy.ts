@@ -1,4 +1,5 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
+
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, KusamaProxyTypes, PolkadotProxyTypes, setupNetworks } from '@e2e-test/shared'
 
@@ -9,12 +10,12 @@ import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, describe, expect, test } from 'vitest'
-import { check, checkEvents } from './helpers/index.js'
 
 import BN from 'bn.js'
-
 import { match } from 'ts-pattern'
+import { check, checkEvents } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -286,8 +287,8 @@ class ProxyActionBuilderImpl<
     if (this.client.api.tx.broker) {
       brokerCalls.push({
         pallet: 'broker',
-        extrinsic: 'purchase',
-        call: this.client.api.tx.broker.purchase(100e10),
+        extrinsic: 'drop_history',
+        call: this.client.api.tx.broker.dropHistory(0),
       })
     }
 
@@ -813,14 +814,11 @@ async function buildAllowedProxyActions<
       ...proxyActionBuilder.buildUtilityAction(),
     ])
     .with('CancelProxy', () => {
-      const actions = [...proxyActionBuilder.buildProxyRejectAnnouncementAction()]
-
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (!['polkadot', 'kusama'].includes(chainName)) {
-        actions.push(...proxyActionBuilder.buildUtilityAction())
-        actions.push(...proxyActionBuilder.buildMultisigAction())
-      }
+      const actions = [
+        ...proxyActionBuilder.buildProxyRejectAnnouncementAction(),
+        ...proxyActionBuilder.buildUtilityAction(),
+        ...proxyActionBuilder.buildMultisigAction(),
+      ]
 
       return actions
     })
@@ -1000,13 +998,6 @@ async function buildDisallowedProxyActions<
         ...proxyActionBuilder.buildStakingAction(),
         ...proxyActionBuilder.buildSystemAction(),
       ]
-
-      // TODO: `utility` and `system` calls should be callable by cancel proxies, but on relay chains this is
-      // currently not the case, pending a PR to the `runtimes` repository.
-      if (['polkadot', 'kusama'].includes(chainName)) {
-        actions.push(...proxyActionBuilder.buildUtilityAction())
-        actions.push(...proxyActionBuilder.buildMultisigAction())
-      }
 
       return actions
     })
@@ -1269,7 +1260,14 @@ async function proxyCallFilteringSingleTestRunner<
     // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
       // Forbidden calls are expected to have failed *only* due to filtering.
-      expect(proxyExecutedData.result).toMatchSnapshot(`${proxyAction.pallet}.${proxyAction.extrinsic}: ${proxyType}`)
+      assert(proxyExecutedData.result.isErr)
+      const error = proxyExecutedData.result.asErr
+      if (error.isModule) {
+        expect(
+          client.api.errors.system.CallFiltered.is(error.asModule),
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+        ).toBe(true)
+      }
     }
     // Path taken for permitted calls
     else {

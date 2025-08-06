@@ -10,7 +10,7 @@ exports[`Polkadot Scheduler > cancel named scheduled task with wrong origin > ev
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 790000000)",
+          "refTime": "(rounded 780000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Polkadot Scheduler > cancel scheduled task with wrong origin > events w
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 770000000)",
+          "refTime": "(rounded 760000000)",
         },
       },
     },
@@ -141,6 +141,13 @@ exports[`Polkadot Scheduler > priority-based execution of weighted tasks works c
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(redacted)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -154,7 +161,7 @@ exports[`Polkadot Scheduler > schedule named task with wrong origin > events whe
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 690000000)",
         },
       },
     },

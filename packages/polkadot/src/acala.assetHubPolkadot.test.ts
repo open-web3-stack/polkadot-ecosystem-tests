@@ -1,10 +1,10 @@
-import { describe } from 'vitest'
-
 import { defaultAccounts } from '@e2e-test/networks'
 import { acala, assetHubPolkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+
+import { describe } from 'vitest'
 
 describe('acala & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, acalaClient] = await setupNetworks(assetHubPolkadot, acala)
