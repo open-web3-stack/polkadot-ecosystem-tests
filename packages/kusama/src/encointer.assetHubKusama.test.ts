@@ -34,7 +34,7 @@ describe('encointerKusama & assetHubKusama', async () => {
       fromBalance: query.balances,
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedTeleportAssets(
-        encointerKusama.custom.xcmRelayNative,
+        assetHubKusama.custom.ksm,
         1e11,
         tx.xcmPallet.parachainV3(1, assetHubKusama.paraId!),
       ),
