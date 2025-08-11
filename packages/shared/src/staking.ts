@@ -860,7 +860,7 @@ async function forceApplyValidatorCommissionTest<
 
   const validatorPrefsPost: PalletStakingValidatorPrefs = await client.api.query.staking.validators(alice.address)
   expect(validatorPrefsPost.commission.toNumber()).toBe(newCommission.toNumber())
-  expect(validatorPrefsPost.blocked).toBeFalsy()
+  expect(validatorPrefsPost.blocked.isFalse).toBeTruthy()
 }
 
 /**
