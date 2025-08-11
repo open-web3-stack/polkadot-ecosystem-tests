@@ -16,7 +16,6 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { BN } from 'bn.js'
 import {
   check,
   checkEvents,

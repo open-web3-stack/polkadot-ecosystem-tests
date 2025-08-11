@@ -33,8 +33,6 @@ export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
  * @param message Optional message to display on failure
  */
 export function expectPjsEqual(actual: any, expected: any, message?: string): void {
-  console.log('actual', actual.toJSON())
-  console.log('expected', expected.toJSON())
   expect(actual.toJSON(), message).toEqual(expected.toJSON())
 }
 
