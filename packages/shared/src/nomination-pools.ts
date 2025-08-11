@@ -656,7 +656,7 @@ async function nominationPoolSetMetadataTest<
 
   let metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
-  expect(metadata.toString(), 'Pool should not have metadata').toBe('')
+  expect(metadata.toString(), 'Pool should not have metadata').toBe('0x')
 
   /// Set pool's metadata
 
@@ -673,7 +673,7 @@ async function nominationPoolSetMetadataTest<
 
   metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
-  expect(metadata.toString(), 'Pool should have the correct metadata set').toBe('Test pool #1, welcome')
+  expect(metadata.toHuman(), 'Pool should have the correct metadata set').toBe('Test pool #1, welcome')
 }
 
 /**
