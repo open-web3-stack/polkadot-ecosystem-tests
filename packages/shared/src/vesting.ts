@@ -9,7 +9,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { check, checkEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { check, checkEvents, expectPjsEqual, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -62,20 +62,20 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev1.event))
   let vestingUpdatedEvent = ev1.event.data
-  assert(vestingUpdatedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
   // the unvested amount in the event emitted in this block.
-  assert(vestingUpdatedEvent.unvested.eq(locked - perBlock * 2))
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 2)
 
   // The act of vesting does not change the `Vesting` storage item - to see how much was unlocked, events
   // must be queried.
 
   const vestingBalance = await client.api.query.vesting.vesting(bob.address)
   assert(vestingBalance.isSome)
-  assert(vestingBalance.unwrap().length === 1)
-  assert(vestingBalance.unwrap()[0].locked.eq(locked))
-  assert(vestingBalance.unwrap()[0].perBlock.eq(perBlock))
-  assert(vestingBalance.unwrap()[0].startingBlock.eq(currBlockNumber - 1))
+  expect(vestingBalance.unwrap().length).toBe(1)
+  expect(vestingBalance.unwrap()[0].locked.toNumber()).toBe(locked)
+  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perBlock)
+  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - 1)
 
   // Check Bob's free and frozen balances
 
@@ -95,7 +95,7 @@ async function testVestedTransfer<
   // Same as above regarding storage.
 
   const vestingBalance2 = await client.api.query.vesting.vesting(bob.address)
-  assert(vestingBalance2.eq(vestingBalance))
+  expectPjsEqual(vestingBalance2, vestingBalance, 'Vesting balance should remain unchanged')
 
   events = await client.api.query.system.events()
 
@@ -106,8 +106,8 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
-  assert(vestingUpdatedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
-  assert(vestingUpdatedEvent.unvested.eq(locked - perBlock * 3))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 3)
 
   // Check Bob's free and frozen balances after Alice's vesting
 
@@ -144,16 +144,16 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingCompleted.is(ev3.event))
   const vestingCompletedEvent = ev3.event.data
-  assert(vestingCompletedEvent.account.eq(encodeAddress(bob.address, addressEncoding)))
+  expect(vestingCompletedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
 
   const vestingBalance3 = await client.api.query.vesting.vesting(bob.address)
-  assert(vestingBalance3.isNone)
+  expect(vestingBalance3.isNone).toBe(true)
 
   // Final check to Bob's balance data
 
   assert(client.api.events.balances.Withdraw.is(balEv.event))
   const balanceWithdrawalEvent = balEv.event.data
-  assert(balanceWithdrawalEvent.who.eq(encodeAddress(bob.address, addressEncoding)))
+  expect(balanceWithdrawalEvent.who.toString()).toBe(encodeAddress(bob.address, addressEncoding))
 
   // Net of the fees from having called `vest` once, Bob's balance should the the vested amount, plus his initial
   // balance.
@@ -204,12 +204,12 @@ async function testForceVestedTransfer<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBe(true)
 
   // Check that no vesting balance was created.
 
   const vestingBalance = await client.api.query.vesting.vesting(charlie.address)
-  assert(vestingBalance.isNone)
+  expect(vestingBalance.isNone).toBe(true)
 }
 
 /**
@@ -240,7 +240,7 @@ async function testForceRemoveVestedSchedule<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBe(true)
 }
 
 /**
@@ -293,10 +293,10 @@ async function testForceVestedTransferAndRemoval<
 
   const vestingBalance = await client.api.query.vesting.vesting(dave.address)
   assert(vestingBalance.isSome)
-  assert(vestingBalance.unwrap().length === 1)
-  assert(vestingBalance.unwrap()[0].locked.eq(locked))
-  assert(vestingBalance.unwrap()[0].perBlock.eq(perBlock))
-  assert(vestingBalance.unwrap()[0].startingBlock.eq(currBlockNumber - 1))
+  expect(vestingBalance.unwrap().length).toBe(1)
+  expect(vestingBalance.unwrap()[0].locked.toNumber()).toBe(locked)
+  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perBlock)
+  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - 1)
 
   // Forcibly remove the vesting schedule.
 
@@ -318,7 +318,7 @@ async function testForceVestedTransferAndRemoval<
 
   // Check that the vesting schedule was removed.
   const vestingBalance2 = await client.api.query.vesting.vesting(dave.address)
-  assert(vestingBalance2.isNone)
+  expect(vestingBalance2.isNone).toBe(true)
 
   // Check that Bob's frozen balance is now 0, and that his free balance is equal to the initially vested amount.
   // In other words, forcible removal of vesting schedule does not make obliterate funds.
@@ -458,7 +458,7 @@ async function testVestedTransferFiltered<
 
   const sysEvents = await client.api.query.system.events()
   const failed = sysEvents.find((e) => e.event.section === 'system' && e.event.method === 'ExtrinsicFailed')
-  assert(failed, 'Expected ExtrinsicFailed')
+  expect(failed, 'Expected ExtrinsicFailed').toBeDefined()
 
   const dispatchErr = failed!.event.data[0] as DispatchError
   assert(dispatchErr.isModule)
@@ -492,10 +492,10 @@ async function testMergeSchedulesNoSchedule<
 
   const sysEvents = await client.api.query.system.events()
   const failed = sysEvents.find((e) => e.event.section === 'system' && e.event.method === 'ExtrinsicFailed')
-  assert(failed, 'Expected ExtrinsicFailed')
+  expect(failed, 'Expected ExtrinsicFailed').toBeDefined()
 
   const dispatchErr = failed!.event.data[0] as DispatchError
-  assert(dispatchErr.isModule)
+  expect(dispatchErr.isModule).toBe(true)
   // Ensure the failure is not due to call filtering
   assert(client.api.errors.vesting.NotVesting.is(dispatchErr.asModule))
 }

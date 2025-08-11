@@ -1268,7 +1268,7 @@ async function proxyCallFilteringSingleTestRunner<
     // This path is taken for forbidden calls
     if (testType === ProxyCallFilteringTestType.Forbidden) {
       // Forbidden calls are expected to have failed *only* due to filtering.
-      assert(proxyExecutedData.result.isErr)
+      expect(proxyExecutedData.result.isErr).toBeTruthy()
       const error = proxyExecutedData.result.asErr
       if (error.isModule) {
         expect(
@@ -1447,13 +1447,13 @@ export async function addRemoveProxyTest<
 
   let proxyData = await client.api.query.proxy.proxies(alice.address)
   let proxies: Vec<PalletProxyProxyDefinition> = proxyData[0]
-  assert(proxies.length === Object.keys(proxyTypes).length)
+  expect(proxies.length).toBe(Object.keys(proxyTypes).length)
 
   let proxyDeposit = proxyData[1]
   let proxyDepositBase = client.api.consts.proxy.proxyDepositBase
   let proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
   let proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor.muln(Object.keys(proxyTypes).length))
-  assert(proxyDeposit.eq(proxyDepositTotal))
+  expect(proxyDeposit.toNumber()).toBe(proxyDepositTotal.toNumber())
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
@@ -1481,10 +1481,10 @@ export async function addRemoveProxyTest<
 
   const proxyDataAfterRemoval = await client.api.query.proxy.proxies(alice.address)
   const proxiesAfterRemoval: Vec<PalletProxyProxyDefinition> = proxyDataAfterRemoval[0]
-  assert(proxiesAfterRemoval.length === 0)
+  expect(proxiesAfterRemoval.length).toBe(0)
 
   const proxyDepositAfterRemoval = proxyDataAfterRemoval[1]
-  assert(proxyDepositAfterRemoval.eq(0))
+  expect(proxyDepositAfterRemoval.toNumber()).toBe(0)
 
   // Create proxies (with delay)
 
@@ -1505,13 +1505,13 @@ export async function addRemoveProxyTest<
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
-  assert(proxies.length === Object.keys(proxyTypes).length)
+  expect(proxies.length).toBe(Object.keys(proxyTypes).length)
 
   proxyDeposit = proxyData[1]
   proxyDepositBase = client.api.consts.proxy.proxyDepositBase
   proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
   proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor.muln(Object.keys(proxyTypes).length))
-  assert(proxyDeposit.eq(proxyDepositTotal))
+  expect(proxyDeposit.toNumber()).toBe(proxyDepositTotal.toNumber())
 
   for (const proxy of proxies) {
     await check(proxy)
@@ -1533,10 +1533,10 @@ export async function addRemoveProxyTest<
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
-  assert(proxies.length === 0)
+  expect(proxies.length).toBe(0)
 
   proxyDeposit = proxyData[1]
-  assert(proxyDeposit.eq(0))
+  expect(proxyDeposit.toNumber()).toBe(0)
 }
 
 /**
@@ -1591,9 +1591,9 @@ export async function createKillPureProxyTest<
   // Pure proxies aren't visible in the `proxies` query.
   const proxyData = await client.api.query.proxy.proxies(alice.address)
   const proxies: Vec<PalletProxyProxyDefinition> = proxyData[0]
-  assert(proxies.length === 0)
+  expect(proxies.length).toBe(0)
   const proxyDeposit = proxyData[1]
-  assert(proxyDeposit.eq(0))
+  expect(proxyDeposit.eq(0)).toBe(true)
 
   const events = await client.api.query.system.events()
 
@@ -1602,7 +1602,7 @@ export async function createKillPureProxyTest<
     return event.section === 'proxy' && event.method === 'PureCreated'
   })
 
-  assert(proxyEvents.length === Object.keys(proxyTypes).length)
+  expect(proxyEvents.length).toBe(Object.keys(proxyTypes).length)
 
   for (const proxyEvent of proxyEvents) {
     assert(client.api.events.proxy.PureCreated.is(proxyEvent.event))
@@ -1617,15 +1617,15 @@ export async function createKillPureProxyTest<
 
     // Confer event data vs. storage
     const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
-    assert(pureProxy[0].length === 1)
-    assert(pureProxy[0][0].proxyType.eq(eventData.proxyType))
-    assert(pureProxy[0][0].delay.eq(0))
-    assert(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding)))
+    expect(pureProxy[0].length).toBe(1)
+    expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
+    expect(pureProxy[0][0].delay.eq(0)).toBe(true)
+    expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding))).toBe(true)
 
     const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
     const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
     const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
-    assert(pureProxy[1].eq(proxyDepositTotal))
+    expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
   }
 
   // Kill pure proxies
@@ -1666,16 +1666,16 @@ export async function createKillPureProxyTest<
     // At present, only `Any` pure proxies can successfully call `proxy.killPure`.
     // Pending a fix (see #8056), this may be updated to check that all pure proxy types can be killed.
     if (eventData.proxyType.toNumber() === proxyTypes['Any']) {
-      assert(pureProxy[0].length === 0)
-      assert(pureProxy[1].eq(0))
+      expect(pureProxy[0].length).toBe(0)
+      expect(pureProxy[1].eq(0)).toBe(true)
     } else {
-      assert(pureProxy[0].length === 1)
-      assert(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding)))
+      expect(pureProxy[0].length).toBe(1)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
       const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
-      assert(pureProxy[1].eq(proxyDepositTotal))
+      expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
     }
   }
 }
@@ -1720,7 +1720,7 @@ export async function proxyCallTest<
   // Check Charlie's balances beforehand
   const oldAliceBalance = (await client.api.query.system.account(alice.address)).data.free
   let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  assert(charlieBalance.eq(0), 'Charlie should have no funds')
+  expect(charlieBalance.eq(0), 'Charlie should have no funds').toBe(true)
 
   await client.dev.newBlock()
 
@@ -1730,9 +1730,11 @@ export async function proxyCallTest<
 
   // Check Alice's and Charlie's balances
   const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free
-  assert(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds')
+  expect(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds').toBe(
+    true,
+  )
   charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  assert(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds')
+  expect(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds').toBe(true)
 }
 
 /**
@@ -1791,16 +1793,16 @@ export async function proxyAnnouncementLifecycleTest<
 
   // Sanity check - the announcement should be associated to Bob and not their delegator, Alice
   let announcements = await client.api.query.proxy.announcements(alice.address)
-  assert(announcements[0].length === 0)
-  assert(announcements[1].eq(0))
+  expect(announcements[0].length).toBe(0)
+  expect(announcements[1].eq(0)).toBe(true)
   announcements = await client.api.query.proxy.announcements(bob.address)
-  assert(announcements[0].length === 1)
+  expect(announcements[0].length).toBe(1)
   await check(announcements[0][0]).toMatchObject(announcementObject)
 
   const announcementDeposit = client.api.consts.proxy.announcementDepositBase
   const announcementDepositFactor = client.api.consts.proxy.announcementDepositFactor
   const announcementDepositTotal = announcementDeposit.add(announcementDepositFactor)
-  assert(announcements[1].eq(announcementDepositTotal))
+  expect(announcements[1].eq(announcementDepositTotal)).toBe(true)
 
   // Alice rejects the announcement
 
@@ -1815,8 +1817,8 @@ export async function proxyAnnouncementLifecycleTest<
   )
 
   announcements = await client.api.query.proxy.announcements(bob.address)
-  assert(announcements[0].length === 0)
-  assert(announcements[1].eq(0))
+  expect(announcements[0].length).toBe(0)
+  expect(announcements[1].eq(0)).toBe(true)
 
   // Bob reannounces the intent
   await sendTransaction(announceTx.signAsync(bob))
@@ -1824,10 +1826,10 @@ export async function proxyAnnouncementLifecycleTest<
   await client.dev.newBlock()
 
   announcements = await client.api.query.proxy.announcements(bob.address)
-  assert(announcements[0].length === 1)
+  expect(announcements[0].length).toBe(1)
   announcementObject.height = currBlockNumber + 2
   await check(announcements[0][0]).toMatchObject(announcementObject)
-  assert(announcements[1].eq(announcementDepositTotal))
+  expect(announcements[1].eq(announcementDepositTotal)).toBe(true)
 
   // Bob cancels the intent themselves
   const removeAnnouncementTx = client.api.tx.proxy.removeAnnouncement(alice.address, transferCall.method.hash)
@@ -1841,8 +1843,8 @@ export async function proxyAnnouncementLifecycleTest<
   )
 
   announcements = await client.api.query.proxy.announcements(bob.address)
-  assert(announcements[0].length === 0)
-  assert(announcements[1].eq(0))
+  expect(announcements[0].length).toBe(0)
+  expect(announcements[1].eq(0)).toBe(true)
 
   // Bob reannounces the intent once more
   await sendTransaction(announceTx.signAsync(bob))

@@ -768,7 +768,7 @@ async function minimumThresholdCancelTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -831,7 +831,7 @@ async function minimumThresholdAsMultiTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -942,7 +942,7 @@ async function approveAsMultiAlreadyApprovedTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -994,7 +994,7 @@ async function tooFewSignatoriesTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.TooFewSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.TooFewSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1061,7 +1061,7 @@ async function tooManySignatoriesTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1159,7 +1159,7 @@ async function signatoriesOutOfOrderInExecutionTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1259,7 +1259,7 @@ async function cancelWithSignatoriesOutOfOrderTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1354,7 +1354,7 @@ async function signatoriesOutOfOrderInApprovalTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1416,7 +1416,7 @@ async function senderInSignatoriesInExecutionTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1509,7 +1509,7 @@ async function senderInSignatoriesInCancellationTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1603,7 +1603,7 @@ async function senderInSignatoriesInApprovalTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1700,7 +1700,7 @@ async function notFoundCancelTest<
   const dispatchError1 = ev1.event.data.dispatchError
 
   assert(dispatchError1.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError1.asModule))
+  expect(client.api.errors.multisig.NotFound.is(dispatchError1.asModule)).toBeTruthy()
 
   // Second attempt: Alice tries to cancel with a bogus call hash
 
@@ -1737,7 +1737,7 @@ async function notFoundCancelTest<
   const dispatchError2 = ev2.event.data.dispatchError
 
   assert(dispatchError2.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError2.asModule))
+  expect(client.api.errors.multisig.NotFound.is(dispatchError2.asModule)).toBeTruthy()
 }
 
 /**
@@ -1831,7 +1831,7 @@ async function notOwnerCancelTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.NotOwner.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.NotOwner.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1910,7 +1910,7 @@ async function noTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.NoTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.NoTimepoint.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -2005,7 +2005,7 @@ async function wrongTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.WrongTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.WrongTimepoint.is(dispatchError.asModule)).toBeTruthy()
 
   // Bob calls asMulti again but uses correct block number with incorrect extrinsic index
   const approveTx2 = client.api.tx.multisig.asMulti(
@@ -2041,7 +2041,7 @@ async function wrongTimepointTest<
   const dispatchError2 = ev2.event.data.dispatchError
 
   assert(dispatchError2.isModule)
-  assert(client.api.errors.multisig.WrongTimepoint.is(dispatchError2.asModule))
+  expect(client.api.errors.multisig.WrongTimepoint.is(dispatchError2.asModule)).toBeTruthy()
 }
 
 /**
@@ -2112,7 +2112,7 @@ async function unexpectedTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -2206,7 +2206,7 @@ async function maxWeightTooLowTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule)).toBeTruthy()
 }
 
 export function successMultisigE2ETests<

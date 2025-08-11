@@ -14,6 +14,7 @@ import {
   check,
   checkEvents,
   checkSystemEvents,
+  expectPjsEqual,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
 } from './helpers/index.js'
@@ -49,7 +50,7 @@ export async function badOriginHelper<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBe(true)
 }
 
 /**
@@ -129,8 +130,8 @@ export async function cancelScheduledTaskBadOriginTest<
   await client.dev.newBlock()
 
   const scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
@@ -175,8 +176,8 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   await client.dev.newBlock()
 
   const scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap())
     .redact({ redactKeys: /maybeId/ })
     .toMatchObject({
@@ -189,7 +190,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
         },
       },
     })
-  assert(scheduled[0].unwrap().maybeId.eq(taskId))
+  expectPjsEqual(scheduled[0].unwrap().maybeId, taskId)
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
@@ -223,8 +224,8 @@ export async function scheduledCallExecutes<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
 
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
@@ -248,11 +249,11 @@ export async function scheduledCallExecutes<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1))
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -284,8 +285,8 @@ export async function scheduledNamedCallExecutes<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
 
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
@@ -309,11 +310,11 @@ export async function scheduledNamedCallExecutes<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -341,8 +342,8 @@ export async function cancelScheduledTask<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
 
   const cancelTx = client.api.tx.scheduler.cancel(currBlockNumber + 2, 0)
 
@@ -361,7 +362,7 @@ export async function cancelScheduledTask<
     .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 
   await client.dev.newBlock()
 
@@ -397,8 +398,8 @@ export async function cancelScheduledNamedTask<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
@@ -414,7 +415,7 @@ export async function cancelScheduledNamedTask<
     .toMatchSnapshot('events for scheduled task cancellation')
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 
   await client.dev.newBlock()
 
@@ -443,7 +444,7 @@ export async function scheduleTaskAfterDelay<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 
   await checkSystemEvents(client, 'scheduler')
     .redact({
@@ -455,8 +456,8 @@ export async function scheduleTaskAfterDelay<
   currBlockNumber += 1
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
@@ -481,11 +482,11 @@ export async function scheduleTaskAfterDelay<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -509,7 +510,7 @@ export async function scheduleNamedTaskAfterDelay<
   currBlockNumber += 1
 
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 
   await checkSystemEvents(client, 'scheduler')
     .redact({
@@ -521,8 +522,8 @@ export async function scheduleNamedTaskAfterDelay<
   currBlockNumber += 1
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
     priority: 0,
@@ -547,11 +548,11 @@ export async function scheduleNamedTaskAfterDelay<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -588,7 +589,7 @@ export async function scheduledOverweightCallFails<
   currBlockNumber += 1
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
 
-  assert(scheduled.length === 1)
+  expect(scheduled.length).toBe(1)
   const scheduledTask: PalletSchedulerScheduled = scheduled[0].unwrap()
   const task = {
     maybeId: null,
@@ -612,7 +613,7 @@ export async function scheduledOverweightCallFails<
 
   // Check that the call was not executed
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(totalIssuance))
+  expect(newTotalIssuance.toNumber()).toBe(totalIssuance.toNumber())
 
   // Check that an event was emitted certifying the scheduled call as overweight
 
@@ -624,7 +625,7 @@ export async function scheduledOverweightCallFails<
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
-  assert(scheduled.length === 1)
+  expect(scheduled.length).toBe(1)
 
   await check(scheduled[0].unwrap()).toMatchObject(task)
 }
@@ -665,7 +666,7 @@ async function scheduleLookupCall<
   )
 
   const agenda = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(agenda.length === 1)
+  expect(agenda.length).toBe(1)
   assert(agenda[0].isSome)
   const scheduledTask = agenda[0].unwrap()
   await check(scheduledTask).toMatchObject({
@@ -685,7 +686,7 @@ async function scheduleLookupCall<
   await client.dev.newBlock()
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance.addn(1)))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
 
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
@@ -745,8 +746,8 @@ export async function schedulePreimagedCall<
   })
 
   let scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   expect(scheduled[0].toJSON()).toMatchObject({
     maybeId: null,
     priority: 0,
@@ -776,8 +777,8 @@ export async function schedulePreimagedCall<
 
   scheduled = await client.api.query.scheduler.agenda(blockNumber + 2)
 
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   expect(scheduled[0].toJSON()).toMatchObject({
     maybeId: null,
     priority: 0,
@@ -790,7 +791,7 @@ export async function schedulePreimagedCall<
     .toMatchSnapshot('events for failing scheduled lookup-task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(newTotalIssuance.eq(oldTotalIssuance))
+  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.toNumber())
 }
 
 /**
@@ -822,8 +823,8 @@ async function testPeriodicTask<
 
   // Initial agenda check
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
     priority: 0,
@@ -857,13 +858,13 @@ async function testPeriodicTask<
       .toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
 
     const currentTotalIssuance = await client.api.query.balances.totalIssuance()
-    assert(currentTotalIssuance.eq(initialTotalIssuance.addn(i)))
+    expect(currentTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(i).toNumber())
 
     // Check agenda for next scheduled execution (if not the last iteration)
     if (i < REPETITIONS) {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 2)
-      assert(scheduled.length === 1)
-      assert(scheduled[0].isSome)
+      expect(scheduled.length).toBe(1)
+      expect(scheduled[0].isSome).toBeTruthy()
 
       let maybePeriodic: [number, number] | null
       if (i === REPETITIONS - 1) {
@@ -892,7 +893,7 @@ async function testPeriodicTask<
 
   // Verify task is removed after all executions
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -1025,8 +1026,9 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify both tasks are in the agenda
   let scheduled = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  assert(scheduled.length === 2)
-  assert(scheduled[0].isSome && scheduled[1].isSome)
+  expect(scheduled.length).toBe(2)
+  expect(scheduled[0].isSome).toBeTruthy()
+  expect(scheduled[1].isSome).toBeTruthy()
 
   // Execute first block - should only complete high priority task
   await client.dev.newBlock()
@@ -1041,16 +1043,17 @@ export async function schedulePriorityWeightedTasks<
 
   // Check that *only* the high priority task executed
   const midTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(midTotalIssuance.eq(initialTotalIssuance.addn(2)))
+  expect(midTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(2).toNumber())
 
   // Verify `incompleteSince` is set to current block
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
   assert(incompleteSince.isSome)
-  assert(incompleteSince.unwrap().eq(currBlockNumber))
+  expect(incompleteSince.unwrap().toNumber()).toBe(currBlockNumber)
 
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
-  assert(scheduled.length === 2)
-  assert(scheduled[0].isSome && scheduled[1].isNone)
+  expect(scheduled.length).toBe(2)
+  expect(scheduled[0].isSome).toBeTruthy()
+  expect(scheduled[1].isNone).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
     priority: 1,
@@ -1064,19 +1067,19 @@ export async function schedulePriorityWeightedTasks<
   currBlockNumber += 1
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
-  assert(finalTotalIssuance.eq(initialTotalIssuance.addn(3)))
+  expect(finalTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(3).toNumber())
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  assert(finalIncompleteSince.isNone)
+  expect(finalIncompleteSince.isNone).toBeTruthy()
 
   // Verify agenda is now empty
   scheduled = await client.api.query.scheduler.agenda(initBlockNumber)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -1126,8 +1129,8 @@ export async function scheduleWithRetryConfig<
 
   // Check initial schedule
   let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject(baseTask)
 
   // Set retry configuration
@@ -1157,10 +1160,10 @@ export async function scheduleWithRetryConfig<
 
   // Verify task failed and was rescheduled
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject(baseTask)
 
   retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
@@ -1187,12 +1190,12 @@ export async function scheduleWithRetryConfig<
 
   // Verify task is still scheduled but without retry config
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject(baseTask)
 
   retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 6, 0])
-  assert(retryOpt.isNone)
+  expect(retryOpt.isNone).toBeTruthy()
 }
 
 /**
@@ -1243,8 +1246,8 @@ export async function scheduleNamedWithRetryConfig<
 
   // Check initial schedule
   let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject(baseTask)
 
   // Set retry configuration
@@ -1270,10 +1273,10 @@ export async function scheduleNamedWithRetryConfig<
 
   // Verify task failed and was rescheduled
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
-  assert(scheduled.length === 0)
+  expect(scheduled.length).toBe(0)
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   // Retries of named tasks have no id
   await check(scheduled[0].unwrap()).toMatchObject({
     ...baseTask,
@@ -1304,8 +1307,8 @@ export async function scheduleNamedWithRetryConfig<
 
   // Verify task is still scheduled but without retry config
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 6)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   // Once again - retries of named tasks have no id, even after removal of retry config
   await check(scheduled[0].unwrap()).toMatchObject({
     ...baseTask,
@@ -1327,8 +1330,8 @@ export async function scheduleNamedWithRetryConfig<
   // In the meantime, the task has been retried a second time, and has scheduled for a third
 
   scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 9)
-  assert(scheduled.length === 1)
-  assert(scheduled[0].isSome)
+  expect(scheduled.length).toBe(1)
+  expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap()).toMatchObject({
     ...baseTask,
     maybeId: null,
@@ -1348,7 +1351,7 @@ export async function scheduleNamedWithRetryConfig<
   await client.dev.newBlock()
 
   retryOpt = await client.api.query.scheduler.retries([initialBlockNumber + 9, 0])
-  assert(retryOpt.isNone)
+  expect(retryOpt.isNone).toBeTruthy()
 }
 
 export function baseSchedulerE2ETests<
