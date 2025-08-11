@@ -14,7 +14,6 @@ import {
   check,
   checkEvents,
   checkSystemEvents,
-  expectPjsEqual,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
 } from './helpers/index.js'
@@ -190,7 +189,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
         },
       },
     })
-  expectPjsEqual(scheduled[0].unwrap().maybeId, taskId)
+  expect(scheduled[0].unwrap().maybeId.unwrap().toU8a()).toEqual(taskId)
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
@@ -249,7 +248,7 @@ export async function scheduledCallExecutes<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1))
+  expect(newTotalIssuance.toBigInt()).toBe(BigInt(oldTotalIssuance.addn(1).toString()))
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
@@ -310,7 +309,7 @@ export async function scheduledNamedCallExecutes<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(BigInt(oldTotalIssuance.addn(1).toString()))
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
@@ -482,7 +481,7 @@ export async function scheduleTaskAfterDelay<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(BigInt(oldTotalIssuance.addn(1).toString()))
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
@@ -548,7 +547,7 @@ export async function scheduleNamedTaskAfterDelay<
     .toMatchSnapshot('events for scheduled task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(BigInt(oldTotalIssuance.addn(1).toString()))
 
   // Check that the call was removed from the agenda
   scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
@@ -613,7 +612,7 @@ export async function scheduledOverweightCallFails<
 
   // Check that the call was not executed
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(totalIssuance.toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(totalIssuance.toBigInt())
 
   // Check that an event was emitted certifying the scheduled call as overweight
 
@@ -686,7 +685,7 @@ async function scheduleLookupCall<
   await client.dev.newBlock()
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.addn(1).toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(BigInt(oldTotalIssuance.addn(1).toString()))
 
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
@@ -791,7 +790,7 @@ export async function schedulePreimagedCall<
     .toMatchSnapshot('events for failing scheduled lookup-task execution')
 
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toNumber()).toBe(oldTotalIssuance.toNumber())
+  expect(newTotalIssuance.toBigInt()).toBe(oldTotalIssuance.toBigInt())
 }
 
 /**
@@ -858,7 +857,7 @@ async function testPeriodicTask<
       .toMatchSnapshot(`events for ${taskId ? 'named' : ''} periodic task execution ${i}`)
 
     const currentTotalIssuance = await client.api.query.balances.totalIssuance()
-    expect(currentTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(i).toNumber())
+    expect(currentTotalIssuance.toBigInt()).toBe(BigInt(initialTotalIssuance.addn(i).toString()))
 
     // Check agenda for next scheduled execution (if not the last iteration)
     if (i < REPETITIONS) {
@@ -1043,7 +1042,7 @@ export async function schedulePriorityWeightedTasks<
 
   // Check that *only* the high priority task executed
   const midTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(midTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(2).toNumber())
+  expect(midTotalIssuance.toBigInt()).toBe(BigInt(initialTotalIssuance.addn(2).toString()))
 
   // Verify `incompleteSince` is set to current block
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
@@ -1067,7 +1066,7 @@ export async function schedulePriorityWeightedTasks<
   currBlockNumber += 1
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(finalTotalIssuance.toNumber()).toBe(initialTotalIssuance.addn(3).toNumber())
+  expect(finalTotalIssuance.toBigInt()).toBe(BigInt(initialTotalIssuance.addn(3).toString()))
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
