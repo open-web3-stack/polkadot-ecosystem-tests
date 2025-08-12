@@ -237,8 +237,10 @@ async function nominationPoolLifecycleTest<
     throttleFrom: null,
     claimPermission: null,
   })
-  expect(nominationPoolPostCreation.memberCounter, 'Pool should have 1 member').toBe(1)
-  expect(nominationPoolPostCreation.points, 'Pool should have `deposit_min_bond` points').toBe(depositorMinBond)
+  expect(nominationPoolPostCreation.memberCounter.toNumber(), 'Pool should have 1 member').toBe(1)
+  expect(nominationPoolPostCreation.points.toNumber(), 'Pool should have `deposit_min_bond` points').toBe(
+    depositorMinBond,
+  )
   await check(nominationPoolPostCreation.roles).toMatchObject({
     depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
     root: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
@@ -485,7 +487,7 @@ async function nominationPoolLifecycleTest<
   expect(poolData.isSome, 'Pool should still exist after funds are unbonded').toBe(true)
   const nominationPoolPostUnbond = poolData.unwrap()
 
-  expect(nominationPoolPostUnbond.points).toBe(depositorMinBond + minJoinBond)
+  expect(nominationPoolPostUnbond.points.toNumber()).toBe(depositorMinBond + minJoinBond)
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 
   /**
