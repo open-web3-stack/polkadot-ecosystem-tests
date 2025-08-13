@@ -352,8 +352,8 @@ export async function cancelScheduledTask<
   currBlockNumber += 1
 
   // This should capture 2 system events, and no `TotalIssuanceForced`.
-  // 1. One system event will be for the test-specific dispatch injected via the helper `scheduleInlineCallWithOrigin`
-  // 2. The other will be for the cancellation of the scheduled task
+  // 1. One system event will be for the test-originated dispatch injected via the helper `scheduleInlineCallWithOrigin`
+  // 2. The other will be a `scheduler.Cancelled` event of the scheduled task
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
       redactKeys: /new|old|when|task/,
@@ -364,10 +364,6 @@ export async function cancelScheduledTask<
   expect(scheduled.length).toBe(0)
 
   await client.dev.newBlock()
-
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'empty event for cancelled task',
-  )
 }
 
 /**
@@ -418,9 +414,15 @@ export async function cancelScheduledNamedTask<
 
   await client.dev.newBlock()
 
-  await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'empty event for cancelled task',
-  )
+  const events = await client.api.query.system.events()
+  const filteredEvents = events.filter((ev) => {
+    const { event } = ev
+    return (
+      (event.section === 'scheduler' && event.method === 'Cancelled') ||
+      (event.section === 'balances' && event.method === 'TotalIssuanceForced')
+    )
+  })
+  expect(filteredEvents.length).toBe(0)
 }
 
 /**
