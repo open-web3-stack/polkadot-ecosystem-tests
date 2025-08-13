@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Paseo Asset Hub Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 18000)",
+          "refTime": "(rounded 1100000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Vesting > test merger of two vesting schedules > vesting events 1 1`] = `[]`;
+
+exports[`Paseo Asset Hub Vesting > test merger of two vesting schedules > vesting events 2 1`] = `[]`;
+
+exports[`Paseo Asset Hub Vesting > vesting schedule lifecycle > vest events 1`] = `[]`;
