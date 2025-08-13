@@ -46,6 +46,12 @@ const custom = {
     usdtIndex: 1984,
     eth: null,
   },
+  assetHubPaseo: {
+    pas: { Concrete: { parents: 1, interior: 'Here' } },
+    usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
+    usdtIndex: 1984,
+    eth: null,
+  },
 }
 
 const accountList = (ethConfig: any) => [
@@ -54,7 +60,11 @@ const accountList = (ethConfig: any) => [
 ]
 
 const getInitStorages = (
-  config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubWestend,
+  config:
+    | typeof custom.assetHubPolkadot
+    | typeof custom.assetHubKusama
+    | typeof custom.assetHubWestend
+    | typeof custom.assetHubPaseo,
 ) => ({
   System: {
     account: [
@@ -94,4 +104,12 @@ export const assetHubWestend = defineChain({
   paraId: 1000,
   custom: custom.assetHubWestend,
   initStorages: getInitStorages(custom.assetHubWestend),
+})
+
+export const assetHubPaseo = defineChain({
+  name: 'assetHubPaseo',
+  endpoint: 'wss://sys.ibp.network/asset-hub-paseo',
+  paraId: 1000,
+  custom: custom.assetHubPaseo,
+  initStorages: getInitStorages(custom.assetHubPaseo),
 })
