@@ -1,0 +1,391 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Paseo Asset Hub Staking > cancel deferred slash with bad origin > cancel deferred slash events with bad origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 38000)",
+          "refTime": "(rounded 630000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > force apply validator commission > force apply min commission events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 89,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 13000)",
+          "refTime": "(rounded 690000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > modify validator count > increase validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 9800)",
+          "refTime": "(rounded 570000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > modify validator count > set validator count bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 9800)",
+          "refTime": "(rounded 570000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 9800)",
+          "refTime": "(rounded 570000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > set minimum validator commission > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 9800)",
+          "refTime": "(rounded 570000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > set staking configs > set staking configs bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 9800)",
+          "refTime": "(rounded 1200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > nominate events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > nominator bond extra events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 0 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 0 validate events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 1 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 1 validate events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 2 bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > staking lifecycle > validator 2 validate events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > test fast unstake > nominate events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > test fast unstake > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > test force unstaking of nominator > force unstake bad origin events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 16000)",
+          "refTime": "(rounded 2300000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > trying to become a validator with no bonded funds fails > events when attempting to validate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 89,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 14000)",
+          "refTime": "(rounded 1400000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > trying to nominate with no bonded funds fails > events when attempting to nominate with no bonded funds 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 89,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 19000)",
+          "refTime": "(rounded 1700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 5000000000000,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > alice funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > bob funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > charlie funds pre slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 89999986568636,
+  "frozen": 0,
+  "reserved": 10000000000000,
+}
+`;
+
+exports[`Paseo Asset Hub Staking > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+      "staker": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "staker": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+]
+`;

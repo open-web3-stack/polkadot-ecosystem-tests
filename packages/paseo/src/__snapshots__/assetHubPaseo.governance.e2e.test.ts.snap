@@ -1,0 +1,134 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Paseo Asset Hub Governance > preimage submission, query and removal works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > preimage submission, query and removal works > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > events for bob's decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info before decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info post decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 94000)",
+          "refTime": "(rounded 1200000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

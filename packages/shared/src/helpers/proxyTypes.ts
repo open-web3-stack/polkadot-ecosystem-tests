@@ -55,6 +55,21 @@ export const AssetHubWestendProxyTypes: ProxyTypeMap = {
   OldParaRegistration: 13,
 }
 
+export const AssetHubPaseoProxyTypes: ProxyTypeMap = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Assets: 3,
+  AssetOwner: 4,
+  AssetManager: 5,
+  Collator: 6,
+  Governance: 7,
+  Staking: 8,
+  NominationPools: 9,
+  OldAuction: 10,
+  OldParaRegistration: 11,
+}
+
 export const CollectivesProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,

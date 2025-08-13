@@ -11,6 +11,9 @@ const custom = {
   westend: {
     wnd: { Concrete: { parents: 0, interior: 'Here' } },
   },
+  paseo: {
+    pas: { Concrete: { parents: 0, interior: 'Here' } },
+  },
 }
 
 const getInitStorages = () => ({
@@ -50,6 +53,14 @@ export const westend = defineChain({
   name: 'westend',
   endpoint: 'wss://westend-rpc.polkadot.io',
   custom: custom.westend,
+  initStorages: getInitStorages(),
+  isRelayChain: true,
+})
+
+export const paseo = defineChain({
+  name: 'paseo',
+  endpoint: 'wss://rpc.ibp.network/paseo',
+  custom: custom.paseo,
   initStorages: getInitStorages(),
   isRelayChain: true,
 })

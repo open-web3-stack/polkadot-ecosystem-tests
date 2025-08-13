@@ -1673,7 +1673,7 @@ export async function proxyCallTest<
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
-  const dave = defaultAccountsSr25519.dave
+  const dave = defaultAccountsSr25519.keyring.addFromUri('//fresh dave')
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
