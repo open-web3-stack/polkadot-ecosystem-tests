@@ -17,7 +17,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > approval with sender in sig
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -42,7 +42,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > approval with signatories o
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -148,7 +148,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > creating a multisig with th
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1800000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -173,7 +173,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > execution with sender in si
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1800000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -264,7 +264,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig creation with too 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1800000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -303,7 +303,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig execution with rem
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1800000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -353,7 +353,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > repeated approval with \`ap
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000000)",
-          "refTime": "(rounded 1600000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },

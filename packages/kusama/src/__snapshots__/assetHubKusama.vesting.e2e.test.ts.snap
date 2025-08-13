@@ -14,8 +14,8 @@ exports[`Kusama Asset Hub Vesting > attempt to merge when no vesting schedules e
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 17000)",
-          "refTime": "(rounded 930000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -34,8 +34,8 @@ exports[`Kusama Asset Hub Vesting > signed-origin force-vested transfer fails > 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 18000)",
-          "refTime": "(rounded 1200000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

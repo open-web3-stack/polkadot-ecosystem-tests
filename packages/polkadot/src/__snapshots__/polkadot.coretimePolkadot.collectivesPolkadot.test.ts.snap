@@ -136,8 +136,8 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 330000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +168,8 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 270000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -195,7 +195,7 @@ exports[`polkadot & coretime & collectives > Relay authorizes Coretime upgrade v
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": "(rounded 130000000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",

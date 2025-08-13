@@ -14,8 +14,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -39,8 +39,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -64,8 +64,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -89,8 +89,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -114,8 +114,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -139,8 +139,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -164,8 +164,8 @@ exports[`Polkadot Staking > base staking tests > chill other > chill other bad o
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -195,8 +195,8 @@ exports[`Polkadot Staking > base staking tests > force apply validator commissio
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 11000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -215,8 +215,8 @@ exports[`Polkadot Staking > base staking tests > modify validator count > increa
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 520000000)",
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -235,8 +235,8 @@ exports[`Polkadot Staking > base staking tests > modify validator count > scale 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 520000000)",
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -255,8 +255,8 @@ exports[`Polkadot Staking > base staking tests > modify validator count > set va
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 520000000)",
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -291,8 +291,8 @@ exports[`Polkadot Staking > base staking tests > set invulnerables with bad orig
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 520000000)",
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -396,8 +396,8 @@ exports[`Polkadot Staking > base staking tests > set minimum validator commissio
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
-          "refTime": "(rounded 520000000)",
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -416,7 +416,7 @@ exports[`Polkadot Staking > base staking tests > set staking configs > set staki
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7200)",
+          "proofSize": "(rounded 7000)",
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -435,8 +435,8 @@ exports[`Polkadot Staking > base staking tests > set staking configs > set staki
         "class": "Mandatory",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1500)",
-          "refTime": "(rounded 260000000)",
+          "proofSize": "(rounded 1000)",
+          "refTime": "(rounded 300000000)",
         },
       },
     ],
@@ -475,8 +475,8 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > events when
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 21000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -669,8 +669,8 @@ exports[`Polkadot Staking > base staking tests > test force unstaking of nominat
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1900000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -694,8 +694,8 @@ exports[`Polkadot Staking > base staking tests > trying to become a validator wi
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 1200000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -719,8 +719,8 @@ exports[`Polkadot Staking > base staking tests > trying to nominate with no bond
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 1300000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -733,54 +733,54 @@ exports[`Polkadot Staking > base staking tests > trying to nominate with no bond
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 99999867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
@@ -793,8 +793,8 @@ exports[`Polkadot Staking > slashing tests > cancel deferred slash with bad orig
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 77000)",
-          "refTime": "(rounded 1900000000)",
+          "proofSize": "(rounded 80000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },

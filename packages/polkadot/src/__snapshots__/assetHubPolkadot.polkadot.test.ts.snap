@@ -112,8 +112,8 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to cha
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 290000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -129,8 +129,8 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx eve
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 363000)",
-            "refTime": "(rounded 42500000000)",
+            "proofSize": "(rounded 400000)",
+            "refTime": "(rounded 40000000000)",
           },
         },
       },
@@ -184,8 +184,8 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 740000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 700000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -197,8 +197,8 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -245,8 +245,8 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 7240)",
-            "refTime": "(rounded 636000000)",
+            "proofSize": "(rounded 7000)",
+            "refTime": "(rounded 600000000)",
           },
         },
       },
