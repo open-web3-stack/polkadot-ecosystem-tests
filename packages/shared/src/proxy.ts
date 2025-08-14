@@ -1525,11 +1525,17 @@ export async function addRemoveProxyTest<
   // Remove delay-having proxies
 
   const removeProxiesTx = client.api.tx.proxy.removeProxies()
-  const removeProxiesEvents = await sendTransaction(removeProxiesTx.signAsync(alice))
+  await sendTransaction(removeProxiesTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(removeProxiesEvents, 'proxy').toMatchSnapshot(`events when removing all proxies from Alice`)
+  // TODO: `remove_proxies` emits no events; when/if it ever does, this'll fail.
+  const events = await client.api.query.system.events()
+  const removeProxiesEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'proxy'
+  })
+  expect(removeProxiesEvent).toBeUndefined()
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
@@ -1807,14 +1813,18 @@ export async function proxyAnnouncementLifecycleTest<
   // Alice rejects the announcement
 
   const rejectAnnouncementTx = client.api.tx.proxy.rejectAnnouncement(bob.address, transferCall.method.hash)
-  const rejectAnnouncementEvents = await sendTransaction(rejectAnnouncementTx.signAsync(alice))
+  await sendTransaction(rejectAnnouncementTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // Rejection of announcements emits no events, this should be empty.
-  await checkEvents(rejectAnnouncementEvents, 'proxy').toMatchSnapshot(
-    "events when Alice rejects Bob's proxy call announcement",
-  )
+  // Rejection of announcements emits no events.
+  // TODO: pending a discussion, this extrinsic may have an event added to it, which will break this test.
+  let events = await client.api.query.system.events()
+  const rejectAnnouncementEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'proxy'
+  })
+  expect(rejectAnnouncementEvent).toBeUndefined()
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(0)
@@ -1833,14 +1843,18 @@ export async function proxyAnnouncementLifecycleTest<
 
   // Bob cancels the intent themselves
   const removeAnnouncementTx = client.api.tx.proxy.removeAnnouncement(alice.address, transferCall.method.hash)
-  const removeAnnouncementEvents = await sendTransaction(removeAnnouncementTx.signAsync(bob))
+  await sendTransaction(removeAnnouncementTx.signAsync(bob))
 
   await client.dev.newBlock()
 
   // Removal of announcements emits no events, this should also be empty.
-  await checkEvents(removeAnnouncementEvents, 'proxy').toMatchSnapshot(
-    'events when Bob removes their proxy call announcement',
-  )
+  // TODO: see comment above for `rejectAnnouncement`
+  events = await client.api.query.system.events()
+  const removeAnnouncementEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'proxy'
+  })
+  expect(removeAnnouncementEvent).toBeUndefined()
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(0)
