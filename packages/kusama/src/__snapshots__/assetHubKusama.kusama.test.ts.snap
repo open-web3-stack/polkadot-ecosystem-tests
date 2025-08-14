@@ -112,8 +112,8 @@ exports[`kusama & assetHubKusama > assetHubKusama transfer KSM to kusama > to ch
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 330000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -129,8 +129,8 @@ exports[`kusama & assetHubKusama > assetHubKusama transfer KSM to kusama > tx ev
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 199000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -290,8 +290,8 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > to ch
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 790000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -303,8 +303,8 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > to ch
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 170000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -320,8 +320,8 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > tx ev
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 172000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

@@ -1,5 +1,5 @@
 import type { StorageValues } from '@acala-network/chopsticks'
-import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
+import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
 import { defaultAccounts } from '@e2e-test/networks'
 
@@ -10,17 +10,29 @@ import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
-const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
-  toMatchSnapshot(msg?: string): void {
-    expect(x).toMatchSnapshot(msg)
+const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
+  expectFn: (x: any) => ({
+    toMatchSnapshot(msg?: string): void {
+      expect(x).toMatchSnapshot(msg)
+    },
+    toMatch(value: any, _msg?: string): void {
+      expect(x).toMatch(value)
+    },
+    toMatchObject(value: any, _msg?: string): void {
+      expect(x).toMatchObject(value)
+    },
+  }),
+  redactOptions: {
+    overrides: {
+      proofSize: {
+        number: 1,
+      },
+      refTime: {
+        number: 1,
+      },
+    },
   },
-  toMatch(value: any, _msg?: string): void {
-    expect(x).toMatch(value)
-  },
-  toMatchObject(value: any, _msg?: string): void {
-    expect(x).toMatchObject(value)
-  },
-}))
+})
 
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
 

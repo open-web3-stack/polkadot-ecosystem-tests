@@ -33,7 +33,7 @@ exports[`Kusama Governance > referenda tests > referendum lifecycle test - submi
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 91000)",
+          "proofSize": "(rounded 90000)",
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -533,8 +533,8 @@ exports[`Kusama Governance > referenda tests > referendum lifecycle test - submi
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 150000)",
-          "refTime": "(rounded 1800000000)",
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -553,8 +553,8 @@ exports[`Kusama Governance > referenda tests > referendum lifecycle test 2 - sub
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 91000)",
-          "refTime": "(rounded 1100000000)",
+          "proofSize": "(rounded 90000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

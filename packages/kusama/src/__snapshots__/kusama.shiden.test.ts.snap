@@ -40,7 +40,7 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > to chain dmp events 1
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 8000)",
-        "refTime": "(rounded 530000000)",
+        "refTime": "(rounded 500000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -52,7 +52,7 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > to chain dmp events 1
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9300)",
+        "proofSize": "(rounded 9000)",
         "refTime": "(rounded 900000000)",
       },
     },
@@ -69,8 +69,8 @@ exports[`kusama & shiden > kusama transfer KSM to shiden > tx events 1`] = `
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 327000000)",
+            "proofSize": "(rounded 6000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -303,8 +303,8 @@ exports[`kusama & shiden > shiden transfer KSM to kusama > to chain ump events 1
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 330000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
