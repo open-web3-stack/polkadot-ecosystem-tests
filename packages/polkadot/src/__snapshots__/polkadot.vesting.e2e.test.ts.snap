@@ -27,7 +27,7 @@ exports[`Polkadot Vesting > merging vesting schedules when none exist fails > me
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
+          "proofSize": "(rounded 10000)",
           "refTime": "(rounded 700000000)",
         },
       },
@@ -47,8 +47,8 @@ exports[`Polkadot Vesting > signed-origin force-vested transfer fails > force ve
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 960000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

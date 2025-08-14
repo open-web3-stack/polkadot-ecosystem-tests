@@ -142,8 +142,8 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 310000000)",
+            "proofSize": "(rounded 6000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -406,8 +406,8 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > to c
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 330000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

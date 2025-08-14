@@ -112,8 +112,8 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 290000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -129,8 +129,8 @@ exports[`polkadot & coretimePolkadot > coretimePolkadot transfer DOT to polkadot
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 169000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -290,8 +290,8 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 780000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -303,8 +303,8 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -320,8 +320,8 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 153000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

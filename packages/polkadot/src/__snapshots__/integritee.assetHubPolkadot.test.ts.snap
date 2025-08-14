@@ -114,7 +114,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5100)",
+        "proofSize": "(rounded 5000)",
         "refTime": 5000000,
       },
     },
@@ -131,8 +131,8 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 310000000)",
+            "proofSize": "(rounded 6000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -366,8 +366,8 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 320000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

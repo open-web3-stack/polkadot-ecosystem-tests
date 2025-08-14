@@ -118,8 +118,8 @@ exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridg
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -135,7 +135,7 @@ exports[`assetHubKusama & bridgeHubKusama > assetHubKusama transfer KSM to bridg
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
+            "proofSize": "(rounded 4000)",
             "refTime": "(rounded 200000000)",
           },
         },
@@ -377,8 +377,8 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 170000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -394,8 +394,8 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 170000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

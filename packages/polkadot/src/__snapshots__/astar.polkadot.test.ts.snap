@@ -110,8 +110,8 @@ exports[`astar & polkadot > astar transfer DOT to polkadot > to chain ump events
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 290000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -205,7 +205,7 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > to chain dmp events
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 8000)",
-        "refTime": "(rounded 530000000)",
+        "refTime": "(rounded 500000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -217,7 +217,7 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > to chain dmp events
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9400)",
+        "proofSize": "(rounded 9000)",
         "refTime": "(rounded 900000000)",
       },
     },
@@ -234,8 +234,8 @@ exports[`astar & polkadot > polkadot transfer DOT to astar > tx events 1`] = `
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 273000000)",
+            "proofSize": "(rounded 6000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
