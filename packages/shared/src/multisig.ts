@@ -1888,15 +1888,14 @@ async function noTimepointTest<
     maxWeight,
   )
 
-  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with `approveAsMulti`')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords = await client.api.query.system.events()
+  const filteredApproveEvents = eventRecords.filter((record) => record.event.section === 'multisig')
+  expect(filteredApproveEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -1983,15 +1982,14 @@ async function wrongTimepointTest<
     maxWeight,
   )
 
-  let approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with wrong block number')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords1 = await client.api.query.system.events()
+  const filteredEvents = eventRecords1.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2019,15 +2017,14 @@ async function wrongTimepointTest<
     maxWeight,
   )
 
-  approveEvents = await sendTransaction(approveTx2.signAsync(bob))
+  await sendTransaction(approveTx2.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with wrong extrinsic index')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords2 = await client.api.query.system.events()
+  const filteredEvents2 = eventRecords2.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents2.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2090,15 +2087,14 @@ async function unexpectedTimepointTest<
     maxWeight,
   )
 
-  const approveEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Alice starts multisig operation with `approveAsMulti`')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords3 = await client.api.query.system.events()
+  const filteredUnexpectedEvents = eventRecords3.filter((record) => record.event.section === 'multisig')
+  expect(filteredUnexpectedEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -2184,15 +2180,14 @@ async function maxWeightTooLowTest<
     { refTime: 1, proofSize: 1 }, // Max weight too low
   )
 
-  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with low weight')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords4 = await client.api.query.system.events()
+  const filteredEvents = eventRecords4.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()

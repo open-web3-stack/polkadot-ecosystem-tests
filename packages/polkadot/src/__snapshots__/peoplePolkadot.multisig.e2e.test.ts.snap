@@ -1,7 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PeoplePolkadot Multisig > failure tests > approval with max weight too low fails > events when Bob executes multisig operation with low weight 1`] = `[]`;
-
 exports[`PeoplePolkadot Multisig > failure tests > approval with sender in signatories fails > events when approval with sender in signatories fails 1`] = `
 [
   {
@@ -51,12 +49,6 @@ exports[`PeoplePolkadot Multisig > failure tests > approval with signatories out
   },
 ]
 `;
-
-exports[`PeoplePolkadot Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong block number 1`] = `[]`;
-
-exports[`PeoplePolkadot Multisig > failure tests > approval with wrong timepoint fails > events when Bob executes multisig operation with wrong extrinsic index 1`] = `[]`;
-
-exports[`PeoplePolkadot Multisig > failure tests > approval without timepoint fails > events when Bob executes multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
 exports[`PeoplePolkadot Multisig > failure tests > cancellation with sender in signatories fails > events for cancellation with sender in signatories fails 1`] = `
 [
@@ -182,8 +174,6 @@ exports[`PeoplePolkadot Multisig > failure tests > execution with sender in sign
   },
 ]
 `;
-
-exports[`PeoplePolkadot Multisig > failure tests > first call with unexpected timepoint fails > events when Alice starts multisig operation with \`approveAsMulti\` 1`] = `[]`;
 
 exports[`PeoplePolkadot Multisig > failure tests > multisig cancellation with remaining signatories out of order fails > events when Alice creates multisig for cancel ordering test 1`] = `
 [
