@@ -40,8 +40,6 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
-
 exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
   {
@@ -63,8 +61,6 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled
   },
 ]
 `;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
