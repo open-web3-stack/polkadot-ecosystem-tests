@@ -499,8 +499,6 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > kick events
 ]
 `;
 
-exports[`Polkadot Staking > base staking tests > staking lifecycle > nominate events 1`] = `[]`;
-
 exports[`Polkadot Staking > base staking tests > staking lifecycle > nominator bond events 1`] = `
 [
   {
@@ -643,8 +641,6 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > validator 2
 ]
 `;
 
-exports[`Polkadot Staking > base staking tests > test fast unstake > nominate events 1`] = `[]`;
-
 exports[`Polkadot Staking > base staking tests > test fast unstake > nominator bond events 1`] = `
 [
   {
@@ -657,8 +653,6 @@ exports[`Polkadot Staking > base staking tests > test fast unstake > nominator b
   },
 ]
 `;
-
-exports[`Polkadot Staking > base staking tests > test fast unstake > register fast unstake events 1`] = `[]`;
 
 exports[`Polkadot Staking > base staking tests > test force unstaking of nominator > force unstake bad origin events 1`] = `
 [

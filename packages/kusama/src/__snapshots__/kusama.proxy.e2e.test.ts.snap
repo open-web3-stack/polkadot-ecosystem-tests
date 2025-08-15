@@ -105,8 +105,6 @@ exports[`Kusama Proxy > add proxies (with/without delay) to an account, and remo
 ]
 `;
 
-exports[`Kusama Proxy > add proxies (with/without delay) to an account, and remove them > events when removing all proxies from Alice 1`] = `[]`;
-
 exports[`Kusama Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
@@ -2923,8 +2921,6 @@ exports[`Kusama Proxy > perform proxy call on behalf of delegator > events when 
 ]
 `;
 
-exports[`Kusama Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
-
 exports[`Kusama Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
 [
   {
@@ -2950,5 +2946,3 @@ exports[`Kusama Proxy > proxy announcement lifecycle test > events when Bob perf
   },
 ]
 `;
-
-exports[`Kusama Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;

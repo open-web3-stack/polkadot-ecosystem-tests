@@ -14,10 +14,16 @@ import type {
 import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert } from 'vitest'
+import { assert, expect } from 'vitest'
 
-import { BN } from 'bn.js'
-import { check, checkEvents, checkSystemEvents, objectCmp, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import {
+  check,
+  checkEvents,
+  checkSystemEvents,
+  expectPjsEqual,
+  objectCmp,
+  scheduleInlineCallWithOrigin,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -168,7 +174,7 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum info before decision deposit')
 
-  assert(referendumData.isOngoing)
+  expect(referendumData.isOngoing).toBe(true)
   // Ongoing referendum data, prior to the decision deposit.
   const ongoingRefPreDecDep: PalletReferendaReferendumStatusConvictionVotingTally = referendumData.asOngoing
 
@@ -177,26 +183,30 @@ export async function referendumLifecycleTest<
   const blocksUntilAlarm = undecidingTimeoutAlarm.sub(ongoingRefPreDecDep.submitted)
   // Check that the referendum's alarm is set to ring after the (globally predetermined) timeout
   // of 14 days, or 201600 blocks.
-  assert(blocksUntilAlarm.eq(client.api.consts.referenda.undecidingTimeout))
+  expect(blocksUntilAlarm.toNumber()).toBe(client.api.consts.referenda.undecidingTimeout.toNumber())
 
   // The referendum was above set to be enacted 1 block after its passing.
   assert(ongoingRefPreDecDep.enactment.isAfter)
-  assert(ongoingRefPreDecDep.enactment.asAfter.eq(1))
+  expect(ongoingRefPreDecDep.enactment.asAfter.toNumber()).toBe(1)
 
   const referendaTracks = client.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
-  assert(ongoingRefPreDecDep.track.eq(smallTipper[0]))
+  expect(ongoingRefPreDecDep.track.toNumber()).toBe(smallTipper[0].toNumber())
   await check(ongoingRefPreDecDep.origin).toMatchObject({
     origins: 'SmallTipper',
   })
 
   // Immediately after a referendum's submission, it will not have a decision deposit,
   // which it will need to begin the decision period.
-  assert(ongoingRefPreDecDep.deciding.isNone)
-  assert(ongoingRefPreDecDep.decisionDeposit.isNone)
+  expect(ongoingRefPreDecDep.deciding.isNone).toBeTruthy()
+  expect(ongoingRefPreDecDep.decisionDeposit.isNone).toBeTruthy()
 
-  assert(ongoingRefPreDecDep.submissionDeposit.who.eq(encodeAddress(devAccounts.alice.address, addressEncoding)))
-  assert(ongoingRefPreDecDep.submissionDeposit.amount.eq(client.api.consts.referenda.submissionDeposit))
+  expect(ongoingRefPreDecDep.submissionDeposit.who.toString()).toBe(
+    encodeAddress(devAccounts.alice.address, addressEncoding),
+  )
+  expect(ongoingRefPreDecDep.submissionDeposit.amount.toString()).toBe(
+    client.api.consts.referenda.submissionDeposit.toString(),
+  )
 
   // Current voting state of the referendum.
   const votes = {
@@ -233,16 +243,20 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum info post decision deposit')
 
-  assert(referendumData.isOngoing)
+  expect(referendumData.isOngoing).toBe(true)
   const ongoingRefPostDecDep = referendumData.asOngoing
 
   // The referendum can only begin deciding after its track's preparation period has elapsed, even though
   // the decision deposit has been placed.
-  assert(ongoingRefPostDecDep.deciding.isNone)
+  expect(ongoingRefPostDecDep.deciding.isNone).toBeTruthy()
   assert(ongoingRefPostDecDep.decisionDeposit.isSome)
 
-  assert(ongoingRefPostDecDep.decisionDeposit.unwrap().who.eq(encodeAddress(devAccounts.bob.address, addressEncoding)))
-  assert(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.eq(smallTipper[1].decisionDeposit))
+  expect(ongoingRefPostDecDep.decisionDeposit.unwrap().who.toString()).toBe(
+    encodeAddress(devAccounts.bob.address, addressEncoding),
+  )
+  expect(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.toString()).toBe(
+    smallTipper[1].decisionDeposit.toString(),
+  )
 
   // The block at which the referendum's preparation period will end, and its decision period will begin.
   const preparePeriodWithOffset = smallTipper[1].preparePeriod.add(ongoingRefPostDecDep.submitted)
@@ -250,7 +264,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPostDecDep.alarm.isSome)
   // The decision deposit has been placed, so the referendum's alarm should point to that block, at the
   // end of the decision period.
-  assert(ongoingRefPostDecDep.alarm.unwrap()[0].eq(preparePeriodWithOffset))
+  expect(ongoingRefPostDecDep.alarm.unwrap()[0].toNumber()).toBe(preparePeriodWithOffset.toNumber())
 
   // Placing a decision deposit for a referendum should change nothing BUT the referendum's
   // 1. deposit data and
@@ -269,7 +283,7 @@ export async function referendumLifecycleTest<
     referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
     assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
     referendumData = referendumDataOpt.unwrap()
-    assert(referendumData.isOngoing)
+    expect(referendumData.isOngoing).toBe(true)
     refPost = referendumData.asOngoing
 
     referendumCmp(refPre, refPost, [], `Failed on iteration number ${i}.`)
@@ -290,14 +304,14 @@ export async function referendumLifecycleTest<
 
   const decisionPeriodStartBlock = ongoingRefPreDecDep.submitted.add(smallTipper[1].preparePeriod)
 
-  assert(refNowDeciding.alarm.unwrap()[0].eq(smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock)))
-
-  assert(
-    refNowDeciding.deciding.eq({
-      since: decisionPeriodStartBlock,
-      confirming: null,
-    }),
+  expect(refNowDeciding.alarm.unwrap()[0].toNumber()).toBe(
+    smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock).toNumber(),
   )
+
+  expect(refNowDeciding.deciding.unwrap().toJSON()).toEqual({
+    since: decisionPeriodStartBlock.toNumber(),
+    confirming: null,
+  })
 
   referendumCmp(refPost!, refNowDeciding, ['alarm', 'deciding'])
 
@@ -335,7 +349,7 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("referendum info after charlie's vote")
 
-  assert(referendumData.isOngoing)
+  expect(referendumData.isOngoing).toBe(true)
   const ongoingRefFirstVote = referendumData.asOngoing
 
   // Charlie voted with 3x conviction
@@ -345,8 +359,8 @@ export async function referendumLifecycleTest<
 
   // Check Charlie's locked funds
   const charlieClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.charlie.address)
-  const localCharlieClassLocks = [[smallTipper[0], ayeVote]]
-  assert(charlieClassLocks.eq(localCharlieClassLocks))
+  const localCharlieClassLocks = [[smallTipper[0].toNumber(), ayeVote]]
+  expect(charlieClassLocks.toJSON()).toEqual(localCharlieClassLocks)
 
   // , and overall account's votes
   const votingByCharlie: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
@@ -363,15 +377,17 @@ export async function referendumLifecycleTest<
   await check(charlieCastVotes.votes[0][1])
     .redact({ removeKeys: unwantedRefIx })
     .toMatchSnapshot("charlie's votes after casting his")
-  assert(charlieCastVotes.votes.length === 1)
-  assert(charlieCastVotes.votes[0][0].eq(referendumIndex))
+  expect(charlieCastVotes.votes.length).toBe(1)
+  expect(charlieCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
 
   const charlieVotes = charlieCastVotes.votes[0][1].asStandard
-  assert(charlieVotes.vote.conviction.isLocked3x && charlieVotes.vote.isAye)
+  expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
+  expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  // After a vote the referendum's alarm is set to the block following the one the vote tx was
+  let blockNumber = await client.api.query.system.number()
+  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  ongoingRefFirstVote.alarm.unwrap()[0].eq(refNowDeciding.deciding.unwrap().since.add(new BN(1)))
+  expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
 
   // Placing a vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -405,7 +421,7 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("referendum info after dave's vote")
 
-  assert(referendumData.isOngoing)
+  expect(referendumData.isOngoing).toBe(true)
   const ongoingRefSecondVote = referendumData.asOngoing
 
   votes.ayes += ayeVote / 10
@@ -414,9 +430,9 @@ export async function referendumLifecycleTest<
   await check(ongoingRefSecondVote.tally).toMatchObject(votes)
 
   const daveLockedFunds = await client.api.query.convictionVoting.classLocksFor(devAccounts.dave.address)
-  const localDaveClassLocks = [[smallTipper[0], ayeVote + nayVote]]
+  const localDaveClassLocks = [[smallTipper[0].toNumber(), ayeVote + nayVote]]
   // Dave voted with `split`, which does not allow expression of conviction in votes.
-  assert(daveLockedFunds.eq(localDaveClassLocks))
+  expect(daveLockedFunds.toJSON()).toEqual(localDaveClassLocks)
 
   // Check Dave's overall votes
 
@@ -431,16 +447,17 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedRefIx })
     .toMatchSnapshot("dave's votes after casting his")
 
-  assert(daveCastVotes.votes.length === 1)
-  assert(daveCastVotes.votes[0][0].eq(referendumIndex))
+  expect(daveCastVotes.votes.length).toBe(1)
+  expect(daveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
 
   const daveVote = daveCastVotes.votes[0][1].asSplit
-  assert(daveVote.aye.eq(ayeVote))
-  assert(daveVote.nay.eq(nayVote))
+  expect(daveVote.aye.toNumber()).toBe(ayeVote)
+  expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  // After a vote the referendum's alarm is set to the block following the one the vote tx was
+  blockNumber = await client.api.query.system.number()
+  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  ongoingRefSecondVote.alarm.unwrap()[0].eq(ongoingRefFirstVote.deciding.unwrap().since.add(new BN(1)))
+  expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
 
   // Placing a split vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -473,7 +490,7 @@ export async function referendumLifecycleTest<
 
   await check(referendumData).redact({ removeKeys: unwantedFields }).toMatchSnapshot("referendum info after eve's vote")
 
-  assert(referendumData.isOngoing)
+  expect(referendumData.isOngoing).toBe(true)
   const ongoingRefThirdVote = referendumData.asOngoing
 
   votes.ayes += ayeVote / 10
@@ -482,9 +499,9 @@ export async function referendumLifecycleTest<
   await check(ongoingRefThirdVote.tally).toMatchObject(votes)
 
   const eveLockedFunds = await client.api.query.convictionVoting.classLocksFor(devAccounts.eve.address)
-  const localEveClassLocks = [[smallTipper[0], ayeVote + nayVote + abstainVote]]
+  const localEveClassLocks = [[smallTipper[0].toNumber(), ayeVote + nayVote + abstainVote]]
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
-  assert(eveLockedFunds.eq(localEveClassLocks))
+  expect(eveLockedFunds.toJSON()).toEqual(localEveClassLocks)
 
   // Check Eve's overall votes
 
@@ -498,17 +515,18 @@ export async function referendumLifecycleTest<
   await check(eveCastVotes.votes[0][1])
     .redact({ removeKeys: unwantedRefIx })
     .toMatchSnapshot("eve's votes after casting hers")
-  assert(eveCastVotes.votes.length === 1)
-  assert(eveCastVotes.votes[0][0].eq(referendumIndex))
+  expect(eveCastVotes.votes.length).toBe(1)
+  expect(eveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
 
   const eveVote = eveCastVotes.votes[0][1].asSplitAbstain
-  assert(eveVote.aye.eq(ayeVote))
-  assert(eveVote.nay.eq(nayVote))
-  assert(eveVote.abstain.eq(abstainVote))
+  expect(eveVote.aye.toNumber()).toBe(ayeVote)
+  expect(eveVote.nay.toNumber()).toBe(nayVote)
+  expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
+  blockNumber = await client.api.query.system.number()
+  // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  ongoingRefThirdVote.alarm.unwrap()[0].eq(ongoingRefSecondVote.deciding.unwrap().since.add(new BN(1)))
+  expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
 
   // Placing a split abstain vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -545,14 +563,14 @@ export async function referendumLifecycleTest<
     return event.section === 'referenda'
   })
 
-  assert(referendaEvents.length === 1, 'cancelling a referendum should emit 1 event')
+  expect(referendaEvents.length).toBe(1)
 
   const cancellationEvent = referendaEvents[0]
   assert(client.api.events.referenda.Cancelled.is(cancellationEvent.event))
 
   const [index, tally] = cancellationEvent.event.data
-  assert(index.eq(referendumIndex))
-  assert(tally.eq(votes))
+  expect(index.toNumber()).toBe(referendumIndex.toNumber())
+  expect(tally.toJSON()).toEqual(votes)
 
   // Now, check the referendum's data, post-cancellation
 
@@ -560,20 +578,21 @@ export async function referendumLifecycleTest<
   // cancelling a referendum does not remove it from storage
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
 
-  assert(referendumDataOpt.unwrap().isCancelled, 'referendum should be cancelled!')
+  expect(referendumDataOpt.unwrap().isCancelled).toBeTruthy()
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  cancelledRef[0].eq(referendumIndex)
+  blockNumber = await client.api.query.system.number()
+  expect(cancelledRef[0].toNumber()).toBe(blockNumber.toNumber())
   // Check that the referendum's submission deposit was refunded to Alice
-  cancelledRef[1].unwrap().eq({
+  expect(cancelledRef[1].unwrap().toJSON()).toEqual({
     who: encodeAddress(devAccounts.alice.address, addressEncoding),
-    amount: client.api.consts.referenda.submissionDeposit,
+    amount: client.api.consts.referenda.submissionDeposit.toNumber(),
   })
   // Check that the referendum's submission deposit was refunded to Bob
-  cancelledRef[2].unwrap().eq({
+  expect(cancelledRef[2].unwrap().toJSON()).toEqual({
     who: encodeAddress(devAccounts.bob.address, addressEncoding),
-    amount: smallTipper[1].decisionDeposit,
+    amount: smallTipper[1].decisionDeposit.toNumber(),
   })
 
   const testAccounts = {
@@ -595,27 +614,28 @@ export async function referendumLifecycleTest<
   }
 
   // Check that cancelling the referendum has no effect on each voter's class locks
-  for (const account of Object.keys(testAccounts)) {
+  for (const account of Object.keys(testAccounts) as (keyof typeof testAccounts)[]) {
     testAccounts[account].classLocks = await client.api.query.convictionVoting.classLocksFor(
       devAccounts[account].address,
     )
-    assert(
-      testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
+    expect(
+      testAccounts[account].classLocks.toJSON(),
       `${account}'s class locks should be unaffected by referendum cancellation`,
-    )
+    ).toEqual(testAccounts[account].localClassLocks)
   }
 
   // Check that cancelling the referendum has no effect on accounts' votes, as seen via `votingFor`
   // storage item.
-  for (const account of Object.keys(testAccounts)) {
+  for (const account of Object.keys(testAccounts) as (keyof typeof testAccounts)[]) {
     const postCancellationVoting: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
       devAccounts[account].address as string,
       smallTipper[0],
     )
     assert(postCancellationVoting.isCasting, `pre-referendum cancellation, ${account}'s votes were cast, not delegated`)
     const postCancellationCastVotes: PalletConvictionVotingVoteCasting = postCancellationVoting.asCasting
-    assert(
-      postCancellationVoting.eq(testAccounts[account].votingBy),
+    expectPjsEqual(
+      postCancellationVoting,
+      testAccounts[account].votingBy,
       `${account}'s votes should be unaffected by referendum cancellation`,
     )
     await check(postCancellationCastVotes.votes[0][1])
@@ -657,14 +677,14 @@ export async function referendumLifecycleTest<
   // later update.
   //
   // Also check that voting for each account is appropriately empty.
-  for (const account of Object.keys(testAccounts)) {
+  for (const account of Object.keys(testAccounts) as (keyof typeof testAccounts)[]) {
     testAccounts[account].classLocks = await client.api.query.convictionVoting.classLocksFor(
       devAccounts[account].address,
     )
-    assert(
-      testAccounts[account].classLocks.eq(testAccounts[account].localClassLocks),
+    expect(
+      testAccounts[account].classLocks.toJSON(),
       `${account}'s class locks should be unaffected by vote removal`,
-    )
+    ).toEqual(testAccounts[account].localClassLocks)
     await check(testAccounts[account].classLocks).toMatchSnapshot(
       `${account}'s class locks after their vote's rescission`,
     )
@@ -676,7 +696,7 @@ export async function referendumLifecycleTest<
     assert(testAccounts[account].votingBy.isCasting)
     const castVotes = testAccounts[account].votingBy.asCasting
     await check(castVotes).toMatchSnapshot(`${account}'s votes after rescission`)
-    assert(castVotes.votes.isEmpty)
+    expect(castVotes.votes.isEmpty).toBeTruthy()
   }
 
   // Check that submission and decision deposits are refunded to the respective voters.
@@ -791,29 +811,25 @@ export async function referendumLifecycleKillTest<
     return event.section === 'referenda'
   })
 
-  assert(referendaEvents.length === 3, 'killing a referendum should emit 3 events')
+  expect(referendaEvents.length, 'killing a referendum should emit 3 events').toBe(3)
 
   referendaEvents.forEach((record) => {
     const { event } = record
     if (client.api.events.referenda.Killed.is(event)) {
       const [index, tally] = event.data
-      assert(index.eq(referendumIndex))
-      assert(
-        tally.eq({
-          ayes: 0,
-          nays: 0,
-          support: 0,
-        }),
-      )
+      expect(index.toNumber()).toBe(referendumIndex.toNumber())
+      expect(tally.ayes.toNumber()).toBe(0)
+      expect(tally.nays.toNumber()).toBe(0)
+      expect(tally.support.toNumber()).toBe(0)
     } else if (client.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
-      if (who.eq(encodeAddress(devAccounts.alice.address, addressEncoding))) {
-        assert(amount.eq(client.api.consts.referenda.submissionDeposit))
-      } else if (who.eq(encodeAddress(devAccounts.bob.address, addressEncoding))) {
-        assert(amount.eq(smallTipper[1].decisionDeposit))
+      if (who.toString() === encodeAddress(devAccounts.alice.address, addressEncoding)) {
+        expect(amount.toNumber()).toBe(client.api.consts.referenda.submissionDeposit.toNumber())
+      } else if (who.toString() === encodeAddress(devAccounts.bob.address, addressEncoding)) {
+        expect(amount.toNumber()).toBe(smallTipper[1].decisionDeposit.toNumber())
       } else {
-        assert(false, 'malformed decision slashed events')
+        expect.fail('malformed decision slashed events')
       }
     }
   })
@@ -821,12 +837,12 @@ export async function referendumLifecycleKillTest<
   const referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   // killing a referendum does not remove it from storage, though it does prune most of its data.
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
-  assert(referendumDataOpt.unwrap().isKilled, 'referendum should be cancelled!')
+  expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
   const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  assert(killedRef.eq(blockNumber))
+  expect(killedRef.toNumber()).toBe(blockNumber)
 }
 
 /**
@@ -857,7 +873,7 @@ export async function preimageTest<
   ])
 
   assert(preimage.isSome)
-  assert(preimage.unwrap().toHex() === encodedProposal.toHex())
+  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
 
   /**
    * Unnote preimage with the same account that had previously noted it

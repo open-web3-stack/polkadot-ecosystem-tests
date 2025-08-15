@@ -40,8 +40,6 @@ exports[`Kusama Scheduler > cancel scheduled task with wrong origin > events whe
 ]
 `;
 
-exports[`Kusama Scheduler > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
-
 exports[`Kusama Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
   {
@@ -63,8 +61,6 @@ exports[`Kusama Scheduler > cancelling a named scheduled task is possible > even
   },
 ]
 `;
-
-exports[`Kusama Scheduler > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Kusama Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
 [

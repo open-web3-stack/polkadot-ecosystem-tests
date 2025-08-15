@@ -37,6 +37,18 @@ const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupChec
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
 
 /**
+ * Compare two PJS objects for equality using their JSON representation.
+ * This avoids issues with metadata differences while providing detailed diff information on failure.
+ *
+ * @param actual The actual PJS object
+ * @param expected The expected PJS object
+ * @param message Optional message to display on failure
+ */
+export function expectPjsEqual(actual: any, expected: any, message?: string): void {
+  expect(actual.toJSON(), message).toEqual(expected.toJSON())
+}
+
+/**
  * Compare the selected properties of two objects.
  *
  * Fails if any of the properties to be compared is different.
@@ -72,7 +84,7 @@ export function objectCmp(
       } else {
         errorMessage = `${optErrorMsg}\n${msg}`
       }
-      assert(cmp, errorMessage)
+      expect(cmp, errorMessage).toBe(true)
     }
   }
 }

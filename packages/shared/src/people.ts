@@ -20,13 +20,14 @@ import type { PalletIdentityLegacyIdentityInfo, PalletIdentityRegistration } fro
 import type { HexString } from '@polkadot/util/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import {
   check,
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
+  expectPjsEqual,
   scheduleCallWithOrigin,
 } from './helpers/index.js'
 
@@ -290,7 +291,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 
   await check(judgedIdentityInfo.toHuman()).toMatchObject(identity)
 
-  assert(identityInfo.eq(judgedIdentityInfo), 'Identity information changed after judgement')
+  expectPjsEqual(identityInfo, judgedIdentityInfo, 'Identity information changed after judgement')
   check(judgedRegistrationInfo.judgements).toMatchSnapshot("eve's judgements after one has been provided")
   check(judgedRegistrationInfo.judgements.sort()).toMatchObject([
     [
@@ -434,7 +435,7 @@ export async function setIdentityThenRequesThenCancelThenClear<
   await checkEvents(clearIdEvents, 'identity').toMatchSnapshot('clear identity events')
 
   const identityInfoNullReply = await querier.identity.identityOf(defaultAccountsSr25519.bob.address)
-  assert(identityInfoNullReply.isNone, "Bob's identity should be empty after it is cleared")
+  expect(identityInfoNullReply.isNone, "Bob's identity should be empty after it is cleared").toBeTruthy()
 }
 
 /**
@@ -551,11 +552,14 @@ export async function setIdentityThenAddSubsThenRemove<
 
   aliceSubData = await querier.identity.subsOf(defaultAccountsSr25519.alice.address)
   await check(aliceSubData).redact({ number: 10 }).toMatchSnapshot('subidentity data after 1st subid removal')
-  assert(aliceSubData[0].lt(doubleIdDepositAmnt), "After removing one subidentity, the other's deposit should remain")
+  expect(
+    aliceSubData[0].lt(doubleIdDepositAmnt),
+    "After removing one subidentity, the other's deposit should remain",
+  ).toBeTruthy()
   await check(aliceSubData[1]).toMatchObject([encodeAddress(defaultAccountsSr25519.bob.address, addressEncoding)])
 
   charlieSuperData = await querier.identity.superOf(defaultAccountsSr25519.charlie.address)
-  assert(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity')
+  expect(charlieSuperData.isNone, 'Charlie should no longer have a supraidentity').toBeTruthy()
 
   /**
    * As Bob, remove oneself from Alice's subidentities
@@ -627,7 +631,7 @@ export async function addRegistrarViaRelayAsRoot<
 
   assert(peopleClient.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBe(true)
 
   /**
    * XCM from relay chain
@@ -688,13 +692,13 @@ export async function addRegistrarViaRelayAsRoot<
     return event.section === 'identity'
   })
 
-  assert(peopleEvents.length === 1, 'adding a registrar should emit 1 event')
+  expect(peopleEvents.length, 'adding a registrar should emit 1 event').toBe(1)
 
   const registrarEvent = peopleEvents[0]
   assert(peopleClient.api.events.identity.RegistrarAdded.is(registrarEvent.event))
 
   const [registrarIndex] = registrarEvent.event.data
-  assert(registrarIndex.eq(2), 'new registrar index should be 2')
+  expect(registrarIndex.eq(2), 'new registrar index should be 2').toBe(true)
 
   registrars.push({
     account: encodeAddress(defaultAccountsSr25519.charlie.address, addressEncoding),
