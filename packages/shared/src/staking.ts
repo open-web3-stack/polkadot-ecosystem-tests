@@ -285,11 +285,17 @@ async function stakingLifecycleTest<
   ///
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
+  await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+  // nominate emits no events
+  let events = await client.api.query.system.events()
+  const nominateEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+  expect(nominateEvent).toBeUndefined()
 
   /// Check the nominator's nominations
 
@@ -388,7 +394,7 @@ async function stakingLifecycleTest<
   )
 
   // Check events for the correct error code
-  const events = await client.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const [ev1] = events.filter((record) => {
     const { event } = record
@@ -529,11 +535,17 @@ async function fastUnstakeTest<
   let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
   const nominateTx = client.api.tx.staking.nominate([bob.address, charlie.address])
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
+  await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+  // nominate emits no events
+  let events = await client.api.query.system.events()
+  const nominateEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+  expect(nominateEvent).toBeUndefined()
 
   // Check nominations
 
@@ -554,14 +566,17 @@ async function fastUnstakeTest<
   /// Fast unstake
 
   const registerFastUnstakeTx = client.api.tx.fastUnstake.registerFastUnstake()
-  const registerFastUnstakeEvents = await sendTransaction(
-    registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }),
-  )
+  await sendTransaction(registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  // `register_fast_unstake` emits no events as of Jan. 2025
-  await checkEvents(registerFastUnstakeEvents, 'fastUnstake').toMatchSnapshot('register fast unstake events')
+  events = await client.api.query.system.events()
+  const registerFastUnstakeEvent = events.filter((record) => {
+    const { event } = record
+    return event.section === 'fastUnstake'
+  })
+  // `register_fast_unstake` emits a `BatchChecked` event
+  expect(registerFastUnstakeEvent.length).toBe(1)
 
   // Check that Alice's tentative nominations have been removed
   nominationsOpt = await client.api.query.staking.nominators(alice.address)
