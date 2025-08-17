@@ -119,40 +119,6 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to cha
     "method": "Processed",
     "section": "messageQueue",
   },
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 1000,
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "id": "(hash)",
-      "origin": {
-        "Ump": {
-          "Para": 1000,
-        },
-      },
-      "success": true,
-      "weightUsed": {
-        "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
 ]
 `;
 
