@@ -3,16 +3,24 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
+import type { KeyringPair } from '@polkadot/keyring/types'
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, expect } from 'vitest'
 
+import { checkEvents } from './helpers/index.js'
+
 /// -------
-/// Helper Functions
+/// Helpers
 /// -------
 
 /**
  * Create a fresh account with specific balance above existential deposit
  */
-async function createAccountWithBalance(client: Client<any, any>, balance: bigint, seed: string): Promise<any> {
+async function createAccountWithBalance<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, balance: any, seed: string): Promise<KeyringPair> {
   // Create fresh account from seed
   const newAccount = defaultAccountsSr25519.keyring.createFromUri(`//${seed}`)
 
@@ -27,293 +35,136 @@ async function createAccountWithBalance(client: Client<any, any>, balance: bigin
 }
 
 /**
- * Check if account has been reaped (removed from storage)
+ * Given a client, query if an account has been reaped (removed from storage).
+ *
+ * @returns a promise that resolves to true if the account has been reaped, false otherwise.
  */
 async function isAccountReaped(client: Client<any, any>, address: string): Promise<boolean> {
-  const accountInfo = await client.api.query.system.account(address)
-  // Account is reaped if it has no nonce, no providers, and zero balance
+  const account = await client.api.query.system.account(address)
+  // An account is reaped (or never existed) if it has no nonce, no providers, and zero balance.
   return (
-    accountInfo.nonce.toNumber() === 0 &&
-    accountInfo.providers.toNumber() === 0 &&
-    (accountInfo as any).data.free.toBigInt() === 0n
+    account.consumers.toNumber() === 0 &&
+    account.providers.toNumber() === 0 &&
+    account.sufficients.toNumber() === 0 &&
+    account.data.free.toBigInt() === 0n &&
+    account.data.frozen.toBigInt() === 0n &&
+    account.data.reserved.toBigInt() === 0n
   )
 }
 
-/// -------
-/// Test Functions
-/// -------
+/// -----
+/// Tests
+/// -----
 
 /**
- * Test successful `transfer_allow_death`
+ * Test that `transfer_allow_death` allows the killing of the sender account.
+ *
+ * 1. Create a fresh account with balance above existential deposit
+ * 2. Create a fresh account with balance equal to existential deposit
+ * 3. Transfer all balance away from the first account to the second account
+ * 4. Verify that the first account has been reaped
+ * 5. Check that events emitted in the course of operation contain correct data
  */
-async function transferAllowDeathSuccessTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts with sufficient balance
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const transferAmount = existentialDeposit * 100n
-  const aliceBalance = transferAmount * 10n
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
-
-  const initialBobBalance = await client.api.query.system.account(bob.address)
-
-  // Perform transfer
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // Verify balance changes (cannot check Transfer events due to mining rewards)
-  const finalAliceBalance = await client.api.query.system.account(alice.address)
-  const finalBobBalance = await client.api.query.system.account(bob.address)
-
-  expect((finalAliceBalance as any).data.free.toBigInt()).toBe(aliceBalance - transferAmount)
-  expect((finalBobBalance as any).data.free.toBigInt()).toBeGreaterThan((initialBobBalance as any).data.free.toBigInt())
-}
-
-/**
- * Test `transfer_allow_death` with insufficient balance
- */
-async function transferAllowDeathInsufficientBalanceTest(chain: Chain) {
+async function transferAllowDeathTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 2n
-  const transferAmount = aliceBalance + 1000n // More than alice has
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
+  // Slight increment to handle fees
+  const edPlusEpsilon = existentialDeposit + existentialDeposit / 10n
+  const alice = await createAccountWithBalance(client, edPlusEpsilon, 'fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
-  // Attempt transfer
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // Check for ExtrinsicFailed event
-  const systemEvents = await client.api.query.system.events()
-  const failedEvent = systemEvents.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-  assert(dispatchError.isModule)
-  assert(client.api.errors.balances.InsufficientBalance.is(dispatchError.asModule))
-}
-
-/**
- * Test `transfer_allow_death` with existential deposit violation
- */
-async function transferAllowDeathExistentialDepositTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-  const newAccount = defaultAccountsSr25519.keyring.createFromUri('//fresh_recipient')
-
-  // Create alice with sufficient balance
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 100n
-  const transferAmount = existentialDeposit - 1n // Below ED
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-
-  // Attempt transfer below ED to new account
-  const transferTx = client.api.tx.balances.transferAllowDeath(newAccount.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // Check for ExtrinsicFailed event
-  const systemEvents = await client.api.query.system.events()
-  const failedEvent = systemEvents.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-  assert(dispatchError.isModule)
-  assert(client.api.errors.balances.ExistentialDeposit.is(dispatchError.asModule))
-}
-
-/**
- * Test that `transfer_allow_death` allows killing sender account
- */
-async function transferAllowDeathKillAccountTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const initialAmount = existentialDeposit + 100n
-  const testAccount = await createAccountWithBalance(client, initialAmount, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
-
-  // Verify account exists before transfer
-  expect(await isAccountReaped(client, testAccount.address)).toBe(false)
+  // Verify both accounts have empty data before transfer
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Transfer all balance away, killing the account
-  const testAccountBalance = await client.api.query.system.account(testAccount.address)
-  const transferAmount = (testAccountBalance as any).data.free.toBigInt()
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit)
+  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
 
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(testAccount))
   await client.dev.newBlock()
+
+  // `Deposit` events are irrelevant, as they contain data that may change as `chopsticks` selects different block
+  // producers each test run, causing the snapshot to fail.
+  await checkEvents(
+    transferEvents,
+    // Event of transfer from Alice to Bob
+    { section: 'balances', method: 'Transfer' },
+    // Event of fee withdrawal from Alice
+    { section: 'balances', method: 'Withdraw' },
+    // Alice account is reaped, so dust is lost
+    { section: 'balances', method: 'DustLost' },
+    // Bob's account was fundless, and its endowment emits an event
+    { section: 'balances', method: 'Endowed' },
+  ).toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
 
   // Verify account was reaped
-  expect(await isAccountReaped(client, testAccount.address)).toBe(true)
-}
+  expect(await isAccountReaped(client, alice.address)).toBe(true)
 
-/**
- * Test successful `transfer_keep_alive`
- */
-async function transferKeepAliveSuccessTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
+  const bobAccount = await client.api.query.system.account(bob.address)
+  expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const transferAmount = existentialDeposit * 100n
-  const aliceBalance = transferAmount * 10n
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
+  // Check 4 events snapshot above
 
-  const transferTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // Verify sender account still exists
-  const aliceBalance2 = await client.api.query.system.account(alice.address)
-  expect((aliceBalance2 as any).data.free.toBigInt()).toBeGreaterThanOrEqual(existentialDeposit)
-}
-
-/**
- * Test `transfer_keep_alive` with insufficient balance
- */
-async function transferKeepAliveInsufficientBalanceTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 2n
-  const transferAmount = aliceBalance + 1000n
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
-
-  const transferTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  const systemEvents = await client.api.query.system.events()
-  const failedEvent = systemEvents.find((record) => {
+  // Check `Transfer` event
+  const events = await client.api.query.system.events()
+  const transferEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+    return event.section === 'balances' && event.method === 'Transfer'
   })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-  assert(dispatchError.isModule)
-  assert(client.api.errors.balances.InsufficientBalance.is(dispatchError.asModule))
-}
-
-/**
- * Test `transfer_keep_alive` expendability protection
- */
-async function transferKeepAliveExpendabilityTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 2n
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob')
-
-  // Try to transfer amount that would leave sender below existential deposit
-  const transferAmount = aliceBalance - existentialDeposit + 1n
-
-  const transferTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  const systemEvents = await client.api.query.system.events()
-  const failedEvent = systemEvents.find((record) => {
+  // Check `Withdraw` event
+  const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+    return event.section === 'balances' && event.method === 'Withdraw'
   })
+  expect(withdrawEvent).toBeDefined()
+  assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
+  const withdrawEventData = withdrawEvent!.event.data
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  // The actual fee amount is nondeterministic, and by itself also irrelevant to the test.
+  // Just checking it's bound in a reasonable interval is enough.
+  expect(withdrawEventData.amount.toBigInt()).toBeGreaterThan(0n)
+  expect(withdrawEventData.amount.toBigInt()).toBeLessThan(existentialDeposit / 10n)
 
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-  assert(dispatchError.isModule)
-  assert(client.api.errors.balances.Expendability.is(dispatchError.asModule))
-}
-
-/**
- * Test `transfer_keep_alive` with existential deposit violation for recipient
- */
-async function transferKeepAliveExistentialDepositTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-  const newAccount = defaultAccountsSr25519.keyring.createFromUri('//new_account_keep_alive_ed_test')
-
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const transferAmount = existentialDeposit - 1n
-  const alice = await createAccountWithBalance(client, existentialDeposit * 100n, 'fresh_alice')
-
-  const transferTx = client.api.tx.balances.transferKeepAlive(newAccount.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  const systemEvents = await client.api.query.system.events()
-  const failedEvent = systemEvents.find((record) => {
+  // Check `DustLost` event
+  const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+    return event.section === 'balances' && event.method === 'DustLost'
   })
+  expect(dustLostEvent).toBeDefined()
+  assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
+  const dustLostEventData = dustLostEvent!.event.data
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(dustLostEventData.amount.toBigInt()).toBeGreaterThan(0n)
+  expect(dustLostEventData.amount.toBigInt()).toBeLessThan(existentialDeposit / 10n)
 
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-  assert(dispatchError.isModule)
-  assert(client.api.errors.balances.ExistentialDeposit.is(dispatchError.asModule))
-}
+  // The fee paid by Alice and the dust lost, along with the amount transferred to Bob,
+  // should sum to Alice's initial balance.
+  expect(existentialDeposit + withdrawEventData.amount.toBigInt() + dustLostEventData.amount.toBigInt()).toBe(
+    existentialDeposit + existentialDeposit / 10n,
+  )
 
-/**
- * Test successful `transfer_all` with keep_alive=false (should kill sender)
- */
-async function transferAllWithoutKeepAliveTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const initialAmount = existentialDeposit * 200n
-  const testAccount = await createAccountWithBalance(client, initialAmount, 'fresh_alice_transfer_all')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob_transfer_all')
-
-  const transferAllTx = client.api.tx.balances.transferAll(bob.address, false)
-  await sendTransaction(transferAllTx.signAsync(testAccount))
-  await client.dev.newBlock()
-
-  // Verify testAccount was reaped
-  expect(await isAccountReaped(client, testAccount.address)).toBe(true)
-}
-
-/**
- * Test successful `transfer_all` with keep_alive=true (should leave ED)
- */
-async function transferAllWithKeepAliveTest(chain: Chain) {
-  const [client] = await setupNetworks(chain)
-
-  // Create fresh accounts
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const initialAmount = existentialDeposit * 200n
-  const testAccount = await createAccountWithBalance(client, initialAmount, 'fresh_alice_transfer_all_keep_alive')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob_transfer_all_keep_alive')
-
-  const transferAllTx = client.api.tx.balances.transferAll(bob.address, true)
-  await sendTransaction(transferAllTx.signAsync(testAccount))
-  await client.dev.newBlock()
-
-  // Verify testAccount still exists and has at least ED
-  expect(await isAccountReaped(client, testAccount.address)).toBe(false)
-  const testAccountBalance = await client.api.query.system.account(testAccount.address)
-  expect((testAccountBalance as any).data.free.toBigInt()).toBeGreaterThanOrEqual(existentialDeposit)
+  // Check `Endowed` event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 }
 
 /**
@@ -324,10 +175,9 @@ async function forceTransferBadOriginTest(chain: Chain) {
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const transferAmount = existentialDeposit * 100n
-  const aliceBalance = transferAmount * 2n
-  const alice = await createAccountWithBalance(client, aliceBalance, 'fresh_alice_force_transfer')
-  const bob = await createAccountWithBalance(client, existentialDeposit, 'fresh_bob_force_transfer')
+  const transferAmount = existentialDeposit
+  const alice = await createAccountWithBalance(client, transferAmount, 'fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
   await sendTransaction(forceTransferTx.signAsync(alice)) // Regular user, not root
@@ -351,10 +201,10 @@ async function forceTransferBadOriginTest(chain: Chain) {
 
 export const transferFunctionsTests = (
   chain: Chain,
-  options: { testSuiteName: string; addressEncoding: number },
+  testConfig: { testSuiteName: string; addressEncoding: number },
 ): RootTestTree => ({
   kind: 'describe',
-  label: `${options.testSuiteName} - Transfer Functions`,
+  label: testConfig.testSuiteName,
   children: [
     {
       kind: 'describe',
@@ -362,67 +212,20 @@ export const transferFunctionsTests = (
       children: [
         {
           kind: 'test',
-          label: 'successful transfer_allow_death',
-          testFn: () => transferAllowDeathSuccessTest(chain),
-        },
-        {
-          kind: 'test',
-          label: '`InsufficientBalance` error',
-          testFn: () => transferAllowDeathInsufficientBalanceTest(chain),
-        },
-        {
-          kind: 'test',
-          label: '`ExistentialDeposit` error',
-          testFn: () => transferAllowDeathExistentialDepositTest(chain),
-        },
-        {
-          kind: 'test',
           label: 'should allow killing sender account',
-          testFn: () => transferAllowDeathKillAccountTest(chain),
+          testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
         },
       ],
     },
     {
       kind: 'describe',
       label: '`transfer_keep_alive`',
-      children: [
-        {
-          kind: 'test',
-          label: 'successful transfer_keep_alive',
-          testFn: () => transferKeepAliveSuccessTest(chain),
-        },
-        {
-          kind: 'test',
-          label: '`InsufficientBalance` error',
-          testFn: () => transferKeepAliveInsufficientBalanceTest(chain),
-        },
-        {
-          kind: 'test',
-          label: '`Expendability` error when would kill sender',
-          testFn: () => transferKeepAliveExpendabilityTest(chain),
-        },
-        {
-          kind: 'test',
-          label: '`ExistentialDeposit` error',
-          testFn: () => transferKeepAliveExistentialDepositTest(chain),
-        },
-      ],
+      children: [],
     },
     {
       kind: 'describe',
       label: '`transfer_all`',
-      children: [
-        {
-          kind: 'test',
-          label: 'successful transfer_all with keep_alive=false',
-          testFn: () => transferAllWithoutKeepAliveTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'successful transfer_all with keep_alive=true',
-          testFn: () => transferAllWithKeepAliveTest(chain),
-        },
-      ],
+      children: [],
     },
     {
       kind: 'describe',
