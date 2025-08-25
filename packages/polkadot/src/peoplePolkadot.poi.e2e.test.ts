@@ -5,8 +5,9 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { defaultAccounts } from '@e2e-test/networks'
-import { peoplePolkadot } from '@e2e-test/networks/chains'
+import { peoplePolkadot, polkadot } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
+import { createXcmTransactSend, scheduleCallWithOrigin } from '@e2e-test/shared/helpers'
 
 import { describe, expect, test } from 'vitest'
 
@@ -15,7 +16,7 @@ import { TEST_PUBLIC_KEY, TEST_VOUCHER_KEY_1, TEST_VOUCHER_KEY_2, TEST_VRF_SIGNA
 
 describe('People Polkadot PoI E2E', () => {
   test('candidate proves personhood via proof of ink flow', async () => {
-    const [peopleClient] = await setupNetworks(peoplePolkadot)
+    const [relayClient, peopleClient] = await setupNetworks(polkadot, peoplePolkadot)
 
     // Wait for storage initialization to complete
     for (let i = 0; i < 15; i++) {
@@ -47,6 +48,7 @@ describe('People Polkadot PoI E2E', () => {
     const evidenceHash = new Uint8Array(32).fill(1)
     const submitEvidenceTx = peopleClient.api.tx.proofOfInk.submitEvidence(evidenceHash)
     await sendTransaction(submitEvidenceTx.signAsync(candidate))
+
     // Wait for evidence submission to trigger mob rule case
     for (let i = 0; i < 3; i++) {
       await peopleClient.dev.newBlock()
@@ -58,37 +60,27 @@ describe('People Polkadot PoI E2E', () => {
     console.log('Step 4: Evidence validation')
     const latestCaseIndex = caseCount.toNumber() - 1
 
-    // Update candidate from Selected to Proven state and resolve the mob rule case
-    const currentCandidateInfo = await peopleClient.api.query.proofOfInk.candidates(candidate.address)
-    if (currentCandidateInfo.isSome) {
-      const candidateData = currentCandidateInfo.unwrap()
-      await peopleClient.dev.setStorage({
-        ProofOfInk: {
-          candidates: [
-            [
-              [candidate.address],
-              {
-                Proven: candidateData.asSelected,
-              },
-            ],
-          ],
+    // Send XCM Transact from relay chain to execute mobRule.intervene with governance origin
+    const interveneTx = peopleClient.api.tx.mobRule.intervene(latestCaseIndex, { Truth: { True: null } })
+
+    const xcmTx = createXcmTransactSend(
+      relayClient,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: 1004 }],
         },
-        MobRule: {
-          doneCases: [
-            [
-              [latestCaseIndex],
-              {
-                verdict: { Truth: { True: null } },
-                tally: { ayes: 1, nays: 0 },
-                reward: null,
-              },
-            ],
-          ],
-        },
-      })
-    } else {
-      throw new Error('Candidate not found')
-    }
+      },
+      interveneTx.method.toHex(),
+      'SuperUser',
+      { proofSize: '4000', refTime: '22000000' },
+    )
+
+    // Execute the XCM call from relay chain with Root origin
+    await scheduleCallWithOrigin(relayClient, { Inline: xcmTx.method.toHex() }, { system: 'Root' })
+
+    // Mine blocks to process the XCM message
+    await relayClient.dev.newBlock()
     await peopleClient.dev.newBlock()
 
     const resolvedCase = await peopleClient.api.query.mobRule.doneCases(latestCaseIndex)
