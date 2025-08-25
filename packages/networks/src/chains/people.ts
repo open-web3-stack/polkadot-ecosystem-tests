@@ -31,9 +31,6 @@ const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.p
       [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 1000e10 } }],
     ],
   },
-  Sudo: {
-    key: defaultAccounts.alice.address,
-  },
   // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.
   Identity: {
     Registrars: [aliceRegistrar, bobRegistrar],

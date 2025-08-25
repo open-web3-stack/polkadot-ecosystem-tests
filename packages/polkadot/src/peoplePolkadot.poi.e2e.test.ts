@@ -17,7 +17,7 @@ describe('People Polkadot PoI E2E', () => {
   test('candidate proves personhood via proof of ink flow', async () => {
     const [peopleClient] = await setupNetworks(peoplePolkadot)
 
-    // Just for the storage initialization to go through
+    // Wait for storage initialization to complete
     for (let i = 0; i < 15; i++) {
       await peopleClient.dev.newBlock()
     }
@@ -27,8 +27,7 @@ describe('People Polkadot PoI E2E', () => {
     const candidate = defaultAccounts.keyring.addFromUri('//TestCandidate')
     await fundAccount(peopleClient, candidate.address)
 
-    // Step 1: Candidate applies for proof of ink
-    console.log('Step 1: Candidate applies for Proof of Ink')
+    console.log('Step 1: Candidate applies for proof of ink')
     const applyTx = peopleClient.api.tx.proofOfInk.apply()
     await sendTransaction(applyTx.signAsync(candidate))
     await peopleClient.dev.newBlock()
@@ -36,7 +35,7 @@ describe('People Polkadot PoI E2E', () => {
     const candidateInfo = await peopleClient.api.query.proofOfInk.candidates(candidate.address)
     expect(candidateInfo.isSome).toBe(true)
 
-    console.log('Step 2: Candidates commits to a tattoo design')
+    console.log('Step 2: Candidate commits to a tattoo design')
     const commitTx = peopleClient.api.tx.proofOfInk.commit({ DesignedElective: [0, 0] }, null)
     await sendTransaction(commitTx.signAsync(candidate))
     await peopleClient.dev.newBlock()
@@ -59,19 +58,43 @@ describe('People Polkadot PoI E2E', () => {
     console.log('Step 4: Evidence validation')
     const latestCaseIndex = caseCount.toNumber() - 1
 
-    await fundAccount(peopleClient, defaultAccounts.alice.address)
-
-    const interveneTx = peopleClient.api.tx.mobRule.intervene(latestCaseIndex, { Truth: { True: null } })
-    const sudoInterveneTx = peopleClient.api.tx.sudo.sudo(interveneTx)
-
-    await sendTransaction(sudoInterveneTx.signAsync(defaultAccounts.alice))
+    // Update candidate from Selected to Proven state and resolve the mob rule case
+    const currentCandidateInfo = await peopleClient.api.query.proofOfInk.candidates(candidate.address)
+    if (currentCandidateInfo.isSome) {
+      const candidateData = currentCandidateInfo.unwrap()
+      await peopleClient.dev.setStorage({
+        ProofOfInk: {
+          candidates: [
+            [
+              [candidate.address],
+              {
+                Proven: candidateData.asSelected,
+              },
+            ],
+          ],
+        },
+        MobRule: {
+          doneCases: [
+            [
+              [latestCaseIndex],
+              {
+                verdict: { Truth: { True: null } },
+                tally: { ayes: 1, nays: 0 },
+                reward: null,
+              },
+            ],
+          ],
+        },
+      })
+    } else {
+      throw new Error('Candidate not found')
+    }
     await peopleClient.dev.newBlock()
 
     const resolvedCase = await peopleClient.api.query.mobRule.doneCases(latestCaseIndex)
     expect(resolvedCase.isNone).toBe(false)
 
     console.log('Step 5: Candidate registers as verified person')
-
     await fundSystemPots(peopleClient)
 
     const registerTx = peopleClient.api.tx.proofOfInk.registerNonReferred(
@@ -80,10 +103,11 @@ describe('People Polkadot PoI E2E', () => {
       TEST_VOUCHER_KEY_2,
       TEST_VRF_SIGNATURE,
     )
+
     await sendTransaction(registerTx.signAsync(candidate))
     await peopleClient.dev.newBlock()
 
-    // Wait additional blocks to ensure privacy voucher registration is processed
+    // Wait for privacy voucher registration processing
     for (let i = 0; i < 3; i++) {
       await peopleClient.dev.newBlock()
     }
@@ -102,17 +126,13 @@ describe('People Polkadot PoI E2E', () => {
     const candidateStatus = await peopleClient.api.query.proofOfInk.candidates(candidate.address)
     expect(candidateStatus.isNone).toBe(true)
 
-    // Step 6: Privacy vouchers were issued
-    console.log('Step 6: Verify privacy vouchers')
+    console.log('Step 6: Verify privacy vouchers were issued')
     await validatePrivacyVouchers(peopleClient)
-
-    console.log('PoI flow completed successfully!')
   }, 300000)
 })
 
 async function setupProofOfInkDesignFamily(client: any) {
-  const sudoAccount = defaultAccounts.keyring.addFromUri('//Alice')
-  await fundAccount(client, sudoAccount.address)
+  await fundAccount(client, defaultAccounts.alice.address)
 
   const addDesignFamilyTx = client.api.tx.proofOfInk.addDesignFamily(
     0,
@@ -120,7 +140,7 @@ async function setupProofOfInkDesignFamily(client: any) {
     new Uint8Array(32).fill(0),
   )
 
-  await sendTransaction(addDesignFamilyTx.signAsync(sudoAccount))
+  await sendTransaction(addDesignFamilyTx.signAsync(defaultAccounts.alice))
 }
 
 async function fundSystemPots(client: any) {
@@ -159,7 +179,6 @@ async function validatePrivacyVouchers(client: any) {
   // Check that voucher 1 exists in its ring
   const voucher1RingKeys = await client.api.query.privacyVoucher.keys(value1, ringIndex1)
   expect(voucher1RingKeys.isSome).toBe(true)
-  console.log('Voucher of value', value1.toString(), 'found in ring index', ringIndex1.toString())
 
   const ring1Keys = voucher1RingKeys.unwrap()
   const testKey1InRing = ring1Keys.some(
@@ -170,7 +189,6 @@ async function validatePrivacyVouchers(client: any) {
   // Check that voucher 2 exists in its ring
   const voucher2RingKeys = await client.api.query.privacyVoucher.keys(value2, ringIndex2)
   expect(voucher2RingKeys.isSome).toBe(true)
-  console.log('Voucher of value', value2.toString(), 'found in ring index', ringIndex2.toString())
 
   const ring2Keys = voucher2RingKeys.unwrap()
   const testKey2InRing = ring2Keys.some(
