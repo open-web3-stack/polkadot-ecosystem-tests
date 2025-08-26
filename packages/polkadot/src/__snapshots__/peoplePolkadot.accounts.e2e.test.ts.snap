@@ -1,10 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Accounts > \`transfer_allow_death\` > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+exports[`Polkadot People Chain Accounts > \`transfer_allow_death\` > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
     "data": {
-      "amount": "(rounded 160000000)",
+      "amount": "(rounded 23000000)",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Withdraw",

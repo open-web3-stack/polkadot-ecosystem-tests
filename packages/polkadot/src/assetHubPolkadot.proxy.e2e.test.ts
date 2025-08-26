@@ -4,7 +4,7 @@ import { AssetHubProxyTypes, fullProxyE2ETests, registerTestTree } from '@e2e-te
 registerTestTree(
   fullProxyE2ETests(
     assetHubPolkadot,
-    { testSuiteName: 'Polkadot AssetHub Proxy', addressEncoding: 0 },
+    { testSuiteName: 'Polkadot Asset Hub Proxy', addressEncoding: 0 },
     AssetHubProxyTypes,
   ),
 )
