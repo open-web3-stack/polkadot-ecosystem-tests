@@ -13,10 +13,24 @@ exports[`Polkadot Accounts > transfer_allow_death > should allow killing sender 
   {
     "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "amount": "(rounded 3200000000)",
     },
     "method": "DustLost",
     "section": "balances",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "NewAccount",
+    "section": "system",
   },
   {
     "data": {

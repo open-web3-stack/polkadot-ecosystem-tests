@@ -102,15 +102,18 @@ async function transferAllowDeathTest<
     { section: 'balances', method: 'DustLost' },
     // Bob's account was fundless, and its endowment emits an event
     { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'KilledAccount' },
+    { section: 'system', method: 'NewAccount' },
   ).toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
 
-  // Verify account was reaped
+  // Verify only Alice's account was reaped
   expect(await isAccountReaped(client, alice.address)).toBe(true)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
 
   const bobAccount = await client.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
-  // Check 4 events snapshot above
+  // Check the events snapshot above
 
   // Check `Transfer` event
   const events = await client.api.query.system.events()
@@ -172,6 +175,26 @@ async function transferAllowDeathTest<
   const endowedEventData = endowedEvent!.event.data
   expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
+
+  // Check `KilledAccount` event
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeDefined()
+  assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+  const killedAccountEventData = killedAccountEvent!.event.data
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+
+  // Check `NewAccount` event
+  const newAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'NewAccount'
+  })
+  expect(newAccountEvent).toBeDefined()
+  assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
+  const newAccountEventData = newAccountEvent!.event.data
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
 }
 
 /**
