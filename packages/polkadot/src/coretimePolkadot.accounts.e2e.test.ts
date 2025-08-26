@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(coretimePolkadot, {
     testSuiteName: 'Polkadot Coretime Accounts',
     addressEncoding: 0,
+    chainEd: 'Normal',
   }),
 )

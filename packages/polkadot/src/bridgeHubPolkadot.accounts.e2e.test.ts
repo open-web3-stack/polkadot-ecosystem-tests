@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(bridgeHubPolkadot, {
     testSuiteName: 'Polkadot Bridge Hub Accounts',
     addressEncoding: 0,
+    chainEd: 'LowEd',
   }),
 )

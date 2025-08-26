@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(peopleKusama, {
     testSuiteName: 'Kusama People Chain Accounts',
     addressEncoding: 2,
+    chainEd: 'LowEd',
   }),
 )

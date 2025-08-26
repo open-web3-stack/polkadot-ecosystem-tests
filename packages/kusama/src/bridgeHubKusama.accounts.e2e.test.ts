@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(bridgeHubKusama, {
     testSuiteName: 'Kusama Bridge Hub Accounts',
     addressEncoding: 2,
+    chainEd: 'LowEd',
   }),
 )

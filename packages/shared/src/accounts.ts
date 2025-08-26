@@ -8,7 +8,8 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { checkEvents } from './helpers/index.js'
+import { match } from 'ts-pattern'
+import { type LowEdChain as ChainEd, checkEvents } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -73,16 +74,17 @@ async function transferAllowDeathTest<
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const transferAmount = existentialDeposit + existentialDeposit / 10n
-  // When transferring the amount above, net of fees, the account will have less than 1 ED.
-  const alice = await createAccountWithBalance(client, transferAmount, '//fresh_alice')
+  const eps = existentialDeposit / 3n
+  // When transferring this amount, net of fees, the account should have less than 1 ED remaining.
+  const totalBalance = existentialDeposit + eps
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
   const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify both accounts have empty data before transfer
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, 2n * transferAmount)
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit)
 
   const transferEvents = await sendTransaction(transferTx.signAsync(alice))
 
@@ -114,7 +116,12 @@ async function transferAllowDeathTest<
   const events = await client.api.query.system.events()
   const transferEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Transfer'
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+        return true
+      }
+    }
   })
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
@@ -135,7 +142,7 @@ async function transferAllowDeathTest<
   // The actual fee amount is nondeterministic, and by itself also irrelevant to the test.
   // Just checking it's bound in a reasonable interval is enough.
   expect(withdrawEventData.amount.toBigInt()).toBeGreaterThan(0n)
-  expect(withdrawEventData.amount.toBigInt()).toBeLessThan(existentialDeposit / 10n)
+  expect(withdrawEventData.amount.toBigInt()).toBeLessThan(eps)
 
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
@@ -147,12 +154,12 @@ async function transferAllowDeathTest<
   const dustLostEventData = dustLostEvent!.event.data
   expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
   expect(dustLostEventData.amount.toBigInt()).toBeGreaterThan(0n)
-  expect(dustLostEventData.amount.toBigInt()).toBeLessThan(existentialDeposit / 10n)
+  expect(dustLostEventData.amount.toBigInt()).toBeLessThan(eps)
 
   // The fee paid by Alice and the dust lost, along with the amount transferred to Bob,
   // should sum to Alice's initial balance.
   expect(existentialDeposit + withdrawEventData.amount.toBigInt() + dustLostEventData.amount.toBigInt()).toBe(
-    existentialDeposit + existentialDeposit / 10n,
+    totalBalance,
   )
 
   // Check `Endowed` event
@@ -199,24 +206,41 @@ async function forceTransferBadOriginTest(chain: Chain) {
 /// Test Tree
 /// -------
 
-export const transferFunctionsTests = (
+const fullTransferAllowDeathTests = (
   chain: Chain,
   testConfig: { testSuiteName: string; addressEncoding: number },
 ): RootTestTree => ({
   kind: 'describe',
-  label: testConfig.testSuiteName,
+  label: 'transfer_allow_death',
   children: [
     {
-      kind: 'describe',
-      label: '`transfer_allow_death`',
-      children: [
-        {
-          kind: 'test',
-          label: 'should allow killing sender account',
-          testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
-        },
-      ],
+      kind: 'test',
+      label: 'should allow killing sender account',
+      testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
     },
+  ],
+})
+
+const partialTransferAllowDeathTests = (
+  _chain: Chain,
+  _testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree => ({
+  kind: 'describe',
+  label: 'transfer_allow_death',
+  children: [],
+})
+
+export const transferFunctionsTests = (
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number; chainEd: ChainEd },
+): RootTestTree => ({
+  kind: 'describe',
+  label: testConfig.testSuiteName,
+  children: [
+    match(testConfig.chainEd)
+      .with('LowEd', () => partialTransferAllowDeathTests(chain, testConfig))
+      .with('Normal', () => fullTransferAllowDeathTests(chain, testConfig))
+      .exhaustive(),
     {
       kind: 'describe',
       label: '`transfer_keep_alive`',

@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(assetHubKusama, {
     testSuiteName: 'Kusama Asset Hub Accounts',
     addressEncoding: 2,
+    chainEd: 'LowEd',
   }),
 )

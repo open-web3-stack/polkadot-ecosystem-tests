@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(peoplePolkadot, {
     testSuiteName: 'Polkadot People Chain Accounts',
     addressEncoding: 0,
+    chainEd: 'Normal',
   }),
 )

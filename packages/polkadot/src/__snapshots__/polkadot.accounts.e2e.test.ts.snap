@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Accounts > \`transfer_allow_death\` > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+exports[`Polkadot Accounts > transfer_allow_death > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
     "data": {
@@ -8,6 +8,31 @@ exports[`Polkadot Accounts > \`transfer_allow_death\` > should allow killing sen
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "amount": "(rounded 3200000000)",
+    },
+    "method": "DustLost",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "freeBalance": 10000000000,
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 10000000000,
+      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Transfer",
     "section": "balances",
   },
 ]

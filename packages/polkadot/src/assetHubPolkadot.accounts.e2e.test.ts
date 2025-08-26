@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(assetHubPolkadot, {
     testSuiteName: 'Polkadot Asset Hub Accounts',
     addressEncoding: 0,
+    chainEd: 'Normal',
   }),
 )

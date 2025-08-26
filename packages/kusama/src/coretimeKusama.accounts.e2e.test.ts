@@ -5,5 +5,6 @@ registerTestTree(
   transferFunctionsTests(coretimeKusama, {
     testSuiteName: 'Kusama Coretime Accounts',
     addressEncoding: 2,
+    chainEd: 'LowEd',
   }),
 )
