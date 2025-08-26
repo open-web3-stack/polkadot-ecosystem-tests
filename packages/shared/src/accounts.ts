@@ -22,7 +22,7 @@ async function createAccountWithBalance<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, balance: any, seed: string): Promise<KeyringPair> {
   // Create fresh account from seed
-  const newAccount = defaultAccountsSr25519.keyring.createFromUri(`//${seed}`)
+  const newAccount = defaultAccountsSr25519.keyring.createFromUri(`${seed}`)
 
   // Set account balance directly via storage
   await client.dev.setStorage({
@@ -73,17 +73,17 @@ async function transferAllowDeathTest<
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  // Slight increment to handle fees
-  const edPlusEpsilon = existentialDeposit + existentialDeposit / 10n
-  const alice = await createAccountWithBalance(client, edPlusEpsilon, 'fresh_alice')
+  const transferAmount = existentialDeposit + existentialDeposit / 10n
+  // When transferring the amount above, net of fees, the account will have less than 1 ED.
+  const alice = await createAccountWithBalance(client, transferAmount, '//fresh_alice')
   const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify both accounts have empty data before transfer
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // Transfer all balance away, killing the account
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit)
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, 2n * transferAmount)
+
   const transferEvents = await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
@@ -176,8 +176,8 @@ async function forceTransferBadOriginTest(chain: Chain) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const transferAmount = existentialDeposit
-  const alice = await createAccountWithBalance(client, transferAmount, 'fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const alice = defaultAccountsSr25519.alice
+  const bob = defaultAccountsSr25519.bob
 
   const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
   await sendTransaction(forceTransferTx.signAsync(alice)) // Regular user, not root
