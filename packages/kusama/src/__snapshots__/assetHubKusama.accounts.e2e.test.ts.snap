@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 97000000)",
+      "who": "GHsd5c8cVv8eksG9VBur8ftUCMhDX5UkHYnA7ocvET37STM",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+      "freeBalance": "(rounded 3300000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 3300000)",
+      "from": "GHsd5c8cVv8eksG9VBur8ftUCMhDX5UkHYnA7ocvET37STM",
+      "to": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;

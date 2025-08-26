@@ -64,7 +64,7 @@ async function isAccountReaped(client: Client<any, any>, address: string): Promi
  * 2. Create a fresh account with balance equal to existential deposit
  * 3. Transfer all balance away from the first account to the second account
  * 4. Verify that the first account has been reaped
- * 5. Check that events emitted in the course of operation contain correct data
+ * 5. Check that events emitted as a result of this operation contain correct data
  */
 async function transferAllowDeathTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -198,6 +198,130 @@ async function transferAllowDeathTest<
 }
 
 /**
+ * Test that `transfer_allow_death` with sufficient balance preserves the sender account.
+ *
+ * 1. Create a fresh account with high balance
+ * 2. Transfer a small amount to another account
+ * 3. Verify that the sender account is not reaped
+ * 4. Check events and post-transfer account data
+ */
+async function transferAllowDeathNoKillTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh accounts
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, totalBalance, '//simple_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//simple_bob')
+
+  // Verify initial state
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  const transferAmount = existentialDeposit // 1 ED
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
+  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Snapshot some events
+  await checkEvents(
+    transferEvents,
+    // Event of transfer from Alice to Bob
+    { section: 'balances', method: 'Transfer' },
+    // Event of fee withdrawal from Alice
+    { section: 'balances', method: 'Withdraw' },
+    // Bob's account was fundless, and its endowment emits an event
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events when Alice transfers 1 ED to Bob with sufficient balance')
+
+  // Verify Alice's account was NOT reaped
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
+
+  // Check final balances
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  const bobAccount = await client.api.query.system.account(bob.address)
+
+  // Get the extrinsic's fee
+  let events = await client.api.query.system.events()
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+
+  //console.log(transferAmount + txPaymentEventData.actualFee.toBigInt())
+  //await client.pause()
+
+  expect(bobAccount.data.free.toBigInt()).toBe(transferAmount)
+  // Alice should have her original balance minus the transfer amount minus fees
+  expect(aliceAccount.data.free.toBigInt()).toBe(
+    totalBalance - transferAmount - txPaymentEventData.actualFee.toBigInt(),
+  )
+
+  // Check events - verify NO KilledAccount events are present
+  events = await client.api.query.system.events()
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  // Verify transfer event
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+        return true
+      }
+    }
+  })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
+
+  // Verify withdraw event
+  const withdrawEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Withdraw'
+  })
+  expect(withdrawEvent).toBeDefined()
+  assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
+  const withdrawEventData = withdrawEvent!.event.data
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
+
+  // Verify endowment event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(transferAmount)
+
+  // Verify `NewAccount` event
+  const newAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'NewAccount'
+  })
+  expect(newAccountEvent).toBeDefined()
+}
+
+/**
  * Test `force_transfer` with bad origin (non-root)
  */
 async function forceTransferBadOriginTest(chain: Chain) {
@@ -229,6 +353,24 @@ async function forceTransferBadOriginTest(chain: Chain) {
 /// Test Tree
 /// -------
 
+/**
+ * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
+ */
+const commonTransferAllowDeathTests = (
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+) => [
+  {
+    kind: 'test' as const,
+    label: 'transfer of some funds does not kill sender account',
+    testFn: () => transferAllowDeathNoKillTest(chain, testConfig.addressEncoding),
+  },
+]
+
+/**
+ * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
+ * fee.
+ */
 const fullTransferAllowDeathTests = (
   chain: Chain,
   testConfig: { testSuiteName: string; addressEncoding: number },
@@ -241,16 +383,20 @@ const fullTransferAllowDeathTests = (
       label: 'should allow killing sender account',
       testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
     },
+    ...commonTransferAllowDeathTests(chain, testConfig),
   ],
 })
 
+/**
+ * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
+ */
 const partialTransferAllowDeathTests = (
-  _chain: Chain,
-  _testConfig: { testSuiteName: string; addressEncoding: number },
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number },
 ): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
-  children: [],
+  children: commonTransferAllowDeathTests(chain, testConfig),
 })
 
 export const transferFunctionsTests = (
