@@ -226,8 +226,8 @@ async function transferAllowDeathNoKillTest<
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n // 100 ED
-  const alice = await createAccountWithBalance(client, totalBalance, '//simple_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//simple_bob')
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -516,8 +516,8 @@ async function transferBelowExistentialDepositTest<
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
-  const alice = await createAccountWithBalance(client, aliceBalance, '//below_ed_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//below_ed_bob')
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -564,6 +564,70 @@ async function transferBelowExistentialDepositTest<
 }
 
 /**
+ * Test that `transfer_allow_death` fails when sender has insufficient funds.
+ *
+ * 1. Create a fresh account with some balance
+ * 2. Attempt to transfer more than the account has to another account
+ * 3. Verify that the transaction fails with token `FundsUnavailable` error
+ * 4. Check that no transfer occurred and only fees were deducted
+ */
+async function transferInsufficientFundsTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh accounts - Alice has no balance
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Try to transfer more than Alice has (200 ED when she only has 100 ED)
+  const transferAmount = 2n * totalBalance
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
+  await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check that transaction failed with FundsUnavailable error
+  const events = await client.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+
+  // Check that it's the FundsUnavailable token error
+  assert(dispatchError.isToken)
+  const tokenError = dispatchError.asToken
+  assert(tokenError.isFundsUnavailable)
+
+  // Verify no transfer occurred - Alice still has funds, Bob still unalive
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Get the transaction fee from the payment event
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+
+  // Verify Alice's balance only decreased by the transaction fee
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - txPaymentEventData.actualFee.toBigInt())
+}
+
+/**
  * Test that `force_transfer` fails when transferring below existential deposit.
  *
  * 1. Create a fresh account with high balance
@@ -601,8 +665,8 @@ async function forceTransferBelowExistentialDepositTest<
   // Create fresh accounts
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
-  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//force_below_ed_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//force_below_ed_bob')
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
@@ -722,6 +786,11 @@ const commonTransferAllowDeathTests = (
     kind: 'test' as const,
     label: 'transfer below existential deposit fails',
     testFn: () => transferBelowExistentialDepositTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'transfer with insufficient funds fails',
+    testFn: () => transferInsufficientFundsTest(chain, testConfig.addressEncoding),
   },
 ]
 
