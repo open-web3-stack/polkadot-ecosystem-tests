@@ -269,9 +269,6 @@ async function transferAllowDeathNoKillTest<
   const txPaymentEventData = txPaymentEvent!.event.data
   assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
 
-  //console.log(transferAmount + txPaymentEventData.actualFee.toBigInt())
-  //await client.pause()
-
   expect(bobAccount.data.free.toBigInt()).toBe(transferAmount)
   // Alice should have her original balance minus the transfer amount minus fees
   expect(aliceAccount.data.free.toBigInt()).toBe(
@@ -506,6 +503,70 @@ async function forceTransferKillTest<
 }
 
 /**
+ * Test that `transfer_allow_death` fails when transferring below existential deposit.
+ *
+ * 1. Create a fresh account with high balance
+ * 2. Attempt to transfer an amount below ED to another account
+ * 3. Verify that the transaction fails with `ExistentialDeposit` error
+ * 4. Check that no transfer occurred
+ */
+async function transferBelowExistentialDepositTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh accounts
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, aliceBalance, '//below_ed_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//below_ed_bob')
+
+  // Verify initial state
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  const transferAmount = existentialDeposit - 1n
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
+  await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check that transaction failed with ExistentialDeposit error
+  const events = await client.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+
+  // Check that it's the ExistentialDeposit error from balances pallet
+  assert(dispatchError.isToken)
+  const tokenError = dispatchError.asToken
+  assert(tokenError.isBelowMinimum)
+
+  // Verify no transfer occurred - Alice still has original balance, Bob still reaped
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Get the transaction fee from the payment event
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+
+  // Verify Alice's balance only decreased by the transaction fee
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+}
+
+/**
  * Test `force_transfer` with a bad origin (non-root).
  */
 async function forceTransferBadOriginTest(chain: Chain) {
@@ -548,6 +609,11 @@ const commonTransferAllowDeathTests = (
     kind: 'test' as const,
     label: 'transfer of some funds does not kill sender account',
     testFn: () => transferAllowDeathNoKillTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'transfer below existential deposit fails',
+    testFn: () => transferBelowExistentialDepositTest(chain, testConfig.addressEncoding),
   },
 ]
 
