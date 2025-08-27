@@ -390,8 +390,6 @@ async function forceTransferKillTest<
     await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
     await baseClient.dev.newBlock()
   } else {
-    // Use XCM from relay chain
-
     // Query parachain ID
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     const paraId = (parachainInfo as any).toNumber()
@@ -407,7 +405,6 @@ async function forceTransferKillTest<
       },
       forceTransferTx.method.toHex(),
       'Superuser',
-      { proofSize: '10000', refTime: '1000000000' },
     )
 
     await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
@@ -567,6 +564,117 @@ async function transferBelowExistentialDepositTest<
 }
 
 /**
+ * Test that `force_transfer` fails when transferring below existential deposit.
+ *
+ * 1. Create a fresh account with high balance
+ * 2. Attempt to force transfer an amount below ED to another account using root origin
+ * 3. Verify that the transaction fails with token `BelowMinimum` error
+ * 4. Check that no transfer occurred
+ */
+async function forceTransferBelowExistentialDepositTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  _addressEncoding: number,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // Create fresh accounts
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//force_below_ed_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//force_below_ed_bob')
+
+  // Verify initial state
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  const transferAmount = existentialDeposit - 1n
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
+
+  if (hasScheduler) {
+    // Use root origin to execute force transfer directly
+    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // Check that transaction failed with BelowMinimum error
+  const events = await baseClient.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  // No events are emitted from this failure, as it was the result of a
+  expect(failedEvent).toBeUndefined()
+
+  if (hasScheduler) {
+    const dispatchedEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'Dispatched'
+    })
+    expect(dispatchedEvent).toBeDefined()
+    assert(baseClient.api.events.scheduler.Dispatched.is(dispatchedEvent!.event))
+    const dispatchData = dispatchedEvent!.event.data
+    assert(dispatchData.result.isErr)
+    const dispatchError = dispatchData.result.asErr
+
+    assert(dispatchError.isToken)
+    const tokenError = dispatchError.asToken
+    assert(tokenError.isBelowMinimum)
+  }
+
+  // Verify no transfer occurred - Alice still has original balance, Bob still in oblivion
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  // Alice's balance should be unchanged (no fees for failed force transfers)
+  const aliceAccount = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
+}
+
+/**
  * Test `force_transfer` with a bad origin (non-root).
  */
 async function forceTransferBadOriginTest(chain: Chain) {
@@ -679,6 +787,11 @@ export const transferFunctionsTests = (
           kind: 'test' as const,
           label: 'force transfer below ED can kill source account',
           testFn: () => forceTransferKillTest(chain, testConfig.addressEncoding, relayChain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'force transfer below existential deposit fails',
+          testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig.addressEncoding, relayChain),
         },
         {
           kind: 'test',
