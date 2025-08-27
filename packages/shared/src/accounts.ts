@@ -9,7 +9,12 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
-import { type LowEdChain as ChainEd, checkEvents } from './helpers/index.js'
+import {
+  type LowEdChain as ChainEd,
+  checkEvents,
+  checkSystemEvents,
+  scheduleInlineCallWithOrigin,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -113,7 +118,13 @@ async function transferAllowDeathTest<
   const bobAccount = await client.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
-  // Check the events snapshot above
+  // Check the events snapshot above:
+  // 1. `Transfer` event
+  // 2. `Withdraw` event
+  // 3. `DustLost` event
+  // 4. `Endowed` event
+  // 5. `KilledAccount` event
+  // 6. `NewAccount` event
 
   // Check `Transfer` event
   const events = await client.api.query.system.events()
@@ -248,7 +259,7 @@ async function transferAllowDeathNoKillTest<
   const bobAccount = await client.api.query.system.account(bob.address)
 
   // Get the extrinsic's fee
-  let events = await client.api.query.system.events()
+  const events = await client.api.query.system.events()
   const txPaymentEvent = events.find((record) => {
     const { event } = record
     return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
@@ -267,7 +278,6 @@ async function transferAllowDeathNoKillTest<
   )
 
   // Check events - verify NO KilledAccount events are present
-  events = await client.api.query.system.events()
   const killedAccountEvent = events.find((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'KilledAccount'
@@ -322,7 +332,137 @@ async function transferAllowDeathNoKillTest<
 }
 
 /**
- * Test `force_transfer` with bad origin (non-root)
+ * Test that `force_transfer` allows the killing of the source account.
+ *
+ * 1. Create a fresh account with balance above existential deposit
+ * 2. Force transfer all balance away from the first account to the second account
+ * 3. Verify that the first account has been reaped
+ * 4. Check that events emitted as a result of this operation contain correct data
+ */
+async function forceTransferKillTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh account
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const eps = existentialDeposit / 3n
+  const totalBalance = existentialDeposit + eps
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+
+  // Verify both accounts have expected initial state
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
+
+  // Use root origin to execute force transfer
+  await scheduleInlineCallWithOrigin(client, forceTransferTx.method.toHex(), { system: 'Root' })
+
+  await client.dev.newBlock()
+
+  // Verify only Alice's account was reaped
+  expect(await isAccountReaped(client, alice.address)).toBe(true)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
+
+  const bobAccount = await client.api.query.system.account(bob.address)
+  expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
+
+  // Snapshot events
+  await checkSystemEvents(
+    client,
+    { section: 'balances', method: 'Transfer' },
+    { section: 'balances', method: 'Withdraw' },
+    { section: 'balances', method: 'DustLost' },
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'KilledAccount' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events of `force_transfer` from Alice to Bob')
+
+  // Check events:
+  // 1. `Transfer` event
+  // 2. `Withdraw` event
+  // 3. `DustLost` event
+  // 4. `Endowed` event
+  // 5. `KilledAccount` event
+  // 6. `NewAccount` event
+  const events = await client.api.query.system.events()
+
+  // Check `Transfer` event
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+        return true
+      }
+    }
+  })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
+
+  // Check `Withdraw` event
+  const withdrawEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Withdraw'
+  })
+  expect(withdrawEvent).toBeDefined()
+  assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
+  const withdrawEventData = withdrawEvent!.event.data
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(withdrawEventData.amount.toBigInt()).toBe(existentialDeposit)
+
+  // Check `DustLost` event
+  const dustLostEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'DustLost'
+  })
+  expect(dustLostEvent).toBeDefined()
+  assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
+  const dustLostEventData = dustLostEvent!.event.data
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(dustLostEventData.amount.toBigInt()).toBe(eps)
+
+  // Check `Endowed` event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
+
+  // Check `KilledAccount` event
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeDefined()
+  assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+  const killedAccountEventData = killedAccountEvent!.event.data
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+
+  // Check `NewAccount` event
+  const newAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'NewAccount'
+  })
+  expect(newAccountEvent).toBeDefined()
+  assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
+  const newAccountEventData = newAccountEvent!.event.data
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+}
+
+/**
+ * Test `force_transfer` with a bad origin (non-root).
  */
 async function forceTransferBadOriginTest(chain: Chain) {
   const [client] = await setupNetworks(chain)
@@ -380,7 +520,7 @@ const fullTransferAllowDeathTests = (
   children: [
     {
       kind: 'test',
-      label: 'should allow killing sender account',
+      label: 'leaving an account below ED kills it',
       testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
     },
     ...commonTransferAllowDeathTests(chain, testConfig),
@@ -425,8 +565,13 @@ export const transferFunctionsTests = (
       label: '`force_transfer`',
       children: [
         {
+          kind: 'test' as const,
+          label: 'force transfer below ED can kill source account',
+          testFn: () => forceTransferKillTest(chain, testConfig.addressEncoding),
+        },
+        {
           kind: 'test',
-          label: '`BadOrigin` error from non-root',
+          label: 'non-root origins cannot force transfer',
           testFn: () => forceTransferBadOriginTest(chain),
         },
       ],
