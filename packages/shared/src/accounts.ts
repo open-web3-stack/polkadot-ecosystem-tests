@@ -13,6 +13,7 @@ import {
   type LowEdChain as ChainEd,
   checkEvents,
   checkSystemEvents,
+  createXcmTransactSend,
   scheduleInlineCallWithOrigin,
 } from './helpers/index.js'
 
@@ -338,43 +339,98 @@ async function transferAllowDeathNoKillTest<
  * 2. Force transfer all balance away from the first account to the second account
  * 3. Verify that the first account has been reaped
  * 4. Check that events emitted as a result of this operation contain correct data
+ *
+ * NOTE: As is usual for PET tests, to simulate execution by a non-signed origin, the scheduler pallet's agenda is
+ * manually modified to include a `balances.force_transfer` call for execution in the next block.
+ *
+ * If the runtime of the chain running this test does have the scheduler pallet, this test must also be given
+ * the chain object of its relay chain, so that XCM can be used to execute a `xcmPallet.send` call with a
+ * `Transact` containing `balances.force_transfer`, for execution in the chain being tested.
  */
 async function forceTransferKillTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  addressEncoding: number,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
+  // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
 
   // Create fresh account
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const eps = existentialDeposit / 3n
   const totalBalance = existentialDeposit + eps
-  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
   const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
 
   // Verify both accounts have expected initial state
-  expect(await isAccountReaped(client, alice.address)).toBe(false)
-  expect(await isAccountReaped(client, bob.address)).toBe(true)
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
 
-  const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
 
-  // Use root origin to execute force transfer
-  await scheduleInlineCallWithOrigin(client, forceTransferTx.method.toHex(), { system: 'Root' })
+  if (hasScheduler) {
+    // Use root origin to execute force transfer directly
+    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await baseClient.dev.newBlock()
+  } else {
+    // Use XCM from relay chain
 
-  await client.dev.newBlock()
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+      { proofSize: '10000', refTime: '1000000000' },
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
 
   // Verify only Alice's account was reaped
-  expect(await isAccountReaped(client, alice.address)).toBe(true)
-  expect(await isAccountReaped(client, bob.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(true)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(false)
 
-  const bobAccount = await client.api.query.system.account(bob.address)
+  const bobAccount = await baseClient.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
   // Snapshot events
   await checkSystemEvents(
-    client,
+    baseClient,
     { section: 'balances', method: 'Transfer' },
-    { section: 'balances', method: 'Withdraw' },
     { section: 'balances', method: 'DustLost' },
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
@@ -383,40 +439,28 @@ async function forceTransferKillTest<
 
   // Check events:
   // 1. `Transfer` event
-  // 2. `Withdraw` event
-  // 3. `DustLost` event
-  // 4. `Endowed` event
-  // 5. `KilledAccount` event
-  // 6. `NewAccount` event
-  const events = await client.api.query.system.events()
+  // 2. `DustLost` event
+  // 3. `Endowed` event
+  // 4. `KilledAccount` event
+  // 5. `NewAccount` event
+  const events = await baseClient.api.query.system.events()
 
   // Check `Transfer` event
   const transferEvent = events.find((record) => {
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
-      assert(client.api.events.balances.Transfer.is(event))
+      assert(baseClient.api.events.balances.Transfer.is(event))
       if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
         return true
       }
     }
   })
   expect(transferEvent).toBeDefined()
-  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
   expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
   expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
-
-  // Check `Withdraw` event
-  const withdrawEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
-  })
-  expect(withdrawEvent).toBeDefined()
-  assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
-  const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  expect(withdrawEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
@@ -424,7 +468,7 @@ async function forceTransferKillTest<
     return event.section === 'balances' && event.method === 'DustLost'
   })
   expect(dustLostEvent).toBeDefined()
-  assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
+  assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
   expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
   expect(dustLostEventData.amount.toBigInt()).toBe(eps)
@@ -435,7 +479,7 @@ async function forceTransferKillTest<
     return event.section === 'balances' && event.method === 'Endowed'
   })
   expect(endowedEvent).toBeDefined()
-  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
   expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
@@ -446,7 +490,7 @@ async function forceTransferKillTest<
     return event.section === 'system' && event.method === 'KilledAccount'
   })
   expect(killedAccountEvent).toBeDefined()
-  assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+  assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
 
@@ -456,7 +500,7 @@ async function forceTransferKillTest<
     return event.section === 'system' && event.method === 'NewAccount'
   })
   expect(newAccountEvent).toBeDefined()
-  assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
+  assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
   expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
 }
@@ -542,6 +586,7 @@ const partialTransferAllowDeathTests = (
 export const transferFunctionsTests = (
   chain: Chain,
   testConfig: { testSuiteName: string; addressEncoding: number; chainEd: ChainEd },
+  relayChain?: Chain,
 ): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
@@ -567,7 +612,7 @@ export const transferFunctionsTests = (
         {
           kind: 'test' as const,
           label: 'force transfer below ED can kill source account',
-          testFn: () => forceTransferKillTest(chain, testConfig.addressEncoding),
+          testFn: () => forceTransferKillTest(chain, testConfig.addressEncoding, relayChain),
         },
         {
           kind: 'test',

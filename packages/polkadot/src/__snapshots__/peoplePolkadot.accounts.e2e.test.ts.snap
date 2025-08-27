@@ -1,5 +1,49 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot People Chain Accounts > \`force_transfer\` > force transfer below ED can kill source account > events of \`force_transfer\` from Alice to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "amount": "(rounded 330000000)",
+    },
+    "method": "DustLost",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "freeBalance": 1000000000,
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 1000000000,
+      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot People Chain Accounts > transfer_allow_death > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
