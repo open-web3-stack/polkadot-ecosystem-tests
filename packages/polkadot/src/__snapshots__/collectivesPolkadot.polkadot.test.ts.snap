@@ -4,36 +4,6 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
 [
   {
     "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
       "destination": {
         "interior": "Here",
         "parents": 1,
@@ -206,36 +176,6 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
 
 exports[`collectives & polkadot > Relay authorizes upgrade for itself > collectives events emitted when sending xcm 1`] = `
 [
-  {
-    "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
   {
     "data": {
       "destination": {
@@ -683,7 +623,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 2000000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -867,36 +807,6 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > destinatio
 
 exports[`collectives & polkadot > whitelisting a call by fellowship > source chain events 1`] = `
 [
-  {
-    "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
   {
     "data": {
       "destination": {

@@ -126,11 +126,36 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx eve
 [
   {
     "data": {
+      "destination": {
+        "interior": "Here",
+        "parents": 1,
+      },
+      "message": [],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Polkadot",
+              },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
       "outcome": {
         "Complete": {
           "used": {
             "proofSize": "(rounded 400000)",
-            "refTime": "(rounded 40000000000)",
+            "refTime": "(rounded 30000000000)",
           },
         },
       },
@@ -185,7 +210,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "DownwardMessagesProcessed",

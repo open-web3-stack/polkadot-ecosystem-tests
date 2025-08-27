@@ -727,54 +727,54 @@ exports[`Kusama Staking > base staking tests > trying to nominate with no bonded
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999554590223,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
