@@ -58,21 +58,21 @@ exports[`Kusama Bridge Hub Accounts > transfer_allow_death > transfer of some fu
   {
     "data": {
       "amount": "(rounded 97000000)",
-      "who": "GHsd5c8cVv8eksG9VBur8ftUCMhDX5UkHYnA7ocvET37STM",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Withdraw",
     "section": "balances",
   },
   {
     "data": {
-      "account": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "NewAccount",
     "section": "system",
   },
   {
     "data": {
-      "account": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
       "freeBalance": "(rounded 33000000)",
     },
     "method": "Endowed",
@@ -81,8 +81,8 @@ exports[`Kusama Bridge Hub Accounts > transfer_allow_death > transfer of some fu
   {
     "data": {
       "amount": "(rounded 33000000)",
-      "from": "GHsd5c8cVv8eksG9VBur8ftUCMhDX5UkHYnA7ocvET37STM",
-      "to": "Dp9rabNQfUoBnVAFKsNsZ7E3zwoqggrpa7RmGSCLLZ1JkXA",
+      "from": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "to": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "Transfer",
     "section": "balances",

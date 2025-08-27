@@ -268,6 +268,7 @@ async function transferAllowDeathNoKillTest<
   assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
   const txPaymentEventData = txPaymentEvent!.event.data
   assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
 
   expect(bobAccount.data.free.toBigInt()).toBe(transferAmount)
   // Alice should have her original balance minus the transfer amount minus fees
@@ -504,8 +505,8 @@ async function forceTransferKillTest<
  *
  * 1. Create a fresh account with high balance
  * 2. Attempt to transfer an amount below ED to another account
- * 3. Verify that the transaction fails with `ExistentialDeposit` error
- * 4. Check that no transfer occurred
+ * 3. Verify that the transaction fails
+ * 4. Check that no funds were transferred, only fees deducted
  */
 async function transferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -557,6 +558,7 @@ async function transferBelowExistentialDepositTest<
   assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
   const txPaymentEventData = txPaymentEvent!.event.data
   assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
@@ -568,7 +570,7 @@ async function transferBelowExistentialDepositTest<
  *
  * 1. Create a fresh account with some balance
  * 2. Attempt to transfer more than the account has to another account
- * 3. Verify that the transaction fails with token `FundsUnavailable` error
+ * 3. Verify that the transaction fails
  * 4. Check that no transfer occurred and only fees were deducted
  */
 async function transferInsufficientFundsTest<
@@ -577,7 +579,6 @@ async function transferInsufficientFundsTest<
 >(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
   const [client] = await setupNetworks(chain)
 
-  // Create fresh accounts - Alice has no balance
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
@@ -621,6 +622,7 @@ async function transferInsufficientFundsTest<
   assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
   const txPaymentEventData = txPaymentEvent!.event.data
   assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
@@ -632,8 +634,8 @@ async function transferInsufficientFundsTest<
  *
  * 1. Create a fresh account with high balance
  * 2. Attempt to force transfer an amount below ED to another account using root origin
- * 3. Verify that the transaction fails with token `BelowMinimum` error
- * 4. Check that no transfer occurred
+ * 3. Verify that the transaction fails
+ * 4. Check that no transfer occurred (no fees, either)
  */
 async function forceTransferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,

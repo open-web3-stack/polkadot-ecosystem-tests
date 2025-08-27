@@ -44,7 +44,7 @@ exports[`Polkadot Collectives Accounts > \`force_transfer\` > force transfer bel
 ]
 `;
 
-exports[`Polkadot Collectives Accounts > transfer_allow_death > should allow killing sender account > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+exports[`Polkadot Collectives Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
     "data": {
@@ -101,21 +101,21 @@ exports[`Polkadot Collectives Accounts > transfer_allow_death > transfer of some
   {
     "data": {
       "amount": "(rounded 16000000)",
-      "who": "14iZ76XKqvAgLe4LLRRs6L93BE5779pSNQSWvkX1zXG4YvZ4",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Withdraw",
     "section": "balances",
   },
   {
     "data": {
-      "account": "12EqLbWZe5jLsfgESG7L7kaNm2fDjKRpSh1AXu9bQdN2k6vH",
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "NewAccount",
     "section": "system",
   },
   {
     "data": {
-      "account": "12EqLbWZe5jLsfgESG7L7kaNm2fDjKRpSh1AXu9bQdN2k6vH",
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
       "freeBalance": 1000000000,
     },
     "method": "Endowed",
@@ -124,8 +124,8 @@ exports[`Polkadot Collectives Accounts > transfer_allow_death > transfer of some
   {
     "data": {
       "amount": 1000000000,
-      "from": "14iZ76XKqvAgLe4LLRRs6L93BE5779pSNQSWvkX1zXG4YvZ4",
-      "to": "12EqLbWZe5jLsfgESG7L7kaNm2fDjKRpSh1AXu9bQdN2k6vH",
+      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "Transfer",
     "section": "balances",
