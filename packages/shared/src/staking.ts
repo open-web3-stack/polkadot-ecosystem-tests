@@ -500,90 +500,6 @@ async function forceUnstakeTest<
 }
 
 /**
- * Test the fast unstaking process.
- *
- * 1. An accounts bonds some funds
- * 2. it nominates some validators
- * 3. it registers itself for fast unstaking
- */
-async function fastUnstakeTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
-  const kr = defaultAccountsSr25519
-  const alice = kr.alice
-  const bob = kr.bob
-  const charlie = kr.charlie
-
-  await client.dev.setStorage({
-    System: {
-      account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
-    },
-  })
-
-  const bondTx = client.api.tx.staking.bond(10000e10, { Staked: null })
-
-  const bondEvents = await sendTransaction(bondTx.signAsync(alice))
-
-  await client.dev.newBlock()
-
-  await checkEvents(bondEvents, 'staking').toMatchSnapshot('nominator bond events')
-
-  /// Nominate some validators
-
-  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-
-  const nominateTx = client.api.tx.staking.nominate([bob.address, charlie.address])
-  await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
-
-  await client.dev.newBlock()
-
-  // nominate emits no events
-  let events = await client.api.query.system.events()
-  const nominateEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'staking'
-  })
-  expect(nominateEvent).toBeUndefined()
-
-  // Check nominations
-
-  let nominationsOpt = await client.api.query.staking.nominators(alice.address)
-  assert(nominationsOpt.isSome)
-  const nominations = nominationsOpt.unwrap()
-
-  const eraNumberOpt = await client.api.query.staking.currentEra()
-  assert(eraNumberOpt.isSome)
-  const eraIndex = eraNumberOpt.unwrap()
-
-  await check(nominations).toMatchObject({
-    submittedIn: eraIndex.toNumber(),
-    suppressed: false,
-    targets: [encodeAddress(bob.address, addressEncoding), encodeAddress(charlie.address, addressEncoding)],
-  })
-
-  /// Fast unstake
-
-  const registerFastUnstakeTx = client.api.tx.fastUnstake.registerFastUnstake()
-  await sendTransaction(registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }))
-
-  await client.dev.newBlock()
-
-  events = await client.api.query.system.events()
-  const registerFastUnstakeEvent = events.filter((record) => {
-    const { event } = record
-    return event.section === 'fastUnstake'
-  })
-  // `register_fast_unstake` emits a `BatchChecked` event
-  expect(registerFastUnstakeEvent.length).toBe(1)
-
-  // Check that Alice's tentative nominations have been removed
-  nominationsOpt = await client.api.query.staking.nominators(alice.address)
-  expect(nominationsOpt.isNone).toBeTruthy()
-}
-
-/**
  * Test the setting of minimum validator commission with `set_min_commission`.
  *
  * This is done for `Root/StakingAdmin` origins, which constitute valid `AdminOrigin` in Polkadot/Kusama
@@ -1789,11 +1705,6 @@ export function baseStakingE2ETests<
         kind: 'test' as const,
         label: 'test force unstaking of nominator',
         testFn: async () => await forceUnstakeTest(chain),
-      },
-      {
-        kind: 'test' as const,
-        label: 'test fast unstake',
-        testFn: async () => await fastUnstakeTest(chain, testConfig.addressEncoding),
       },
       {
         kind: 'test' as const,

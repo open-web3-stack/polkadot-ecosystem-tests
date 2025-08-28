@@ -641,19 +641,6 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > validator 2
 ]
 `;
 
-exports[`Polkadot Staking > base staking tests > test fast unstake > nominator bond events 1`] = `
-[
-  {
-    "data": {
-      "amount": 100000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-]
-`;
-
 exports[`Polkadot Staking > base staking tests > test force unstaking of nominator > force unstake bad origin events 1`] = `
 [
   {

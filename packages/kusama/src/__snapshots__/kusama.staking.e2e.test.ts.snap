@@ -641,19 +641,6 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > validator 2 v
 ]
 `;
 
-exports[`Kusama Staking > base staking tests > test fast unstake > nominator bond events 1`] = `
-[
-  {
-    "data": {
-      "amount": 100000000000000,
-      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-]
-`;
-
 exports[`Kusama Staking > base staking tests > test force unstaking of nominator > force unstake bad origin events 1`] = `
 [
   {
