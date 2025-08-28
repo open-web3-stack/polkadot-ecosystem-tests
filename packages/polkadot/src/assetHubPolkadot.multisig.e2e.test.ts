@@ -3,7 +3,7 @@ import { baseMultisigE2Etests, registerTestTree } from '@e2e-test/shared'
 
 registerTestTree(
   baseMultisigE2Etests(assetHubPolkadot, {
-    testSuiteName: 'AssetHubPolkadot Multisig',
+    testSuiteName: 'Polkadot Asset Hub Multisig',
     addressEncoding: 0,
   }),
 )

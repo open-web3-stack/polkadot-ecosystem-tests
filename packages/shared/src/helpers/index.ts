@@ -336,3 +336,11 @@ export async function setValidatorsStorage(
     },
   })
 }
+
+/**
+ * Whether a chain's ED is lower than typical transaction fees or not.
+ *
+ * An exact comparison is not relevant - this marker only identifies whether transfers at or around the
+ * chain's ED can be made without raising `pallet_balances::FundsUnavailable`.
+ */
+export type LowEdChain = 'LowEd' | 'Normal'
