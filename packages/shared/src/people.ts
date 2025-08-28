@@ -53,7 +53,8 @@ const identity = {
 
 /**
  * Send an XCM message from the relay chain to the people parachain.
- * This message contains a `Transact` with an extrinsic to be executed in the parachain, with a `Root` origin.
+ * This message contains a `Transact`, which itself contains an extrinsic to be executed in the parachain with a
+ * `Root` origin.
  */
 async function sendXcmFromRelayToPeople(
   relayClient: {
