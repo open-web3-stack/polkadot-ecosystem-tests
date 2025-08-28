@@ -48,14 +48,6 @@ exports[`Kusama Coretime Accounts > transfer_allow_death > transfer of some fund
 [
   {
     "data": {
-      "amount": "(rounded 100000000)",
-      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "NewAccount",
