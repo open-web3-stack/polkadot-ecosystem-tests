@@ -741,6 +741,110 @@ async function forceTransferBelowExistentialDepositTest<
 }
 
 /**
+ * Test force transfer when source has insufficient funds.
+ *
+ * 1. Create Alice with some balance
+ * 2. Try to force transfer more than Alice has to Bob
+ * 3. Verify the transaction fails
+ * 4. Check that Alice's balance is unchanged (no fees for force transfers)
+ */
+async function forceTransferInsufficientFundsTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  _addressEncoding: number,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // Create fresh accounts
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
+  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  // Try to force transfer more than Alice has (2 ED when she only has 1)
+  const transferAmount = 2n * aliceBalance
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // Check for failure
+  const events = await baseClient.api.query.system.events()
+
+  if (hasScheduler) {
+    const dispatchedEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'Dispatched'
+    })
+    expect(dispatchedEvent).toBeDefined()
+    assert(baseClient.api.events.scheduler.Dispatched.is(dispatchedEvent!.event))
+    const dispatchData = dispatchedEvent!.event.data
+    assert(dispatchData.result.isErr)
+    const dispatchError = dispatchData.result.asErr
+
+    assert(dispatchError.isToken)
+    const tokenError = dispatchError.asToken
+    assert(tokenError.isFundsUnavailable)
+  }
+
+  // Verify no transfer occurred
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  // Alice's balance should be unchanged (no fees for failed force transfers)
+  const aliceAccount = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
+}
+
+/**
  * Test `force_transfer` with a bad origin (non-root).
  */
 async function forceTransferBadOriginTest(chain: Chain) {
@@ -863,6 +967,11 @@ export const transferFunctionsTests = (
           kind: 'test' as const,
           label: 'force transfer below existential deposit fails',
           testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig.addressEncoding, relayChain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'force transfer with insufficient funds fails',
+          testFn: () => forceTransferInsufficientFundsTest(chain, testConfig.addressEncoding, relayChain),
         },
         {
           kind: 'test',
