@@ -36,7 +36,7 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v5": [
           {
             "receiveTeleportedAsset": [
               {
@@ -44,12 +44,10 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -64,12 +62,10 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -86,12 +82,14 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },

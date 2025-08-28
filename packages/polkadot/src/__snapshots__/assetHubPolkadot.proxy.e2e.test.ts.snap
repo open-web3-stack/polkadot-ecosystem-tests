@@ -429,7 +429,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1207,7 +1207,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1401,7 +1401,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1434,7 +1434,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1576,7 +1576,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1609,7 +1609,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1713,7 +1713,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1746,7 +1746,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1831,7 +1831,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1864,7 +1864,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1949,7 +1949,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1982,7 +1982,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
