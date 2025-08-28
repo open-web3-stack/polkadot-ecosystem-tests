@@ -96,16 +96,23 @@ async function transferAllowDeathTest<
 
   await client.dev.newBlock()
 
+  await checkEvents(
+    transferEvents,
+    // Event of fee withdrawal from Alice
+    { section: 'balances', method: 'Withdraw' },
+    // Alice account is reaped, so dust is lost
+    { section: 'balances', method: 'DustLost' },
+  )
+    // Withdrawal and dust lost events may change due to fees
+    .redact({ number: 0 })
+    .toMatchSnapshot('unstable events when Alice `transfer_allow_death` to Bob')
+
   // `Deposit` events are irrelevant, as they contain data that may change as `chopsticks` selects different block
   // producers each test run, causing the snapshot to fail.
   await checkEvents(
     transferEvents,
     // Event of transfer from Alice to Bob
     { section: 'balances', method: 'Transfer' },
-    // Event of fee withdrawal from Alice
-    { section: 'balances', method: 'Withdraw' },
-    // Alice account is reaped, so dust is lost
-    { section: 'balances', method: 'DustLost' },
     // Bob's account was fundless, and its endowment emits an event
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
@@ -127,8 +134,19 @@ async function transferAllowDeathTest<
   // 5. `KilledAccount` event
   // 6. `NewAccount` event
 
-  // Check `Transfer` event
   const events = await client.api.query.system.events()
+
+  // Transaction payment event that should appear before any other events; other events are regular
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  expect(txPaymentEvent).toBeDefined()
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+
+  // Check `Transfer` event
   const transferEvent = events.find((record) => {
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
@@ -154,10 +172,7 @@ async function transferAllowDeathTest<
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
   expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  // The actual fee amount is nondeterministic, and by itself also irrelevant to the test.
-  // Just checking it's bound in a reasonable interval is enough.
-  expect(withdrawEventData.amount.toBigInt()).toBeGreaterThan(0n)
-  expect(withdrawEventData.amount.toBigInt()).toBeLessThan(eps)
+  expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
 
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
@@ -244,8 +259,6 @@ async function transferAllowDeathNoKillTest<
     transferEvents,
     // Event of transfer from Alice to Bob
     { section: 'balances', method: 'Transfer' },
-    // Event of fee withdrawal from Alice
-    { section: 'balances', method: 'Withdraw' },
     // Bob's account was fundless, and its endowment emits an event
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'NewAccount' },
@@ -630,6 +643,69 @@ async function transferInsufficientFundsTest<
 }
 
 /**
+ * Test self-transfer of entire balance with `transfer_allow_death`.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. Alice transfers 99 ED to herself
+ * 3. Verify that Alice is not reaped
+ * 4. Check events for exact numbers
+ */
+async function transferAllowDeathSelfTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  const transferAmount = existentialDeposit * 99n // Transfer almost everything to self
+  const transferTx = client.api.tx.balances.transferAllowDeath(alice.address, transferAmount)
+  await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Get transaction fee
+  const events = await client.api.query.system.events()
+
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // Alice should still be alive and balance only reduced by fees
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+
+  // Check no killing/creation related events occurred
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  const newAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'NewAccount'
+  })
+  expect(newAccountEvent).toBeUndefined()
+
+  const dustLostEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'DustLost'
+  })
+  expect(dustLostEvent).toBeUndefined()
+}
+
+/**
  * Test that `force_transfer` fails when transferring below existential deposit.
  *
  * 1. Create a fresh account with high balance
@@ -897,6 +973,11 @@ const commonTransferAllowDeathTests = (
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
     testFn: () => transferInsufficientFundsTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'self-transfer of entire balance',
+    testFn: () => transferAllowDeathSelfTest(chain, testConfig.addressEncoding),
   },
 ]
 
