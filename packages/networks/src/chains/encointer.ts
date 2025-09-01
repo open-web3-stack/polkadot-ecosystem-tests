@@ -7,7 +7,7 @@ const custom = {
   },
 }
 
-const getInitStorages = (config: typeof custom.encointerKusama) => ({
+const getInitStorages = (_config: typeof custom.encointerKusama) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 10e12 } }],
