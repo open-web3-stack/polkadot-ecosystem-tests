@@ -116,8 +116,8 @@ exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -133,8 +133,8 @@ exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to 
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 190000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -373,8 +373,8 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -390,8 +390,8 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 170000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

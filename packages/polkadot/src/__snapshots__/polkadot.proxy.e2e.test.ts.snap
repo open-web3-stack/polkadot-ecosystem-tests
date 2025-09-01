@@ -85,8 +85,6 @@ exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and re
 ]
 `;
 
-exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and remove them > events when removing all proxies from Alice 1`] = `[]`;
-
 exports[`Polkadot Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
@@ -394,6 +392,1061 @@ exports[`Polkadot Proxy > create and kill pure proxies > events when killing pur
 ]
 `;
 
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet auctions, call bid 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 72,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet bounties, call propose_bounty 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet nomination_pools, call chill 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0b000000",
+            "index": 39,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet staking, call bond 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
+[
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+    },
+    "method": "VestingCompleted",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet auctions, call bid 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 72,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet crowdloan, call dissolve 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x08000000",
+            "index": 73,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet slots, call trigger_onboard 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 71,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet bounties, call propose_bounty 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet nomination_pools, call chill 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0b000000",
+            "index": 39,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet auctions, call bid 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 72,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet bounties, call propose_bounty 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 30,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet nomination_pools, call chill 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0b000000",
+            "index": 39,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet referenda, call submit 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet staking, call bond 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 29,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet nomination_pools, call chill 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0b000000",
+            "index": 39,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call bond 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 40,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet balances, call burn 1`] = `
 [
   {
@@ -473,8 +1526,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -506,8 +1559,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -539,8 +1592,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -629,8 +1682,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -662,8 +1715,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -695,8 +1748,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -766,8 +1819,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -799,8 +1852,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -832,8 +1885,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -941,8 +1994,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -974,8 +2027,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1007,8 +2060,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1154,8 +2207,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1187,8 +2240,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1220,8 +2273,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1291,8 +2344,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 140000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1324,8 +2377,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1357,8 +2410,8 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -1387,1061 +2440,6 @@ exports[`Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden 
 ]
 `;
 
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet auctions, call bid 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 72,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet bounties, call propose_bounty 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 30,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet nomination_pools, call chill 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 39,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet referenda, call submit 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
-[
-  {
-    "data": {
-      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-    },
-    "method": "VestingCompleted",
-    "section": "vesting",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet auctions, call bid 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 72,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet crowdloan, call dissolve 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x08000000",
-            "index": 73,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Auction > events for proxy type Auction, pallet slots, call trigger_onboard 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 71,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 30,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet bounties, call propose_bounty 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet referenda, call submit 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet nomination_pools, call chill 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 39,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet auctions, call bid 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x03000000",
-            "index": 72,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet bounties, call propose_bounty 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 30,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet nomination_pools, call chill 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 39,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet referenda, call submit 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 590000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 12000)",
-          "refTime": "(rounded 580000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet proxy, call remove_proxy 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 29,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet nomination_pools, call chill 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0b000000",
-            "index": 39,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 40,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
 [
   {
@@ -2462,8 +2460,6 @@ exports[`Polkadot Proxy > perform proxy call on behalf of delegator > events whe
   },
 ]
 `;
-
-exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
 
 exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
 [
@@ -2490,5 +2486,3 @@ exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob pe
   },
 ]
 `;
-
-exports[`Polkadot Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;

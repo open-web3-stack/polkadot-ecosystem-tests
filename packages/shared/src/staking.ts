@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -10,10 +10,10 @@ import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
-import { check, checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { check, checkEvents, checkSystemEvents, expectPjsEqual, scheduleInlineCallWithOrigin } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -245,8 +245,8 @@ async function stakingLifecycleTest<
     const prefs: PalletStakingValidatorPrefs = await client.api.query.staking.validators(validator.address)
     const { commission, blocked } = prefs
 
-    assert(commission.eq(minValidatorCommission))
-    assert(blocked.isFalse)
+    expect(commission.toNumber()).toBe(minValidatorCommission.toNumber())
+    expect(blocked.isFalse).toBeTruthy()
   }
 
   ///
@@ -285,23 +285,29 @@ async function stakingLifecycleTest<
   ///
 
   const nominateTx = client.api.tx.staking.nominate(validators.map((v) => v.address))
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
+  await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+  // nominate emits no events
+  let events = await client.api.query.system.events()
+  const nominateEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+  expect(nominateEvent).toBeUndefined()
 
   /// Check the nominator's nominations
 
   let nominationsOpt = await client.api.query.staking.nominators(alice.address)
   assert(nominationsOpt.isSome)
   const nominations = nominationsOpt.unwrap()
-  assert(nominations.submittedIn.eq(eraNumber))
-  assert(nominations.suppressed.isFalse)
-  assert(nominations.targets.length === validators.length)
+  expect(nominations.submittedIn.toNumber()).toBe(eraNumber.toNumber())
+  expect(nominations.suppressed.isFalse).toBeTruthy()
+  expect(nominations.targets.length).toBe(validators.length)
 
   const targets = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
-  assert(validators.every((v) => targets.includes(encodeAddress(v.address, addressEncoding))))
+  expect(validators.every((v) => targets.includes(encodeAddress(v.address, addressEncoding)))).toBe(true)
 
   ///
   /// Chill one of the validators
@@ -320,15 +326,15 @@ async function stakingLifecycleTest<
   assert(nominationsOpt.isSome)
   const nominationsPostChill = nominationsOpt.unwrap()
 
-  assert(nominationsPostChill.submittedIn.eq(eraNumber))
-  assert(nominationsPostChill.suppressed.isFalse)
-  assert(nominationsPostChill.targets.length === validators.length)
+  expect(nominationsPostChill.submittedIn.toNumber()).toBe(eraNumber.toNumber())
+  expect(nominationsPostChill.suppressed.isFalse).toBe(true)
+  expect(nominationsPostChill.targets.length).toBe(validators.length)
 
   // Check that the chilled validator is *still* in the nominations.
   // Its previous call to `validate` would only have taken effect in the next era, as will the
   // posterior call to `chill`.
   const targetsPostChill = nominations.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
-  assert(targetsPostChill.every((v) => targets.includes(encodeAddress(v, addressEncoding))))
+  expect(targetsPostChill.every((v) => targets.includes(encodeAddress(v, addressEncoding)))).toBe(true)
 
   ///
   /// Chilled validator wishes to remove all its nominations
@@ -349,13 +355,13 @@ async function stakingLifecycleTest<
   assert(nominationsOpt.isSome)
   const nominationsPostKick = nominationsOpt.unwrap()
 
-  assert(nominationsPostKick.submittedIn.eq(eraNumber))
-  assert(nominationsPostKick.suppressed.isFalse)
-  assert(nominationsPostKick.targets.length === validators.length - 1)
+  expect(nominationsPostKick.submittedIn.toNumber()).toBe(eraNumber.toNumber())
+  expect(nominationsPostKick.suppressed.isFalse).toBe(true)
+  expect(nominationsPostKick.targets.length).toBe(validators.length - 1)
 
   // Check that the kicked nominator's nominations *no longer* include the validator who kicked them.
   const targetsPostKick = nominationsPostKick.targets.map((t) => encodeAddress(t.toString(), addressEncoding))
-  assert(!targetsPostKick.includes(encodeAddress(validators[0].address, addressEncoding)))
+  expect(targetsPostKick.includes(encodeAddress(validators[0].address, addressEncoding))).toBe(false)
 
   ///
   /// Chilled validator wishes to validate again, but this time it blocks itself
@@ -371,8 +377,8 @@ async function stakingLifecycleTest<
   const prefs: PalletStakingValidatorPrefs = await client.api.query.staking.validators(validators[0].address)
   const { commission, blocked } = prefs
 
-  assert(commission.eq(minValidatorCommission))
-  assert(blocked.isTrue)
+  expect(commission.toNumber()).toBe(minValidatorCommission.toNumber())
+  expect(blocked).toBeTruthy()
 
   ///
   /// Nominator tries to select the blocked validator
@@ -388,7 +394,7 @@ async function stakingLifecycleTest<
   )
 
   // Check events for the correct error code
-  const events = await client.api.query.system.events()
+  events = await client.api.query.system.events()
 
   const [ev1] = events.filter((record) => {
     const { event } = record
@@ -467,7 +473,7 @@ async function forceUnstakeTest<
   ///
 
   const slashingSpans = await client.api.query.staking.slashingSpans(bob.address)
-  assert(slashingSpans.isNone)
+  expect(slashingSpans.isNone).toBeTruthy()
 
   // Bob can have no slashing spans recorded as a fresh nominator, so `force_unstake`'s second argument is 0.
   const forceUnstakeTx = client.api.tx.staking.forceUnstake(bob.address, 0)
@@ -490,7 +496,7 @@ async function forceUnstakeTest<
   await client.dev.newBlock()
 
   nominatorPrefs = await client.api.query.staking.nominators(bob.address)
-  assert(nominatorPrefs.isNone)
+  expect(nominatorPrefs.isNone).toBeTruthy()
 }
 
 /**
@@ -529,11 +535,17 @@ async function fastUnstakeTest<
   let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
   const nominateTx = client.api.tx.staking.nominate([bob.address, charlie.address])
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
+  await sendTransaction(nominateTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  await checkEvents(nominateEvents, 'staking').toMatchSnapshot('nominate events')
+  // nominate emits no events
+  let events = await client.api.query.system.events()
+  const nominateEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'staking'
+  })
+  expect(nominateEvent).toBeUndefined()
 
   // Check nominations
 
@@ -554,18 +566,21 @@ async function fastUnstakeTest<
   /// Fast unstake
 
   const registerFastUnstakeTx = client.api.tx.fastUnstake.registerFastUnstake()
-  const registerFastUnstakeEvents = await sendTransaction(
-    registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }),
-  )
+  await sendTransaction(registerFastUnstakeTx.signAsync(alice, { nonce: aliceNonce++ }))
 
   await client.dev.newBlock()
 
-  // `register_fast_unstake` emits no events as of Jan. 2025
-  await checkEvents(registerFastUnstakeEvents, 'fastUnstake').toMatchSnapshot('register fast unstake events')
+  events = await client.api.query.system.events()
+  const registerFastUnstakeEvent = events.filter((record) => {
+    const { event } = record
+    return event.section === 'fastUnstake'
+  })
+  // `register_fast_unstake` emits a `BatchChecked` event
+  expect(registerFastUnstakeEvent.length).toBe(1)
 
   // Check that Alice's tentative nominations have been removed
   nominationsOpt = await client.api.query.staking.nominators(alice.address)
-  assert(nominationsOpt.isNone)
+  expect(nominationsOpt.isNone).toBeTruthy()
 }
 
 /**
@@ -619,7 +634,7 @@ async function setMinCommission<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBeTruthy()
 
   ///
   /// Run the extrinsic with a `Root/StakingAdmin` origins.
@@ -646,11 +661,11 @@ async function setMinCommission<
     })
 
     // TODO: `set_minimum_commission` does not emit events at this point.
-    assert(stakingEvents.length === 0, 'setting global nomination pool configs should emit 1 event')
+    expect(stakingEvents.length, 'setting global nomination pool configs should emit 1 event').toBe(0)
 
     const postMinCommission = (await client.api.query.staking.minCommission()).toNumber()
 
-    assert(postMinCommission === preMinCommission + inc)
+    expect(postMinCommission).toBe(preMinCommission + inc)
   }
 }
 
@@ -723,7 +738,7 @@ async function setStakingConfigsTest<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBeTruthy()
 
   ///
   /// Run the extrinsic with a `Root` origin
@@ -745,7 +760,7 @@ async function setStakingConfigsTest<
   })
 
   // TODO: `set_staking_configs` does not emit events at this point.
-  assert(stakingEvents.length === 0, 'setting staking configs should emit 1 event')
+  expect(stakingEvents.length, 'setting staking configs should emit 1 event').toBe(0)
 
   const postMinNominatorBond = (await client.api.query.staking.minNominatorBond()).toNumber()
   const postMinValidatorBond = (await client.api.query.staking.minValidatorBond()).toNumber()
@@ -762,13 +777,13 @@ async function setStakingConfigsTest<
 
   await check(setStakingConfigsSuccess).redact({ number: 2 }).toMatchSnapshot('set staking configs event')
 
-  assert(postMinNominatorBond === preMinNominatorBond + inc)
-  assert(postMinValidatorBond === preMinValidatorBond + inc)
-  assert(postMaxNominatorsCount === preMaxNominatorsCount + inc)
-  assert(postMaxValidatorsCount === preMaxValidatorsCount + inc)
-  assert(postChillThreshold === preChillThreshold + inc)
-  assert(postMinCommission === preMinCommission + inc)
-  assert(postMaxStakedRewards === preMaxStakedRewards + inc)
+  expect(postMinNominatorBond).toBe(preMinNominatorBond + inc)
+  expect(postMinValidatorBond).toBe(preMinValidatorBond + inc)
+  expect(postMaxNominatorsCount).toBe(preMaxNominatorsCount + inc)
+  expect(postMaxValidatorsCount).toBe(preMaxValidatorsCount + inc)
+  expect(postChillThreshold).toBe(preChillThreshold + inc)
+  expect(postMinCommission).toBe(preMinCommission + inc)
+  expect(postMaxStakedRewards).toBe(preMaxStakedRewards + inc)
 }
 
 /**
@@ -859,8 +874,8 @@ async function forceApplyValidatorCommissionTest<
   )
 
   const validatorPrefsPost: PalletStakingValidatorPrefs = await client.api.query.staking.validators(alice.address)
-  assert(validatorPrefsPost.commission.eq(newCommission))
-  assert(validatorPrefsPost.blocked.isFalse)
+  expect(validatorPrefsPost.commission.toNumber()).toBe(newCommission.toNumber())
+  expect(validatorPrefsPost.blocked.isFalse).toBeTruthy()
 }
 
 /**
@@ -912,10 +927,10 @@ async function modifyValidatorCountTest<
     return event.section === 'staking'
   })
   // None of these validator count setting extrinsics emit events.
-  assert(stakingEvents.length === 0)
+  expect(stakingEvents.length).toBe(0)
 
   let validatorCount = await client.api.query.staking.validatorCount()
-  assert(validatorCount.eq(new BN(100)))
+  expect(validatorCount.toNumber()).toBe(100)
 
   ///
   /// `increaseValidatorCount`
@@ -941,10 +956,10 @@ async function modifyValidatorCountTest<
 
   events = await client.api.query.system.events()
 
-  assert(stakingEvents.length === 0)
+  expect(stakingEvents.length).toBe(0)
 
   validatorCount = await client.api.query.staking.validatorCount()
-  assert(validatorCount.eq(new BN(200)))
+  expect(validatorCount.toNumber()).toBe(200)
 
   ///
   /// `scaleValidatorCount`
@@ -970,10 +985,10 @@ async function modifyValidatorCountTest<
 
   events = await client.api.query.system.events()
 
-  assert(stakingEvents.length === 0)
+  expect(stakingEvents.length).toBe(0)
 
   validatorCount = await client.api.query.staking.validatorCount()
-  assert(validatorCount.eq(new BN(220)))
+  expect(validatorCount.toNumber()).toBe(220)
 }
 
 /**
@@ -1095,7 +1110,7 @@ async function chillOtherTest<
     }
   }
 
-  assert(setStakingConfigsCalls.length === 8)
+  expect(setStakingConfigsCalls.length).toBe(8)
 
   // Extract the last call, which should be the only one with which `chill_other` can succeed.
   const successfulCall = setStakingConfigsCalls.pop()
@@ -1124,7 +1139,7 @@ async function chillOtherTest<
 
     assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
     const dispatchError = ev.event.data.dispatchError
-    assert(dispatchError.isModule)
+    expect(dispatchError.isModule).toBe(true)
     assert(client.api.errors.staking.CannotChillOther.is(dispatchError.asModule))
   }
 
@@ -1143,7 +1158,7 @@ async function chillOtherTest<
   await checkEvents(chillOtherEvents, 'staking').toMatchSnapshot('chill other events')
 
   const nominatorPrefs = await client.api.query.staking.nominators(bob.address)
-  assert(nominatorPrefs.isNone)
+  expect(nominatorPrefs.isNone).toBe(true)
 }
 
 /// --------------
@@ -1356,7 +1371,7 @@ async function cancelDeferredSlashTest<
   // Two blocks away from the era change.
 
   let slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  assert(slash.length === 1)
+  expect(slash.length).toBe(1)
 
   const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
   scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin)
@@ -1376,7 +1391,7 @@ async function cancelDeferredSlashTest<
   // And the slash should have been cancelled.
 
   slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  assert(slash.length === 0)
+  expect(slash.length).toBe(0)
 
   // Era-boundary block creation tends to be slow.
   await client.dev.setStorage({
@@ -1400,7 +1415,7 @@ async function cancelDeferredSlashTest<
   // The era should have changed.
 
   const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-  assert(newActiveEra === activeEra + 1)
+  expect(newActiveEra).toBe(activeEra + 1)
 
   // None of the validators' funds should have been slashed.
 
@@ -1408,9 +1423,9 @@ async function cancelDeferredSlashTest<
   const bobFundsPostSlash = await client.api.query.system.account(bob.address)
   const charlieFundsPostSlash = await client.api.query.system.account(charlie.address)
 
-  assert(aliceFundsPostSlash.eq(aliceFundsPreSlash))
-  assert(bobFundsPostSlash.eq(bobFundsPreSlash))
-  assert(charlieFundsPostSlash.eq(charlieFundsPreSlash))
+  expectPjsEqual(aliceFundsPostSlash, aliceFundsPreSlash)
+  expectPjsEqual(bobFundsPostSlash, bobFundsPreSlash)
+  expectPjsEqual(charlieFundsPostSlash, charlieFundsPreSlash)
 }
 
 /**
@@ -1444,7 +1459,7 @@ async function cancelDeferredSlashTestBadOrigin<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBeTruthy()
 }
 
 /**
@@ -1516,7 +1531,7 @@ async function setInvulnerablesTestBadOrigin<
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
-  assert(dispatchError.isBadOrigin)
+  expect(dispatchError.isBadOrigin).toBeTruthy()
 
   // Try it with `StakingAdmin` origin, which is still not enough on Polkadot/Kusama.
 
@@ -1537,8 +1552,8 @@ async function setInvulnerablesTestBadOrigin<
 
   assert(client.api.events.scheduler.Dispatched.is(ev_.event))
   const e = ev_.event.data
-  assert(e.result.isErr)
-  assert(e.result.asErr.isBadOrigin)
+  expect(e.result.isErr).toBeTruthy()
+  expect(e.result.asErr.isBadOrigin).toBeTruthy()
 }
 
 /**
@@ -1715,73 +1730,120 @@ async function setInvulnerablesTest<
 /// --------------
 /// --------------
 
-export function stakingE2ETests<
+export function slashingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    test('trying to become a validator with no bonded funds fails', async () => {
-      await validateNoBondedFundsFailureTest(chain)
-    })
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'slashing tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'unapplied slash',
+        testFn: async () => await unappliedSlashTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash with bad origin',
+        testFn: async () => await cancelDeferredSlashTestBadOrigin(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash as root',
+        testFn: async () => await cancelDeferredSlashTestAsRoot(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancel deferred slash as admin',
+        testFn: async () => await cancelDeferredSlashTestAsAdmin(chain),
+      },
+    ],
+  }
+}
 
-    test('trying to nominate with no bonded funds fails', async () => {
-      await nominateNoBondedFundsFailureTest(chain)
-    })
+export function baseStakingE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'base staking tests',
+    children: [
+      {
+        kind: 'test' as const,
+        label: 'trying to become a validator with no bonded funds fails',
+        testFn: async () => await validateNoBondedFundsFailureTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'trying to nominate with no bonded funds fails',
+        testFn: async () => await nominateNoBondedFundsFailureTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'staking lifecycle',
+        testFn: async () => await stakingLifecycleTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test' as const,
+        label: 'test force unstaking of nominator',
+        testFn: async () => await forceUnstakeTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'test fast unstake',
+        testFn: async () => await fastUnstakeTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set minimum validator commission',
+        testFn: async () => await setMinCommission(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set staking configs',
+        testFn: async () => await setStakingConfigsTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'force apply validator commission',
+        testFn: async () => await forceApplyValidatorCommissionTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'modify validator count',
+        testFn: async () => await modifyValidatorCountTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'chill other',
+        testFn: async () => await chillOtherTest(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set invulnerables with bad origin',
+        testFn: async () => await setInvulnerablesTestBadOrigin(chain),
+      },
+      {
+        kind: 'test' as const,
+        label: 'set invulnerables with root origin',
+        testFn: async () => await setInvulnerablesTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
+}
 
-    test('staking lifecycle', async () => {
-      await stakingLifecycleTest(chain, testConfig.addressEncoding)
-    })
+export function fullStakingTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  const basalTestTree = baseStakingE2ETests(chain, testConfig)
+  const slashingTestTree = slashingTests(chain)
 
-    test('test force unstaking of nominator', async () => {
-      await forceUnstakeTest(chain)
-    })
-
-    test('test fast unstake', async () => {
-      await fastUnstakeTest(chain, testConfig.addressEncoding)
-    })
-
-    test('set minimum validator commission', async () => {
-      await setMinCommission(chain)
-    })
-
-    test('set staking configs', async () => {
-      await setStakingConfigsTest(chain)
-    })
-
-    test('force apply validator commission', async () => {
-      await forceApplyValidatorCommissionTest(chain)
-    })
-
-    test('modify validator count', async () => {
-      await modifyValidatorCountTest(chain)
-    })
-
-    test('chill other', async () => {
-      await chillOtherTest(chain)
-    })
-
-    test('unapplied slash', async () => {
-      await unappliedSlashTest(chain)
-    })
-
-    test('cancel deferred slash with bad origin', async () => {
-      await cancelDeferredSlashTestBadOrigin(chain)
-    })
-
-    test('cancel deferred slash as root', async () => {
-      await cancelDeferredSlashTestAsRoot(chain)
-    })
-
-    test('cancel deferred slash as admin', async () => {
-      await cancelDeferredSlashTestAsAdmin(chain)
-    })
-
-    test('set invulnerables with bad origin', async () => {
-      await setInvulnerablesTestBadOrigin(chain)
-    })
-
-    test('set invulnerables with root origin', async () => {
-      await setInvulnerablesTest(chain, testConfig.addressEncoding)
-    })
-  })
+  return {
+    kind: 'describe' as const,
+    label: testConfig.testSuiteName,
+    children: [basalTestTree, slashingTestTree],
+  }
 }

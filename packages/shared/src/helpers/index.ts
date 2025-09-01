@@ -1,5 +1,5 @@
 import type { StorageValues } from '@acala-network/chopsticks'
-import { sendTransaction, withExpect } from '@acala-network/chopsticks-testing'
+import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
 import { defaultAccounts } from '@e2e-test/networks'
 
@@ -10,19 +10,43 @@ import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
-const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = withExpect((x: any) => ({
-  toMatchSnapshot(msg?: string): void {
-    expect(x).toMatchSnapshot(msg)
+const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
+  expectFn: (x: any) => ({
+    toMatchSnapshot(msg?: string): void {
+      expect(x).toMatchSnapshot(msg)
+    },
+    toMatch(value: any, _msg?: string): void {
+      expect(x).toMatch(value)
+    },
+    toMatchObject(value: any, _msg?: string): void {
+      expect(x).toMatchObject(value)
+    },
+  }),
+  redactOptions: {
+    overrides: {
+      proofSize: {
+        number: 1,
+      },
+      refTime: {
+        number: 1,
+      },
+    },
   },
-  toMatch(value: any, _msg?: string): void {
-    expect(x).toMatch(value)
-  },
-  toMatchObject(value: any, _msg?: string): void {
-    expect(x).toMatchObject(value)
-  },
-}))
+})
 
 export { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp }
+
+/**
+ * Compare two PJS objects for equality using their JSON representation.
+ * This avoids issues with metadata differences while providing detailed diff information on failure.
+ *
+ * @param actual The actual PJS object
+ * @param expected The expected PJS object
+ * @param message Optional message to display on failure
+ */
+export function expectPjsEqual(actual: any, expected: any, message?: string): void {
+  expect(actual.toJSON(), message).toEqual(expected.toJSON())
+}
 
 /**
  * Compare the selected properties of two objects.
@@ -60,7 +84,7 @@ export function objectCmp(
       } else {
         errorMessage = `${optErrorMsg}\n${msg}`
       }
-      assert(cmp, errorMessage)
+      expect(cmp, errorMessage).toBe(true)
     }
   }
 }

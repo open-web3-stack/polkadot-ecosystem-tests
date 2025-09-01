@@ -112,8 +112,8 @@ exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > t
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 290000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -129,8 +129,8 @@ exports[`polkadot & peoplePolkadot > peoplePolkadot transfer DOT to polkadot > t
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 167000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -290,8 +290,8 @@ exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > t
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 760000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -304,7 +304,7 @@ exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > t
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": "(rounded 160000000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -320,8 +320,8 @@ exports[`polkadot & peoplePolkadot > polkadot transfer DOT to peoplePolkadot > t
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 153000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

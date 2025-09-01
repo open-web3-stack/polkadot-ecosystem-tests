@@ -129,7 +129,7 @@ exports[`acala & astar > acala transfer ACA to astar > to chain xcm events 1`] =
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9400)",
+        "proofSize": "(rounded 9000)",
         "refTime": "(rounded 900000000)",
       },
     },

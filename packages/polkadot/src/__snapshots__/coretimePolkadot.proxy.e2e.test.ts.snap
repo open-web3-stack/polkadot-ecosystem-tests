@@ -75,8 +75,6 @@ exports[`Polkadot Coretime Proxy > add proxies (with/without delay) to an accoun
 ]
 `;
 
-exports[`Polkadot Coretime Proxy > add proxies (with/without delay) to an account, and remove them > events when removing all proxies from Alice 1`] = `[]`;
-
 exports[`Polkadot Coretime Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
@@ -346,6 +344,799 @@ exports[`Polkadot Coretime Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call drop_history 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0e000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call renew 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0e000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x08000000",
+            "index": 21,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call renew 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x0e000000",
+            "index": 50,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 42,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Remarked",
+    "section": "system",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet multisig, call as_multi 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 41,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch_all 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call force_batch 1`] = `
+[
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet balances, call burn 1`] = `
 [
   {
@@ -425,8 +1216,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 130000000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -458,8 +1249,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -491,8 +1282,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -543,8 +1334,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 130000000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -576,8 +1367,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -609,8 +1400,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -661,8 +1452,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 130000000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -694,8 +1485,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -727,8 +1518,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -817,8 +1608,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 130000000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -850,8 +1641,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -883,8 +1674,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -992,8 +1783,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 16000)",
-          "refTime": "(rounded 130000000000)",
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1025,8 +1816,8 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1058,806 +1849,13 @@ exports[`Polkadot Coretime Proxy > filtering tests for forbidden proxy calls > f
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
     "method": "ExtrinsicSuccess",
     "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call drop_history 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0e000000",
-            "index": 50,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call renew 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0e000000",
-            "index": 50,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x08000000",
-            "index": 21,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call renew 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x0e000000",
-            "index": 50,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x01000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 14000)",
-          "refTime": "(rounded 750000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet multisig, call as_multi 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 41,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch_all 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy > filtering tests for permitted proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call force_batch 1`] = `
-[
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
   },
 ]
 `;
@@ -1882,8 +1880,6 @@ exports[`Polkadot Coretime Proxy > perform proxy call on behalf of delegator > e
   },
 ]
 `;
-
-exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events when Alice rejects Bob's proxy call announcement 1`] = `[]`;
 
 exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
 [
@@ -1910,5 +1906,3 @@ exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events wh
   },
 ]
 `;
-
-exports[`Polkadot Coretime Proxy > proxy announcement lifecycle test > events when Bob removes their proxy call announcement 1`] = `[]`;

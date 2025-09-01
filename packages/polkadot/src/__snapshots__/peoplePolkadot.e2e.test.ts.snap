@@ -20,7 +20,7 @@ exports[`Polkadot People > adding a registrar as root from the relay chain works
     "data": {
       "dispatchInfo": {
         "class": "Mandatory",
-        "paysFee": "No",
+        "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
           "refTime": "(rounded 100000000)",
@@ -38,7 +38,7 @@ exports[`Polkadot People > adding a registrar as root from the relay chain works
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

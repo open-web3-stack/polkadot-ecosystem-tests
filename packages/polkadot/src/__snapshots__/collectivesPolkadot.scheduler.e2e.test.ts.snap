@@ -9,8 +9,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 170000)",
-          "refTime": "(rounded 1600000000)",
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -29,8 +29,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 170000)",
-          "refTime": "(rounded 1600000000)",
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -39,8 +39,6 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
   },
 ]
 `;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
@@ -63,8 +61,6 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled
   },
 ]
 `;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > empty event for cancelled task 1`] = `[]`;
 
 exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
 [
@@ -141,6 +137,13 @@ exports[`Collectives Polkadot Scheduler E2E tests > priority-based execution of 
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(redacted)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -153,8 +156,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wro
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 170000)",
-          "refTime": "(rounded 1500000000)",
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -173,8 +176,8 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 170000)",
-          "refTime": "(rounded 1400000000)",
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

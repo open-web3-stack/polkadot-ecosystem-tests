@@ -112,7 +112,7 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5100)",
+        "proofSize": "(rounded 5000)",
         "refTime": 5000000,
       },
     },
@@ -129,8 +129,8 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6200)",
-            "refTime": "(rounded 310000000)",
+            "proofSize": "(rounded 6000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -364,8 +364,8 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 330000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

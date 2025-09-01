@@ -4,36 +4,6 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
 [
   {
     "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
       "destination": {
         "interior": "Here",
         "parents": 1,
@@ -136,8 +106,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 330000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +138,8 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 270000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -195,7 +165,7 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": "(rounded 140000000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",
@@ -206,36 +176,6 @@ exports[`collectives & polkadot > Relay authorizes Collectives upgrade via Colle
 
 exports[`collectives & polkadot > Relay authorizes upgrade for itself > collectives events emitted when sending xcm 1`] = `
 [
-  {
-    "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
   {
     "data": {
       "destination": {
@@ -369,8 +309,8 @@ exports[`collectives & polkadot > Relay authorizes upgrade for itself > governin
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 270000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -504,8 +444,8 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7200)",
-        "refTime": "(rounded 290000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -521,8 +461,8 @@ exports[`collectives & polkadot > collectivesPolkadot teleport DOT to polkadot >
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 168000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -682,8 +622,8 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
     "data": {
       "dmqHead": "(hash)",
       "weightUsed": {
-        "proofSize": "(rounded 3500)",
-        "refTime": "(rounded 760000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 2000000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -695,8 +635,8 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -712,8 +652,8 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3590)",
-            "refTime": "(rounded 153000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -855,8 +795,8 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > destinatio
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 270000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -867,36 +807,6 @@ exports[`collectives & polkadot > whitelisting a call by fellowship > destinatio
 
 exports[`collectives & polkadot > whitelisting a call by fellowship > source chain events 1`] = `
 [
-  {
-    "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
   {
     "data": {
       "destination": {

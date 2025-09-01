@@ -13,6 +13,31 @@ exports[`Kusama Vesting > forced vested transfer and forced removal of vesting s
 ]
 `;
 
+exports[`Kusama Vesting > merging vesting schedules when none exist fails > merge schedules extrinsic failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 28,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Vesting > signed-origin force-vested transfer fails > force vest events 1`] = `
 [
   {
@@ -22,8 +47,8 @@ exports[`Kusama Vesting > signed-origin force-vested transfer fails > force vest
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 13000)",
-          "refTime": "(rounded 1100000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

@@ -4,36 +4,6 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
 [
   {
     "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
       "destination": {
         "interior": "Here",
         "parents": 1,
@@ -136,8 +106,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 330000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -168,8 +138,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 270000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -195,7 +165,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": "(rounded 140000000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",

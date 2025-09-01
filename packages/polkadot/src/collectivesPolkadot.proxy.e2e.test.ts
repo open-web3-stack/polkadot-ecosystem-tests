@@ -1,8 +1,10 @@
 import { collectivesPolkadot } from '@e2e-test/networks/chains'
-import { CollectivesProxyTypes, proxyE2ETests } from '@e2e-test/shared'
+import { CollectivesProxyTypes, fullProxyE2ETests, registerTestTree } from '@e2e-test/shared'
 
-proxyE2ETests(
-  collectivesPolkadot,
-  { testSuiteName: 'Polkadot Collectives Proxy', addressEncoding: 0 },
-  CollectivesProxyTypes,
+registerTestTree(
+  fullProxyE2ETests(
+    collectivesPolkadot,
+    { testSuiteName: 'Polkadot Collectives Proxy', addressEncoding: 0 },
+    CollectivesProxyTypes,
+  ),
 )

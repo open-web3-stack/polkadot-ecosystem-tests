@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -10,7 +10,7 @@ import type { PalletNominationPoolsBondedPoolInner } from '@polkadot/types/looku
 import type { Codec } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import {
   check,
@@ -98,7 +98,8 @@ async function createNominationPool(
 async function nominationPoolCreationFailureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
   const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
@@ -168,7 +169,8 @@ async function nominationPoolCreationFailureTest<
 async function nominationPoolLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
   const ferdie = defaultAccountsSr25519.keyring.addFromUri('//Ferdie')
 
   // Fund test accounts not already provisioned in the test chain spec.
@@ -210,7 +212,7 @@ async function nominationPoolLifecycleTest<
   let poolData: Option<PalletNominationPoolsBondedPoolInner> = await client.api.query.nominationPools.bondedPools(
     preLastPoolId + 1,
   )
-  assert(poolData.isNone, 'Pool should not exist before block is applied')
+  expect(poolData.isNone, 'Pool should not exist before block is applied').toBe(true)
 
   await client.dev.newBlock()
 
@@ -222,10 +224,10 @@ async function nominationPoolLifecycleTest<
   /// Check status of created pool
 
   const nomPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
-  assert(preLastPoolId + 1 === nomPoolId, 'Pool ID should be most recently available number + 1')
+  expect(preLastPoolId + 1, 'Pool ID should be most recently available number + 1').toBe(nomPoolId)
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should exist after block is applied')
+  expect(poolData.isSome, 'Pool should exist after block is applied').toBe(true)
 
   const nominationPoolPostCreation = poolData.unwrap()
   await check(nominationPoolPostCreation.commission).toMatchObject({
@@ -235,15 +237,17 @@ async function nominationPoolLifecycleTest<
     throttleFrom: null,
     claimPermission: null,
   })
-  assert(nominationPoolPostCreation.memberCounter.eq(1), 'Pool should have 1 member')
-  assert(nominationPoolPostCreation.points.eq(depositorMinBond), 'Pool should have `deposit_min_bond` points')
+  expect(nominationPoolPostCreation.memberCounter.toNumber(), 'Pool should have 1 member').toBe(1)
+  expect(nominationPoolPostCreation.points.toNumber(), 'Pool should have `deposit_min_bond` points').toBe(
+    depositorMinBond,
+  )
   await check(nominationPoolPostCreation.roles).toMatchObject({
     depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
     root: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
     nominator: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
     bouncer: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
   })
-  assert(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation')
+  expect(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation').toBe(true)
 
   /**
    * Update pool roles
@@ -259,10 +263,10 @@ async function nominationPoolLifecycleTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(updateRolesEvents, 'staking', 'nominationPools').toMatchSnapshot('update roles events')
+  await checkEvents(updateRolesEvents, 'nominationPools').toMatchSnapshot('update roles events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+  expect(poolData.isSome, 'Pool should still exist after roles are updated').toBe(true)
 
   const nominationPoolWithRoles = poolData.unwrap()
   nominationPoolCmp(nominationPoolPostCreation, nominationPoolWithRoles, ['roles'])
@@ -315,7 +319,7 @@ async function nominationPoolLifecycleTest<
 
   /// Check that all commission data were set correctly
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after commission is changed')
+  expect(poolData.isSome, 'Pool should still exist after commission is changed').toBe(true)
 
   const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
@@ -394,14 +398,14 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('join nomination pool events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after new member joins')
+  expect(poolData.isSome, 'Pool should still exist after new member joins').toBe(true)
 
   const nominationPoolWithMembers = poolData.unwrap()
-  assert(nominationPoolWithMembers.memberCounter.eq(2), 'Pool should have 2 members')
-  assert(
-    nominationPoolWithMembers.points.eq(depositorMinBond + minJoinBond),
+  expect(nominationPoolWithMembers.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
+  expect(
+    nominationPoolWithMembers.points.toNumber(),
     'Pool should have `depositor_min_bond + min_join_bond` points',
-  )
+  ).toBe(depositorMinBond + minJoinBond)
 
   nominationPoolCmp(nominationPoolWithCommission, nominationPoolWithMembers, ['memberCounter', 'points'])
 
@@ -424,9 +428,8 @@ async function nominationPoolLifecycleTest<
   const nominationPoolWithExtraBond = poolData.unwrap()
 
   nominationPoolCmp(nominationPoolWithMembers, nominationPoolWithExtraBond, ['points'])
-  assert(
-    nominationPoolWithExtraBond.points.eq(depositorMinBond + 2 * minJoinBond - 1),
-    'Incorrect pool point count after bond_extra',
+  expect(nominationPoolWithExtraBond.points.toNumber(), 'Incorrect pool point count after bond_extra').toBe(
+    depositorMinBond + 2 * minJoinBond - 1,
   )
 
   /**
@@ -446,13 +449,13 @@ async function nominationPoolLifecycleTest<
 
   let events = await client.api.query.system.events()
 
-  assert(
+  expect(
     events.filter((record) => {
       const { event } = record
       return event.section === 'nominationPools'
-    }).length === 0,
+    }).length,
     'claiming a fresh pool\'s commission will not emit any "nomination pools" events, as it the extrinsic fails',
-  )
+  ).toBe(0)
 
   const [systemEvent] = events.filter((record) => {
     const { event } = record
@@ -481,10 +484,10 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('unbond events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after funds are unbonded')
+  expect(poolData.isSome, 'Pool should still exist after funds are unbonded').toBe(true)
   const nominationPoolPostUnbond = poolData.unwrap()
 
-  assert(nominationPoolPostUnbond.points.eq(depositorMinBond + minJoinBond))
+  expect(nominationPoolPostUnbond.points.toNumber()).toBe(depositorMinBond + minJoinBond)
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 
   /**
@@ -503,7 +506,7 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('chill events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after chill')
+  expect(poolData.isSome, 'Pool should still exist after chill').toBe(true)
 
   const nominationPoolPostChill = poolData.unwrap()
 
@@ -523,11 +526,11 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('set state events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after state is changed')
+  expect(poolData.isSome, 'Pool should still exist after state is changed').toBe(true)
 
   const nominationPoolBlocked = poolData.unwrap()
 
-  assert(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked')
+  expect(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked').toBe(true)
   nominationPoolCmp(nominationPoolPostUnbond, nominationPoolBlocked, ['state'])
 
   /**
@@ -544,14 +547,14 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('unbond (kick) events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after bouncer-unbond')
+  expect(poolData.isSome, 'Pool should still exist after bouncer-unbond').toBe(true)
   const nominationPoolPostKick = poolData.unwrap()
 
   nominationPoolCmp(nominationPoolBlocked, nominationPoolPostKick, ['points'])
-  assert(nominationPoolPostKick.points.eq(depositorMinBond))
+  expect(nominationPoolPostKick.points.toNumber()).toBe(depositorMinBond)
   // Although the bouncer has forcefully unbonded the member, they are still counted as a member
   // until the unbonding period (28/7 eras (Polkadot/Kusama)) has passed, and they withdraw.
-  assert(nominationPoolPostKick.memberCounter.eq(2))
+  expect(nominationPoolPostKick.memberCounter.toNumber()).toBe(2)
 
   /**
    * Set pool state to `Destroying`
@@ -567,10 +570,10 @@ async function nominationPoolLifecycleTest<
     .toMatchSnapshot('set state to destroying events')
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome, 'Pool should still exist after state is changed')
+  expect(poolData.isSome, 'Pool should still exist after state is changed').toBe(true)
 
   const nominationPoolDestroying = poolData.unwrap()
-  assert(nominationPoolDestroying.state.isDestroying)
+  expect(nominationPoolDestroying.state.isDestroying).toBe(true)
   nominationPoolCmp(nominationPoolPostKick, nominationPoolDestroying, ['state'])
 
   /**
@@ -608,7 +611,7 @@ async function nominationPoolLifecycleTest<
   /// Check that the pool state is unchanged after the failed unbonding attempt.
 
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
-  assert(poolData.isSome)
+  expect(poolData.isSome).toBe(true)
 
   const nominationPoolPostDepositorUnbond = poolData.unwrap()
   nominationPoolCmp(nominationPoolDestroying, nominationPoolPostDepositorUnbond, [])
@@ -622,7 +625,9 @@ async function nominationPoolLifecycleTest<
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
 
   const createNomPoolEvents = await createNominationPool(
@@ -638,7 +643,7 @@ async function nominationPoolSetMetadataTest<
   const poolData: Option<PalletNominationPoolsBondedPoolInner> = await client.api.query.nominationPools.bondedPools(
     preLastPoolId + 1,
   )
-  assert(poolData.isNone, 'Pool should not exist before block is applied')
+  expect(poolData.isNone, 'Pool should not exist before block is applied').toBe(true)
 
   await client.dev.newBlock()
 
@@ -653,7 +658,7 @@ async function nominationPoolSetMetadataTest<
 
   let metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
-  assert(metadata.eq(''), 'Pool should not have metadata')
+  expect(metadata.toString(), 'Pool should not have metadata').toBe('0x')
 
   /// Set pool's metadata
 
@@ -670,7 +675,7 @@ async function nominationPoolSetMetadataTest<
 
   metadata = await client.api.query.nominationPools.metadata(nomPoolId)
 
-  assert(metadata.eq('Test pool #1, welcome'), 'Pool should have the correct metadata set')
+  expect(metadata.toHuman(), 'Pool should have the correct metadata set').toBe('Test pool #1, welcome')
 }
 
 /**
@@ -680,7 +685,9 @@ async function nominationPoolSetMetadataTest<
 async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const firstPoolId = preLastPoolId + 1
 
@@ -719,10 +726,10 @@ async function nominationPoolDoubleJoinError<
     .toMatchSnapshot('join nomination pool events')
 
   let poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)
-  assert(poolData.isSome, 'Pool should still exist after new member joins')
+  expect(poolData.isSome, 'Pool should still exist after new member joins').toBe(true)
 
   const nominationPoolWithMembers = poolData.unwrap()
-  assert(nominationPoolWithMembers.memberCounter.eq(2), 'Pool should have 2 members')
+  expect(nominationPoolWithMembers.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
 
   /**
    * Create a second pool
@@ -774,20 +781,20 @@ async function nominationPoolDoubleJoinError<
    */
 
   poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)
-  assert(poolData.isSome, 'Pool should still exist after failed join')
+  expect(poolData.isSome, 'Pool should still exist after failed join').toBe(true)
 
   const nominationPoolWithMembersAfterError = poolData.unwrap()
-  assert(nominationPoolWithMembersAfterError.memberCounter.eq(2), 'Pool should have 2 members')
+  expect(nominationPoolWithMembersAfterError.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
 
   /**
    * Check that Eve is not a member of the second pool
    */
 
   poolData = await client.api.query.nominationPools.bondedPools(secondPoolId)
-  assert(poolData.isSome, 'Pool should still exist after failed join')
+  expect(poolData.isSome, 'Pool should still exist after failed join').toBe(true)
 
   const secondNominationPoolAfterFailedJoin = poolData.unwrap()
-  assert(secondNominationPoolAfterFailedJoin.memberCounter.eq(1), 'Pool should have 1 member')
+  expect(secondNominationPoolAfterFailedJoin.memberCounter.toNumber(), 'Pool should have 1 member').toBe(1)
 }
 
 /**
@@ -805,7 +812,9 @@ async function nominationPoolDoubleJoinError<
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
   const one = new u32(client.api.registry, 1)
 
   const preMinJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
@@ -845,7 +854,7 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
+    await scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
 
     await client.dev.newBlock()
 
@@ -860,12 +869,12 @@ async function nominationPoolGlobalConfigTest<
     const postMaxMembersPerPool = (await client.api.query.nominationPools.maxPoolMembersPerPool()).unwrap().toNumber()
     const postGlobalMaxCommission = (await client.api.query.nominationPools.globalMaxCommission()).unwrap().toNumber()
 
-    assert(postMinJoinBond === preMinJoinBond + inc)
-    assert(postMinCreateBond === preMinCreateBond + inc)
-    assert(postMaxPoolsOpt === preMaxPoolsOpt + inc)
-    assert(postMaxMembersOpt === preMaxMembersOpt + inc)
-    assert(postMaxMembersPerPool === preMaxMembersPerPool + inc)
-    assert(postGlobalMaxCommission === preGlobalMaxCommission + inc)
+    expect(postMinJoinBond).toBe(preMinJoinBond + inc)
+    expect(postMinCreateBond).toBe(preMinCreateBond + inc)
+    expect(postMaxPoolsOpt).toBe(preMaxPoolsOpt + inc)
+    expect(postMaxMembersOpt).toBe(preMaxMembersOpt + inc)
+    expect(postMaxMembersPerPool).toBe(preMaxMembersPerPool + inc)
+    expect(postGlobalMaxCommission).toBe(preGlobalMaxCommission + inc)
   }
 }
 
@@ -881,7 +890,9 @@ async function nominationPoolGlobalConfigTest<
 async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
 
@@ -935,7 +946,7 @@ async function nominationPoolsUpdateRolesTest<
   await checkEvents(updateRolesEvents, 'nominationPools').toMatchSnapshot('update roles events')
 
   poolData = await client.api.query.nominationPools.bondedPools(poolId)
-  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+  expect(poolData.isSome, 'Pool should still exist after roles are updated').toBe(true)
 
   const nominationPoolWithRoles = poolData.unwrap()
 
@@ -998,7 +1009,7 @@ async function nominationPoolsUpdateRolesTest<
   await checkEvents(updateRolesRemoveSelfEvents, 'nominationPools').toMatchSnapshot('update roles remove self events')
 
   poolData = await client.api.query.nominationPools.bondedPools(poolId)
-  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+  expect(poolData.isSome, 'Pool should still exist after roles are updated').toBe(true)
 
   const nominationPoolWithoutRoot = poolData.unwrap()
 
@@ -1022,7 +1033,7 @@ async function nominationPoolsUpdateRolesTest<
     { Set: defaultAccountsSr25519.eve.address },
   )
 
-  scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1036,7 +1047,7 @@ async function nominationPoolsUpdateRolesTest<
   await check(nomPoolsEvents, 'nominationPools').toMatchSnapshot('update pool roles via scheduler pallet')
 
   poolData = await client.api.query.nominationPools.bondedPools(poolId)
-  assert(poolData.isSome, 'Pool should still exist after roles are updated')
+  expect(poolData.isSome, 'Pool should still exist after roles are updated').toBe(true)
 
   const nominationPoolUpdatedRoles = poolData.unwrap()
 
@@ -1050,35 +1061,47 @@ async function nominationPoolsUpdateRolesTest<
   })
 }
 
-export function nominationPoolsE2ETests<
+export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    const [client] = await setupNetworks(chain)
-
-    test('nomination pool lifecycle test', async () => {
-      await nominationPoolLifecycleTest(client, testConfig.addressEncoding)
-    })
-
-    test('nomination pool creation with insufficient funds', async () => {
-      await nominationPoolCreationFailureTest(client)
-    })
-
-    test('nomination pool metadata test', async () => {
-      await nominationPoolSetMetadataTest(client)
-    })
-
-    test('nomination pool double join test: an account can only ever be in one pool at a time', async () => {
-      await nominationPoolDoubleJoinError(client)
-    })
-
-    test('nomination pool global config test', async () => {
-      await nominationPoolGlobalConfigTest(client)
-    })
-
-    test('nomination pools update roles test', async () => {
-      await nominationPoolsUpdateRolesTest(client, testConfig.addressEncoding)
-    })
-  })
+>(
+  chain: Chain<TCustom, TInitStoragesRelay>,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test',
+        label: 'nomination pool lifecycle test',
+        testFn: async () => await nominationPoolLifecycleTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool creation with insufficient funds',
+        testFn: async () => await nominationPoolCreationFailureTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool metadata test',
+        testFn: async () => await nominationPoolSetMetadataTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool double join test: an account can only ever be in one pool at a time',
+        testFn: async () => await nominationPoolDoubleJoinError(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool global config test',
+        testFn: async () => await nominationPoolGlobalConfigTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pools update roles test',
+        testFn: async () => await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
 }

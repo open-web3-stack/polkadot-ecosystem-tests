@@ -5,9 +5,10 @@ import { setupNetworks } from '@e2e-test/shared'
 
 import { encodeAddress } from '@polkadot/util-crypto'
 
-import { assert, describe, expect, test } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import { checkEvents } from './helpers/index.js'
+import type { RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -767,7 +768,7 @@ async function minimumThresholdCancelTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -830,7 +831,7 @@ async function minimumThresholdAsMultiTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MinimumThreshold.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -941,7 +942,7 @@ async function approveAsMultiAlreadyApprovedTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.AlreadyApproved.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -993,7 +994,7 @@ async function tooFewSignatoriesTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.TooFewSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.TooFewSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1060,7 +1061,7 @@ async function tooManySignatoriesTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.TooManySignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1158,7 +1159,7 @@ async function signatoriesOutOfOrderInExecutionTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1258,7 +1259,7 @@ async function cancelWithSignatoriesOutOfOrderTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1353,7 +1354,7 @@ async function signatoriesOutOfOrderInApprovalTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SignatoriesOutOfOrder.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1415,7 +1416,7 @@ async function senderInSignatoriesInExecutionTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1508,7 +1509,7 @@ async function senderInSignatoriesInCancellationTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1602,7 +1603,7 @@ async function senderInSignatoriesInApprovalTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.SenderInSignatories.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1699,7 +1700,7 @@ async function notFoundCancelTest<
   const dispatchError1 = ev1.event.data.dispatchError
 
   assert(dispatchError1.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError1.asModule))
+  expect(client.api.errors.multisig.NotFound.is(dispatchError1.asModule)).toBeTruthy()
 
   // Second attempt: Alice tries to cancel with a bogus call hash
 
@@ -1736,7 +1737,7 @@ async function notFoundCancelTest<
   const dispatchError2 = ev2.event.data.dispatchError
 
   assert(dispatchError2.isModule)
-  assert(client.api.errors.multisig.NotFound.is(dispatchError2.asModule))
+  expect(client.api.errors.multisig.NotFound.is(dispatchError2.asModule)).toBeTruthy()
 }
 
 /**
@@ -1830,7 +1831,7 @@ async function notOwnerCancelTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.NotOwner.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.NotOwner.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1887,15 +1888,14 @@ async function noTimepointTest<
     maxWeight,
   )
 
-  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with `approveAsMulti`')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords = await client.api.query.system.events()
+  const filteredApproveEvents = eventRecords.filter((record) => record.event.section === 'multisig')
+  expect(filteredApproveEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -1909,7 +1909,7 @@ async function noTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.NoTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.NoTimepoint.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -1982,15 +1982,14 @@ async function wrongTimepointTest<
     maxWeight,
   )
 
-  let approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with wrong block number')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords1 = await client.api.query.system.events()
+  const filteredEvents = eventRecords1.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2004,7 +2003,7 @@ async function wrongTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.WrongTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.WrongTimepoint.is(dispatchError.asModule)).toBeTruthy()
 
   // Bob calls asMulti again but uses correct block number with incorrect extrinsic index
   const approveTx2 = client.api.tx.multisig.asMulti(
@@ -2018,15 +2017,14 @@ async function wrongTimepointTest<
     maxWeight,
   )
 
-  approveEvents = await sendTransaction(approveTx2.signAsync(bob))
+  await sendTransaction(approveTx2.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with wrong extrinsic index')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords2 = await client.api.query.system.events()
+  const filteredEvents2 = eventRecords2.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents2.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2040,7 +2038,7 @@ async function wrongTimepointTest<
   const dispatchError2 = ev2.event.data.dispatchError
 
   assert(dispatchError2.isModule)
-  assert(client.api.errors.multisig.WrongTimepoint.is(dispatchError2.asModule))
+  expect(client.api.errors.multisig.WrongTimepoint.is(dispatchError2.asModule)).toBeTruthy()
 }
 
 /**
@@ -2089,15 +2087,14 @@ async function unexpectedTimepointTest<
     maxWeight,
   )
 
-  const approveEvents = await sendTransaction(asMultiTx.signAsync(alice))
+  await sendTransaction(asMultiTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Alice starts multisig operation with `approveAsMulti`')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords3 = await client.api.query.system.events()
+  const filteredUnexpectedEvents = eventRecords3.filter((record) => record.event.section === 'multisig')
+  expect(filteredUnexpectedEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   const events = await client.api.query.system.events()
@@ -2111,7 +2108,7 @@ async function unexpectedTimepointTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.UnexpectedTimepoint.is(dispatchError.asModule)).toBeTruthy()
 }
 
 /**
@@ -2183,15 +2180,14 @@ async function maxWeightTooLowTest<
     { refTime: 1, proofSize: 1 }, // Max weight too low
   )
 
-  const approveEvents = await sendTransaction(approveTx.signAsync(bob))
+  await sendTransaction(approveTx.signAsync(bob))
 
   await client.dev.newBlock()
 
-  await checkEvents(approveEvents, 'multisig')
-    .redact({
-      redactKeys: /height/,
-    })
-    .toMatchSnapshot('events when Bob executes multisig operation with low weight')
+  // Manually check that there are no multisig events in the transaction result
+  const eventRecords4 = await client.api.query.system.events()
+  const filteredEvents = eventRecords4.filter((record) => record.event.section === 'multisig')
+  expect(filteredEvents.length).toBe(0)
 
   // Check for ExtrinsicFailed event
   events = await client.api.query.system.events()
@@ -2205,104 +2201,162 @@ async function maxWeightTooLowTest<
   const dispatchError = ev.event.data.dispatchError
 
   assert(dispatchError.isModule)
-  assert(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule))
+  expect(client.api.errors.multisig.MaxWeightTooLow.is(dispatchError.asModule)).toBeTruthy()
 }
 
-export function multisigE2ETests<
+export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }) {
-  describe(testConfig.testSuiteName, async () => {
-    // Success tests
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'success tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'basic 2-of-3 multisig creation and execution',
+        testFn: () => basicMultisigTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'multisig cancellation works',
+        testFn: () => multisigCancellationTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label:
+          'second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution',
+        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding),
+      },
+      {
+        kind: 'test',
+        label: 'final approval with `approveAsMulti` does not lead to execution',
+        testFn: () => finalApprovalApproveAsMultiTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'beginning multisig approval with `approveAsMulti` works',
+        testFn: () => approveAsMultiFirstTest(chain, testConfig.addressEncoding),
+      },
+    ],
+  }
+}
 
-    test('basic 2-of-3 multisig creation and execution', async () => {
-      await basicMultisigTest(chain, testConfig.addressEncoding)
-    })
+export function failureMultisigE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'failure tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'multisig cancellation with threshold < 2 fails',
+        testFn: () => minimumThresholdCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'creating a multisig with threshold < 2 fails',
+        testFn: () => minimumThresholdAsMultiTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'repeated approval with `approveAsMulti` fails',
+        testFn: () => approveAsMultiAlreadyApprovedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig creation with too few signatories fails',
+        testFn: () => tooFewSignatoriesTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig creation with too many signatories fails',
+        testFn: () => tooManySignatoriesTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig execution with remaining signatories out of order fails',
+        testFn: () => signatoriesOutOfOrderInExecutionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'multisig cancellation with remaining signatories out of order fails',
+        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with signatories out of order fails',
+        testFn: () => signatoriesOutOfOrderInApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'execution with sender in signatories fails',
+        testFn: () => senderInSignatoriesInExecutionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancellation with sender in signatories fails',
+        testFn: () => senderInSignatoriesInCancellationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with sender in signatories fails',
+        testFn: () => senderInSignatoriesInApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'cancelling a non-existent multisig operation fails',
+        testFn: () => notFoundCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'non-depositor tries to cancel multisig fails',
+        testFn: () => notOwnerCancelTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval without timepoint fails',
+        testFn: () => noTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with wrong timepoint fails',
+        testFn: () => wrongTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'first call with unexpected timepoint fails',
+        testFn: () => unexpectedTimepointTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'approval with max weight too low fails',
+        testFn: () => maxWeightTooLowTest(chain),
+      },
+    ],
+  }
+}
 
-    test('multisig cancellation works', async () => {
-      await multisigCancellationTest(chain, testConfig.addressEncoding)
-    })
-
-    test('second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution', async () => {
-      await approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding)
-    })
-
-    test('final approval with `approveAsMulti` does not lead to execution', async () => {
-      await finalApprovalApproveAsMultiTest(chain)
-    })
-
-    test('beginning multisig approval with `approveAsMulti` works', async () => {
-      await approveAsMultiFirstTest(chain, testConfig.addressEncoding)
-    })
-
-    // Failure tests (ordered by error enum variants)
-
-    test('multisig cancellation with threshold < 2 fails', async () => {
-      await minimumThresholdCancelTest(chain)
-    })
-
-    test('creating a multisig with threshold < 2 fails', async () => {
-      await minimumThresholdAsMultiTest(chain)
-    })
-
-    test('repeated approval with `approveAsMulti` fails', async () => {
-      await approveAsMultiAlreadyApprovedTest(chain)
-    })
-
-    test('multisig creation with too few signatories fails', async () => {
-      await tooFewSignatoriesTest(chain)
-    })
-
-    test('multisig creation with too many signatories fails', async () => {
-      await tooManySignatoriesTest(chain)
-    })
-
-    test('multisig execution with remaining signatories out of order fails', async () => {
-      await signatoriesOutOfOrderInExecutionTest(chain)
-    })
-
-    test('multisig cancellation with remaining signatories out of order fails', async () => {
-      await cancelWithSignatoriesOutOfOrderTest(chain)
-    })
-
-    test('approval with signatories out of order fails', async () => {
-      await signatoriesOutOfOrderInApprovalTest(chain)
-    })
-
-    test('execution with sender in signatories fails', async () => {
-      await senderInSignatoriesInExecutionTest(chain)
-    })
-
-    test('cancellation with sender in signatories fails', async () => {
-      await senderInSignatoriesInCancellationTest(chain)
-    })
-
-    test('approval with sender in signatories fails', async () => {
-      await senderInSignatoriesInApprovalTest(chain)
-    })
-
-    test('cancelling a non-existent multisig operation fails', async () => {
-      await notFoundCancelTest(chain)
-    })
-
-    test('non-depositor tries to cancel multisig fails', async () => {
-      await notOwnerCancelTest(chain)
-    })
-
-    test('approval without timepoint fails', async () => {
-      await noTimepointTest(chain)
-    })
-
-    test('approval with wrong timepoint fails', async () => {
-      await wrongTimepointTest(chain)
-    })
-
-    test('first call with unexpected timepoint fails', async () => {
-      await unexpectedTimepointTest(chain)
-    })
-
-    test('approval with max weight too low fails', async () => {
-      await maxWeightTooLowTest(chain)
-    })
-  })
+/**
+ * Default set of multisig end-to-end tests.
+ *
+ * Includes both success and failure cases.
+ * A test tree structure allows some extensibility in case a chain needs to
+ * change/add/remove default tests.
+ *
+ * @param chain - The chain to test.
+ * @param testConfig - Test configuration data - address encoding, top-level test suite name, etc.
+ * @returns A test tree structure.
+ */
+export function baseMultisigE2Etests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [successMultisigE2ETests(chain, testConfig), failureMultisigE2ETests(chain)],
+  }
 }

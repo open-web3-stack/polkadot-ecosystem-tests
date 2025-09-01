@@ -1,12 +1,14 @@
 import { collectivesPolkadot, polkadot } from '@e2e-test/networks/chains'
-import { collectivesChainE2ETests, setupNetworks } from '@e2e-test/shared'
+import { baseCollectivesChainE2ETests, registerTestTree, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe, test } from 'vitest'
 
-collectivesChainE2ETests(polkadot, collectivesPolkadot, { testSuiteName: 'collectives & polkadot' })
+registerTestTree(
+  baseCollectivesChainE2ETests(polkadot, collectivesPolkadot, { testSuiteName: 'collectives & polkadot' }),
+)
 
 describe('collectives & polkadot', async () => {
   const [polkadotClient, collectivesClient] = await setupNetworks(polkadot, collectivesPolkadot)

@@ -1,4 +1,4 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { vestingE2ETests } from '@e2e-test/shared'
+import { registerTestTree, relayVestingE2ETests } from '@e2e-test/shared'
 
-vestingE2ETests(polkadot, { testSuiteName: 'Polkadot Vesting', addressEncoding: 0 })
+registerTestTree(relayVestingE2ETests(polkadot, { testSuiteName: 'Polkadot Vesting', addressEncoding: 0 }))
