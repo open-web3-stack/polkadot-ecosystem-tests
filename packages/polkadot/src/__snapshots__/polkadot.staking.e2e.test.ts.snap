@@ -823,9 +823,9 @@ exports[`Polkadot Staking > slashing tests > unapplied slash > alice funds post 
 exports[`Polkadot Staking > slashing tests > unapplied slash > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 97499867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 2500000000000,
 }
 `;
 
@@ -843,9 +843,9 @@ exports[`Polkadot Staking > slashing tests > unapplied slash > bob funds post sl
 exports[`Polkadot Staking > slashing tests > unapplied slash > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 97499867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 2500000000000,
 }
 `;
 
@@ -861,9 +861,9 @@ exports[`Polkadot Staking > slashing tests > unapplied slash > charlie funds pos
 exports[`Polkadot Staking > slashing tests > unapplied slash > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999867589258,
+  "free": 97499867589258,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 2500000000000,
 }
 `;
 

@@ -823,9 +823,9 @@ exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post sl
 exports[`Kusama Staking > slashing tests > unapplied slash > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99899557923553,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 100000000000,
 }
 `;
 
@@ -843,9 +843,9 @@ exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slas
 exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99899557923553,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 100000000000,
 }
 `;
 
@@ -861,9 +861,9 @@ exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post 
 exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99899557923553,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 100000000000,
 }
 `;
 

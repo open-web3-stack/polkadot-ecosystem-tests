@@ -13,6 +13,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
+import { match } from 'ts-pattern'
 import {
   check,
   checkEvents,
@@ -1235,17 +1236,35 @@ async function chillOtherTest<
 async function unappliedSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
   const dave = testAccounts.dave
 
+  let eraChangeBlock: number | undefined
+  // Only move to era change if running on a relay chain. If not, this is running on a post-migration Asset Hub,
+  // in which this is unnecessary.
+  if (testConfig.relayOrPara === 'Relay') {
+    eraChangeBlock = await locateEraChange(client)
+    if (eraChangeBlock === undefined) {
+      // This test only makes sense to run if there's an active era.
+      console.warn('Unable to find era change block, skipping unapplied slash test')
+      return
+    }
+
+    // Go to the block just before the one in which the era changes, in order to modify the staking ledger with the
+    // accounts that will be slashed.
+    // If this isn't done, the slash will not be applied.
+    await client.dev.setHead(eraChangeBlock - 1)
+  }
+
   const balances = 10000e10
   await client.dev.setStorage({
     System: {
       account: [
+        [[alice.address], { providers: 1, data: { free: balances } }],
         [[bob.address], { providers: 1, data: { free: balances } }],
         [[charlie.address], { providers: 1, data: { free: balances } }],
       ],
@@ -1263,36 +1282,60 @@ async function unappliedSlashTest<
   await client.dev.newBlock()
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-  const slashKey = [
-    alice.address,
-    // perbill, not relevant for the test
-    0,
-    // page index, not relevant either
-    0,
-  ]
+  let slashKey: any
+  let slashValue: any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      slashKey = [activeEra + 1]
+
+      slashValue = [
+        {
+          validator: alice.address,
+          // Less than the bonded funds.
+          own: slashAmount,
+          others: [
+            // Exactly the bonded funds.
+            [bob.address, slashAmount * 2],
+            // More than the bonded funds.
+            [charlie.address, slashAmount * 3],
+          ],
+          reporters: [dave.address],
+          payout: bondAmount,
+        },
+      ]
+    })
+    .with('Para', () => {
+      const slashKeyNewComponent = [
+        alice.address,
+        // perbill, not relevant for the test
+        0,
+        // page index, not relevant either
+        0,
+      ]
+
+      slashKey = [activeEra, slashKeyNewComponent]
+
+      slashValue = {
+        validator: alice.address,
+        // Less than the bonded funds.
+        own: slashAmount,
+        others: [
+          // Exactly the bonded funds.
+          [bob.address, slashAmount * 2],
+          // More than the bonded funds.
+          [charlie.address, slashAmount * 3],
+        ],
+        reporter: dave.address,
+        payout: bondAmount,
+      }
+    })
+    .exhaustive()
 
   // Insert a slash into storage. The accounts named here as validators/nominators need not have called
   // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
   await client.dev.setStorage({
     Staking: {
-      UnappliedSlashes: [
-        [
-          [activeEra, slashKey],
-          {
-            validator: alice.address,
-            // Less than the bonded funds.
-            own: slashAmount,
-            others: [
-              // Exactly the bonded funds.
-              [bob.address, slashAmount * 2],
-              // More than the bonded funds.
-              [charlie.address, slashAmount * 3],
-            ],
-            reporter: dave.address,
-            payout: bondAmount,
-          },
-        ],
-      ],
+      UnappliedSlashes: [[slashKey, slashValue]],
     },
   })
 
@@ -1789,7 +1832,7 @@ export function slashingTests<
       {
         kind: 'test',
         label: 'unapplied slash',
-        testFn: async () => await unappliedSlashTest(chain),
+        testFn: async () => await unappliedSlashTest(chain, testConfig),
       },
       {
         kind: 'test',
