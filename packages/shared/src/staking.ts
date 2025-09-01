@@ -1347,6 +1347,12 @@ async function unappliedSlashTest<
   expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
   expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
+  if (testConfig.relayOrPara === 'Para') {
+    // Manually apply the slash.
+    const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
+    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  }
+
   await client.dev.newBlock()
 
   await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
