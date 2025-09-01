@@ -1,7 +1,7 @@
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
-import { defaultAccounts } from '@e2e-test/networks'
+import { Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -9,6 +9,8 @@ import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
+
+import { match } from 'ts-pattern'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
   expectFn: (x: any) => ({
@@ -90,11 +92,21 @@ export function objectCmp(
 }
 
 /**
+ * This enum is used when scheduling calls, to know whether the scheduling is:
+ * 1. on a relay chain, using an RPC call to get the current block number, or
+ * 2. on a system parachain, using that parachain's last known relay chain block number.
+ */
+export type RelayOrPara = 'Relay' | 'Para'
+
+/**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
  *
  * The call can be either an inline call or a lookup call, which in the latter case *must* have been noted
  * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
+ *
+ * @param relayOrPara Whether the call is being scheduled on a parachain. This parachain's runtime *must* have the
+ * scheduler pallet available.
  */
 export async function scheduleCallWithOrigin(
   client: {
@@ -112,14 +124,17 @@ export async function scheduleCallWithOrigin(
         }
       },
   origin: any,
+  relayOrPara: RelayOrPara = 'Relay',
 ) {
-  const number = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const scheduledBlock = await match(relayOrPara)
+    .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .otherwise(async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
 
   await client.dev.setStorage({
     Scheduler: {
       agenda: [
         [
-          [number + 1],
+          [scheduledBlock],
           [
             {
               call,
@@ -145,8 +160,9 @@ export async function scheduleInlineCallWithOrigin(
   },
   encodedCall: HexString,
   origin: any,
+  relayOrPara: RelayOrPara = 'Relay',
 ) {
-  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin)
+  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, relayOrPara)
 }
 
 /**
@@ -162,8 +178,9 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
+  isParachain: RelayOrPara = 'Relay',
 ) {
-  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin)
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, isParachain)
 }
 
 /**
@@ -335,4 +352,10 @@ export async function setValidatorsStorage(
       ]),
     },
   })
+}
+
+export interface TestConfig {
+  testSuiteName: string
+  addressEncoding: number
+  relayOrPara: RelayOrPara
 }

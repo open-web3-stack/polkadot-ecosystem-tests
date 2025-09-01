@@ -124,7 +124,7 @@ export async function cancelScheduledTaskBadOriginTest<
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, call)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -170,7 +170,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, call)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -215,7 +215,7 @@ export async function scheduledCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -276,7 +276,7 @@ export async function scheduledNamedCallExecutes<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 2, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -335,7 +335,7 @@ export async function cancelScheduledTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -346,7 +346,7 @@ export async function cancelScheduledTask<
 
   const cancelTx = client.api.tx.scheduler.cancel(currBlockNumber + 2, 0)
 
-  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -387,7 +387,7 @@ export async function cancelScheduledNamedTask<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, currBlockNumber + 3, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -398,7 +398,7 @@ export async function cancelScheduledNamedTask<
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
-  scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -439,7 +439,7 @@ export async function scheduleTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.scheduleAfter(1, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -505,7 +505,7 @@ export async function scheduleNamedTaskAfterDelay<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, 1, null, 0, adjustIssuanceTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
   currBlockNumber += 1
@@ -583,7 +583,7 @@ export async function scheduledOverweightCallFails<
   let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const scheduleTx = client.api.tx.scheduler.schedule(currBlockNumber + 2, null, 0, withWeightTx)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -813,7 +813,7 @@ async function testPeriodicTask<
 ) {
   const [client] = await setupNetworks(chain)
 
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -1123,7 +1123,7 @@ export async function scheduleWithRetryConfig<
 
   // Schedule the task first
   const scheduleTx = client.api.tx.scheduler.schedule(initialBlockNumber + 3, null, 1, failingTx)
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   // Move to scheduling block
   await client.dev.newBlock()
@@ -1140,7 +1140,7 @@ export async function scheduleWithRetryConfig<
     retryConfig.totalRetries,
     retryConfig.period,
   )
-  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1176,7 +1176,7 @@ export async function scheduleWithRetryConfig<
   })
 
   const cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 6, 0])
-  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1240,7 +1240,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Schedule the named task first
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, initialBlockNumber + 3, null, 1, failingTx)
-  scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' })
 
   // Move to scheduling block
   await client.dev.newBlock()
@@ -1253,7 +1253,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Set retry configuration
   const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
-  scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1293,7 +1293,7 @@ export async function scheduleNamedWithRetryConfig<
   })
 
   let cancelRetryTx = client.api.tx.scheduler.cancelRetryNamed(taskId)
-  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -1347,7 +1347,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Cancel the retry configuration with `cancelRetry`
   cancelRetryTx = client.api.tx.scheduler.cancelRetry([initialBlockNumber + 9, 0])
-  scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

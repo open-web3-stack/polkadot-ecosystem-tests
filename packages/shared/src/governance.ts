@@ -546,7 +546,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 
@@ -795,7 +795,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
 
   await client.dev.newBlock()
 

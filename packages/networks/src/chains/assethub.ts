@@ -47,7 +47,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[testAccounts.alice.address], { providers: 1, data: { free: 110000n * 10n ** 10n } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
     ],
   },
   Assets: {
