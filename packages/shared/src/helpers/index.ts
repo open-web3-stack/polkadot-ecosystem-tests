@@ -1,7 +1,7 @@
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
-import { Chain, defaultAccounts } from '@e2e-test/networks'
+import { defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'

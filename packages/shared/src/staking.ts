@@ -216,13 +216,16 @@ async function stakingLifecycleTest<
     validators.push(validator)
   }
 
-  const minValBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  let minValBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
   const ed = client.api.consts.balances.existentialDeposit.toBigInt()
+  if (minValBond === 0n) {
+    minValBond = ed * 10n ** 5n
+  }
 
   await client.dev.setStorage({
     System: {
-      // Min val bond + 10 for fees
-      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 10n } }]),
+      // Min val bond + 100 EDs for fees (to be safe)
+      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 100n } }]),
     },
   })
 
@@ -452,7 +455,11 @@ async function forceUnstakeTest<
   const bob = testAccounts.bob
 
   const minNominatorBond = (await client.api.query.staking.minNominatorBond()).toBigInt()
-  const minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  let minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  const ed = client.api.consts.balances.existentialDeposit.toBigInt()
+  if (minValidatorBond === 0n) {
+    minValidatorBond = ed * 10n ** 5n
+  }
 
   await client.dev.setStorage({
     System: {
@@ -826,7 +833,11 @@ async function forceApplyValidatorCommissionTest<
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
-  const minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  let minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  const ed = client.api.consts.balances.existentialDeposit.toBigInt()
+  if (minValidatorBond === 0n) {
+    minValidatorBond = ed * 10n ** 5n
+  }
 
   await client.dev.setStorage({
     System: {
@@ -1046,7 +1057,11 @@ async function chillOtherTest<
   /// Rquired information for this test, to set appropriate thresholds later
 
   const minNominatorBond = (await client.api.query.staking.minNominatorBond()).toBigInt()
-  const minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  let minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  const ed = client.api.consts.balances.existentialDeposit.toBigInt()
+  if (minValidatorBond === 0n) {
+    minValidatorBond = ed * 10n ** 5n
+  }
 
   const minValidatorCommission = await client.api.query.staking.minCommission()
 
@@ -1622,7 +1637,11 @@ async function setInvulnerablesTest<
   const charlie = testAccounts.charlie
   const dave = testAccounts.dave
 
-  const minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  let minValidatorBond = (await client.api.query.staking.minValidatorBond()).toBigInt()
+  const ed = client.api.consts.balances.existentialDeposit.toBigInt()
+  if (minValidatorBond === 0n) {
+    minValidatorBond = ed * 10n ** 5n
+  }
   const bondAmount = minValidatorBond + minValidatorBond / 10n
 
   await client.dev.setStorage({

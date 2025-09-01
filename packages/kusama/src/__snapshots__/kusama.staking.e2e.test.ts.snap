@@ -490,7 +490,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > kick events 1
 [
   {
     "data": {
-      "nominator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "nominator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Kicked",
@@ -504,7 +504,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > nominator bon
   {
     "data": {
       "amount": 100000000000000,
-      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "stash": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Bonded",
     "section": "staking",
@@ -517,7 +517,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > nominator bon
   {
     "data": {
       "amount": 100000000000000,
-      "stash": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "stash": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Bonded",
     "section": "staking",
@@ -529,7 +529,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > unbond events
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": "(rounded 33000000000000)",
       "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Unbonded",
@@ -558,7 +558,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > validator 0 b
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": "(rounded 33000000000000)",
       "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
     },
     "method": "Bonded",
@@ -587,7 +587,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > validator 1 b
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": "(rounded 33000000000000)",
       "stash": "GtgvkKoi3CxJk2mP5ZzuJ7Mj8ipiy4Sf6T4wtt89W8m8FNa",
     },
     "method": "Bonded",
@@ -616,7 +616,7 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > validator 2 b
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": "(rounded 33000000000000)",
       "stash": "ErRmn1hykJ1ppjMoNfQyRYA9c3j7y3YZnKQsCecD1k9D42B",
     },
     "method": "Bonded",
@@ -724,57 +724,70 @@ exports[`Kusama Staking > base staking tests > trying to nominate with no bonded
 ]
 `;
 
+exports[`Kusama Staking > fast unstake > test fast unstake > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999554590223,
+  "free": 89999554590223,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 

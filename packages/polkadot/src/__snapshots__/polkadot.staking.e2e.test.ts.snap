@@ -490,7 +490,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > kick events
 [
   {
     "data": {
-      "nominator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "nominator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Kicked",
@@ -504,7 +504,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > nominator b
   {
     "data": {
       "amount": 100000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Bonded",
     "section": "staking",
@@ -517,7 +517,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > nominator b
   {
     "data": {
       "amount": 100000000000000,
-      "stash": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Bonded",
     "section": "staking",
@@ -558,7 +558,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > validator 0
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": 1000000000000000,
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
     "method": "Bonded",
@@ -587,7 +587,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > validator 1
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": 1000000000000000,
       "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
     "method": "Bonded",
@@ -616,7 +616,7 @@ exports[`Polkadot Staking > base staking tests > staking lifecycle > validator 2
 [
   {
     "data": {
-      "amount": 50000000000000,
+      "amount": 1000000000000000,
       "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
     "method": "Bonded",
@@ -724,57 +724,70 @@ exports[`Polkadot Staking > base staking tests > trying to nominate with no bond
 ]
 `;
 
+exports[`Polkadot Staking > fast unstake > test fast unstake > nominator bond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 100000000000000,
+      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+]
+`;
+
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
 exports[`Polkadot Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 99999867589258,
+  "free": 89999867589258,
   "frozen": 0,
-  "reserved": 0,
+  "reserved": 10000000000000,
 }
 `;
 
