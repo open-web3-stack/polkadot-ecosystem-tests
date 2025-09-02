@@ -261,7 +261,7 @@ __metadata:
     "@acala-network/chopsticks": "npm:^1.2.1"
     "@acala-network/chopsticks-testing": "npm:^1.2.1"
     "@e2e-test/networks": "workspace:*"
-    "@polkadot/api": "npm:^16.4.3"
+    "@polkadot/api": "npm:^16.4.6"
     "@polkadot/types": "npm:^16.4.3"
     "@polkadot/types-augment": "npm:^16.4.3"
   languageName: unknown
