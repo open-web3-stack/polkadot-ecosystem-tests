@@ -72,7 +72,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'wss://kusama-asset-hub-rpc.polkadot.io',
+  endpoint: 'wss://sys.ibp.network/asset-hub-kusama',
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
