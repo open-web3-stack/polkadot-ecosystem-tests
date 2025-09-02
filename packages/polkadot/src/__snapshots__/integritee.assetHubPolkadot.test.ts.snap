@@ -32,7 +32,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -40,12 +40,10 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -60,12 +58,10 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -82,12 +78,14 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -114,8 +112,8 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": 5000000,
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -348,6 +346,9 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -383,8 +384,8 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 2000)",
-            "refTime": 2000000,
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -394,7 +395,17 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
   },
   {
     "data": {
-      "fees": [],
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 190000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      ],
       "paying": {
         "interior": {
           "X1": [
