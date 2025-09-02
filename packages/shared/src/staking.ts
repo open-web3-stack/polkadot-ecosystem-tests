@@ -1260,7 +1260,8 @@ async function unappliedSlashTest<
     await client.dev.setHead(eraChangeBlock - 1)
   }
 
-  const balances = 10000e10
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const balances = existentialDeposit * 10n ** 5n
   await client.dev.setStorage({
     System: {
       account: [
@@ -1347,6 +1348,7 @@ async function unappliedSlashTest<
   expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
   expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
+  // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
   if (testConfig.relayOrPara === 'Para') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
@@ -1393,41 +1395,65 @@ async function cancelDeferredSlashTest<
   const charlie = testAccounts.charlie
   const dave = testAccounts.dave
 
-  const eraChangeBlock = await locateEraChange(client)
-  if (eraChangeBlock === undefined) {
-    // This test only makes sense to run if there's an active era.
-    return
+  let eraChangeBlock: number | undefined
+  if (testConfig.relayOrPara === 'Relay') {
+    eraChangeBlock = await locateEraChange(client)
+    if (eraChangeBlock === undefined) {
+      // This test only makes sense to run if there's an active era.
+      return
+    }
+
+    // Go to a block before the one in which the era changes. In the two blocks before it changes,
+    // 1. the call to `cancel_deferred_slash` will be scheduled
+    // 2. the stakers in question will call `bond`
+    await client.dev.setHead(eraChangeBlock - 2)
   }
 
-  // Go to a block before the one in which the era changes. In the two blocks before it changes,
-  // 1. the call to `cancel_deferred_slash` will be scheduled
-  // 2. the stakers in question will call `bond`
-  await client.dev.setHead(eraChangeBlock - 2)
-
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-  const bondAmount = 1000e10
-  const slashAmount = bondAmount / 2
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const bondAmount = existentialDeposit * 10n ** 5n
+  const balance = bondAmount + bondAmount / 10n
+  const slashAmount = bondAmount / 2n
+
+  let slashKey: any
+  let slashKeyNewComponent: any | undefined
+  let slashValue: any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      slashKey = [activeEra + 1]
+      slashValue = [
+        {
+          validator: alice.address,
+          own: slashAmount,
+          others: [
+            [bob.address, slashAmount],
+            [charlie.address, slashAmount],
+          ],
+          reporters: [dave.address],
+          payout: bondAmount,
+        },
+      ]
+    })
+    .with('Para', () => {
+      slashKeyNewComponent = [alice.address, 0, 0]
+      slashKey = [activeEra, slashKeyNewComponent]
+      slashValue = {
+        validator: alice.address,
+        own: slashAmount,
+        others: [
+          [bob.address, slashAmount],
+          [charlie.address, slashAmount],
+        ],
+        reporter: dave.address,
+        payout: bondAmount,
+      }
+    })
+    .exhaustive()
 
   // Insert a slash into storage.
   await client.dev.setStorage({
     Staking: {
-      UnappliedSlashes: [
-        [
-          [activeEra + 1],
-          [
-            {
-              validator: alice.address,
-              own: slashAmount,
-              others: [
-                [bob.address, slashAmount],
-                [charlie.address, slashAmount],
-              ],
-              reporters: [dave.address],
-              payout: bondAmount,
-            },
-          ],
-        ],
-      ],
+      UnappliedSlashes: [[slashKey, slashValue]],
     },
   })
 
@@ -1436,9 +1462,9 @@ async function cancelDeferredSlashTest<
   await client.dev.setStorage({
     System: {
       account: [
-        [[alice.address], { providers: 1, data: { free: 10000e10 } }],
-        [[bob.address], { providers: 1, data: { free: 10000e10 } }],
-        [[charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[alice.address], { providers: 1, data: { free: balance } }],
+        [[bob.address], { providers: 1, data: { free: balance } }],
+        [[charlie.address], { providers: 1, data: { free: balance } }],
       ],
     },
   })
@@ -1452,10 +1478,25 @@ async function cancelDeferredSlashTest<
 
   // Two blocks away from the era change.
 
-  let slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  expect(slash.length).toBe(1)
+  let slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      expect(slash.length).toBe(1)
+    })
+    .with('Para', () => {
+      expect(slash.toJSON()).toBeDefined()
+    })
+    .exhaustive()
 
-  const cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
+  let cancelDeferredSlashTx: any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
+    })
+    .with('Para', () => {
+      cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra, [slashKeyNewComponent])
+    })
+    .exhaustive()
   await scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin, testConfig.relayOrPara)
 
   // Check stakers' bonded funds before the slash would be applied.
@@ -1472,32 +1513,51 @@ async function cancelDeferredSlashTest<
 
   // And the slash should have been cancelled.
 
-  slash = await client.api.query.staking.unappliedSlashes(activeEra + 1)
-  expect(slash.length).toBe(0)
+  slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      expect(slash.length).toBe(0)
+    })
+    .with('Para', () => {
+      expect(slash.toJSON()).toBeNull()
+    })
+    .exhaustive()
 
   // Era-boundary block creation tends to be slow.
-  await client.dev.setStorage({
-    ParasDisputes: {
-      $removePrefix: ['disputes', 'included'],
-    },
-    Dmp: {
-      $removePrefix: ['downwardMessageQueues'],
-    },
-    Staking: {
-      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-    },
-    Session: {
-      $removePrefix: ['nextKeys'],
-    },
-  })
+  if (testConfig.relayOrPara === 'Relay') {
+    await client.dev.setStorage({
+      ParasDisputes: {
+        $removePrefix: ['disputes', 'included'],
+      },
+      Dmp: {
+        $removePrefix: ['downwardMessageQueues'],
+      },
+      Staking: {
+        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      },
+      Session: {
+        $removePrefix: ['nextKeys'],
+      },
+    })
+  }
 
   // This new block marks the start of the new era.
+
+  // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
+  if (testConfig.relayOrPara === 'Para') {
+    // Manually apply the slash.
+    const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
+    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  }
+
   await client.dev.newBlock()
 
   // The era should have changed.
 
-  const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
-  expect(newActiveEra).toBe(activeEra + 1)
+  if (testConfig.relayOrPara === 'Relay') {
+    const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
+    expect(newActiveEra).toBe(activeEra + 1)
+  }
 
   // None of the validators' funds should have been slashed.
 
@@ -1666,16 +1726,19 @@ async function setInvulnerablesTest<
   // Locate era change
   //
 
-  const eraChangeBlock = await locateEraChange(client)
-  if (eraChangeBlock === undefined) {
-    // This test only makes sense to run if there's an active era.
-    console.warn('Unable to find era change block, skipping unapplied slash test')
-    return
-  }
+  let eraChangeBlock: number | undefined
+  if (testConfig.relayOrPara === 'Relay') {
+    eraChangeBlock = await locateEraChange(client)
+    if (eraChangeBlock === undefined) {
+      // This test only makes sense to run if there's an active era.
+      console.warn('Unable to find era change block, skipping unapplied slash test')
+      return
+    }
 
-  // Go to a block before the era change - accounts need to bond, start validating, and invulnerables still need to be
-  // set.
-  await client.dev.setHead(eraChangeBlock - 3)
+    // Go to a block before the era change - accounts need to bond, start validating, and invulnerables still need to be
+    // set.
+    await client.dev.setHead(eraChangeBlock - 3)
+  }
 
   //
   // Fund accounts
@@ -1691,14 +1754,14 @@ async function setInvulnerablesTest<
   if (minValidatorBond === 0n) {
     minValidatorBond = ed * 10n ** 5n
   }
-  const bondAmount = minValidatorBond + minValidatorBond / 10n
+  const balance = minValidatorBond + minValidatorBond / 10n
 
   await client.dev.setStorage({
     System: {
       account: [
-        [[alice.address], { providers: 1, data: { free: bondAmount } }],
-        [[bob.address], { providers: 1, data: { free: bondAmount } }],
-        [[charlie.address], { providers: 1, data: { free: bondAmount } }],
+        [[alice.address], { providers: 1, data: { free: balance } }],
+        [[bob.address], { providers: 1, data: { free: balance } }],
+        [[charlie.address], { providers: 1, data: { free: balance } }],
       ],
     },
   })
@@ -1755,40 +1818,62 @@ async function setInvulnerablesTest<
 
   const slashAmount = minValidatorBond / 2n
 
+  let slashKey: any
+  let slashValue: any
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      slashKey = [activeEra + 1]
+      slashValue = [
+        {
+          validator: alice.address,
+          own: slashAmount,
+          others: [
+            [bob.address, slashAmount * 2n],
+            [charlie.address, slashAmount * 3n],
+          ],
+          reporters: [dave.address],
+          payout: minValidatorBond,
+        },
+      ]
+    })
+    .with('Para', () => {
+      const slashKeyNewComponent = [alice.address, 0, 0]
+      slashKey = [activeEra, slashKeyNewComponent]
+      slashValue = {
+        validator: alice.address,
+        own: slashAmount,
+        others: [
+          [bob.address, slashAmount * 2n],
+          [charlie.address, slashAmount * 3n],
+        ],
+        reporter: dave.address,
+        payout: minValidatorBond,
+      }
+    })
+    .exhaustive()
+
+  if (testConfig.relayOrPara === 'Relay') {
+    await client.dev.setStorage({
+      ParasDisputes: {
+        $removePrefix: ['disputes', 'included'],
+      },
+      Dmp: {
+        $removePrefix: ['downwardMessageQueues'],
+      },
+      Staking: {
+        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      },
+      Session: {
+        $removePrefix: ['nextKeys'],
+      },
+    })
+  }
+
   // Insert a slash into storage. The accounts named here as validators/nominators need not have called
   // `validate`/`nominate` - they must only exist in the staking ledger as having bonded funds.
   await client.dev.setStorage({
-    ParasDisputes: {
-      $removePrefix: ['disputes', 'included'],
-    },
-    Dmp: {
-      $removePrefix: ['downwardMessageQueues'],
-    },
     Staking: {
-      $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
-      UnappliedSlashes: [
-        [
-          [activeEra + 1],
-          [
-            {
-              validator: alice.address,
-              // Less than the bonded funds.
-              own: slashAmount,
-              others: [
-                // Exactly the bonded funds.
-                [bob.address, slashAmount * 2n],
-                // More than the bonded funds.
-                [charlie.address, slashAmount * 3n],
-              ],
-              reporters: [dave.address],
-              payout: bondAmount,
-            },
-          ],
-        ],
-      ],
-    },
-    Session: {
-      $removePrefix: ['nextKeys'],
+      UnappliedSlashes: [[slashKey, slashValue]],
     },
   })
 
@@ -1801,6 +1886,12 @@ async function setInvulnerablesTest<
   expect(aliceFundsPreSlash.data.toJSON()).toMatchSnapshot('alice funds pre slash')
   expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
   expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
+
+  if (testConfig.relayOrPara === 'Para') {
+    // Manually apply the slash.
+    const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
+    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  }
 
   // With this block, the slash will have been applied.
   await client.dev.newBlock()
@@ -1817,10 +1908,12 @@ async function setInvulnerablesTest<
   expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
 
   expect(aliceFundsPostSlash.data.reserved.toBigInt()).toBe(aliceFundsPreSlash.data.reserved.toBigInt() - slashAmount)
-  expect(bobFundsPostSlash.data.reserved.toBigInt()).toBe(bobFundsPreSlash.data.reserved.toBigInt() - bondAmount)
+  expect(bobFundsPostSlash.data.reserved.toBigInt()).toBe(bobFundsPreSlash.data.reserved.toBigInt() - slashAmount * 2n)
+  expect(bobFundsPostSlash.data.reserved.toBigInt()).toBe(0n)
   expect(charlieFundsPostSlash.data.reserved.toBigInt()).toBe(
-    charlieFundsPreSlash.data.reserved.toBigInt() - bondAmount,
+    charlieFundsPreSlash.data.reserved.toBigInt() - slashAmount * 2n,
   )
+  expect(charlieFundsPostSlash.data.reserved.toBigInt()).toBe(0n)
 }
 
 /// --------------
