@@ -36,7 +36,7 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v5": [
           {
             "receiveTeleportedAsset": [
               {
@@ -44,12 +44,10 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
                   "fungible": 100000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -64,12 +62,10 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
                   "fungible": 100000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -86,12 +82,14 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -118,8 +116,8 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 160000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -135,7 +133,7 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
+            "proofSize": "(rounded 4000)",
             "refTime": "(rounded 200000000)",
           },
         },
@@ -372,8 +370,8 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3600)",
-        "refTime": "(rounded 170000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -389,8 +387,8 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 3600)",
-            "refTime": "(rounded 170000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
