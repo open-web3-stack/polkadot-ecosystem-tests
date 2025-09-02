@@ -43,7 +43,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.1.4",
 		"@types/lodash": "^4.17.20",
-		"@types/node": "^24.2.1",
+		"@types/node": "^24.3.0",
 		"@vitest/ui": "^3.2.4",
 		"dotenv": "^17.2.1",
 		"husky": "^9.1.7",
