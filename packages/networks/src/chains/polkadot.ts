@@ -1,5 +1,5 @@
-import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
   polkadot: {
@@ -15,6 +15,7 @@ const getInitStorages = () => ({
     Account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 1000 * 1e10 } }],
     ],
   },
   ParasDisputes: {

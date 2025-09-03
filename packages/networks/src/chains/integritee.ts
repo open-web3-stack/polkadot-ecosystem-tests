@@ -1,5 +1,5 @@
-import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
 const custom = {
   integriteePolkadot: {

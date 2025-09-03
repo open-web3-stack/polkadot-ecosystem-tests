@@ -1,5 +1,5 @@
-import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
   astar: {
