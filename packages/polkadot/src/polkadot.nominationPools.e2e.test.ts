@@ -1,6 +1,10 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { baseNominationPoolsE2ETests, registerTestTree } from '@e2e-test/shared'
+import { baseNominationPoolsE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
-registerTestTree(
-  baseNominationPoolsE2ETests(polkadot, { testSuiteName: 'Polkadot Nomination Pools', addressEncoding: 0 }),
-)
+const testConfig: TestConfig = {
+  testSuiteName: 'Polkadot Nomination Pools',
+  addressEncoding: 0,
+  relayOrPara: 'Relay',
+}
+
+registerTestTree(baseNominationPoolsE2ETests(polkadot, testConfig))
