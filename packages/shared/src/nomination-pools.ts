@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
@@ -21,6 +21,7 @@ import {
   objectCmp,
   scheduleInlineCallWithOrigin,
   setValidatorsStorage,
+  type TestConfig,
 } from './helpers/index.js'
 
 /// -------
@@ -109,11 +110,11 @@ async function nominationPoolCreationFailureTest<
   // Attempt to create a pool with insufficient funds
   const createNomPoolTx = client.api.tx.nominationPools.create(
     depositorMinBond - 1,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.bob.address,
-    defaultAccountsSr25519.charlie.address,
+    testAccounts.alice.address,
+    testAccounts.bob.address,
+    testAccounts.charlie.address,
   )
-  await sendTransaction(createNomPoolTx.signAsync(defaultAccountsSr25519.alice))
+  await sendTransaction(createNomPoolTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -169,18 +170,18 @@ async function nominationPoolCreationFailureTest<
 async function nominationPoolLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  const ferdie = defaultAccountsSr25519.keyring.addFromUri('//Ferdie')
+  const ferdie = testAccounts.keyring.addFromUri('//fresh_ferdie')
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
       account: [
-        [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccountsSr25519.charlie.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccountsSr25519.dave.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccountsSr25519.eve.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.dave.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
         [[ferdie.address], { providers: 1, data: { free: 10000e10 } }],
       ],
     },
@@ -201,11 +202,11 @@ async function nominationPoolLifecycleTest<
 
   const createNomPoolTx = client.api.tx.nominationPools.create(
     depositorMinBond,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
   )
-  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(defaultAccountsSr25519.alice))
+  const createNomPoolEvents = await sendTransaction(createNomPoolTx.signAsync(testAccounts.alice))
 
   /// Check that prior to the block taking effect, the pool does not yet exist with the
   /// most recently available pool ID.
@@ -242,10 +243,10 @@ async function nominationPoolLifecycleTest<
     depositorMinBond,
   )
   await check(nominationPoolPostCreation.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    root: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    nominator: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    root: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    nominator: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
   })
   expect(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation').toBe(true)
 
@@ -255,11 +256,11 @@ async function nominationPoolLifecycleTest<
 
   const updateRolesTx = client.api.tx.nominationPools.updateRoles(
     nomPoolId,
-    { Set: defaultAccountsSr25519.bob.address },
-    { Set: defaultAccountsSr25519.charlie.address },
-    { Set: defaultAccountsSr25519.dave.address },
+    { Set: testAccounts.bob.address },
+    { Set: testAccounts.charlie.address },
+    { Set: testAccounts.dave.address },
   )
-  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccountsSr25519.alice))
+  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -272,10 +273,10 @@ async function nominationPoolLifecycleTest<
   nominationPoolCmp(nominationPoolPostCreation, nominationPoolWithRoles, ['roles'])
 
   await check(nominationPoolWithRoles.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    root: encodeAddress(defaultAccountsSr25519.bob.address, addressEncoding),
-    nominator: encodeAddress(defaultAccountsSr25519.charlie.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.dave.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    root: encodeAddress(testAccounts.bob.address, testConfig.addressEncoding),
+    nominator: encodeAddress(testAccounts.charlie.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
   })
 
   /**
@@ -286,10 +287,7 @@ async function nominationPoolLifecycleTest<
   // `10e1` = `10 * 10`
   const commission = 1e6
 
-  const setCommissionTx = client.api.tx.nominationPools.setCommission(nomPoolId, [
-    commission,
-    defaultAccountsSr25519.eve.address,
-  ])
+  const setCommissionTx = client.api.tx.nominationPools.setCommission(nomPoolId, [commission, testAccounts.eve.address])
 
   const setCommissionMaxTx = client.api.tx.nominationPools.setCommissionMax(nomPoolId, commission * 10)
 
@@ -309,7 +307,7 @@ async function nominationPoolLifecycleTest<
     setCommissionChangeRateTx,
     setCommissionClaimPermissionTx,
   ])
-  const commissionEvents = await sendTransaction(commissionTx.signAsync(defaultAccountsSr25519.bob))
+  const commissionEvents = await sendTransaction(commissionTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -329,7 +327,7 @@ async function nominationPoolLifecycleTest<
 
   const newCommissionData = {
     max: commission * 10,
-    current: [commission, encodeAddress(defaultAccountsSr25519.eve.address, addressEncoding)],
+    current: [commission, encodeAddress(testAccounts.eve.address, testConfig.addressEncoding)],
     changeRate: {
       maxIncrease: 1e9,
       minDelay: 10,
@@ -363,7 +361,7 @@ async function nominationPoolLifecycleTest<
   }
 
   const nominateTx = client.api.tx.nominationPools.nominate(nomPoolId, validators)
-  const nominateEvents = await sendTransaction(nominateTx.signAsync(defaultAccountsSr25519.charlie))
+  const nominateEvents = await sendTransaction(nominateTx.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -389,7 +387,7 @@ async function nominationPoolLifecycleTest<
    */
 
   const joinPoolTx = client.api.tx.nominationPools.join(minJoinBond, nomPoolId)
-  const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccountsSr25519.eve))
+  const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -414,7 +412,7 @@ async function nominationPoolLifecycleTest<
    */
 
   const bondExtraTx = client.api.tx.nominationPools.bondExtra({ FreeBalance: minJoinBond - 1 })
-  const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(defaultAccountsSr25519.eve))
+  const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -474,8 +472,8 @@ async function nominationPoolLifecycleTest<
    * Unbond previously bonded funds
    */
 
-  const unbondTx = client.api.tx.nominationPools.unbond(defaultAccountsSr25519.eve.address, minJoinBond - 1)
-  const unbondEvents = await sendTransaction(unbondTx.signAsync(defaultAccountsSr25519.eve))
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, minJoinBond - 1)
+  const unbondEvents = await sendTransaction(unbondTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -495,7 +493,7 @@ async function nominationPoolLifecycleTest<
    */
 
   const chillTx = client.api.tx.nominationPools.chill(nomPoolId)
-  const chillEvents = await sendTransaction(chillTx.signAsync(defaultAccountsSr25519.charlie))
+  const chillEvents = await sendTransaction(chillTx.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -517,7 +515,7 @@ async function nominationPoolLifecycleTest<
    */
 
   const setStateTx = client.api.tx.nominationPools.setState(nomPoolId, 'Blocked')
-  const setStateEvents = await sendTransaction(setStateTx.signAsync(defaultAccountsSr25519.bob))
+  const setStateEvents = await sendTransaction(setStateTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -537,8 +535,8 @@ async function nominationPoolLifecycleTest<
    * Kick a member from the pool as the bouncer
    */
 
-  const kickTx = client.api.tx.nominationPools.unbond(defaultAccountsSr25519.eve.address, minJoinBond)
-  const kickEvents = await sendTransaction(kickTx.signAsync(defaultAccountsSr25519.dave))
+  const kickTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, minJoinBond)
+  const kickEvents = await sendTransaction(kickTx.signAsync(testAccounts.dave))
 
   await client.dev.newBlock()
 
@@ -561,7 +559,7 @@ async function nominationPoolLifecycleTest<
    */
 
   const setDestroyingTx = client.api.tx.nominationPools.setState(nomPoolId, 'Destroying')
-  const setDestroyingEvents = await sendTransaction(setDestroyingTx.signAsync(defaultAccountsSr25519.bob))
+  const setDestroyingEvents = await sendTransaction(setDestroyingTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -583,8 +581,8 @@ async function nominationPoolLifecycleTest<
    * process, but has not fully unbonded and withdrawn their funds.
    */
 
-  const unbondDepositorTx = client.api.tx.nominationPools.unbond(defaultAccountsSr25519.alice.address, depositorMinBond)
-  await sendTransaction(unbondDepositorTx.signAsync(defaultAccountsSr25519.alice))
+  const unbondDepositorTx = client.api.tx.nominationPools.unbond(testAccounts.alice.address, depositorMinBond)
+  await sendTransaction(unbondDepositorTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -632,10 +630,10 @@ async function nominationPoolSetMetadataTest<
 
   const createNomPoolEvents = await createNominationPool(
     client,
-    defaultAccountsSr25519.alice,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.alice.address,
+    testAccounts.alice,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
   )
 
   /// Check that prior to the pool creation extrinsic taking effect, the pool does not yet exist with the
@@ -663,7 +661,7 @@ async function nominationPoolSetMetadataTest<
   /// Set pool's metadata
 
   const setMetadataTx = client.api.tx.nominationPools.setMetadata(nomPoolId, 'Test pool #1, welcome')
-  const setMetadataEvents = await sendTransaction(setMetadataTx.signAsync(defaultAccountsSr25519.alice))
+  const setMetadataEvents = await sendTransaction(setMetadataTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -693,10 +691,10 @@ async function nominationPoolDoubleJoinError<
 
   await createNominationPool(
     client,
-    defaultAccountsSr25519.alice,
-    defaultAccountsSr25519.bob.address,
-    defaultAccountsSr25519.charlie.address,
-    defaultAccountsSr25519.dave.address,
+    testAccounts.alice,
+    testAccounts.bob.address,
+    testAccounts.charlie.address,
+    testAccounts.dave.address,
   )
 
   await client.dev.newBlock()
@@ -708,8 +706,8 @@ async function nominationPoolDoubleJoinError<
   await client.dev.setStorage({
     System: {
       account: [
-        [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 10000e10 } }],
-        [[defaultAccountsSr25519.eve.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
       ],
     },
   })
@@ -717,7 +715,7 @@ async function nominationPoolDoubleJoinError<
   const minJoinBond = await client.api.query.nominationPools.minJoinBond()
 
   const joinPoolTx = client.api.tx.nominationPools.join(minJoinBond, firstPoolId)
-  const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(defaultAccountsSr25519.eve))
+  const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -738,10 +736,10 @@ async function nominationPoolDoubleJoinError<
   /// The depositor in the second pool cannot be Alice, as that would also be a double join - precisely the object of this test.
   await createNominationPool(
     client,
-    defaultAccountsSr25519.bob,
-    defaultAccountsSr25519.alice.address,
-    defaultAccountsSr25519.charlie.address,
-    defaultAccountsSr25519.dave.address,
+    testAccounts.bob,
+    testAccounts.alice.address,
+    testAccounts.charlie.address,
+    testAccounts.dave.address,
   )
 
   await client.dev.newBlock()
@@ -753,7 +751,7 @@ async function nominationPoolDoubleJoinError<
    */
 
   const joinSecondPoolTx = client.api.tx.nominationPools.join(minJoinBond, secondPoolId)
-  await sendTransaction(joinSecondPoolTx.signAsync(defaultAccountsSr25519.eve))
+  await sendTransaction(joinSecondPoolTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
 
@@ -812,7 +810,7 @@ async function nominationPoolDoubleJoinError<
 async function nominationPoolGlobalConfigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const one = new u32(client.api.registry, 1)
@@ -835,7 +833,7 @@ async function nominationPoolGlobalConfigTest<
       { Set: preMaxMembersPerPool + inc },
       { Set: preGlobalMaxCommission + inc },
     )
-  await sendTransaction(setConfigsCall(0).signAsync(defaultAccountsSr25519.alice))
+  await sendTransaction(setConfigsCall(0).signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -854,7 +852,7 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    await scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin)
+    await scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin, testConfig.relayOrPara)
 
     await client.dev.newBlock()
 
@@ -890,7 +888,7 @@ async function nominationPoolGlobalConfigTest<
 async function nominationPoolsUpdateRolesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
@@ -902,10 +900,10 @@ async function nominationPoolsUpdateRolesTest<
 
   await createNominationPool(
     client,
-    defaultAccountsSr25519.alice,
-    defaultAccountsSr25519.bob.address,
-    defaultAccountsSr25519.charlie.address,
-    defaultAccountsSr25519.dave.address,
+    testAccounts.alice,
+    testAccounts.bob.address,
+    testAccounts.charlie.address,
+    testAccounts.dave.address,
   )
 
   await client.dev.newBlock()
@@ -916,10 +914,10 @@ async function nominationPoolsUpdateRolesTest<
   const nominationPool = poolData.unwrap()
 
   await check(nominationPool.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    root: encodeAddress(defaultAccountsSr25519.bob.address, addressEncoding),
-    nominator: encodeAddress(defaultAccountsSr25519.charlie.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.dave.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    root: encodeAddress(testAccounts.bob.address, testConfig.addressEncoding),
+    nominator: encodeAddress(testAccounts.charlie.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
   })
 
   /**
@@ -929,17 +927,17 @@ async function nominationPoolsUpdateRolesTest<
 
   await client.dev.setStorage({
     System: {
-      account: [[[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 10000e10 } }]],
+      account: [[[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }]],
     },
   })
 
   const updateRolesTx = client.api.tx.nominationPools.updateRoles(
     poolId,
-    { Set: defaultAccountsSr25519.alice.address },
-    { Set: defaultAccountsSr25519.dave.address },
-    { Set: defaultAccountsSr25519.bob.address },
+    { Set: testAccounts.alice.address },
+    { Set: testAccounts.dave.address },
+    { Set: testAccounts.bob.address },
   )
-  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(defaultAccountsSr25519.bob))
+  const updateRolesEvents = await sendTransaction(updateRolesTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -953,10 +951,10 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPool, nominationPoolWithRoles, ['roles'])
 
   await check(nominationPoolWithRoles.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    root: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    nominator: encodeAddress(defaultAccountsSr25519.dave.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.bob.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    root: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.bob.address, testConfig.addressEncoding),
   })
 
   /**
@@ -965,11 +963,11 @@ async function nominationPoolsUpdateRolesTest<
 
   const updateRolesFailTx = client.api.tx.nominationPools.updateRoles(
     poolId,
-    { Set: defaultAccountsSr25519.eve.address },
-    { Set: defaultAccountsSr25519.eve.address },
-    { Set: defaultAccountsSr25519.eve.address },
+    { Set: testAccounts.eve.address },
+    { Set: testAccounts.eve.address },
+    { Set: testAccounts.eve.address },
   )
-  await sendTransaction(updateRolesFailTx.signAsync(defaultAccountsSr25519.bob))
+  await sendTransaction(updateRolesFailTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1000,9 +998,7 @@ async function nominationPoolsUpdateRolesTest<
     { Noop: null },
     { Noop: null },
   )
-  const updateRolesRemoveSelfEvents = await sendTransaction(
-    updateRolesRemoveSelfTx.signAsync(defaultAccountsSr25519.alice),
-  )
+  const updateRolesRemoveSelfEvents = await sendTransaction(updateRolesRemoveSelfTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1016,10 +1012,10 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPoolWithRoles, nominationPoolWithoutRoot, ['roles'])
 
   await check(nominationPoolWithoutRoot.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
     root: null,
-    nominator: encodeAddress(defaultAccountsSr25519.dave.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.bob.address, addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.bob.address, testConfig.addressEncoding),
   })
 
   /**
@@ -1028,12 +1024,12 @@ async function nominationPoolsUpdateRolesTest<
 
   const updateRolesCall = client.api.tx.nominationPools.updateRoles(
     poolId,
-    { Set: defaultAccountsSr25519.charlie.address },
-    { Set: defaultAccountsSr25519.dave.address },
-    { Set: defaultAccountsSr25519.eve.address },
+    { Set: testAccounts.charlie.address },
+    { Set: testAccounts.dave.address },
+    { Set: testAccounts.eve.address },
   )
 
-  await scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
@@ -1054,20 +1050,17 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPoolWithoutRoot, nominationPoolUpdatedRoles, ['roles'])
 
   await check(nominationPoolUpdatedRoles.roles).toMatchObject({
-    depositor: encodeAddress(defaultAccountsSr25519.alice.address, addressEncoding),
-    root: encodeAddress(defaultAccountsSr25519.charlie.address, addressEncoding),
-    nominator: encodeAddress(defaultAccountsSr25519.dave.address, addressEncoding),
-    bouncer: encodeAddress(defaultAccountsSr25519.eve.address, addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+    root: encodeAddress(testAccounts.charlie.address, testConfig.addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
+    bouncer: encodeAddress(testAccounts.eve.address, testConfig.addressEncoding),
   })
 }
 
 export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(
-  chain: Chain<TCustom, TInitStoragesRelay>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-): RootTestTree {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -1075,7 +1068,7 @@ export function baseNominationPoolsE2ETests<
       {
         kind: 'test',
         label: 'nomination pool lifecycle test',
-        testFn: async () => await nominationPoolLifecycleTest(chain, testConfig.addressEncoding),
+        testFn: async () => await nominationPoolLifecycleTest(chain, testConfig),
       },
       {
         kind: 'test',
@@ -1095,12 +1088,12 @@ export function baseNominationPoolsE2ETests<
       {
         kind: 'test',
         label: 'nomination pool global config test',
-        testFn: async () => await nominationPoolGlobalConfigTest(chain),
+        testFn: async () => await nominationPoolGlobalConfigTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'nomination pools update roles test',
-        testFn: async () => await nominationPoolsUpdateRolesTest(chain, testConfig.addressEncoding),
+        testFn: async () => await nominationPoolsUpdateRolesTest(chain, testConfig),
       },
     ],
   }
