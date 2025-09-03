@@ -17,6 +17,7 @@ import {
   checkEvents,
   checkSystemEvents,
   createAndBondAccounts,
+  getBlockNumber,
   getValidators,
   objectCmp,
   scheduleInlineCallWithOrigin,
@@ -60,6 +61,58 @@ function nominationPoolCmp(
 }
 
 /**
+ * Checks if the maximum allowed number of pools exists, and increases it if needed.
+ *
+ * This function checks if the current number of pools has reached the maximum limit, if one has been set.
+ * If so, schedules a `setConfigs` call via the scheduler pallet to increase the
+ * maximum number of pools by 1.
+ *
+ * @param client The API client
+ * @param testConfig Test configuration containing relay/para info
+ */
+async function ensureMaxPoolsCapacity(client: { api: ApiPromise; dev: any }, testConfig: TestConfig): Promise<void> {
+  const currentPoolCount = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const maxPoolsOpt = await client.api.query.nominationPools.maxPools()
+
+  // If maxPools is None, there's no limit, so no action is needed
+  if (maxPoolsOpt.isNone) {
+    return
+  }
+
+  const maxPools = maxPoolsOpt.unwrap().toNumber()
+  const newMaxPools = maxPools + 1
+
+  // If the maximum number of pools has been reached, increase the limit
+  if (currentPoolCount >= maxPools) {
+    const setConfigsCall = client.api.tx.nominationPools.setConfigs(
+      { Noop: null }, // Keep minJoinBond unchanged
+      { Noop: null }, // Keep minCreateBond unchanged
+      { Set: newMaxPools }, // Increase maxPools by 1
+      { Noop: null }, // Keep maxPoolMembers unchanged
+      { Noop: null }, // Keep maxPoolMembersPerPool unchanged
+      { Noop: null }, // Keep globalMaxCommission unchanged
+    )
+
+    // Schedule the call with Root origin
+    await scheduleInlineCallWithOrigin(
+      client,
+      setConfigsCall.method.toHex(),
+      { system: 'Root' },
+      testConfig.relayOrPara,
+    )
+
+    // Execute the scheduled call
+    await client.dev.newBlock()
+
+    // Verify the change took effect
+    const updatedMaxPools = (await client.api.query.nominationPools.maxPools()).unwrap().toNumber()
+    if (updatedMaxPools !== newMaxPools) {
+      throw new Error(`Failed to increase max pools limit. Expected: ${newMaxPools}, Got: ${updatedMaxPools}`)
+    }
+  }
+}
+
+/**
  * Create a nomination pool for use in tests; useful helper to reduce boilerplate in tests.
  *
  * Creates a nomination pool with the minimum bond required to create a pool.
@@ -69,17 +122,21 @@ function nominationPoolCmp(
  * @returns A promise resolving to the events emitted by the transaction, and the .
  */
 async function createNominationPool(
-  client: { api: ApiPromise },
+  client: { api: ApiPromise; dev: any },
   signer: KeyringPair,
   root: string,
   nominator: string,
   bouncer: string,
+  testConfig: TestConfig,
 ): Promise<{ events: Promise<Codec[]> }> {
+  // Ensure capacity exists to create a new pool
+  await ensureMaxPoolsCapacity(client, testConfig)
+
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
 
-  const depositorBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+  const depositorBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
 
   const createNomPoolTx = client.api.tx.nominationPools.create(depositorBond, root, nominator, bouncer)
   const createNomPoolEvents = sendTransaction(createNomPoolTx.signAsync(signer))
@@ -103,9 +160,9 @@ async function nominationPoolCreationFailureTest<
   const [client] = await setupNetworks(chain)
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
 
-  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
 
   // Attempt to create a pool with insufficient funds
   const createNomPoolTx = client.api.tx.nominationPools.create(
@@ -192,9 +249,15 @@ async function nominationPoolLifecycleTest<
   // Obtain the minimum deposit required to create a pool, as calculated by `pallet_nomination_poola::create`.
   const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
   const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
-  const existentialDep = client.api.consts.balances.existentialDeposit.toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
 
-  const depositorMinBond = Math.max(minJoinBond, minCreateBond, existentialDep)
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  /**
+   * Check that the network is not at max pool capacity; if so, increase it.
+   */
+
+  await ensureMaxPoolsCapacity(client, testConfig)
 
   /**
    * Create pool with sufficient funds
@@ -319,7 +382,7 @@ async function nominationPoolLifecycleTest<
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   expect(poolData.isSome, 'Pool should still exist after commission is changed').toBe(true)
 
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
 
   const nominationPoolWithCommission = poolData.unwrap()
 
@@ -386,7 +449,7 @@ async function nominationPoolLifecycleTest<
    * Have another account join the pool
    */
 
-  const joinPoolTx = client.api.tx.nominationPools.join(minJoinBond, nomPoolId)
+  const joinPoolTx = client.api.tx.nominationPools.join(depositorMinBond, nomPoolId)
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
@@ -400,10 +463,9 @@ async function nominationPoolLifecycleTest<
 
   const nominationPoolWithMembers = poolData.unwrap()
   expect(nominationPoolWithMembers.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
-  expect(
-    nominationPoolWithMembers.points.toNumber(),
-    'Pool should have `depositor_min_bond + min_join_bond` points',
-  ).toBe(depositorMinBond + minJoinBond)
+  expect(nominationPoolWithMembers.points.toNumber(), 'Pool should have `depositor_min_bond * 2` points').toBe(
+    depositorMinBond * 2,
+  )
 
   nominationPoolCmp(nominationPoolWithCommission, nominationPoolWithMembers, ['memberCounter', 'points'])
 
@@ -411,7 +473,7 @@ async function nominationPoolLifecycleTest<
    * Bond additional funds as Eve
    */
 
-  const bondExtraTx = client.api.tx.nominationPools.bondExtra({ FreeBalance: minJoinBond - 1 })
+  const bondExtraTx = client.api.tx.nominationPools.bondExtra({ FreeBalance: depositorMinBond - 1 })
   const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
@@ -427,7 +489,7 @@ async function nominationPoolLifecycleTest<
 
   nominationPoolCmp(nominationPoolWithMembers, nominationPoolWithExtraBond, ['points'])
   expect(nominationPoolWithExtraBond.points.toNumber(), 'Incorrect pool point count after bond_extra').toBe(
-    depositorMinBond + 2 * minJoinBond - 1,
+    3 * depositorMinBond - 1,
   )
 
   /**
@@ -472,7 +534,7 @@ async function nominationPoolLifecycleTest<
    * Unbond previously bonded funds
    */
 
-  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, minJoinBond - 1)
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond - 1)
   const unbondEvents = await sendTransaction(unbondTx.signAsync(testAccounts.eve))
 
   await client.dev.newBlock()
@@ -485,7 +547,7 @@ async function nominationPoolLifecycleTest<
   expect(poolData.isSome, 'Pool should still exist after funds are unbonded').toBe(true)
   const nominationPoolPostUnbond = poolData.unwrap()
 
-  expect(nominationPoolPostUnbond.points.toNumber()).toBe(depositorMinBond + minJoinBond)
+  expect(nominationPoolPostUnbond.points.toNumber()).toBe(depositorMinBond * 2)
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 
   /**
@@ -535,7 +597,7 @@ async function nominationPoolLifecycleTest<
    * Kick a member from the pool as the bouncer
    */
 
-  const kickTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, minJoinBond)
+  const kickTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
   const kickEvents = await sendTransaction(kickTx.signAsync(testAccounts.dave))
 
   await client.dev.newBlock()
@@ -623,7 +685,7 @@ async function nominationPoolLifecycleTest<
 async function nominationPoolSetMetadataTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
@@ -634,6 +696,7 @@ async function nominationPoolSetMetadataTest<
     testAccounts.alice.address,
     testAccounts.alice.address,
     testAccounts.alice.address,
+    testConfig,
   )
 
   /// Check that prior to the pool creation extrinsic taking effect, the pool does not yet exist with the
@@ -669,6 +732,19 @@ async function nominationPoolSetMetadataTest<
     .redact({ removeKeys: /poolId/ })
     .toMatchSnapshot('set metadata events')
 
+  /// Check events
+  const events = await client.api.query.system.events()
+  const [metadataUpdatedEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'nominationPools'
+  })
+  assert(client.api.events.nominationPools.MetadataUpdated.is(metadataUpdatedEvent.event))
+  const metadataUpdatedData = metadataUpdatedEvent.event.data
+  expect(metadataUpdatedData.poolId.toNumber()).toBe(nomPoolId)
+  expect(metadataUpdatedData.caller.toString()).toBe(
+    encodeAddress(testAccounts.alice.address, testConfig.addressEncoding),
+  )
+
   /// Check the set metadata
 
   metadata = await client.api.query.nominationPools.metadata(nomPoolId)
@@ -683,7 +759,7 @@ async function nominationPoolSetMetadataTest<
 async function nominationPoolDoubleJoinError<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
@@ -695,6 +771,7 @@ async function nominationPoolDoubleJoinError<
     testAccounts.bob.address,
     testAccounts.charlie.address,
     testAccounts.dave.address,
+    testConfig,
   )
 
   await client.dev.newBlock()
@@ -740,6 +817,7 @@ async function nominationPoolDoubleJoinError<
     testAccounts.alice.address,
     testAccounts.charlie.address,
     testAccounts.dave.address,
+    testConfig,
   )
 
   await client.dev.newBlock()
@@ -873,6 +951,21 @@ async function nominationPoolGlobalConfigTest<
     expect(postMaxMembersOpt).toBe(preMaxMembersOpt + inc)
     expect(postMaxMembersPerPool).toBe(preMaxMembersPerPool + inc)
     expect(postGlobalMaxCommission).toBe(preGlobalMaxCommission + inc)
+
+    /// Check events
+    const events = await client.api.query.system.events()
+    const [globalParamsUpdatedEvent] = events.filter((record) => {
+      const { event } = record
+      return event.section === 'nominationPools'
+    })
+    assert(client.api.events.nominationPools.GlobalParamsUpdated.is(globalParamsUpdatedEvent.event))
+    const globalParamsUpdatedData = globalParamsUpdatedEvent.event.data
+    expect(globalParamsUpdatedData.minJoinBond.toNumber()).toBe(preMinJoinBond + inc)
+    expect(globalParamsUpdatedData.minCreateBond.toNumber()).toBe(preMinCreateBond + inc)
+    expect(globalParamsUpdatedData.maxPools.unwrap().toNumber()).toBe(preMaxPoolsOpt + inc)
+    expect(globalParamsUpdatedData.maxMembers.unwrap().toNumber()).toBe(preMaxMembersOpt + inc)
+    expect(globalParamsUpdatedData.maxMembersPerPool.unwrap().toNumber()).toBe(preMaxMembersPerPool + inc)
+    expect(globalParamsUpdatedData.globalMaxCommission.unwrap().toNumber()).toBe(preGlobalMaxCommission + inc)
   }
 }
 
@@ -904,6 +997,7 @@ async function nominationPoolsUpdateRolesTest<
     testAccounts.bob.address,
     testAccounts.charlie.address,
     testAccounts.dave.address,
+    testConfig,
   )
 
   await client.dev.newBlock()
@@ -1078,12 +1172,12 @@ export function baseNominationPoolsE2ETests<
       {
         kind: 'test',
         label: 'nomination pool metadata test',
-        testFn: async () => await nominationPoolSetMetadataTest(chain),
+        testFn: async () => await nominationPoolSetMetadataTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'nomination pool double join test: an account can only ever be in one pool at a time',
-        testFn: async () => await nominationPoolDoubleJoinError(chain),
+        testFn: async () => await nominationPoolDoubleJoinError(chain, testConfig),
       },
       {
         kind: 'test',
