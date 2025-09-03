@@ -16,13 +16,16 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
+import { match } from 'ts-pattern'
 import {
   check,
   checkEvents,
   checkSystemEvents,
   expectPjsEqual,
+  getBlockNumber,
   objectCmp,
   scheduleInlineCallWithOrigin,
+  type TestConfig,
 } from './helpers/index.js'
 
 /// -------
@@ -112,7 +115,7 @@ function referendumCmp(
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // Fund test accounts not already provisioned in the test chain spec.
@@ -126,11 +129,6 @@ export async function referendumLifecycleTest<
       ],
     },
   })
-
-  /**
-   * Get current referendum count i.e. the next referendum's index
-   */
-  const referendumIndex = await client.api.query.referenda.referendumCount()
 
   /**
    * Submit a new referendum
@@ -156,6 +154,15 @@ export async function referendumLifecycleTest<
   await checkEvents(submissionEvents, 'referenda')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum submission events')
+
+  const subEvents = await client.api.query.system.events()
+  const [refEvent] = subEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'referenda' && event.method === 'Submitted'
+  })
+  assert(client.api.events.referenda.Submitted.is(refEvent.event))
+  const refEventData = refEvent.event.data
+  const referendumIndex = refEventData[0].toNumber()
 
   /**
    * Check the created referendum's data
@@ -202,7 +209,7 @@ export async function referendumLifecycleTest<
   expect(ongoingRefPreDecDep.decisionDeposit.isNone).toBeTruthy()
 
   expect(ongoingRefPreDecDep.submissionDeposit.who.toString()).toBe(
-    encodeAddress(devAccounts.alice.address, addressEncoding),
+    encodeAddress(devAccounts.alice.address, testConfig.addressEncoding),
   )
   expect(ongoingRefPreDecDep.submissionDeposit.amount.toString()).toBe(
     client.api.consts.referenda.submissionDeposit.toString(),
@@ -252,7 +259,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPostDecDep.decisionDeposit.isSome)
 
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().who.toString()).toBe(
-    encodeAddress(devAccounts.bob.address, addressEncoding),
+    encodeAddress(devAccounts.bob.address, testConfig.addressEncoding),
   )
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.toString()).toBe(
     smallTipper[1].decisionDeposit.toString(),
@@ -278,7 +285,17 @@ export async function referendumLifecycleTest<
   let refPre = ongoingRefPostDecDep
   let refPost: PalletReferendaReferendumStatusConvictionVotingTally
 
-  for (let i = 0; i < smallTipper[1].preparePeriod.toNumber() - 2; i++) {
+  let iters: number
+  match(testConfig.relayOrPara)
+    .with('Relay', async () => {
+      iters = smallTipper[1].preparePeriod.toNumber() - 2
+    })
+    .with('Para', async () => {
+      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / 2
+    })
+    .exhaustive()
+
+  for (let i = 0; i < iters!; i++) {
     await client.dev.newBlock()
     referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
     assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
@@ -378,16 +395,16 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedRefIx })
     .toMatchSnapshot("charlie's votes after casting his")
   expect(charlieCastVotes.votes.length).toBe(1)
-  expect(charlieCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
+  expect(charlieCastVotes.votes[0][0].toNumber()).toBe(referendumIndex)
 
   const charlieVotes = charlieCastVotes.votes[0][1].asStandard
   expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
   expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  let blockNumber = await client.api.query.system.number()
+  let blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
+  expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
 
   // Placing a vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -448,16 +465,16 @@ export async function referendumLifecycleTest<
     .toMatchSnapshot("dave's votes after casting his")
 
   expect(daveCastVotes.votes.length).toBe(1)
-  expect(daveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
+  expect(daveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex)
 
   const daveVote = daveCastVotes.votes[0][1].asSplit
   expect(daveVote.aye.toNumber()).toBe(ayeVote)
   expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  blockNumber = await client.api.query.system.number()
+  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
+  expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
 
   // Placing a split vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -516,17 +533,17 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedRefIx })
     .toMatchSnapshot("eve's votes after casting hers")
   expect(eveCastVotes.votes.length).toBe(1)
-  expect(eveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex.toNumber())
+  expect(eveCastVotes.votes[0][0].toNumber()).toBe(referendumIndex)
 
   const eveVote = eveCastVotes.votes[0][1].asSplitAbstain
   expect(eveVote.aye.toNumber()).toBe(ayeVote)
   expect(eveVote.nay.toNumber()).toBe(nayVote)
   expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  blockNumber = await client.api.query.system.number()
+  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
   // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
-  expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber.toNumber() + 1)
+  expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
 
   // Placing a split abstain vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -546,7 +563,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
@@ -569,7 +586,7 @@ export async function referendumLifecycleTest<
   assert(client.api.events.referenda.Cancelled.is(cancellationEvent.event))
 
   const [index, tally] = cancellationEvent.event.data
-  expect(index.toNumber()).toBe(referendumIndex.toNumber())
+  expect(index.toNumber()).toBe(referendumIndex)
   expect(tally.toJSON()).toEqual(votes)
 
   // Now, check the referendum's data, post-cancellation
@@ -582,16 +599,22 @@ export async function referendumLifecycleTest<
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  blockNumber = await client.api.query.system.number()
-  expect(cancelledRef[0].toNumber()).toBe(blockNumber.toNumber())
+  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  match(testConfig.relayOrPara)
+    .with('Relay', async () => {
+      expect(cancelledRef[0].toNumber()).toBe(blockNumber)
+    })
+    .with('Para', async () => {
+      expect(cancelledRef[0].toNumber()).toBe(blockNumber - 2)
+    })
   // Check that the referendum's submission deposit was refunded to Alice
   expect(cancelledRef[1].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.alice.address, addressEncoding),
+    who: encodeAddress(devAccounts.alice.address, testConfig.addressEncoding),
     amount: client.api.consts.referenda.submissionDeposit.toNumber(),
   })
   // Check that the referendum's submission deposit was refunded to Bob
   expect(cancelledRef[2].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.bob.address, addressEncoding),
+    who: encodeAddress(devAccounts.bob.address, testConfig.addressEncoding),
     amount: smallTipper[1].decisionDeposit.toNumber(),
   })
 
@@ -728,7 +751,7 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -743,7 +766,7 @@ export async function referendumLifecycleKillTest<
   /**
    * Get current referendum count i.e. the next referendum's index
    */
-  const referendumIndex = await client.api.query.referenda.referendumCount()
+  const referendumIndex = (await client.api.query.referenda.referendumCount()).toNumber()
 
   /**
    * Submit a new referendum
@@ -795,7 +818,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
@@ -817,16 +840,16 @@ export async function referendumLifecycleKillTest<
     const { event } = record
     if (client.api.events.referenda.Killed.is(event)) {
       const [index, tally] = event.data
-      expect(index.toNumber()).toBe(referendumIndex.toNumber())
+      expect(index.toNumber()).toBe(referendumIndex)
       expect(tally.ayes.toNumber()).toBe(0)
       expect(tally.nays.toNumber()).toBe(0)
       expect(tally.support.toNumber()).toBe(0)
     } else if (client.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
-      if (who.toString() === encodeAddress(devAccounts.alice.address, addressEncoding)) {
+      if (who.toString() === encodeAddress(devAccounts.alice.address, testConfig.addressEncoding)) {
         expect(amount.toNumber()).toBe(client.api.consts.referenda.submissionDeposit.toNumber())
-      } else if (who.toString() === encodeAddress(devAccounts.bob.address, addressEncoding)) {
+      } else if (who.toString() === encodeAddress(devAccounts.bob.address, testConfig.addressEncoding)) {
         expect(amount.toNumber()).toBe(smallTipper[1].decisionDeposit.toNumber())
       } else {
         expect.fail('malformed decision slashed events')
@@ -840,9 +863,15 @@ export async function referendumLifecycleKillTest<
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  expect(killedRef.toNumber()).toBe(blockNumber)
+  match(testConfig.relayOrPara)
+    .with('Relay', async () => {
+      expect(killedRef.toNumber()).toBe(blockNumber)
+    })
+    .with('Para', async () => {
+      expect(killedRef.toNumber()).toBe(blockNumber - 2)
+    })
 }
 
 /**
@@ -898,7 +927,7 @@ export async function preimageTest<
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -910,12 +939,12 @@ export function baseGovernanceE2ETests<
           {
             kind: 'test',
             label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-            testFn: async () => await referendumLifecycleTest(chain, testConfig.addressEncoding),
+            testFn: async () => await referendumLifecycleTest(chain, testConfig),
           },
           {
             kind: 'test',
             label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-            testFn: async () => await referendumLifecycleKillTest(chain, testConfig.addressEncoding),
+            testFn: async () => await referendumLifecycleKillTest(chain, testConfig),
           },
         ],
       },

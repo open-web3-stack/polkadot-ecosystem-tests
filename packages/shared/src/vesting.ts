@@ -9,7 +9,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { check, checkEvents, expectPjsEqual, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { check, checkEvents, expectPjsEqual, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -23,7 +23,7 @@ import { check, checkEvents, expectPjsEqual, scheduleInlineCallWithOrigin } from
 async function testVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -62,7 +62,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev1.event))
   let vestingUpdatedEvent = ev1.event.data
-  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
   // the unvested amount in the event emitted in this block.
   expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 2)
@@ -106,7 +106,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
-  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 3)
 
   // Check Bob's free and frozen balances after Alice's vesting
@@ -144,7 +144,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingCompleted.is(ev3.event))
   const vestingCompletedEvent = ev3.event.data
-  expect(vestingCompletedEvent.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(vestingCompletedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 
   const vestingBalance3 = await client.api.query.vesting.vesting(bob.address)
   expect(vestingBalance3.isNone).toBe(true)
@@ -153,7 +153,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.balances.Withdraw.is(balEv.event))
   const balanceWithdrawalEvent = balEv.event.data
-  expect(balanceWithdrawalEvent.who.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(balanceWithdrawalEvent.who.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 
   // Net of the fees from having called `vest` once, Bob's balance should the the vested amount, plus his initial
   // balance.
@@ -503,7 +503,7 @@ async function testMergeSchedulesNoSchedule<
 export function relayVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -511,7 +511,7 @@ export function relayVestingE2ETests<
       {
         kind: 'test',
         label: 'vesting schedule lifecycle',
-        testFn: () => testVestedTransfer(chain, testConfig.addressEncoding),
+        testFn: () => testVestedTransfer(chain, testConfig),
       },
       {
         kind: 'test',
@@ -545,7 +545,7 @@ export function relayVestingE2ETests<
 export function assetHubVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,

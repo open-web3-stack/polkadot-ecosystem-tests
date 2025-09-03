@@ -98,6 +98,9 @@ export function objectCmp(
  */
 export type RelayOrPara = 'Relay' | 'Para'
 
+/** Whether async backing is enabled or disabled on the querying parachain. */
+export type AsyncBacking = 'Enabled' | 'Disabled'
+
 /**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
@@ -128,7 +131,8 @@ export async function scheduleCallWithOrigin(
 ) {
   const scheduledBlock = await match(relayOrPara)
     .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .otherwise(async () => (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber())
+    .with('Para', async () => ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+    .exhaustive()
 
   await client.dev.setStorage({
     Scheduler: {
@@ -178,9 +182,9 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
-  isParachain: RelayOrPara = 'Relay',
+  relayOrPara: RelayOrPara = 'Relay',
 ) {
-  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, isParachain)
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, relayOrPara)
 }
 
 /**
@@ -354,6 +358,26 @@ export async function setValidatorsStorage(
   })
 }
 
+/**
+ * Get the last known block number for a given chain.
+ *
+ * @param api Promise-based RPC wrapper around the endpoint of a Polkadot chain.
+ * @param relayOrPara Whether the block provider being queried is local or external (e.g. a parachain querying its
+ * relay chain)
+ * @returns The last known block number
+ */
+export async function getBlockNumber(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
+  return await match(relayOrPara)
+    .with('Relay', async () => (await api.rpc.chain.getHeader()).number.toNumber())
+    .with('Para', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+    .exhaustive()
+}
+
+/**
+ * Interface specifying the configuration data required for an E2E test suite.
+ *
+ * Only parachains need to specify the `asyncBacking` field.
+ */
 export interface TestConfig {
   testSuiteName: string
   addressEncoding: number
