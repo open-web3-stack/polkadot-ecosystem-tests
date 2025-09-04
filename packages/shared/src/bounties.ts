@@ -36,6 +36,14 @@ async function getBountyDescription(client: any, bountyIndex: number): Promise<s
 }
 
 /**
+ * Get approved bounties queue
+ */
+async function getBountyApprovals(client: any): Promise<number[]> {
+  const approvals = await client.api.query.bounties.bountyApprovals()
+  return approvals.map((index: any) => index.toNumber())
+}
+
+/**
  * Setup accounts with funds for testing
  */
 async function setupTestAccounts(client: any, accounts: string[] = ['alice', 'bob']) {
@@ -126,6 +134,59 @@ export async function bountyCreationTest<
   await client.teardown()
 }
 
+/**
+ * Test 2: Bounty approval flow
+ *
+ * Verifies:
+ * - Bounty can be approved by treasurer
+ * - Status changes from Proposed to Approved
+ * - Bounty is added to approvals queue
+ * - Correct events are emitted
+ */
+export async function bountyApprovalTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const bountyValue = 10000000000000n // 1000
+  const description = 'Test bounty for approval'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Verify initial state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify approval events
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approval events')
+
+  // Verify status changed
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
+  // Verify bounty is in approvals queue
+  const approvals = await getBountyApprovals(client)
+  expect(approvals).toContain(bountyIndex)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -142,6 +203,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Creating a bounty',
         testFn: async () => await bountyCreationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty approval flow',
+        testFn: async () => await bountyApprovalTest(chain),
       },
     ],
   }
