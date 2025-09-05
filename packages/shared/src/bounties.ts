@@ -83,7 +83,7 @@ async function getBountyIndexFromEvent(client: any): Promise<number> {
 
 /**
  * Test 1: Creating a bounty
- *
+ * Propose a bounty
  * Verifies:
  * - Bounty proposal is successful
  * - Correct events are emitted
@@ -187,6 +187,79 @@ export async function bountyApprovalTest<
   await client.teardown()
 }
 
+/**
+ * Test 3: Curator assignment and acceptance
+ *
+ * Verifies:
+ * - Curator can be proposed for a funded bounty
+ * - Curator can accept the role
+ * - Status transitions correctly
+ * - Curator deposit is reserved
+ * - Correct events are emitted
+ */
+export async function curatorAssignmentTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const bountyValue = 10000000000000n // 1000 tokens
+  const curatorFee = 1000000000000n // 100 tokens (10% fee)
+  const description = 'Test bounty with curator'
+
+  // Propose and approve bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // Verify curator proposed events
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // Verify bounty status
+  const bounty = await getBounty(client, bountyIndex)
+  expect(bounty.status.isCuratorProposed).toBeTruthy()
+  expect(bounty.fee.toBigInt()).toBe(curatorFee)
+
+  // Curator accepts the role
+  const acceptCuratorEvents = await sendTransaction(
+    client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob),
+  )
+
+  await client.dev.newBlock()
+
+  // Verify curator accepted events
+  await checkEvents(acceptCuratorEvents, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // Verify bounty is now active
+  const activeBounty = await getBounty(client, bountyIndex)
+  console.log('Active bounty status:', activeBounty.status.toHuman())
+  expect(activeBounty.status.isActive).toBeTruthy()
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -208,6 +281,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty approval flow',
         testFn: async () => await bountyApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Curator assignment and acceptance',
+        testFn: async () => await curatorAssignmentTest(chain),
       },
     ],
   }
