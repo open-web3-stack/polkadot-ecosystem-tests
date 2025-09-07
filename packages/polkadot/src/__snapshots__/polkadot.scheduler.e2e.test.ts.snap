@@ -566,6 +566,54 @@ exports[`Polkadot Scheduler > setting and canceling retry configuration for name
 ]
 `;
 
+exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed anonymous task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed named task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
 exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
 [
   {

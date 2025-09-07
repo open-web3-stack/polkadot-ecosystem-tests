@@ -361,10 +361,11 @@ export async function setValidatorsStorage(
 /**
  * Get the last known block number for a given chain.
  *
+ * The block provider might be local or external (e.g. a parachain querying its relay chain).
+ *
  * @param api Promise-based RPC wrapper around the endpoint of a Polkadot chain.
- * @param relayOrPara Whether the block provider being queried is local or external (e.g. a parachain querying its
- * relay chain)
- * @returns The last known block number
+ * @returns The last known block number if relay, the relay chain block number the most recent parablock was anchored
+ * to if parachain.
  */
 export async function getBlockNumber(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
   return await match(relayOrPara)
@@ -374,12 +375,65 @@ export async function getBlockNumber(api: ApiPromise, relayOrPara: RelayOrPara):
 }
 
 /**
- * Interface specifying the configuration data required for an E2E test suite.
- *
- * Only parachains need to specify the `asyncBacking` field.
+ * Get the earliest block number in which a task can be scheduled.
  */
-export interface TestConfig {
+export async function nextSchedulableBlockNum(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
+  return await match(relayOrPara)
+    .with('Relay', async () => (await api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('Para', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+    .exhaustive()
+}
+
+/**
+ * Get the offset at which the block numbers that key the scheduler's agenda are incremented.
+ *
+ * * If on a relay chain, the offset is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
+ *   every block number is available.
+ * * If on a parachain without AB, with the same meaning as above.
+ * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
+ *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number.
+ *
+ * @param relayOrPara Whether the call is being scheduled on a relay or parachain.
+ * @param asyncBacking Whether async backing is enabled on the parachain.
+ * @returns The number of blocks to offset when scheduling tasks
+ */
+export function schedulerOffset(cfg: TestConfig): number {
+  if (cfg.relayOrPara === 'Relay') {
+    return 1
+  }
+
+  if (cfg.asyncBacking === 'Enabled') {
+    return 2
+  }
+
+  // On a parachain without async backing.
+  return 1
+}
+
+/**
+ * Configuration for relay chain tests.
+ */
+export interface RelayTestConfig {
   testSuiteName: string
   addressEncoding: number
-  relayOrPara: RelayOrPara
+  relayOrPara: 'Relay'
 }
+
+/**
+ * Configuration for parachain tests.
+ * Async backing is relevant due to the step size of `parachainSystem.lastRelayChainBlockNumber`.
+ *
+ * Recall that with the AHM, the scheduler pallet's agenda will be keyed by this block number.
+ * It is, then, relevant for tests to know whether AB is enabled.
+ */
+export interface ParaTestConfig {
+  testSuiteName: string
+  addressEncoding: number
+  relayOrPara: 'Para'
+  asyncBacking: AsyncBacking
+}
+
+/**
+ * Union type for all test configurations, whether relay or parachain.
+ */
+export type TestConfig = RelayTestConfig | ParaTestConfig

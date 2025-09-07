@@ -1,10 +1,11 @@
 import { assetHubPolkadot } from '@e2e-test/networks/chains'
-import { assetHubVestingE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
+import { assetHubVestingE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
 
-const testConfig: TestConfig = {
+const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot Asset Hub Vesting',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  relayOrPara: 'Para',
+  asyncBacking: 'Enabled',
 }
 
 registerTestTree(assetHubVestingE2ETests(assetHubPolkadot, testConfig))

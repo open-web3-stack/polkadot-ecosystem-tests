@@ -1,10 +1,11 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
-import { assetHubVestingE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
+import { assetHubVestingE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
 
-const kahTestConfig: TestConfig = {
+const kahTestConfig: ParaTestConfig = {
   testSuiteName: 'Kusama Asset Hub Vesting',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  relayOrPara: 'Para',
+  asyncBacking: 'Enabled',
 }
 
 registerTestTree(assetHubVestingE2ETests(assetHubKusama, kahTestConfig))

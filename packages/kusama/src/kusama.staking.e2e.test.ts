@@ -1,6 +1,10 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { fullStakingTests, registerTestTree } from '@e2e-test/shared'
+import { fullStakingTests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(
-  fullStakingTests(kusama, { testSuiteName: 'Kusama Staking', addressEncoding: 2, relayOrPara: 'Relay' }),
-)
+const testConfig: RelayTestConfig = {
+  testSuiteName: 'Kusama Staking',
+  addressEncoding: 2,
+  relayOrPara: 'Relay',
+}
+
+registerTestTree(fullStakingTests(kusama, testConfig))

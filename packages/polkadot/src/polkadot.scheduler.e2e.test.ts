@@ -1,4 +1,10 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { baseSchedulerE2ETests, registerTestTree } from '@e2e-test/shared'
+import { baseSchedulerE2ETests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(baseSchedulerE2ETests(polkadot, { testSuiteName: 'Polkadot Scheduler' }))
+const testConfig: RelayTestConfig = {
+  testSuiteName: 'Polkadot Scheduler',
+  addressEncoding: 0,
+  relayOrPara: 'Relay',
+}
+
+registerTestTree(baseSchedulerE2ETests(polkadot, testConfig))

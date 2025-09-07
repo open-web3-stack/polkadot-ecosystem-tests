@@ -1,6 +1,10 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { fullStakingTests, registerTestTree } from '@e2e-test/shared'
+import { fullStakingTests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(
-  fullStakingTests(polkadot, { testSuiteName: 'Polkadot Staking', addressEncoding: 0, relayOrPara: 'Relay' }),
-)
+const testConfig: RelayTestConfig = {
+  testSuiteName: 'Polkadot Staking',
+  addressEncoding: 0,
+  relayOrPara: 'Relay',
+}
+
+registerTestTree(fullStakingTests(polkadot, testConfig))
