@@ -303,8 +303,8 @@ exports[`kusama & coretimeKusama > kusama transfer KSM to coretimeKusama > to ch
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

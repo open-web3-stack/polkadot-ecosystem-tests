@@ -193,6 +193,16 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when killin
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "FJ3Yk5SeRPRt8rQjeVDZ3Mxm199uwx8pLT1cPBEHWaNEgzV",
+      "spawner": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -381,7 +391,7 @@ exports[`People Kusama Proxy > filtering tests for allowed proxy calls > allowed
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -924,7 +934,7 @@ exports[`People Kusama Proxy > filtering tests for allowed proxy calls > allowed
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1094,7 +1104,7 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1212,7 +1222,7 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1349,7 +1359,7 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1505,7 +1515,7 @@ exports[`People Kusama Proxy > filtering tests for forbidden proxy calls > forbi
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
