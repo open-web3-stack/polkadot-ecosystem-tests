@@ -291,7 +291,7 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > to 
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 1000000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -303,8 +303,8 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > to 
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

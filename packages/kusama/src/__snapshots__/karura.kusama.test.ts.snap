@@ -103,7 +103,7 @@ exports[`karura & kusama > karura transfer KSM to kusama > to chain ump events 1
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",
@@ -263,7 +263,7 @@ exports[`karura & kusama > karura transfer KSM to kusama wiht limited weight > t
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",
@@ -384,7 +384,7 @@ exports[`karura & kusama > kusama transfer KSM to karura > tx events 1`] = `
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 400000000)",
           },
         },
       },

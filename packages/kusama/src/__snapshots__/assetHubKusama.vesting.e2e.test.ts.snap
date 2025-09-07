@@ -15,7 +15,7 @@ exports[`Kusama Asset Hub Vesting > attempt to merge when no vesting schedules e
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

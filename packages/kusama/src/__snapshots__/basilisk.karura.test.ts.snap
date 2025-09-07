@@ -325,7 +325,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > route chain xcm e
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "Processed",

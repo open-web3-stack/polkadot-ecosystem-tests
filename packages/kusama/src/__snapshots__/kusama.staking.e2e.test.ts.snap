@@ -15,7 +15,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -196,7 +196,7 @@ exports[`Kusama Staking > base staking tests > force apply validator commission 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -305,7 +305,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with bad origin
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > alice funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 5000000000000,
 }
@@ -314,7 +314,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with root origi
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 10000000000000,
 }
@@ -325,7 +325,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with root origi
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > bob funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 0,
 }
@@ -334,7 +334,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with root origi
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 10000000000000,
 }
@@ -343,7 +343,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with root origi
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > charlie funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 0,
 }
@@ -352,7 +352,7 @@ exports[`Kusama Staking > base staking tests > set invulnerables with root origi
 exports[`Kusama Staking > base staking tests > set invulnerables with root origin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999112324871,
+  "free": 89999109015461,
   "frozen": 0,
   "reserved": 10000000000000,
 }
@@ -527,6 +527,13 @@ exports[`Kusama Staking > base staking tests > staking lifecycle > nominator bon
 
 exports[`Kusama Staking > base staking tests > staking lifecycle > unbond events 1`] = `
 [
+  {
+    "data": {
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
   {
     "data": {
       "amount": 50000000000000,
@@ -727,54 +734,54 @@ exports[`Kusama Staking > base staking tests > trying to nominate with no bonded
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
 exports[`Kusama Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 99999553329391,
   "frozen": 0,
-  "reserved": 10000000000000,
+  "reserved": 0,
 }
 `;
 
@@ -801,7 +808,7 @@ exports[`Kusama Staking > slashing tests > cancel deferred slash with bad origin
 exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 5000000000000,
 }
@@ -810,7 +817,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post sl
 exports[`Kusama Staking > slashing tests > unapplied slash > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 10000000000000,
 }
@@ -821,7 +828,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > balances slash even
 exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 0,
 }
@@ -830,7 +837,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slas
 exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 10000000000000,
 }
@@ -839,7 +846,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash
 exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 0,
 }
@@ -848,7 +855,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post 
 exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 89999554590223,
+  "free": 89999553329391,
   "frozen": 0,
   "reserved": 10000000000000,
 }

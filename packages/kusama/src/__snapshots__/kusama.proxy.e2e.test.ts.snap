@@ -309,6 +309,16 @@ exports[`Kusama Proxy > create and kill pure proxies > events when killing pure 
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "D6qRX8F2Swp1mAnssEJ5PsbjWbeKSdYyRzY7sEujFjtWzQp",
+      "spawner": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -770,6 +780,14 @@ exports[`Kusama Proxy > filtering tests for allowed proxy calls > allowed proxy 
 
 exports[`Kusama Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
 [
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",

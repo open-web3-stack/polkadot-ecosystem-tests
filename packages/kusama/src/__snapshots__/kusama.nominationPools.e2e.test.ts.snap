@@ -167,7 +167,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -192,7 +192,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commis
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
