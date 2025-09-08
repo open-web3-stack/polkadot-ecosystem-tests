@@ -412,18 +412,28 @@ export async function cancelScheduledTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const offset = schedulerOffset(testConfig)
+  let targetBlockNumber: number
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      targetBlockNumber = initialBlockNumber + 3 * offset
+    })
+    .with('Para', () => {
+      targetBlockNumber = initialBlockNumber + 2 * offset
+    })
+    .exhaustive()
 
-  const scheduleTx = client.api.tx.scheduler.schedule(initialBlockNumber + 3, null, 0, adjustIssuanceTx)
+  const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, adjustIssuanceTx)
 
   await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
   expect(scheduled[0].isSome).toBeTruthy()
 
-  const cancelTx = client.api.tx.scheduler.cancel(initialBlockNumber + 3, 0)
+  const cancelTx = client.api.tx.scheduler.cancel(targetBlockNumber!, 0)
 
   await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
@@ -438,7 +448,7 @@ export async function cancelScheduledTask<
     })
     .toMatchSnapshot('events for scheduled task cancellation')
 
-  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(0)
 
   await client.dev.newBlock()
@@ -463,20 +473,24 @@ export async function cancelScheduledNamedTask<
   const taskId = sha256AsU8a('task_id')
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const offset = schedulerOffset(testConfig)
+  let targetBlockNumber: number
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      targetBlockNumber = initialBlockNumber + 3 * offset
+    })
+    .with('Para', () => {
+      targetBlockNumber = initialBlockNumber + 2 * offset
+    })
+    .exhaustive()
 
-  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(
-    taskId,
-    initialBlockNumber + 3,
-    null,
-    0,
-    adjustIssuanceTx,
-  )
+  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlockNumber!, null, 0, adjustIssuanceTx)
 
   await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
   expect(scheduled[0].isSome).toBeTruthy()
 
@@ -492,7 +506,7 @@ export async function cancelScheduledNamedTask<
     })
     .toMatchSnapshot('events for scheduled task cancellation')
 
-  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 3)
+  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(0)
 
   await client.dev.newBlock()
@@ -555,6 +569,8 @@ export async function scheduleTaskAfterDelay<
     .with('Para', () => {
       // Recall that parachains use `parachainSystem.lastRelayChainBlockNumber` to key the agenda for the next block,
       // not the agenda for the current block - a step back is needed.
+      // Also, the scheduler considers the block in which call to schedule the delayed task to not count, so the
+      // `+ 1` is to start counting from the next, as yet uncreated block.
       targetBlock = currBlockNumber + delay + 1 - offset
     })
     .exhaustive()
@@ -702,14 +718,26 @@ export async function scheduledOverweightCallFails<
 
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
 
+  const offset = schedulerOffset(testConfig)
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
-  const scheduleTx = client.api.tx.scheduler.schedule(initialBlockNumber + 2, null, 0, withWeightTx)
+  // Target block is two blocks in the future - see the notes about parachain scheduling differences.
+  let targetBlockNumber: number
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      targetBlockNumber = initialBlockNumber + 2 * offset
+    })
+    .with('Para', () => {
+      targetBlockNumber = initialBlockNumber + offset
+    })
+    .exhaustive()
+
+  const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, withWeightTx)
 
   await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 2)
+  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
 
   const scheduledTask: PalletSchedulerScheduled = scheduled[0].unwrap()
@@ -750,11 +778,11 @@ export async function scheduledOverweightCallFails<
   })
 
   assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
-  expect(overweightEvent.event.data.task.toJSON()).toMatchObject([initialBlockNumber + 2, 0])
+  expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
   expect(overweightEvent.event.data.id.toJSON()).toBeNull()
 
   // Check that the call remains in the agenda for the original block it was scheduled in
-  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 2)
+  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
 
   await check(scheduled[0].unwrap()).toMatchObject(task)
@@ -864,12 +892,24 @@ export async function schedulePreimagedCall<
 
   // Schedule using the preimage hash
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const offset = schedulerOffset(testConfig)
+  // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
+  // at `n + 2`.
+  let targetBlockNumber: number
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      targetBlockNumber = initialBlockNumber + 2 * offset
+    })
+    .with('Para', () => {
+      targetBlockNumber = initialBlockNumber + offset
+    })
+    .exhaustive()
 
   await client.dev.setStorage({
     Scheduler: {
       agenda: [
         [
-          [initialBlockNumber + 2],
+          [targetBlockNumber!],
           [
             {
               call: {
@@ -888,7 +928,7 @@ export async function schedulePreimagedCall<
     },
   })
 
-  let scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 2)
+  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
   expect(scheduled[0].isSome).toBeTruthy()
   expect(scheduled[0].toJSON()).toMatchObject({
@@ -918,7 +958,7 @@ export async function schedulePreimagedCall<
   // Move to execution block
   await client.dev.newBlock()
 
-  scheduled = await client.api.query.scheduler.agenda(initialBlockNumber + 2)
+  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
 
   expect(scheduled.length).toBe(1)
   expect(scheduled[0].isSome).toBeTruthy()
@@ -948,7 +988,7 @@ export async function schedulePreimagedCall<
     return event.section === 'scheduler' && event.method === 'CallUnavailable'
   })
   assert(client.api.events.scheduler.CallUnavailable.is(schedEvent.event))
-  expect(schedEvent.event.data.task.toJSON()).toMatchObject([initialBlockNumber + 2, 0])
+  expect(schedEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
   expect(schedEvent.event.data.id.toJSON()).toBeNull()
 }
 
@@ -981,6 +1021,8 @@ export async function schedulePreimagedCall<
  *
  * @param scheduleTx The extrinsic containing the periodic task (named or otherwise) to be scheduled.
  * @param taskId The ID of the periodic task, if named. Null otherwise.
+ * @param period The period of the task - on parachains, with nonlocal block providers, it must be expressed by how
+ *        many relay blocks it spans.
  * @param testConfig The test configuration - needed to account for relaychain vs parachain scheduler agenda keying.
  */
 async function testPeriodicTask<
@@ -990,6 +1032,7 @@ async function testPeriodicTask<
   chain: Chain<TCustom, TInitStorages>,
   scheduleTx: SubmittableExtrinsic<'promise', ISubmittableResult>,
   taskId: Uint8Array | null,
+  period: number,
   testConfig: TestConfig,
 ) {
   const [client] = await setupNetworks(chain)
@@ -1009,14 +1052,15 @@ async function testPeriodicTask<
   currBlockNumber += offset
 
   // Agenda check for the first scheduled execution
-  let agenda: any
+  let targetBlock: number
   if (testConfig.relayOrPara === 'Relay') {
-    agenda = await client.api.query.scheduler.agenda(currBlockNumber + 1)
+    targetBlock = currBlockNumber + offset
   } else {
     // Recall that on a parachain, a task to be run on the next block has an agenda key of
     // `parachainSystem.lastRelayChainBlockNumber`, which `getBlockNumber` will return.
-    agenda = await client.api.query.scheduler.agenda(currBlockNumber)
+    targetBlock = currBlockNumber
   }
+  let agenda = await client.api.query.scheduler.agenda(targetBlock!)
 
   expect(agenda.length).toBe(1)
   expect(agenda[0].isSome).toBeTruthy()
@@ -1026,7 +1070,7 @@ async function testPeriodicTask<
     call: { inline: adjustIssuanceTx.method.toHex() },
     // The last repetition will have this as null, so in effect, this ranges from `REPETITIONS - 1` to `null`,
     // for a total of `REPETITIONS`.
-    maybePeriodic: [PERIOD, REPETITIONS - 1],
+    maybePeriodic: [period, REPETITIONS - 1],
     origin: {
       system: {
         root: null,
@@ -1057,13 +1101,12 @@ async function testPeriodicTask<
 
     // Check agenda for next scheduled execution (if not the last iteration)
     if (i < REPETITIONS) {
-      let targetBlock: number
       if (testConfig.relayOrPara === 'Relay') {
-        targetBlock = currBlockNumber + 2
+        targetBlock = currBlockNumber + period
       } else {
-        targetBlock = currBlockNumber
+        targetBlock = currBlockNumber + period - offset
       }
-      agenda = await client.api.query.scheduler.agenda(targetBlock)
+      agenda = await client.api.query.scheduler.agenda(targetBlock!)
 
       expect(agenda.length).toBe(1)
       expect(agenda[0].isSome).toBeTruthy()
@@ -1075,7 +1118,7 @@ async function testPeriodicTask<
       if (i === REPETITIONS - 1) {
         maybePeriodic = null
       } else {
-        maybePeriodic = [PERIOD, REPETITIONS - (i + 1)]
+        maybePeriodic = [period, REPETITIONS - (i + 1)]
       }
 
       await check(agenda[0].unwrap()).toMatchObject({
@@ -1091,24 +1134,20 @@ async function testPeriodicTask<
       })
     }
 
-    // If on a parachain with AB enabled, the single new block from above is enough to advance through the repetitions.
-    // Recall that with AB, each parachain block corresponds to 2 relay blocks, and that `PERIOD === 2`.
-    if (
-      testConfig.relayOrPara === 'Relay' ||
-      (testConfig.relayOrPara === 'Para' && testConfig.asyncBacking === 'Disabled')
-    ) {
-      // Skip one block (no execution)
-      await client.dev.newBlock()
-      currBlockNumber += offset
-    }
+    await client.dev.newBlock()
+    currBlockNumber += offset
   }
 
   // Verify task is removed after all executions
-  if (testConfig.relayOrPara === 'Relay') {
-    agenda = await client.api.query.scheduler.agenda(currBlockNumber + 1)
-  } else {
-    agenda = await client.api.query.scheduler.agenda(currBlockNumber)
-  }
+  match(testConfig.relayOrPara)
+    .with('Relay', () => {
+      targetBlock = currBlockNumber + offset
+    })
+    .with('Para', () => {
+      targetBlock = currBlockNumber
+    })
+    .exhaustive()
+  agenda = await client.api.query.scheduler.agenda(targetBlock!)
   expect(agenda.length).toBe(0)
 
   // Check final issuance - must have been increased by `REPETITIONS * increment == REPETITIONS`.
@@ -1132,19 +1171,24 @@ export async function schedulePeriodicTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
 
+  const offset = schedulerOffset(testConfig)
   const delay = match(testConfig.relayOrPara)
-    .with('Relay', () => 2)
-    .with('Para', () => 2)
+    .with('Relay', () => 2 * offset)
+    // Parachain scheduling differences - see notes above.
+    // This is obviously 2, but leaving it like this clarifies what's happening.
+    .with('Para', () => 2 * offset - offset)
     .exhaustive()
+
+  const period = PERIOD * offset
 
   const scheduleTx = client.api.tx.scheduler.schedule(
     currBlockNumber + delay, // when
-    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
+    [period, REPETITIONS], // maybe_periodic: [period, repetitions]
     0, // priority
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(chain, scheduleTx, null, testConfig)
+  await testPeriodicTask(chain, scheduleTx, null, period, testConfig)
 }
 
 /**
@@ -1164,22 +1208,25 @@ export async function scheduleNamedPeriodicTask<
   const taskId = sha256AsU8a('task_id')
   const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
 
+  const offset = schedulerOffset(testConfig)
   const delay = match(testConfig.relayOrPara)
-    .with('Relay', () => 2)
+    .with('Relay', () => 2 * offset)
     // Recall: to schedule a task on the next block of a parachain, the offset is 0. On the block after that one,
     // it is 1 if async backing is disabled, 2 if enabled.
-    .with('Para', () => 2)
+    .with('Para', () => 2 * offset - offset)
     .exhaustive()
+
+  const period = PERIOD * offset
 
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(
     taskId, // id
     currBlockNumber + delay, // when
-    [PERIOD, REPETITIONS], // maybe_periodic: [period, repetitions]
+    [period, REPETITIONS], // maybe_periodic: [period, repetitions]
     0, // priority
     adjustIssuanceTx, // call
   )
 
-  await testPeriodicTask(chain, scheduleNamedTx, taskId, testConfig)
+  await testPeriodicTask(chain, scheduleNamedTx, taskId, period, testConfig)
 }
 
 /**
@@ -1462,7 +1509,7 @@ export async function scheduleWithRetryConfig<
     .redact({
       redactKeys: /task|when/,
     })
-    .toMatchSnapshot('events for failed named task execution')
+    .toMatchSnapshot('events for failed anonymous task execution')
 
   const rescheduledBlock = targetBlock! + period
   // Verify task failed and was rescheduled
@@ -1738,7 +1785,7 @@ export function baseSchedulerE2ETests<
       },
       {
         kind: 'test',
-        label: 'scheduling a named periodic task that executes multiple times',
+        label: 'scheduling a named periodic is possible',
         testFn: async () => await scheduleNamedPeriodicTask(chain, testConfig),
       },
       {

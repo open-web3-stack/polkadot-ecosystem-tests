@@ -256,7 +256,7 @@ exports[`Polkadot Scheduler > scheduling a named call is possible, and the call 
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 1 1`] = `
+exports[`Polkadot Scheduler > scheduling a named periodic is possible > events for named periodic task execution 1 1`] = `
 [
   {
     "data": {
@@ -286,7 +286,7 @@ exports[`Polkadot Scheduler > scheduling a named periodic task that executes mul
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 1`] = `
+exports[`Polkadot Scheduler > scheduling a named periodic is possible > events for named periodic task execution 2 1`] = `
 [
   {
     "data": {
@@ -316,7 +316,7 @@ exports[`Polkadot Scheduler > scheduling a named periodic task that executes mul
 ]
 `;
 
-exports[`Polkadot Scheduler > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 1`] = `
+exports[`Polkadot Scheduler > scheduling a named periodic is possible > events for named periodic task execution 3 1`] = `
 [
   {
     "data": {
@@ -567,54 +567,6 @@ exports[`Polkadot Scheduler > setting and canceling retry configuration for name
 `;
 
 exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed anonymous task execution 1`] = `
-[
-  {
-    "data": {
-      "id": null,
-      "result": {
-        "Err": "BadOrigin",
-      },
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed named task execution 1`] = `
-[
-  {
-    "data": {
-      "id": null,
-      "result": {
-        "Err": "BadOrigin",
-      },
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Scheduled",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Polkadot Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
 [
   {
     "data": {
