@@ -1,11 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > balance on from chain 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "free": "(rounded 9900000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -15,105 +15,109 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > bal
 }
 `;
 
-exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > balance on to chain 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 1000000000000)",
+    "free": "(rounded 99900000000)",
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 0,
+  "nonce": 1,
   "providers": 1,
-  "sufficients": 0,
+  "sufficients": 1,
 }
 `;
 
-exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > from chain ump messages 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > from chain hrmp messages 1`] = `
 [
   {
-    "v5": [
+    "data": [
+      "ConcatenatedVersionedXcm",
       {
-        "receiveTeleportedAsset": [
+        "v5": [
           {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "interior": {
-                "here": null,
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 100000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
               },
-              "parents": 0,
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 100000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
             },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
-      {
-        "clearOrigin": null,
-      },
-      {
-        "buyExecution": {
-          "fees": {
-            "fun": {
-              "fungible": 1000000000000,
-            },
-            "id": {
-              "interior": {
-                "here": null,
-              },
-              "parents": 0,
-            },
-          },
-          "weightLimit": {
-            "unlimited": null,
-          },
-        },
-      },
-      {
-        "depositAsset": {
-          "assets": {
-            "wild": {
-              "allCounted": 1,
-            },
-          },
-          "beneficiary": {
-            "interior": {
-              "x1": [
-                {
-                  "accountId32": {
-                    "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                    "network": null,
-                  },
-                },
-              ],
-            },
-            "parents": 0,
-          },
-        },
-      },
-      {
-        "setTopic": "(redacted)",
-      },
     ],
+    "recipient": 1001,
   },
 ]
 `;
 
-exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > to chain ump events 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
       "id": "(hash)",
       "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
+        "Sibling": 1000,
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -122,7 +126,7 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > to 
 ]
 `;
 
-exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx events 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -130,7 +134,7 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 500000000)",
           },
         },
       },
@@ -143,7 +147,7 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 1030000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",
@@ -171,7 +175,13 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
   {
     "data": {
       "destination": {
-        "interior": "Here",
+        "interior": {
+          "X1": [
+            {
+              "Parachain": "(rounded 1000)",
+            },
+          ],
+        },
         "parents": 1,
       },
       "message": [
@@ -179,11 +189,11 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
           "ReceiveTeleportedAsset": [
             {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
-                "parents": 0,
+                "parents": 1,
               },
             },
           ],
@@ -193,11 +203,11 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
-                "parents": 0,
+                "parents": 1,
               },
             },
             "weightLimit": "Unlimited",
@@ -247,12 +257,12 @@ exports[`kusama & bridgeHubKusama > bridgeHubKusama transfer KSM to kusama > tx 
 ]
 `;
 
-exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > balance on from chain 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "free": "(rounded 9900000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -262,12 +272,12 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > bal
 }
 `;
 
-exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > balance on to chain 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 1000000000000)",
+    "free": "(rounded 99800000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -277,34 +287,94 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > bal
 }
 `;
 
-exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > to chain dmp events 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "receiveTeleportedAsset": [
+              {
+                "fun": {
+                  "fungible": 100000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 100000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
-      "count": 1,
-    },
-    "method": "DownwardMessagesReceived",
-    "section": "parachainSystem",
-  },
-  {
-    "data": {
-      "dmqHead": "(hash)",
-      "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 1000000000)",
-      },
-    },
-    "method": "DownwardMessagesProcessed",
-    "section": "parachainSystem",
-  },
-  {
-    "data": {
       "id": "(hash)",
-      "origin": "Parent",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -313,7 +383,7 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > to 
 ]
 `;
 
-exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx events 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -327,18 +397,18 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx 
       },
     },
     "method": "Attempted",
-    "section": "xcmPallet",
+    "section": "polkadotXcm",
   },
   {
     "data": {
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 1320000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",
-            "parents": 0,
+            "parents": 1,
           },
         },
       ],
@@ -357,7 +427,7 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx 
       },
     },
     "method": "FeesPaid",
-    "section": "xcmPallet",
+    "section": "polkadotXcm",
   },
   {
     "data": {
@@ -365,18 +435,18 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx 
         "interior": {
           "X1": [
             {
-              "Parachain": "(rounded 1000)",
+              "Parachain": 1000,
             },
           ],
         },
-        "parents": 0,
+        "parents": 1,
       },
       "message": [
         {
           "ReceiveTeleportedAsset": [
             {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -390,7 +460,7 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx 
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -439,7 +509,7 @@ exports[`kusama & bridgeHubKusama > kusama transfer KSM to bridgeHubKusama > tx 
       },
     },
     "method": "Sent",
-    "section": "xcmPallet",
+    "section": "polkadotXcm",
   },
 ]
 `;

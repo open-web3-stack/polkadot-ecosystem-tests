@@ -222,7 +222,14 @@ exports[`Kusama AssetHub Proxy > create and kill pure proxies > events when kill
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 42,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1400,7 +1407,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1575,7 +1582,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1712,7 +1719,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1830,7 +1837,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1948,7 +1955,7 @@ exports[`Kusama AssetHub Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -2112,18 +2119,6 @@ exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when
       "real": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
     },
     "method": "Announced",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

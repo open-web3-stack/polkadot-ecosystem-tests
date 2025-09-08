@@ -130,7 +130,7 @@ exports[`kusama & assetHubKusama > assetHubKusama transfer KSM to kusama > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 500000000)",
           },
         },
       },
@@ -303,8 +303,8 @@ exports[`kusama & assetHubKusama > kusama transfer KSM to assetHubKusama > to ch
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

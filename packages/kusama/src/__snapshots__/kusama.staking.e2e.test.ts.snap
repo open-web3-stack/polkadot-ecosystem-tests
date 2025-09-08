@@ -15,7 +15,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`Kusama Staking > base staking tests > chill other > chill other bad ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -196,7 +196,7 @@ exports[`Kusama Staking > base staking tests > force apply validator commission 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

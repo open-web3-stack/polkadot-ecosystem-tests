@@ -28,7 +28,7 @@ exports[`Kusama Vesting > merging vesting schedules when none exist fails > merg
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -63,6 +63,14 @@ exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
       "unvested": "(rounded 85000000000)",
     },
     "method": "VestingUpdated",
@@ -73,6 +81,14 @@ exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 
 
 exports[`Kusama Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
 [
+  {
+    "data": {
+      "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "scheduleIndex": 1,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
@@ -99,6 +115,14 @@ exports[`Kusama Vesting > test merger of two vesting schedules > vesting schedul
 
 exports[`Kusama Vesting > vesting schedule lifecycle > vest events 1`] = `
 [
+  {
+    "data": {
+      "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
