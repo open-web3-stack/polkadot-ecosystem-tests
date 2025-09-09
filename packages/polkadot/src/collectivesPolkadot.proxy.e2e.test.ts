@@ -6,5 +6,6 @@ registerTestTree(
     collectivesPolkadot,
     { testSuiteName: 'Polkadot Collectives Proxy', addressEncoding: 0 },
     CollectivesProxyTypes,
+    false,
   ),
 )

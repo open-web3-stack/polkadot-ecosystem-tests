@@ -23,7 +23,7 @@ import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
 import { match } from 'ts-pattern'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, getBlockNumber } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1558,7 +1558,12 @@ export async function addRemoveProxyTest<
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  addressEncoding: number,
+  proxyTypes: Record<string, number>,
+  useRelayBlockNumber: boolean,
+) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -1639,7 +1644,8 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  const currBlockNumber = await getBlockNumber(client, useRelayBlockNumber)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1656,9 +1662,11 @@ export async function createKillPureProxyTest<
 
     // `proxy.killPure` does not emit any events.
     // #7995 will fix this, eliciting a failed test run sometime in the future.
-    await checkEvents(proxyEvents, 'proxy').toMatchSnapshot(
-      `events when killing pure proxy of type ${proxyTypeIx} for Alice`,
-    )
+    await checkEvents(proxyEvents, 'proxy')
+      .redact({
+        removeKeys: /pure/,
+      })
+      .toMatchSnapshot(`events when killing pure proxy of type ${proxyTypeIx} for Alice`)
   }
 
   // Check that the pure proxies were killed
@@ -1757,7 +1765,7 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, useRelayBlockNumber: boolean) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -1790,7 +1798,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = await getBlockNumber(client, useRelayBlockNumber)
   const announcementObject = {
     real: encodeAddress(alice.address, addressEncoding),
     callHash: transferCall.method.hash.toHex(),
@@ -1837,8 +1845,10 @@ export async function proxyAnnouncementLifecycleTest<
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
-  announcementObject.height = currBlockNumber + 2
-  await check(announcements[0][0]).toMatchObject(announcementObject)
+  await check(announcements[0][0]).toMatchObject({
+    ...announcementObject,
+    height: currBlockNumber + 4,
+  })
   expect(announcements[1].eq(announcementDepositTotal)).toBe(true)
 
   // Bob cancels the intent themselves
@@ -1886,6 +1896,7 @@ export function baseProxyE2ETests<
   chain: Chain<TCustom, TInitStorages>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
+  useRelayBlockNumber: boolean,
 ): RootTestTree {
   return {
     kind: 'describe',
@@ -1899,7 +1910,8 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes),
+        testFn: async () =>
+          await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes, useRelayBlockNumber),
       },
       {
         kind: 'test',
@@ -1909,7 +1921,8 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding),
+        testFn: async () =>
+          await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding, useRelayBlockNumber),
       },
     ],
   }
@@ -1922,11 +1935,12 @@ export function fullProxyE2ETests<
   chain: Chain<TCustom, TInitStorages>,
   testConfig: { testSuiteName: string; addressEncoding: number },
   proxyTypes: Record<string, number>,
+  useRelayBlockNumber: boolean,
 ): RootTestTree {
   const allowedFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
   const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
 
-  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyTypes)
+  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyTypes, useRelayBlockNumber)
   baseTestTree.children.push(allowedFilteringTests, forbiddenFilteringTests)
 
   return baseTestTree

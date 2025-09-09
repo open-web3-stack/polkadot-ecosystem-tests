@@ -6,5 +6,6 @@ registerTestTree(
     assetHubPolkadot,
     { testSuiteName: 'Polkadot AssetHub Proxy', addressEncoding: 0 },
     AssetHubProxyTypes,
+    false,
   ),
 )

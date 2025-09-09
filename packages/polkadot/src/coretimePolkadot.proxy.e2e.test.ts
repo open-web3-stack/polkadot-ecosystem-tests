@@ -6,5 +6,6 @@ registerTestTree(
     coretimePolkadot,
     { testSuiteName: 'Polkadot Coretime Proxy', addressEncoding: 0 },
     CoretimeProxyTypes,
+    false,
   ),
 )

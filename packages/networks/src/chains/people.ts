@@ -47,7 +47,7 @@ export const peoplePolkadot = defineChain({
 
 export const peopleKusama = defineChain({
   name: 'peopleKusama',
-  endpoint: 'wss://kusama-people-rpc.polkadot.io',
+  endpoint: 'wss://people-kusama.dotters.network',
   paraId: 1004,
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),

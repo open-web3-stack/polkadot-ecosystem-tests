@@ -336,3 +336,17 @@ export async function setValidatorsStorage(
     },
   })
 }
+
+export async function getBlockNumber(
+  client: {
+    api: ApiPromise
+  },
+  useRelayBlockNumber: boolean,
+): Promise<number> {
+  if (useRelayBlockNumber && client.api.query.parachainSystem) {
+    const validationData = (await client.api.query.parachainSystem.validationData()) as any
+    return validationData.unwrap().relayParentNumber.toNumber()
+  } else {
+    return (await client.api.rpc.chain.getHeader()).number.toNumber()
+  }
+}
