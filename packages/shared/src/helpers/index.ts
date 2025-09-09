@@ -375,7 +375,7 @@ export async function getBlockNumber(api: ApiPromise, relayOrPara: RelayOrPara):
 }
 
 /**
- * Get the earliest block number in which a task can be scheduled.
+ * Get the next block number in which a task can be scheduled.
  */
 export async function nextSchedulableBlockNum(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
   return await match(relayOrPara)

@@ -4,7 +4,7 @@ import { baseGovernanceE2ETests, type RelayTestConfig, registerTestTree } from '
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Kusama Governance',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  blockProvider: 'Relay',
 }
 
 registerTestTree(baseGovernanceE2ETests(kusama, testConfig))

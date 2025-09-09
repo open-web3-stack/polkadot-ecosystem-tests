@@ -6,7 +6,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Any",
     },
     "method": "ProxyAdded",
@@ -16,7 +16,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyAdded",
@@ -26,7 +26,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyAdded",
@@ -36,7 +36,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "HyXXTjiT1XBZBpCGSXjLbH4wkb7AGBt3NmHpsji77BXab7e",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Identity",
     },
     "method": "ProxyAdded",
@@ -46,7 +46,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "GvdYm4dtSFetLboSmKA3fRbobchAuFmZuWt9GR2f4MVH6GD",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "IdentityJudgement",
     },
     "method": "ProxyAdded",
@@ -56,7 +56,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Collator",
     },
     "method": "ProxyAdded",
@@ -71,7 +71,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Any",
     },
     "method": "ProxyRemoved",
@@ -81,7 +81,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyRemoved",
@@ -91,7 +91,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyRemoved",
@@ -101,7 +101,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "HyXXTjiT1XBZBpCGSXjLbH4wkb7AGBt3NmHpsji77BXab7e",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Identity",
     },
     "method": "ProxyRemoved",
@@ -111,7 +111,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "GvdYm4dtSFetLboSmKA3fRbobchAuFmZuWt9GR2f4MVH6GD",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "IdentityJudgement",
     },
     "method": "ProxyRemoved",
@@ -121,7 +121,7 @@ exports[`People Kusama Proxy > add proxies (with/without delay) to an account, a
     "data": {
       "delay": 0,
       "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Collator",
     },
     "method": "ProxyRemoved",
@@ -136,7 +136,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -145,7 +145,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -154,7 +154,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -163,7 +163,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Identity",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -172,7 +172,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "IdentityJudgement",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -181,7 +181,7 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when creati
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -193,17 +193,14 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when killin
 [
   {
     "data": {
-      "disambiguationIndex": 0,
-      "proxyType": "Any",
-      "pure": "FJ3Yk5SeRPRt8rQjeVDZ3Mxm199uwx8pLT1cPBEHWaNEgzV",
-      "spawner": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-    },
-    "method": "PureKilled",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 42,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -406,7 +403,7 @@ exports[`People Kusama Proxy > filtering tests for allowed proxy calls > allowed
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sender": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Remarked",
     "section": "system",
@@ -949,7 +946,7 @@ exports[`People Kusama Proxy > filtering tests for allowed proxy calls > allowed
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sender": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Remarked",
     "section": "system",
@@ -1582,8 +1579,8 @@ exports[`People Kusama Proxy > perform proxy call on behalf of delegator > event
   {
     "data": {
       "amount": 1000000000000,
-      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "to": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      "from": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "to": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
     },
     "method": "Transfer",
     "section": "balances",
@@ -1603,22 +1600,10 @@ exports[`People Kusama Proxy > proxy announcement lifecycle test > events when B
   {
     "data": {
       "callHash": "(hash)",
-      "proxy": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "real": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "proxy": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "real": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Announced",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

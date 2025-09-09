@@ -1,5 +1,5 @@
 import { defineChain } from '../defineChain.js'
-import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
   coretimePolkadot: {
@@ -15,6 +15,7 @@ const getInitStorages = (_config: typeof custom.coretimePolkadot | typeof custom
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
     ],
   },
 })

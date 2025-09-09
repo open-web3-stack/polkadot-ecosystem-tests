@@ -1,6 +1,11 @@
 import { coretimeKusama } from '@e2e-test/networks/chains'
-import { CoretimeProxyTypes, fullProxyE2ETests, registerTestTree } from '@e2e-test/shared'
+import { CoretimeProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(
-  fullProxyE2ETests(coretimeKusama, { testSuiteName: 'Kusama Coretime Proxy', addressEncoding: 2 }, CoretimeProxyTypes),
-)
+const testConfig: ParaTestConfig = {
+  testSuiteName: 'Kusama Coretime Proxy',
+  addressEncoding: 2,
+  relayOrPara: 'Para',
+  asyncBacking: 'Enabled',
+}
+
+registerTestTree(fullProxyE2ETests(coretimeKusama, testConfig, CoretimeProxyTypes))

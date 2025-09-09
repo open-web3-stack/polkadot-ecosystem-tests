@@ -1,10 +1,11 @@
 import { assetHubPolkadot } from '@e2e-test/networks/chains'
-import { AssetHubProxyTypes, fullProxyE2ETests, registerTestTree } from '@e2e-test/shared'
+import { AssetHubProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(
-  fullProxyE2ETests(
-    assetHubPolkadot,
-    { testSuiteName: 'Polkadot AssetHub Proxy', addressEncoding: 0 },
-    AssetHubProxyTypes,
-  ),
-)
+const testConfig: ParaTestConfig = {
+  testSuiteName: 'Polkadot AssetHub Proxy',
+  addressEncoding: 0,
+  relayOrPara: 'Para',
+  asyncBacking: 'Enabled',
+}
+
+registerTestTree(fullProxyE2ETests(assetHubPolkadot, testConfig, AssetHubProxyTypes))
