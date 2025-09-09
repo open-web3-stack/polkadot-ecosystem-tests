@@ -1642,7 +1642,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1793,7 +1793,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const announcementObject = {
     real: encodeAddress(alice.address, testConfig.addressEncoding),
     callHash: transferCall.method.hash.toHex(),

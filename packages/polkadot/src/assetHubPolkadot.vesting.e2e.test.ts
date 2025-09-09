@@ -4,7 +4,7 @@ import { assetHubVestingE2ETests, type ParaTestConfig, registerTestTree } from '
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot Asset Hub Vesting',
   addressEncoding: 0,
-  relayOrPara: 'Para',
+  blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
 }
 

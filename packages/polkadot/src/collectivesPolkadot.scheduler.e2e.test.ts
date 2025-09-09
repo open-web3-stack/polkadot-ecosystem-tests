@@ -4,7 +4,7 @@ import { baseSchedulerE2ETests, registerTestTree, type TestConfig } from '@e2e-t
 const testConfig: TestConfig = {
   testSuiteName: 'Collectives Polkadot Scheduler E2E tests',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseSchedulerE2ETests(collectivesPolkadot, testConfig))

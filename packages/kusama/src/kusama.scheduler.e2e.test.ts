@@ -4,7 +4,7 @@ import { baseSchedulerE2ETests, type RelayTestConfig, registerTestTree } from '@
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Kusama Scheduler',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseSchedulerE2ETests(kusama, testConfig))

@@ -514,7 +514,12 @@ async function forceUnstakeTest<
   let nominatorPrefs = await client.api.query.staking.nominators(bob.address)
   assert(nominatorPrefs.isSome)
 
-  await scheduleInlineCallWithOrigin(client, forceUnstakeTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceUnstakeTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -672,7 +677,12 @@ async function setMinCommission<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    await scheduleInlineCallWithOrigin(client, setMinCommissionCall(inc).method.toHex(), origin, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(
+      client,
+      setMinCommissionCall(inc).method.toHex(),
+      origin,
+      testConfig.blockProvider,
+    )
 
     await client.dev.newBlock()
 
@@ -773,7 +783,7 @@ async function setStakingConfigsTest<
     client,
     setStakingConfigsCall(inc).method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -891,7 +901,7 @@ async function forceApplyValidatorCommissionTest<
     client,
     setStakingConfigsTx.method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -953,7 +963,7 @@ async function modifyValidatorCountTest<
     client,
     setValidatorCountCall(100).method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -992,7 +1002,7 @@ async function modifyValidatorCountTest<
     client,
     increaseValidatorCountCall(100).method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -1026,7 +1036,7 @@ async function modifyValidatorCountTest<
     client,
     scaleValidatorCountCall(10).method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -1086,7 +1096,7 @@ async function chillOtherTest<
     client,
     setStakingConfigsCall.method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -1173,7 +1183,7 @@ async function chillOtherTest<
   const successfulCall = setStakingConfigsCalls.pop()
 
   for (const call of setStakingConfigsCalls) {
-    await scheduleInlineCallWithOrigin(client, call.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(client, call.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     await client.dev.newBlock()
 
@@ -1203,7 +1213,12 @@ async function chillOtherTest<
   /// To end the test, sucessfully run `chill_other` with the appropriate staking configuration limits all set,
   /// and observe that Bob is forcibly chilled.
 
-  await scheduleInlineCallWithOrigin(client, successfulCall!.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    successfulCall!.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1246,7 +1261,7 @@ async function unappliedSlashTest<
   let eraChangeBlock: number | undefined
   // Only move to era change if running on a relay chain. If not, this is running on a post-migration Asset Hub,
   // in which this is unnecessary.
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1285,8 +1300,8 @@ async function unappliedSlashTest<
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
   let slashKey: any
   let slashValue: any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       slashKey = [activeEra + 1]
 
       slashValue = [
@@ -1305,7 +1320,7 @@ async function unappliedSlashTest<
         },
       ]
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       const slashKeyNewComponent = [
         alice.address,
         // perbill, not relevant for the test
@@ -1349,10 +1364,15 @@ async function unappliedSlashTest<
   expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
   // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
-  if (testConfig.relayOrPara === 'Para') {
+  if (testConfig.blockProvider === 'NonLocal') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
-    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(
+      client,
+      applySlashTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
   }
 
   await client.dev.newBlock()
@@ -1396,7 +1416,7 @@ async function cancelDeferredSlashTest<
   const dave = testAccounts.dave
 
   let eraChangeBlock: number | undefined
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1418,8 +1438,8 @@ async function cancelDeferredSlashTest<
   let slashKey: any
   let slashKeyNewComponent: any | undefined
   let slashValue: any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       slashKey = [activeEra + 1]
       slashValue = [
         {
@@ -1434,7 +1454,7 @@ async function cancelDeferredSlashTest<
         },
       ]
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       slashKeyNewComponent = [alice.address, 0, 0]
       slashKey = [activeEra, slashKeyNewComponent]
       slashValue = {
@@ -1479,25 +1499,25 @@ async function cancelDeferredSlashTest<
   // Two blocks away from the era change.
 
   let slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       expect(slash.length).toBe(1)
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       expect(slash.toJSON()).toBeDefined()
     })
     .exhaustive()
 
   let cancelDeferredSlashTx: any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra, [slashKeyNewComponent])
     })
     .exhaustive()
-  await scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelDeferredSlashTx.method.toHex(), origin, testConfig.blockProvider)
 
   // Check stakers' bonded funds before the slash would be applied.
 
@@ -1514,17 +1534,17 @@ async function cancelDeferredSlashTest<
   // And the slash should have been cancelled.
 
   slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       expect(slash.length).toBe(0)
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       expect(slash.toJSON()).toBeNull()
     })
     .exhaustive()
 
   // Era-boundary block creation tends to be slow.
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     await client.dev.setStorage({
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
@@ -1544,17 +1564,22 @@ async function cancelDeferredSlashTest<
   // This new block marks the start of the new era.
 
   // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
-  if (testConfig.relayOrPara === 'Para') {
+  if (testConfig.blockProvider === 'NonLocal') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
-    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(
+      client,
+      applySlashTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
   }
 
   await client.dev.newBlock()
 
   // The era should have changed.
 
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
     expect(newActiveEra).toBe(activeEra + 1)
   }
@@ -1687,7 +1712,7 @@ async function setInvulnerablesTestBadOrigin<
     client,
     setInvulnerablesTx.method.toHex(),
     { Origins: 'StakingAdmin' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -1727,7 +1752,7 @@ async function setInvulnerablesTest<
   //
 
   let eraChangeBlock: number | undefined
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1796,7 +1821,7 @@ async function setInvulnerablesTest<
     client,
     setInvulnerablesTx.method.toHex(),
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
   await client.dev.newBlock()
@@ -1820,8 +1845,8 @@ async function setInvulnerablesTest<
 
   let slashKey: any
   let slashValue: any
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       slashKey = [activeEra + 1]
       slashValue = [
         {
@@ -1836,7 +1861,7 @@ async function setInvulnerablesTest<
         },
       ]
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       const slashKeyNewComponent = [alice.address, 0, 0]
       slashKey = [activeEra, slashKeyNewComponent]
       slashValue = {
@@ -1852,7 +1877,7 @@ async function setInvulnerablesTest<
     })
     .exhaustive()
 
-  if (testConfig.relayOrPara === 'Relay') {
+  if (testConfig.blockProvider === 'Local') {
     await client.dev.setStorage({
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
@@ -1887,10 +1912,15 @@ async function setInvulnerablesTest<
   expect(bobFundsPreSlash.data.toJSON()).toMatchSnapshot('bob funds pre slash')
   expect(charlieFundsPreSlash.data.toJSON()).toMatchSnapshot('charlie funds pre slash')
 
-  if (testConfig.relayOrPara === 'Para') {
+  if (testConfig.blockProvider === 'NonLocal') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
-    await scheduleInlineCallWithOrigin(client, applySlashTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(
+      client,
+      applySlashTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
   }
 
   // With this block, the slash will have been applied.

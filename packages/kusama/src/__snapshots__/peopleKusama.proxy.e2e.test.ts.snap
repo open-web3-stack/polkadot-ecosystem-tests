@@ -193,14 +193,17 @@ exports[`People Kusama Proxy > create and kill pure proxies > events when killin
 [
   {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 42,
-          },
-        },
-      },
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "pure": "JKb9r5Bt4mCcqRdrhmgjP6gEyfLeJdZMUUP5wxereNBnFT2",
+      "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1604,6 +1607,18 @@ exports[`People Kusama Proxy > proxy announcement lifecycle test > events when B
       "real": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Kusama Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

@@ -4,7 +4,7 @@ import { CoretimeProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTes
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot Coretime Proxy',
   addressEncoding: 0,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Enabled',
 }
 

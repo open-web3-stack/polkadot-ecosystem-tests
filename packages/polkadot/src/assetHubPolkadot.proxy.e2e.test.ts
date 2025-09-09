@@ -4,7 +4,7 @@ import { AssetHubProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTes
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot AssetHub Proxy',
   addressEncoding: 0,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Enabled',
 }
 

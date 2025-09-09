@@ -98,7 +98,7 @@ async function ensureMaxPoolsCapacity(client: { api: ApiPromise; dev: any }, tes
       client,
       setConfigsCall.method.toHex(),
       { system: 'Root' },
-      testConfig.relayOrPara,
+      testConfig.blockProvider,
     )
 
     // Execute the scheduled call
@@ -382,7 +382,7 @@ async function nominationPoolLifecycleTest<
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   expect(poolData.isSome, 'Pool should still exist after commission is changed').toBe(true)
 
-  const blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   const nominationPoolWithCommission = poolData.unwrap()
 
@@ -930,7 +930,7 @@ async function nominationPoolGlobalConfigTest<
   ]
 
   for (const [origin, inc] of originsAndIncrements) {
-    await scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin, testConfig.relayOrPara)
+    await scheduleInlineCallWithOrigin(client, setConfigsCall(inc).method.toHex(), origin, testConfig.blockProvider)
 
     await client.dev.newBlock()
 
@@ -1123,7 +1123,12 @@ async function nominationPoolsUpdateRolesTest<
     { Set: testAccounts.eve.address },
   )
 
-  await scheduleInlineCallWithOrigin(client, updateRolesCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    updateRolesCall.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 

@@ -4,7 +4,7 @@ import { CollectivesProxyTypes, fullProxyE2ETests, type ParaTestConfig, register
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot Collectives Proxy',
   addressEncoding: 0,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Enabled',
 }
 

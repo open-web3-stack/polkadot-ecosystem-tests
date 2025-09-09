@@ -4,7 +4,7 @@ import { fullProxyE2ETests, KusamaProxyTypes, type RelayTestConfig, registerTest
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Kusama Proxy',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(fullProxyE2ETests(kusama, testConfig, KusamaProxyTypes))

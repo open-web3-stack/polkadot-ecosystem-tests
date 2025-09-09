@@ -4,7 +4,7 @@ import { fullStakingTests, type RelayTestConfig, registerTestTree } from '@e2e-t
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Staking',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(fullStakingTests(polkadot, testConfig))

@@ -286,11 +286,11 @@ export async function referendumLifecycleTest<
   let refPost: PalletReferendaReferendumStatusConvictionVotingTally
 
   let iters: number
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       iters = (smallTipper[1].preparePeriod.toNumber() - 2) / 2
     })
     .exhaustive()
@@ -401,7 +401,7 @@ export async function referendumLifecycleTest<
   expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
   expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  let blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  let blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -471,7 +471,7 @@ export async function referendumLifecycleTest<
   expect(daveVote.aye.toNumber()).toBe(ayeVote)
   expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -540,7 +540,7 @@ export async function referendumLifecycleTest<
   expect(eveVote.nay.toNumber()).toBe(nayVote)
   expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -563,7 +563,7 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -599,12 +599,12 @@ export async function referendumLifecycleTest<
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       expect(cancelledRef[0].toNumber()).toBe(blockNumber)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       expect(cancelledRef[0].toNumber()).toBe(blockNumber - 2)
     })
   // Check that the referendum's submission deposit was refunded to Alice
@@ -818,7 +818,7 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -863,13 +863,13 @@ export async function referendumLifecycleKillTest<
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       expect(killedRef.toNumber()).toBe(blockNumber)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       expect(killedRef.toNumber()).toBe(blockNumber - 2)
     })
 }

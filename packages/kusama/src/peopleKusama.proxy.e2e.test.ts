@@ -4,7 +4,7 @@ import { fullProxyE2ETests, type ParaTestConfig, PeopleProxyTypes, registerTestT
 const testConfig: ParaTestConfig = {
   testSuiteName: 'People Kusama Proxy',
   addressEncoding: 2,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Disabled',
 }
 

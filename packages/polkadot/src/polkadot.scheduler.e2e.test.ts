@@ -4,7 +4,7 @@ import { baseSchedulerE2ETests, type RelayTestConfig, registerTestTree } from '@
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Scheduler',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseSchedulerE2ETests(polkadot, testConfig))

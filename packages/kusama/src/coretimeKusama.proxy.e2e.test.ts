@@ -4,7 +4,7 @@ import { CoretimeProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTes
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Kusama Coretime Proxy',
   addressEncoding: 2,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Enabled',
 }
 

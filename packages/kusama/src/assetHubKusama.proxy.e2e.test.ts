@@ -4,7 +4,7 @@ import { AssetHubProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTes
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Kusama AssetHub Proxy',
   addressEncoding: 2,
-  relayOrPara: 'Para',
+  blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
 }
 

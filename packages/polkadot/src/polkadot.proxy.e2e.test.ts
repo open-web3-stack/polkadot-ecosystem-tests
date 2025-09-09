@@ -4,7 +4,7 @@ import { fullProxyE2ETests, PolkadotProxyTypes, type RelayTestConfig, registerTe
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Proxy',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(fullProxyE2ETests(polkadot, testConfig, PolkadotProxyTypes))

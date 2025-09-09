@@ -4,7 +4,7 @@ import { fullProxyE2ETests, type ParaTestConfig, PeopleProxyTypes, registerTestT
 const testConfig: ParaTestConfig = {
   testSuiteName: 'People Polkadot Proxy',
   addressEncoding: 0,
-  relayOrPara: 'Para',
+  blockProvider: 'Local',
   asyncBacking: 'Disabled',
 }
 

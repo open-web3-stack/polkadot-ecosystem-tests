@@ -4,7 +4,7 @@ import { baseNominationPoolsE2ETests, registerTestTree, type TestConfig } from '
 const testConfig: TestConfig = {
   testSuiteName: 'Kusama Nomination Pools',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseNominationPoolsE2ETests(kusama, testConfig))

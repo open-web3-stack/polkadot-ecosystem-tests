@@ -4,7 +4,7 @@ import { baseNominationPoolsE2ETests, registerTestTree, type TestConfig } from '
 const testConfig: TestConfig = {
   testSuiteName: 'Polkadot Nomination Pools',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseNominationPoolsE2ETests(polkadot, testConfig))

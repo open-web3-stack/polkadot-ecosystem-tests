@@ -4,7 +4,7 @@ import { registerTestTree, relayVestingE2ETests, type TestConfig } from '@e2e-te
 const testConfig: TestConfig = {
   testSuiteName: 'Kusama Vesting',
   addressEncoding: 2,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(relayVestingE2ETests(kusama, testConfig))

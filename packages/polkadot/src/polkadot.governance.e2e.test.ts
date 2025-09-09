@@ -4,7 +4,7 @@ import { baseGovernanceE2ETests, type RelayTestConfig, registerTestTree } from '
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Governance',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseGovernanceE2ETests(polkadot, testConfig))

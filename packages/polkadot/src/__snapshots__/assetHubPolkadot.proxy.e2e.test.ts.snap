@@ -222,14 +222,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 [
   {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 42,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -2119,6 +2112,18 @@ exports[`Polkadot AssetHub Proxy > proxy announcement lifecycle test > events wh
       "real": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

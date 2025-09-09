@@ -193,14 +193,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 [
   {
     "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 42,
-          },
-        },
-      },
+      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1604,6 +1597,18 @@ exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when
       "real": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]

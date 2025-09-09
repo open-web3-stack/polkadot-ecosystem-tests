@@ -4,7 +4,7 @@ import { assetHubVestingE2ETests, type ParaTestConfig, registerTestTree } from '
 const kahTestConfig: ParaTestConfig = {
   testSuiteName: 'Kusama Asset Hub Vesting',
   addressEncoding: 2,
-  relayOrPara: 'Para',
+  blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
 }
 

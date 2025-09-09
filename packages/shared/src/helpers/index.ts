@@ -92,11 +92,12 @@ export function objectCmp(
 }
 
 /**
- * This enum is used when scheduling calls, to know whether the scheduling is:
- * 1. on a relay chain, using an RPC call to get the current block number, or
- * 2. on a system parachain, using that parachain's last known relay chain block number.
+ * This enum is used when scheduling calls, to know whether the calling environment:
+ * 1. uses a local block provider e.g. relay chains, or some system parachains
+ * 2. uses a non-local block provider e.g. some system parachain that need relay block numbers for proxies or
+ *    call scheduling
  */
-export type RelayOrPara = 'Relay' | 'Para'
+export type BlockProvider = 'Local' | 'NonLocal'
 
 /** Whether async backing is enabled or disabled on the querying parachain. */
 export type AsyncBacking = 'Enabled' | 'Disabled'
@@ -108,8 +109,8 @@ export type AsyncBacking = 'Enabled' | 'Disabled'
  * The call can be either an inline call or a lookup call, which in the latter case *must* have been noted
  * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
  *
- * @param relayOrPara Whether the call is being scheduled on a parachain. This parachain's runtime *must* have the
- * scheduler pallet available.
+ * @param blockProvider Whether the call is being scheduled on a chain that uses a local or nonlocal block provider.
+ *        This chain's runtime *must* have the scheduler pallet available.
  */
 export async function scheduleCallWithOrigin(
   client: {
@@ -127,11 +128,13 @@ export async function scheduleCallWithOrigin(
         }
       },
   origin: any,
-  relayOrPara: RelayOrPara = 'Relay',
+  blockProvider: BlockProvider = 'Local',
 ) {
-  const scheduledBlock = await match(relayOrPara)
-    .with('Relay', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('Para', async () => ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+  const scheduledBlock = await match(blockProvider)
+    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('NonLocal', async () =>
+      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
+    )
     .exhaustive()
 
   await client.dev.setStorage({
@@ -164,9 +167,9 @@ export async function scheduleInlineCallWithOrigin(
   },
   encodedCall: HexString,
   origin: any,
-  relayOrPara: RelayOrPara = 'Relay',
+  blockProvider: BlockProvider = 'Local',
 ) {
-  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, relayOrPara)
+  await scheduleCallWithOrigin(client, { Inline: encodedCall }, origin, blockProvider)
 }
 
 /**
@@ -182,9 +185,9 @@ export async function scheduleLookupCallWithOrigin(
   },
   lookupCall: { hash: any; len: any },
   origin: any,
-  relayOrPara: RelayOrPara = 'Relay',
+  blockProvider: BlockProvider = 'Local',
 ) {
-  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, relayOrPara)
+  await scheduleCallWithOrigin(client, { Lookup: lookupCall }, origin, blockProvider)
 }
 
 /**
@@ -367,20 +370,20 @@ export async function setValidatorsStorage(
  * @returns The last known block number if relay, the relay chain block number the most recent parablock was anchored
  * to if parachain.
  */
-export async function getBlockNumber(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
-  return await match(relayOrPara)
-    .with('Relay', async () => (await api.rpc.chain.getHeader()).number.toNumber())
-    .with('Para', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+export async function getBlockNumber(api: ApiPromise, blockProvider: BlockProvider): Promise<number> {
+  return await match(blockProvider)
+    .with('Local', async () => (await api.rpc.chain.getHeader()).number.toNumber())
+    .with('NonLocal', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
     .exhaustive()
 }
 
 /**
  * Get the next block number in which a task can be scheduled.
  */
-export async function nextSchedulableBlockNum(api: ApiPromise, relayOrPara: RelayOrPara): Promise<number> {
-  return await match(relayOrPara)
-    .with('Relay', async () => (await api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('Para', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
+export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: BlockProvider): Promise<number> {
+  return await match(blockProvider)
+    .with('Local', async () => (await api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('NonLocal', async () => ((await api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber())
     .exhaustive()
 }
 
@@ -393,12 +396,12 @@ export async function nextSchedulableBlockNum(api: ApiPromise, relayOrPara: Rela
  * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
  *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number.
  *
- * @param relayOrPara Whether the call is being scheduled on a relay or parachain.
+ * @param blockProvider Whether the call is being scheduled on a relay or parachain.
  * @param asyncBacking Whether async backing is enabled on the parachain.
  * @returns The number of blocks to offset when scheduling tasks
  */
 export function schedulerOffset(cfg: TestConfig): number {
-  if (cfg.relayOrPara === 'Relay') {
+  if (cfg.blockProvider === 'Local') {
     return 1
   }
 
@@ -416,7 +419,7 @@ export function schedulerOffset(cfg: TestConfig): number {
 export interface RelayTestConfig {
   testSuiteName: string
   addressEncoding: number
-  relayOrPara: 'Relay'
+  blockProvider: 'Local'
 }
 
 /**
@@ -429,7 +432,7 @@ export interface RelayTestConfig {
 export interface ParaTestConfig {
   testSuiteName: string
   addressEncoding: number
-  relayOrPara: 'Para'
+  blockProvider: BlockProvider
   asyncBacking: AsyncBacking
 }
 

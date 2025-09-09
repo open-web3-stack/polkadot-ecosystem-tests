@@ -123,7 +123,7 @@ export async function scheduleBadOriginTest<
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
-  const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.relayOrPara)
+  const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber, null, 0, call)
 
@@ -142,7 +142,7 @@ export async function scheduleNamedBadOriginTest<
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
-  const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.relayOrPara)
+  const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
 
   const taskId = sha256AsU8a('task_id')
@@ -166,21 +166,21 @@ export async function cancelScheduledTaskBadOriginTest<
   const [client] = await setupNetworks(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
 
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, call)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -217,14 +217,14 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   const [client] = await setupNetworks(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
@@ -233,7 +233,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlockNumber!, null, 0, call)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -274,21 +274,21 @@ export async function scheduledCallExecutes<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
 
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, adjustIssuanceTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -344,20 +344,25 @@ export async function scheduledNamedCallExecutes<
 
   const taskId = sha256AsU8a('task_id')
 
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlockNumber!, null, 0, adjustIssuanceTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleNamedTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
 
@@ -411,21 +416,21 @@ export async function cancelScheduledTask<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 3 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
     .exhaustive()
 
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, adjustIssuanceTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -435,7 +440,7 @@ export async function cancelScheduledTask<
 
   const cancelTx = client.api.tx.scheduler.cancel(targetBlockNumber!, 0)
 
-  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -472,21 +477,26 @@ export async function cancelScheduledNamedTask<
 
   const taskId = sha256AsU8a('task_id')
 
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 3 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
     .exhaustive()
 
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlockNumber!, null, 0, adjustIssuanceTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleNamedTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -496,7 +506,7 @@ export async function cancelScheduledNamedTask<
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
-  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -548,9 +558,9 @@ export async function scheduleTaskAfterDelay<
 
   const scheduleTx = client.api.tx.scheduler.scheduleAfter(delay, null, 0, adjustIssuanceTx)
 
-  let currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
   currBlockNumber += offset
@@ -562,11 +572,11 @@ export async function scheduleTaskAfterDelay<
     .toMatchSnapshot('events when scheduling task with delay')
 
   let targetBlock: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlock = currBlockNumber + delay + 1
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       // Recall that parachains use `parachainSystem.lastRelayChainBlockNumber` to key the agenda for the next block,
       // not the agenda for the current block - a step back is needed.
       // Also, the scheduler considers the block in which call to schedule the delayed task to not count, so the
@@ -629,14 +639,19 @@ export async function scheduleNamedTaskAfterDelay<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
 
-  let currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   const offset = schedulerOffset(testConfig)
   // See above note in `scheduleTaskAfterDelay`
   const delay = 5 * offset
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, delay, null, 0, adjustIssuanceTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleNamedTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleNamedTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
   currBlockNumber += offset
@@ -648,11 +663,11 @@ export async function scheduleNamedTaskAfterDelay<
     .toMatchSnapshot('events when scheduling task with delay')
 
   let targetBlock: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlock = currBlockNumber + delay + 1
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       // Recall that parachains use `parachainSystem.lastRelayChainBlockNumber` to key the agenda for the next block,
       // not the agenda for the current block - a step back is needed.
       targetBlock = currBlockNumber + delay + 1 - offset
@@ -719,21 +734,21 @@ export async function scheduledOverweightCallFails<
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
 
   const offset = schedulerOffset(testConfig)
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // Target block is two blocks in the future - see the notes about parachain scheduling differences.
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
 
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber!, null, 0, withWeightTx)
 
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -827,10 +842,10 @@ async function scheduleLookupCall<
     client,
     { hash: preimageHash, len: encodedProposal.encodedLength },
     { system: 'Root' },
-    testConfig.relayOrPara,
+    testConfig.blockProvider,
   )
 
-  const targetBlock = await nextSchedulableBlockNum(client.api, testConfig.relayOrPara)
+  const targetBlock = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   let agenda = await client.api.query.scheduler.agenda(targetBlock)
 
   expect(agenda.length).toBe(1)
@@ -891,16 +906,16 @@ export async function schedulePreimagedCall<
   await checkEvents(noteEvents, 'preimage').toMatchSnapshot('note preimage events')
 
   // Schedule using the preimage hash
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
   // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
   // at `n + 2`.
   let targetBlockNumber: number
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlockNumber = initialBlockNumber + offset
     })
     .exhaustive()
@@ -1040,12 +1055,12 @@ async function testPeriodicTask<
   const offset = schedulerOffset(testConfig)
 
   // Manually schedule `scheduleTx` to run on the next block.
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  let currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   // Move to just before the first execution block
   await client.dev.newBlock()
@@ -1053,13 +1068,16 @@ async function testPeriodicTask<
 
   // Agenda check for the first scheduled execution
   let targetBlock: number
-  if (testConfig.relayOrPara === 'Relay') {
-    targetBlock = currBlockNumber + offset
-  } else {
-    // Recall that on a parachain, a task to be run on the next block has an agenda key of
-    // `parachainSystem.lastRelayChainBlockNumber`, which `getBlockNumber` will return.
-    targetBlock = currBlockNumber
-  }
+  match(testConfig.blockProvider)
+    .with('Local', () => {
+      targetBlock = currBlockNumber + offset
+    })
+    .with('NonLocal', () => {
+      // Recall that on a parachain, a task to be run on the next block has an agenda key of
+      // `parachainSystem.lastRelayChainBlockNumber`, which `getBlockNumber` will return.
+      targetBlock = currBlockNumber
+    })
+    .exhaustive()
   let agenda = await client.api.query.scheduler.agenda(targetBlock!)
 
   expect(agenda.length).toBe(1)
@@ -1101,7 +1119,7 @@ async function testPeriodicTask<
 
     // Check agenda for next scheduled execution (if not the last iteration)
     if (i < REPETITIONS) {
-      if (testConfig.relayOrPara === 'Relay') {
+      if (testConfig.blockProvider === 'Local') {
         targetBlock = currBlockNumber + period
       } else {
         targetBlock = currBlockNumber + period - offset
@@ -1139,11 +1157,11 @@ async function testPeriodicTask<
   }
 
   // Verify task is removed after all executions
-  match(testConfig.relayOrPara)
-    .with('Relay', () => {
+  match(testConfig.blockProvider)
+    .with('Local', () => {
       targetBlock = currBlockNumber + offset
     })
-    .with('Para', () => {
+    .with('NonLocal', () => {
       targetBlock = currBlockNumber
     })
     .exhaustive()
@@ -1169,14 +1187,14 @@ export async function schedulePeriodicTask<
   const [client] = await setupNetworks(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   const offset = schedulerOffset(testConfig)
-  const delay = match(testConfig.relayOrPara)
-    .with('Relay', () => 2 * offset)
+  const delay = match(testConfig.blockProvider)
+    .with('Local', () => 2 * offset)
     // Parachain scheduling differences - see notes above.
     // This is obviously 2, but leaving it like this clarifies what's happening.
-    .with('Para', () => 2 * offset - offset)
+    .with('NonLocal', () => 2 * offset - offset)
     .exhaustive()
 
   const period = PERIOD * offset
@@ -1206,14 +1224,14 @@ export async function scheduleNamedPeriodicTask<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   const offset = schedulerOffset(testConfig)
-  const delay = match(testConfig.relayOrPara)
-    .with('Relay', () => 2 * offset)
+  const delay = match(testConfig.blockProvider)
+    .with('Local', () => 2 * offset)
     // Recall: to schedule a task on the next block of a parachain, the offset is 0. On the block after that one,
     // it is 1 if async backing is disabled, 2 if enabled.
-    .with('Para', () => 2 * offset - offset)
+    .with('NonLocal', () => 2 * offset - offset)
     .exhaustive()
 
   const period = PERIOD * offset
@@ -1258,15 +1276,15 @@ export async function schedulePriorityWeightedTasks<
   const highPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceHighTx, taskWeight)
   const lowPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceLowTx, taskWeight)
 
-  const initBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   let currBlockNumber = initBlockNumber
   const offset = schedulerOffset(testConfig)
   let priorityTargetBlock: number
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       priorityTargetBlock = initBlockNumber + 2 * offset
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       priorityTargetBlock = initBlockNumber + offset
     })
     .exhaustive()
@@ -1285,7 +1303,7 @@ export async function schedulePriorityWeightedTasks<
     lowPriorityTx,
   )
 
-  const targetBlock = await nextSchedulableBlockNum(client.api, testConfig.relayOrPara)
+  const targetBlock = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
 
   // Schedule both tasks
   await client.dev.setStorage({
@@ -1314,7 +1332,7 @@ export async function schedulePriorityWeightedTasks<
   await client.dev.newBlock()
   currBlockNumber += offset
 
-  const manuallyScheduledBlock = await nextSchedulableBlockNum(client.api, testConfig.relayOrPara)
+  const manuallyScheduledBlock = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
 
   // Verify both tasks are in the agenda
   let scheduled = await client.api.query.scheduler.agenda(manuallyScheduledBlock)
@@ -1340,21 +1358,21 @@ export async function schedulePriorityWeightedTasks<
   // Verify `incompleteSince` is set to current block
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
   assert(incompleteSince.isSome)
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       expect(incompleteSince.unwrap().toNumber()).toBe(currBlockNumber)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       expect(incompleteSince.unwrap().toNumber()).toBe(currBlockNumber - offset)
     })
     .exhaustive()
 
   // Check the agenda for the most recently built block
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber - offset)
     })
     .exhaustive()
@@ -1400,11 +1418,11 @@ export async function schedulePriorityWeightedTasks<
   expect(scheduled.length).toBe(0)
 
   // The agenda on the block just before the most recently built block should be emoty
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 2 * offset)
     })
     .exhaustive()
@@ -1412,11 +1430,11 @@ export async function schedulePriorityWeightedTasks<
   expect(scheduled.length).toBe(0)
 
   // Check the agenda on the most recently built block - should be empty
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       scheduled = await client.api.query.scheduler.agenda(currBlockNumber - offset)
     })
     .exhaustive()
@@ -1440,7 +1458,7 @@ export async function scheduleWithRetryConfig<
   const [client] = await setupNetworks(chain)
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   // Define base task object once
   const baseTask = {
@@ -1466,11 +1484,11 @@ export async function scheduleWithRetryConfig<
   }
 
   let targetBlock: number
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       targetBlock = initialBlockNumber + 3 * offset
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       // Recall that on a parachain, the current value of `parachainSystem.lastRelayChainBlockNumber`
       // keys the agenda for the next block, not the current one, so a step back is needed.
       targetBlock = initialBlockNumber + 3 * offset - offset
@@ -1479,7 +1497,7 @@ export async function scheduleWithRetryConfig<
 
   // Schedule the named task first
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlock!, null, 1, failingTx)
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   // Move to scheduling block
   await client.dev.newBlock()
@@ -1492,7 +1510,7 @@ export async function scheduleWithRetryConfig<
 
   // Set retry configuration
   const setRetryTx = client.api.tx.scheduler.setRetry([targetBlock!, 0], retryConfig.totalRetries, retryConfig.period)
-  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -1532,7 +1550,7 @@ export async function scheduleWithRetryConfig<
   })
 
   const cancelRetryTx = client.api.tx.scheduler.cancelRetry([rescheduledBlock!, 0])
-  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -1579,7 +1597,7 @@ export async function scheduleNamedWithRetryConfig<
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const taskId = sha256AsU8a('retry_task')
-  const initialBlockNumber = await getBlockNumber(client.api, testConfig.relayOrPara)
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   // Define base task object once
   const baseTask = {
@@ -1605,11 +1623,11 @@ export async function scheduleNamedWithRetryConfig<
   }
 
   let targetBlock: number
-  match(testConfig.relayOrPara)
-    .with('Relay', async () => {
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
       targetBlock = initialBlockNumber + 3 * offset
     })
-    .with('Para', async () => {
+    .with('NonLocal', async () => {
       // Recall that on a parachain, the current value of `parachainSystem.lastRelayChainBlockNumber`
       // keys the agenda for the next block, not the current one, so a step back is needed.
       targetBlock = initialBlockNumber + 3 * offset - offset
@@ -1618,7 +1636,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Schedule the named task first
   const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlock!, null, 1, failingTx)
-  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   // Move to scheduling block
   await client.dev.newBlock()
@@ -1631,7 +1649,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Set retry configuration
   const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
-  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -1672,7 +1690,7 @@ export async function scheduleNamedWithRetryConfig<
   })
 
   let cancelRetryTx = client.api.tx.scheduler.cancelRetryNamed(taskId)
-  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
@@ -1728,7 +1746,7 @@ export async function scheduleNamedWithRetryConfig<
 
   // Cancel the retry configuration with `cancelRetry`
   cancelRetryTx = client.api.tx.scheduler.cancelRetry([finalRescheduledBlock!, 0])
-  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.relayOrPara)
+  await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 

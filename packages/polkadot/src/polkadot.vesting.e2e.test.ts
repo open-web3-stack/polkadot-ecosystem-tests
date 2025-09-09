@@ -4,7 +4,7 @@ import { type RelayTestConfig, registerTestTree, relayVestingE2ETests } from '@e
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Vesting',
   addressEncoding: 0,
-  relayOrPara: 'Relay',
+  blockProvider: 'Local',
 }
 
 registerTestTree(relayVestingE2ETests(polkadot, testConfig))
