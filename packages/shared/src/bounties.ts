@@ -101,7 +101,9 @@ export async function bountyCreationTest<
   await setupTestAccounts(client, ['alice'])
 
   const initialBountyCount = await getBountyCount(client)
-  const bountyValue = 10000000000000n // 1000 tokens
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.muln(1000) // 1000 EDs
   const description = 'Test bounty for development work'
 
   // Propose a bounty
@@ -152,7 +154,8 @@ export async function bountyApprovalTest<
 
   await setupTestAccounts(client, ['alice'])
 
-  const bountyValue = 10000000000000n // 1000
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.muln(1000) // 1000 EDs
   const description = 'Test bounty for approval'
 
   // Propose a bounty
@@ -206,8 +209,9 @@ export async function curatorAssignmentTest<
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  const bountyValue = 10000000000000n // 1000 tokens
-  const curatorFee = 1000000000000n // 100 tokens (10% fee)
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.muln(1000) // 1000 EDs
+  const curatorFee = existentialDeposit.muln(100) // 100 EDs (10% fee)
   const description = 'Test bounty with curator'
 
   // Propose and approve bounty
