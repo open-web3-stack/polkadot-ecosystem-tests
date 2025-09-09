@@ -47,17 +47,18 @@ async function getBountyApprovals(client: any): Promise<number[]> {
  * Setup accounts with funds for testing
  */
 async function setupTestAccounts(client: any, accounts: string[] = ['alice', 'bob']) {
-  const accountData: any[] = []
+  const accountMap = {
+    alice: devAccounts.alice.address,
+    bob: devAccounts.bob.address,
+    charlie: devAccounts.charlie.address,
+  }
 
-  if (accounts.includes('alice')) {
-    accountData.push([[devAccounts.alice.address], { providers: 1, data: { free: 100000000000000n } }])
-  }
-  if (accounts.includes('bob')) {
-    accountData.push([[devAccounts.bob.address], { providers: 1, data: { free: 100000000000000n } }])
-  }
-  if (accounts.includes('charlie')) {
-    accountData.push([[devAccounts.charlie.address], { providers: 1, data: { free: 100000000000000n } }])
-  }
+  const accountData = accounts
+    .filter((account) => accountMap[account as keyof typeof accountMap])
+    .map((account) => [
+      [accountMap[account as keyof typeof accountMap]],
+      { providers: 1, data: { free: 100000000000000n } },
+    ])
 
   await client.dev.setStorage({
     System: {
