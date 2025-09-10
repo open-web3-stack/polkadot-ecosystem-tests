@@ -255,75 +255,107 @@ export async function bountyApprovalWithCuratorTest<
 }
 
 /**
- * Test 3: Curator assignment and acceptance
+ * Bounty funding for Approved Bounties
  *
  * Verifies:
- * - Curator can be proposed for a funded bounty
- * - Curator can accept the role
- * - Status transitions correctly
- * - Curator deposit is reserved
+ * - Approved Bounties get funded by treasury automatically
+ * - Status changes from Approved -> Funded
  * - Correct events are emitted
  */
-export async function curatorAssignmentTest<
+export async function bountyFundingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping bounty funding test')
+    return
+  }
+
+  // move client head to the last spend period block - 2
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 2)
+
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 EDs
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
-  const description = 'Test bounty with curator'
+  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const description = 'Test bounty for funding'
 
-  // Propose and approve bounty
-  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+  // get bountycount and increase it by 1
+  const bountyCount = await getBountyCount(client)
+  const bountyIndex = bountyCount + 1
 
-  await client.dev.newBlock()
-  const bountyIndex = await getBountyIndexFromEvent(client)
-
-  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
-    Origins: 'Treasurer',
+  // increase the bounty count
+  await client.dev.setStorage({
+    Bounties: {
+      bountyCount: bountyIndex,
+    },
   })
 
+  // get the bounty count from the storage and verify it is same as the bounty index
+  const bountyCountFromStorage = await client.api.query.bounties.bountyCount()
+  expect(bountyCountFromStorage.toNumber()).toBe(bountyIndex)
+
+  // add a bounty description using the setStorage with correct format
+  await client.dev.setStorage({
+    Bounties: {
+      bountyDescriptions: [[[bountyIndex], description]],
+    },
+  })
+
+  // verify the bounty description is added to the storage
+  const bountyDescriptionFromStorage = await client.api.query.bounties.bountyDescriptions(bountyIndex)
+  expect(bountyDescriptionFromStorage.isSome).toBe(true)
+  expect(bountyDescriptionFromStorage.unwrap().toUtf8()).toBe(description)
+
+  // add a bounty using the setStorage with correct format
+  await client.dev.setStorage({
+    Bounties: {
+      bounties: [
+        [
+          [bountyIndex],
+          {
+            proposer: devAccounts.alice.address,
+            value: bountyValue,
+            fee: 0,
+            curatorDeposit: 0,
+            bond: 1000000000,
+            status: { proposed: null },
+          },
+        ],
+      ],
+    },
+  })
+
+  // verify the bounty is added to the storage
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
   await client.dev.newBlock()
 
-  // Propose a curator
-  await scheduleInlineCallWithOrigin(
-    client,
-    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
-    { Origins: 'Treasurer' },
-  )
+  // add a bounty in the approvals queue by using setStorage
+  await client.dev.setStorage({
+    Bounties: {
+      bountyApprovals: [bountyIndex],
+    },
+  })
+
+  // verify the bounty is added to the approvals queue
+  const approvals = await getBountyApprovals(client)
+  expect(approvals).toContain(bountyIndex)
 
   await client.dev.newBlock()
 
-  // Verify curator proposed events
-  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
-    .redact({ redactKeys: /bountyId/ })
-    .toMatchSnapshot('curator proposed events')
-
-  // Verify bounty status
-  const bounty = await getBounty(client, bountyIndex)
-  expect(bounty.status.isCuratorProposed).toBeTruthy()
-  expect(bounty.fee.toBigInt()).toBe(curatorFee)
-
-  // Curator accepts the role
-  const acceptCuratorEvents = await sendTransaction(
-    client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob),
-  )
-
   await client.dev.newBlock()
 
-  // Verify curator accepted events
-  await checkEvents(acceptCuratorEvents, { section: 'bounties', method: 'CuratorAccepted' })
-    .redact({ redactKeys: /bountyId/ })
-    .toMatchSnapshot('curator accepted events')
+  // TODO: Verify that the `BountyBecameActive` event occurred in the block just before this one (i.e., after the bounty is funded)
 
-  // Verify bounty is now active
-  const activeBounty = await getBounty(client, bountyIndex)
-  console.log('Active bounty status:', activeBounty.status.toHuman())
-  expect(activeBounty.status.isActive).toBeTruthy()
+  // verify that the bounty is funded
+  const bountyStatus = await getBounty(client, bountyIndex)
+  expect(bountyStatus.status.isFunded).toBe(true)
 
   await client.teardown()
 }
@@ -352,8 +384,13 @@ export function baseBountiesE2ETests<
       },
       {
         kind: 'test',
-        label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentTest(chain),
+        label: 'Bounty approval flow with curator',
+        testFn: async () => await bountyApprovalWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for Approved Bounties',
+        testFn: async () => await bountyFundingTest(chain),
       },
     ],
   }
