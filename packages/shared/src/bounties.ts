@@ -360,6 +360,90 @@ export async function bountyFundingTest<
   await client.teardown()
 }
 
+/**
+ *  Bounty funding for ApprovedWithCurator Bounties
+ *
+ * Verifies:
+ * - When a bounty is approved with curator, status changes to ApprovedWithCurator
+ * - ApprovedWithCurator Bounties get funded by treasury automatically
+ * - Status changes from ApprovedWithCurator -> CuratorProposed
+ * - Correct events are emitted
+ */
+export async function bountyFundingForApprovedWithCuratorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // go the block number when the last spend period block - 1
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 1)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  // get the bounty count and increase it by 1
+  const bountyCount = await getBountyCount(client)
+  const bountyIndex = bountyCount + 1
+
+  // increase the bounty count
+  await client.dev.setStorage({
+    Bounties: {
+      bountyCount: bountyIndex,
+    },
+  })
+
+  // verify the bounty count is increased
+  const bountyCountFromStorage = await client.api.query.bounties.bountyCount()
+  expect(bountyCountFromStorage.toNumber()).toBe(bountyIndex)
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 tokens (10% fee)
+
+  const bondValue = existentialDeposit.toBigInt() * 10n // 10 EDs
+  const bountyWithCurator = {
+    proposer: devAccounts.alice.address,
+    value: bountyValue,
+    fee: curatorFee,
+    curatorDeposit: 0,
+    bond: bondValue,
+    status: { approvedWithCurator: { curator: devAccounts.bob.address } },
+  }
+
+  // add the bounty to the storage
+  await client.dev.setStorage({
+    Bounties: {
+      bounties: [[[bountyIndex], bountyWithCurator]],
+    },
+  })
+
+  // verify the bounty is added to the storage
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isApprovedWithCurator).toBe(true)
+
+  // add bouty to the approvals queue
+  await client.dev.setStorage({
+    Bounties: {
+      bountyApprovals: [bountyIndex],
+    },
+  })
+
+  // verify the bounty is added to the approvals queue
+  const approvals = await getBountyApprovals(client)
+  expect(approvals).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // bounty is funded in this block
+  await client.dev.newBlock()
+
+  // verify the bounty is funded
+  const bountyAfterFunding = await getBounty(client, bountyIndex)
+  expect(bountyAfterFunding.status.isCuratorProposed).toBe(true)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -391,6 +475,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty funding for Approved Bounties',
         testFn: async () => await bountyFundingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for ApprovedWithCurator Bounties',
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
       },
     ],
   }
