@@ -235,9 +235,13 @@ export async function bountyApprovalWithCuratorTest<
   await client.dev.newBlock()
 
   // Verify approval events
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApprovedWithCurator' })
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty approval with curator events')
+
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
 
   // Verify status changed
   const approvedBounty = await getBounty(client, bountyIndex)
