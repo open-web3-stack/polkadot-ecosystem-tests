@@ -805,12 +805,32 @@ exports[`Kusama Staking > slashing tests > cancel deferred slash with bad origin
 ]
 `;
 
+exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 33232889962721,
+  "frozen": 0,
+  "reserved": 50000000000,
+}
+`;
+
 exports[`Kusama Staking > slashing tests > unapplied slash > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
   "free": "(redacted)",
   "frozen": 0,
   "reserved": 100000000000,
+}
+`;
+
+exports[`Kusama Staking > slashing tests > unapplied slash > balances slash events 1`] = `[]`;
+
+exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 33232889962721,
+  "frozen": 0,
+  "reserved": 0,
 }
 `;
 
@@ -823,6 +843,15 @@ exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash
 }
 `;
 
+exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post slash 1`] = `
+{
+  "flags": "0x80000000000000000000000000000000",
+  "free": 33232889962721,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
 exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
@@ -830,4 +859,33 @@ exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds pre s
   "frozen": 0,
   "reserved": 100000000000,
 }
+`;
+
+exports[`Kusama Staking > slashing tests > unapplied slash > staking slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "staker": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "staker": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 100000000000,
+      "staker": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Slashed",
+    "section": "staking",
+  },
+]
 `;

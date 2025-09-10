@@ -1408,7 +1408,7 @@ async function unappliedSlashTest<
     .toMatchSnapshot('charlie funds pre slash')
 
   // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
-  if (testConfig.blockProvider === 'NonLocal') {
+  if (client.api.tx.staking.applySlash) {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
     await scheduleInlineCallWithOrigin(
@@ -1417,8 +1417,26 @@ async function unappliedSlashTest<
       { system: 'Root' },
       testConfig.blockProvider,
     )
+  } else {
+    // If `applySlash` is not available, the era change method is being used (pre-AHM relay chains).
+    // Era-boundary block creation tends to be slow, so these storages are removed.
+    await client.dev.setStorage({
+      ParasDisputes: {
+        $removePrefix: ['disputes', 'included'],
+      },
+      Dmp: {
+        $removePrefix: ['downwardMessageQueues'],
+      },
+      Staking: {
+        $removePrefix: ['erasStakersOverview', 'erasStakersPaged', 'erasStakers'],
+      },
+      Session: {
+        $removePrefix: ['nextKeys'],
+      },
+    })
   }
 
+  // With this block, the slash will have been applied.
   await client.dev.newBlock()
 
   await checkSystemEvents(client, { section: 'staking', method: 'Slashed' }).toMatchSnapshot('staking slash events')
