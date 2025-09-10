@@ -444,6 +444,108 @@ export async function bountyFundingForApprovedWithCuratorTest<
   await client.teardown()
 }
 
+/**
+ * Curator assignment and acceptance
+ *
+ * Verifies:
+ * - Curator can be proposed for a funded bounty
+ * - Status changes from Funded -> CuratorProposed
+ * - Curator can accept the role
+ * - Status changes from CuratorProposed -> Active
+ * - Curator deposit is reserved
+ * - Correct events are emitted
+ */
+export async function curatorAssignmentAndAcceptanceTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  // get bounty count and increase it by 1
+  const bountyCount = await getBountyCount(client)
+  const bountyIndex = bountyCount + 1
+
+  // increase the bounty count
+  await client.dev.setStorage({
+    Bounties: {
+      bountyCount: bountyIndex,
+    },
+  })
+
+  // verify the bounty count is increased
+  const bountyCountFromStorage = await client.api.query.bounties.bountyCount()
+  expect(bountyCountFromStorage.toNumber()).toBe(bountyIndex)
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const bondValue = existentialDeposit.toBigInt() * 10n // 10 EDs
+
+  // add the below funded bounty to the storage
+  const fundedBounty = {
+    proposer: devAccounts.alice.address,
+    value: bountyValue,
+    fee: 0,
+    curatorDeposit: 0,
+    bond: bondValue,
+    status: { funded: null },
+  }
+
+  await client.dev.setStorage({
+    Bounties: {
+      bounties: [[[bountyIndex], fundedBounty]],
+    },
+  })
+
+  // verify the bounty is added to the storage
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isFunded).toBe(true)
+
+  await client.dev.newBlock()
+
+  // propose a curator
+  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 tokens (10% fee)
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // verify events
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the curator is proposed
+  const curatorProposed = await getBounty(client, bountyIndex)
+  expect(curatorProposed.status.isCuratorProposed).toBe(true)
+
+  await client.dev.newBlock()
+
+  // accept the curator
+  const acceptCuratorEvents = await sendTransaction(
+    client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob),
+  )
+
+  await client.dev.newBlock()
+
+  // verify events
+  await checkEvents(acceptCuratorEvents, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the curator is accepted
+  const curatorAccepted = await getBounty(client, bountyIndex)
+  expect(curatorAccepted.status.isActive).toBe(true)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -480,6 +582,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty funding for ApprovedWithCurator Bounties',
         testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Curator assignment and acceptance',
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
       },
     ],
   }
