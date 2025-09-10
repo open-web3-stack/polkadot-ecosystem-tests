@@ -804,9 +804,14 @@ export async function scheduledOverweightCallFails<
 
   // Since the scheduler pallet signaled it as permanently overweight, it should set the
   // `incompleteSince` storage item.
-
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
-  assert(incompleteSince.isNone)
+  // TODO: this change only recently made it to Kusama. Update this when resolved.
+  if (chain.name.toLowerCase().includes('kusama')) {
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
+  } else {
+    assert(incompleteSince.isNone)
+  }
 }
 
 /**
@@ -1411,7 +1416,12 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  expect(finalIncompleteSince.isNone).toBeTruthy()
+  if (chain.name.toLowerCase().includes('kusama')) {
+    expect(finalIncompleteSince.isSome).toBeTruthy()
+    expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+  } else {
+    expect(finalIncompleteSince.isNone).toBeTruthy()
+  }
 
   // Check that the agenda for the block in which the 2 priority tasks were scheduled is empty
   scheduled = await client.api.query.scheduler.agenda(priorityTargetBlock!)
