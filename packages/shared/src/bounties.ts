@@ -192,6 +192,65 @@ export async function bountyApprovalTest<
 }
 
 /**
+ * Bounty approval flow with curator
+ *
+ * Verifies:
+ * - Bounty can be approved by treasurer with curator
+ * - Status changes from Proposed to ApprovedWithCurator
+ * - Bounty is added to approvals queue
+ * - Correct events are emitted
+ */
+export async function bountyApprovalWithCuratorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 EDs
+  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
+  const description = 'Test bounty for approval with curator'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Verify initial state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
+  // Approve the bounty with curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.approveBountyWithCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Verify approval events
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApprovedWithCurator' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approval with curator events')
+
+  // Verify status changed
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApprovedWithCurator).toBe(true)
+
+  // Verify bounty is in approvals queue
+  const approvals = await getBountyApprovals(client)
+  expect(approvals).toContain(bountyIndex)
+
+  await client.teardown()
+}
+
+/**
  * Test 3: Curator assignment and acceptance
  *
  * Verifies:
