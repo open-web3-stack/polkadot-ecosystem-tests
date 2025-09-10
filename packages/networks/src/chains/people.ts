@@ -1,5 +1,5 @@
-import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
   peoplePolkadot: {
@@ -29,6 +29,7 @@ const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.p
       [[defaultAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.bob.address], { providers: 1, data: { free: 1000e10 } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
     ],
   },
   // Registrars to be used in E2E tests - required to test `RegistrarOrigin`-locked extrinsics.

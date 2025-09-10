@@ -1,6 +1,6 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import {
   type Client,
   type DescribeNode,
@@ -23,7 +23,7 @@ import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
 import { match } from 'ts-pattern'
-import { check, checkEvents } from './helpers/index.js'
+import { check, checkEvents, getBlockNumber, schedulerOffset, type TestConfig } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -36,6 +36,9 @@ const PROXY_DELAY = 5
 
 /**
  * Given a keyring and a network's proxy types, create a keypair for each proxy type.
+ *
+ * @returns A record of proxy type names to their corresponding keypairs. The proxy type names that key the return
+ *          object will be derived from the fields in the `proxyTypes` argument.
  */
 function createProxyAccounts(
   accountName: string,
@@ -186,7 +189,7 @@ class ProxyActionBuilderImpl<
       ambassadorCoreCalls.push({
         pallet: 'core_fellowship',
         extrinsic: 'bump',
-        call: this.client.api.tx.ambassadorCore.bump(defaultAccountsSr25519.eve.address),
+        call: this.client.api.tx.ambassadorCore.bump(testAccounts.eve.address),
       })
     }
 
@@ -233,7 +236,7 @@ class ProxyActionBuilderImpl<
       assetsCalls.push({
         pallet: 'assets',
         extrinsic: 'mint',
-        call: this.client.api.tx.assets.mint(1, defaultAccountsSr25519.eve.address, 1e10),
+        call: this.client.api.tx.assets.mint(1, testAccounts.eve.address, 1e10),
       })
     }
     return assetsCalls
@@ -245,7 +248,7 @@ class ProxyActionBuilderImpl<
       assetsCalls.push({
         pallet: 'assets',
         extrinsic: 'create',
-        call: this.client.api.tx.assets.create(1, defaultAccountsSr25519.eve.address, 1e10),
+        call: this.client.api.tx.assets.create(1, testAccounts.eve.address, 1e10),
       })
     }
     return assetsCalls
@@ -309,7 +312,7 @@ class ProxyActionBuilderImpl<
       brokerPurchaseCreditCalls.push({
         pallet: 'broker',
         extrinsic: 'purchase_credit',
-        call: this.client.api.tx.broker.purchaseCredit(100e10, defaultAccountsSr25519.eve.address),
+        call: this.client.api.tx.broker.purchaseCredit(100e10, testAccounts.eve.address),
       })
     }
 
@@ -396,7 +399,7 @@ class ProxyActionBuilderImpl<
       fellowshipCalls.push({
         pallet: 'core_fellowship',
         extrinsic: 'bump',
-        call: this.client.api.tx.fellowshipCore.bump(defaultAccountsSr25519.eve.address),
+        call: this.client.api.tx.fellowshipCore.bump(testAccounts.eve.address),
       })
     }
 
@@ -464,7 +467,7 @@ class ProxyActionBuilderImpl<
       identityJudgementCalls.push({
         pallet: 'identity',
         extrinsic: 'provide_judgement',
-        call: this.client.api.tx.identity.provideJudgement(0, defaultAccountsSr25519.eve.address, 'FeePaid', hash),
+        call: this.client.api.tx.identity.provideJudgement(0, testAccounts.eve.address, 'FeePaid', hash),
       })
     }
 
@@ -583,7 +586,7 @@ class ProxyActionBuilderImpl<
       proxyCalls.push({
         pallet: 'proxy',
         extrinsic: 'remove_announcement',
-        call: this.client.api.tx.proxy.removeAnnouncement(defaultAccountsSr25519.eve.address, hash),
+        call: this.client.api.tx.proxy.removeAnnouncement(testAccounts.eve.address, hash),
       })
     }
 
@@ -598,7 +601,7 @@ class ProxyActionBuilderImpl<
       cancelProxyCalls.push({
         pallet: 'proxy',
         extrinsic: 'reject_announcement',
-        call: this.client.api.tx.proxy.rejectAnnouncement(defaultAccountsSr25519.eve.address, hash),
+        call: this.client.api.tx.proxy.rejectAnnouncement(testAccounts.eve.address, hash),
       })
     }
 
@@ -614,7 +617,7 @@ class ProxyActionBuilderImpl<
         // Careful not to elicit unintended call filtering by using a proxy type that is a supertype of
         // of the calling proxy type.
         // With the available data at this point, it is not possible to foresee which proxy type is making the call.
-        call: this.client.api.tx.proxy.removeProxy(defaultAccountsSr25519.eve.address, proxyType!, 0),
+        call: this.client.api.tx.proxy.removeProxy(testAccounts.eve.address, proxyType!, 0),
       })
     }
 
@@ -695,7 +698,7 @@ class ProxyActionBuilderImpl<
       vestingCalls.push({
         pallet: 'vesting',
         extrinsic: 'vested_transfer',
-        call: this.client.api.tx.vesting.vestedTransfer(defaultAccountsSr25519.eve.address, {
+        call: this.client.api.tx.vesting.vestedTransfer(testAccounts.eve.address, {
           locked: 100e10,
           perBlock: 1e10,
           startingBlock: 1,
@@ -721,7 +724,7 @@ class ProxyActionBuilderImpl<
       uniquesCalls.push({
         pallet: 'uniques',
         extrinsic: 'mint',
-        call: this.client.api.tx.uniques.mint(1, 1, defaultAccountsSr25519.eve.address),
+        call: this.client.api.tx.uniques.mint(1, 1, testAccounts.eve.address),
       })
     }
 
@@ -734,7 +737,7 @@ class ProxyActionBuilderImpl<
       uniquesCalls.push({
         pallet: 'uniques',
         extrinsic: 'create',
-        call: this.client.api.tx.uniques.create(1, defaultAccountsSr25519.eve.address),
+        call: this.client.api.tx.uniques.create(1, testAccounts.eve.address),
       })
     }
 
@@ -1220,7 +1223,7 @@ async function proxyCallFilteringSingleTestRunner<
 ) {
   const [client] = await setupNetworks(chain)
 
-  const alice = defaultAccountsSr25519.alice
+  const alice = testAccounts.alice
 
   // Add the proxy account, with the to-be-tested proxy type
   const addProxyTx = client.api.tx.proxy.addProxy(proxyAccount.address, proxyTypeIx, 0)
@@ -1338,7 +1341,7 @@ function proxyCallFilteringTestTree<
   proxyTypes: Record<string, number>,
   testType: ProxyCallFilteringTestType,
 ): DescribeNode {
-  const kr = defaultAccountsSr25519.keyring
+  const kr = testAccounts.keyring
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
@@ -1403,21 +1406,21 @@ function proxyCallFilteringTestTree<
  * 1. creates proxies of every type for an account
  *     - these proxies have a delay of 0
  * 2. checks that the proxies exist
- * 3. removes every previously created proxy
+ * 3. removes every previously created proxy, one at a time with `remove_proxy`
  * 4. checks that the proxies no longer exist
  * 5. creates proxies of every type for the same account, this time with a delay
- * 6. checks that the proxies exist
- * 7. removes every previously created proxy with `remove_proxies`
- * 8. checks that the proxies no longer exist
+ * 6. checks that the proxies have been removed
+ * 7. removes every previously created proxy, all at once with `remove_proxies`
+ * 8. checks that the proxies have been removed
  */
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>, delay: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>, delay: number) {
   const [client] = await setupNetworks(chain)
 
-  const alice = defaultAccountsSr25519.alice
-  const kr = defaultAccountsSr25519.keyring
+  const alice = testAccounts.alice
+  const kr = testAccounts.keyring
 
   // Create object with keys as proxy types and values as an Sr25519 keypair
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
@@ -1457,7 +1460,7 @@ export async function addRemoveProxyTest<
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
-      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, addressEncoding),
+      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
       proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
       delay: 0,
     })
@@ -1517,7 +1520,7 @@ export async function addRemoveProxyTest<
     await check(proxy)
       .redact({ removeKeys: /proxyType/ })
       .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, addressEncoding),
+        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
         delay: delay,
       })
   }
@@ -1558,10 +1561,10 @@ export async function addRemoveProxyTest<
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = defaultAccountsSr25519.alice
+  const alice = testAccounts.alice
 
   // Create pure proxies
 
@@ -1626,7 +1629,7 @@ export async function createKillPureProxyTest<
     expect(pureProxy[0].length).toBe(1)
     expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
     expect(pureProxy[0][0].delay.eq(0)).toBe(true)
-    expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding))).toBe(true)
+    expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
 
     const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
     const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1639,7 +1642,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1676,7 +1679,7 @@ export async function createKillPureProxyTest<
       expect(pureProxy[1].eq(0)).toBe(true)
     } else {
       expect(pureProxy[0].length).toBe(1)
-      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, addressEncoding))).toBe(true)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1699,9 +1702,9 @@ export async function proxyCallTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  const charlie = testAccounts.charlie
 
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -1757,12 +1760,12 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-  const charlie = defaultAccountsSr25519.charlie
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  const charlie = testAccounts.charlie
 
   await client.dev.setStorage({
     System: {
@@ -1778,7 +1781,7 @@ export async function proxyAnnouncementLifecycleTest<
   await client.dev.newBlock()
 
   // Bob announces an intent to transfer funds to Charlie
-  const transferAmount: number = 100e10
+  const transferAmount = client.api.consts.balances.existentialDeposit.toBigInt() * 100n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
   await client.dev.newBlock()
@@ -1790,9 +1793,9 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const announcementObject = {
-    real: encodeAddress(alice.address, addressEncoding),
+    real: encodeAddress(alice.address, testConfig.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
     height: currBlockNumber,
   }
@@ -1835,9 +1838,12 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
+  const offset = schedulerOffset(testConfig)
+
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
-  announcementObject.height = currBlockNumber + 2
+  announcementObject.height = currBlockNumber + 2 * offset
+
   await check(announcements[0][0]).toMatchObject(announcementObject)
   expect(announcements[1].eq(announcementDepositTotal)).toBe(true)
 
@@ -1882,24 +1888,20 @@ export async function proxyAnnouncementLifecycleTest<
 export function baseProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(
-  chain: Chain<TCustom, TInitStorages>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-  proxyTypes: Record<string, number>,
-): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
-    label: testConfig.testSuiteName,
+    label: testConfig.testSuiteName + ' base tests',
     children: [
       {
         kind: 'test',
         label: 'add proxies (with/without delay) to an account, and remove them',
-        testFn: async () => await addRemoveProxyTest(chain, testConfig.addressEncoding, proxyTypes, PROXY_DELAY),
+        testFn: async () => await addRemoveProxyTest(chain, testConfig, proxyTypes, PROXY_DELAY),
       },
       {
         kind: 'test',
         label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(chain, testConfig.addressEncoding, proxyTypes),
+        testFn: async () => await createKillPureProxyTest(chain, testConfig, proxyTypes),
       },
       {
         kind: 'test',
@@ -1909,7 +1911,7 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig.addressEncoding),
+        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig),
       },
     ],
   }
@@ -1918,16 +1920,15 @@ export function baseProxyE2ETests<
 export function fullProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(
-  chain: Chain<TCustom, TInitStorages>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-  proxyTypes: Record<string, number>,
-): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
   const allowedFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Permitted)
   const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, proxyTypes, ProxyCallFilteringTestType.Forbidden)
 
   const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyTypes)
-  baseTestTree.children.push(allowedFilteringTests, forbiddenFilteringTests)
 
-  return baseTestTree
+  return {
+    kind: 'describe' as const,
+    label: testConfig.testSuiteName + ' full tests (includes call filtering)',
+    children: [baseTestTree, allowedFilteringTests, forbiddenFilteringTests],
+  }
 }

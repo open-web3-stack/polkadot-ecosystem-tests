@@ -1,12 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Any",
     },
     "method": "ProxyAdded",
@@ -16,7 +16,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyAdded",
@@ -26,7 +26,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyAdded",
@@ -36,7 +36,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "EM8fNwcZSqgrttrMmkctnpRQgC1HZiMrVtMu2GHToK3gidi",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Broker",
     },
     "method": "ProxyAdded",
@@ -46,7 +46,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "DwuEgokcQ45AGkC65gFfLV5j35RrJum6AU9sxECb9FzuxRW",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CoretimeRenewer",
     },
     "method": "ProxyAdded",
@@ -56,7 +56,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "DJn991i1ZTrXXRWQR9DkT5NJmxTA3X1xZk7ZCVgDYFu6y9e",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "OnDemandPurchaser",
     },
     "method": "ProxyAdded",
@@ -66,7 +66,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Collator",
     },
     "method": "ProxyAdded",
@@ -75,13 +75,13 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
 ]
 `;
 
-exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Any",
     },
     "method": "ProxyRemoved",
@@ -91,7 +91,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyRemoved",
@@ -101,7 +101,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyRemoved",
@@ -111,7 +111,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "EM8fNwcZSqgrttrMmkctnpRQgC1HZiMrVtMu2GHToK3gidi",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Broker",
     },
     "method": "ProxyRemoved",
@@ -121,7 +121,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "DwuEgokcQ45AGkC65gFfLV5j35RrJum6AU9sxECb9FzuxRW",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "CoretimeRenewer",
     },
     "method": "ProxyRemoved",
@@ -131,7 +131,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "DJn991i1ZTrXXRWQR9DkT5NJmxTA3X1xZk7ZCVgDYFu6y9e",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "OnDemandPurchaser",
     },
     "method": "ProxyRemoved",
@@ -141,7 +141,7 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
-      "delegator": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "proxyType": "Collator",
     },
     "method": "ProxyRemoved",
@@ -150,13 +150,13 @@ exports[`Kusama Coretime Proxy > add proxies (with/without delay) to an account,
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -165,7 +165,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -174,7 +174,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -183,7 +183,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Broker",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -192,7 +192,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CoretimeRenewer",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -201,7 +201,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "OnDemandPurchaser",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -210,7 +210,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -218,14 +218,14 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when crea
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "GGpFpBACd8abcKvunDtwZzEAGeiSt4awSCH7sAumKcKr9tV",
-      "spawner": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "pure": "GV8GWLDsikzsf9uSKwvZu5G415z9f5CUuSPTQoDxnELtQuf",
+      "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureKilled",
     "section": "proxy",
@@ -240,7 +240,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
 [
   {
     "data": {
@@ -259,7 +259,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
 [
   {
     "data": {
@@ -278,7 +278,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
 [
   {
     "data": {
@@ -297,7 +297,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
 [
   {
     "data": {
@@ -316,7 +316,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
 [
   {
     "data": {
@@ -335,7 +335,7 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
 [
   {
     "data": {
@@ -354,7 +354,42 @@ exports[`Kusama Coretime Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "to": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "proxy": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "real": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Coretime Proxy base tests > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
 [
   {
     "data": {
@@ -366,7 +401,19 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -385,7 +432,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -404,7 +451,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -423,7 +470,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -449,12 +496,12 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sender": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Remarked",
     "section": "system",
@@ -483,7 +530,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -500,7 +547,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -517,7 +564,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -534,7 +581,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call drop_history 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call drop_history 1`] = `
 [
   {
     "data": {
@@ -553,7 +600,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call renew 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet broker, call renew 1`] = `
 [
   {
     "data": {
@@ -572,7 +619,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -591,7 +638,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -608,7 +655,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -625,7 +672,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Broker > events for proxy type Broker, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -642,7 +689,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -661,7 +708,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -680,7 +727,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -697,7 +744,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -714,7 +761,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -731,7 +778,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -750,7 +797,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -769,7 +816,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -786,7 +833,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -803,7 +850,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -820,7 +867,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call renew 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call renew 1`] = `
 [
   {
     "data": {
@@ -839,7 +886,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -858,7 +905,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -875,7 +922,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -892,7 +939,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -909,7 +956,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -928,7 +975,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -947,7 +994,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -966,7 +1013,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -992,12 +1039,12 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "sender": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Remarked",
     "section": "system",
@@ -1026,7 +1073,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -1043,7 +1090,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1060,7 +1107,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1077,7 +1124,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet multisig, call as_multi 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -1096,7 +1143,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -1113,7 +1160,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch_all 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1130,7 +1177,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call force_batch 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1147,7 +1194,7 @@ exports[`Kusama Coretime Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1166,7 +1213,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet broker, call purchase_credit 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet broker, call purchase_credit 1`] = `
 [
   {
     "data": {
@@ -1185,7 +1232,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet collator_selection, call register_as_candidate 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -1204,125 +1251,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1355,7 +1284,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1388,7 +1317,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1421,7 +1350,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1440,7 +1369,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1473,7 +1402,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1506,7 +1435,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1539,7 +1468,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1558,45 +1487,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call purchase_credit 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1629,7 +1520,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1662,7 +1553,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1695,7 +1586,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1714,7 +1605,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet balances, call burn 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet broker, call purchase_credit 1`] = `
 [
   {
     "data": {
@@ -1733,7 +1624,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet broker, call purchase_credit 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -1752,26 +1643,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1804,7 +1676,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call remark 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1837,7 +1709,7 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call remark_with_event 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1870,20 +1742,18 @@ exports[`Kusama Coretime Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`Kusama Coretime Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
 [
   {
     "data": {
-      "amount": 1000000000000,
-      "from": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
-      "to": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1891,28 +1761,158 @@ exports[`Kusama Coretime Proxy > perform proxy call on behalf of delegator > eve
 ]
 `;
 
-exports[`Kusama Coretime Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet balances, call burn 1`] = `
 [
   {
     "data": {
-      "callHash": "(hash)",
-      "proxy": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "real": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
-    "method": "Announced",
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]
 `;
 
-exports[`Kusama Coretime Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet broker, call purchase_credit 1`] = `
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet collator_selection, call register_as_candidate 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
   },
 ]
 `;
