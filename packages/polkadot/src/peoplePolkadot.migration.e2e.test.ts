@@ -141,7 +141,7 @@ async function validatePostMigrationState(api: ApiPromise) {
 
   const onPollStatus = await api.query.storageInitialization?.onPollStatus?.()
   expect(onPollStatus).toBeDefined()
-  expect(onPollStatus.toString()).toBe('XcmFundsTransfer')
+  expect(onPollStatus.toString()).toBe('CreatingAsset')
 
   console.log('Migration validation completed successfully')
 }
@@ -220,19 +220,18 @@ async function logStateChanges(peopleApi: ApiPromise, assetHubApi: any, state: s
       sovereignUsdcBalance1: sovereignUsdcBalance1?.isSome ? sovereignUsdcBalance1.unwrap().balance.toString() : '0',
     })
 
+    const usdcAsset = {
+      parents: 1,
+      interior: { X3: [{ Parachain: 1000 }, { PalletInstance: 50 }, { GeneralIndex: 1337 }] },
+    }
     const sovereignUsdcBalanceppl1 = await peopleApi.query.assets?.account?.(
-      1337,
+      usdcAsset,
       '13YMK2eeQPvfRffsm2g4NpcKYZbe7jfvtXtsimn8ot2Z1W17',
     ) // gets 3M
     const sovereignUsdcBalanceppl3 = await peopleApi.query.assets?.account?.(
-      1337,
-      '5Ec4AhPaYcfBz8fMoPd4EfnAgwbzRS7np3APZUnnFo12qEYk',
-    ) // gets 3M
-    const usdcAsset = { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1337 }] } } }
-    const sovereignUsdcBalanceppl4 = await peopleApi.query.foreignAssets?.account?.(
       usdcAsset,
       '5Ec4AhPaYcfBz8fMoPd4EfnAgwbzRS7np3APZUnnFo12qEYk',
-    ) // gets 0
+    ) // gets 3M
 
     console.log('USDC balance checks:', {
       sovereignUsdcBalanceppl1: sovereignUsdcBalanceppl1?.isSome
@@ -240,9 +239,6 @@ async function logStateChanges(peopleApi: ApiPromise, assetHubApi: any, state: s
         : '0',
       sovereignUsdcBalanceppl3: sovereignUsdcBalanceppl3?.isSome
         ? sovereignUsdcBalanceppl3.unwrap().balance.toString()
-        : '0',
-      sovereignUsdcBalanceppl4: sovereignUsdcBalanceppl4?.isSome
-        ? sovereignUsdcBalanceppl4.unwrap().balance.toString()
         : '0',
     })
 
@@ -344,11 +340,19 @@ async function validatePostOnPollState(api: ApiPromise) {
   expect(onPollStatus).toBeDefined()
   expect(onPollStatus.toString()).toBe('Completed')
 
+  const assetId = {
+    parents: 1,
+    interior: { X3: [{ Parachain: 1000 }, { PalletInstance: 50 }, { GeneralIndex: 1337 }] },
+  }
+
+  const assetHub1337Info = await api.query.assets?.asset?.(assetId)
+  expect(assetHub1337Info?.isSome).toBe(true)
+
   const xcmTransferInitiatedAt = await api.query.storageInitialization?.xcmTransferInitiatedAt?.()
   expect(xcmTransferInitiatedAt?.isNone || !xcmTransferInitiatedAt).toBe(true)
 
   const palletAccount = '5Ec4AhPaYcfBz8fMoPd4EfnAgwbzRS7np3APZUnnFo12qEYk'
-  const palletBalance = await api.query.assets?.account?.(1337, palletAccount)
+  const palletBalance = await api.query.assets?.account?.(assetId, palletAccount)
   const balance = palletBalance?.isSome ? palletBalance.unwrap().balance.toString() : '0'
   expect(Number(balance)).toBeGreaterThan(0)
 
@@ -356,25 +360,25 @@ async function validatePostOnPollState(api: ApiPromise) {
 
   // Privacy Voucher pot
   const privacyVoucherPot = api.createType('AccountId32', '5EYCAe5cKX69Mxxed85UP31RW4kBcvj3XZDdnW6aQktrkEzF')
-  const privacyVoucherBalance = await api.query.assets?.account?.(1337, privacyVoucherPot)
+  const privacyVoucherBalance = await api.query.assets?.account?.(assetId, privacyVoucherPot)
   const privacyVoucherAmount = privacyVoucherBalance?.isSome ? privacyVoucherBalance.unwrap().balance.toString() : '0'
   expect(Number(privacyVoucherAmount)).toBeGreaterThanOrEqual(expectedPotFunding)
 
   // Proof of Ink pot
   const proofOfInkPot = api.createType('AccountId32', '5EYCAe5cKNj94aT7so7yim4AjuCPBaTcZN7s3q3Catj25W55')
-  const proofOfInkBalance = await api.query.assets?.account?.(1337, proofOfInkPot)
+  const proofOfInkBalance = await api.query.assets?.account?.(assetId, proofOfInkPot)
   const proofOfInkAmount = proofOfInkBalance?.isSome ? proofOfInkBalance.unwrap().balance.toString() : '0'
   expect(Number(proofOfInkAmount)).toBeGreaterThanOrEqual(expectedPotFunding)
 
   // Mob Rule pot
   const mobRulePot = api.createType('AccountId32', '5EYCAe5biWpWmazrztq9xjjy3vNhR5ZfF44FTP5a3peKZVrw')
-  const mobRuleBalance = await api.query.assets?.account?.(1337, mobRulePot)
+  const mobRuleBalance = await api.query.assets?.account?.(assetId, mobRulePot)
   const mobRuleAmount = mobRuleBalance?.isSome ? mobRuleBalance.unwrap().balance.toString() : '0'
   expect(Number(mobRuleAmount)).toBeGreaterThanOrEqual(expectedPotFunding)
 
   // Score pot
   const scorePot = api.createType('AccountId32', '5EYCAe5jKbSeb7z6DKnvn7f3An3cREmaHWaocjngJ5B48P73')
-  const scoreBalance = await api.query.assets?.account?.(1337, scorePot)
+  const scoreBalance = await api.query.assets?.account?.(assetId, scorePot)
   const scoreAmount = scoreBalance?.isSome ? scoreBalance.unwrap().balance.toString() : '0'
   expect(Number(scoreAmount)).toBeGreaterThanOrEqual(expectedPotFunding)
 
