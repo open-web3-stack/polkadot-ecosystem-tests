@@ -1,5 +1,5 @@
 import { assetHubPaseo } from '@e2e-test/networks/chains'
-import { fullStakingTests, registerTestTree, stakingTests, type TestConfig } from '@e2e-test/shared'
+import { fullStakingTests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
 const pAssetHubTestConfig: TestConfig = {
   testSuiteName: 'Paseo Asset Hub Staking',
