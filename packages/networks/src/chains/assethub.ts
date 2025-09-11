@@ -6,6 +6,8 @@ const custom = {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    usdc: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1337 }] } } },
+    usdcIndex: 1337,
     eth: {
       parents: 2,
       interior: {
@@ -25,6 +27,8 @@ const custom = {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    usdc: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1337 }] } } },
+    usdcIndex: 1337,
     eth: {
       parents: 2,
       interior: {
@@ -42,25 +46,32 @@ const custom = {
   },
 }
 
-const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => ({
-  System: {
-    account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-    ],
-  },
-  Assets: {
-    account: [
-      [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
-    ],
-  },
-  ForeignAssets: {
-    account: [
-      [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
-      [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
-    ],
-  },
-})
+const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => {
+  return {
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      ],
+    },
+    Assets: {
+      account: [
+        [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
+        [[config.usdcIndex, '5Eg2fntPdLr67jPWMPa9MK7ywRHJ8rAtsgoppSKH8X2bgiiV'], { balance: 5000000e6 }], // 5M USDC for people chain sovereign account
+      ],
+    },
+    ForeignAssets: {
+      account: [
+        [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
+        [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
+      ],
+    },
+    PolkadotXcm: {
+      // Clear XCM version notifications to avoid interference with test messages
+      $removePrefix: ['versionNotifyTargets', 'versionNotifiers'],
+    },
+  }
+}
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',

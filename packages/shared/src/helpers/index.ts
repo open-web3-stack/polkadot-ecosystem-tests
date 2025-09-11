@@ -6,7 +6,9 @@ import { defaultAccounts } from '@e2e-test/networks'
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import { stringToU8a, u8aToHex } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
+import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
@@ -323,4 +325,54 @@ export async function setValidatorsStorage(
       ]),
     },
   })
+}
+
+/**
+ * Derive the account ID for a Substrate pallet from its PalletId.
+ *
+ * This function replicates the behavior of Substrate's `into_account_truncating()` method
+ * for pallet accounts. The derivation follows this pattern:
+ * 1. Create a 32-byte array starting with "modl" (4 bytes)
+ * 2. Append the pallet ID (up to 8 bytes)
+ * 3. Fill remaining bytes with zeros
+ * 4. Use the result as the AccountId32
+ *
+ * @param palletId The pallet ID as a string (e.g., "pal-init") or Uint8Array (max 8 bytes)
+ * @param ss58Prefix The SS58 format prefix (0 for Polkadot, 2 for Kusama, etc.)
+ * @returns Object containing the account ID in hex format and SS58 address
+ */
+export function derivePalletAccount(
+  palletId: string | Uint8Array,
+  ss58Prefix = 0,
+): {
+  accountId: HexString
+  ss58Address: string
+} {
+  // Convert pallet ID to Uint8Array if it's a string
+  const palletIdBytes = typeof palletId === 'string' ? stringToU8a(palletId) : palletId
+
+  // Ensure it's exactly 8 bytes, pad with zeros if necessary
+  const paddedPalletId = new Uint8Array(8)
+  paddedPalletId.set(palletIdBytes.slice(0, 8))
+
+  // Create the account derivation input: "modl" + pallet_id + 0x00...
+  const prefix = stringToU8a('modl')
+  const suffix = new Uint8Array(32 - prefix.length - paddedPalletId.length) // Fill remaining with zeros
+
+  const accountInput = new Uint8Array(32)
+  accountInput.set(prefix, 0)
+  accountInput.set(paddedPalletId, prefix.length)
+  accountInput.set(suffix, prefix.length + paddedPalletId.length)
+
+  // For pallet accounts, we use the raw bytes directly as the AccountId32
+  // This is equivalent to into_account_truncating() in Substrate
+  const accountId = u8aToHex(accountInput)
+
+  // Encode to SS58 format
+  const ss58Address = encodeAddress(accountInput, ss58Prefix)
+
+  return {
+    accountId,
+    ss58Address,
+  }
 }
