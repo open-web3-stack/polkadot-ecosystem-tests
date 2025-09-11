@@ -24,4 +24,5 @@ export default defineConfig({
 		outDir: '../../dist',
 	},
 	plugins: [tsconfigPaths(), swc.vite()],
+	clearScreen: false,
 })

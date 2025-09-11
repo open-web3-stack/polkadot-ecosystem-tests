@@ -44,7 +44,7 @@ exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > to chain 
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 900000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -56,8 +56,8 @@ exports[`kusama & peopleKusama > kusama transfer KSM to peopleKusama > to chain 
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

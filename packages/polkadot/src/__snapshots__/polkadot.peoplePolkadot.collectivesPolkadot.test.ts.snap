@@ -4,36 +4,6 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
 [
   {
     "data": {
-      "fees": [
-        {
-          "fun": {
-            "Fungible": "(rounded 300000000)",
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "paying": {
-        "interior": {
-          "X1": [
-            {
-              "Plurality": {
-                "id": "Technical",
-                "part": "Voice",
-              },
-            },
-          ],
-        },
-        "parents": 0,
-      },
-    },
-    "method": "FeesPaid",
-    "section": "polkadotXcm",
-  },
-  {
-    "data": {
       "destination": {
         "interior": "Here",
         "parents": 1,

@@ -1,12 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`People Polkadot Proxy > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Any",
     },
     "method": "ProxyAdded",
@@ -16,7 +16,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyAdded",
@@ -26,7 +26,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyAdded",
@@ -36,7 +36,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "16QD1UeugRmjF51GTNmgankDenJX3tvqfVf2bWT7BPzZ1yVf",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Identity",
     },
     "method": "ProxyAdded",
@@ -46,7 +46,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "15MK2myq7rWCaDnsdhZ7HrtkWdL74XzjC2Qcuu8RjMAWieaR",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "IdentityJudgement",
     },
     "method": "ProxyAdded",
@@ -56,7 +56,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Collator",
     },
     "method": "ProxyAdded",
@@ -65,13 +65,13 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
 ]
 `;
 
-exports[`People Polkadot Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Any",
     },
     "method": "ProxyRemoved",
@@ -81,7 +81,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyRemoved",
@@ -91,7 +91,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyRemoved",
@@ -101,7 +101,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "16QD1UeugRmjF51GTNmgankDenJX3tvqfVf2bWT7BPzZ1yVf",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Identity",
     },
     "method": "ProxyRemoved",
@@ -111,7 +111,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "15MK2myq7rWCaDnsdhZ7HrtkWdL74XzjC2Qcuu8RjMAWieaR",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "IdentityJudgement",
     },
     "method": "ProxyRemoved",
@@ -121,7 +121,7 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
     "data": {
       "delay": 0,
       "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Collator",
     },
     "method": "ProxyRemoved",
@@ -130,13 +130,13 @@ exports[`People Polkadot Proxy > add proxies (with/without delay) to an account,
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -145,7 +145,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -154,7 +154,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -163,7 +163,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Identity",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -172,7 +172,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "IdentityJudgement",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -181,7 +181,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -189,7 +189,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when crea
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
 [
   {
     "data": {
@@ -201,7 +201,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
 [
   {
     "data": {
@@ -220,7 +220,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
 [
   {
     "data": {
@@ -239,7 +239,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
 [
   {
     "data": {
@@ -258,7 +258,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
 [
   {
     "data": {
@@ -277,7 +277,7 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
 [
   {
     "data": {
@@ -296,7 +296,42 @@ exports[`People Polkadot Proxy > create and kill pure proxies > events when kill
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "to": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "proxy": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "real": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
 [
   {
     "data": {
@@ -308,7 +343,19 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -327,7 +374,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -346,7 +393,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -365,7 +412,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -380,8 +427,8 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -391,12 +438,12 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Remarked",
     "section": "system",
@@ -414,8 +461,8 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -425,7 +472,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -442,7 +489,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -459,7 +506,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -476,7 +523,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -495,7 +542,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -514,7 +561,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -531,7 +578,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -548,7 +595,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -565,7 +612,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -584,7 +631,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -603,7 +650,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -620,7 +667,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -637,7 +684,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -654,7 +701,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet identity, call clear_identity 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet identity, call clear_identity 1`] = `
 [
   {
     "data": {
@@ -673,7 +720,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet identity, call provide_judgement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet identity, call provide_judgement 1`] = `
 [
   {
     "data": {
@@ -692,7 +739,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -711,7 +758,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -728,7 +775,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -745,7 +792,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Identity > events for proxy type Identity, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -762,7 +809,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call provide_judgement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call provide_judgement 1`] = `
 [
   {
     "data": {
@@ -781,7 +828,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -800,7 +847,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -817,7 +864,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -834,7 +881,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -851,7 +898,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -870,7 +917,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -889,7 +936,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -908,7 +955,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -923,8 +970,8 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -934,12 +981,12 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Remarked",
     "section": "system",
@@ -957,8 +1004,8 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -968,7 +1015,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -985,7 +1032,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1002,7 +1049,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1019,7 +1066,7 @@ exports[`People Polkadot Proxy > filtering tests for allowed proxy calls > allow
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1038,125 +1085,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1178,7 +1107,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1189,7 +1118,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1211,8 +1140,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1222,7 +1151,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1244,8 +1173,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1255,7 +1184,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet balances, call burn 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1274,26 +1203,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1315,7 +1225,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1326,7 +1236,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call remark 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1348,8 +1258,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1359,7 +1269,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call remark_with_event 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1381,8 +1291,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1392,7 +1302,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet balances, call burn 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1411,7 +1321,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet collator_selection, call register_as_candidate 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -1430,26 +1340,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call clear_identity 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1471,7 +1362,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Operational",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": "(rounded 80000)",
           "refTime": "(rounded 100000000000)",
         },
       },
@@ -1482,7 +1373,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call remark 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1504,8 +1395,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1515,7 +1406,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call remark_with_event 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1537,8 +1428,8 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1548,7 +1439,7 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1567,20 +1458,18 @@ exports[`People Polkadot Proxy > filtering tests for forbidden proxy calls > for
 ]
 `;
 
-exports[`People Polkadot Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
-      "amount": 1000000000000,
-      "from": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "to": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1588,25 +1477,136 @@ exports[`People Polkadot Proxy > perform proxy call on behalf of delegator > eve
 ]
 `;
 
-exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call clear_identity 1`] = `
 [
   {
     "data": {
-      "callHash": "(hash)",
-      "proxy": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "real": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
-    "method": "Announced",
+    "method": "ProxyExecuted",
     "section": "proxy",
   },
 ]
 `;
 
-exports[`People Polkadot Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 80000)",
+          "refTime": "(rounded 100000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",

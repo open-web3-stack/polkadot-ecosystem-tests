@@ -10,7 +10,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 200000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -30,7 +30,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 200000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -137,6 +137,13 @@ exports[`Collectives Polkadot Scheduler E2E tests > priority-based execution of 
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "when": "(redacted)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -150,7 +157,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wro
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 200000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -170,7 +177,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 200000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -249,7 +256,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is p
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 1 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic is possible > events for named periodic task execution 1 1`] = `
 [
   {
     "data": {
@@ -279,7 +286,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 2 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic is possible > events for named periodic task execution 2 1`] = `
 [
   {
     "data": {
@@ -309,7 +316,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic task that executes multiple times > events for named periodic task execution 3 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named periodic is possible > events for named periodic task execution 3 1`] = `
 [
   {
     "data": {
@@ -559,7 +566,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry 
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed task execution 1`] = `
+exports[`Collectives Polkadot Scheduler E2E tests > setting and canceling retry configuration for unnamed scheduled tasks > events for failed anonymous task execution 1`] = `
 [
   {
     "data": {

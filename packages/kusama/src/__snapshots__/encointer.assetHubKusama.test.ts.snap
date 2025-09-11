@@ -1,11 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > balance on from chain 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "free": "(rounded 9900000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -15,18 +15,22 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
 }
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > balance on to chain 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > balance on to chain 1`] = `
 {
-  "balance": "(rounded 1000000000000)",
-  "extra": null,
-  "reason": {
-    "sufficient": null,
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 99900000000)",
+    "frozen": 0,
+    "reserved": 0,
   },
-  "status": "Liquid",
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 1,
 }
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > from chain hrmp messages 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > from chain hrmp messages 1`] = `
 [
   {
     "data": [
@@ -34,10 +38,10 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       {
         "v5": [
           {
-            "reserveAssetDeposited": [
+            "receiveTeleportedAsset": [
               {
                 "fun": {
-                  "fungible": 1000000000000,
+                  "fungible": 100000000000,
                 },
                 "id": {
                   "interior": {
@@ -55,7 +59,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
             "buyExecution": {
               "fees": {
                 "fun": {
-                  "fungible": 1000000000000,
+                  "fungible": 100000000000,
                 },
                 "id": {
                   "interior": {
@@ -97,12 +101,12 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
         ],
       },
     ],
-    "recipient": 2039,
+    "recipient": 1001,
   },
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > to chain xcm events 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
@@ -122,15 +126,15 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to integriteePolkadot > tx events 1`] = `
+exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encointerKusama > tx events 1`] = `
 [
   {
     "data": {
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 500000000)",
           },
         },
       },
@@ -143,7 +147,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 300000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",
@@ -157,7 +161,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -174,7 +178,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
         "interior": {
           "X1": [
             {
-              "Parachain": "(rounded 2000)",
+              "Parachain": "(rounded 1000)",
             },
           ],
         },
@@ -182,10 +186,10 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
       },
       "message": [
         {
-          "ReserveAssetDeposited": [
+          "ReceiveTeleportedAsset": [
             {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -199,7 +203,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -239,7 +243,7 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -253,23 +257,27 @@ exports[`integriteePolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT t
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
-{
-  "balance": "(rounded 1000000000000000)",
-  "extra": null,
-  "reason": {
-    "consumer": null,
-  },
-  "status": "Liquid",
-}
-`;
-
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > balance on to chain 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 964000000)",
+    "free": "(rounded 9900000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 99800000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -279,26 +287,24 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
 }
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > from chain hrmp messages 1`] = `
 [
   {
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v5": [
           {
-            "withdrawAsset": [
+            "receiveTeleportedAsset": [
               {
                 "fun": {
-                  "fungible": 1000000000,
+                  "fungible": 100000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -310,15 +316,13 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
             "buyExecution": {
               "fees": {
                 "fun": {
-                  "fungible": 1000000000,
+                  "fungible": 100000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -335,12 +339,14 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
               },
               "beneficiary": {
                 "interior": {
-                  "x1": {
-                    "accountId32": {
-                      "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
-                      "network": null,
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "network": null,
+                      },
                     },
-                  },
+                  ],
                 },
                 "parents": 0,
               },
@@ -357,18 +363,18 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > to chain xcm events 1`] = `
 [
   {
     "data": {
       "id": "(hash)",
       "origin": {
-        "Sibling": "(rounded 2000)",
+        "Sibling": "(rounded 1000)",
       },
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -377,7 +383,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
 ]
 `;
 
-exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT to assetHubPolkadot > tx events 1`] = `
+exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to assetHubKusama > tx events 1`] = `
 [
   {
     "data": {
@@ -398,11 +404,11 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 190000000)",
+            "Fungible": "(rounded 1000000000)",
           },
           "id": {
             "interior": "Here",
-            "parents": 0,
+            "parents": 1,
           },
         },
       ],
@@ -412,7 +418,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],
@@ -437,10 +443,10 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
       },
       "message": [
         {
-          "WithdrawAsset": [
+          "ReceiveTeleportedAsset": [
             {
               "fun": {
-                "Fungible": 1000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -454,7 +460,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
           "BuyExecution": {
             "fees": {
               "fun": {
-                "Fungible": 1000000000,
+                "Fungible": 100000000000,
               },
               "id": {
                 "interior": "Here",
@@ -494,7 +500,7 @@ exports[`integriteePolkadot & assetHubPolkadot > integriteePolkadot transfer DOT
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": "Polkadot",
+                "network": "Kusama",
               },
             },
           ],

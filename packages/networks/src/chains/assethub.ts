@@ -1,5 +1,5 @@
-import { defaultAccounts, defaultAccountsSr25519 } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
   assetHubPolkadot: {
@@ -47,6 +47,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
     ],
   },
   Assets: {
@@ -72,7 +73,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'wss://kusama-asset-hub-rpc.polkadot.io',
+  endpoint: 'wss://sys.ibp.network/asset-hub-kusama',
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),

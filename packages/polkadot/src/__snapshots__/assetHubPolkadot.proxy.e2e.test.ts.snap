@@ -1,12 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when adding proxies to Alice 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Any",
     },
     "method": "ProxyAdded",
@@ -16,7 +16,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyAdded",
@@ -26,7 +26,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyAdded",
@@ -36,7 +36,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "126KyAPbTVKyiyKcwxacvVmyEePA8i6jMupyzYt3Dn8NdKCB",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Assets",
     },
     "method": "ProxyAdded",
@@ -46,7 +46,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "13MxebFxyqJFSvjyDQa98rdbfTAYDm2fQCekGBL7NQEXHFyu",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "AssetOwner",
     },
     "method": "ProxyAdded",
@@ -56,7 +56,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "139Uc4UtHzkXPhmXeV67BSHBXmRvuUCKh5gR2mxisNmpqV8B",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "AssetManager",
     },
     "method": "ProxyAdded",
@@ -66,7 +66,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Collator",
     },
     "method": "ProxyAdded",
@@ -75,13 +75,13 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (batch) 1`] = `
 [
   {
     "data": {
       "delay": 0,
       "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Any",
     },
     "method": "ProxyRemoved",
@@ -91,7 +91,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "NonTransfer",
     },
     "method": "ProxyRemoved",
@@ -101,7 +101,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "CancelProxy",
     },
     "method": "ProxyRemoved",
@@ -111,7 +111,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "126KyAPbTVKyiyKcwxacvVmyEePA8i6jMupyzYt3Dn8NdKCB",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Assets",
     },
     "method": "ProxyRemoved",
@@ -121,7 +121,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "13MxebFxyqJFSvjyDQa98rdbfTAYDm2fQCekGBL7NQEXHFyu",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "AssetOwner",
     },
     "method": "ProxyRemoved",
@@ -131,7 +131,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "139Uc4UtHzkXPhmXeV67BSHBXmRvuUCKh5gR2mxisNmpqV8B",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "AssetManager",
     },
     "method": "ProxyRemoved",
@@ -141,7 +141,7 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
     "data": {
       "delay": 0,
       "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
-      "delegator": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "proxyType": "Collator",
     },
     "method": "ProxyRemoved",
@@ -150,13 +150,13 @@ exports[`Polkadot AssetHub Proxy > add proxies (with/without delay) to an accoun
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -165,7 +165,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "NonTransfer",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -174,7 +174,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "CancelProxy",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -183,7 +183,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Assets",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -192,7 +192,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "AssetOwner",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -201,7 +201,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "AssetManager",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -210,7 +210,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Collator",
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
@@ -218,7 +218,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when cr
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 0 for Alice 1`] = `
 [
   {
     "data": {
@@ -230,7 +230,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 1 for Alice 1`] = `
 [
   {
     "data": {
@@ -249,7 +249,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 2 for Alice 1`] = `
 [
   {
     "data": {
@@ -268,7 +268,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 3 for Alice 1`] = `
 [
   {
     "data": {
@@ -287,7 +287,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 4 for Alice 1`] = `
 [
   {
     "data": {
@@ -306,7 +306,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 5 for Alice 1`] = `
 [
   {
     "data": {
@@ -325,7 +325,7 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when killing pure proxy of type 6 for Alice 1`] = `
 [
   {
     "data": {
@@ -344,7 +344,42 @@ exports[`Polkadot AssetHub Proxy > create and kill pure proxies > events when ki
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "to": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
+[
+  {
+    "data": {
+      "callHash": "(hash)",
+      "proxy": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "real": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Announced",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
 [
   {
     "data": {
@@ -356,7 +391,19 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -375,7 +422,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -394,7 +441,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -413,7 +460,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -429,7 +476,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -439,12 +486,12 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Remarked",
     "section": "system",
@@ -473,7 +520,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -490,7 +537,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -507,7 +554,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -524,7 +571,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call mint 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call mint 1`] = `
 [
   {
     "data": {
@@ -540,7 +587,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -559,7 +606,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call set_metadata 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call set_metadata 1`] = `
 [
   {
     "data": {
@@ -578,7 +625,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call mint 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call mint 1`] = `
 [
   {
     "data": {
@@ -597,7 +644,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -614,7 +661,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -631,7 +678,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -648,7 +695,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call create 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call create 1`] = `
 [
   {
     "data": {
@@ -667,7 +714,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -686,7 +733,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call destroy 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call destroy 1`] = `
 [
   {
     "data": {
@@ -705,7 +752,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call create 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call create 1`] = `
 [
   {
     "data": {
@@ -724,7 +771,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -741,7 +788,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -758,7 +805,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetOwner > events for proxy type AssetOwner, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -775,7 +822,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call create 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call create 1`] = `
 [
   {
     "data": {
@@ -794,7 +841,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call mint 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet assets, call mint 1`] = `
 [
   {
     "data": {
@@ -810,7 +857,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -829,7 +876,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call destroy 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call destroy 1`] = `
 [
   {
     "data": {
@@ -848,7 +895,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call set_metadata 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet nfts, call set_metadata 1`] = `
 [
   {
     "data": {
@@ -867,7 +914,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call create 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call create 1`] = `
 [
   {
     "data": {
@@ -886,7 +933,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call mint 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet uniques, call mint 1`] = `
 [
   {
     "data": {
@@ -905,7 +952,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -922,7 +969,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -939,7 +986,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Assets > events for proxy type Assets, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -956,7 +1003,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -975,7 +1022,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -994,7 +1041,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -1011,7 +1058,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1028,7 +1075,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1045,7 +1092,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet collator_selection, call register_as_candidate 1`] = `
 [
   {
     "data": {
@@ -1064,7 +1111,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -1083,7 +1130,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -1100,7 +1147,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1117,7 +1164,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Collator > events for proxy type Collator, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1134,7 +1181,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet multisig, call as_multi 1`] = `
 [
   {
     "data": {
@@ -1153,7 +1200,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call reject_announcement 1`] = `
 [
   {
     "data": {
@@ -1172,7 +1219,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet proxy, call remove_announcement 1`] = `
 [
   {
     "data": {
@@ -1191,7 +1238,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark 1`] = `
 [
   {
     "data": {
@@ -1207,7 +1254,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -1217,12 +1264,12 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
       "hash_": "(hash)",
-      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Remarked",
     "section": "system",
@@ -1251,7 +1298,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
 [
   {
     "data": {},
@@ -1268,7 +1315,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
 [
   {
     "data": {},
@@ -1285,7 +1332,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
 [
   {
     "data": {},
@@ -1302,7 +1349,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for allowed proxy calls > all
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
 [
   {
     "data": {
@@ -1321,7 +1368,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call create 1`] = `
 [
   {
     "data": {
@@ -1340,7 +1387,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1359,7 +1406,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call destroy 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet nfts, call destroy 1`] = `
 [
   {
     "data": {
@@ -1378,182 +1425,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call create 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call set_metadata 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1576,7 +1448,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1586,7 +1458,40 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1619,40 +1524,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call mint 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet uniques, call create 1`] = `
 [
   {
     "data": {
@@ -1671,7 +1543,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet assets, call mint 1`] = `
 [
   {
     "data": {
@@ -1690,7 +1562,45 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet nfts, call set_metadata 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1713,7 +1623,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1723,7 +1633,40 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1756,40 +1699,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet uniques, call mint 1`] = `
 [
   {
     "data": {
@@ -1808,7 +1718,26 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1831,7 +1760,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1841,7 +1770,40 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1874,40 +1836,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -1926,7 +1855,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1949,7 +1878,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 200000000000)",
+          "refTime": "(rounded 100000000000)",
         },
       },
     },
@@ -1959,7 +1888,40 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -1992,7 +1954,92 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Operational",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 100000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
 [
   {
     "data": {
@@ -2025,7 +2072,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet vesting, call vested_transfer 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet vesting, call vested_transfer 1`] = `
 [
   {
     "data": {
@@ -2044,7 +2091,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet balances, call burn 1`] = `
 [
   {
     "data": {
@@ -2063,7 +2110,7 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
 ]
 `;
 
-exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet vesting, call vested_transfer 1`] = `
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NonTransfer > events for proxy type NonTransfer, pallet vesting, call vested_transfer 1`] = `
 [
   {
     "data": {
@@ -2075,53 +2122,6 @@ exports[`Polkadot AssetHub Proxy > filtering tests for forbidden proxy calls > f
           },
         },
       },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > perform proxy call on behalf of delegator > events when Bob transfers funds to Charlie as Alice's proxy 1`] = `
-[
-  {
-    "data": {
-      "amount": 1000000000000,
-      "from": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-      "to": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > proxy announcement lifecycle test > events when Bob announces a proxy call 1`] = `
-[
-  {
-    "data": {
-      "callHash": "(hash)",
-      "proxy": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "real": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
-    },
-    "method": "Announced",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot AssetHub Proxy > proxy announcement lifecycle test > events when Bob performs the announced proxy call 1`] = `
-[
-  {
-    "data": {
-      "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
