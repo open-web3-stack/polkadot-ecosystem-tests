@@ -245,6 +245,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e-test/paseo@workspace:packages/paseo":
+  version: 0.0.0-use.local
+  resolution: "@e2e-test/paseo@workspace:packages/paseo"
+  dependencies:
+    "@acala-network/chopsticks-testing": "npm:^1.2.1"
+    "@e2e-test/shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@e2e-test/polkadot@workspace:packages/polkadot":
   version: 0.0.0-use.local
   resolution: "@e2e-test/polkadot@workspace:packages/polkadot"

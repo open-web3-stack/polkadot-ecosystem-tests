@@ -1,0 +1,558 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Paseo Asset Hub Governance > preimage tests > preimage submission, query and removal works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > preimage tests > preimage submission, query and removal works > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 90000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
+[
+  [
+    30,
+    50000000000,
+  ],
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after casting his 1`] = `
+{
+  "standard": {
+    "balance": 50000000000,
+    "vote": "0x83",
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after referendum's cancellation 1`] = `
+{
+  "standard": {
+    "balance": 50000000000,
+    "vote": "0x83",
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after rescission 1`] = `
+{
+  "delegations": {
+    "capital": 0,
+    "votes": 0,
+  },
+  "prior": [
+    0,
+    0,
+  ],
+  "votes": [],
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after their vote's rescission 1`] = `
+[
+  [
+    30,
+    60000000000,
+  ],
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after casting his 1`] = `
+{
+  "split": {
+    "aye": 50000000000,
+    "nay": 10000000000,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after referendum's cancellation 1`] = `
+{
+  "split": {
+    "aye": 50000000000,
+    "nay": 10000000000,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after rescission 1`] = `
+{
+  "delegations": {
+    "capital": 0,
+    "votes": 0,
+  },
+  "prior": [
+    0,
+    0,
+  ],
+  "votes": [],
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after their vote's rescission 1`] = `
+[
+  [
+    30,
+    80000000000,
+  ],
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after casting hers 1`] = `
+{
+  "splitAbstain": {
+    "abstain": 20000000000,
+    "aye": 50000000000,
+    "nay": 10000000000,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after referendum's cancellation 1`] = `
+{
+  "splitAbstain": {
+    "abstain": 20000000000,
+    "aye": 50000000000,
+    "nay": 10000000000,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after rescission 1`] = `
+{
+  "delegations": {
+    "capital": 0,
+    "votes": 0,
+  },
+  "prior": [
+    0,
+    0,
+  ],
+  "votes": [],
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for bob's decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "Standard": {
+          "balance": 50000000000,
+          "vote": {
+            "conviction": "Locked3x",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "Split": {
+          "aye": 50000000000,
+          "nay": 10000000000,
+        },
+      },
+      "who": "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `
+[
+  {
+    "data": {
+      "vote": {
+        "SplitAbstain": {
+          "abstain": 20000000000,
+          "aye": 50000000000,
+          "nay": 10000000000,
+        },
+      },
+      "who": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": {
+      "confirming": null,
+    },
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 150000000000,
+      "nays": 0,
+      "support": 50000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after dave's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": {
+      "confirming": null,
+    },
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 155000000000,
+      "nays": 1000000000,
+      "support": 100000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after eve's vote 1`] = `
+{
+  "ongoing": {
+    "deciding": {
+      "confirming": null,
+    },
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 160000000000,
+      "nays": 2000000000,
+      "support": 170000000000,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info before decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info post decision deposit 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    },
+    "submissionDeposit": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum upon start of decision period 1`] = `
+{
+  "deciding": {
+    "confirming": null,
+  },
+  "decisionDeposit": {
+    "amount": 10000000000,
+    "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+  },
+  "enactment": {
+    "after": 1,
+  },
+  "inQueue": false,
+  "origin": {
+    "origins": "SmallTipper",
+  },
+  "proposal": {
+    "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+  },
+  "submissionDeposit": {
+    "amount": 10000000000,
+    "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+  },
+  "tally": {
+    "ayes": 0,
+    "nays": 0,
+    "support": 0,
+  },
+  "track": 30,
+}
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "SubmissionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 88000000)",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "ItemCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {},
+    "method": "BatchCompleted",
+    "section": "utility",
+  },
+  {
+    "data": {
+      "amount": "(rounded 88000000)",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "actualFee": "(rounded 88000000)",
+      "tip": 0,
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 200000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Paseo Asset Hub Governance > referenda tests > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 90000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

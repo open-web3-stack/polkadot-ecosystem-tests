@@ -1,0 +1,8 @@
+{
+	"name": "@e2e-test/paseo",
+	"type": "module",
+	"dependencies": {
+		"@acala-network/chopsticks-testing": "^1.2.1",
+		"@e2e-test/shared": "workspace:*"
+	}
+}
