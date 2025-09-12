@@ -4,15 +4,6 @@ exports[`Kusama Asset Hub Accounts > \`force_transfer\` > force transfer below E
 [
   {
     "data": {
-      "amount": "(rounded 12000000)",
-      "from": "F3opxRUwkBj1LqjZ7DyiHCRh9Z4zVPLaVjoxfD5ddbip8mt",
-      "to": "EPGHRDFaBbQz4uF8DgnuScxYp4rvvtpL5MTed7VvGprNQmm",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
       "account": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "KilledAccount",

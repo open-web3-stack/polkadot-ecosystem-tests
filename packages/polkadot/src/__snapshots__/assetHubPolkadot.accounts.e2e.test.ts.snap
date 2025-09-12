@@ -4,9 +4,9 @@ exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transfer below
 [
   {
     "data": {
-      "amount": "(rounded 12000)",
+      "amount": "(rounded 8800)",
       "from": "13UVJyLgBASGhE2ok3TvxUfaQBGUt88JCcdYjHvUhvQkFTTx",
-      "to": "12ixt2xmCJKuLXjM3gh1SY7C3aj4gBoBUqExTBTGhLCSATFw",
+      "to": "14EQvBy9h8xGbh2R3ustnkfkF514E7wpmHtg27gDaTLM2str",
     },
     "method": "Transfer",
     "section": "balances",

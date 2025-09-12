@@ -4,15 +4,6 @@ exports[`Kusama Bridge Hub Accounts > \`force_transfer\` > force transfer below 
 [
   {
     "data": {
-      "amount": 3,
-      "from": "F3opxRUwkBj1LqjZ7DyiHCRh9Z4zVPLaVjoxfD5ddbip8mt",
-      "to": "DQkekNBt8g6D7bPUEqhgfujADxzzfivr1qQZJkeGzAqnEzF",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
       "account": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "KilledAccount",
