@@ -274,9 +274,9 @@ export async function bountyFundingTest<
     return
   }
 
-  // move client head to the last spend period block - 2
+  // move client head to the last spend period block - 3
   const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
-  await client.dev.setHead(lastSpendPeriodBlockNumber - 2)
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
@@ -284,78 +284,53 @@ export async function bountyFundingTest<
   const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
   const description = 'Test bounty for funding'
 
-  // get bountycount and increase it by 1
-  const bountyCount = await getBountyCount(client)
-  const bountyIndex = bountyCount + 1
+  // propose a bounty
+  const bountyProposedEvents = await sendTransaction(
+    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice),
+  )
 
-  // increase the bounty count
-  await client.dev.setStorage({
-    Bounties: {
-      bountyCount: bountyIndex,
-    },
-  })
+  await client.dev.newBlock()
 
-  // get the bounty count from the storage and verify it is same as the bounty index
-  const bountyCountFromStorage = await client.api.query.bounties.bountyCount()
-  expect(bountyCountFromStorage.toNumber()).toBe(bountyIndex)
-
-  // add a bounty description using the setStorage with correct format
-  await client.dev.setStorage({
-    Bounties: {
-      bountyDescriptions: [[[bountyIndex], description]],
-    },
-  })
-
-  // verify the bounty description is added to the storage
-  const bountyDescriptionFromStorage = await client.api.query.bounties.bountyDescriptions(bountyIndex)
-  expect(bountyDescriptionFromStorage.isSome).toBe(true)
-  expect(bountyDescriptionFromStorage.unwrap().toUtf8()).toBe(description)
-
-  // add a bounty using the setStorage with correct format
-  await client.dev.setStorage({
-    Bounties: {
-      bounties: [
-        [
-          [bountyIndex],
-          {
-            proposer: devAccounts.alice.address,
-            value: bountyValue,
-            fee: 0,
-            curatorDeposit: 0,
-            bond: 1000000000,
-            status: { proposed: null },
-          },
-        ],
-      ],
-    },
-  })
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
 
   // verify the bounty is added to the storage
+  const bountyIndex = await getBountyIndexFromEvent(client)
   const bountyFromStorage = await getBounty(client, bountyIndex)
   expect(bountyFromStorage.status.isProposed).toBe(true)
 
-  await client.dev.newBlock()
-
-  // add a bounty in the approvals queue by using setStorage
-  await client.dev.setStorage({
-    Bounties: {
-      bountyApprovals: [bountyIndex],
-    },
+  // approve the bounty with origin treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
   })
 
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
   // verify the bounty is added to the approvals queue
-  const approvals = await getBountyApprovals(client)
-  expect(approvals).toContain(bountyIndex)
+  const approvalsforStorage = await getBountyApprovals(client)
+  expect(approvalsforStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
-
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
   await client.dev.newBlock()
 
-  // TODO: Verify that the `BountyBecameActive` event occurred in the block just before this one (i.e., after the bounty is funded)
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
 
-  // verify that the bounty is funded
-  const bountyStatus = await getBounty(client, bountyIndex)
-  expect(bountyStatus.status.isFunded).toBe(true)
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  // TODO: @dhirajs0 - verify that the bond of the proposer is reserved and it's unreserved after the bounty is funded
 
   await client.teardown()
 }
