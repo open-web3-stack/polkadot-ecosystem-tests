@@ -1,3 +1,4 @@
+export * from './accounts.js'
 export * from './collectives.js'
 export * from './governance.js'
 export * from './helpers/index.js'

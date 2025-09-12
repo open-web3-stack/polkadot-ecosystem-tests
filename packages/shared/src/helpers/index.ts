@@ -362,6 +362,14 @@ export async function setValidatorsStorage(
 }
 
 /**
+ * Whether a chain's ED is lower than typical transaction fees or not.
+ *
+ * An exact comparison is not relevant - this marker only identifies whether transfers at or around the
+ * chain's ED can be made without raising `pallet_balances::FundsUnavailable`.
+ */
+export type ChainED = 'LowEd' | 'Normal'
+
+/**
  * Get the last known block number for a given chain.
  *
  * The block provider might be local or external (e.g. a parachain querying its relay chain).
@@ -420,6 +428,7 @@ export interface RelayTestConfig {
   testSuiteName: string
   addressEncoding: number
   blockProvider: 'Local'
+  chainEd: ChainED
 }
 
 /**
@@ -434,6 +443,7 @@ export interface ParaTestConfig {
   addressEncoding: number
   blockProvider: BlockProvider
   asyncBacking: AsyncBacking
+  chainEd: ChainED
 }
 
 /**
