@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -10,11 +10,11 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
-  type LowEdChain as ChainEd,
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
   scheduleInlineCallWithOrigin,
+  type TestConfig,
 } from './helpers/index.js'
 
 /// -------
@@ -29,7 +29,7 @@ async function createAccountWithBalance<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, balance: any, seed: string): Promise<KeyringPair> {
   // Create fresh account from seed
-  const newAccount = defaultAccountsSr25519.keyring.createFromUri(`${seed}`)
+  const newAccount = testAccounts.keyring.createFromUri(`${seed}`)
 
   // Set account balance directly via storage
   await client.dev.setStorage({
@@ -84,7 +84,7 @@ async function transferAllowDeathTest<
   // When transferring this amount, net of fees, the account should have less than 1 ED remaining.
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   // Verify both accounts have empty data before transfer
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -155,6 +155,8 @@ async function transferAllowDeathTest<
         return true
       }
     }
+
+    return false
   })
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
@@ -242,7 +244,7 @@ async function transferAllowDeathNoKillTest<
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n // 100 ED
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -296,7 +298,7 @@ async function transferAllowDeathNoKillTest<
   })
   expect(killedAccountEvent).toBeUndefined()
 
-  // Verify transfer event
+  // Verify transfer event -- fee transfers also count, so a filter for the proper sender is needed.
   const transferEvent = events.find((record) => {
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
@@ -305,6 +307,8 @@ async function transferAllowDeathNoKillTest<
         return true
       }
     }
+
+    return false
   })
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
@@ -364,7 +368,7 @@ async function forceTransferKillTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
   baseChain: Chain<TCustom, TInitStoragesBase>,
-  addressEncoding: number,
+  testConfig: TestConfig,
   relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
@@ -391,7 +395,7 @@ async function forceTransferKillTest<
   const eps = existentialDeposit / 3n
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   // Verify both accounts have expected initial state
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
@@ -401,7 +405,12 @@ async function forceTransferKillTest<
 
   if (hasScheduler) {
     // Use root origin to execute force transfer directly
-    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
     await baseClient.dev.newBlock()
   } else {
     // Query parachain ID
@@ -421,7 +430,7 @@ async function forceTransferKillTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -453,21 +462,23 @@ async function forceTransferKillTest<
   // 5. `NewAccount` event
   const events = await baseClient.api.query.system.events()
 
-  // Check `Transfer` event
+  // Check `Transfer` event - again, filter to disambiguate fee transfers
   const transferEvent = events.find((record) => {
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
       assert(baseClient.api.events.balances.Transfer.is(event))
-      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
         return true
       }
     }
+
+    return false
   })
   expect(transferEvent).toBeDefined()
   assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `DustLost` event
@@ -478,7 +489,7 @@ async function forceTransferKillTest<
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   expect(dustLostEventData.amount.toBigInt()).toBe(eps)
 
   // Check `Endowed` event
@@ -489,7 +500,7 @@ async function forceTransferKillTest<
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 
   // Check `KilledAccount` event
@@ -500,7 +511,7 @@ async function forceTransferKillTest<
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
-  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
 
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
@@ -510,7 +521,7 @@ async function forceTransferKillTest<
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 }
 
 /**
@@ -531,7 +542,7 @@ async function transferBelowExistentialDepositTest<
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -595,7 +606,7 @@ async function transferInsufficientFundsTest<
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
@@ -719,7 +730,7 @@ async function forceTransferBelowExistentialDepositTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
   baseChain: Chain<TCustom, TInitStoragesBase>,
-  _addressEncoding: number,
+  testConfig: TestConfig,
   relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
@@ -744,7 +755,7 @@ async function forceTransferBelowExistentialDepositTest<
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
   const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   // Verify initial state
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
@@ -755,7 +766,12 @@ async function forceTransferBelowExistentialDepositTest<
 
   if (hasScheduler) {
     // Use root origin to execute force transfer directly
-    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
     await baseClient.dev.newBlock()
   } else {
     // Query parachain ID
@@ -775,7 +791,7 @@ async function forceTransferBelowExistentialDepositTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -830,7 +846,7 @@ async function forceTransferInsufficientFundsTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
   baseChain: Chain<TCustom, TInitStoragesBase>,
-  _addressEncoding: number,
+  testConfig: TestConfig,
   relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
@@ -855,7 +871,7 @@ async function forceTransferInsufficientFundsTest<
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit
   const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
-  const bob = defaultAccountsSr25519.keyring.createFromUri('//fresh_bob')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
@@ -865,7 +881,12 @@ async function forceTransferInsufficientFundsTest<
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
   if (hasScheduler) {
-    await scheduleInlineCallWithOrigin(baseClient, forceTransferTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
     await baseClient.dev.newBlock()
   } else {
     // Query parachain ID
@@ -885,7 +906,7 @@ async function forceTransferInsufficientFundsTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -929,8 +950,8 @@ async function forceTransferBadOriginTest(chain: Chain) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const transferAmount = existentialDeposit
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
 
   const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
   await sendTransaction(forceTransferTx.signAsync(alice)) // Regular user, not root
@@ -1013,11 +1034,7 @@ const partialTransferAllowDeathTests = (
   children: commonTransferAllowDeathTests(chain, testConfig),
 })
 
-export const transferFunctionsTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number; chainEd: ChainEd },
-  relayChain?: Chain,
-): RootTestTree => ({
+export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, relayChain?: Chain): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
   children: [
@@ -1042,17 +1059,17 @@ export const transferFunctionsTests = (
         {
           kind: 'test' as const,
           label: 'force transfer below ED can kill source account',
-          testFn: () => forceTransferKillTest(chain, testConfig.addressEncoding, relayChain),
+          testFn: () => forceTransferKillTest(chain, testConfig, relayChain),
         },
         {
           kind: 'test' as const,
           label: 'force transfer below existential deposit fails',
-          testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig.addressEncoding, relayChain),
+          testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig, relayChain),
         },
         {
           kind: 'test' as const,
           label: 'force transfer with insufficient funds fails',
-          testFn: () => forceTransferInsufficientFundsTest(chain, testConfig.addressEncoding, relayChain),
+          testFn: () => forceTransferInsufficientFundsTest(chain, testConfig, relayChain),
         },
         {
           kind: 'test',
