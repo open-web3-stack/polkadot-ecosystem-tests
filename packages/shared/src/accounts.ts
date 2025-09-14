@@ -15,8 +15,8 @@ import {
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
+  updateCumulativeFees,
 } from './helpers/index.js'
 
 /// -------
@@ -1044,7 +1044,8 @@ const partialTransferAllowDeathTests = (
  * 3. Creates a vested transfer to lock 90000 ED
  * 4. Tries to add an `Any` proxy
  *    - the proxy deposit, on any relay or system parachain, is *well* below 10000 ED, so this should *not* fail
- * 5. Checks that a `balances.LiquidityError` was raised
+ * 5. Checks that a `balances.LiquidityRestrictions` was raised
+ * 6. Verify that the account has funds to perform the operation
  */
 async function liquidityRestrictionTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1071,6 +1072,11 @@ async function liquidityRestrictionTest<
   await sendTransaction(createPoolTx.signAsync(alice))
   await client.dev.newBlock()
 
+  // Initialize fee tracking map
+  const cumulativeFees = new Map<string, bigint>()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
   // Step 3: Create a vested transfer to self, in order to freeze some funds
   const number = await getBlockNumber(client.api, testConfig.blockProvider)
   const vestedAmount = existentialDeposit * 90000n // 90000 ED
@@ -1085,11 +1091,15 @@ async function liquidityRestrictionTest<
   await sendTransaction(vestedTransferTx.signAsync(alice))
   await client.dev.newBlock()
 
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
   // Step 4: Try to add an `Any` proxy - this should fail due to liquidity restrictions
   const bob = testAccounts.bob
   const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
   await sendTransaction(addProxyTx.signAsync(alice))
   await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 5: Check that the transaction failed with appropriate error
   const finalEvents = await client.api.query.system.events()
@@ -1102,11 +1112,28 @@ async function liquidityRestrictionTest<
   assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
   const dispatchError = failedEvent!.event.data.dispatchError
 
-  // Check that it's a balances pallet error related to liquidity
-  // The exact error might be `InsufficientBalance` or similar depending on the runtime
   assert(dispatchError.isModule)
   const moduleError = dispatchError.asModule
   expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+
+  // Step 6: Verify account state should have allowed the operation which just failed
+  const account = await client.api.query.system.account(alice.address)
+
+  expect(account.data.free.toBigInt()).toBe(
+    totalBalance -
+      vestedAmount -
+      existentialDeposit -
+      cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+  )
+  expect(account.data.reserved.toBigInt()).toBe(poolBond)
+  expect(account.data.frozen.toBigInt()).toBe(vestedAmount - existentialDeposit)
+
+  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
+  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
+  const proxyDeposit = proxyDepositFactor * 1n + proxyDepositBase
+
+  // The operation failed, even though the account had enough funds to place the deposit required for the proxy.
+  expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(proxyDeposit)
 }
 
 export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, relayChain?: Chain): RootTestTree => ({
@@ -1155,7 +1182,7 @@ export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, rel
     },
     {
       kind: 'describe',
-      label: 'liquidity restrictions',
+      label: 'currency tests',
       children: [
         {
           kind: 'test',
