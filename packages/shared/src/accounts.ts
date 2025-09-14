@@ -13,7 +13,9 @@ import {
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
+  getBlockNumber,
   scheduleInlineCallWithOrigin,
+  schedulerOffset,
   type TestConfig,
 } from './helpers/index.js'
 
@@ -1034,6 +1036,79 @@ const partialTransferAllowDeathTests = (
   children: commonTransferAllowDeathTests(chain, testConfig),
 })
 
+/**
+ * Test that demonstrates liquidity restrictions when funds are locked in multiple systems.
+ *
+ * 1. Credits an account with 100000 ED
+ * 2. Creates a nomination pool with 90000 ED
+ * 3. Creates a vested transfer to lock 90000 ED
+ * 4. Tries to add an `Any` proxy
+ *    - the proxy deposit, on any relay or system parachain, is *well* below 10000 ED, so this should *not* fail
+ * 5. Checks that a `balances.LiquidityError` was raised
+ */
+async function liquidityRestrictionTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // Step 1: Create account with 100000 ED
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100000n // 100000 ED
+  const alice = testAccounts.alice
+
+  // Verify initial balance
+  await client.dev.setStorage({
+    System: {
+      account: [[[alice.address], { providers: 1, data: { free: totalBalance } }]],
+    },
+  })
+
+  // Step 2: Create nomination pool
+  const poolBond = existentialDeposit * 90000n // 90000 ED
+
+  const createPoolTx = client.api.tx.nominationPools.create(poolBond, alice.address, alice.address, alice.address)
+  await sendTransaction(createPoolTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  // Step 3: Create a vested transfer to self, in order to freeze some funds
+  const number = await getBlockNumber(client.api, testConfig.blockProvider)
+  const vestedAmount = existentialDeposit * 90000n // 90000 ED
+  const perBlock = existentialDeposit // Release 1 ED per block
+  const startingBlock = number
+
+  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
+    locked: vestedAmount,
+    perBlock: perBlock,
+    startingBlock: startingBlock,
+  })
+  await sendTransaction(vestedTransferTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  // Step 4: Try to add an `Any` proxy - this should fail due to liquidity restrictions
+  const bob = testAccounts.bob
+  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  // Step 5: Check that the transaction failed with appropriate error
+  const finalEvents = await client.api.query.system.events()
+  const failedEvent = finalEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+
+  // Check that it's a balances pallet error related to liquidity
+  // The exact error might be `InsufficientBalance` or similar depending on the runtime
+  assert(dispatchError.isModule)
+  const moduleError = dispatchError.asModule
+  expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+}
+
 export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, relayChain?: Chain): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
@@ -1075,6 +1150,17 @@ export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, rel
           kind: 'test',
           label: 'non-root origins cannot force transfer',
           testFn: () => forceTransferBadOriginTest(chain),
+        },
+      ],
+    },
+    {
+      kind: 'describe',
+      label: 'liquidity restrictions',
+      children: [
+        {
+          kind: 'test',
+          label: 'adding proxy fails when funds are locked in pools and vesting',
+          testFn: () => liquidityRestrictionTest(chain, testConfig),
         },
       ],
     },
