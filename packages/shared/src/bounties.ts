@@ -926,6 +926,11 @@ export async function bountyClosureProposedTest<
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty rejected events')
 
+  // verify the Slash event
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' })
+    .redact({ redactKeys: /who/ })
+    .toMatchSnapshot('proposer bond slashed event')
+
   // Verify bounty is removed from storage
   const bountyAfterClosure = await getBounty(client, bountyIndex)
   expect(bountyAfterClosure).toBeNull()
