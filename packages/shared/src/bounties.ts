@@ -1050,6 +1050,128 @@ export async function bountyClosureFundedTest<
   await client.teardown()
 }
 
+/**
+ * Test: Bounty closure in Active state
+ *
+ * Verifies:
+ * - Bounty can be closed when in Active state
+ * - Curator deposit is refunded
+ * - Funds are transferred back to treasury
+ * - Bounty is removed from storage
+ * - BountyCanceled event is emitted
+ */
+export async function bountyClosureActiveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping bounty closure active test')
+    return
+  }
+
+  // Move to spend period
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for closure in active state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // Accept curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // Verify bounty is in Active state
+  const activeBounty = await getBounty(client, bountyIndex)
+  expect(activeBounty.status.isActive).toBe(true)
+
+  // Get curator reserved balance before closure
+  const curatorBalanceBeforeClosure = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceBeforeClosure = curatorBalanceBeforeClosure.data.reserved.toBigInt()
+  console.log('Curator reserved balance before:', curatorReservedBalanceBeforeClosure)
+
+  // Close the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify BountyCanceled event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyCanceled' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty canceled event')
+
+  // verify the curator transfer of balance event to the treasury
+  await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
+    .redact({ redactKeys: /from|to/ })
+    .toMatchSnapshot('Bounty value is transferred to the treasury')
+
+  // Verify bounty is removed from storage
+  const bountyAfterClosure = await getBounty(client, bountyIndex)
+  expect(bountyAfterClosure).toBeNull()
+
+  // Verify curator deposit was refunded
+  const curatorBalanceAfterClosure = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceAfterClosure = curatorBalanceAfterClosure.data.reserved.toBigInt()
+  expect(curatorReservedBalanceBeforeClosure).toBeGreaterThan(curatorReservedBalanceAfterClosure)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -1111,6 +1233,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty closure in funded state',
         testFn: async () => await bountyClosureFundedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in active state',
+        testFn: async () => await bountyClosureActiveTest(chain),
       },
     ],
   }
