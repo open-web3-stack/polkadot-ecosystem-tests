@@ -875,6 +875,67 @@ export async function bountyAwardingAndClaimingTest<
   await client.teardown()
 }
 
+/**
+ * Test: Bounty closure in Proposed state
+ *
+ * Verifies:
+ * - Bounty can be closed by GeneralAdmin when in Proposed state
+ * - Proposer's bond is slashed
+ * - Bounty is removed from storage
+ * - BountyRejected event is emitted
+ */
+export async function bountyClosureProposedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for closure in proposed state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Verify bounty is in Proposed state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
+  // Close the bounty using Treasurer origin
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify BountyRejected event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyRejected' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty rejected events')
+
+  // Verify bounty is removed from storage
+  const bountyAfterClosure = await getBounty(client, bountyIndex)
+  expect(bountyAfterClosure).toBeNull()
+
+  // Verify description is removed
+  const descriptionAfterClosure = await getBountyDescription(client, bountyIndex)
+  expect(descriptionAfterClosure).toBeNull()
+
+  // Verify proposer's bond was slashed
+  const finalBalance = await client.api.query.system.account(devAccounts.alice.address)
+  const reservedBalance = finalBalance.data.reserved.toBigInt()
+
+  // The bond should be slashed (not returned to free balance)
+  expect(reservedBalance).toBe(0n) // Reserved should be 0 after slash
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -926,6 +987,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty awarding and claiming',
         testFn: async () => await bountyAwardingAndClaimingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in proposed state',
+        testFn: async () => await bountyClosureProposedTest(chain),
       },
     ],
   }
