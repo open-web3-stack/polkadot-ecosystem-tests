@@ -1172,6 +1172,65 @@ export async function bountyClosureActiveTest<
   await client.teardown()
 }
 
+/**
+ * Test: Unassign curator in ApprovedWithCurator state
+ *
+ * Verifies:
+ * - Treasurer can unassign curator from ApprovedWithCurator state
+ * - Status changes back to Approved
+ * - CuratorUnassigned event is emitted
+ */
+export async function unassignCuratorApprovedWithCuratorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for unassign curator in approved with curator state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve bounty with curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.approveBountyWithCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in ApprovedWithCurator state
+  const approvedWithCuratorBounty = await getBounty(client, bountyIndex)
+  expect(approvedWithCuratorBounty.status.isApprovedWithCurator).toBe(true)
+
+  // Unassign curator using Treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.unassignCurator(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify CuratorUnassigned event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorUnassigned' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator unassigned approved with curator events')
+
+  // Verify bounty status changed back to Approved
+  const bountyAfterUnassign = await getBounty(client, bountyIndex)
+  expect(bountyAfterUnassign.status.isApproved).toBe(true)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -1238,6 +1297,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty closure in active state',
         testFn: async () => await bountyClosureActiveTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in ApprovedWithCurator state',
+        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
       },
     ],
   }
