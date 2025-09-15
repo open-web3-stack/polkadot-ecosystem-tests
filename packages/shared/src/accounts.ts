@@ -1037,28 +1037,46 @@ const partialTransferAllowDeathTests = (
 })
 
 /**
- * Test that demonstrates liquidity restrictions when funds are locked in multiple systems.
+ * Interface for deposit-requiring actions that can be tested for liquidity restrictions
+ */
+interface DepositAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  name: string
+  createTransaction: (client: Client<TCustom, TInitStorages>) => Promise<any>
+  calculateDeposit: (client: Client<TCustom, TInitStorages>) => Promise<bigint>
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
+/**
+ * Helper function that tests liquidity restrictions for any deposit-requiring action.
  *
  * 1. Credits an account with 100000 ED
  * 2. Creates a nomination pool with 90000 ED
  * 3. Creates a vested transfer to lock 90000 ED
- * 4. Tries to add an `Any` proxy
- *    - the proxy deposit, on any relay or system parachain, is *well* below 10000 ED, so this should *not* fail
+ * 4. Tries to execute the provided action
  * 5. Checks that a `balances.LiquidityRestrictions` was raised
  * 6. Verify that the account has funds to perform the operation
  */
-async function liquidityRestrictionTest<
+async function testLiquidityRestrictionForAction<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, action: DepositAction<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
+
+  // Skip test if the required pallet is not available
+  if (!action.isAvailable(client)) {
+    console.log(`Skipping ${action.name} test - required pallet not available`)
+    return
+  }
 
   // Step 1: Create account with 100000 ED
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100000n // 100000 ED
   const alice = testAccounts.alice
 
-  // Verify initial balance
+  // Set initial balance
   await client.dev.setStorage({
     System: {
       account: [[[alice.address], { providers: 1, data: { free: totalBalance } }]],
@@ -1093,20 +1111,21 @@ async function liquidityRestrictionTest<
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 4: Try to add an `Any` proxy - this should fail due to liquidity restrictions
-  const bob = testAccounts.bob
-  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
-  await sendTransaction(addProxyTx.signAsync(alice))
+  // Step 4: Try to execute the action - this should fail due to liquidity restrictions
+  const actionTx = await action.createTransaction(client)
+  await sendTransaction(actionTx.signAsync(alice))
   await client.dev.newBlock()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 5: Check that the transaction failed with appropriate error
+  // Step 5: Check that the transaction failed with the appropriate error
   const finalEvents = await client.api.query.system.events()
   const failedEvent = finalEvents.find((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
+
+  // TODO: snapshot at least one event
 
   expect(failedEvent).toBeDefined()
   assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
@@ -1118,6 +1137,7 @@ async function liquidityRestrictionTest<
 
   // Step 6: Verify account state should have allowed the operation which just failed
   const account = await client.api.query.system.account(alice.address)
+  const actionDeposit = await action.calculateDeposit(client)
 
   expect(account.data.free.toBigInt()).toBe(
     totalBalance -
@@ -1128,15 +1148,70 @@ async function liquidityRestrictionTest<
   expect(account.data.reserved.toBigInt()).toBe(poolBond)
   expect(account.data.frozen.toBigInt()).toBe(vestedAmount - existentialDeposit)
 
-  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
-  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
-  const proxyDeposit = proxyDepositFactor * 1n + proxyDepositBase
-
-  // The operation failed, even though the account had enough funds to place the deposit required for the proxy.
-  expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(proxyDeposit)
+  // The operation failed, even though the account had enough funds to place the required deposit
+  expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
 }
 
-export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, relayChain?: Chain): RootTestTree => ({
+/**
+ * Define the deposit-requiring actions to test
+ */
+function createDepositActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): DepositAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'proxy addition',
+      createTransaction: async (client) => {
+        const bob = testAccounts.bob
+        return client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+      },
+      calculateDeposit: async (client) => {
+        const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
+        const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
+        return proxyDepositFactor * 1n + proxyDepositBase
+      },
+      isAvailable: (client) => !!client.api.tx.proxy,
+    },
+    {
+      name: 'multisig creation',
+      createTransaction: async (client) => {
+        const bob = testAccounts.bob
+        const call = client.api.tx.system.remark('multisig test')
+        return client.api.tx.multisig.asMulti(2, [bob.address], null, call, { refTime: 1000000, proofSize: 1000 })
+      },
+      calculateDeposit: async (client) => {
+        const depositBase = client.api.consts.multisig.depositBase.toBigInt()
+        const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
+        return depositBase + depositFactor * 1n
+      },
+      isAvailable: (client) => !!client.api.tx.multisig,
+    },
+    {
+      name: 'referendum submission',
+      createTransaction: async (client) => {
+        return client.api.tx.referenda.submit(
+          { Origins: 'SmallTipper' } as any,
+          { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
+          { After: 1 },
+        )
+      },
+      calculateDeposit: async (client) => {
+        return client.api.consts.referenda.submissionDeposit.toBigInt()
+      },
+      isAvailable: (client) => !!client.api.tx.referenda,
+    },
+  ]
+}
+
+export const transferFunctionsTests = <
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStorages>,
+): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
   children: [
@@ -1183,13 +1258,11 @@ export const transferFunctionsTests = (chain: Chain, testConfig: TestConfig, rel
     {
       kind: 'describe',
       label: 'currency tests',
-      children: [
-        {
-          kind: 'test',
-          label: 'adding proxy fails when funds are locked in pools and vesting',
-          testFn: () => liquidityRestrictionTest(chain, testConfig),
-        },
-      ],
+      children: createDepositActions<TCustom, TInitStorages>().map((action) => ({
+        kind: 'test' as const,
+        label: `${action.name} improperly fails when funds are locked in pools and vesting`,
+        testFn: () => testLiquidityRestrictionForAction(chain, testConfig, action),
+      })),
     },
   ],
 })
