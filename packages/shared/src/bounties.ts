@@ -459,51 +459,71 @@ export async function curatorAssignmentAndAcceptanceTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await setupTestAccounts(client, ['alice', 'bob'])
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping bounty funding test')
+    return
+  }
 
-  // get bounty count and increase it by 1
-  const bountyCount = await getBountyCount(client)
-  const bountyIndex = bountyCount + 1
+  // move client head to the last spend period block - 3
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
 
-  // increase the bounty count
-  await client.dev.setStorage({
-    Bounties: {
-      bountyCount: bountyIndex,
-    },
-  })
-
-  // verify the bounty count is increased
-  const bountyCountFromStorage = await client.api.query.bounties.bountyCount()
-  expect(bountyCountFromStorage.toNumber()).toBe(bountyIndex)
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
   const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
-  const bondValue = existentialDeposit.toBigInt() * 10n // 10 EDs
+  const description = 'Test bounty for funding'
 
-  // add the below funded bounty to the storage
-  const fundedBounty = {
-    proposer: devAccounts.alice.address,
-    value: bountyValue,
-    fee: 0,
-    curatorDeposit: 0,
-    bond: bondValue,
-    status: { funded: null },
-  }
-
-  await client.dev.setStorage({
-    Bounties: {
-      bounties: [[[bountyIndex], fundedBounty]],
-    },
-  })
-
-  // verify the bounty is added to the storage
-  const bountyFromStorage = await getBounty(client, bountyIndex)
-  expect(bountyFromStorage.status.isFunded).toBe(true)
+  // propose a bounty
+  const bountyProposedEvents = await sendTransaction(
+    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice),
+  )
 
   await client.dev.newBlock()
 
-  // propose a curator
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 tokens (10% fee)
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // verify the bounty is added to the storage
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
+  // approve the bounty with origin treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the bounty is added to the approvals queue
+  const approvalsforStorage = await getBountyApprovals(client)
+  expect(approvalsforStorage).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
+
+  // assign curator to the bounty
   await scheduleInlineCallWithOrigin(
     client,
     client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
@@ -514,32 +534,30 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   await client.dev.newBlock()
 
-  // verify events
+  // verify the CuratorProposed event
   await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
-    .redact({ redactKeys: /index/ })
+    .redact({ redactKeys: /bountyId/ })
     .toMatchSnapshot('curator proposed events')
 
-  // verify the curator is proposed
-  const curatorProposed = await getBounty(client, bountyIndex)
-  expect(curatorProposed.status.isCuratorProposed).toBe(true)
+  // verify the bounty status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
 
   await client.dev.newBlock()
 
   // accept the curator
-  const acceptCuratorEvents = await sendTransaction(
-    client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob),
-  )
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
 
   await client.dev.newBlock()
 
-  // verify events
-  await checkEvents(acceptCuratorEvents, { section: 'bounties', method: 'CuratorAccepted' })
-    .redact({ redactKeys: /index/ })
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
     .toMatchSnapshot('curator accepted events')
 
-  // verify the curator is accepted
-  const curatorAccepted = await getBounty(client, bountyIndex)
-  expect(curatorAccepted.status.isActive).toBe(true)
+  // verify the bounty status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   await client.teardown()
 }
@@ -576,16 +594,16 @@ export function baseBountiesE2ETests<
       //   label: 'Bounty funding for Approved Bounties',
       //   testFn: async () => await bountyFundingTest(chain),
       // },
-      {
-        kind: 'test',
-        label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
-      },
       // {
       //   kind: 'test',
-      //   label: 'Curator assignment and acceptance',
-      //   testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+      //   label: 'Bounty funding for ApprovedWithCurator Bounties',
+      //   testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
       // },
+      {
+        kind: 'test',
+        label: 'Curator assignment and acceptance',
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+      },
     ],
   }
 }
