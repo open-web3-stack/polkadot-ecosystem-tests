@@ -24,6 +24,7 @@ async function getBountyCount(client: any): Promise<number> {
  */
 async function getBounty(client: any, bountyIndex: number): Promise<any | null> {
   const bounty = await client.api.query.bounties.bounties(bountyIndex)
+  if (!bounty) return null
   return bounty.isSome ? bounty.unwrap() : null
 }
 
@@ -936,6 +937,107 @@ export async function bountyClosureProposedTest<
   await client.teardown()
 }
 
+/**
+ * Test: Bounty closure in Funded state
+ *
+ * Verifies:
+ * - Bounty can be closed when in Funded state
+ * - Funds are transferred back to treasury
+ * - Bounty is removed from storage
+ * - BountyCanceled event is emitted
+ */
+export async function bountyClosureFundedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // Move to spend period
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping bounty closure funded test')
+    return
+  }
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for closure in funded state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  // Verify bounty is funded
+  const fundedBounty = await getBounty(client, bountyIndex)
+  expect(fundedBounty.status.isFunded).toBe(true)
+
+  // get treasury balance before closure
+  const treasuryAccountId = client.api.consts.treasury.potAccount.toHex()
+  const treasuryAccountBeforeClosureInfo = await client.api.query.system.account(treasuryAccountId)
+  const treasuryBalanceBeforeClosure = treasuryAccountBeforeClosureInfo.data.free.toBigInt()
+
+  // Close the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify BountyCanceled event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyCanceled' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty canceled events')
+
+  // verify the transfer event
+  await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
+    .redact({ redactKeys: /from|to/ })
+    .toMatchSnapshot('bounty value transfered to treasury')
+
+  // get treasury balance after closure
+  const treasuryAccountAfterClosureInfo = await client.api.query.system.account(treasuryAccountId)
+  const treasuryBalanceAfterClosure = treasuryAccountAfterClosureInfo.data.free.toBigInt()
+  expect(treasuryBalanceAfterClosure).toBeGreaterThan(treasuryBalanceBeforeClosure)
+
+  await client.dev.newBlock()
+
+  // Verify bounty is removed from storage
+  const bountyAfterClosure = await getBounty(client, bountyIndex)
+  expect(bountyAfterClosure).toBeNull()
+
+  // Verify description is removed
+  const descriptionAfterClosure = await getBountyDescription(client, bountyIndex)
+  expect(descriptionAfterClosure).toBeNull()
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -992,6 +1094,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Bounty closure in proposed state',
         testFn: async () => await bountyClosureProposedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in funded state',
+        testFn: async () => await bountyClosureFundedTest(chain),
       },
     ],
   }
