@@ -97,6 +97,13 @@ async function logBountyEvents(client: any) {
   })
 }
 
+async function logAllEvents(client: any) {
+  const events = await client.api.query.system.events()
+  events.forEach((evt: any, idx: number) => {
+    console.log(`Event #${idx}:`, evt.event?.toHuman?.() ?? evt.event)
+  })
+}
+
 /// -------
 /// Tests
 /// -------
