@@ -1333,6 +1333,141 @@ export async function unassignCuratorCuratorProposedTest<
   await client.teardown()
 }
 
+/**
+ * Test: Unassign curator in Active state by curator themselves
+ *
+ * Verifies:
+ * - Curator can unassign themselves from Active state
+ * - Curator deposit is refunded
+ * - Status changes to Funded
+ * - CuratorUnassigned event is emitted
+ */
+export async function unassignCuratorActiveByCuratorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping unassign curator active by curator test')
+    return
+  }
+
+  // Move to spend period
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for unassign curator active by curator'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // verify the status is Proposed
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyStatus = await getBounty(client, bountyIndex)
+  expect(bountyStatus.status.isProposed).toBe(true)
+
+  // verify the BountyProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the status is Approved
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isApproved).toBe(true)
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+
+  // verify the event BountyBecameActive
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  // verify the status is Funded
+  const bountyStatusAfterFunding = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  // Accept curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Get curator reserved balance before unassign
+  const curatorBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceBefore = curatorBalanceBefore.data.reserved.toBigInt()
+
+  // Unassign curator by curator themselves
+  await sendTransaction(client.api.tx.bounties.unassignCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Verify CuratorUnassigned event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorUnassigned' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator unassigned active by curator events')
+
+  // Verify bounty status changed to Funded
+  const bountyAfterUnassign = await getBounty(client, bountyIndex)
+  expect(bountyAfterUnassign.status.isFunded).toBe(true)
+
+  // Verify curator deposit was refunded as the caller is the curator so dont slash the curator
+  const curatorBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceAfter = curatorBalanceAfter.data.reserved.toBigInt()
+  expect(curatorReservedBalanceAfter).toBeLessThan(curatorReservedBalanceBefore)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -1409,6 +1544,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Unassign curator in CuratorProposed state',
         testFn: async () => await unassignCuratorCuratorProposedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in Active state by curator themselves',
+        testFn: async () => await unassignCuratorActiveByCuratorTest(chain),
       },
     ],
   }
