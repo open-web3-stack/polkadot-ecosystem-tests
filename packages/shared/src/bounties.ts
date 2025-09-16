@@ -1617,6 +1617,170 @@ export async function unassignCuratorActiveByTreasurerTest<
   await client.teardown()
 }
 
+/**
+ * Test: Unassign curator in PendingPayout state by Treasurer
+ *
+ * Verifies:
+ * - Treasurer can unassign curator from PendingPayout state
+ * - Curator deposit is slashed
+ * - Status changes to Funded
+ * - CuratorUnassigned event is emitted
+ */
+export async function unassignCuratorPendingPayoutTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping unassign curator pending payout test')
+    return
+  }
+
+  // Move to spend period
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for unassign curator pending payout'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // verify the BountyProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // verify the status is Proposed
+  const bountyStatus = await getBounty(client, bountyIndex)
+  expect(bountyStatus.status.isProposed).toBe(true)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the status is Approved
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isApproved).toBe(true)
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  // verify the status is Funded
+  const bountyStatusAfterFunding = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  // Accept curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Award the bounty
+  await sendTransaction(
+    client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.alice.address).signAsync(devAccounts.bob),
+  )
+
+  await client.dev.newBlock()
+
+  // verify the BountyAwarded event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyAwarded' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty awarded events')
+
+  // verify the status is PendingPayout
+  const bountyStatusAfterAwarding = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterAwarding.status.isPendingPayout).toBe(true)
+
+  // Get curator reserved balance before unassign
+  const curatorBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceBefore = curatorBalanceBefore.data.reserved.toBigInt()
+
+  // Unassign curator by Treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.unassignCurator(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify CuratorUnassigned event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorUnassigned' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator unassigned pending payout events')
+
+  // verify the curator slash event as the unassignCurator is called by the treasurer
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' })
+    .redact({ redactKeys: /who/ })
+    .toMatchSnapshot('curator slash event')
+
+  // verify that the slashed amout is deposited to the treasury
+  await checkSystemEvents(client, { section: 'treasury', method: 'Deposit' })
+    .redact({ redactKeys: /data/ })
+    .toMatchSnapshot('Bounty bond is deposited to the treasury')
+
+  // Verify bounty status changed to Funded
+  const bountyAfterUnassign = await getBounty(client, bountyIndex)
+  expect(bountyAfterUnassign.status.isFunded).toBe(true)
+
+  // Verify curator reserved balance was slashed
+  const curatorBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorReservedBalanceAfter = curatorBalanceAfter.data.reserved.toBigInt()
+  expect(curatorReservedBalanceBefore).toBeGreaterThan(curatorReservedBalanceAfter)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -1703,6 +1867,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Unassign curator in Active state by Treasurer',
         testFn: async () => await unassignCuratorActiveByTreasurerTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in PendingPayout state',
+        testFn: async () => await unassignCuratorPendingPayoutTest(chain),
       },
     ],
   }
