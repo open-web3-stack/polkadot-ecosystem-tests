@@ -1785,6 +1785,56 @@ export async function unassignCuratorPendingPayoutTest<
 /// Test Suite
 /// -------
 
+/**
+ * All curator unassign tests
+ * @param chain
+ * @returns RootTestTree
+ */
+export function allCuratorUnassignTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'All curator unassign tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Unassign curator in ApprovedWithCurator state',
+        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in CuratorProposed state',
+        testFn: async () => await unassignCuratorCuratorProposedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in Active state by curator themselves',
+        testFn: async () => await unassignCuratorActiveByCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in Active state by Treasurer',
+        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in PendingPayout state',
+        testFn: async () => await unassignCuratorPendingPayoutTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
+ * Base set of bounty end-to-end tests.
+ *
+ * Includes both success and failure cases.
+ * A test tree structure allows some extensibility in case a chain needs to
+ * change/add/remove default tests.
+ */
+
 export function baseBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1848,31 +1898,7 @@ export function baseBountiesE2ETests<
         label: 'Bounty closure in active state',
         testFn: async () => await bountyClosureActiveTest(chain),
       },
-      {
-        kind: 'test',
-        label: 'Unassign curator in ApprovedWithCurator state',
-        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Unassign curator in CuratorProposed state',
-        testFn: async () => await unassignCuratorCuratorProposedTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Unassign curator in Active state by curator themselves',
-        testFn: async () => await unassignCuratorActiveByCuratorTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Unassign curator in Active state by Treasurer',
-        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Unassign curator in PendingPayout state',
-        testFn: async () => await unassignCuratorPendingPayoutTest(chain),
-      },
+      allCuratorUnassignTests(chain),
     ],
   }
 }
