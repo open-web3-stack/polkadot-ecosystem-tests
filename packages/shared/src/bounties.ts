@@ -1231,6 +1231,108 @@ export async function unassignCuratorApprovedWithCuratorTest<
   await client.teardown()
 }
 
+/**
+ * Test: Unassign curator in CuratorProposed state
+ *
+ * Verifies:
+ * - Treasurer can unassign curator from CuratorProposed state
+ * - Status changes to Funded
+ * - CuratorUnassigned event is emitted
+ */
+export async function unassignCuratorCuratorProposedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping unassign curator curator proposed test')
+    return
+  }
+
+  // Move to spend period
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for unassign curator in curator proposed state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // verify status of the bounty
+  const bountyStatusAfterProposal = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterProposal.status.isProposed).toBe(true)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify status of the bounty
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isApproved).toBe(true)
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  const bountyStatusAfterFunding = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in CuratorProposed state
+  const curatorProposedBounty = await getBounty(client, bountyIndex)
+  expect(curatorProposedBounty.status.isCuratorProposed).toBe(true)
+
+  // Unassign curator using Treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.unassignCurator(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify CuratorUnassigned event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorUnassigned' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator unassigned curator proposed events')
+
+  // Verify bounty status changed to Funded
+  const bountyAfterUnassign = await getBounty(client, bountyIndex)
+  expect(bountyAfterUnassign.status.isFunded).toBe(true)
+
+  await client.teardown()
+}
+
 /// -------
 /// Test Suite
 /// -------
@@ -1302,6 +1404,11 @@ export function baseBountiesE2ETests<
         kind: 'test',
         label: 'Unassign curator in ApprovedWithCurator state',
         testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in CuratorProposed state',
+        testFn: async () => await unassignCuratorCuratorProposedTest(chain),
       },
     ],
   }
