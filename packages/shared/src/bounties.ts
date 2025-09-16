@@ -1786,6 +1786,38 @@ export async function unassignCuratorPendingPayoutTest<
 /// -------
 
 /**
+ * Bounty Closure Tests
+ * @param chain
+ * @returns RootTestTree
+ */
+export function bountyClosureTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Bounty Closure Tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty closure in proposed state',
+        testFn: async () => await bountyClosureProposedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in funded state',
+        testFn: async () => await bountyClosureFundedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in active state',
+        testFn: async () => await bountyClosureActiveTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
  * All curator unassign tests
  * @param chain
  * @returns RootTestTree
@@ -1883,21 +1915,7 @@ export function baseBountiesE2ETests<
         label: 'Bounty awarding and claiming',
         testFn: async () => await bountyAwardingAndClaimingTest(chain),
       },
-      {
-        kind: 'test',
-        label: 'Bounty closure in proposed state',
-        testFn: async () => await bountyClosureProposedTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty closure in funded state',
-        testFn: async () => await bountyClosureFundedTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty closure in active state',
-        testFn: async () => await bountyClosureActiveTest(chain),
-      },
+      bountyClosureTests(chain),
       allCuratorUnassignTests(chain),
     ],
   }
