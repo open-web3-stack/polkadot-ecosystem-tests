@@ -15,6 +15,7 @@ import {
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
+  schedulerOffset,
   type TestConfig,
   updateCumulativeFees,
 } from './helpers/index.js'
@@ -673,6 +674,42 @@ async function transferAllowDeathSelfTest<
   const aliceBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
 
+  console.log(alice.address)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [alice.address],
+          {
+            providers: 1,
+            data: {
+              free: 10n ** 10n,
+              reserved: 0n,
+              frozen: 10n ** 10n,
+            },
+          },
+        ],
+      ],
+    },
+    Balances: {
+      locks: [
+        [
+          [alice.address],
+          [
+            {
+              id: 'random  ', // Padded to 8 bytes with spaces
+              amount: 10n ** 10n,
+              reasons: 'Misc',
+            },
+          ],
+        ],
+      ],
+    },
+  })
+
+  await client.pause()
+
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   const transferAmount = existentialDeposit * 99n // Transfer almost everything to self
@@ -1050,24 +1087,64 @@ interface DepositAction<
 }
 
 /**
+ * Interface for actions that create reserves (bonded/locked funds)
+ */
+interface ReserveAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  name: string
+  execute: (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint) => Promise<bigint>
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
+/**
+ * Interface for actions that create locks (frozen funds)
+ */
+interface LockAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  name: string
+  execute: (
+    client: Client<TCustom, TInitStorages>,
+    alice: KeyringPair,
+    amount: bigint,
+    testConfig: TestConfig,
+  ) => Promise<void>
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
+/**
  * Helper function that tests liquidity restrictions for any deposit-requiring action.
  *
  * 1. Credits an account with 100000 ED
- * 2. Creates a nomination pool with 90000 ED
- * 3. Creates a vested transfer to lock 90000 ED
- * 4. Tries to execute the provided action
- * 5. Checks that a `balances.LiquidityRestrictions` was raised
- * 6. Verify that the account has funds to perform the operation
+ * 2. Executes the provided reserve action
+ * 3. Executes the provided lock action
+ * 4. Tries to execute the provided deposit action
+ * 5. Checks that `balances.LiquidityRestrictions` is raised
+ * 6. Verify that the account has, in fact, funds to perform the operation
  */
 async function testLiquidityRestrictionForAction<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, action: DepositAction<TCustom, TInitStorages>) {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  reserveAction: ReserveAction<TCustom, TInitStorages>,
+  lockAction: LockAction<TCustom, TInitStorages>,
+  depositAction: DepositAction<TCustom, TInitStorages>,
+) {
   const [client] = await setupNetworks(chain)
 
-  // Skip test if the required pallet is not available
-  if (!action.isAvailable(client)) {
-    console.log(`Skipping ${action.name} test - required pallet not available`)
+  // Skip test if any required pallet is not available
+  const missingActions: string[] = []
+  if (!reserveAction.isAvailable(client)) missingActions.push(`reserve=${reserveAction.name}`)
+  if (!lockAction.isAvailable(client)) missingActions.push(`lock=${lockAction.name}`)
+  if (!depositAction.isAvailable(client)) missingActions.push(`deposit=${depositAction.name}`)
+
+  if (missingActions.length > 0) {
+    console.log(`Skipping test - required pallets not available: ${missingActions.join(', ')}`)
     return
   }
 
@@ -1083,36 +1160,22 @@ async function testLiquidityRestrictionForAction<
     },
   })
 
-  // Step 2: Create nomination pool
-  const poolBond = existentialDeposit * 90000n // 90000 ED
-
-  const createPoolTx = client.api.tx.nominationPools.create(poolBond, alice.address, alice.address, alice.address)
-  await sendTransaction(createPoolTx.signAsync(alice))
-  await client.dev.newBlock()
+  // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
+  const reserveAmount = existentialDeposit * 90000n // 90000 ED
+  const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
 
   // Initialize fee tracking map
   const cumulativeFees = new Map<string, bigint>()
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // Step 3: Execute lock action (e.g., vested transfer or manual lock)
+  const lockAmount = existentialDeposit * 90000n // 90000 ED
+  await lockAction.execute(client, alice, lockAmount, testConfig)
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 3: Create a vested transfer to self, in order to freeze some funds
-  const number = await getBlockNumber(client.api, testConfig.blockProvider)
-  const vestedAmount = existentialDeposit * 90000n // 90000 ED
-  const perBlock = existentialDeposit // Release 1 ED per block
-  const startingBlock = number
-
-  const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
-    locked: vestedAmount,
-    perBlock: perBlock,
-    startingBlock: startingBlock,
-  })
-  await sendTransaction(vestedTransferTx.signAsync(alice))
-  await client.dev.newBlock()
-
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
-
-  // Step 4: Try to execute the action - this should fail due to liquidity restrictions
-  const actionTx = await action.createTransaction(client)
+  // Step 4: Try to execute the deposit action - this should fail due to liquidity restrictions
+  const actionTx = await depositAction.createTransaction(client)
   await sendTransaction(actionTx.signAsync(alice))
   await client.dev.newBlock()
 
@@ -1137,19 +1200,144 @@ async function testLiquidityRestrictionForAction<
 
   // Step 6: Verify account state should have allowed the operation which just failed
   const account = await client.api.query.system.account(alice.address)
-  const actionDeposit = await action.calculateDeposit(client)
+  const actionDeposit = await depositAction.calculateDeposit(client)
 
   expect(account.data.free.toBigInt()).toBe(
-    totalBalance -
-      vestedAmount -
-      existentialDeposit -
-      cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+    totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
   )
-  expect(account.data.reserved.toBigInt()).toBe(poolBond)
-  expect(account.data.frozen.toBigInt()).toBe(vestedAmount - existentialDeposit)
+  expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
+  expect(account.data.frozen.toBigInt()).toBe(lockAmount)
 
   // The operation failed, even though the account had enough funds to place the required deposit
   expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
+}
+
+/**
+ * Define the reserve actions
+ */
+function createReserveActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): ReserveAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'staking bond',
+      execute: async (client, alice, amount) => {
+        const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
+        await sendTransaction(bondTx.signAsync(alice))
+        await client.dev.newBlock()
+        return amount
+      },
+      isAvailable: (client) => !!client.api.tx.staking,
+    },
+    {
+      name: 'nomination pool',
+      execute: async (client, alice, amount) => {
+        const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+        // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
+        // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
+        // Thus, here 1 ED is subtracted so that the tests' checks are the same for all actions.
+        const virtualAmount = amount - existentialDeposit
+        const createPoolTx = client.api.tx.nominationPools.create(
+          virtualAmount,
+          alice.address,
+          alice.address,
+          alice.address,
+        )
+        await sendTransaction(createPoolTx.signAsync(alice))
+        await client.dev.newBlock()
+        return virtualAmount
+      },
+      isAvailable: (client) => !!client.api.tx.nominationPools,
+    },
+    /*     {
+      name: 'manual reserve',
+      execute: async (client, alice, amount) => {
+        // Get current account state
+        const currentAccount = await client.api.query.system.account(alice.address)
+        const currentFree = currentAccount.data.free.toBigInt()
+        const currentReserved = currentAccount.data.reserved.toBigInt()
+        
+        // Manually set reserved amount and reduce free balance
+        await client.dev.setStorage({
+          System: {
+            account: [[[alice.address], { 
+              providers: currentAccount.providers.toNumber(),
+              data: { 
+                free: currentFree - amount,
+                reserved: currentReserved + amount,
+                frozen: currentAccount.data.frozen.toBigInt(),
+              }
+            }]],
+          },
+        })
+      },
+      isAvailable: () => true, // Always available
+    }, */
+  ]
+}
+
+/**
+ * Define the lock actions
+ */
+function createLockActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): LockAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'vested transfer',
+      execute: async (client, alice, amount, testConfig) => {
+        const offset = schedulerOffset(testConfig)
+        const number = await getBlockNumber(client.api, testConfig.blockProvider)
+        const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
+        const startingBlock = BigInt(number) + 3n * BigInt(offset)
+
+        const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
+          locked: amount,
+          perBlock: perBlock,
+          startingBlock: startingBlock,
+        })
+        await sendTransaction(vestedTransferTx.signAsync(alice))
+        await client.dev.newBlock()
+      },
+      isAvailable: (client) => !!client.api.tx.vesting,
+    },
+    /*     {
+      name: 'manual lock',
+      execute: async (client, alice, amount) => {
+        // Get current account state
+        const currentAccount = await client.api.query.system.account(alice.address)
+        const currentFree = currentAccount.data.free.toBigInt()
+        const currentFrozen = currentAccount.data.frozen.toBigInt()
+        
+        // Manually set frozen amount and reduce free balance
+        await client.dev.setStorage({
+          System: {
+            account: [[[alice.address], { 
+              providers: currentAccount.providers.toNumber(),
+              data: { 
+                free: currentFree - amount,
+                reserved: currentAccount.data.reserved.toBigInt(),
+                frozen: currentFrozen + amount,
+              }
+            }]],
+          },
+          Balances: {
+            accounts: [[[alice.address], [
+              {
+                // This field is a `Vec<u8>` with 8 bytes, so needs padding.
+                id: 'random  ',
+                amount: amount,
+                reasons: 'Misc'
+              }
+            ]]]
+          }
+        })
+      },
+      isAvailable: () => true, // Always available
+    }, */
+  ]
 }
 
 /**
@@ -1258,11 +1446,28 @@ export const transferFunctionsTests = <
     {
       kind: 'describe',
       label: 'currency tests',
-      children: createDepositActions<TCustom, TInitStorages>().map((action) => ({
-        kind: 'test' as const,
-        label: `${action.name} improperly fails when funds are locked in pools and vesting`,
-        testFn: () => testLiquidityRestrictionForAction(chain, testConfig, action),
-      })),
+      children: (() => {
+        const reserveActions = createReserveActions<TCustom, TInitStorages>()
+        const lockActions = createLockActions<TCustom, TInitStorages>()
+        const depositActions = createDepositActions<TCustom, TInitStorages>()
+
+        const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
+
+        for (const reserveAction of reserveActions) {
+          for (const lockAction of lockActions) {
+            for (const depositAction of depositActions) {
+              testCases.push({
+                kind: 'test' as const,
+                label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
+                testFn: () =>
+                  testLiquidityRestrictionForAction(chain, testConfig, reserveAction, lockAction, depositAction),
+              })
+            }
+          }
+        }
+
+        return testCases
+      })(),
     },
   ],
 })
