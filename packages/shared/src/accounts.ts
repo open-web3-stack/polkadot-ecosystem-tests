@@ -674,8 +674,6 @@ async function transferAllowDeathSelfTest<
   const aliceBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
 
-  console.log(alice.address)
-
   await client.dev.setStorage({
     System: {
       account: [
@@ -707,8 +705,6 @@ async function transferAllowDeathSelfTest<
       ],
     },
   })
-
-  await client.pause()
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
@@ -1149,46 +1145,61 @@ async function testLiquidityRestrictionForAction<
   }
 
   // Step 1: Create account with 100000 ED
+
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100000n // 100000 ED
   const alice = testAccounts.alice
 
   // Set initial balance
+
   await client.dev.setStorage({
     System: {
       account: [[[alice.address], { providers: 1, data: { free: totalBalance } }]],
     },
   })
 
-  // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
-  const reserveAmount = existentialDeposit * 90000n // 90000 ED
-  const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
-
-  // Initialize fee tracking map
+  // Initialize fee tracking map before any transactions
   const cumulativeFees = new Map<string, bigint>()
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
+  // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
+
+  const reserveAmount = existentialDeposit * 90000n // 90000 ED
+  const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
+
   const lockAmount = existentialDeposit * 90000n // 90000 ED
   await lockAction.execute(client, alice, lockAmount, testConfig)
+
+  await client.dev.newBlock()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 4: Try to execute the deposit action - this should fail due to liquidity restrictions
+
   const actionTx = await depositAction.createTransaction(client)
-  await sendTransaction(actionTx.signAsync(alice))
+  const actionEvents = await sendTransaction(actionTx.signAsync(alice))
+
   await client.dev.newBlock()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 5: Check that the transaction failed with the appropriate error
+
+  await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'liquidity restricted action events',
+  )
+
   const finalEvents = await client.api.query.system.events()
   const failedEvent = finalEvents.find((record) => {
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
-
-  // TODO: snapshot at least one event
 
   expect(failedEvent).toBeDefined()
   assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
@@ -1199,6 +1210,7 @@ async function testLiquidityRestrictionForAction<
   expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
 
   // Step 6: Verify account state should have allowed the operation which just failed
+
   const account = await client.api.query.system.account(alice.address)
   const actionDeposit = await depositAction.calculateDeposit(client)
 
@@ -1225,7 +1237,7 @@ function createReserveActions<
       execute: async (client, alice, amount) => {
         const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
         await sendTransaction(bondTx.signAsync(alice))
-        await client.dev.newBlock()
+        // Note: Don't call newBlock() here - let the caller handle it so fees can be tracked
         return amount
       },
       isAvailable: (client) => !!client.api.tx.staking,
@@ -1245,7 +1257,6 @@ function createReserveActions<
           alice.address,
         )
         await sendTransaction(createPoolTx.signAsync(alice))
-        await client.dev.newBlock()
         return virtualAmount
       },
       isAvailable: (client) => !!client.api.tx.nominationPools,
@@ -1267,7 +1278,7 @@ function createReserveActions<
                 {
                   providers: currentAccount.providers.toNumber(),
                   data: {
-                    free: currentFree,
+                    free: currentFree - amount,
                     reserved: amount,
                     frozen: currentFrozen,
                   },
@@ -1305,7 +1316,6 @@ function createLockActions<
           startingBlock: startingBlock,
         })
         await sendTransaction(vestedTransferTx.signAsync(alice))
-        await client.dev.newBlock()
       },
       isAvailable: (client) => !!client.api.tx.vesting,
     },
@@ -1316,11 +1326,9 @@ function createLockActions<
         const currentAccount = await client.api.query.system.account(alice.address)
         const currentFree = currentAccount.data.free.toBigInt()
         const currentReserved = currentAccount.data.reserved.toBigInt()
-        const currentFrozen = currentAccount.data.frozen.toBigInt()
-        console.log('currentFrozen', currentFrozen)
-        console.log('amount', amount)
 
-        // Manually set frozen amount and reduce free balance
+        // Manually set frozen amount - frozen applies to total balance (free + reserved)
+        // Don't modify free balance as frozen constraint works on the total
         await client.dev.setStorage({
           System: {
             account: [
@@ -1329,7 +1337,7 @@ function createLockActions<
                 {
                   providers: currentAccount.providers.toNumber(),
                   data: {
-                    free: currentFree - amount,
+                    free: currentFree,
                     reserved: currentReserved,
                     frozen: amount,
                   },
