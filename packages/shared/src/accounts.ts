@@ -1250,30 +1250,36 @@ function createReserveActions<
       },
       isAvailable: (client) => !!client.api.tx.nominationPools,
     },
-    /*     {
+    {
       name: 'manual reserve',
       execute: async (client, alice, amount) => {
         // Get current account state
         const currentAccount = await client.api.query.system.account(alice.address)
         const currentFree = currentAccount.data.free.toBigInt()
-        const currentReserved = currentAccount.data.reserved.toBigInt()
-        
+        const currentFrozen = currentAccount.data.frozen.toBigInt()
+
         // Manually set reserved amount and reduce free balance
         await client.dev.setStorage({
           System: {
-            account: [[[alice.address], { 
-              providers: currentAccount.providers.toNumber(),
-              data: { 
-                free: currentFree - amount,
-                reserved: currentReserved + amount,
-                frozen: currentAccount.data.frozen.toBigInt(),
-              }
-            }]],
+            account: [
+              [
+                [alice.address],
+                {
+                  providers: currentAccount.providers.toNumber(),
+                  data: {
+                    free: currentFree,
+                    reserved: amount,
+                    frozen: currentFrozen,
+                  },
+                },
+              ],
+            ],
           },
         })
+        return amount
       },
       isAvailable: () => true, // Always available
-    }, */
+    },
   ]
 }
 
@@ -1303,40 +1309,53 @@ function createLockActions<
       },
       isAvailable: (client) => !!client.api.tx.vesting,
     },
-    /*     {
+    {
       name: 'manual lock',
       execute: async (client, alice, amount) => {
         // Get current account state
         const currentAccount = await client.api.query.system.account(alice.address)
         const currentFree = currentAccount.data.free.toBigInt()
+        const currentReserved = currentAccount.data.reserved.toBigInt()
         const currentFrozen = currentAccount.data.frozen.toBigInt()
-        
+        console.log('currentFrozen', currentFrozen)
+        console.log('amount', amount)
+
         // Manually set frozen amount and reduce free balance
         await client.dev.setStorage({
           System: {
-            account: [[[alice.address], { 
-              providers: currentAccount.providers.toNumber(),
-              data: { 
-                free: currentFree - amount,
-                reserved: currentAccount.data.reserved.toBigInt(),
-                frozen: currentFrozen + amount,
-              }
-            }]],
+            account: [
+              [
+                [alice.address],
+                {
+                  providers: currentAccount.providers.toNumber(),
+                  data: {
+                    free: currentFree - amount,
+                    reserved: currentReserved,
+                    frozen: amount,
+                  },
+                },
+              ],
+            ],
           },
           Balances: {
-            accounts: [[[alice.address], [
-              {
-                // This field is a `Vec<u8>` with 8 bytes, so needs padding.
-                id: 'random  ',
-                amount: amount,
-                reasons: 'Misc'
-              }
-            ]]]
-          }
+            locks: [
+              [
+                [alice.address],
+                [
+                  {
+                    // This field is a `Vec<u8>` with 8 bytes, so needs padding.
+                    id: 'random  ',
+                    amount: amount,
+                    reasons: 'Misc',
+                  },
+                ],
+              ],
+            ],
+          },
         })
       },
       isAvailable: () => true, // Always available
-    }, */
+    },
   ]
 }
 
