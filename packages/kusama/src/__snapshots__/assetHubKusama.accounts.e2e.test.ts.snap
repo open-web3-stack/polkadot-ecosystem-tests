@@ -94,9 +94,41 @@ exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction erro
 ]
 `;
 
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
+
 exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
 
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
+
 exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer, deposit=referendum submission"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, deposit=referendum submission"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer, deposit=referendum submission"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, deposit=referendum submission"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer"`;
+
+exports[`Kusama Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer, deposit=referendum submission"`;
 
 exports[`Kusama Asset Hub Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
 [

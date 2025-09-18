@@ -10,6 +10,7 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  check,
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
@@ -1156,7 +1157,9 @@ async function testLiquidityRestrictionForAction<
   if (!depositAction.isAvailable(client)) missingActions.push(`deposit=${depositAction.name}`)
 
   if (missingActions.length > 0) {
-    console.log(`Skipping test - required pallets not available: ${missingActions.join(', ')}`)
+    await check(`Skipping test - required pallets not available: ${missingActions.join(', ')}`).toMatchSnapshot(
+      'liquidity restriction test skipped',
+    )
     return
   }
 
@@ -1342,7 +1345,6 @@ function createLockActions<
       isAvailable: (client) => {
         // Vesting is filtered on Asset Hubs while the AHM is pending.
         const chainName = client.config.name.toLowerCase()
-        console.log('chainName', chainName)
         if (chainName.includes('assethub')) return false
         return !!client.api.tx.vesting
       },
