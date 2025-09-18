@@ -62,6 +62,82 @@ async function isAccountReaped(client: Client<any, any>, address: string): Promi
   )
 }
 
+/**
+ * Interface for actions that create reserved/held funds.
+ *
+ * Examples: bonding funds for staking, nomination pool creation or joining.
+ */
+interface ReserveAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  /** Name of the action - will be used to tag the test and its snapshots. */
+  name: string
+  /**
+   * When awaited, this action will created the desired reserve in the calling account.
+   *
+   * @returns The amount of the reserve created. This is necessary because some actions may created a reserve
+   * that is not the same as the amount passed to them, which will cause later checks to fail.
+   * */
+  execute: (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint) => Promise<bigint>
+  /** Whether this action is available on the given network. If not, the test will be skipped. */
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
+/**
+ * Interface for actions that create locks/freezes on funds.
+ *
+ * Examples: vested transfer, conviction voting.
+ */
+interface LockAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  /** Name of the action - will be used to tag the test and its snapshots. */
+  name: string
+  /** When awaited, this action will create the desired lock in the calling account. */
+  execute: (
+    client: Client<TCustom, TInitStorages>,
+    alice: KeyringPair,
+    amount: bigint,
+    testConfig: TestConfig,
+  ) => Promise<void>
+  /** Whether this action is available on the given network. If not, the test will be skipped. */
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
+/**
+ * Interface for deposit-requiring actions that can be tested for liquidity restrictions.
+ */
+interface DepositAction<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+> {
+  /** Name of the action - will be used to tag the test and its snapshots. */
+  name: string
+  /**
+   * When awaited, this action will attempt to create the desired reserve in the calling account.
+   *
+   * To trigger the expected error, this must be an extrinsic from a pallet that still uses the old `Currency` traits,
+   * in particular `Currency::reserve`.
+   * */
+  createTransaction: (client: Client<TCustom, TInitStorages>) => Promise<any>
+  /**
+   * When awaited, this action will calculate the deposit required to create the desired reserve.
+   *
+   * This differs based on the action - proxy deposits have a base and a factor (applied per proxy creation), as do
+   * multisig creation deposits, but referenda submissions have a fixed deposit.
+   *
+   * This method calculates the deposit for the given action, for use in later checks that the action failed, but
+   * should have succeeded based on available funds.
+   *
+   * @returns The amount required to create the desired reserve on funds.
+   */
+  calculateDeposit: (client: Client<TCustom, TInitStorages>) => Promise<bigint>
+  /** Whether this action is available on the given network. If not, the test will be skipped. */
+  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
+}
+
 /// -----
 /// Tests
 /// -----
@@ -1070,52 +1146,6 @@ const partialTransferAllowDeathTests = (
 })
 
 /**
- * Interface for deposit-requiring actions that can be tested for liquidity restrictions
- */
-interface DepositAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
-> {
-  name: string
-  createTransaction: (client: Client<TCustom, TInitStorages>) => Promise<any>
-  calculateDeposit: (client: Client<TCustom, TInitStorages>) => Promise<bigint>
-  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
-}
-
-/**
- * Interface for actions that create reserved/held funds.
- *
- * Examples: bonding funds for staking, nomination pool creation or joining.
- */
-interface ReserveAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
-> {
-  name: string
-  execute: (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint) => Promise<bigint>
-  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
-}
-
-/**
- * Interface for actions that create locks/freezes on funds.
- *
- * Examples: vested transfer, conviction voting.
- */
-interface LockAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
-> {
-  name: string
-  execute: (
-    client: Client<TCustom, TInitStorages>,
-    alice: KeyringPair,
-    amount: bigint,
-    testConfig: TestConfig,
-  ) => Promise<void>
-  isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
-}
-
-/**
  * Helper function that tests liquidity restrictions for any deposit-requiring action.
  *
  * Some pallets are still using the `Currency` traits, which when combined with the new `Fungible` traits,
@@ -1128,7 +1158,7 @@ interface LockAction<
  *
  * These actions (and tests) are generated at the test-tree level, so each network will have a different set of test
  * cases, depending on the pallets it has available.
- * See the `DepositAction/ReserveAction/LockAction` interfaces for details.
+ * See the {@link DepositAction}, {@link ReserveAction}, and {@link LockAction} interfaces for details.
  *
  * Overall test structure:
  *
