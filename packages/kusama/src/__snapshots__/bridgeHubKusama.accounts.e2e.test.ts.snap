@@ -44,6 +44,31 @@ exports[`Kusama Bridge Hub Accounts > \`force_transfer\` > force transfer below 
 ]
 `;
 
+exports[`Kusama Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 10,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Bridge Hub Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
 [
   {

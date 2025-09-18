@@ -1,4 +1,4 @@
-import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
+import { assetHubKusama } from '@e2e-test/networks/chains'
 import { registerTestTree, transferFunctionsTests } from '@e2e-test/shared'
 
 registerTestTree(
@@ -7,8 +7,10 @@ registerTestTree(
     {
       testSuiteName: 'Kusama Asset Hub Accounts',
       addressEncoding: 2,
+      blockProvider: 'NonLocal',
+      asyncBacking: 'Enabled',
       chainEd: 'LowEd',
     },
-    kusama,
+    assetHubKusama,
   ),
 )

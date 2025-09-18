@@ -1,4 +1,4 @@
-import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
+import { assetHubPolkadot } from '@e2e-test/networks/chains'
 import { registerTestTree, transferFunctionsTests } from '@e2e-test/shared'
 
 registerTestTree(
@@ -7,8 +7,10 @@ registerTestTree(
     {
       testSuiteName: 'Polkadot Asset Hub Accounts',
       addressEncoding: 0,
+      blockProvider: 'NonLocal',
+      asyncBacking: 'Enabled',
       chainEd: 'Normal',
     },
-    polkadot,
+    assetHubPolkadot,
   ),
 )

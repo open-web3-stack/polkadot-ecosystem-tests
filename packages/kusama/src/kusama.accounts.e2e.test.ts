@@ -5,6 +5,7 @@ registerTestTree(
   transferFunctionsTests(kusama, {
     testSuiteName: 'Kusama Accounts',
     addressEncoding: 2,
+    blockProvider: 'Local',
     chainEd: 'LowEd',
   }),
 )
