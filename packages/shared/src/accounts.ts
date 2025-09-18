@@ -1384,7 +1384,7 @@ function createLockActions<
                 [
                   {
                     // This field is a `Vec<u8>` with 8 bytes, so needs padding.
-                    id: 'random  ',
+                    id: 'assembly',
                     amount: amount,
                     reasons: 'Misc',
                   },
