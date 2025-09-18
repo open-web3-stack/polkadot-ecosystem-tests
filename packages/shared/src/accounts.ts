@@ -1317,7 +1317,13 @@ function createLockActions<
         })
         await sendTransaction(vestedTransferTx.signAsync(alice))
       },
-      isAvailable: (client) => !!client.api.tx.vesting,
+      isAvailable: (client) => {
+        // Vesting is filtered on Asset Hubs while the AHM is pending.
+        const chainName = client.config.name.toLowerCase()
+        console.log('chainName', chainName)
+        if (chainName.includes('assethub')) return false
+        return !!client.api.tx.vesting
+      },
     },
     {
       name: 'manual lock',
