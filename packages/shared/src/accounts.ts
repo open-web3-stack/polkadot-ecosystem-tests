@@ -509,7 +509,7 @@ async function forceTransferKillTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -870,7 +870,7 @@ async function forceTransferBelowExistentialDepositTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -985,7 +985,7 @@ async function forceTransferInsufficientFundsTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
     await relayClient!.dev.newBlock()
@@ -1456,11 +1456,12 @@ function createDepositActions<
 
 export const transferFunctionsTests = <
   TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
-  relayChain?: Chain<TCustom, TInitStorages>,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
@@ -1509,9 +1510,9 @@ export const transferFunctionsTests = <
       kind: 'describe',
       label: 'currency tests',
       children: (() => {
-        const reserveActions = createReserveActions<TCustom, TInitStorages>()
-        const lockActions = createLockActions<TCustom, TInitStorages>()
-        const depositActions = createDepositActions<TCustom, TInitStorages>()
+        const reserveActions = createReserveActions<TCustom, TInitStoragesBase>()
+        const lockActions = createLockActions<TCustom, TInitStoragesBase>()
+        const depositActions = createDepositActions<TCustom, TInitStoragesBase>()
 
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 

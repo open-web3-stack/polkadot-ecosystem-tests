@@ -1,4 +1,4 @@
-import { assetHubPolkadot } from '@e2e-test/networks/chains'
+import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
 import { registerTestTree, transferFunctionsTests } from '@e2e-test/shared'
 
 registerTestTree(
@@ -11,6 +11,6 @@ registerTestTree(
       asyncBacking: 'Enabled',
       chainEd: 'Normal',
     },
-    assetHubPolkadot,
+    polkadot,
   ),
 )
