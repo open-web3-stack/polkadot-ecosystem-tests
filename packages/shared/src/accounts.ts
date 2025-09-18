@@ -750,38 +750,6 @@ async function transferAllowDeathSelfTest<
   const aliceBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
 
-  await client.dev.setStorage({
-    System: {
-      account: [
-        [
-          [alice.address],
-          {
-            providers: 1,
-            data: {
-              free: 10n ** 10n,
-              reserved: 0n,
-              frozen: 10n ** 10n,
-            },
-          },
-        ],
-      ],
-    },
-    Balances: {
-      locks: [
-        [
-          [alice.address],
-          [
-            {
-              id: 'random  ', // Padded to 8 bytes with spaces
-              amount: 10n ** 10n,
-              reasons: 'Misc',
-            },
-          ],
-        ],
-      ],
-    },
-  })
-
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   const transferAmount = existentialDeposit * 99n // Transfer almost everything to self
@@ -915,7 +883,7 @@ async function forceTransferBelowExistentialDepositTest<
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
-  // No events are emitted from this failure, as it was the result of a
+  // No events are emitted from this failure, as it was the result of a manually injected scheduler call.
   expect(failedEvent).toBeUndefined()
 
   if (hasScheduler) {
