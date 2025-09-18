@@ -311,7 +311,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "Gnv77gxzKFNGZhM2k9YFHnmGMsXPgXkCSHDnK7GjhSavMV3",
+      "pure": "H5stkwjmqxFzQqXWpTrS4NEcjobu4vjjSFvRioNTvQQ9qRb",
       "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureKilled",
