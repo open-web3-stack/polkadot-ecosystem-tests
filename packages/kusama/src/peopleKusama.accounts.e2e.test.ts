@@ -7,6 +7,7 @@ registerTestTree(
     {
       testSuiteName: 'Kusama People Chain Accounts',
       addressEncoding: 2,
+      blockProvider: 'Local',
       chainEd: 'LowEd',
     },
     kusama,

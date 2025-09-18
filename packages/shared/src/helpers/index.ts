@@ -465,7 +465,7 @@ export interface RelayTestConfig {
   testSuiteName: string
   addressEncoding: number
   blockProvider: 'Local'
-  chainEd: ChainED
+  chainEd?: ChainED
 }
 
 /**
@@ -480,7 +480,7 @@ export interface ParaTestConfig {
   addressEncoding: number
   blockProvider: BlockProvider
   asyncBacking: AsyncBacking
-  chainEd: ChainED
+  chainEd?: ChainED
 }
 
 /**

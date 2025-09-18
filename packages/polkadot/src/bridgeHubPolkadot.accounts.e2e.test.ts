@@ -6,6 +6,7 @@ registerTestTree(
     bridgeHubPolkadot,
     {
       testSuiteName: 'Polkadot Bridge Hub Accounts',
+      blockProvider: 'Local',
       addressEncoding: 0,
       chainEd: 'LowEd',
     },

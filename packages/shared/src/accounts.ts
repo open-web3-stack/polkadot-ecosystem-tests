@@ -1471,7 +1471,7 @@ export const transferFunctionsTests = <
     match(testConfig.chainEd)
       .with('LowEd', () => partialTransferAllowDeathTests(chain, testConfig))
       .with('Normal', () => fullTransferAllowDeathTests(chain, testConfig))
-      .exhaustive(),
+      .otherwise(() => fullTransferAllowDeathTests(chain, testConfig)),
     {
       kind: 'describe',
       label: '`transfer_keep_alive`',

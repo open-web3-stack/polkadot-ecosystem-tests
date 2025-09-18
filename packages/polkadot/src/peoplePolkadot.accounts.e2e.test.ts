@@ -7,6 +7,7 @@ registerTestTree(
     {
       testSuiteName: 'Polkadot People Chain Accounts',
       addressEncoding: 0,
+      blockProvider: 'Local',
       chainEd: 'Normal',
     },
     polkadot,

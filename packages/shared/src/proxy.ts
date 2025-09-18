@@ -1891,7 +1891,7 @@ export function baseProxyE2ETests<
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
-    label: testConfig.testSuiteName + ' base tests',
+    label: `${testConfig.testSuiteName} base tests`,
     children: [
       {
         kind: 'test',
@@ -1928,7 +1928,7 @@ export function fullProxyE2ETests<
 
   return {
     kind: 'describe' as const,
-    label: testConfig.testSuiteName + ' full tests (includes call filtering)',
+    label: `${testConfig.testSuiteName} full tests (includes call filtering)`,
     children: [baseTestTree, allowedFilteringTests, forbiddenFilteringTests],
   }
 }
