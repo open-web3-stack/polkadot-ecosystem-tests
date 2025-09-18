@@ -1141,7 +1141,6 @@ export async function bountyClosureActiveTest<
   // Get curator reserved balance before closure
   const curatorBalanceBeforeClosure = await client.api.query.system.account(devAccounts.bob.address)
   const curatorReservedBalanceBeforeClosure = curatorBalanceBeforeClosure.data.reserved.toBigInt()
-  console.log('Curator reserved balance before:', curatorReservedBalanceBeforeClosure)
 
   // Close the bounty
   await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
@@ -1587,8 +1586,6 @@ export async function unassignCuratorActiveByTreasurerTest<
   })
 
   await client.dev.newBlock()
-
-  await logAllEvents(client)
 
   // Verify CuratorUnassigned event
   await checkSystemEvents(client, { section: 'bounties', method: 'CuratorUnassigned' })
