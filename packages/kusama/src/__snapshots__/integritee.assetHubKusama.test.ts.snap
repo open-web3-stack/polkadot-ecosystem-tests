@@ -112,8 +112,8 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": 5000000,
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -346,6 +346,9 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -381,8 +384,8 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 2000)",
-            "refTime": 2000000,
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -392,7 +395,17 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
   },
   {
     "data": {
-      "fees": [],
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 190000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      ],
       "paying": {
         "interior": {
           "X1": [
