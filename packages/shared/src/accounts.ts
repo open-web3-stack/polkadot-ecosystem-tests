@@ -1083,7 +1083,9 @@ interface DepositAction<
 }
 
 /**
- * Interface for actions that create reserves (bonded/locked funds)
+ * Interface for actions that create reserved/held funds.
+ *
+ * Examples: bonding funds for staking, nomination pool creation or joining.
  */
 interface ReserveAction<
   TCustom extends Record<string, unknown> | undefined,
@@ -1095,7 +1097,9 @@ interface ReserveAction<
 }
 
 /**
- * Interface for actions that create locks (frozen funds)
+ * Interface for actions that create locks/freezes on funds.
+ *
+ * Examples: vested transfer, conviction voting.
  */
 interface LockAction<
   TCustom extends Record<string, unknown> | undefined,
@@ -1113,6 +1117,20 @@ interface LockAction<
 
 /**
  * Helper function that tests liquidity restrictions for any deposit-requiring action.
+ *
+ * Some pallets are still using the `Currency` traits, which when combined with the new `Fungible` traits,
+ * can lead to some operations failing incorrectly due to "liquidity restrictions".
+ *
+ * This test requires 3 actions:
+ * 1. one that generates a reserve on a account for more than half its free balance
+ * 2. one that generates a lock for more than half of its balance, again
+ * 3. another action that internally uses `Currency::reserve` to reserve funds not exceeding the remaining free balance
+ *
+ * These actions (and tests) are generated at the test-tree level, so each network will have a different set of test
+ * cases, depending on the pallets it has available.
+ * See the `DepositAction/ReserveAction/LockAction` interfaces for details.
+ *
+ * Overall test structure:
  *
  * 1. Credits an account with 100000 ED
  * 2. Executes the provided reserve action
@@ -1225,7 +1243,9 @@ async function testLiquidityRestrictionForAction<
 }
 
 /**
- * Define the reserve actions
+ * Define the list of reserve actions to be used in the liquidity restriction tests.
+ *
+ * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
  */
 function createReserveActions<
   TCustom extends Record<string, unknown> | undefined,
@@ -1261,6 +1281,8 @@ function createReserveActions<
       },
       isAvailable: (client) => !!client.api.tx.nominationPools,
     },
+    // This action manually sets storage to simulate an existing reserve.
+    // Helpful on networks where staking or nomination pools are not available i.e. most of them.
     {
       name: 'manual reserve',
       execute: async (client, alice, amount) => {
@@ -1295,7 +1317,9 @@ function createReserveActions<
 }
 
 /**
- * Define the lock actions
+ * Define the lock actions to be used in the liquidity restriction tests.
+ *
+ * Recall that in the case a network does not support one of these, it'll be skipped when generating the test cases.
  */
 function createLockActions<
   TCustom extends Record<string, unknown> | undefined,
@@ -1325,6 +1349,8 @@ function createLockActions<
         return !!client.api.tx.vesting
       },
     },
+    // This action manually sets storage to simulate an existing lock.
+    // Helpful on networks where vesting is not available i.e. most of them.
     {
       name: 'manual lock',
       execute: async (client, alice, amount) => {
@@ -1374,7 +1400,12 @@ function createLockActions<
 }
 
 /**
- * Define the deposit-requiring actions to test
+ * Define the deposit-requiring actions that will trigger the liquidity restriction error.
+ *
+ * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
+ *
+ * On every network where this error is raised, proxy and multisig are available, so the test is guaranteed to run
+ * at least once each network.
  */
 function createDepositActions<
   TCustom extends Record<string, unknown> | undefined,
@@ -1486,6 +1517,10 @@ export const transferFunctionsTests = <
 
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
+        // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
+        // trigger the liquidity restriction error.
+        // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
+        // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
         for (const reserveAction of reserveActions) {
           for (const lockAction of lockActions) {
             for (const depositAction of depositActions) {
