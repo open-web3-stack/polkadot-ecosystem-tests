@@ -224,7 +224,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "Gnv77gxzKFNGZhM2k9YFHnmGMsXPgXkCSHDnK7GjhSavMV3",
+      "pure": "HiNRvZ1FQo49D9GBVEgY3k8twom9AbH8Jx8baRj62RpraXH",
       "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureKilled",

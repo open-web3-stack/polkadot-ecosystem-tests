@@ -195,7 +195,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "JKb9r5Bt4mCcqRdrhmgjP6gEyfLeJdZMUUP5wxereNBnFT2",
+      "pure": "G8X8vSJqrrYwqCergtc6gakEEBbbQfm1SENyRGMBYwp647T",
       "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureKilled",
