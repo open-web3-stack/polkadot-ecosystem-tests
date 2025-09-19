@@ -2241,6 +2241,59 @@ async function invalidIndexApprovalTest<
 }
 
 /**
+ * Test that proposing a curator for a non-funded bounty fails with `UnexpectedStatus`.
+ *
+ * 1. Alice proposes a bounty
+ * 2. Treasurer attempts to propose a curator before the bounty is funded
+ * 3. Verify that the transaction fails with the appropriate error
+ */
+async function unexpectedStatusProposeCuratorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for curator proposal'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // propose curator by Treasurer
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, 1000n).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Check for scheduler Dispatched event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev.event))
+  const dispatchError = ev.event.data.result.asErr
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.UnexpectedStatus.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2279,10 +2332,15 @@ export function allBountyFailureTests<
       //   label: 'Invalid value',
       //   testFn: async () => await invalidValueTest(chain),
       // },
+      // {
+      //   kind: 'test',
+      //   label: 'Invalid bounty index approval',
+      //   testFn: async () => await invalidIndexApprovalTest(chain),
+      // },
       {
         kind: 'test',
-        label: 'Invalid bounty index approval',
-        testFn: async () => await invalidIndexApprovalTest(chain),
+        label: 'Unexpected status when proposing curator before bounty is funded',
+        testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
       },
     ],
   } as RootTestTree
