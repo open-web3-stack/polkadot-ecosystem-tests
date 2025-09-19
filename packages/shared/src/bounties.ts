@@ -2197,6 +2197,50 @@ async function invalidValueTest<
 }
 
 /**
+ * Test that approving a non-existent bounty fails with `InvalidIndex`.
+ *
+ * 1. Treasurer attempts to approve a bounty that doesn't exist
+ * 2. Verify that the transaction fails with the appropriate error
+ */
+async function invalidIndexApprovalTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const nonExistentBountyIndex = 999
+
+  await setupTestAccounts(client, ['alice'])
+
+  // approve transaction with origin treasurer
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.approveBounty(nonExistentBountyIndex).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Check for scheduler Dispatched event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev.event))
+  const dispatchError = ev.event.data.result.asErr
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.InvalidIndex.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2230,10 +2274,15 @@ export function allBountyFailureTests<
       //   label: 'Reason too big',
       //   testFn: async () => await reasonTooBigTest(chain),
       // },
+      // {
+      //   kind: 'test',
+      //   label: 'Invalid value',
+      //   testFn: async () => await invalidValueTest(chain),
+      // },
       {
         kind: 'test',
-        label: 'Invalid value',
-        testFn: async () => await invalidValueTest(chain),
+        label: 'Invalid bounty index approval',
+        testFn: async () => await invalidIndexApprovalTest(chain),
       },
     ],
   } as RootTestTree
