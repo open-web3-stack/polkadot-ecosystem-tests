@@ -2375,6 +2375,120 @@ async function requireCuratorAcceptTest<
 }
 
 /**
+ * Test creating a child bounty from an active parent bounty and then trying to close it should fail with `HasActiveChildBounty`.
+ *
+ * Verifies:
+ * - Curator can create child bounty when parent bounty is in Active state
+ * - ChildBountyAdded event is emitted
+ * - Child bounty gets proper funding from parent bounty
+ */
+async function hasActiveChildBountyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // move client head to the last spend period block
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping child bounty test')
+    return
+  }
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for child bounty check'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+
+  // Propose Bob as curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Bob accepts curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in Active state before creating child bounty
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Note: The curator (Bob) should create the child bounty, not Alice
+  const childBountyValue = existentialDeposit.toBigInt() * 100n // Smaller value for child bounty
+  const childBountyDescription = 'Test child bounty'
+
+  await sendTransaction(
+    client.api.tx.childBounties
+      .addChildBounty(bountyIndex, childBountyValue, childBountyDescription)
+      .signAsync(devAccounts.bob), // Bob is the curator, so he should create the child bounty
+  )
+
+  await client.dev.newBlock()
+
+  // Check for ChildBountyAdded event
+  await checkSystemEvents(client, { section: 'childBounties', method: 'Added' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty added events')
+
+  // Verify parent bounty is still in Active state
+  const parentBounty = await getBounty(client, bountyIndex)
+  expect(parentBounty.status.isActive).toBe(true)
+
+  // award the parent bounty
+  await sendTransaction(
+    client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.bob.address).signAsync(devAccounts.bob),
+  )
+
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.HasActiveChildBounty.is(dispatchError.asModule)).toBeTruthy()
+
+  // Verify parent bounty is still in Active state
+  const parentBountyAfterAward = await getBounty(client, bountyIndex)
+  expect(parentBountyAfterAward.status.isActive).toBe(true)
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2427,6 +2541,11 @@ export function allBountyFailureTests<
         kind: 'test',
         label: 'Non-curator trying to accept curator role',
         testFn: async () => await requireCuratorAcceptTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty cannot be awarded if it has an active child bounty',
+        testFn: async () => await hasActiveChildBountyTest(chain),
       },
     ],
   } as RootTestTree
@@ -2547,6 +2666,6 @@ export function baseBountiesE2ETests<
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allBountyFailureTests(chain), allBountySuccessTests(chain)],
+    children: [allBountySuccessTests(chain), allBountyFailureTests(chain)],
   }
 }
