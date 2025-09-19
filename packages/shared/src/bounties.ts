@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
 
@@ -19,14 +19,14 @@ const CURATOR_FEE_MULTIPLIER = 100n
 /**
  * Get the current bounty count
  */
-async function getBountyCount(client: any): Promise<number> {
+async function getBountyCount(client: Client<any, any>): Promise<number> {
   return (await client.api.query.bounties.bountyCount()).toNumber()
 }
 
 /**
  * Get a bounty by index
  */
-async function getBounty(client: any, bountyIndex: number): Promise<any | null> {
+async function getBounty(client: Client<any, any>, bountyIndex: number): Promise<any | null> {
   const bounty = await client.api.query.bounties.bounties(bountyIndex)
   if (!bounty) return null
   return bounty.isSome ? bounty.unwrap() : null
@@ -35,7 +35,7 @@ async function getBounty(client: any, bountyIndex: number): Promise<any | null> 
 /**
  * Get bounty description by index
  */
-async function getBountyDescription(client: any, bountyIndex: number): Promise<string | null> {
+async function getBountyDescription(client: Client<any, any>, bountyIndex: number): Promise<string | null> {
   const description = await client.api.query.bounties.bountyDescriptions(bountyIndex)
   return description.isSome ? description.unwrap().toUtf8() : null
 }
@@ -43,7 +43,7 @@ async function getBountyDescription(client: any, bountyIndex: number): Promise<s
 /**
  * Get approved bounties queue
  */
-async function getBountyApprovals(client: any): Promise<number[]> {
+async function getBountyApprovals(client: Client<any, any>): Promise<number[]> {
   const approvals = await client.api.query.bounties.bountyApprovals()
   return approvals.map((index: any) => index.toNumber())
 }
@@ -51,7 +51,7 @@ async function getBountyApprovals(client: any): Promise<number[]> {
 /**
  * Setup accounts with funds for testing
  */
-async function setupTestAccounts(client: any, accounts: string[] = ['alice', 'bob']) {
+async function setupTestAccounts(client: Client<any, any>, accounts: string[] = ['alice', 'bob']) {
   const accountMap = {
     alice: devAccounts.alice.address,
     bob: devAccounts.bob.address,
@@ -75,7 +75,7 @@ async function setupTestAccounts(client: any, accounts: string[] = ['alice', 'bo
 /**
  * Get bounty index from BountyProposed event
  */
-async function getBountyIndexFromEvent(client: any): Promise<number> {
+async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number> {
   const [bountyProposedEvent] = (await client.api.query.system.events()).filter(
     ({ event }: any) => event.section === 'bounties' && event.method === 'BountyProposed',
   )
@@ -342,8 +342,6 @@ export async function bountyFundingTest<
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
-
-  // TODO: @dhirajs0 - verify that the bond of the proposer is reserved and it's unreserved after the bounty is funded
 
   await client.teardown()
 }
