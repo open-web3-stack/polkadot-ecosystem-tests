@@ -2433,6 +2433,63 @@ export function allBountyFailureTests<
 }
 
 /**
+ * Bounty approval tests
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+export function bountyApprovalTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Bounty approval tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty approval flow',
+        testFn: async () => await bountyApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty approval flow with curator',
+        testFn: async () => await bountyApprovalWithCuratorTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
+ * Bounty funding tests
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+
+export function bountyFundingTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Bounty funding tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty funding for Approved Bounties',
+        testFn: async () => await bountyFundingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for ApprovedWithCurator Bounties',
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
  *
  * All success cases for bounty
  *
@@ -2454,26 +2511,6 @@ export function allBountySuccessTests<
       },
       {
         kind: 'test',
-        label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
-      },
-      {
-        kind: 'test',
         label: 'Curator assignment and acceptance',
         testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
       },
@@ -2487,6 +2524,8 @@ export function allBountySuccessTests<
         label: 'Bounty awarding and claiming',
         testFn: async () => await bountyAwardingAndClaimingTest(chain),
       },
+      bountyFundingTests(chain),
+      bountyApprovalTests(chain),
       bountyClosureTests(chain),
       allCuratorUnassignTests(chain),
     ],
