@@ -1,6 +1,58 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `
+exports[`Kusama Bounties > All bounty failure tests > Bounty cannot be awarded if it has an active child bounty > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Bounties > All bounty failure tests > Bounty closure in approved state > scheduler events when closing bounty with approved state fails 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x03000000",
+            "index": 35,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Bounties > All bounty failure tests > Bounty closure in pending payout state > scheduler events when closing bounty with pending payout fails 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x07000000",
+            "index": 35,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `
 [
   {
     "data": "(redacted)",
@@ -10,7 +62,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -22,7 +74,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty became active events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty became active events 1`] = `
 [
   {
     "data": {
@@ -34,7 +86,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -46,7 +98,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -59,7 +111,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -72,7 +124,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator slash event 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator slash event 1`] = `
 [
   {
     "data": {
@@ -85,7 +137,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator unassigned active by treasurer events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > curator unassigned active by treasurer events 1`] = `
 [
   {
     "data": {
@@ -97,7 +149,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -109,7 +161,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty became active events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty became active events 1`] = `
 [
   {
     "data": {
@@ -121,7 +173,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -133,7 +185,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -146,7 +198,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -159,7 +211,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator unassigned active by curator events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > curator unassigned active by curator events 1`] = `
 [
   {
     "data": {
@@ -171,7 +223,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Acti
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in ApprovedWithCurator state > curator unassigned approved with curator events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in ApprovedWithCurator state > curator unassigned approved with curator events 1`] = `
 [
   {
     "data": {
@@ -183,7 +235,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Appr
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -195,7 +247,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Cura
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > bounty became active events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > bounty became active events 1`] = `
 [
   {
     "data": {
@@ -207,7 +259,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Cura
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > curator unassigned curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > curator unassigned curator proposed events 1`] = `
 [
   {
     "data": {
@@ -219,7 +271,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Cura
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `
 [
   {
     "data": "(redacted)",
@@ -229,7 +281,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -241,7 +293,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty awarded events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty awarded events 1`] = `
 [
   {
     "data": {
@@ -254,7 +306,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty became active events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty became active events 1`] = `
 [
   {
     "data": {
@@ -266,7 +318,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -278,7 +330,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -291,7 +343,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -304,7 +356,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator slash event 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator slash event 1`] = `
 [
   {
     "data": {
@@ -317,7 +369,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator unassigned pending payout events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > curator unassigned pending payout events 1`] = `
 [
   {
     "data": {
@@ -329,7 +381,7 @@ exports[`Kusama Bounties > All curator unassign tests > Unassign curator in Pend
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > Bounty value is transferred to the treasury 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > Bounty value is transferred to the treasury 1`] = `
 [
   {
     "data": {
@@ -343,7 +395,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -355,9 +407,9 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > bounty canceled event 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty canceled event 1`] = `
 [
   {
     "data": {
@@ -369,7 +421,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -382,7 +434,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -395,7 +447,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in active state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -407,9 +459,9 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty canceled events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty canceled events 1`] = `
 [
   {
     "data": {
@@ -421,7 +473,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty value transfered to treasury 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty value transfered to treasury 1`] = `
 [
   {
     "data": {
@@ -435,7 +487,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in funded state
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in proposed state > bounty rejected events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in proposed state > bounty rejected events 1`] = `
 [
   {
     "data": {
@@ -448,7 +500,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in proposed sta
 ]
 `;
 
-exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slashed event 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slashed event 1`] = `
 [
   {
     "data": {
@@ -461,7 +513,7 @@ exports[`Kusama Bounties > Bounty Closure Tests > Bounty closure in proposed sta
 ]
 `;
 
-exports[`Kusama Bounties > Bounty approval flow > bounty approval events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty approval tests > Bounty approval flow > bounty approval events 1`] = `
 [
   {
     "data": {
@@ -473,7 +525,7 @@ exports[`Kusama Bounties > Bounty approval flow > bounty approval events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty approval flow with curator > bounty approval with curator events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty approval tests > Bounty approval flow with curator > bounty approval with curator events 1`] = `
 [
   {
     "data": {
@@ -485,7 +537,7 @@ exports[`Kusama Bounties > Bounty approval flow with curator > bounty approval w
 ]
 `;
 
-exports[`Kusama Bounties > Bounty approval flow with curator > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty approval tests > Bounty approval flow with curator > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -498,7 +550,7 @@ exports[`Kusama Bounties > Bounty approval flow with curator > curator proposed 
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -510,7 +562,7 @@ exports[`Kusama Bounties > Bounty awarding and claiming > bounty approved events
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > bounty awarded events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > bounty awarded events 1`] = `
 [
   {
     "data": {
@@ -523,9 +575,9 @@ exports[`Kusama Bounties > Bounty awarding and claiming > bounty awarded events 
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > bounty claimed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > bounty claimed events 1`] = `
 [
   {
     "data": {
@@ -539,7 +591,7 @@ exports[`Kusama Bounties > Bounty awarding and claiming > bounty claimed events 
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -551,7 +603,7 @@ exports[`Kusama Bounties > Bounty awarding and claiming > bounty proposed events
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -564,7 +616,7 @@ exports[`Kusama Bounties > Bounty awarding and claiming > curator accepted event
 ]
 `;
 
-exports[`Kusama Bounties > Bounty awarding and claiming > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claiming > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -577,7 +629,7 @@ exports[`Kusama Bounties > Bounty awarding and claiming > curator proposed event
 ]
 `;
 
-exports[`Kusama Bounties > Bounty extension > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -589,9 +641,9 @@ exports[`Kusama Bounties > Bounty extension > bounty approved events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty extension > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty extension > bounty extended events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > bounty extended events 1`] = `
 [
   {
     "data": {
@@ -603,7 +655,7 @@ exports[`Kusama Bounties > Bounty extension > bounty extended events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty extension > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -615,7 +667,7 @@ exports[`Kusama Bounties > Bounty extension > bounty proposed events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty extension > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -628,7 +680,7 @@ exports[`Kusama Bounties > Bounty extension > curator accepted events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty extension > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty extension > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -641,7 +693,7 @@ exports[`Kusama Bounties > Bounty extension > curator proposed events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Bounty funding for Approved Bounties > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -653,9 +705,9 @@ exports[`Kusama Bounties > Bounty funding for Approved Bounties > bounty approve
 ]
 `;
 
-exports[`Kusama Bounties > Bounty funding for Approved Bounties > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty funding for Approved Bounties > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -667,7 +719,7 @@ exports[`Kusama Bounties > Bounty funding for Approved Bounties > bounty propose
 ]
 `;
 
-exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -679,9 +731,9 @@ exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > bou
 ]
 `;
 
-exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -693,7 +745,7 @@ exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > bou
 ]
 `;
 
-exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -706,7 +758,7 @@ exports[`Kusama Bounties > Bounty funding for ApprovedWithCurator Bounties > cur
 ]
 `;
 
-exports[`Kusama Bounties > Creating a bounty > bounty proposal events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Creating a bounty > bounty proposal events 1`] = `
 [
   {
     "data": {
@@ -718,7 +770,7 @@ exports[`Kusama Bounties > Creating a bounty > bounty proposal events 1`] = `
 ]
 `;
 
-exports[`Kusama Bounties > Curator assignment and acceptance > bounty approved events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Curator assignment and acceptance > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -730,9 +782,9 @@ exports[`Kusama Bounties > Curator assignment and acceptance > bounty approved e
 ]
 `;
 
-exports[`Kusama Bounties > Curator assignment and acceptance > bounty became active events 1`] = `[]`;
+exports[`Kusama Bounties > All bounty success tests > Curator assignment and acceptance > bounty became active events 1`] = `[]`;
 
-exports[`Kusama Bounties > Curator assignment and acceptance > bounty proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Curator assignment and acceptance > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -744,7 +796,7 @@ exports[`Kusama Bounties > Curator assignment and acceptance > bounty proposed e
 ]
 `;
 
-exports[`Kusama Bounties > Curator assignment and acceptance > curator accepted events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Curator assignment and acceptance > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -757,7 +809,7 @@ exports[`Kusama Bounties > Curator assignment and acceptance > curator accepted 
 ]
 `;
 
-exports[`Kusama Bounties > Curator assignment and acceptance > curator proposed events 1`] = `
+exports[`Kusama Bounties > All bounty success tests > Curator assignment and acceptance > curator proposed events 1`] = `
 [
   {
     "data": {
