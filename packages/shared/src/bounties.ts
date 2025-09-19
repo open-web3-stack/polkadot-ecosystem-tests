@@ -1833,6 +1833,106 @@ export function allCuratorUnassignTests<
 }
 
 /**
+ * Bounty approval tests
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+export function bountyApprovalTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Bounty approval tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty approval flow',
+        testFn: async () => await bountyApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty approval flow with curator',
+        testFn: async () => await bountyApprovalWithCuratorTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
+ * Bounty funding tests
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+
+export function bountyFundingTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'Bounty funding tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty funding for Approved Bounties',
+        testFn: async () => await bountyFundingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for ApprovedWithCurator Bounties',
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
+ *
+ * All success cases for bounty
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+export function allBountySuccessTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'All bounty success tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Creating a bounty',
+        testFn: async () => await bountyCreationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Curator assignment and acceptance',
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty extension',
+        testFn: async () => await bountyExtensionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty awarding and claiming',
+        testFn: async () => await bountyAwardingAndClaimingTest(chain),
+      },
+      bountyFundingTests(chain),
+      bountyApprovalTests(chain),
+      bountyClosureTests(chain),
+      allCuratorUnassignTests(chain),
+    ],
+  } as RootTestTree
+}
+
+/**
  * Test: Bounty closure in Approved state (should fail)
  *
  * Verifies:
@@ -2547,106 +2647,6 @@ export function allBountyFailureTests<
         label: 'Bounty cannot be awarded if it has an active child bounty',
         testFn: async () => await hasActiveChildBountyTest(chain),
       },
-    ],
-  } as RootTestTree
-}
-
-/**
- * Bounty approval tests
- *
- * @param chain
- * @returns RootTestTree
- */
-export function bountyApprovalTests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  return {
-    kind: 'describe',
-    label: 'Bounty approval tests',
-    children: [
-      {
-        kind: 'test',
-        label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(chain),
-      },
-    ],
-  } as RootTestTree
-}
-
-/**
- * Bounty funding tests
- *
- * @param chain
- * @returns RootTestTree
- */
-
-export function bountyFundingTests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  return {
-    kind: 'describe',
-    label: 'Bounty funding tests',
-    children: [
-      {
-        kind: 'test',
-        label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
-      },
-    ],
-  } as RootTestTree
-}
-
-/**
- *
- * All success cases for bounty
- *
- * @param chain
- * @returns RootTestTree
- */
-export function allBountySuccessTests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  return {
-    kind: 'describe',
-    label: 'All bounty success tests',
-    children: [
-      {
-        kind: 'test',
-        label: 'Creating a bounty',
-        testFn: async () => await bountyCreationTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty extension',
-        testFn: async () => await bountyExtensionTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty awarding and claiming',
-        testFn: async () => await bountyAwardingAndClaimingTest(chain),
-      },
-      bountyFundingTests(chain),
-      bountyApprovalTests(chain),
-      bountyClosureTests(chain),
-      allCuratorUnassignTests(chain),
     ],
   } as RootTestTree
 }
