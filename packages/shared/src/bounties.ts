@@ -2433,20 +2433,19 @@ export function allBountyFailureTests<
 }
 
 /**
- * Base set of bounty end-to-end tests.
  *
- * Includes both success and failure cases.
- * A test tree structure allows some extensibility in case a chain needs to
- * change/add/remove default tests.
+ * All success cases for bounty
+ *
+ * @param chain
+ * @returns RootTestTree
  */
-
-export function baseBountiesE2ETests<
+export function allBountySuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
-    label: testConfig.testSuiteName,
+    label: 'All bounty success tests',
     children: [
       {
         kind: 'test',
@@ -2490,7 +2489,25 @@ export function baseBountiesE2ETests<
       },
       bountyClosureTests(chain),
       allCuratorUnassignTests(chain),
-      allBountyFailureTests(chain),
     ],
+  } as RootTestTree
+}
+
+/**
+ * Base set of bounty end-to-end tests.
+ *
+ * Includes both success and failure cases.
+ * A test tree structure allows some extensibility in case a chain needs to
+ * change/add/remove default tests.
+ */
+
+export function baseBountiesE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [allBountyFailureTests(chain), allBountySuccessTests(chain)],
   }
 }
