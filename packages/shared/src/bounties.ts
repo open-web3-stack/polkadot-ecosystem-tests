@@ -12,6 +12,10 @@ import type { RootTestTree } from './types.js'
 /// Helpers
 /// -------
 
+// multipliers for the bounty and curator fee
+const BOUNTY_MULTIPLIER = 1000n
+const CURATOR_FEE_MULTIPLIER = 100n
+
 /**
  * Get the current bounty count
  */
@@ -75,9 +79,17 @@ async function getBountyIndexFromEvent(client: any): Promise<number> {
   const [bountyProposedEvent] = (await client.api.query.system.events()).filter(
     ({ event }: any) => event.section === 'bounties' && event.method === 'BountyProposed',
   )
-  expect(bountyProposedEvent).toBeDefined()
+  expect(bountyProposedEvent).toBeTruthy()
   assert(client.api.events.bounties.BountyProposed.is(bountyProposedEvent.event))
   return bountyProposedEvent.event.data.index.toNumber()
+}
+
+async function ensureSpendPeriodAvailable(lastSpendPeriodBlock: any): Promise<boolean> {
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping test')
+    return false
+  }
+  return true
 }
 
 /// -------
@@ -105,7 +117,7 @@ export async function bountyCreationTest<
   const initialBountyCount = await getBountyCount(client)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 EDs
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
   const description = 'Test bounty for development work'
 
   // Propose a bounty
@@ -157,7 +169,7 @@ export async function bountyApprovalTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 EDs
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
   const description = 'Test bounty for approval'
 
   // Propose a bounty
@@ -211,8 +223,8 @@ export async function bountyApprovalWithCuratorTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 EDs
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // 100 EDs (10% fee)
   const description = 'Test bounty for approval with curator'
 
   // Propose a bounty
@@ -271,8 +283,7 @@ export async function bountyFundingTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping bounty funding test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -283,7 +294,7 @@ export async function bountyFundingTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -360,8 +371,8 @@ export async function bountyFundingForApprovedWithCuratorTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 tokens (10% fee)
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // 100 tokens (10% fee)
   const description = 'Test bounty for funding with curator'
 
   // propose a bounty
@@ -444,8 +455,7 @@ export async function curatorAssignmentAndAcceptanceTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping bounty funding test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -456,7 +466,7 @@ export async function curatorAssignmentAndAcceptanceTest<
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -505,8 +515,7 @@ export async function curatorAssignmentAndAcceptanceTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
-
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   await scheduleInlineCallWithOrigin(
     client,
@@ -561,8 +570,7 @@ export async function bountyExtensionTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping bounty funding test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -573,7 +581,7 @@ export async function bountyExtensionTest<
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -622,7 +630,7 @@ export async function bountyExtensionTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
   await scheduleInlineCallWithOrigin(
@@ -709,8 +717,7 @@ export async function bountyAwardingAndClaimingTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping bounty funding test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -721,7 +728,7 @@ export async function bountyAwardingAndClaimingTest<
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n // 1000 tokens
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -770,7 +777,7 @@ export async function bountyAwardingAndClaimingTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * 100n // 100 EDs (10% fee)
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
   await scheduleInlineCallWithOrigin(
@@ -877,7 +884,7 @@ export async function bountyClosureProposedTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in proposed state'
 
   // Propose a bounty
@@ -952,7 +959,7 @@ export async function bountyClosureFundedTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in funded state'
 
   // Propose a bounty
@@ -1043,8 +1050,7 @@ export async function bountyClosureActiveTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping bounty closure active test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -1055,8 +1061,8 @@ export async function bountyClosureActiveTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for closure in active state'
 
   // Propose a bounty
@@ -1164,8 +1170,8 @@ export async function unassignCuratorApprovedWithCuratorTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator in approved with curator state'
 
   // Propose a bounty
@@ -1221,8 +1227,7 @@ export async function unassignCuratorCuratorProposedTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping unassign curator curator proposed test')
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -1233,8 +1238,8 @@ export async function unassignCuratorCuratorProposedTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator in curator proposed state'
 
   // Propose a bounty
@@ -1324,8 +1329,7 @@ export async function unassignCuratorActiveByCuratorTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping unassign curator active by curator test')
+  if (!ensureSpendPeriodAvailable(client)) {
     return
   }
 
@@ -1336,8 +1340,8 @@ export async function unassignCuratorActiveByCuratorTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator active by curator'
 
   // Propose a bounty
@@ -1459,8 +1463,7 @@ export async function unassignCuratorActiveByTreasurerTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (lastSpendPeriodBlock.isNone) {
-    console.warn('Last spend period block is none, skipping unassign curator active by treasurer test')
+  if (!ensureSpendPeriodAvailable(client)) {
     return
   }
 
@@ -1471,8 +1474,8 @@ export async function unassignCuratorActiveByTreasurerTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator active by treasurer'
 
   // Propose a bounty
@@ -1618,8 +1621,8 @@ export async function unassignCuratorPendingPayoutTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator pending payout'
 
   // Propose a bounty
@@ -1948,7 +1951,7 @@ export async function bountyClosureApprovedTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in approved state'
 
   // Propose a bounty
@@ -2033,8 +2036,8 @@ export async function bountyClosurePendingPayoutTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for closure in pending payout state'
 
   // Propose a bounty
@@ -2140,8 +2143,8 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for premature unassign curator by public'
 
   // Propose a bounty
@@ -2224,7 +2227,7 @@ async function reasonTooBigTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const maxReasonLength = client.api.consts.bounties.maximumReasonLength.toNumber()
 
   // Create a description that exceeds the maximum length
@@ -2357,7 +2360,7 @@ async function unexpectedStatusProposeCuratorTest<
   await setupTestAccounts(client, ['alice'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for curator proposal'
 
   // Propose a bounty
@@ -2366,10 +2369,12 @@ async function unexpectedStatusProposeCuratorTest<
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
 
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+
   // propose curator by Treasurer
   await scheduleInlineCallWithOrigin(
     client,
-    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, 1000n).method.toHex(),
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
     {
       Origins: 'Treasurer',
     },
@@ -2419,7 +2424,7 @@ async function requireCuratorAcceptTest<
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for curator requirement'
 
   // Propose a bounty
@@ -2439,10 +2444,12 @@ async function requireCuratorAcceptTest<
   // Bounty will be funded in this block
   await client.dev.newBlock()
 
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+
   // Propose Bob as curator
   await scheduleInlineCallWithOrigin(
     client,
-    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, 1000n).method.toHex(),
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
     {
       Origins: 'Treasurer',
     },
@@ -2500,7 +2507,7 @@ async function hasActiveChildBountyTest<
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for child bounty check'
 
   // Propose a bounty
@@ -2520,7 +2527,7 @@ async function hasActiveChildBountyTest<
   // Bounty will be funded in this block
   await client.dev.newBlock()
 
-  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // Propose Bob as curator
   await scheduleInlineCallWithOrigin(
@@ -2543,7 +2550,7 @@ async function hasActiveChildBountyTest<
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   // Note: The curator (Bob) should create the child bounty, not Alice
-  const childBountyValue = existentialDeposit.toBigInt() * 100n // Smaller value for child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // Smaller value for child bounty
   const childBountyDescription = 'Test child bounty'
 
   await sendTransaction(
