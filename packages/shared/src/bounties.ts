@@ -87,23 +87,6 @@ async function getBountyEvents(client: any): Promise<any[]> {
   return events.filter((record) => record.event.section === 'bounties')
 }
 
-/**
- *  Log the bounties events
- */
-async function logBountyEvents(client: any) {
-  const events = await getBountyEvents(client)
-  events.forEach((evt: any, idx: number) => {
-    console.log(`Event #${idx}:`, evt.event?.toHuman?.() ?? evt.event)
-  })
-}
-
-async function logAllEvents(client: any) {
-  const events = await client.api.query.system.events()
-  events.forEach((evt: any, idx: number) => {
-    console.log(`Event #${idx}:`, evt.event?.toHuman?.() ?? evt.event)
-  })
-}
-
 /// -------
 /// Tests
 /// -------
