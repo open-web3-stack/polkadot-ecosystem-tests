@@ -32,15 +32,6 @@ exports[`Polkadot Accounts > \`force_transfer\` > force transfer below ED can ki
     "method": "Endowed",
     "section": "balances",
   },
-  {
-    "data": {
-      "amount": 10000000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -518,15 +509,6 @@ exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED 
     "method": "Endowed",
     "section": "balances",
   },
-  {
-    "data": {
-      "amount": 10000000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -566,15 +548,6 @@ exports[`Polkadot Accounts > transfer_allow_death > transfer of some funds does 
       "freeBalance": 10000000000,
     },
     "method": "Endowed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 10000000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
     "section": "balances",
   },
 ]

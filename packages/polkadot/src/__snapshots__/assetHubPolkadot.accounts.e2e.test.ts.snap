@@ -4,15 +4,6 @@ exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transfer below
 [
   {
     "data": {
-      "amount": "(rounded 8800)",
-      "from": "13UVJyLgBASGhE2ok3TvxUfaQBGUt88JCcdYjHvUhvQkFTTx",
-      "to": "14EQvBy9h8xGbh2R3ustnkfkF514E7wpmHtg27gDaTLM2str",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "KilledAccount",
@@ -39,15 +30,6 @@ exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transfer below
       "freeBalance": 100000000,
     },
     "method": "Endowed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 100000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
     "section": "balances",
   },
 ]
@@ -105,11 +87,7 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
-
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
 
@@ -163,15 +141,6 @@ exports[`Polkadot Asset Hub Accounts > transfer_allow_death > leaving an account
     "method": "Endowed",
     "section": "balances",
   },
-  {
-    "data": {
-      "amount": 100000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -211,15 +180,6 @@ exports[`Polkadot Asset Hub Accounts > transfer_allow_death > transfer of some f
       "freeBalance": 100000000,
     },
     "method": "Endowed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 100000000,
-      "from": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "to": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Transfer",
     "section": "balances",
   },
 ]

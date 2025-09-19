@@ -32,15 +32,6 @@ exports[`Kusama Bridge Hub Accounts > \`force_transfer\` > force transfer below 
     "method": "Endowed",
     "section": "balances",
   },
-  {
-    "data": {
-      "amount": "(rounded 33000000)",
-      "from": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-      "to": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -118,15 +109,6 @@ exports[`Kusama Bridge Hub Accounts > transfer_allow_death > transfer of some fu
       "freeBalance": "(rounded 33000000)",
     },
     "method": "Endowed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 33000000)",
-      "from": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-      "to": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "Transfer",
     "section": "balances",
   },
 ]
