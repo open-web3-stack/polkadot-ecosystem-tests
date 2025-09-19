@@ -1418,7 +1418,14 @@ export async function schedulePriorityWeightedTasks<
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
   if (chain.name.toLowerCase().includes('kusama')) {
     expect(finalIncompleteSince.isSome).toBeTruthy()
-    expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+    match(testConfig.blockProvider)
+      .with('Local', async () => {
+        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+      })
+      .with('NonLocal', async () => {
+        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+      })
+      .exhaustive()
   } else {
     expect(finalIncompleteSince.isNone).toBeTruthy()
   }
