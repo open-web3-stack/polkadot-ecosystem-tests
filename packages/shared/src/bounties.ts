@@ -2153,6 +2153,50 @@ async function reasonTooBigTest<
 }
 
 /**
+ * Test that proposing a bounty with value below minimum fails with `InvalidValue`.
+ *
+ * 1. Alice attempts to propose a bounty with value below the minimum required
+ * 2. Verify that the transaction fails with the appropriate error
+ */
+async function invalidValueTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum.toBigInt()
+  const description = 'Test bounty with invalid value'
+
+  // Use a value below the minimum
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const invalidValue = bountyValueMinimum - existentialDeposit.toBigInt()
+
+  const proposeTx = client.api.tx.bounties.proposeBounty(invalidValue, description)
+
+  await sendTransaction(proposeTx.signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.InvalidValue.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2181,10 +2225,15 @@ export function allBountyFailureTests<
       //   label: 'Unassign curator in active state by public premature',
       //   testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
       // },
+      // {
+      //   kind: 'test',
+      //   label: 'Reason too big',
+      //   testFn: async () => await reasonTooBigTest(chain),
+      // },
       {
         kind: 'test',
-        label: 'Reason too big',
-        testFn: async () => await reasonTooBigTest(chain),
+        label: 'Invalid value',
+        testFn: async () => await invalidValueTest(chain),
       },
     ],
   } as RootTestTree
