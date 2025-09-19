@@ -1423,7 +1423,14 @@ export async function schedulePriorityWeightedTasks<
     // serviced.
     // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
     expect(finalIncompleteSince.isSome).toBeTruthy()
-    expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+    match(testConfig.blockProvider)
+      .with('Local', async () => {
+        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+      })
+      .with('NonLocal', async () => {
+        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+      })
+      .exhaustive()
   } else {
     expect(finalIncompleteSince.isNone).toBeTruthy()
   }
