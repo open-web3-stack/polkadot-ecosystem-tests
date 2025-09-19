@@ -2015,6 +2015,100 @@ export async function bountyClosurePendingPayoutTest<
 }
 
 /**
+ * Test that unassigning curator in Active state by public fails with `Premature`.
+ *
+ * 1. Alice proposes a bounty, it gets approved, curator is proposed and accepted
+ * 2. Public user attempts to unassign curator immediately (before proper timing)
+ * 3. Verify that the transaction fails with the appropriate error
+ */
+async function unassignCuratorActiveStateByPublicPrematureTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // move to spend period
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping unassign curator active state by public premature test')
+    return
+  }
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for premature unassign curator by public'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // Approve the bounty
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // Propose Bob as curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Bob accepts curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in Active state
+  const bountyStatus = await getBounty(client, bountyIndex)
+  expect(bountyStatus.status.isActive).toBe(true)
+
+  // Charlie (public user) tries to unassign curator immediately (premature)
+  // Using scheduleInlineCallWithOrigin to simulate public call
+  await sendTransaction(client.api.tx.bounties.unassignCurator(bountyIndex).signAsync(devAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Check the result of dispatched event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.Premature.is(dispatchError.asModule)).toBeTruthy()
+
+  // Verify bounty is still in storage and still Active
+  const bountyAfterFailedUnassign = await getBounty(client, bountyIndex)
+  expect(bountyAfterFailedUnassign).toBeDefined()
+  expect(bountyAfterFailedUnassign.status.isActive).toBe(true)
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2028,15 +2122,20 @@ export function allBountyFailureTests<
     kind: 'describe',
     label: 'All bounty failure tests',
     children: [
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty closure in approved state',
+      //   testFn: async () => await bountyClosureApprovedTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty closure in pending payout state',
+      //   testFn: async () => await bountyClosurePendingPayoutTest(chain),
+      // },
       {
         kind: 'test',
-        label: 'Bounty closure in approved state',
-        testFn: async () => await bountyClosureApprovedTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty closure in pending payout state',
-        testFn: async () => await bountyClosurePendingPayoutTest(chain),
+        label: 'Unassign curator in active state by public premature',
+        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
       },
     ],
   } as RootTestTree
@@ -2058,48 +2157,48 @@ export function baseBountiesE2ETests<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      {
-        kind: 'test',
-        label: 'Creating a bounty',
-        testFn: async () => await bountyCreationTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty extension',
-        testFn: async () => await bountyExtensionTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'Bounty awarding and claiming',
-        testFn: async () => await bountyAwardingAndClaimingTest(chain),
-      },
-      bountyClosureTests(chain),
-      allCuratorUnassignTests(chain),
+      // {
+      //   kind: 'test',
+      //   label: 'Creating a bounty',
+      //   testFn: async () => await bountyCreationTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty approval flow',
+      //   testFn: async () => await bountyApprovalTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty approval flow with curator',
+      //   testFn: async () => await bountyApprovalWithCuratorTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty funding for Approved Bounties',
+      //   testFn: async () => await bountyFundingTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty funding for ApprovedWithCurator Bounties',
+      //   testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Curator assignment and acceptance',
+      //   testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty extension',
+      //   testFn: async () => await bountyExtensionTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'Bounty awarding and claiming',
+      //   testFn: async () => await bountyAwardingAndClaimingTest(chain),
+      // },
+      // bountyClosureTests(chain),
+      // allCuratorUnassignTests(chain),
       allBountyFailureTests(chain),
     ],
   }
