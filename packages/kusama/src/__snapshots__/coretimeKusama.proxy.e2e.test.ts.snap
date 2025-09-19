@@ -224,7 +224,7 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
     "data": {
       "disambiguationIndex": 0,
       "proxyType": "Any",
-      "pure": "HYSTBdBr3xFcyGw7WKV1XjfLDV7KZAGoFw3c5NRvLP47EUs",
+      "pure": "DQjLipt49tAp3QYzuastmiDypMUhDmCEjDjiHAz2GLn3RFK",
       "spawner": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureKilled",
