@@ -260,8 +260,8 @@ async function stakingLifecycleTest<
 
   await client.dev.setStorage({
     System: {
-      // Min val bond + 100 EDs for fees (to be safe)
-      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 100n } }]),
+      // Min val bond + 1000 EDs for fees (to be safe)
+      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 1000n } }]),
     },
   })
 
@@ -496,6 +496,7 @@ async function forceUnstakeTest<
   if (minValidatorBond === 0n) {
     minValidatorBond = ed * 10n ** 5n
   }
+  const minValidatorCommission = (await client.api.query.staking.minCommission()).toBigInt()
 
   await client.dev.setStorage({
     System: {
@@ -519,7 +520,7 @@ async function forceUnstakeTest<
 
   /// Express intent to validate as Alice, and nominate as Bob
 
-  const validateTx = client.api.tx.staking.validate({ commission: 10e6, blocked: false })
+  const validateTx = client.api.tx.staking.validate({ commission: minValidatorCommission, blocked: false })
   await sendTransaction(validateTx.signAsync(alice))
 
   await client.dev.newBlock()
