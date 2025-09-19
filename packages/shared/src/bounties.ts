@@ -2294,6 +2294,86 @@ async function unexpectedStatusProposeCuratorTest<
 }
 
 /**
+ * Test that a non-curator trying to accept curator role fails with `RequireCurator`.
+ *
+ * 1. Alice proposes a bounty and treasurer proposes Bob as curator
+ * 2. Charlie attempts to accept the curator role (should be Bob)
+ * 3. Verify that the transaction fails with the appropriate error
+ */
+async function requireCuratorAcceptTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // move client head to the last spend period block
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping curator assignment test')
+    return
+  }
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for curator requirement'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // Propose Bob as curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, 1000n).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // Charlie tries to accept curator role (should be Bob)
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+
+  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Check for ExtrinsicFailed event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.RequireCurator.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2337,10 +2417,15 @@ export function allBountyFailureTests<
       //   label: 'Invalid bounty index approval',
       //   testFn: async () => await invalidIndexApprovalTest(chain),
       // },
+      // {
+      //   kind: 'test',
+      //   label: 'Unexpected status when proposing curator before bounty is funded',
+      //   testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
+      // },
       {
         kind: 'test',
-        label: 'Unexpected status when proposing curator before bounty is funded',
-        testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
+        label: 'Non-curator trying to accept curator role',
+        testFn: async () => await requireCuratorAcceptTest(chain),
       },
     ],
   } as RootTestTree
