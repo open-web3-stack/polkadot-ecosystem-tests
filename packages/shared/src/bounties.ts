@@ -76,7 +76,8 @@ async function getBountyIndexFromEvent(client: any): Promise<number> {
     ({ event }: any) => event.section === 'bounties' && event.method === 'BountyProposed',
   )
   expect(bountyProposedEvent).toBeDefined()
-  return (bountyProposedEvent.event.data as any).index.toNumber()
+  assert(client.api.events.bounties.BountyProposed.is(bountyProposedEvent.event))
+  return bountyProposedEvent.event.data.index.toNumber()
 }
 
 /// -------
