@@ -3,7 +3,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 
-import { expect } from 'vitest'
+import { assert, expect } from 'vitest'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
@@ -1840,6 +1840,104 @@ export function allCuratorUnassignTests<
 }
 
 /**
+ * Test: Bounty closure in Approved state (should fail)
+ *
+ * Verifies:
+ * - Bounty closure fails with UnexpectedStatus when in Approved state (GeneralAdmin cannot close approved bounties)
+ * - Bounty remains in storage
+ */
+export async function bountyClosureApprovedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const description = 'Test bounty for closure in approved state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve the bounty
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in Approved state
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
+  // Try to close the bounty - should fail
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('scheduler events when closing bounty with approved state fails')
+
+  // check he result of dispatched event
+  const events = await client.api.query.system.events()
+
+  // Find the Dispatched event from scheduler
+  const dispatchedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(dispatchedEvent)
+  assert(client.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+
+  const dispatchedData = dispatchedEvent.event.data
+  expect(dispatchedData.result.isErr).toBe(true)
+
+  // Decode the module error to get human-readable details
+  const dispatchError = dispatchedData.result.asErr
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.UnexpectedStatus.is(dispatchError.asModule)).toBeTruthy()
+
+  // Verify bounty is still in storage and still Approved
+  const bountyAfterFailedClosure = await getBounty(client, bountyIndex)
+  expect(bountyAfterFailedClosure).toBeDefined()
+  expect(bountyAfterFailedClosure.status.isApproved).toBe(true)
+
+  await client.teardown()
+}
+
+/**
+ * All the failure cases for bounty
+ *
+ * @param chain
+ * @returns RootTestTree
+ */
+export function allBountyFailureTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'All bounty failure tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'Bounty closure in approved state',
+        testFn: async () => await bountyClosureApprovedTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
  * Base set of bounty end-to-end tests.
  *
  * Includes both success and failure cases.
@@ -1897,6 +1995,7 @@ export function baseBountiesE2ETests<
       },
       bountyClosureTests(chain),
       allCuratorUnassignTests(chain),
+      allBountyFailureTests(chain),
     ],
   }
 }
