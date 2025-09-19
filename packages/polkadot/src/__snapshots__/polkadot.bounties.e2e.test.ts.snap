@@ -1,0 +1,771 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > Bounty bond is deposited to the treasury 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator slash event 1`] = `
+[
+  {
+    "data": {
+      "amount": 500000000000,
+      "who": "(redacted)",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by Treasurer > curator unassigned active by treasurer events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in Active state by curator themselves > curator unassigned active by curator events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in ApprovedWithCurator state > curator unassigned approved with curator events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in CuratorProposed state > curator unassigned curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > Bounty bond is deposited to the treasury 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Deposit",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty awarded events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "index": "(redacted)",
+    },
+    "method": "BountyAwarded",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator slash event 1`] = `
+[
+  {
+    "data": {
+      "amount": 500000000000,
+      "who": "(redacted)",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All curator unassign tests > Unassign curator in PendingPayout state > curator unassigned pending payout events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+    },
+    "method": "CuratorUnassigned",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > Bounty value is transferred to the treasury 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000000,
+      "from": "(redacted)",
+      "to": "(redacted)",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > bounty canceled event 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCanceled",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in active state > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty canceled events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyCanceled",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in funded state > bounty value transfered to treasury 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000000,
+      "from": "(redacted)",
+      "to": "(redacted)",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in proposed state > bounty rejected events 1`] = `
+[
+  {
+    "data": {
+      "bond": "(rounded 14000000000)",
+      "index": "(redacted)",
+    },
+    "method": "BountyRejected",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty Closure Tests > Bounty closure in proposed state > proposer bond slashed event 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 14000000000)",
+      "who": "(redacted)",
+    },
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty approval flow > bounty approval events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty approval flow with curator > bounty approval with curator events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty approval flow with curator > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > bounty awarded events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "index": "(redacted)",
+    },
+    "method": "BountyAwarded",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > bounty claimed events 1`] = `
+[
+  {
+    "data": {
+      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "index": "(redacted)",
+      "payout": 9000000000000,
+    },
+    "method": "BountyClaimed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty awarding and claiming > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty extension > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty extension > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty extension > bounty extended events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyExtended",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty extension > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty extension > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty extension > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty funding for Approved Bounties > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty funding for Approved Bounties > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty funding for Approved Bounties > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Bounty funding for ApprovedWithCurator Bounties > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Bounty funding for ApprovedWithCurator Bounties > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Creating a bounty > bounty proposal events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Curator assignment and acceptance > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Curator assignment and acceptance > bounty became active events 1`] = `[]`;
+
+exports[`Polkadot Bounties > Curator assignment and acceptance > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Curator assignment and acceptance > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > Curator assignment and acceptance > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
