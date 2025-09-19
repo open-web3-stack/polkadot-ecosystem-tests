@@ -79,14 +79,6 @@ async function getBountyIndexFromEvent(client: any): Promise<number> {
   return (bountyProposedEvent.event.data as any).index.toNumber()
 }
 
-/**
- * Get bounties events from the system events
- */
-async function getBountyEvents(client: any): Promise<any[]> {
-  const events = await client.api.query.system.events()
-  return events.filter((record) => record.event.section === 'bounties')
-}
-
 /// -------
 /// Tests
 /// -------
