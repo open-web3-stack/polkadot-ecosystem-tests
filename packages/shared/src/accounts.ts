@@ -191,8 +191,6 @@ async function transferAllowDeathTest<
   // producers each test run, causing the snapshot to fail.
   await checkEvents(
     transferEvents,
-    // Event of transfer from Alice to Bob
-    { section: 'balances', method: 'Transfer' },
     // Bob's account was fundless, and its endowment emits an event
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
@@ -339,8 +337,6 @@ async function transferAllowDeathNoKillTest<
   // Snapshot some events
   await checkEvents(
     transferEvents,
-    // Event of transfer from Alice to Bob
-    { section: 'balances', method: 'Transfer' },
     // Bob's account was fundless, and its endowment emits an event
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'NewAccount' },
@@ -527,7 +523,7 @@ async function forceTransferKillTest<
   // Snapshot events
   await checkSystemEvents(
     baseClient,
-    { section: 'balances', method: 'Transfer' },
+    // Do not snapshot `Transfer` event, as it is unstable, and the event checker does not allow filtering.
     { section: 'balances', method: 'DustLost' },
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
