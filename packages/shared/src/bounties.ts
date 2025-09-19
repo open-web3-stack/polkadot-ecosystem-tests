@@ -127,7 +127,7 @@ export async function bountyCreationTest<
   // Get bounty index and verify bounty data
   const bountyIndex = await getBountyIndexFromEvent(client)
   const bounty = await getBounty(client, bountyIndex)
-  expect(bounty).toBeDefined()
+  expect(bounty).toBeTruthy()
   expect(bounty.value.toBigInt()).toBe(bountyValue)
   expect(bounty.status.isProposed).toBe(true)
 
@@ -150,7 +150,7 @@ export async function bountyCreationTest<
  */
 export async function bountyApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TInitStorages extends Record<string, Record<string, 2>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
@@ -1889,7 +1889,7 @@ export function bountyFundingTests<
   } as RootTestTree
 }
 
-/**
+/**≠
  *
  * All success cases for bounty
  *
@@ -2001,7 +2001,7 @@ export async function bountyClosureApprovedTest<
 
   // Verify bounty is still in storage and still Approved
   const bountyAfterFailedClosure = await getBounty(client, bountyIndex)
-  expect(bountyAfterFailedClosure).toBeDefined()
+  expect(bountyAfterFailedClosure).toBeTruthy()
   expect(bountyAfterFailedClosure.status.isApproved).toBe(true)
 
   await client.teardown()
@@ -2109,7 +2109,7 @@ export async function bountyClosurePendingPayoutTest<
 
   // Verify bounty is still in storage and still PendingPayout
   const bountyAfterFailedClosure = await getBounty(client, bountyIndex)
-  expect(bountyAfterFailedClosure).toBeDefined()
+  expect(bountyAfterFailedClosure).toBeTruthy()
   expect(bountyAfterFailedClosure.status.isPendingPayout).toBe(true)
 
   await client.teardown()
@@ -2203,7 +2203,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 
   // Verify bounty is still in storage and still Active
   const bountyAfterFailedUnassign = await getBounty(client, bountyIndex)
-  expect(bountyAfterFailedUnassign).toBeDefined()
+  expect(bountyAfterFailedUnassign).toBeTruthy()
   expect(bountyAfterFailedUnassign.status.isActive).toBe(true)
 
   await client.teardown()
