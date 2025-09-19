@@ -1907,6 +1907,114 @@ export async function bountyClosureApprovedTest<
 }
 
 /**
+ * Test: Bounty closure in PendingPayout state (should fail)
+ *
+ * Verifies:
+ * - Bounty closure fails with PendingPayout error when in PendingPayout state (GeneralAdmin must unassign curator first)
+ * - Bounty remains in storage
+ */
+export async function bountyClosurePendingPayoutTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (lastSpendPeriodBlock.isNone) {
+    console.warn('Last spend period block is none, skipping bounty closure pending payout test')
+    return
+  }
+
+  // Move to spend period
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * 1000n
+  const curatorFee = existentialDeposit.toBigInt() * 100n
+  const description = 'Test bounty for closure in pending payout state'
+
+  // Propose a bounty
+  await sendTransaction(client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // Approve the bounty
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await client.dev.newBlock()
+  // Bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // Propose a curator
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    { Origins: 'Treasurer' },
+  )
+
+  await client.dev.newBlock()
+
+  // Accept curator role
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Award the bounty
+  await sendTransaction(
+    client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.alice.address).signAsync(devAccounts.bob),
+  )
+
+  await client.dev.newBlock()
+
+  // Verify bounty is in PendingPayout state
+  const pendingPayoutBounty = await getBounty(client, bountyIndex)
+  expect(pendingPayoutBounty.status.isPendingPayout).toBe(true)
+
+  // Try to close the bounty - should fail
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.closeBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('scheduler events when closing bounty with pending payout fails')
+
+  const events = await client.api.query.system.events()
+
+  const dispatchedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(dispatchedEvent)
+  assert(client.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+
+  const dispatchedData = dispatchedEvent.event.data
+  expect(dispatchedData.result.isErr).toBe(true)
+
+  const dispatchError = dispatchedData.result.asErr
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.PendingPayout.is(dispatchError.asModule)).toBeTruthy()
+
+  // Verify bounty is still in storage and still PendingPayout
+  const bountyAfterFailedClosure = await getBounty(client, bountyIndex)
+  expect(bountyAfterFailedClosure).toBeDefined()
+  expect(bountyAfterFailedClosure.status.isPendingPayout).toBe(true)
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -1924,6 +2032,11 @@ export function allBountyFailureTests<
         kind: 'test',
         label: 'Bounty closure in approved state',
         testFn: async () => await bountyClosureApprovedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in pending payout state',
+        testFn: async () => await bountyClosurePendingPayoutTest(chain),
       },
     ],
   } as RootTestTree
