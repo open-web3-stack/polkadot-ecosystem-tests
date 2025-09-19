@@ -2388,41 +2388,41 @@ export function allBountyFailureTests<
     kind: 'describe',
     label: 'All bounty failure tests',
     children: [
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty closure in approved state',
-      //   testFn: async () => await bountyClosureApprovedTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty closure in pending payout state',
-      //   testFn: async () => await bountyClosurePendingPayoutTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Unassign curator in active state by public premature',
-      //   testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Reason too big',
-      //   testFn: async () => await reasonTooBigTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Invalid value',
-      //   testFn: async () => await invalidValueTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Invalid bounty index approval',
-      //   testFn: async () => await invalidIndexApprovalTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Unexpected status when proposing curator before bounty is funded',
-      //   testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'Bounty closure in approved state',
+        testFn: async () => await bountyClosureApprovedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty closure in pending payout state',
+        testFn: async () => await bountyClosurePendingPayoutTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unassign curator in active state by public premature',
+        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Reason too big',
+        testFn: async () => await reasonTooBigTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Invalid value',
+        testFn: async () => await invalidValueTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Invalid bounty index approval',
+        testFn: async () => await invalidIndexApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Unexpected status when proposing curator before bounty is funded',
+        testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
+      },
       {
         kind: 'test',
         label: 'Non-curator trying to accept curator role',
@@ -2448,48 +2448,48 @@ export function baseBountiesE2ETests<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // {
-      //   kind: 'test',
-      //   label: 'Creating a bounty',
-      //   testFn: async () => await bountyCreationTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty approval flow',
-      //   testFn: async () => await bountyApprovalTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty approval flow with curator',
-      //   testFn: async () => await bountyApprovalWithCuratorTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty funding for Approved Bounties',
-      //   testFn: async () => await bountyFundingTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty funding for ApprovedWithCurator Bounties',
-      //   testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Curator assignment and acceptance',
-      //   testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty extension',
-      //   testFn: async () => await bountyExtensionTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'Bounty awarding and claiming',
-      //   testFn: async () => await bountyAwardingAndClaimingTest(chain),
-      // },
-      // bountyClosureTests(chain),
-      // allCuratorUnassignTests(chain),
+      {
+        kind: 'test',
+        label: 'Creating a bounty',
+        testFn: async () => await bountyCreationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty approval flow',
+        testFn: async () => await bountyApprovalTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty approval flow with curator',
+        testFn: async () => await bountyApprovalWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for Approved Bounties',
+        testFn: async () => await bountyFundingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty funding for ApprovedWithCurator Bounties',
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Curator assignment and acceptance',
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty extension',
+        testFn: async () => await bountyExtensionTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty awarding and claiming',
+        testFn: async () => await bountyAwardingAndClaimingTest(chain),
+      },
+      bountyClosureTests(chain),
+      allCuratorUnassignTests(chain),
       allBountyFailureTests(chain),
     ],
   }
