@@ -1373,21 +1373,6 @@ function createLockActions<
               ],
             ],
           },
-          Balances: {
-            locks: [
-              [
-                [alice.address],
-                [
-                  {
-                    // This field is a `Vec<u8>` with 8 bytes, so needs padding.
-                    id: 'assembly',
-                    amount: amount,
-                    reasons: 'Misc',
-                  },
-                ],
-              ],
-            ],
-          },
         })
       },
       isAvailable: () => true, // Always available
