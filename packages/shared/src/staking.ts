@@ -2163,6 +2163,9 @@ export function baseStakingE2ETests<
   }
 }
 
+/**
+ * Tests to fast unstake pallet.
+ */
 export function fastUnstakeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -2180,7 +2183,10 @@ export function fastUnstakeTests<
   }
 }
 
-export function stakingTests<
+/**
+ * Staking E2E test tree - contains base tests to pallet functionality, as well as slashing tests.
+ */
+export function fullStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
@@ -2194,7 +2200,13 @@ export function stakingTests<
   }
 }
 
-export function fullStakingTests<
+/**
+ * Complete staking E2E test tree; contains
+ * 1. base tests
+ * 2. slashing tests
+ * 3. fast unstake tests
+ */
+export function completeStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
