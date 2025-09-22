@@ -1417,6 +1417,11 @@ export async function schedulePriorityWeightedTasks<
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
   if (chain.name.toLowerCase().includes('kusama')) {
+    // Kusama is using a new version of the scheduler pallet prepared for general applicability, including in
+    // post-AHM asset hubs.
+    // It always sets `incompleteSince` to `n + 1`, where `n` is the block in which the agenda was last
+    // serviced.
+    // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
     expect(finalIncompleteSince.isSome).toBeTruthy()
     match(testConfig.blockProvider)
       .with('Local', async () => {
