@@ -1,5 +1,5 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
-import { baseStakingE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
+import { fullStakingE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
 const pAssetHubTestConfig: TestConfig = {
   testSuiteName: 'Kusama Asset Hub Staking',
@@ -8,4 +8,4 @@ const pAssetHubTestConfig: TestConfig = {
   asyncBacking: 'Enabled',
 }
 
-registerTestTree(baseStakingE2ETests(assetHubKusama, pAssetHubTestConfig))
+registerTestTree(fullStakingE2ETests(assetHubKusama, pAssetHubTestConfig))
