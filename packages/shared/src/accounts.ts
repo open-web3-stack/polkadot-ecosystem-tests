@@ -1262,6 +1262,7 @@ function createReserveActions<
     {
       name: 'nomination pool',
       execute: async (client, alice, amount) => {
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
         const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
         // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
         // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
@@ -1273,7 +1274,7 @@ function createReserveActions<
           alice.address,
           alice.address,
         )
-        await sendTransaction(createPoolTx.signAsync(alice))
+        await sendTransaction(createPoolTx.signAsync(alice, { nonce: aliceNonce }))
         return virtualAmount
       },
       isAvailable: (client) => !!client.api.tx.nominationPools,
@@ -1287,6 +1288,7 @@ function createReserveActions<
         const currentAccount = await client.api.query.system.account(alice.address)
         const currentFree = currentAccount.data.free.toBigInt()
         const currentFrozen = currentAccount.data.frozen.toBigInt()
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
         // Manually set reserved amount and reduce free balance
         await client.dev.setStorage({
@@ -1295,11 +1297,15 @@ function createReserveActions<
               [
                 [alice.address],
                 {
+                  nonce: aliceNonce,
+                  consumers: 1 + currentAccount.consumers.toNumber(),
+                  sufficients: currentAccount.sufficients.toNumber(),
                   providers: currentAccount.providers.toNumber(),
                   data: {
                     free: currentFree - amount,
                     reserved: amount,
                     frozen: currentFrozen,
+                    flags: currentAccount.data.flags,
                   },
                 },
               ],
@@ -1354,6 +1360,7 @@ function createLockActions<
         const currentAccount = await client.api.query.system.account(alice.address)
         const currentFree = currentAccount.data.free.toBigInt()
         const currentReserved = currentAccount.data.reserved.toBigInt()
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
         // Manually set frozen amount - frozen applies to total balance (free + reserved)
         // Don't modify free balance as frozen constraint works on the total
@@ -1363,11 +1370,15 @@ function createLockActions<
               [
                 [alice.address],
                 {
+                  nonce: aliceNonce,
+                  consumers: 1 + currentAccount.consumers.toNumber(),
                   providers: currentAccount.providers.toNumber(),
+                  sufficients: currentAccount.sufficients.toNumber(),
                   data: {
                     free: currentFree,
                     reserved: currentReserved,
                     frozen: amount,
+                    flags: currentAccount.data.flags,
                   },
                 },
               ],
