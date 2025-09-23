@@ -1,5 +1,5 @@
-import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
   astar: {
@@ -46,7 +46,7 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
 export const astar = defineChain({
   name: 'astar',
   paraId: 2006,
-  endpoint: 'wss://astar-rpc.dwellir.com',
+  endpoint: 'wss://astar-rpc.n.dwellir.com',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
 })
@@ -54,7 +54,7 @@ export const astar = defineChain({
 export const shiden = defineChain({
   name: 'shiden',
   paraId: 2007,
-  endpoint: 'wss://shiden-rpc.dwellir.com',
+  endpoint: 'wss://shiden-rpc.n.dwellir.com',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
 })

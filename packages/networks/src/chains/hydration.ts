@@ -1,5 +1,5 @@
-import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
   hydration: {
@@ -37,7 +37,7 @@ export const hydration = defineChain({
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: 'wss://basilisk-rpc.dwellir.com',
+  endpoint: 'wss://basilisk-rpc.n.dwellir.com',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
 })

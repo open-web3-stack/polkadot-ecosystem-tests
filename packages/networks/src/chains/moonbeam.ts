@@ -1,5 +1,5 @@
-import { defaultAccounts } from '../defaultAccounts.js'
 import { defineChain } from '../defineChain.js'
+import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
   moonbeam: {
@@ -46,7 +46,7 @@ const getInitStorages = () => ({
 export const moonbeam = defineChain({
   name: 'moonbeam',
   paraId: 2004,
-  endpoint: 'wss://moonbeam-rpc.dwellir.com',
+  endpoint: 'wss://moonbeam-rpc.n.dwellir.com',
   custom: custom.moonbeam,
   initStorages: getInitStorages(),
 })
@@ -54,7 +54,7 @@ export const moonbeam = defineChain({
 export const moonriver = defineChain({
   name: 'moonriver',
   paraId: 2023,
-  endpoint: 'wss://moonriver-rpc.dwellir.com',
+  endpoint: 'wss://moonriver-rpc.n.dwellir.com',
   custom: custom.moonriver,
   initStorages: getInitStorages(),
 })

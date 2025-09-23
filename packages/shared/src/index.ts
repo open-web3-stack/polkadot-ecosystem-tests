@@ -1,6 +1,7 @@
 export * from './bounties.js'
 export * from './collectives.js'
 export * from './governance.js'
+export * from './helpers/index.js'
 export * from './helpers/proxyTypes.js'
 export * from './multisig.js'
 export * from './nomination-pools.js'

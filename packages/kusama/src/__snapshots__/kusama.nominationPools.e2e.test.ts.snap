@@ -38,7 +38,7 @@ exports[`Kusama Nomination Pools > nomination pool double join test: an account 
     "data": {
       "bonded": "(rounded 1700000000)",
       "joined": true,
-      "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -129,16 +129,16 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > bond extra f
 [
   {
     "data": {
-      "amount": "(rounded 1700000000)",
+      "amount": "(rounded 1000000000000)",
     },
     "method": "Bonded",
     "section": "staking",
   },
   {
     "data": {
-      "bonded": "(rounded 1700000000)",
+      "bonded": "(rounded 1000000000000)",
       "joined": false,
-      "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -155,7 +155,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events
   },
   {
     "data": {
-      "caller": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      "caller": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
     },
     "method": "PoolNominatorChilled",
     "section": "nominationPools",
@@ -167,7 +167,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > chill events
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -192,7 +192,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > claim commis
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -208,7 +208,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > commission a
     "data": {
       "current": [
         "0.10%",
-        "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+        "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
       ],
     },
     "method": "PoolCommissionUpdated",
@@ -252,7 +252,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomin
   },
   {
     "data": {
-      "depositor": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "depositor": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -261,7 +261,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > create nomin
     "data": {
       "bonded": 1000000000000,
       "joined": true,
-      "member": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "member": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -273,16 +273,16 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > join nominat
 [
   {
     "data": {
-      "amount": "(rounded 1700000000)",
+      "amount": 1000000000000,
     },
     "method": "Bonded",
     "section": "staking",
   },
   {
     "data": {
-      "bonded": "(rounded 1700000000)",
+      "bonded": 1000000000000,
       "joined": true,
-      "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -294,7 +294,7 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > nomination p
 [
   {
     "data": {
-      "caller": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      "caller": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
     },
     "method": "PoolNominationMade",
     "section": "nominationPools",
@@ -369,16 +369,16 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond (kick
 [
   {
     "data": {
-      "amount": "(rounded 1700000000)",
+      "amount": 1000000000000,
     },
     "method": "Unbonded",
     "section": "staking",
   },
   {
     "data": {
-      "balance": "(rounded 1700000000)",
-      "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "points": "(rounded 1700000000)",
+      "balance": 1000000000000,
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "points": 1000000000000,
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -390,16 +390,16 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > unbond event
 [
   {
     "data": {
-      "amount": "(rounded 1700000000)",
+      "amount": "(rounded 1000000000000)",
     },
     "method": "Unbonded",
     "section": "staking",
   },
   {
     "data": {
-      "balance": "(rounded 1700000000)",
-      "member": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "points": "(rounded 1700000000)",
+      "balance": "(rounded 1000000000000)",
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "points": "(rounded 1000000000000)",
     },
     "method": "Unbonded",
     "section": "nominationPools",
@@ -411,9 +411,9 @@ exports[`Kusama Nomination Pools > nomination pool lifecycle test > update roles
 [
   {
     "data": {
-      "bouncer": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
-      "nominator": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-      "root": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "bouncer": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "nominator": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+      "root": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "RolesUpdated",
     "section": "nominationPools",
@@ -432,7 +432,7 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
   },
   {
     "data": {
-      "depositor": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "depositor": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Created",
     "section": "nominationPools",
@@ -441,7 +441,7 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > create nomina
     "data": {
       "bonded": 1000000000000,
       "joined": true,
-      "member": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "member": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "Bonded",
     "section": "nominationPools",
@@ -453,7 +453,7 @@ exports[`Kusama Nomination Pools > nomination pool metadata test > set metadata 
 [
   {
     "data": {
-      "caller": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "caller": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "MetadataUpdated",
     "section": "nominationPools",
@@ -466,9 +466,9 @@ exports[`Kusama Nomination Pools > nomination pools update roles test > update p
   {
     "event": {
       "data": [
-        "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
-        "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-        "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+        "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
+        "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+        "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
       ],
       "index": "0x2908",
     },
@@ -484,9 +484,9 @@ exports[`Kusama Nomination Pools > nomination pools update roles test > update r
 [
   {
     "data": {
-      "bouncer": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "nominator": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
-      "root": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "bouncer": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "nominator": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
+      "root": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "RolesUpdated",
     "section": "nominationPools",
@@ -523,8 +523,8 @@ exports[`Kusama Nomination Pools > nomination pools update roles test > update r
 [
   {
     "data": {
-      "bouncer": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
-      "nominator": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+      "bouncer": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "nominator": "H7L1Xh1XZxbKktdoEG5rkWdUdydq9e3NpsjmcSHpUHM8Z6h",
       "root": null,
     },
     "method": "RolesUpdated",

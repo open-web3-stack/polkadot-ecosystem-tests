@@ -1,4 +1,10 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { baseNominationPoolsE2ETests, registerTestTree } from '@e2e-test/shared'
+import { baseNominationPoolsE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
-registerTestTree(baseNominationPoolsE2ETests(kusama, { testSuiteName: 'Kusama Nomination Pools', addressEncoding: 2 }))
+const testConfig: TestConfig = {
+  testSuiteName: 'Kusama Nomination Pools',
+  addressEncoding: 2,
+  blockProvider: 'Local',
+}
+
+registerTestTree(baseNominationPoolsE2ETests(kusama, testConfig))

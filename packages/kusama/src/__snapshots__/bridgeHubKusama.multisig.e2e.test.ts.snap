@@ -65,7 +65,7 @@ exports[`BridgeHubKusama Multisig > failure tests > cancellation with sender in 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`BridgeHubKusama Multisig > failure tests > cancelling a non-existent mu
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`BridgeHubKusama Multisig > failure tests > cancelling a non-existent mu
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -204,7 +204,7 @@ exports[`BridgeHubKusama Multisig > failure tests > multisig cancellation with r
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -229,7 +229,7 @@ exports[`BridgeHubKusama Multisig > failure tests > multisig cancellation with t
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -318,7 +318,7 @@ exports[`BridgeHubKusama Multisig > failure tests > non-depositor tries to cance
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

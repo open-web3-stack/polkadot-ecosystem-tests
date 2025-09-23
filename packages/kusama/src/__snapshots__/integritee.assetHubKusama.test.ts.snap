@@ -32,7 +32,7 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -112,8 +112,8 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": 5000000,
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
@@ -130,7 +130,7 @@ exports[`integriteeKusama & assetHubKusama > assetHubKusama transfer KSM to inte
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 600000000)",
           },
         },
       },
@@ -269,7 +269,7 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 760000000)",
+    "free": "(rounded 635000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -346,6 +346,9 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -364,8 +367,8 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 300000000)",
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 1000000000)",
       },
     },
     "method": "Processed",
@@ -381,8 +384,8 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
       "outcome": {
         "Complete": {
           "used": {
-            "proofSize": "(rounded 2000)",
-            "refTime": 2000000,
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -392,7 +395,17 @@ exports[`integriteeKusama & assetHubKusama > integriteeKusama transfer KSM to as
   },
   {
     "data": {
-      "fees": [],
+      "fees": [
+        {
+          "fun": {
+            "Fungible": "(rounded 190000000)",
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      ],
       "paying": {
         "interior": {
           "X1": [

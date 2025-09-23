@@ -134,7 +134,7 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 500000000)",
           },
         },
       },
@@ -277,7 +277,7 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 99900000000)",
+    "free": "(rounded 99800000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -352,6 +352,9 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -370,8 +373,8 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
