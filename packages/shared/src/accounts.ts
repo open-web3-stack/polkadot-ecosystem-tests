@@ -1562,6 +1562,10 @@ async function forceTransferBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin) // BadOrigin is a top-level DispatchError, not a module error
 }
 
+// ---------------------
+// `transfer_keep_alive`
+// ---------------------
+
 // --------------
 // `transfer_all`
 // --------------
@@ -1694,6 +1698,104 @@ async function transferAllWithReserveTest<
       cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
   )
 }
+
+// -----------------
+// `force_unreserve`
+// -----------------
+
+/**
+ * Test `force_unreserve` with a bad origin (non-root).
+ */
+async function forceUnreserveBadOriginTest(chain: Chain) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh account
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const alice = testAccounts.alice
+  const unreserveAmount = existentialDeposit
+
+  const forceUnreserveTx = client.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
+  await sendTransaction(forceUnreserveTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const systemEvents = await client.api.query.system.events()
+  const failedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+// -------------------
+// `force_set_balance`
+// -------------------
+
+/**
+ * Test `force_set_balance` with a bad origin (non-root).
+ */
+async function forceSetBalanceBadOriginTest(chain: Chain) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh account
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const alice = testAccounts.alice
+  const newFree = existentialDeposit * 10n
+
+  const forceSetBalanceTx = client.api.tx.balances.forceSetBalance(alice.address, newFree)
+  await sendTransaction(forceSetBalanceTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const systemEvents = await client.api.query.system.events()
+  const failedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+// -----------------------------
+// `force_adjust_total_issuance`
+// -----------------------------
+
+/**
+ * Test `force_adjust_total_issuance` with a bad origin (non-root).
+ */
+async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
+  const [client] = await setupNetworks(chain)
+
+  // Create fresh account
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const alice = testAccounts.alice
+  const direction = 'Increase'
+  const delta = existentialDeposit
+
+  const forceAdjustTotalIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance(direction, delta)
+  await sendTransaction(forceAdjustTotalIssuanceTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const systemEvents = await client.api.query.system.events()
+  const failedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+  assert(dispatchError.isBadOrigin)
+}
+
+// ------
+// `burn`
+// ------
 
 // ---------------------------------------
 // Various currency/fungible-related tests
@@ -1917,22 +2019,6 @@ export const transferFunctionsTests = <
       .otherwise(() => fullTransferAllowDeathTests(chain, testConfig)),
     {
       kind: 'describe',
-      label: '`transfer_keep_alive`',
-      children: [],
-    },
-    {
-      kind: 'describe',
-      label: '`transfer_all`',
-      children: [
-        {
-          kind: 'test',
-          label: 'account with reserves cannot transfer all funds',
-          testFn: () => transferAllWithReserveTest(chain, testConfig),
-        },
-      ],
-    },
-    {
-      kind: 'describe',
       label: '`force_transfer`',
       children: [
         {
@@ -1959,6 +2045,55 @@ export const transferFunctionsTests = <
           kind: 'test',
           label: 'non-root origins cannot force transfer',
           testFn: () => forceTransferBadOriginTest(chain),
+        },
+      ],
+    },
+    {
+      kind: 'describe',
+      label: '`transfer_keep_alive`',
+      children: [],
+    },
+    {
+      kind: 'describe',
+      label: '`transfer_all`',
+      children: [
+        {
+          kind: 'test',
+          label: 'account with reserves cannot transfer all funds',
+          testFn: () => transferAllWithReserveTest(chain, testConfig),
+        },
+      ],
+    },
+    {
+      kind: 'describe',
+      label: '`force_unreserve`',
+      children: [
+        {
+          kind: 'test',
+          label: 'non-root origins cannot forcefully unreserve',
+          testFn: () => forceUnreserveBadOriginTest(chain),
+        },
+      ],
+    },
+    {
+      kind: 'describe',
+      label: '`force_set_balance`',
+      children: [
+        {
+          kind: 'test',
+          label: 'non-root origins cannot forcefully set balances',
+          testFn: () => forceSetBalanceBadOriginTest(chain),
+        },
+      ],
+    },
+    {
+      kind: 'describe',
+      label: '`force_adjust_total_issuance`',
+      children: [
+        {
+          kind: 'test',
+          label: 'non-root origins cannot forcefully adjust the total issuance',
+          testFn: () => forceAdjustTotalIssuanceBadOriginTest(chain),
         },
       ],
     },
