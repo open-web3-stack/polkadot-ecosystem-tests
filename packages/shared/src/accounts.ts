@@ -1364,6 +1364,177 @@ async function forceTransferInsufficientFundsTest<
 }
 
 /**
+ * Test that `force_transfer` with reserve does not kill the source account.
+ *
+ * 1. Create a fresh account with 100+eps ED of balance
+ * 2. Create a reserve on the account for 20 ED, increasing consumer count
+ * 3. Force transfer Alice's remaining free balance to Bob
+ *     - about 80 ED minus the fees for above reserve
+ * 4. Verify that the transfer didn't occur, and thus the first account was NOT reaped due to the consumer ref
+ * 5. Check that events emitted as a result of this operation contain correct data
+ */
+async function forceTransferWithReserveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
+  // and the base client needs to be recreated simultaneously - otherwise, they would be unable to communicate.
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100n + existentialDeposit
+  const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  // Verify both accounts have expected initial state
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  // Create a reserve action - use the first available one
+  const reserveActions = createReserveActions<TCustom, TInitStoragesBase>()
+  const availableReserveAction = reserveActions.find((action) => action.isAvailable(baseClient))
+
+  if (!availableReserveAction) {
+    console.error('No reserve actions available for this chain')
+    return
+  }
+
+  // 2. Execute reserve action to create a consumer
+
+  const reservedAmount = await availableReserveAction.execute(baseClient, alice, existentialDeposit * 20n)
+  await baseClient.dev.newBlock()
+
+  // Get Alice's account state after reserve
+  const aliceAccountAfterReserve = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountAfterReserve.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 3. Force transfer Alice's remaining free balance to Bob; should be about 80 ED minus the fees for above reserve
+
+  const aliceFreeBefore = aliceAccountAfterReserve.data.free.toBigInt()
+  const transferAmount = aliceAccountAfterReserve.data.free.toBigInt()
+
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
+
+  if (hasScheduler) {
+    // Use root origin to execute force transfer directly
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 4. Check the transfer failed
+
+  // Verify Alice's account was NOT reaped due to consumer count
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  const aliceAccountFinal = await baseClient.api.query.system.account(alice.address)
+  const bobAccount = await baseClient.api.query.system.account(bob.address)
+
+  // Check final balances - Alice's balance should be unchanged (no fees for force transfers)
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(aliceFreeBefore)
+  expect(bobAccount.data.free.toBigInt()).toBe(0n)
+
+  // Alice should still have consumers and reserved balance
+  expect(aliceAccountFinal.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountFinal.providers.toNumber()).toBe(aliceAccountAfterReserve.providers.toNumber())
+  expect(aliceAccountFinal.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 5. Check events
+
+  const events = await baseClient.api.query.system.events()
+
+  // Verify no `KilledAccount` events are present
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  // Check that no transfer event from Alice to Bob occurred
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(baseClient.api.events.balances.Transfer.is(event))
+      if (
+        event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, testConfig.addressEncoding)
+      ) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeUndefined()
+
+  if (hasScheduler) {
+    const dispatchedEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'Dispatched'
+    })
+    expect(dispatchedEvent).toBeDefined()
+    assert(baseClient.api.events.scheduler.Dispatched.is(dispatchedEvent!.event))
+    const dispatchData = dispatchedEvent!.event.data
+    assert(dispatchData.result.isErr)
+    const dispatchError = dispatchData.result.asErr
+
+    assert(dispatchError.isToken)
+    const tokenError = dispatchError.asToken
+    expect(tokenError.isFrozen).toBeTruthy()
+  }
+}
+
+/**
  * Test `force_transfer` with a bad origin (non-root).
  */
 async function forceTransferBadOriginTest(chain: Chain) {
@@ -1524,9 +1695,9 @@ async function transferAllWithReserveTest<
   )
 }
 
-/**
- * Various currency/fungible-related tests
- */
+// ---------------------------------------
+// Various currency/fungible-related tests
+// ---------------------------------------
 
 /**
  * Helper function that tests liquidity restrictions for any deposit-requiring action.
@@ -1778,6 +1949,11 @@ export const transferFunctionsTests = <
           kind: 'test' as const,
           label: 'force transfer with insufficient funds fails',
           testFn: () => forceTransferInsufficientFundsTest(chain, testConfig, relayChain),
+        },
+        {
+          kind: 'test',
+          label: 'account with reserves cannot be force transferred from',
+          testFn: () => forceTransferWithReserveTest(chain, testConfig, relayChain),
         },
         {
           kind: 'test',
