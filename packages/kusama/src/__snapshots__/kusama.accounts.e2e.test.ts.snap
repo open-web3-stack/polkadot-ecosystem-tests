@@ -55,6 +55,33 @@ exports[`Kusama Accounts > \`transfer_all\` > account with reserves cannot trans
 ]
 `;
 
+exports[`Kusama Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
+[
+  {
+    "data": {
+      "account": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "freeBalance": "(rounded 33000000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Accounts > \`transfer_all\` > transfer all with keepAlive false leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
 [
   {

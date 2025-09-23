@@ -449,7 +449,7 @@ async function transferInsufficientFundsTest<
 async function transferAllowDeathTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
@@ -523,7 +523,7 @@ async function transferAllowDeathTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
       assert(client.api.events.balances.Transfer.is(event))
-      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
         return true
       }
     }
@@ -533,8 +533,8 @@ async function transferAllowDeathTest<
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `Withdraw` event
@@ -545,7 +545,7 @@ async function transferAllowDeathTest<
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
 
   // Check `DustLost` event
@@ -556,7 +556,7 @@ async function transferAllowDeathTest<
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   expect(dustLostEventData.amount.toBigInt()).toBeGreaterThan(0n)
   expect(dustLostEventData.amount.toBigInt()).toBeLessThan(eps)
 
@@ -574,7 +574,7 @@ async function transferAllowDeathTest<
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 
   // Check `KilledAccount` event
@@ -585,7 +585,7 @@ async function transferAllowDeathTest<
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
-  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
 
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
@@ -595,7 +595,7 @@ async function transferAllowDeathTest<
   expect(newAccountEvent).toBeDefined()
   assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 }
 
 /**
@@ -609,7 +609,7 @@ async function transferAllowDeathTest<
 async function transferAllowDeathNoKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
@@ -673,7 +673,7 @@ async function transferAllowDeathNoKillTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
       assert(client.api.events.balances.Transfer.is(event))
-      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
         return true
       }
     }
@@ -683,8 +683,8 @@ async function transferAllowDeathNoKillTest<
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
   // Verify withdraw event
@@ -695,7 +695,7 @@ async function transferAllowDeathNoKillTest<
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
 
   // Verify endowment event
@@ -706,7 +706,7 @@ async function transferAllowDeathNoKillTest<
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(transferAmount)
 
   // Verify `NewAccount` event
@@ -728,7 +728,7 @@ async function transferAllowDeathNoKillTest<
 async function transferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
@@ -807,7 +807,7 @@ async function transferAllowDeathInsufficientFundsTest<
 async function transferAllowDeathWithReserveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // 1. Create fresh addresses, one with 10 ED (plus some extra for fees)
@@ -903,8 +903,8 @@ async function transferAllowDeathWithReserveTest<
     if (event.section === 'balances' && event.method === 'Transfer') {
       assert(client.api.events.balances.Transfer.is(event))
       if (
-        event.data.from.toString() === encodeAddress(alice.address, addressEncoding) &&
-        event.data.to.toString() === encodeAddress(bob.address, addressEncoding)
+        event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, testConfig.addressEncoding)
       ) {
         return true
       }
@@ -935,7 +935,7 @@ async function transferAllowDeathWithReserveTest<
 async function transferAllowDeathSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -1609,7 +1609,7 @@ async function forceTransferBadOriginTest(chain: Chain) {
 async function transferAllKeepAliveTrueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // 1. Create and fund accounts
@@ -1677,7 +1677,7 @@ async function transferAllKeepAliveTrueTest<
     const { event } = record
     if (event.section === 'balances' && event.method === 'Transfer') {
       assert(client.api.events.balances.Transfer.is(event))
-      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
         return true
       }
     }
@@ -1686,8 +1686,103 @@ async function transferAllKeepAliveTrueTest<
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(expectedBobBalance)
+}
+
+/**
+ * Test that `transfer_all` with `keepAlive = false` kills the sender account.
+ *
+ * 1. Create an account, Alice, with 100 ED
+ * 2. Transfer all funds to another account, Bob, with `keepAlive = false`
+ * 3. Verify that transfer succeeds and Alice is killed
+ *     - Alice account is reaped (KilledAccount event)
+ *     - Bob gets all 100 ED minus transaction fees
+ * 4. Verify that events emitted as a result of this operation contain correct data
+ */
+async function transferAllKeepAliveFalseTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create and fund accounts
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // 2. Transfer all funds to Bob with `keepAlive = false`
+
+  const transferAllTx = client.api.tx.balances.transferAll(bob.address, false)
+  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Snapshot events
+  await checkEvents(
+    transferEvents,
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'KilledAccount' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = false`')
+
+  // 3. Verify that transfer succeeds, and Alice is killed
+
+  // Verify Alice is reaped, Bob is alive
+  expect(await isAccountReaped(client, alice.address)).toBe(true)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
+
+  const bobAccount = await client.api.query.system.account(bob.address)
+
+  // Get the transaction fee
+  const events = await client.api.query.system.events()
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // Bob should get all 100 ED minus the transaction fee
+  const expectedBobBalance = aliceBalance - txPaymentEventData.actualFee.toBigInt()
+  expect(bobAccount.data.free.toBigInt()).toBe(expectedBobBalance)
+
+  // 4. Check events
+
+  // Check `KilledAccount` event
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeDefined()
+  assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+  const killedAccountEventData = killedAccountEvent!.event.data
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+
+  // Check transfer event
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(expectedBobBalance)
 }
 
@@ -1835,7 +1930,7 @@ async function transferAllWithReserveTest<
 async function transferKeepAliveInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amount: bigint) =>
     client.api.tx.balances.transferKeepAlive(bob, amount)
   await transferInsufficientFundsTest(chain, lambda)
@@ -2079,19 +2174,16 @@ async function testLiquidityRestrictionForAction<
 /**
  * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
  */
-const commonTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-) => [
+const commonTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig) => [
   {
     kind: 'test' as const,
     label: 'transfer of some funds does not kill sender account',
-    testFn: () => transferAllowDeathNoKillTest(chain, testConfig.addressEncoding),
+    testFn: () => transferAllowDeathNoKillTest(chain, testConfig),
   },
   {
     kind: 'test' as const,
     label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain, testConfig.addressEncoding),
+    testFn: () => transferBelowExistentialDepositTest(chain),
   },
   {
     kind: 'test' as const,
@@ -2101,7 +2193,7 @@ const commonTransferAllowDeathTests = (
   {
     kind: 'test' as const,
     label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain, testConfig.addressEncoding),
+    testFn: () => transferAllowDeathSelfTest(chain),
   },
 ]
 
@@ -2109,10 +2201,7 @@ const commonTransferAllowDeathTests = (
  * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
  * fee.
  */
-const fullTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-): RootTestTree => ({
+const fullTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
   children: [
@@ -2121,12 +2210,12 @@ const fullTransferAllowDeathTests = (
     {
       kind: 'test',
       label: 'leaving an account below ED kills it',
-      testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
+      testFn: () => transferAllowDeathTest(chain, testConfig),
     },
     {
       kind: 'test',
       label: 'account with reserves is not reaped when transferring funds',
-      testFn: () => transferAllowDeathWithReserveTest(chain, testConfig.addressEncoding),
+      testFn: () => transferAllowDeathWithReserveTest(chain, testConfig),
     },
   ],
 })
@@ -2134,10 +2223,7 @@ const fullTransferAllowDeathTests = (
 /**
  * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
  */
-const partialTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-): RootTestTree => ({
+const partialTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
   children: commonTransferAllowDeathTests(chain, testConfig),
@@ -2197,7 +2283,7 @@ export const transferFunctionsTests = <
         {
           kind: 'test',
           label: 'transfer with insufficient funds fails',
-          testFn: () => transferKeepAliveInsufficientFundsTest(chain, testConfig.addressEncoding),
+          testFn: () => transferKeepAliveInsufficientFundsTest(chain),
         },
       ],
     },
@@ -2208,7 +2294,12 @@ export const transferFunctionsTests = <
         {
           kind: 'test',
           label: 'transfer all with keepAlive true leaves 1 ED',
-          testFn: () => transferAllKeepAliveTrueTest(chain, testConfig.addressEncoding),
+          testFn: () => transferAllKeepAliveTrueTest(chain, testConfig),
+        },
+        {
+          kind: 'test',
+          label: 'transfer all with keepAlive false kills sender',
+          testFn: () => transferAllKeepAliveFalseTest(chain, testConfig),
         },
         {
           kind: 'test',
