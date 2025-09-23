@@ -1,8 +1,8 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { registerTestTree, transferFunctionsTests } from '@e2e-test/shared'
+import { accountsE2ETests, registerTestTree } from '@e2e-test/shared'
 
 registerTestTree(
-  transferFunctionsTests(kusama, {
+  accountsE2ETests(kusama, {
     testSuiteName: 'Kusama Accounts',
     addressEncoding: 2,
     blockProvider: 'Local',

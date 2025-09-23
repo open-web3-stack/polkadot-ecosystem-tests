@@ -1936,6 +1936,97 @@ async function transferKeepAliveInsufficientFundsTest<
   await transferInsufficientFundsTest(chain, lambda)
 }
 
+/**
+ * Test that `transfer_keep_alive` fails when trying to transfer below ED.
+ *
+ * 1. Create account, Alice, with 100 ED
+ * 2. Attempt to transfer 99 ED to Bob
+ *    - this would leave Alice with 1 ED minus fees, which would be below ED
+ * 3. Verify that the transaction fails
+ * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
+ */
+async function transferKeepAliveBelowEdTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create accounts, and endow Alice with funds
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // 2. Try to transfer 99 ED from Alice to Bob
+  const transferAmount = existentialDeposit * 99n
+  const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
+  await sendTransaction(transferKeepAliveTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // 3. Verify that the transaction failed
+
+  const events = await client.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+  assert(dispatchError.isToken)
+  const tokenError = dispatchError.asToken
+  assert(tokenError.isNotExpendable)
+
+  // Verify no transfer occurred - Alice still has funds, Bob still reaped
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Get the transaction fee from the payment event
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // 4. Verify Alice and Bob's balances
+
+  // Verify Alice's balance only decreased by the transaction fee
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+
+  // Verify no endowment event for Bob
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeUndefined()
+
+  // Verify no transfer event occurred
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (
+        event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, testConfig.addressEncoding)
+      ) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeUndefined()
+}
+
 // -----------------
 // `force_unreserve`
 // -----------------
@@ -2229,7 +2320,38 @@ const partialTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): R
   children: commonTransferAllowDeathTests(chain, testConfig),
 })
 
-export const transferFunctionsTests = <
+const commonTransferKeepAliveTests = (chain: Chain) => [
+  {
+    kind: 'test' as const,
+    label: 'transfer with insufficient funds fails',
+    testFn: () => transferKeepAliveInsufficientFundsTest(chain),
+  },
+]
+
+const partialTransferKeepAliveTests = (chain: Chain): RootTestTree => ({
+  kind: 'describe',
+  label: 'transfer_keep_alive',
+  children: commonTransferKeepAliveTests(chain),
+})
+
+/**
+ * Tests for `transfer_keep_alive` that require the chain's ED to be at least as large as the usual transaction fee.
+ */
+const fullTransferKeepAliveTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+  kind: 'describe',
+  label: 'transfer_keep_alive',
+  children: [
+    ...commonTransferKeepAliveTests(chain),
+
+    {
+      kind: 'test',
+      label: 'transfer (keep alive) below existential deposit fails',
+      testFn: () => transferKeepAliveBelowEdTest(chain, testConfig),
+    },
+  ],
+})
+
+export const accountsE2ETests = <
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -2245,6 +2367,10 @@ export const transferFunctionsTests = <
       .with('LowEd', () => partialTransferAllowDeathTests(chain, testConfig))
       .with('Normal', () => fullTransferAllowDeathTests(chain, testConfig))
       .otherwise(() => fullTransferAllowDeathTests(chain, testConfig)),
+    match(testConfig.chainEd)
+      .with('LowEd', () => partialTransferKeepAliveTests(chain))
+      .with('Normal', () => fullTransferKeepAliveTests(chain, testConfig))
+      .otherwise(() => fullTransferKeepAliveTests(chain, testConfig)),
     {
       kind: 'describe',
       label: '`force_transfer`',
