@@ -1,5 +1,4 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { baseChildBountiesE2ETests } from '@e2e-test/shared/child_bounties'
-import { registerTestTree } from '@e2e-test/shared/types'
+import { baseChildBountiesE2ETests, registerTestTree } from '@e2e-test/shared'
 
 registerTestTree(baseChildBountiesE2ETests(kusama, { testSuiteName: 'Kusama Child Bounties', addressEncoding: 2 }))
