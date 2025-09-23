@@ -730,6 +730,135 @@ async function transferInsufficientFundsTest<
 }
 
 /**
+ * Test that `transfer_allow_death` with reserve does not kill the sender account.
+ *
+ * 1. Create a fresh account with 10+eps ED of balance
+ * 2. Create a reserve on the account for 2 ED, increasing consumer count
+ * 3. Transfer 8 ED to another account
+ * 4. Verify that the transfer didn't occur, and thus the first account was NOT reaped due to the consumer ref
+ * 5. Check that events emitted as a result of this operation contain correct data
+ */
+async function transferAllowDeathWithReserveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create fresh addresses, one with 10 ED (plus some extra for fees)
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const eps = existentialDeposit / 3n
+  const totalBalance = existentialDeposit * 10n + eps // 10 ED + some extra
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  // Verify both accounts have expected initial state
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Create a reserve action - use the first available one
+  const reserveActions = createReserveActions<TCustom, TInitStorages>()
+  const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
+
+  if (!availableReserveAction) {
+    console.error('No reserve actions available for this chain')
+    return
+  }
+
+  // 2. Execute reserve action to create a consumer
+
+  const reservedAmount = await availableReserveAction.execute(client, alice, existentialDeposit * 2n)
+  await client.dev.newBlock()
+
+  // Get Alice's account state after reserve
+  const aliceAccountAfterReserve = await client.api.query.system.account(alice.address)
+  expect(aliceAccountAfterReserve.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 3. Transfer 8 ED to Bob
+
+  // Calculate how much free balance Alice has left after reserve and prepare transfer
+  const aliceFreeBefore = aliceAccountAfterReserve.data.free.toBigInt()
+  const transferAmount = existentialDeposit * 8n // Transfer 8 ED to Bob
+
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
+  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Snapshot events
+  await checkEvents(
+    transferEvents,
+    // Bob's account was fundless, and its endowment emits an event
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events when Alice with reserve transfers to Bob')
+
+  // 4. Check the transfer failed
+
+  // Verify Alice's account was NOT reaped due to consumer count
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  const aliceAccountFinal = await client.api.query.system.account(alice.address)
+  const bobAccount = await client.api.query.system.account(bob.address)
+
+  // Get the transaction fee
+  const events = await client.api.query.system.events()
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // Check final balances
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(aliceFreeBefore - txPaymentEventData.actualFee.toBigInt())
+  expect(bobAccount.data.free.toBigInt()).toBe(0n)
+
+  // Alice should still have consumers and reserved balance
+  expect(aliceAccountFinal.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountFinal.providers.toNumber()).toBe(aliceAccountAfterReserve.providers.toNumber())
+  expect(aliceAccountFinal.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 5. Check events
+
+  // Verify NO KilledAccount events are present
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  // Check that no transfer event from Alice to Bob occurred
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (
+        event.data.from.toString() === encodeAddress(alice.address, addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, addressEncoding)
+      ) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeUndefined()
+
+  const errorEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  assert(client.api.events.system.ExtrinsicFailed.is(errorEvent!.event))
+  const errorEventData = errorEvent!.event.data
+  assert(errorEventData.dispatchError.isToken)
+  const tokenError = errorEventData.dispatchError.asToken
+  expect(tokenError.isFrozen).toBeTruthy()
+}
+
+/**
  * Test self-transfer of entire balance with `transfer_allow_death`.
  *
  * 1. Create Alice with 100 ED
@@ -1089,12 +1218,18 @@ const fullTransferAllowDeathTests = (
   kind: 'describe',
   label: 'transfer_allow_death',
   children: [
+    ...commonTransferAllowDeathTests(chain, testConfig),
+
     {
       kind: 'test',
       label: 'leaving an account below ED kills it',
       testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
     },
-    ...commonTransferAllowDeathTests(chain, testConfig),
+    {
+      kind: 'test',
+      label: 'account with reserves is not reaped when transferring funds',
+      testFn: () => transferAllowDeathWithReserveTest(chain, testConfig.addressEncoding),
+    },
   ],
 })
 

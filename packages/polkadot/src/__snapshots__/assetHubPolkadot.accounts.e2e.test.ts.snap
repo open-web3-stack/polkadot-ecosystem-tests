@@ -117,6 +117,8 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer, deposit=referendum submission"`;
 
+exports[`Polkadot Asset Hub Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+
 exports[`Polkadot Asset Hub Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {

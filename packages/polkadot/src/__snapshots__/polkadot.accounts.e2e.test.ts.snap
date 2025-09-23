@@ -485,6 +485,8 @@ exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds
 ]
 `;
 
+exports[`Polkadot Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+
 exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
