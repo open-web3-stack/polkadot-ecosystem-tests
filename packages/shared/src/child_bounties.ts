@@ -129,6 +129,143 @@ async function logAllEvents(client: any) {
   })
 }
 
+/// -------
+/// Tests
+/// -------
+
+/**
+ * Test basic child bounty from parent bounty.
+ *
+ * 1. Alice creates a parent bounty
+ * 2. Verify that Alice makes a deposit for the parent bounty creation
+ * 3. Bob creates a child bounty from the parent bounty
+ */
+export async function childBountyCreationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
+    return
+  }
+
+  // move client head to the last spend period block - 3
+  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
+  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const description = 'Test bounty for child bounty creation'
+
+  // propose a bounty
+  const bountyProposedEvents = await sendTransaction(
+    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice),
+  )
+
+  await client.dev.newBlock()
+
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // verify the bounty status is Proposed
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
+  // approve the bounty with origin Treasurer
+  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event is emitted
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the bounty is added to the approvals queue
+  const approvalsforStorage = await getBountyApprovals(client)
+  expect(approvalsforStorage).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
+  await client.dev.newBlock()
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  // assign curator to the bounty
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+  )
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the bounty status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  await client.dev.newBlock()
+
+  // accept the curator
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the bounty status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Note: The curator (Bob) should create the child bounty, not Alice
+  const childBountyValue = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // Smaller value for child bounty
+  const childBountyDescription = 'Test child bounty'
+
+  await sendTransaction(
+    client.api.tx.childBounties
+      .addChildBounty(bountyIndex, childBountyValue, childBountyDescription)
+      .signAsync(devAccounts.bob), // Bob is the curator, so he should create the child bounty
+  )
+
+  await client.dev.newBlock()
+
+  // Check for ChildBountyAdded event
+  await checkSystemEvents(client, { section: 'childBounties', method: 'Added' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty added events')
+
+  await logAllEvents(client)
+
+  await client.teardown()
+}
+
 /**
  * Base set of childBounties end-to-end tests.
  *
