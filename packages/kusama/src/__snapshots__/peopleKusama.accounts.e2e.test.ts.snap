@@ -35,6 +35,26 @@ exports[`Kusama People Chain Accounts > \`force_transfer\` > force transfer belo
 ]
 `;
 
+exports[`Kusama People Chain Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "freeBalance": "(rounded 2600000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama People Chain Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
 [
   {

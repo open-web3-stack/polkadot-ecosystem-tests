@@ -139,9 +139,222 @@ interface DepositAction<
   isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
 }
 
+/**
+ * Define the list of reserve actions to be used in the liquidity restriction tests.
+ *
+ * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
+ */
+function createReserveActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): ReserveAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'staking bond',
+      execute: async (client, alice, amount) => {
+        const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
+        await sendTransaction(bondTx.signAsync(alice))
+        // Note: Don't call newBlock() here - let the caller handle it so fees can be tracked
+        return amount
+      },
+      isAvailable: (client) => !!client.api.tx.staking,
+    },
+    {
+      name: 'nomination pool',
+      execute: async (client, alice, amount) => {
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+        const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+        // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
+        // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
+        // Thus, here 1 ED is subtracted so that the tests' checks are the same for all actions.
+        const virtualAmount = amount - existentialDeposit
+        const createPoolTx = client.api.tx.nominationPools.create(
+          virtualAmount,
+          alice.address,
+          alice.address,
+          alice.address,
+        )
+        await sendTransaction(createPoolTx.signAsync(alice, { nonce: aliceNonce }))
+        return virtualAmount
+      },
+      isAvailable: (client) => !!client.api.tx.nominationPools,
+    },
+    // This action manually sets storage to simulate an existing reserve.
+    // Helpful on networks where staking or nomination pools are not available i.e. most of them.
+    {
+      name: 'manual reserve',
+      execute: async (client, alice, amount) => {
+        // Get current account state
+        const currentAccount = await client.api.query.system.account(alice.address)
+        const currentFree = currentAccount.data.free.toBigInt()
+        const currentFrozen = currentAccount.data.frozen.toBigInt()
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+        // Manually set reserved amount and reduce free balance
+        await client.dev.setStorage({
+          System: {
+            account: [
+              [
+                [alice.address],
+                {
+                  nonce: aliceNonce,
+                  consumers: 1 + currentAccount.consumers.toNumber(),
+                  sufficients: currentAccount.sufficients.toNumber(),
+                  providers: currentAccount.providers.toNumber(),
+                  data: {
+                    free: currentFree - amount,
+                    reserved: amount,
+                    frozen: currentFrozen,
+                    flags: currentAccount.data.flags,
+                  },
+                },
+              ],
+            ],
+          },
+        })
+        return amount
+      },
+      isAvailable: () => true, // Always available
+    },
+  ]
+}
+
+/**
+ * Define the lock actions to be used in the liquidity restriction tests.
+ *
+ * Recall that in the case a network does not support one of these, it'll be skipped when generating the test cases.
+ */
+function createLockActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): LockAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'vested transfer',
+      execute: async (client, alice, amount, testConfig) => {
+        const offset = schedulerOffset(testConfig)
+        const number = await getBlockNumber(client.api, testConfig.blockProvider)
+        const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
+        const startingBlock = BigInt(number) + 3n * BigInt(offset)
+
+        const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
+          locked: amount,
+          perBlock: perBlock,
+          startingBlock: startingBlock,
+        })
+        await sendTransaction(vestedTransferTx.signAsync(alice))
+      },
+      isAvailable: (client) => {
+        // Vesting is filtered on Asset Hubs while the AHM is pending.
+        const chainName = client.config.name.toLowerCase()
+        if (chainName.includes('assethub')) return false
+        return !!client.api.tx.vesting
+      },
+    },
+    // This action manually sets storage to simulate an existing lock.
+    // Helpful on networks where vesting is not available i.e. most of them.
+    {
+      name: 'manual lock',
+      execute: async (client, alice, amount) => {
+        // Get current account state
+        const currentAccount = await client.api.query.system.account(alice.address)
+        const currentFree = currentAccount.data.free.toBigInt()
+        const currentReserved = currentAccount.data.reserved.toBigInt()
+        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+        // Manually set frozen amount - frozen applies to total balance (free + reserved)
+        // Don't modify free balance as frozen constraint works on the total
+        await client.dev.setStorage({
+          System: {
+            account: [
+              [
+                [alice.address],
+                {
+                  nonce: aliceNonce,
+                  consumers: 1 + currentAccount.consumers.toNumber(),
+                  providers: currentAccount.providers.toNumber(),
+                  sufficients: currentAccount.sufficients.toNumber(),
+                  data: {
+                    free: currentFree,
+                    reserved: currentReserved,
+                    frozen: amount,
+                    flags: currentAccount.data.flags,
+                  },
+                },
+              ],
+            ],
+          },
+        })
+      },
+      isAvailable: () => true, // Always available
+    },
+  ]
+}
+
+/**
+ * Define the deposit-requiring actions that will trigger the liquidity restriction error.
+ *
+ * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
+ *
+ * On every network where this error is raised, proxy and multisig are available, so the test is guaranteed to run
+ * at least once each network.
+ */
+function createDepositActions<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(): DepositAction<TCustom, TInitStorages>[] {
+  return [
+    {
+      name: 'proxy addition',
+      createTransaction: async (client) => {
+        const bob = testAccounts.bob
+        return client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+      },
+      calculateDeposit: async (client) => {
+        const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
+        const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
+        return proxyDepositFactor * 1n + proxyDepositBase
+      },
+      isAvailable: (client) => !!client.api.tx.proxy,
+    },
+    {
+      name: 'multisig creation',
+      createTransaction: async (client) => {
+        const bob = testAccounts.bob
+        const call = client.api.tx.system.remark('multisig test')
+        return client.api.tx.multisig.asMulti(2, [bob.address], null, call, { refTime: 1000000, proofSize: 1000 })
+      },
+      calculateDeposit: async (client) => {
+        const depositBase = client.api.consts.multisig.depositBase.toBigInt()
+        const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
+        return depositBase + depositFactor * 1n
+      },
+      isAvailable: (client) => !!client.api.tx.multisig,
+    },
+    {
+      name: 'referendum submission',
+      createTransaction: async (client) => {
+        return client.api.tx.referenda.submit(
+          { Origins: 'SmallTipper' } as any,
+          { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
+          { After: 1 },
+        )
+      },
+      calculateDeposit: async (client) => {
+        return client.api.consts.referenda.submissionDeposit.toBigInt()
+      },
+      isAvailable: (client) => !!client.api.tx.referenda,
+    },
+  ]
+}
+
 /// -----
 /// Tests
 /// -----
+
+// ----------------------
+// `transfer_allow_death`
+// ----------------------
 
 /**
  * Test that `transfer_allow_death` allows the killing of the sender account.
@@ -421,183 +634,6 @@ async function transferAllowDeathNoKillTest<
     return event.section === 'system' && event.method === 'NewAccount'
   })
   expect(newAccountEvent).toBeDefined()
-}
-
-/**
- * Test that `force_transfer` allows the killing of the source account.
- *
- * 1. Create a fresh account with balance above existential deposit
- * 2. Force transfer all balance away from the first account to the second account
- * 3. Verify that the first account has been reaped
- * 4. Check that events emitted as a result of this operation contain correct data
- *
- * NOTE: As is usual for PET tests, to simulate execution by a non-signed origin, the scheduler pallet's agenda is
- * manually modified to include a `balances.force_transfer` call for execution in the next block.
- *
- * If the runtime of the chain running this test does have the scheduler pallet, this test must also be given
- * the chain object of its relay chain, so that XCM can be used to execute a `xcmPallet.send` call with a
- * `Transact` containing `balances.force_transfer`, for execution in the chain being tested.
- */
-async function forceTransferKillTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(
-  baseChain: Chain<TCustom, TInitStoragesBase>,
-  testConfig: TestConfig,
-  relayChain?: Chain<TCustom, TInitStoragesRelay>,
-) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
-
-  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
-  // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
-  const hasScheduler = !!bc.api.tx.scheduler
-  if (hasScheduler) {
-    baseClient = bc
-  } else {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
-    relayClient = rc
-    baseClient = bc
-  }
-
-  // Create fresh account
-  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 3n
-  const totalBalance = existentialDeposit + eps
-  const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
-  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
-
-  // Verify both accounts have expected initial state
-  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
-  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
-
-  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
-
-  if (hasScheduler) {
-    // Use root origin to execute force transfer directly
-    await scheduleInlineCallWithOrigin(
-      baseClient,
-      forceTransferTx.method.toHex(),
-      { system: 'Root' },
-      testConfig.blockProvider,
-    )
-    await baseClient.dev.newBlock()
-  } else {
-    // Query parachain ID
-    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
-    const paraId = (parachainInfo as any).toNumber()
-
-    // Create XCM transact message
-    const xcmTx = createXcmTransactSend(
-      relayClient!,
-      {
-        parents: 0,
-        interior: {
-          X1: [{ Parachain: paraId }],
-        },
-      },
-      forceTransferTx.method.toHex(),
-      'Superuser',
-    )
-
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
-
-    // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
-    await baseClient.dev.newBlock()
-  }
-
-  // Verify only Alice's account was reaped
-  expect(await isAccountReaped(baseClient, alice.address)).toBe(true)
-  expect(await isAccountReaped(baseClient, bob.address)).toBe(false)
-
-  const bobAccount = await baseClient.api.query.system.account(bob.address)
-  expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
-
-  // Snapshot events
-  await checkSystemEvents(
-    baseClient,
-    // Do not snapshot `Transfer` event, as it is unstable, and the event checker does not allow filtering.
-    { section: 'balances', method: 'DustLost' },
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events of `force_transfer` from Alice to Bob')
-
-  // Check events:
-  // 1. `Transfer` event
-  // 2. `DustLost` event
-  // 3. `Endowed` event
-  // 4. `KilledAccount` event
-  // 5. `NewAccount` event
-  const events = await baseClient.api.query.system.events()
-
-  // Check `Transfer` event - again, filter to disambiguate fee transfers
-  const transferEvent = events.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Transfer') {
-      assert(baseClient.api.events.balances.Transfer.is(event))
-      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
-        return true
-      }
-    }
-
-    return false
-  })
-  expect(transferEvent).toBeDefined()
-  assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
-  const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
-  expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
-
-  // Check `DustLost` event
-  const dustLostEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
-  })
-  expect(dustLostEvent).toBeDefined()
-  assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
-  const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-  expect(dustLostEventData.amount.toBigInt()).toBe(eps)
-
-  // Check `Endowed` event
-  const endowedEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
-  })
-  expect(endowedEvent).toBeDefined()
-  assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
-  const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
-  expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
-
-  // Check `KilledAccount` event
-  const killedAccountEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
-  })
-  expect(killedAccountEvent).toBeDefined()
-  assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
-  const killedAccountEventData = killedAccountEvent!.event.data
-  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-
-  // Check `NewAccount` event
-  const newAccountEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
-  })
-  expect(newAccountEvent).toBeDefined()
-  assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
-  const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 }
 
 /**
@@ -921,6 +957,187 @@ async function transferAllowDeathSelfTest<
   expect(dustLostEvent).toBeUndefined()
 }
 
+// ----------------
+// `force_transfer`
+// ----------------
+
+/**
+ * Test that `force_transfer` allows the killing of the source account.
+ *
+ * 1. Create a fresh account with balance above existential deposit
+ * 2. Force transfer all balance away from the first account to the second account
+ * 3. Verify that the first account has been reaped
+ * 4. Check that events emitted as a result of this operation contain correct data
+ *
+ * NOTE: As is usual for PET tests, to simulate execution by a non-signed origin, the scheduler pallet's agenda is
+ * manually modified to include a `balances.force_transfer` call for execution in the next block.
+ *
+ * If the runtime of the chain running this test does have the scheduler pallet, this test must also be given
+ * the chain object of its relay chain, so that XCM can be used to execute a `xcmPallet.send` call with a
+ * `Transact` containing `balances.force_transfer`, for execution in the chain being tested.
+ */
+async function forceTransferKillTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
+  // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // Create fresh account
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const eps = existentialDeposit / 3n
+  const totalBalance = existentialDeposit + eps
+  const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  // Verify both accounts have expected initial state
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
+
+  if (hasScheduler) {
+    // Use root origin to execute force transfer directly
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // Verify only Alice's account was reaped
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(true)
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(false)
+
+  const bobAccount = await baseClient.api.query.system.account(bob.address)
+  expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
+
+  // Snapshot events
+  await checkSystemEvents(
+    baseClient,
+    // Do not snapshot `Transfer` event, as it is unstable, and the event checker does not allow filtering.
+    { section: 'balances', method: 'DustLost' },
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'KilledAccount' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events of `force_transfer` from Alice to Bob')
+
+  // Check events:
+  // 1. `Transfer` event
+  // 2. `DustLost` event
+  // 3. `Endowed` event
+  // 4. `KilledAccount` event
+  // 5. `NewAccount` event
+  const events = await baseClient.api.query.system.events()
+
+  // Check `Transfer` event - again, filter to disambiguate fee transfers
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(baseClient.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding)) {
+        return true
+      }
+    }
+
+    return false
+  })
+  expect(transferEvent).toBeDefined()
+  assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
+
+  // Check `DustLost` event
+  const dustLostEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'DustLost'
+  })
+  expect(dustLostEvent).toBeDefined()
+  assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
+  const dustLostEventData = dustLostEvent!.event.data
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(dustLostEventData.amount.toBigInt()).toBe(eps)
+
+  // Check `Endowed` event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
+
+  // Check `KilledAccount` event
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeDefined()
+  assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+  const killedAccountEventData = killedAccountEvent!.event.data
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+
+  // Check `NewAccount` event
+  const newAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'NewAccount'
+  })
+  expect(newAccountEvent).toBeDefined()
+  assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
+  const newAccountEventData = newAccountEvent!.event.data
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
+}
+
 /**
  * Test that `force_transfer` fails when transferring below existential deposit.
  *
@@ -1174,76 +1391,142 @@ async function forceTransferBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin) // BadOrigin is a top-level DispatchError, not a module error
 }
 
-/// -------
-/// Test Tree
-/// -------
+// --------------
+// `transfer_all`
+// --------------
 
 /**
- * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
+ * Test that `transfer_all` with reserve does not kill the sender account.
+ *
+ * 1. Create a fresh account with 100+eps ED of balance
+ * 2. Create a reserve on the account for 20 ED, increasing consumer count
+ * 3. Transfer all free balance to another account
+ * 4. Verify that the transfer occurred, but with the first account NOT having been reaped due to the consumer ref
+ *   - it will have kept 1 ED as free balance, and 20 as reserved balance, with no changes to consumer refs
+ * 5. Check that events emitted as a result of this operation contain correct data
  */
-const commonTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-) => [
-  {
-    kind: 'test' as const,
-    label: 'transfer of some funds does not kill sender account',
-    testFn: () => transferAllowDeathNoKillTest(chain, testConfig.addressEncoding),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain, testConfig.addressEncoding),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer with insufficient funds fails',
-    testFn: () => transferInsufficientFundsTest(chain, testConfig.addressEncoding),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain, testConfig.addressEncoding),
-  },
-]
+async function transferAllWithReserveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100n + existentialDeposit
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  // Verify both accounts have expected initial state
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Create a reserve action - use the first available one
+  const reserveActions = createReserveActions<TCustom, TInitStorages>()
+  const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
+
+  if (!availableReserveAction) {
+    console.error('No reserve actions available for this chain')
+    return
+  }
+
+  // 2. Execute reserve action to create a consumer
+
+  const reservedAmount = await availableReserveAction.execute(client, alice, existentialDeposit * 20n)
+  await client.dev.newBlock()
+
+  // Initialize fee tracking map before any transactions
+  const cumulativeFees = new Map<string, bigint>()
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // Get Alice's account state after reserve
+  const aliceAccountAfterReserve = await client.api.query.system.account(alice.address)
+  expect(aliceAccountAfterReserve.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 3. Transfer all free balance to Bob
+
+  // Calculate how much free balance Alice has left after reserve and prepare transfer
+  const transferAllTx = client.api.tx.balances.transferAll(bob.address, false) // keepAlive = false
+  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // Snapshot events
+  await checkEvents(
+    transferEvents,
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events when Alice with reserve transfers all to Bob')
+
+  // 4. Check the transfer succeeded
+
+  // Verify Alice's account was NOT reaped due to consumer count
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
+
+  const aliceAccountFinal = await client.api.query.system.account(alice.address)
+  const bobAccount = await client.api.query.system.account(bob.address)
+
+  // Check final balances
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(existentialDeposit)
+  // Bob gets all of Alice's balance, minus the fee for the transfer tx, and the existential deposit
+  // to keep Alice's account alive
+  expect(bobAccount.data.free.toBigInt()).toBe(
+    totalBalance -
+      reservedAmount -
+      existentialDeposit -
+      cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+  )
+
+  // Alice should still have consumers and reserved balance
+  expect(aliceAccountFinal.consumers.toNumber()).toBeGreaterThanOrEqual(1)
+  expect(aliceAccountFinal.providers.toNumber()).toBe(aliceAccountAfterReserve.providers.toNumber())
+  expect(aliceAccountFinal.data.reserved.toBigInt()).toBe(reservedAmount)
+
+  // 5. Check events
+
+  const events = await client.api.query.system.events()
+
+  // Verify no `KilledAccount˝ events are present
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  // Check that a transfer event from Alice to Bob occurred
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (
+        event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, testConfig.addressEncoding)
+      ) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(
+    totalBalance -
+      reservedAmount -
+      existentialDeposit -
+      cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+  )
+}
 
 /**
- * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
- * fee.
+ * Various currency/fungible-related tests
  */
-const fullTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: [
-    ...commonTransferAllowDeathTests(chain, testConfig),
-
-    {
-      kind: 'test',
-      label: 'leaving an account below ED kills it',
-      testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
-    },
-    {
-      kind: 'test',
-      label: 'account with reserves is not reaped when transferring funds',
-      testFn: () => transferAllowDeathWithReserveTest(chain, testConfig.addressEncoding),
-    },
-  ],
-})
-
-/**
- * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
- */
-const partialTransferAllowDeathTests = (
-  chain: Chain,
-  testConfig: { testSuiteName: string; addressEncoding: number },
-): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: commonTransferAllowDeathTests(chain, testConfig),
-})
 
 /**
  * Helper function that tests liquidity restrictions for any deposit-requiring action.
@@ -1374,214 +1657,76 @@ async function testLiquidityRestrictionForAction<
   expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
 }
 
-/**
- * Define the list of reserve actions to be used in the liquidity restriction tests.
- *
- * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
- */
-function createReserveActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(): ReserveAction<TCustom, TInitStorages>[] {
-  return [
-    {
-      name: 'staking bond',
-      execute: async (client, alice, amount) => {
-        const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
-        await sendTransaction(bondTx.signAsync(alice))
-        // Note: Don't call newBlock() here - let the caller handle it so fees can be tracked
-        return amount
-      },
-      isAvailable: (client) => !!client.api.tx.staking,
-    },
-    {
-      name: 'nomination pool',
-      execute: async (client, alice, amount) => {
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-        const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-        // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
-        // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
-        // Thus, here 1 ED is subtracted so that the tests' checks are the same for all actions.
-        const virtualAmount = amount - existentialDeposit
-        const createPoolTx = client.api.tx.nominationPools.create(
-          virtualAmount,
-          alice.address,
-          alice.address,
-          alice.address,
-        )
-        await sendTransaction(createPoolTx.signAsync(alice, { nonce: aliceNonce }))
-        return virtualAmount
-      },
-      isAvailable: (client) => !!client.api.tx.nominationPools,
-    },
-    // This action manually sets storage to simulate an existing reserve.
-    // Helpful on networks where staking or nomination pools are not available i.e. most of them.
-    {
-      name: 'manual reserve',
-      execute: async (client, alice, amount) => {
-        // Get current account state
-        const currentAccount = await client.api.query.system.account(alice.address)
-        const currentFree = currentAccount.data.free.toBigInt()
-        const currentFrozen = currentAccount.data.frozen.toBigInt()
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-
-        // Manually set reserved amount and reduce free balance
-        await client.dev.setStorage({
-          System: {
-            account: [
-              [
-                [alice.address],
-                {
-                  nonce: aliceNonce,
-                  consumers: 1 + currentAccount.consumers.toNumber(),
-                  sufficients: currentAccount.sufficients.toNumber(),
-                  providers: currentAccount.providers.toNumber(),
-                  data: {
-                    free: currentFree - amount,
-                    reserved: amount,
-                    frozen: currentFrozen,
-                    flags: currentAccount.data.flags,
-                  },
-                },
-              ],
-            ],
-          },
-        })
-        return amount
-      },
-      isAvailable: () => true, // Always available
-    },
-  ]
-}
+/// ----------
+/// Test Trees
+/// ----------
 
 /**
- * Define the lock actions to be used in the liquidity restriction tests.
- *
- * Recall that in the case a network does not support one of these, it'll be skipped when generating the test cases.
+ * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
  */
-function createLockActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(): LockAction<TCustom, TInitStorages>[] {
-  return [
-    {
-      name: 'vested transfer',
-      execute: async (client, alice, amount, testConfig) => {
-        const offset = schedulerOffset(testConfig)
-        const number = await getBlockNumber(client.api, testConfig.blockProvider)
-        const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
-        const startingBlock = BigInt(number) + 3n * BigInt(offset)
-
-        const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
-          locked: amount,
-          perBlock: perBlock,
-          startingBlock: startingBlock,
-        })
-        await sendTransaction(vestedTransferTx.signAsync(alice))
-      },
-      isAvailable: (client) => {
-        // Vesting is filtered on Asset Hubs while the AHM is pending.
-        const chainName = client.config.name.toLowerCase()
-        if (chainName.includes('assethub')) return false
-        return !!client.api.tx.vesting
-      },
-    },
-    // This action manually sets storage to simulate an existing lock.
-    // Helpful on networks where vesting is not available i.e. most of them.
-    {
-      name: 'manual lock',
-      execute: async (client, alice, amount) => {
-        // Get current account state
-        const currentAccount = await client.api.query.system.account(alice.address)
-        const currentFree = currentAccount.data.free.toBigInt()
-        const currentReserved = currentAccount.data.reserved.toBigInt()
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-
-        // Manually set frozen amount - frozen applies to total balance (free + reserved)
-        // Don't modify free balance as frozen constraint works on the total
-        await client.dev.setStorage({
-          System: {
-            account: [
-              [
-                [alice.address],
-                {
-                  nonce: aliceNonce,
-                  consumers: 1 + currentAccount.consumers.toNumber(),
-                  providers: currentAccount.providers.toNumber(),
-                  sufficients: currentAccount.sufficients.toNumber(),
-                  data: {
-                    free: currentFree,
-                    reserved: currentReserved,
-                    frozen: amount,
-                    flags: currentAccount.data.flags,
-                  },
-                },
-              ],
-            ],
-          },
-        })
-      },
-      isAvailable: () => true, // Always available
-    },
-  ]
-}
+const commonTransferAllowDeathTests = (
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+) => [
+  {
+    kind: 'test' as const,
+    label: 'transfer of some funds does not kill sender account',
+    testFn: () => transferAllowDeathNoKillTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'transfer below existential deposit fails',
+    testFn: () => transferBelowExistentialDepositTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'transfer with insufficient funds fails',
+    testFn: () => transferInsufficientFundsTest(chain, testConfig.addressEncoding),
+  },
+  {
+    kind: 'test' as const,
+    label: 'self-transfer of entire balance',
+    testFn: () => transferAllowDeathSelfTest(chain, testConfig.addressEncoding),
+  },
+]
 
 /**
- * Define the deposit-requiring actions that will trigger the liquidity restriction error.
- *
- * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
- *
- * On every network where this error is raised, proxy and multisig are available, so the test is guaranteed to run
- * at least once each network.
+ * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
+ * fee.
  */
-function createDepositActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(): DepositAction<TCustom, TInitStorages>[] {
-  return [
+const fullTransferAllowDeathTests = (
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree => ({
+  kind: 'describe',
+  label: 'transfer_allow_death',
+  children: [
+    ...commonTransferAllowDeathTests(chain, testConfig),
+
     {
-      name: 'proxy addition',
-      createTransaction: async (client) => {
-        const bob = testAccounts.bob
-        return client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
-      },
-      calculateDeposit: async (client) => {
-        const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
-        const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
-        return proxyDepositFactor * 1n + proxyDepositBase
-      },
-      isAvailable: (client) => !!client.api.tx.proxy,
+      kind: 'test',
+      label: 'leaving an account below ED kills it',
+      testFn: () => transferAllowDeathTest(chain, testConfig.addressEncoding),
     },
     {
-      name: 'multisig creation',
-      createTransaction: async (client) => {
-        const bob = testAccounts.bob
-        const call = client.api.tx.system.remark('multisig test')
-        return client.api.tx.multisig.asMulti(2, [bob.address], null, call, { refTime: 1000000, proofSize: 1000 })
-      },
-      calculateDeposit: async (client) => {
-        const depositBase = client.api.consts.multisig.depositBase.toBigInt()
-        const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
-        return depositBase + depositFactor * 1n
-      },
-      isAvailable: (client) => !!client.api.tx.multisig,
+      kind: 'test',
+      label: 'account with reserves is not reaped when transferring funds',
+      testFn: () => transferAllowDeathWithReserveTest(chain, testConfig.addressEncoding),
     },
-    {
-      name: 'referendum submission',
-      createTransaction: async (client) => {
-        return client.api.tx.referenda.submit(
-          { Origins: 'SmallTipper' } as any,
-          { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
-          { After: 1 },
-        )
-      },
-      calculateDeposit: async (client) => {
-        return client.api.consts.referenda.submissionDeposit.toBigInt()
-      },
-      isAvailable: (client) => !!client.api.tx.referenda,
-    },
-  ]
-}
+  ],
+})
+
+/**
+ * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
+ */
+const partialTransferAllowDeathTests = (
+  chain: Chain,
+  testConfig: { testSuiteName: string; addressEncoding: number },
+): RootTestTree => ({
+  kind: 'describe',
+  label: 'transfer_allow_death',
+  children: commonTransferAllowDeathTests(chain, testConfig),
+})
 
 export const transferFunctionsTests = <
   TCustom extends Record<string, unknown> | undefined,
@@ -1607,7 +1752,13 @@ export const transferFunctionsTests = <
     {
       kind: 'describe',
       label: '`transfer_all`',
-      children: [],
+      children: [
+        {
+          kind: 'test',
+          label: 'account with reserves cannot transfer all funds',
+          testFn: () => transferAllWithReserveTest(chain, testConfig),
+        },
+      ],
     },
     {
       kind: 'describe',

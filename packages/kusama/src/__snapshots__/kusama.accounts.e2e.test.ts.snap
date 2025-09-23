@@ -35,6 +35,26 @@ exports[`Kusama Accounts > \`force_transfer\` > force transfer below ED can kill
 ]
 `;
 
+exports[`Kusama Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "freeBalance": "(rounded 26000000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
 [
   {
