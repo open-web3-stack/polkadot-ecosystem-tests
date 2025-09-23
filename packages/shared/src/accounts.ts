@@ -3,7 +3,9 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { ISubmittableResult } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
@@ -20,6 +22,14 @@ import {
   type TestConfig,
   updateCumulativeFees,
 } from './helpers/index.js'
+
+//
+// Note about this module
+//
+//
+// Tests are grouped by the main extrinsic from the balances pallet that they target; both the source code,
+// and the test trees used to register test cases with `vitest`.
+//
 
 /// -------
 /// Helpers
@@ -346,6 +356,77 @@ function createDepositActions<
       isAvailable: (client) => !!client.api.tx.referenda,
     },
   ]
+}
+
+/**
+ * Test that a transfer function fails when sender has insufficient funds.
+ *
+ * 1. Create a fresh account with some balance
+ * 2. Attempt to transfer more than the account has available
+ * 3. Verify that the transaction fails
+ * 4. Check that no transfer occurred and only fees were deducted
+ */
+async function transferInsufficientFundsTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  transferFn: (
+    client: Client<TCustom, TInitStorages>,
+    bob: string,
+    ...args: any[]
+  ) => SubmittableExtrinsic<'promise', ISubmittableResult>,
+) {
+  const [client] = await setupNetworks(chain)
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const totalBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Try to transfer more than Alice has (200 ED when she only has 100 ED)
+  const transferAmount = 2n * totalBalance
+  const transferTx = transferFn(client, bob.address, transferAmount)
+  await sendTransaction(transferTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Check that transaction failed with FundsUnavailable error
+  const events = await client.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+
+  // Check that it's the FundsUnavailable token error
+  assert(dispatchError.isToken)
+  const tokenError = dispatchError.asToken
+  assert(tokenError.isFundsUnavailable)
+
+  // Verify no transfer occurred - Alice still has funds, Bob still unalive
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Get the transaction fee from the payment event
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // Verify Alice's balance only decreased by the transaction fee
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - txPaymentEventData.actualFee.toBigInt())
 }
 
 /// -----
@@ -702,67 +783,16 @@ async function transferBelowExistentialDepositTest<
 }
 
 /**
- * Test that `transfer_allow_death` fails when sender has insufficient funds.
- *
- * 1. Create a fresh account with some balance
- * 2. Attempt to transfer more than the account has to another account
- * 3. Verify that the transaction fails
- * 4. Check that no transfer occurred and only fees were deducted
+ * Insufficient funds checks for `transfer_allow_death`
  */
-async function transferInsufficientFundsTest<
+async function transferAllowDeathInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>) {
+  const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amt: bigint) =>
+    client.api.tx.balances.transferAllowDeath(bob, amt)
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const totalBalance = existentialDeposit * 100n
-  const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
-  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
-
-  expect(await isAccountReaped(client, alice.address)).toBe(false)
-  expect(await isAccountReaped(client, bob.address)).toBe(true)
-
-  // Try to transfer more than Alice has (200 ED when she only has 100 ED)
-  const transferAmount = 2n * totalBalance
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  await sendTransaction(transferTx.signAsync(alice))
-
-  await client.dev.newBlock()
-
-  // Check that transaction failed with FundsUnavailable error
-  const events = await client.api.query.system.events()
-  const failedEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
-
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
-
-  // Check that it's the FundsUnavailable token error
-  assert(dispatchError.isToken)
-  const tokenError = dispatchError.asToken
-  assert(tokenError.isFundsUnavailable)
-
-  // Verify no transfer occurred - Alice still has funds, Bob still unalive
-  expect(await isAccountReaped(client, alice.address)).toBe(false)
-  expect(await isAccountReaped(client, bob.address)).toBe(true)
-
-  // Get the transaction fee from the payment event
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
-
-  // Verify Alice's balance only decreased by the transaction fee
-  const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - txPaymentEventData.actualFee.toBigInt())
+  await transferInsufficientFundsTest(chain, lambda)
 }
 
 /**
@@ -1562,10 +1592,6 @@ async function forceTransferBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin) // BadOrigin is a top-level DispatchError, not a module error
 }
 
-// ---------------------
-// `transfer_keep_alive`
-// ---------------------
-
 // --------------
 // `transfer_all`
 // --------------
@@ -1697,6 +1723,27 @@ async function transferAllWithReserveTest<
       existentialDeposit -
       cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
   )
+}
+
+// ---------------------
+// `transfer_keep_alive`
+// ---------------------
+
+/**
+ * Test that `transfer_keep_alive` fails when sender has insufficient funds.
+ *
+ * 1. Create a fresh account with some balance
+ * 2. Attempt to transfer more than the account has to another account
+ * 3. Verify that the transaction fails
+ * 4. Check that no transfer occurred and only fees were deducted
+ */
+async function transferKeepAliveInsufficientFundsTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _addressEncoding: number) {
+  const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amount: bigint) =>
+    client.api.tx.balances.transferKeepAlive(bob, amount)
+  await transferInsufficientFundsTest(chain, lambda)
 }
 
 // -----------------
@@ -1954,7 +2001,7 @@ const commonTransferAllowDeathTests = (
   {
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
-    testFn: () => transferInsufficientFundsTest(chain, testConfig.addressEncoding),
+    testFn: () => transferAllowDeathInsufficientFundsTest(chain),
   },
   {
     kind: 'test' as const,
@@ -2023,7 +2070,7 @@ export const transferFunctionsTests = <
       children: [
         {
           kind: 'test' as const,
-          label: 'force transfer below ED can kill source account',
+          label: 'force transferring origin below ED can kill it',
           testFn: () => forceTransferKillTest(chain, testConfig, relayChain),
         },
         {
@@ -2051,7 +2098,13 @@ export const transferFunctionsTests = <
     {
       kind: 'describe',
       label: '`transfer_keep_alive`',
-      children: [],
+      children: [
+        {
+          kind: 'test',
+          label: 'transfer with insufficient funds fails',
+          testFn: () => transferKeepAliveInsufficientFundsTest(chain, testConfig.addressEncoding),
+        },
+      ],
     },
     {
       kind: 'describe',
