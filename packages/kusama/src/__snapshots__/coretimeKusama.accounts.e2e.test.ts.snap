@@ -95,6 +95,26 @@ exports[`Kusama Coretime Accounts > \`transfer_all\` > transfer all with keepAli
 ]
 `;
 
+exports[`Kusama Coretime Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
+[
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+      "freeBalance": "(rounded 3200000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Coretime Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
 [
   {

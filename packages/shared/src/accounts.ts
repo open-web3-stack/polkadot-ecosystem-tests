@@ -2207,7 +2207,7 @@ export const transferFunctionsTests = <
       children: [
         {
           kind: 'test',
-          label: 'transfer all with keepAlive false leaves 1 ED',
+          label: 'transfer all with keepAlive true leaves 1 ED',
           testFn: () => transferAllKeepAliveTrueTest(chain, testConfig.addressEncoding),
         },
         {
