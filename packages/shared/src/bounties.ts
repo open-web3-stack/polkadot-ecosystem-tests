@@ -1327,7 +1327,7 @@ export async function unassignCuratorActiveByCuratorTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (!ensureSpendPeriodAvailable(client)) {
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
@@ -1461,7 +1461,7 @@ export async function unassignCuratorActiveByTreasurerTest<
   const [client] = await setupNetworks(chain)
 
   const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (!ensureSpendPeriodAvailable(client)) {
+  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
     return
   }
 
