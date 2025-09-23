@@ -112,6 +112,40 @@ exports[`kusama & coretimeKusama > coretimeKusama transfer KSM to kusama > to ch
       },
       "success": true,
       "weightUsed": {
+        "proofSize": "(rounded 6000)",
+        "refTime": "(rounded 900000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 6000)",
+        "refTime": "(rounded 900000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Ump": {
+          "Para": "(rounded 1000)",
+        },
+      },
+      "success": true,
+      "weightUsed": {
         "proofSize": "(rounded 7000)",
         "refTime": "(rounded 300000000)",
       },
@@ -281,7 +315,7 @@ exports[`kusama & coretimeKusama > kusama transfer KSM to coretimeKusama > to ch
 [
   {
     "data": {
-      "count": 1,
+      "count": 3,
     },
     "method": "DownwardMessagesReceived",
     "section": "parachainSystem",
@@ -291,11 +325,37 @@ exports[`kusama & coretimeKusama > kusama transfer KSM to coretimeKusama > to ch
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 1000000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
     "section": "parachainSystem",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": "(rounded 100000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": "Parent",
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": "(rounded 100000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
   },
   {
     "data": {
