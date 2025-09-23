@@ -1597,6 +1597,101 @@ async function forceTransferBadOriginTest(chain: Chain) {
 // --------------
 
 /**
+ * Test that `transfer_all` with `keepAlive = true` transfers all but 1 ED.
+ *
+ * 1. Create an account, Alice, with 100 ED
+ * 2. Transfer all funds to another account, Bob, with `keepAlive = true`
+ * 3. Verify that transfer succeeds
+ *     - Alice keeps exactly 1 ED (existential deposit)
+ *     - Bob gets 99 ED minus transaction fees
+ * 4. Verify that events emitted as a result of this operation contain correct data
+ */
+async function transferAllKeepAliveTrueTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create and fund accounts
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // 2. Transfer all funds to Bob with `keepAlive = true`
+
+  const transferAllTx = client.api.tx.balances.transferAll(bob.address, true)
+  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Snapshot events
+  await checkEvents(
+    transferEvents,
+    { section: 'balances', method: 'Endowed' },
+    { section: 'system', method: 'NewAccount' },
+  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = true`')
+
+  // 3. Verify that transfer succeeds
+
+  // Verify both accounts are alive
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(false)
+
+  const aliceAccountFinal = await client.api.query.system.account(alice.address)
+  const bobAccount = await client.api.query.system.account(bob.address)
+
+  // Get the transaction fee
+  const events = await client.api.query.system.events()
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // Alice should keep exactly 1 ED
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(existentialDeposit)
+
+  // Bob should get 99 ED minus the transaction fee
+  const expectedBobBalance = existentialDeposit * 99n - txPaymentEventData.actualFee.toBigInt()
+  expect(bobAccount.data.free.toBigInt()).toBe(expectedBobBalance)
+
+  // 4. Check events
+
+  // No `KilledAccount` events
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeUndefined()
+
+  // Check transfer event
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (event.data.from.toString() === encodeAddress(alice.address, addressEncoding)) {
+        return true
+      }
+    }
+    return false
+  })
+  expect(transferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(transferEvent!.event))
+  const transferEventData = transferEvent!.event.data
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(transferEventData.amount.toBigInt()).toBe(expectedBobBalance)
+}
+
+/**
  * Test that `transfer_all` with reserve does not kill the sender account.
  *
  * 1. Create a fresh account with 100+eps ED of balance
@@ -2110,6 +2205,11 @@ export const transferFunctionsTests = <
       kind: 'describe',
       label: '`transfer_all`',
       children: [
+        {
+          kind: 'test',
+          label: 'transfer all with keepAlive false leaves 1 ED',
+          testFn: () => transferAllKeepAliveTrueTest(chain, testConfig.addressEncoding),
+        },
         {
           kind: 'test',
           label: 'account with reserves cannot transfer all funds',
