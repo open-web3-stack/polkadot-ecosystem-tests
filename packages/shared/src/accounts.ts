@@ -2798,7 +2798,7 @@ async function testLiquidityRestrictionForAction<
   // Step 1: Create account with 100000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const totalBalance = existentialDeposit * 100000n // 100000 ED
+  const totalBalance = existentialDeposit * 1000000n // 100000 ED
   const alice = testAccounts.alice
 
   // Set initial balance
@@ -2815,7 +2815,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
 
-  const reserveAmount = existentialDeposit * 90000n // 90000 ED
+  const reserveAmount = existentialDeposit * 900000n // 90000 ED
   const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
 
   await client.dev.newBlock()
@@ -2824,7 +2824,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
 
-  const lockAmount = existentialDeposit * 90000n // 90000 ED
+  const lockAmount = existentialDeposit * 900000n // 90000 ED
   await lockAction.execute(client, alice, lockAmount, testConfig)
 
   await client.dev.newBlock()

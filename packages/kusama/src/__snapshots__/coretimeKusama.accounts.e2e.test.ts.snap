@@ -4,8 +4,8 @@ exports[`Kusama Coretime Accounts > \`force_adjust_total_issuance\` > successful
 [
   {
     "data": {
-      "new_": "(rounded 4800000000000000)",
-      "old": "(rounded 4800000000000000)",
+      "new_": "(rounded 3900000000000000)",
+      "old": "(rounded 3900000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -17,8 +17,8 @@ exports[`Kusama Coretime Accounts > \`force_adjust_total_issuance\` > successful
 [
   {
     "data": {
-      "new_": "(rounded 4800000000000000)",
-      "old": "(rounded 4800000000000000)",
+      "new_": "(rounded 3900000000000000)",
+      "old": "(rounded 3900000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",

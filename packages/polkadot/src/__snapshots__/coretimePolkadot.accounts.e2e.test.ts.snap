@@ -4,8 +4,8 @@ exports[`Polkadot Coretime Accounts > \`force_adjust_total_issuance\` > successf
 [
   {
     "data": {
-      "new_": "(rounded 420000000000000)",
-      "old": "(rounded 420000000000000)",
+      "new_": "(rounded 210000000000000)",
+      "old": "(rounded 210000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -17,8 +17,8 @@ exports[`Polkadot Coretime Accounts > \`force_adjust_total_issuance\` > successf
 [
   {
     "data": {
-      "new_": "(rounded 420000000000000)",
-      "old": "(rounded 420000000000000)",
+      "new_": "(rounded 210000000000000)",
+      "old": "(rounded 210000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
