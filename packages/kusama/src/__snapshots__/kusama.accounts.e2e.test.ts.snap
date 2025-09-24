@@ -1,5 +1,31 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 17000000000000000000)",
+      "old": "(rounded 17000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
+[
+  {
+    "data": {
+      "new_": "(rounded 17000000000000000000)",
+      "old": "(rounded 17000000000000000000)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
 [
   {

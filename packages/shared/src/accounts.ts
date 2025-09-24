@@ -2386,6 +2386,166 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   expect(issuanceAfter2).toBe(issuanceBefore)
 }
 
+/**
+ * Test `force_adjust_total_issuance` with successful adjustments.
+ *
+ * 1. Get initial total issuance
+ * 2. Increase total issuance by 1
+ * 3. Verify the increase worked
+ * 4. Decrease total issuance by 2
+ * 5. Verify the decrease worked
+ */
+async function forceAdjustTotalIssuanceSuccessTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  let paraId: number | undefined
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+
+    // Query parachain ID once for XCM operations
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    paraId = (parachainInfo as any).toNumber()
+  }
+
+  // 1. Get initial total issuance
+
+  const initialIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
+
+  // 2. Increase total issuance by 1
+
+  const increaseDirection = 'Increase'
+  const increaseDelta = 1n
+  const forceAdjustIncreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, increaseDelta)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceAdjustIncreaseTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceAdjustIncreaseTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for first issuance change',
+  )
+
+  // 3. Verify the increase worked
+
+  const afterIncreaseIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
+  expect(afterIncreaseIssuance).toBe(initialIssuance + increaseDelta)
+
+  // Check for TotalIssuanceForced event
+  let systemEvents = await baseClient.api.query.system.events()
+  let issuanceEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'TotalIssuanceForced'
+  })
+  expect(issuanceEvent).toBeDefined()
+  assert(baseClient.api.events.balances.TotalIssuanceForced.is(issuanceEvent!.event))
+  let issuanceEventData = issuanceEvent!.event.data
+  assert(issuanceEventData.old.eq(initialIssuance))
+  assert(issuanceEventData.new_.eq(afterIncreaseIssuance))
+
+  // 4. Decrease total issuance by 2
+
+  const decreaseDirection = 'Decrease'
+  const decreaseDelta = 2n
+  const forceAdjustDecreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, decreaseDelta)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceAdjustDecreaseTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceAdjustDecreaseTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
+    'events for second issuance change',
+  )
+
+  // 5. Verify the decrease worked
+
+  const finalIssuance = await baseClient.api.query.balances.totalIssuance()
+  const finalIssuanceBigInt = finalIssuance.toBigInt()
+  expect(finalIssuanceBigInt).toBe(afterIncreaseIssuance - decreaseDelta)
+  expect(finalIssuanceBigInt).toBe(initialIssuance + increaseDelta - decreaseDelta)
+
+  // Check for second TotalIssuanceForced event
+  systemEvents = await baseClient.api.query.system.events()
+  issuanceEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'TotalIssuanceForced'
+  })
+  expect(issuanceEvent).toBeDefined()
+  assert(baseClient.api.events.balances.TotalIssuanceForced.is(issuanceEvent!.event))
+  issuanceEventData = issuanceEvent!.event.data
+  assert(issuanceEventData.old.eq(afterIncreaseIssuance))
+  assert(issuanceEventData.new_.eq(finalIssuanceBigInt))
+}
+
 // ------
 // `burn`
 // ------
@@ -2741,6 +2901,11 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'zero delta fails with DeltaZero error in both directions',
           testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(chain, testConfig, relayChain),
+        },
+        {
+          kind: 'test',
+          label: 'successful adjustments increase and decrease total issuance',
+          testFn: () => forceAdjustTotalIssuanceSuccessTest(chain, testConfig, relayChain),
         },
       ],
     },
