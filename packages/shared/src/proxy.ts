@@ -1659,9 +1659,11 @@ export async function createKillPureProxyTest<
 
     // `proxy.killPure` does not emit any events.
     // #7995 will fix this, eliciting a failed test run sometime in the future.
-    await checkEvents(proxyEvents, 'proxy').toMatchSnapshot(
-      `events when killing pure proxy of type ${proxyTypeIx} for Alice`,
-    )
+    await checkEvents(proxyEvents, 'proxy')
+      .redact({
+        removeKeys: /pure/,
+      })
+      .toMatchSnapshot(`events when killing pure proxy of type ${proxyTypeIx} for Alice`)
   }
 
   // Check that the pure proxies were killed
