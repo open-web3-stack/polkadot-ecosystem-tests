@@ -2154,6 +2154,198 @@ async function forceUnreserveBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin)
 }
 
+/**
+ * Test `force_unreserve` on an account with no reserves: no-op.
+ *
+ * 1. Create Alice with 100 ED and no reserves
+ * 2. Forcefully unreserve 0 from Alice
+ * 3. Verify the action is a no-op
+ * 4. Verify Alice's balance is unchanged
+ */
+async function forceUnreserveNoReservesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  let paraId: number | undefined
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+
+    // Query parachain ID once for XCM operations
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    paraId = (parachainInfo as any).toNumber()
+  }
+
+  // 1. Create Alice with 100 ED and no reserves
+
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+
+  // Verify Alice has no reserves
+  const aliceAccountBefore = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountBefore.data.reserved.toBigInt()).toBe(0n)
+
+  // 2. Forcefully unreserve 0 from Alice
+
+  const unreserveAmount = 0n
+  const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceUnreserveTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceUnreserveTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 3. Verify no `balances.Unreserved` event is emitted
+
+  const systemEvents = await baseClient.api.query.system.events()
+  const unreservedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Unreserved'
+  })
+  expect(unreservedEvent).toBeUndefined()
+
+  // 4. Verify Alice's balance is unchanged
+  const aliceAccountAfter = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountAfter.data.free.toBigInt()).toBe(aliceBalance)
+  expect(aliceAccountAfter.data.reserved.toBigInt()).toBe(0n)
+}
+
+/**
+ * Test `force_unreserve` on a non-existent account.
+ *
+ * 1. Create a fresh keypair (no balance)
+ * 2. Forcefully unreserve some amount from the non-existent account
+ * 3. Verify the action is a no-op
+ * 4. Verify the account remains non-existent
+ */
+async function forceUnreserveNonExistentAccountTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  let paraId: number | undefined
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+
+    // Query parachain ID once for XCM operations
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    paraId = (parachainInfo as any).toNumber()
+  }
+
+  // 1. Create a fresh keypair (no balance)
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+
+  // 2. Forcefully unreserve some amount from the non-existent account
+
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const unreserveAmount = existentialDeposit
+  const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(bob.address, unreserveAmount)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceUnreserveTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceUnreserveTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 3. Verify no `balances.Unreserved` event is emitted
+  const systemEvents = await baseClient.api.query.system.events()
+  const unreservedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Unreserved'
+  })
+  expect(unreservedEvent).toBeUndefined()
+
+  // 4. Verify the account remains non-existent
+  expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+}
+
 // -------------------
 // `force_set_balance`
 // -------------------
@@ -2874,6 +3066,16 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'non-root origins cannot forcefully unreserve',
           testFn: () => forceUnreserveBadOriginTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'unreserving 0 from account with no reserves is a no-op',
+          testFn: () => forceUnreserveNoReservesTest(chain, testConfig, relayChain),
+        },
+        {
+          kind: 'test',
+          label: 'unreserving from non-existent account is a no-op',
+          testFn: () => forceUnreserveNonExistentAccountTest(chain, testConfig, relayChain),
         },
       ],
     },
