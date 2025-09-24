@@ -1962,6 +1962,7 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // 2. Try to transfer 99 ED from Alice to Bob
+
   const transferAmount = existentialDeposit * 99n
   const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
   await sendTransaction(transferKeepAliveTx.signAsync(alice))
@@ -2024,6 +2025,101 @@ async function transferKeepAliveBelowEdTest<
     }
     return false
   })
+  expect(transferEvent).toBeUndefined()
+}
+
+/**
+ * Test that `transfer_keep_alive` fails, on low ED chains, when trying to transfer below ED.
+ *
+ * Low ED here means that the ED is below a typical transfer fee.
+ *
+ * 1. Create account, Alice, with 100 ED
+ * 2. Attempt to transfer 99 ED to Bob
+ *    - this would leave Alice with roughly 1 ED minus fees
+ * 3. Verify that the transaction fails
+ * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
+ */
+async function transferKeepAliveBelowEdLowEdTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create accounts, and endow Alice with funds
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
+  const bob = testAccounts.keyring.createFromUri('//fresh_bob')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // 2. Try to transfer 99 ED from Alice to Bob (would leave Alice with insufficient funds after fees)
+
+  const transferAmount = existentialDeposit * 99n
+  const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
+  await sendTransaction(transferKeepAliveTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // 3. Verify that the transaction failed
+
+  const events = await client.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  expect(failedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+  const dispatchError = failedEvent!.event.data.dispatchError
+  assert(dispatchError.isToken)
+  const tokenError = dispatchError.asToken
+  assert(tokenError.isFundsUnavailable)
+
+  // Verify no transfer occurred - Alice still has funds, Bob still reaped
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+  expect(await isAccountReaped(client, bob.address)).toBe(true)
+
+  // Get the transaction fee from the payment event
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+
+  // 4. Verify Alice and Bob's balances
+
+  // Verify Alice's balance only decreased by the transaction fee
+  const aliceAccount = await client.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+
+  // Verify no endowment event for Bob
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeUndefined()
+
+  // Verify no transfer (Alice -> Bob) event occurred
+  const transferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      if (
+        event.data.from.toString() === encodeAddress(alice.address, testConfig.addressEncoding) &&
+        event.data.to.toString() === encodeAddress(bob.address, testConfig.addressEncoding)
+      ) {
+        return true
+      }
+    }
+    return false
+  })
+
   expect(transferEvent).toBeUndefined()
 }
 
@@ -2292,7 +2388,7 @@ const commonTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig) => 
  * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
  * fee.
  */
-const fullTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+const transferAllowDeathNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
   children: [
@@ -2314,7 +2410,7 @@ const fullTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): Root
 /**
  * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
  */
-const partialTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+const transferAllowDeathLowEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
   children: commonTransferAllowDeathTests(chain, testConfig),
@@ -2328,16 +2424,23 @@ const commonTransferKeepAliveTests = (chain: Chain) => [
   },
 ]
 
-const partialTransferKeepAliveTests = (chain: Chain): RootTestTree => ({
+const lowEdTransferKeepAliveTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_keep_alive',
-  children: commonTransferKeepAliveTests(chain),
+  children: [
+    ...commonTransferKeepAliveTests(chain),
+    {
+      kind: 'test' as const,
+      label: 'transfer (keep alive) below existential deposit fails on low ED chains',
+      testFn: () => transferKeepAliveBelowEdLowEdTest(chain, testConfig),
+    },
+  ],
 })
 
 /**
  * Tests for `transfer_keep_alive` that require the chain's ED to be at least as large as the usual transaction fee.
  */
-const fullTransferKeepAliveTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+const transferKeepAliveNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_keep_alive',
   children: [
@@ -2364,13 +2467,13 @@ export const accountsE2ETests = <
   label: testConfig.testSuiteName,
   children: [
     match(testConfig.chainEd)
-      .with('LowEd', () => partialTransferAllowDeathTests(chain, testConfig))
-      .with('Normal', () => fullTransferAllowDeathTests(chain, testConfig))
-      .otherwise(() => fullTransferAllowDeathTests(chain, testConfig)),
+      .with('LowEd', () => transferAllowDeathLowEDTests(chain, testConfig))
+      .with('Normal', () => transferAllowDeathNormalEDTests(chain, testConfig))
+      .otherwise(() => transferAllowDeathNormalEDTests(chain, testConfig)),
     match(testConfig.chainEd)
-      .with('LowEd', () => partialTransferKeepAliveTests(chain))
-      .with('Normal', () => fullTransferKeepAliveTests(chain, testConfig))
-      .otherwise(() => fullTransferKeepAliveTests(chain, testConfig)),
+      .with('LowEd', () => lowEdTransferKeepAliveTests(chain, testConfig))
+      .with('Normal', () => transferKeepAliveNormalEDTests(chain, testConfig))
+      .otherwise(() => transferKeepAliveNormalEDTests(chain, testConfig)),
     {
       kind: 'describe',
       label: '`force_transfer`',

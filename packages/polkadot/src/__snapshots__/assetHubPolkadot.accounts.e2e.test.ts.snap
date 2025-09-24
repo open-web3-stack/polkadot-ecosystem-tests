@@ -1,40 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transfer below ED can kill source account > events of \`force_transfer\` from Alice to Bob 1`] = `
-[
-  {
-    "data": {
-      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "KilledAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "amount": "(rounded 33000000)",
-    },
-    "method": "DustLost",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 100000000,
-    },
-    "method": "Endowed",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
 [
   {
@@ -99,46 +64,6 @@ exports[`Polkadot Asset Hub Accounts > \`transfer_all\` > transfer all with keep
     "method": "KilledAccount",
     "section": "system",
   },
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 10000000000)",
-    },
-    "method": "Endowed",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Accounts > \`transfer_all\` > transfer all with keepAlive false leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
-[
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 9900000000)",
-    },
-    "method": "Endowed",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Accounts > \`transfer_all\` > transfer all with keepAlive false leaves 1 ED > events when Alice transfers all to Bob with keepAlive = false 1`] = `
-[
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",

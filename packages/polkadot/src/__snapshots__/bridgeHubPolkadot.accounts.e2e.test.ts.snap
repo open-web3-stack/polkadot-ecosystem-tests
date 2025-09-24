@@ -161,6 +161,56 @@ exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction e
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer, deposit=referendum submission"`;
 
+exports[`Polkadot Bridge Hub Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+
+exports[`Polkadot Bridge Hub Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "freeBalance": 1000000000,
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Bridge Hub Accounts > transfer_allow_death > leaving an account below ED kills it > unstable events when Alice \`transfer_allow_death\` to Bob 1`] = `
+[
+  {
+    "data": {
+      "amount": "(number)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "amount": "(number)",
+    },
+    "method": "DustLost",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Bridge Hub Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
 [
   {
