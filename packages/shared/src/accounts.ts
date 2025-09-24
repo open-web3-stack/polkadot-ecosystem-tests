@@ -2217,6 +2217,175 @@ async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin)
 }
 
+/**
+ * Test `force_adjust_total_issuance` with zero delta in both directions.
+ *
+ * 1. Try to increase total issuance by 0
+ * 2. Verify that the transaction fails
+ * 3. Try to decrease total issuance by 0
+ * 4. Verify that the transaction also fails
+ */
+async function forceAdjustTotalIssuanceZeroDeltaTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  let paraId: number | undefined
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+
+    // Query parachain ID once for XCM operations
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    paraId = (parachainInfo as any).toNumber()
+  }
+
+  const issuanceBefore = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
+
+  // 1. Try to increase total issuance by 0
+
+  const increaseDirection = 'Increase'
+  const zeroDelta = 0n
+  const forceAdjustIncreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, zeroDelta)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceAdjustIncreaseZeroTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceAdjustIncreaseZeroTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 2. Verify that the increase transaction failed
+
+  let events = await baseClient.api.query.system.events()
+
+  if (hasScheduler) {
+    const dispatchedEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'Dispatched'
+    })
+    expect(dispatchedEvent).toBeDefined()
+    assert(baseClient.api.events.scheduler.Dispatched.is(dispatchedEvent!.event))
+    const dispatchData = dispatchedEvent!.event.data
+    assert(dispatchData.result.isErr)
+    const dispatchError = dispatchData.result.asErr
+
+    assert(dispatchError.isModule)
+    const moduleError = dispatchError.asModule
+    expect(baseClient.api.errors.balances.DeltaZero.is(moduleError)).toBe(true)
+  }
+
+  let issuanceEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'TotalIssuanceForced'
+  })
+  expect(issuanceEvent).toBeUndefined()
+
+  const issuanceAfter = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
+  expect(issuanceAfter).toBe(issuanceBefore)
+
+  // 3. Try to decrease total issuance by 0
+
+  const decreaseDirection = 'Decrease'
+  const forceAdjustDecreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, zeroDelta)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceAdjustDecreaseZeroTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceAdjustDecreaseZeroTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 4. Verify that the decrease transaction failed
+  events = await baseClient.api.query.system.events()
+
+  if (hasScheduler) {
+    const dispatchedEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'Dispatched'
+    })
+    expect(dispatchedEvent).toBeDefined()
+    assert(baseClient.api.events.scheduler.Dispatched.is(dispatchedEvent!.event))
+    const dispatchData = dispatchedEvent!.event.data
+    assert(dispatchData.result.isErr)
+    const dispatchError = dispatchData.result.asErr
+
+    assert(dispatchError.isModule)
+    const moduleError = dispatchError.asModule
+    expect(baseClient.api.errors.balances.DeltaZero.is(moduleError)).toBe(true)
+  }
+
+  issuanceEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'TotalIssuanceForced'
+  })
+  expect(issuanceEvent).toBeUndefined()
+
+  const issuanceAfter2 = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
+  expect(issuanceAfter2).toBe(issuanceBefore)
+}
+
 // ------
 // `burn`
 // ------
@@ -2567,6 +2736,11 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'non-root origins cannot forcefully adjust the total issuance',
           testFn: () => forceAdjustTotalIssuanceBadOriginTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'zero delta fails with DeltaZero error in both directions',
+          testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(chain, testConfig, relayChain),
         },
       ],
     },
