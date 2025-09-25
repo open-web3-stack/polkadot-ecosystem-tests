@@ -79,8 +79,8 @@ async function isAccountReaped(client: Client<any, any>, address: string): Promi
  * Examples: bonding funds for staking, nomination pool creation or joining.
  */
 interface ReserveAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 > {
   /** Name of the action - will be used to tag the test and its snapshots. */
   name: string
@@ -101,8 +101,8 @@ interface ReserveAction<
  * Examples: vested transfer, conviction voting.
  */
 interface LockAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 > {
   /** Name of the action - will be used to tag the test and its snapshots. */
   name: string
@@ -121,8 +121,8 @@ interface LockAction<
  * Interface for deposit-requiring actions that can be tested for liquidity restrictions.
  */
 interface DepositAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 > {
   /** Name of the action - will be used to tag the test and its snapshots. */
   name: string
@@ -155,8 +155,8 @@ interface DepositAction<
  * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
  */
 function createReserveActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(): ReserveAction<TCustom, TInitStorages>[] {
   return [
     {
@@ -235,8 +235,8 @@ function createReserveActions<
  * Recall that in the case a network does not support one of these, it'll be skipped when generating the test cases.
  */
 function createLockActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(): LockAction<TCustom, TInitStorages>[] {
   return [
     {
@@ -310,8 +310,8 @@ function createLockActions<
  * at least once each network.
  */
 function createDepositActions<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(): DepositAction<TCustom, TInitStorages>[] {
   return [
     {
@@ -805,8 +805,8 @@ async function transferAllowDeathInsufficientFundsTest<
  * 5. Check that events emitted as a result of this operation contain correct data
  */
 async function transferAllowDeathWithReserveTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
@@ -1404,8 +1404,8 @@ async function forceTransferInsufficientFundsTest<
  * 5. Check that events emitted as a result of this operation contain correct data
  */
 async function forceTransferWithReserveTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
   baseChain: Chain<TCustom, TInitStoragesBase>,
@@ -1797,8 +1797,8 @@ async function transferAllKeepAliveFalseTest<
  * 5. Check that events emitted as a result of this operation contain correct data
  */
 async function transferAllWithReserveTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
@@ -2346,6 +2346,148 @@ async function forceUnreserveNonExistentAccountTest<
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
 }
 
+/**
+ * Test `force_unreserve` on an account with existing reserves.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. Create a reserve of 20 ED using any available deposit action
+ *    - reserve actions are avoided in case the manual lock is chosen; since it's a manual storage modification,
+ *      it'll interact poorly with the unreservation
+ * 3. Forcefully unreserve 20 ED from Alice
+ * 4. Verify `balances.Unreserved` event is emitted with correct data
+ * 5. Verify Alice's reserved balance decreased and free balance increased
+ */
+async function forceUnreserveWithReservesTest<
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  let paraId: number | undefined
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+
+    // Query parachain ID once for XCM operations
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    paraId = (parachainInfo as any).toNumber()
+  }
+
+  // 1. Create Alice with 10000 ED
+
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 10000n
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+
+  // Verify Alice starts with no reserves and no consumers
+  const aliceAccountInitial = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountInitial.data.reserved.toBigInt()).toBe(0n)
+  expect(aliceAccountInitial.data.free.toBigInt()).toBe(aliceBalance)
+  expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
+
+  // 2. Create a reserve a multisig operation - available on most chains
+
+  const multisigThreshold = 2n
+  const multisigDeposit =
+    baseClient.api.consts.multisig.depositBase.toBigInt() +
+    multisigThreshold * baseClient.api.consts.multisig.depositFactor.toBigInt()
+  const multisigTx = baseClient.api.tx.multisig.asMulti(
+    multisigThreshold,
+    [testAccounts.bob.address],
+    null,
+    baseClient.api.tx.system.remark('multisig test').method.toHex(),
+    { refTime: 1000000, proofSize: 1000 },
+  )
+  await sendTransaction(multisigTx.signAsync(alice))
+  await baseClient.dev.newBlock()
+
+  // Verify the reserve was created and consumer count increased
+  const aliceAccountAfterReserve = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(multisigDeposit)
+  expect(aliceAccountAfterReserve.consumers.toNumber()).toEqual(1)
+  const consumersAfterReserve = aliceAccountAfterReserve.consumers.toNumber()
+
+  // 3. Forcefully unreserve 20 ED from Alice
+
+  const unreserveAmount = multisigDeposit
+  const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
+
+  if (hasScheduler) {
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceUnreserveTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId! }],
+        },
+      },
+      forceUnreserveTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+
+    // Advance blocks on both chains
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 4. Verify `balances.Unreserved` event is emitted with correct data
+
+  const systemEvents = await baseClient.api.query.system.events()
+  const unreservedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Unreserved'
+  })
+
+  expect(unreservedEvent).toBeDefined()
+  assert(baseClient.api.events.balances.Unreserved.is(unreservedEvent!.event))
+  const unreservedEventData = unreservedEvent!.event.data
+  expect(unreservedEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(unreservedEventData.amount.toBigInt()).toBe(unreserveAmount)
+
+  // 5. Verify Alice's reserved balance decreased, free balance increased, and consumer count decreased
+
+  const aliceAccountFinal = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountFinal.data.reserved.toBigInt()).toBe(0n)
+
+  // Free balance should be original balance minus any fees paid during reserve creation
+  const expectedFreeBalance = aliceAccountAfterReserve.data.free.toBigInt() + unreserveAmount
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(expectedFreeBalance)
+
+  // Consumer count should have decreased back to 0 (or at least decreased from after reserve)
+  const consumersAfterUnreserve = aliceAccountFinal.consumers.toNumber()
+  expect(consumersAfterUnreserve).toBeLessThan(consumersAfterReserve)
+  expect(consumersAfterUnreserve).toBe(0)
+}
+
 // -------------------
 // `force_set_balance`
 // -------------------
@@ -2763,16 +2905,16 @@ async function forceAdjustTotalIssuanceSuccessTest<
  *
  * Overall test structure:
  *
- * 1. Credits an account with 100000 ED
- * 2. Executes the provided reserve action
- * 3. Executes the provided lock action
+ * 1. Credits an account with 1000000 ED
+ * 2. Executes the provided reserve action for 900000 ED
+ * 3. Executes the provided lock action for 900000 ED
  * 4. Tries to execute the provided deposit action
  * 5. Checks that `balances.LiquidityRestrictions` is raised
  * 6. Verify that the account has, in fact, funds to perform the operation
  */
 async function testLiquidityRestrictionForAction<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
 >(
   chain: Chain<TCustom, TInitStorages>,
   testConfig: TestConfig,
@@ -2795,10 +2937,10 @@ async function testLiquidityRestrictionForAction<
     return
   }
 
-  // Step 1: Create account with 100000 ED
+  // Step 1: Create account with 1000000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const totalBalance = existentialDeposit * 1000000n // 100000 ED
+  const totalBalance = existentialDeposit * 1000000n
   const alice = testAccounts.alice
 
   // Set initial balance
@@ -2815,7 +2957,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
 
-  const reserveAmount = existentialDeposit * 900000n // 90000 ED
+  const reserveAmount = existentialDeposit * 900000n
   const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
 
   await client.dev.newBlock()
@@ -2824,7 +2966,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
 
-  const lockAmount = existentialDeposit * 900000n // 90000 ED
+  const lockAmount = existentialDeposit * 900000n
   await lockAction.execute(client, alice, lockAmount, testConfig)
 
   await client.dev.newBlock()
@@ -2909,7 +3051,13 @@ const commonTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig) => 
  * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
  * fee.
  */
-const transferAllowDeathNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+const transferAllowDeathNormalEDTests = <
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+>(
+  chain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+): RootTestTree => ({
   kind: 'describe',
   label: 'transfer_allow_death',
   children: [
@@ -2976,8 +3124,8 @@ const transferKeepAliveNormalEDTests = (chain: Chain, testConfig: TestConfig): R
 })
 
 export const accountsE2ETests = <
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
@@ -3076,6 +3224,11 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'unreserving from non-existent account is a no-op',
           testFn: () => forceUnreserveNonExistentAccountTest(chain, testConfig, relayChain),
+        },
+        {
+          kind: 'test',
+          label: 'unreserving from account with reserves works correctly',
+          testFn: () => forceUnreserveWithReservesTest(chain, testConfig, relayChain),
         },
       ],
     },
