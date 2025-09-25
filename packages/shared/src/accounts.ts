@@ -2839,6 +2839,252 @@ async function forceSetBalanceBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin)
 }
 
+/**
+ * Test `force_set_balance` successfully setting a balance.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. Force set Alice's balance to 101 ED
+ * 3. Verify that the balance was set correctly
+ * 4. Check new total issuance
+ */
+async function forceSetBalanceSuccessTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // 1. Create Alice's account with 100 ED
+
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(baseClient, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+
+  // Verify initial balance
+  const aliceAccountInitial = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
+
+  // Query initial total issuance
+  const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
+
+  // 2. Force set Alice's balance to 101 ED
+
+  const newBalance = existentialDeposit * 101n
+  const expectedIssuanceIncrease = newBalance - initialBalance
+  const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
+
+  if (hasScheduler) {
+    // Use root origin to execute force set balance directly
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceSetBalanceTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceSetBalanceTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 3. Verify that the transaction succeeded and balance was set
+
+  // Verify Alice's balance was set to 101 ED
+  const aliceAccountFinal = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(newBalance)
+
+  // Verify total issuance increased by the expected amount
+  const finalTotalIssuance = await baseClient.api.query.balances.totalIssuance()
+  const actualIssuanceIncrease = finalTotalIssuance.toBigInt() - initialTotalIssuance.toBigInt()
+  expect(actualIssuanceIncrease).toBe(expectedIssuanceIncrease)
+
+  // 4. Check events and new total issuance
+
+  const events = await baseClient.api.query.system.events()
+
+  // Check that a BalanceSet event was emitted
+  const balanceSetEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'BalanceSet'
+  })
+  expect(balanceSetEvent).toBeDefined()
+  assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
+
+  const balanceSetEventData = balanceSetEvent!.event.data
+  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(balanceSetEventData.free.toBigInt()).toBe(newBalance)
+
+  // Check new total issuance
+  const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
+  expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() + expectedIssuanceIncrease)
+
+  // Verify Alice is still alive
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+}
+
+/**
+ * Test `force_set_balance` setting balance below ED reaps the account.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. Force set Alice's balance to ED - 1 (below existential deposit)
+ * 3. Verify that the account was reaped and total issuance decreased
+ * 4. Check events
+ */
+async function forceSetBalanceBelowEdTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // 1. Create Alice's account with 100 ED
+
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(baseClient, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+
+  // Verify initial balance
+  const aliceAccountInitial = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
+
+  // Query initial total issuance
+  const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
+
+  // 2. Force set Alice's balance to ED - 1 (below existential deposit)
+
+  const newBalance = existentialDeposit - 1n // Below ED
+  const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
+
+  if (hasScheduler) {
+    // Use root origin to execute force set balance directly
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceSetBalanceTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceSetBalanceTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient!.dev.newBlock()
+    await baseClient.dev.newBlock()
+  }
+
+  // 3. Verify that the transaction succeeded, and that Alice's account was reaped
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(true)
+
+  // 4. Check events
+
+  const events = await baseClient.api.query.system.events()
+
+  // Check that a BalanceSet event was emitted
+  const balanceSetEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'BalanceSet'
+  })
+  expect(balanceSetEvent).toBeDefined()
+  assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
+
+  const balanceSetEventData = balanceSetEvent!.event.data
+  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(balanceSetEventData.free.toBigInt()).toBe(0n)
+
+  // Check that a KilledAccount event was emitted
+  const killedAccountEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedAccountEvent).toBeDefined()
+  assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
+
+  const killedAccountEventData = killedAccountEvent!.event.data
+  expect(killedAccountEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+
+  // Check new total issuance
+  const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
+  expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() - initialBalance)
+}
+
 // -----------------------------
 // `force_adjust_total_issuance`
 // -----------------------------
@@ -3576,6 +3822,16 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'non-root origins cannot forcefully set balances',
           testFn: () => forceSetBalanceBadOriginTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'successfully sets balance and and adjusts total issuance',
+          testFn: () => forceSetBalanceSuccessTest(chain, testConfig, relayChain),
+        },
+        {
+          kind: 'test',
+          label: 'setting balance below ED reaps account and updates total issuance',
+          testFn: () => forceSetBalanceBelowEdTest(chain, testConfig, relayChain),
         },
       ],
     },
