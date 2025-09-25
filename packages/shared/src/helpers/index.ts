@@ -5,7 +5,10 @@ import { defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { EventRecord } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
+import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
@@ -440,3 +443,84 @@ export interface ParaTestConfig {
  * Union type for all test configurations, whether relay or parachain.
  */
 export type TestConfig = RelayTestConfig | ParaTestConfig
+
+type ArgMatcher = unknown | ((actual: unknown) => boolean)
+
+type EventMatchCriteria<T extends AnyTuple = AnyTuple, N = unknown> = {
+  type: IsEvent<T, N>
+  args?: { [K in keyof N]?: ArgMatcher }
+}
+
+/**
+ * Assert that specific Substrate events were emitted.
+ *
+ * Usage:
+ * - `type`: the event constructor (e.g. `api.events.system.CodeUpdated`)
+ * - `args` (optional): matchers for event fields
+ *   - literal: compared via `.toString()`
+ *   - function: `(value) => boolean`
+ *
+ * Examples:
+ *
+ * // Match by literal
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.preimage.Noted, args: { hash_: preimageHash } }
+ * ])
+ *
+ * // Match with function
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.scheduler.Dispatched, args: { result: (r) => r.isErr } }
+ * ])
+ *
+ * // Match by type only
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.system.CodeUpdated }
+ * ])
+ */
+export function assertExpectedEvents(actualEvents: EventRecord[], expectedEvents: EventMatchCriteria[]): void {
+  const missing: string[] = []
+
+  for (const expected of expectedEvents) {
+    const { type, args: expectedArgs } = expected
+
+    const match = actualEvents.find(({ event }) => {
+      if (!type.is(event)) return false
+
+      if (!expectedArgs) return true
+
+      const namedArgs = (event as IEvent<Codec[]>).data as unknown as Record<string, unknown>
+
+      for (const [key, matcher] of Object.entries(expectedArgs)) {
+        const actualValue = namedArgs[key]
+
+        if (typeof matcher === 'function') {
+          if (!matcher(actualValue)) {
+            return false
+          }
+        } else {
+          if (matcher?.toString?.() !== actualValue?.toString?.()) {
+            return false
+          }
+        }
+      }
+
+      return true
+    })
+
+    if (!match) {
+      const name = type.meta?.name.toString() ?? '[unknown event]'
+      const argDesc = expectedArgs
+        ? `${JSON.stringify(
+            Object.fromEntries(
+              Object.entries(expectedArgs).map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v?.toString()]),
+            ),
+          )}`
+        : ''
+      missing.push(`Event type "${name}" with expected args: ${argDesc}`)
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`Expected events not found:\n- ${missing.join('\n- ')}`)
+  }
+}
