@@ -1573,6 +1573,119 @@ async function forceTransferBadOriginTest(chain: Chain) {
   assert(dispatchError.isBadOrigin) // BadOrigin is a top-level DispatchError, not a module error
 }
 
+/**
+ * Test self-transfer with `force_transfer`.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. The entirety of Alice's balance is forcefully transferred to herself
+ * 3. Verify that the transfer is a no-op (no balance changes, no fees)
+ * 4. Check that no transfer or other balance events occur
+ */
+async function forceTransferSelfTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(
+  baseChain: Chain<TCustom, TInitStoragesBase>,
+  testConfig: TestConfig,
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+) {
+  let relayClient: Client<TCustom, TInitStoragesRelay>
+  let baseClient: Client<TCustom, TInitStoragesBase>
+  const [bc] = await setupNetworks(baseChain)
+
+  // Check if scheduler pallet is available
+  const hasScheduler = !!bc.api.tx.scheduler
+  if (hasScheduler) {
+    baseClient = bc
+  } else {
+    if (!relayChain) {
+      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
+    }
+
+    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    relayClient = rc
+    baseClient = bc
+  }
+
+  // 1. Create Alice's account
+  const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
+  const aliceBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(baseClient, aliceBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+
+  // 2. Self-transfer all balance
+
+  const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, alice.address, aliceBalance)
+
+  if (hasScheduler) {
+    // Use root origin to execute force transfer directly
+    await scheduleInlineCallWithOrigin(
+      baseClient,
+      forceTransferTx.method.toHex(),
+      { system: 'Root' },
+      testConfig.blockProvider,
+    )
+    await baseClient.dev.newBlock()
+  } else {
+    // Query parachain ID
+    const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
+    const paraId = (parachainInfo as any).toNumber()
+
+    // Create XCM transact message
+    const xcmTx = createXcmTransactSend(
+      relayClient!,
+      {
+        parents: 0,
+        interior: {
+          X1: [{ Parachain: paraId }],
+        },
+      },
+      forceTransferTx.method.toHex(),
+      'Superuser',
+    )
+
+    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await baseClient.dev.newBlock()
+  }
+
+  // 3. Verify that the transaction succeeded (no ExtrinsicFailed event)
+
+  const events = await baseClient.api.query.system.events()
+  const failedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvent).toBeUndefined()
+
+  // 4. Verify Alice's balance is unchanged (force transfers have no fees, self-transfer should be no-op)
+
+  const aliceAccount = await baseClient.api.query.system.account(alice.address)
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
+
+  // Verify no Transfer event occurred
+  const transferEvent = findTransferEvent(events, baseClient, alice.address, alice.address, testConfig.addressEncoding)
+  expect(transferEvent).toBeUndefined()
+
+  // Verify no Endowed event occurred
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeUndefined()
+
+  // Verify no KilledAccount event occurred
+  const killedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedEvent).toBeUndefined()
+
+  // Verify Alice is still alive
+  expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+}
+
 // --------------
 // `transfer_all`
 // --------------
@@ -3385,6 +3498,11 @@ export const accountsE2ETests = <
           kind: 'test',
           label: 'non-root origins cannot force transfer',
           testFn: () => forceTransferBadOriginTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'self-transfer is a no-op',
+          testFn: () => forceTransferSelfTest(chain, testConfig, relayChain),
         },
       ],
     },
