@@ -3775,6 +3775,103 @@ async function burnWithDepositTest<
   expect(killedEvent).toBeUndefined()
 }
 
+/**
+ * Test that attempting to burn all, or more than all, of an account's funds fails.
+ *
+ * 1. Create Alice with 100 ED
+ * 2. Attempt to burn 100 ED - should fail due to insufficient funds
+ * 3. Attempt to burn 100 ED again - should fail due to insufficient funds (balance is now < 100 ED due to fees)
+ * 4. Verify Alice's balance only decreases by transaction fees
+ * 5. Verify total issuance is unchanged in both cases
+ */
+async function burnDoubleAttemptTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create Alice with 100 ED
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 100n
+  const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+  const aliceAccountInitial = await client.api.query.system.account(alice.address)
+  const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
+
+  const cumulativeFees = new Map<string, bigint>()
+
+  // 2. Attempt to burn 100 ED - should fail
+
+  const burnAmount = existentialDeposit * 100n
+  const firstBurnTx = client.api.tx.balances.burn(burnAmount, false)
+  await sendTransaction(firstBurnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // Verify first transaction failed
+  let systemEvents = await client.api.query.system.events()
+  let extrinsicFailedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(extrinsicFailedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(extrinsicFailedEvent!.event))
+
+  let dispatchError = extrinsicFailedEvent!.event.data.dispatchError
+  expect(dispatchError.isModule).toBe(false)
+  expect(dispatchError.asToken.isFundsUnavailable).toBeTruthy()
+
+  // 3. Attempt to burn 100 ED again - should fail due to insufficient funds
+
+  const secondBurnTx = client.api.tx.balances.burn(burnAmount, false)
+  await sendTransaction(secondBurnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // Verify second transaction also failed
+  systemEvents = await client.api.query.system.events()
+  extrinsicFailedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(extrinsicFailedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(extrinsicFailedEvent!.event))
+
+  dispatchError = extrinsicFailedEvent!.event.data.dispatchError
+  expect(dispatchError.isModule).toBe(false)
+  expect(dispatchError.asToken.isFundsUnavailable).toBeTruthy()
+
+  // 4. Verify Alice's balance only decreases by transaction fees
+
+  const aliceAccountAfter = await client.api.query.system.account(alice.address)
+  const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
+  const transactionFees = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!
+
+  expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFees)
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // 5. Verify total issuance is unchanged
+
+  const finalTotalIssuance = await client.api.query.balances.totalIssuance()
+  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+
+  // Verify no Burned events were emitted
+  const burnEvents = systemEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Burned'
+  })
+  expect(burnEvents).toHaveLength(0)
+}
+
 // ---------------------------------------
 // Various currency/fungible-related tests
 // ---------------------------------------
@@ -4032,6 +4129,11 @@ const commonBurnTests = (chain: Chain, testConfig: TestConfig) => [
     kind: 'test' as const,
     label: 'burning funds from account works',
     testFn: () => burnTestBaseCase(chain, testConfig),
+  },
+  {
+    kind: 'test' as const,
+    label: 'burning entire balance, or more than it, fails',
+    testFn: () => burnDoubleAttemptTest(chain, testConfig),
   },
 ]
 
