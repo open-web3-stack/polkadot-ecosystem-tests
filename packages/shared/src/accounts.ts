@@ -28,10 +28,14 @@ import {
 //
 // Note about this module
 //
-//
 // Tests are grouped by the main extrinsic from the balances pallet that they target; both the source code,
 // and the test trees used to register test cases with `vitest`.
 //
+// Some tests have different behavior based on the chain's ED; this is check through the test configuration.
+// This is because some operations, like the intentional reaping of an account through `transfer_allow_death`, must
+// be executed with a different amount of funds depending on the ED ~ tx. fee relationship.
+//
+// This is currently not done in favor of skipping those tests in low ED chains; it is left for a future PR.
 
 /// -------
 /// Helpers
@@ -3528,7 +3532,7 @@ async function burnTestBaseCase<
  *     - fee deduction will bring the amount below ED, on chains whose ED is above a typical transaction fee
  *     - on other chains, this test cannot be run
  * 3. Verify that the account is reaped
- * 4. Verify that the total issuance is decreased by the amount burned
+ * 4. Verify that the total issuance is decreased by the amount burned, plus the amount lost as dust
  */
 async function burnTestWithReaping<
   TCustom extends Record<string, unknown> | undefined,
@@ -3749,7 +3753,7 @@ async function burnWithDepositTest<
   expect(aliceAccountAfterBurn.consumers.toNumber()).toBe(1) // Still has consumer
   expect(aliceAccountAfterBurn.data.frozen.toBigInt()).toBe(0n)
 
-  // Verify the account has expected free balance (initial - burned - fees)
+  // Verify the account has expected free balance (initial - fees)
   const totalFees = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!
   const expectedFreeBalance = initialBalance - totalFees
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedFreeBalance)
