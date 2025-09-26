@@ -1,6 +1,32 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Collectives Accounts > \`burn\` > burning all funds from account leads to account reaping > events for burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1000000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Accounts > \`burn\` > burning all funds from account leads to account reaping > events for first burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1000000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
 [
   {
     "data": {

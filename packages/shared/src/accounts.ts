@@ -307,8 +307,7 @@ function createLockActions<
         const currentReserved = currentAccount.data.reserved.toBigInt()
         const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
-        // Manually set frozen amount - frozen applies to total balance (free + reserved)
-        // Don't modify free balance as frozen constraint works on the total
+        // Manually set frozen amount, and don't modify free balance as frozen constraint works on the total
         await client.dev.setStorage({
           System: {
             account: [
@@ -3480,15 +3479,15 @@ async function burnTestBaseCase<
   // 2. Alice burns 500 ED of her own
 
   const burnAmount = existentialDeposit * 500n
-  const firstBurnTx = client.api.tx.balances.burn(burnAmount, false)
-  const firstBurnEvents = await sendTransaction(firstBurnTx.signAsync(alice))
+  const burnTx = client.api.tx.balances.burn(burnAmount, false)
+  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
   // Update cumulative fees
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  await checkEvents(firstBurnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
+  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
     'events when Alice self-burns funds',
   )
 
@@ -3516,17 +3515,18 @@ async function burnTestBaseCase<
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
-
   const burnEventData = burnEvent!.event.data
   expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
 }
 
 /**
- * Test that burning all of an accounts funds leads to it being reaped.
+ * Test that the burning of an account's funds below ED leads to it being reaped.
  *
  * 1. Create Alice with 1000 ED
  * 2. Burn 999 ED (with `keep_alive` set to `false`)
+ *     - fee deduction will bring the amount below ED, on chains whose ED is above a typical transaction fee
+ *     - on other chains, this test cannot be run
  * 3. Verify that the account is reaped
  * 4. Verify that the total issuance is decreased by the amount burned
  */
@@ -3552,14 +3552,14 @@ async function burnTestWithReaping<
   // 2. Burn 999 ED
 
   const burnAmount = initialBalance - existentialDeposit
-  const firstBurnTx = client.api.tx.balances.burn(burnAmount, false)
-  const firstBurnEvents = await sendTransaction(firstBurnTx.signAsync(alice))
+  const burnTx = client.api.tx.balances.burn(burnAmount, false)
+  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  await checkEvents(firstBurnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for first burn')
+  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for burn')
 
   // 3. Verify that the account is reaped
 
@@ -3589,6 +3589,190 @@ async function burnTestWithReaping<
 
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - (burnAmount + dustLostAmount))
+}
+
+/**
+ * Test that burning with `keep_alive` set to `true` prevents burning below ED.
+ *
+ * 1. Create Alice with 1000 ED
+ * 2. Attempt to burn 999 ED with `keep_alive` set to `true`
+ * 3. Verify that the transaction fails
+ * 4. Verify that Alice's balance only decreases by transaction fees
+ * 5. Verify that total issuance is unchanged
+ */
+async function burnKeepAliveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create Alice with 1000 ED
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 1000n
+  const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+  const aliceAccountInitial = await client.api.query.system.account(alice.address)
+  const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
+
+  const cumulativeFees = new Map<string, bigint>()
+
+  // 2. Attempt to burn 999 ED with `keep_alive` set to `true`
+
+  const burnAmount = existentialDeposit * 999n
+  const burnTx = client.api.tx.balances.burn(burnAmount, true)
+  await sendTransaction(burnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // 3. Verify that the transaction fails
+
+  const systemEvents = await client.api.query.system.events()
+  const extrinsicFailedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(extrinsicFailedEvent).toBeDefined()
+  assert(client.api.events.system.ExtrinsicFailed.is(extrinsicFailedEvent!.event))
+
+  const dispatchError = extrinsicFailedEvent!.event.data.dispatchError
+  expect(dispatchError.isModule).toBe(false)
+  expect(dispatchError.asToken.isFundsUnavailable).toBeTruthy()
+
+  // 4. Verify that Alice's balance only decreases by transaction fees
+
+  const aliceAccountAfter = await client.api.query.system.account(alice.address)
+  const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
+  const transactionFee = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!
+
+  expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFee)
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // 5. Verify that total issuance is unchanged
+
+  const finalTotalIssuance = await client.api.query.balances.totalIssuance()
+  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+
+  // Verify no Burned event was emitted
+  const burnEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Burned'
+  })
+  expect(burnEvent).toBeUndefined()
+}
+
+/**
+ * Test that burning funds from an account with a reserve cannot reap it due to nonzero consumer count.
+ *
+ * 1. Create Alice with 1000 ED + multisig deposit amount
+ * 2. Create a multisig deposit to add a consumer reference
+ * 3. Burn 999 ED with `keep_alive` set to `false`
+ * 4. Verify that the account is NOT reaped due to consumer count
+ * 5. Verify that total issuance is unchanged
+ */
+async function burnWithDepositTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create Alice with 1000 ED + multisig deposit amount
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+
+  const initialBalance = existentialDeposit * 2n
+  const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // Query initial total issuance and consumer count
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+  const aliceAccountInitial = await client.api.query.system.account(alice.address)
+  expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
+
+  const cumulativeFees = new Map<string, bigint>()
+
+  // 2. Add a consumer reference
+
+  const currentAccount = await client.api.query.system.account(alice.address)
+  const currentFree = currentAccount.data.free.toBigInt()
+  const currentReserved = currentAccount.data.reserved.toBigInt()
+  const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+  // Manually set account data to add a consumer reference.
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [alice.address],
+          {
+            nonce: aliceNonce,
+            consumers: 1 + currentAccount.consumers.toNumber(),
+            providers: currentAccount.providers.toNumber(),
+            sufficients: currentAccount.sufficients.toNumber(),
+            data: {
+              free: currentFree,
+              reserved: currentReserved,
+              // No frozen balance required - to forestall the burn, only a consumer reference is needed.
+              frozen: 0n,
+              flags: currentAccount.data.flags,
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  await client.dev.newBlock()
+
+  // 3. Burn 1 ED with `keep_alive` set to `false`
+
+  const burnAmount = existentialDeposit
+  const burnTx = client.api.tx.balances.burn(burnAmount, false)
+  await sendTransaction(burnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  // 4. Verify that the account is NOT reaped due to consumer count
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  const aliceAccountAfterBurn = await client.api.query.system.account(alice.address)
+  expect(aliceAccountAfterBurn.consumers.toNumber()).toBe(1) // Still has consumer
+  expect(aliceAccountAfterBurn.data.frozen.toBigInt()).toBe(0n)
+
+  // Verify the account has expected free balance (initial - burned - fees)
+  const totalFees = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!
+  const expectedFreeBalance = initialBalance - totalFees
+  expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedFreeBalance)
+
+  // 5. Verify that total issuance is unchanged
+
+  const finalTotalIssuance = await client.api.query.balances.totalIssuance()
+  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+
+  // Verify Burned event was not emitted
+  const systemEvents = await client.api.query.system.events()
+  const burnEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Burned'
+  })
+  expect(burnEvent).toBeUndefined()
+
+  // Verify no KilledAccount event was emitted
+  const killedEvent = systemEvents.find((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'KilledAccount'
+  })
+  expect(killedEvent).toBeUndefined()
 }
 
 // ---------------------------------------
@@ -3871,8 +4055,18 @@ const burnNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree =
 
     {
       kind: 'test',
-      label: 'burning all funds from account leads to account reaping',
+      label: 'burning funds below ED leads to account reaping',
       testFn: () => burnTestWithReaping(chain, testConfig),
+    },
+    {
+      kind: 'test' as const,
+      label: 'burning below ED with keep_alive is no-op',
+      testFn: () => burnKeepAliveTest(chain, testConfig),
+    },
+    {
+      kind: 'test' as const,
+      label: 'burning from account with multisig deposit cannot reap it',
+      testFn: () => burnWithDepositTest(chain, testConfig),
     },
   ],
 })
