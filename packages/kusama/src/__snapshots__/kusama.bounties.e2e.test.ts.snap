@@ -103,7 +103,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -116,7 +116,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -190,7 +190,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -203,7 +203,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -297,7 +297,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
 [
   {
     "data": {
-      "beneficiary": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "beneficiary": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "index": "(redacted)",
     },
     "method": "BountyAwarded",
@@ -335,7 +335,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -348,7 +348,7 @@ exports[`Kusama Bounties > All bounty success tests > All curator unassign tests
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -426,7 +426,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bou
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -439,7 +439,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty Closure Tests > Bou
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -542,7 +542,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty approval tests > Bo
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -566,7 +566,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claimi
 [
   {
     "data": {
-      "beneficiary": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "beneficiary": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "index": "(redacted)",
     },
     "method": "BountyAwarded",
@@ -581,7 +581,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claimi
 [
   {
     "data": {
-      "beneficiary": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "beneficiary": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "index": "(redacted)",
       "payout": "(rounded 300000000000)",
     },
@@ -608,7 +608,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claimi
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -621,7 +621,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty awarding and claimi
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -672,7 +672,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty extension > curator
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -685,7 +685,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty extension > curator
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -750,7 +750,7 @@ exports[`Kusama Bounties > All bounty success tests > Bounty funding tests > Bou
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -801,7 +801,7 @@ exports[`Kusama Bounties > All bounty success tests > Curator assignment and acc
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -814,7 +814,7 @@ exports[`Kusama Bounties > All bounty success tests > Curator assignment and acc
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
     },
     "method": "CuratorProposed",
     "section": "bounties",

@@ -103,7 +103,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -116,7 +116,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -190,7 +190,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -203,7 +203,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -297,7 +297,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
 [
   {
     "data": {
-      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "beneficiary": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "index": "(redacted)",
     },
     "method": "BountyAwarded",
@@ -335,7 +335,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -348,7 +348,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -426,7 +426,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -439,7 +439,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -542,7 +542,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty approval tests > 
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -566,7 +566,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
 [
   {
     "data": {
-      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "beneficiary": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "index": "(redacted)",
     },
     "method": "BountyAwarded",
@@ -581,7 +581,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
 [
   {
     "data": {
-      "beneficiary": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "beneficiary": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "index": "(redacted)",
       "payout": 9000000000000,
     },
@@ -608,7 +608,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -621,7 +621,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -672,7 +672,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty extension > curat
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -685,7 +685,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty extension > curat
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -750,7 +750,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > B
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
@@ -801,7 +801,7 @@ exports[`Polkadot Bounties > All bounty success tests > Curator assignment and a
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorAccepted",
     "section": "bounties",
@@ -814,7 +814,7 @@ exports[`Polkadot Bounties > All bounty success tests > Curator assignment and a
   {
     "data": {
       "bountyId": "(redacted)",
-      "curator": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
     },
     "method": "CuratorProposed",
     "section": "bounties",
