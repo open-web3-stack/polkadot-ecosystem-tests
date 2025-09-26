@@ -1,5 +1,57 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Asset Hub Accounts > \`burn\` > burning all funds from account leads to account reaping > events for first burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 100000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Accounts > \`burn\` > multiple burns leading to account reaping > events for first burn 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Accounts > \`burn\` > multiple burns leading to account reaping > events when Alice self-burns funds 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
 [
   {
