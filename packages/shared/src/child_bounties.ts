@@ -146,16 +146,22 @@ export async function childBountyCreationTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
-    return
-  }
-
-  // move client head to the last spend period block - 3
-  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
-  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
-
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  // ensure the last spend period block number is updated in storage
+  const fetchedLastSpendPeriodBlockNumber = await client.api.query.treasury.lastSpendPeriod()
+  expect(fetchedLastSpendPeriodBlockNumber.unwrap().toNumber()).toBe(newLastSpendPeriodBlockNumber)
+
+  await client.dev.newBlock()
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit
   const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
