@@ -168,9 +168,8 @@ export async function childBountyCreationTest<
   const description = 'Test bounty for child bounty creation'
 
   // propose a bounty
-  const bountyProposedEvents = await sendTransaction(
-    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(testAccounts.alice),
-  )
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -185,7 +184,8 @@ export async function childBountyCreationTest<
   expect(bountyFromStorage.status.isProposed).toBe(true)
 
   // approve the bounty with origin Treasurer
-  await scheduleInlineCallWithOrigin(client, client.api.tx.bounties.approveBounty(bountyIndex).method.toHex(), {
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
     Origins: 'Treasurer',
   })
 
@@ -215,13 +215,10 @@ export async function childBountyCreationTest<
 
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
-  await scheduleInlineCallWithOrigin(
-    client,
-    client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee).method.toHex(),
-    {
-      Origins: 'Treasurer',
-    },
-  )
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
 
   await client.dev.newBlock()
 
@@ -237,7 +234,8 @@ export async function childBountyCreationTest<
   await client.dev.newBlock()
 
   // accept the curator
-  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(testAccounts.bob))
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -254,11 +252,12 @@ export async function childBountyCreationTest<
   const childBountyValue = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // Smaller value for child bounty
   const childBountyDescription = 'Test child bounty'
 
-  await sendTransaction(
-    client.api.tx.childBounties
-      .addChildBounty(bountyIndex, childBountyValue, childBountyDescription)
-      .signAsync(testAccounts.bob), // Bob is the curator, so he should create the child bounty
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
   )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
