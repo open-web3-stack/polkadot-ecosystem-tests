@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
@@ -53,9 +53,9 @@ async function getBountyApprovals(client: Client<any, any>): Promise<number[]> {
  */
 async function setupTestAccounts(client: Client<any, any>, accounts: string[] = ['alice', 'bob', 'charlie']) {
   const accountMap = {
-    alice: devAccounts.alice.address,
-    bob: devAccounts.bob.address,
-    charlie: devAccounts.charlie.address,
+    alice: testAccounts.alice.address,
+    bob: testAccounts.bob.address,
+    charlie: testAccounts.charlie.address,
   }
 
   const accountData = accounts
@@ -169,7 +169,7 @@ export async function childBountyCreationTest<
 
   // propose a bounty
   const bountyProposedEvents = await sendTransaction(
-    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(devAccounts.alice),
+    client.api.tx.bounties.proposeBounty(bountyValue, description).signAsync(testAccounts.alice),
   )
 
   await client.dev.newBlock()
@@ -217,7 +217,7 @@ export async function childBountyCreationTest<
   // assign curator to the bounty
   await scheduleInlineCallWithOrigin(
     client,
-    client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee).method.toHex(),
+    client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee).method.toHex(),
     {
       Origins: 'Treasurer',
     },
@@ -237,7 +237,7 @@ export async function childBountyCreationTest<
   await client.dev.newBlock()
 
   // accept the curator
-  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(devAccounts.bob))
+  await sendTransaction(client.api.tx.bounties.acceptCurator(bountyIndex).signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -257,7 +257,7 @@ export async function childBountyCreationTest<
   await sendTransaction(
     client.api.tx.childBounties
       .addChildBounty(bountyIndex, childBountyValue, childBountyDescription)
-      .signAsync(devAccounts.bob), // Bob is the curator, so he should create the child bounty
+      .signAsync(testAccounts.bob), // Bob is the curator, so he should create the child bounty
   )
 
   await client.dev.newBlock()
