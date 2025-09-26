@@ -1,31 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot People Chain Accounts > \`burn\` > burning all funds from account leads to account reaping > events for burn 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 1000000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot People Chain Accounts > \`burn\` > burning all funds from account leads to account reaping > events for first burn 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 1000000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Polkadot People Chain Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
 [
   {
@@ -40,32 +14,6 @@ exports[`Polkadot People Chain Accounts > \`burn\` > burning funds below ED lead
 `;
 
 exports[`Polkadot People Chain Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
-[
-  {
-    "data": {
-      "amount": 500000000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot People Chain Accounts > \`burn\` > multiple burns leading to account reaping > events for first burn 1`] = `
-[
-  {
-    "data": {
-      "amount": 500000000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot People Chain Accounts > \`burn\` > multiple burns leading to account reaping > events when Alice self-burns funds 1`] = `
 [
   {
     "data": {

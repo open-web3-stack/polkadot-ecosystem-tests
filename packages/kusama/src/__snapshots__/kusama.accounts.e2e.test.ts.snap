@@ -1,21 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Accounts > \`burn\` > burning all funds from account leads to account reaping > events for first burn 1`] = `[]`;
-
 exports[`Kusama Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 170000000000)",
-      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Kusama Accounts > \`burn\` > multiple burns leading to account reaping > events for first burn 1`] = `
 [
   {
     "data": {
