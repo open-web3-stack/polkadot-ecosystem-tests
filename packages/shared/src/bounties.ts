@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
@@ -55,9 +55,9 @@ async function getBountyApprovals(client: Client<any, any>): Promise<number[]> {
  */
 async function setupTestAccounts(client: Client<any, any>, accounts: string[] = ['alice', 'bob']) {
   const accountMap = {
-    alice: devAccounts.alice.address,
-    bob: devAccounts.bob.address,
-    charlie: devAccounts.charlie.address,
+    alice: testAccounts.alice.address,
+    bob: testAccounts.bob.address,
+    charlie: testAccounts.charlie.address,
   }
 
   const accountData = accounts
@@ -124,7 +124,7 @@ export async function bountyCreationTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposalEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposalEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -175,7 +175,7 @@ export async function bountyApprovalTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -232,7 +232,7 @@ export async function bountyApprovalWithCuratorTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -244,7 +244,7 @@ export async function bountyApprovalWithCuratorTest<
   // Approve the bounty with curator
   const approveBountyWithCuratorTx = client.api.tx.bounties.approveBountyWithCurator(
     bountyIndex,
-    devAccounts.bob.address,
+    testAccounts.bob.address,
     curatorFee,
   )
   await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), {
@@ -304,7 +304,7 @@ export async function bountyFundingTest<
 
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -380,7 +380,7 @@ export async function bountyFundingForApprovedWithCuratorTest<
 
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -397,7 +397,7 @@ export async function bountyFundingForApprovedWithCuratorTest<
   // approve the bounty with origin treasurer with curator
   const approveBountyWithCuratorTx = client.api.tx.bounties.approveBountyWithCurator(
     bountyIndex,
-    devAccounts.bob.address,
+    testAccounts.bob.address,
     curatorFee,
   )
   await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), {
@@ -474,7 +474,7 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -520,7 +520,7 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -540,7 +540,7 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   // accept the curator
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -587,7 +587,7 @@ export async function bountyExtensionTest<
 
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -634,7 +634,7 @@ export async function bountyExtensionTest<
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -654,7 +654,7 @@ export async function bountyExtensionTest<
 
   // accept the curator
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -677,7 +677,7 @@ export async function bountyExtensionTest<
 
   // extend the bounty expiry
   const extendBountyTx = client.api.tx.bounties.extendBountyExpiry(bountyIndex, 'Testing the bounty extension')
-  const extendBountyEvents = await sendTransaction(extendBountyTx.signAsync(devAccounts.bob))
+  const extendBountyEvents = await sendTransaction(extendBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -714,14 +714,20 @@ export async function bountyAwardingAndClaimingTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const lastSpendPeriodBlock = await client.api.query.treasury.lastSpendPeriod()
-  if (!ensureSpendPeriodAvailable(lastSpendPeriodBlock)) {
-    return
-  }
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  let currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
 
-  // Move to spend period boundary to trigger automatic funding
-  const lastSpendPeriodBlockNumber = lastSpendPeriodBlock.unwrap().toNumber()
-  await client.dev.setHead(lastSpendPeriodBlockNumber - 3)
+  // ensure the last spend period block number is updated in storage
+  const fetchedLastSpendPeriodBlockNumber = await client.api.query.treasury.lastSpendPeriod()
+  expect(fetchedLastSpendPeriodBlockNumber.unwrap().toNumber()).toBe(newLastSpendPeriodBlockNumber)
+
+  await client.dev.newBlock()
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -731,7 +737,7 @@ export async function bountyAwardingAndClaimingTest<
 
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -778,7 +784,7 @@ export async function bountyAwardingAndClaimingTest<
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -798,7 +804,7 @@ export async function bountyAwardingAndClaimingTest<
 
   // accept the curator
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -814,8 +820,8 @@ export async function bountyAwardingAndClaimingTest<
   await client.dev.newBlock()
 
   // award the bounty to the beneficiary
-  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.alice.address)
-  const awardBountyEvents = await sendTransaction(awardBountyTx.signAsync(devAccounts.bob))
+  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, testAccounts.alice.address)
+  const awardBountyEvents = await sendTransaction(awardBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -829,7 +835,7 @@ export async function bountyAwardingAndClaimingTest<
   expect(bountyAwarded.status.isPendingPayout).toBe(true)
 
   // Calculate the claimable at block number
-  const currentBlock = await client.api.rpc.chain.getHeader()
+  currentBlock = await client.api.rpc.chain.getHeader()
   const bountyDepositPayoutDelay = await client.api.consts.bounties.bountyDepositPayoutDelay
   const claimableAtBlock = currentBlock.number.toNumber() + Number(bountyDepositPayoutDelay.toNumber())
 
@@ -840,7 +846,7 @@ export async function bountyAwardingAndClaimingTest<
 
   // claim the bounty
   const claimBountyTx = client.api.tx.bounties.claimBounty(bountyIndex)
-  const claimBountyEvents = await sendTransaction(claimBountyTx.signAsync(devAccounts.alice))
+  const claimBountyEvents = await sendTransaction(claimBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -883,7 +889,7 @@ export async function bountyClosureProposedTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -919,7 +925,7 @@ export async function bountyClosureProposedTest<
   expect(descriptionAfterClosure).toBeNull()
 
   // Verify proposer's bond was slashed
-  const finalBalance = await client.api.query.system.account(devAccounts.alice.address)
+  const finalBalance = await client.api.query.system.account(testAccounts.alice.address)
   const reservedBalance = finalBalance.data.reserved.toBigInt()
 
   // The bond should be slashed (not returned to free balance)
@@ -960,7 +966,7 @@ export async function bountyClosureFundedTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -1066,7 +1072,7 @@ export async function bountyClosureActiveTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -1094,7 +1100,7 @@ export async function bountyClosureActiveTest<
     .toMatchSnapshot('bounty became active events')
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
@@ -1106,7 +1112,7 @@ export async function bountyClosureActiveTest<
 
   // Accept curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1120,7 +1126,7 @@ export async function bountyClosureActiveTest<
   expect(activeBounty.status.isActive).toBe(true)
 
   // Get curator reserved balance before closure
-  const curatorBalanceBeforeClosure = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceBeforeClosure = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceBeforeClosure = curatorBalanceBeforeClosure.data.reserved.toBigInt()
 
   // Close the bounty
@@ -1146,7 +1152,7 @@ export async function bountyClosureActiveTest<
   expect(bountyAfterClosure).toBeNull()
 
   // Verify curator deposit was refunded
-  const curatorBalanceAfterClosure = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceAfterClosure = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceAfterClosure = curatorBalanceAfterClosure.data.reserved.toBigInt()
   expect(curatorReservedBalanceBeforeClosure).toBeGreaterThan(curatorReservedBalanceAfterClosure)
 
@@ -1176,7 +1182,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -1184,7 +1190,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
   // Approve bounty with curator
   const approveBountyWithCuratorTx = client.api.tx.bounties.approveBountyWithCurator(
     bountyIndex,
-    devAccounts.bob.address,
+    testAccounts.bob.address,
     curatorFee,
   )
   await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), { Origins: 'Treasurer' })
@@ -1247,7 +1253,7 @@ export async function unassignCuratorCuratorProposedTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -1287,7 +1293,7 @@ export async function unassignCuratorCuratorProposedTest<
   expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
@@ -1349,7 +1355,7 @@ export async function unassignCuratorActiveByCuratorTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1395,7 +1401,7 @@ export async function unassignCuratorActiveByCuratorTest<
   expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
@@ -1411,7 +1417,7 @@ export async function unassignCuratorActiveByCuratorTest<
 
   // Accept curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1425,12 +1431,12 @@ export async function unassignCuratorActiveByCuratorTest<
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   // Get curator reserved balance before unassign
-  const curatorBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceBefore = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceBefore = curatorBalanceBefore.data.reserved.toBigInt()
 
   // Unassign curator by curator themselves
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await sendTransaction(unassignCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(unassignCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1444,7 +1450,7 @@ export async function unassignCuratorActiveByCuratorTest<
   expect(bountyAfterUnassign.status.isFunded).toBe(true)
 
   // Verify curator deposit was refunded as the caller is the curator so dont slash the curator
-  const curatorBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceAfter = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceAfter = curatorBalanceAfter.data.reserved.toBigInt()
   expect(curatorReservedBalanceAfter).toBeLessThan(curatorReservedBalanceBefore)
 
@@ -1484,7 +1490,7 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1530,7 +1536,7 @@ export async function unassignCuratorActiveByTreasurerTest<
   expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
@@ -1546,7 +1552,7 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Accept curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1560,7 +1566,7 @@ export async function unassignCuratorActiveByTreasurerTest<
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   // Get curator balance before unassign
-  const curatorBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceBefore = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceBefore = curatorBalanceBefore.data.reserved.toBigInt()
 
   // Unassign curator by Treasurer
@@ -1591,7 +1597,7 @@ export async function unassignCuratorActiveByTreasurerTest<
   expect(bountyAfterUnassign.status.isFunded).toBe(true)
 
   // Verify curator deposit was slashed
-  const curatorBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceAfter = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceAfter = curatorBalanceAfter.data.reserved.toBigInt()
   expect(curatorReservedBalanceBefore).toBeGreaterThan(curatorReservedBalanceAfter)
 
@@ -1632,7 +1638,7 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1679,7 +1685,7 @@ export async function unassignCuratorPendingPayoutTest<
   expect(bountyStatusAfterFunding.status.isFunded).toBe(true)
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
@@ -1695,7 +1701,7 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Accept curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1709,8 +1715,8 @@ export async function unassignCuratorPendingPayoutTest<
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   // Award the bounty
-  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.alice.address)
-  await sendTransaction(awardBountyTx.signAsync(devAccounts.bob))
+  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, testAccounts.alice.address)
+  await sendTransaction(awardBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -1724,7 +1730,7 @@ export async function unassignCuratorPendingPayoutTest<
   expect(bountyStatusAfterAwarding.status.isPendingPayout).toBe(true)
 
   // Get curator reserved balance before unassign
-  const curatorBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceBefore = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceBefore = curatorBalanceBefore.data.reserved.toBigInt()
 
   // Unassign curator by Treasurer
@@ -1755,7 +1761,7 @@ export async function unassignCuratorPendingPayoutTest<
   expect(bountyAfterUnassign.status.isFunded).toBe(true)
 
   // Verify curator reserved balance was slashed
-  const curatorBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  const curatorBalanceAfter = await client.api.query.system.account(testAccounts.bob.address)
   const curatorReservedBalanceAfter = curatorBalanceAfter.data.reserved.toBigInt()
   expect(curatorReservedBalanceBefore).toBeGreaterThan(curatorReservedBalanceAfter)
 
@@ -1961,7 +1967,7 @@ export async function bountyClosureApprovedTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -2050,7 +2056,7 @@ export async function bountyClosurePendingPayoutTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -2068,20 +2074,20 @@ export async function bountyClosurePendingPayoutTest<
   await client.dev.newBlock()
 
   // Propose a curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
 
   await client.dev.newBlock()
 
   // Accept curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
   // Award the bounty
-  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.alice.address)
-  await sendTransaction(awardBountyTx.signAsync(devAccounts.bob))
+  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, testAccounts.alice.address)
+  await sendTransaction(awardBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -2157,7 +2163,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -2175,7 +2181,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   await client.dev.newBlock()
 
   // Propose Bob as curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -2184,7 +2190,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 
   // Bob accepts curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -2195,7 +2201,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   // Charlie (public user) tries to unassign curator immediately (premature)
   // Using scheduleInlineCallWithOrigin to simulate public call
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await sendTransaction(unassignCuratorTx.signAsync(devAccounts.charlie))
+  await sendTransaction(unassignCuratorTx.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -2244,7 +2250,7 @@ async function reasonTooBigTest<
 
   const proposeTx = client.api.tx.bounties.proposeBounty(bountyValue, longDescription)
 
-  await sendTransaction(proposeTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -2288,7 +2294,7 @@ async function invalidValueTest<
 
   const proposeTx = client.api.tx.bounties.proposeBounty(invalidValue, description)
 
-  await sendTransaction(proposeTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -2371,7 +2377,7 @@ async function unexpectedStatusProposeCuratorTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -2379,7 +2385,7 @@ async function unexpectedStatusProposeCuratorTest<
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // propose curator by Treasurer
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -2433,7 +2439,7 @@ async function requireCuratorAcceptTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -2453,7 +2459,7 @@ async function requireCuratorAcceptTest<
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // Propose Bob as curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -2462,7 +2468,7 @@ async function requireCuratorAcceptTest<
 
   // Charlie tries to accept curator role (should be Bob)
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.charlie))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
 
@@ -2514,7 +2520,7 @@ async function hasActiveChildBountyTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(devAccounts.alice))
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
@@ -2534,7 +2540,7 @@ async function hasActiveChildBountyTest<
   const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // Propose Bob as curator
-  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, devAccounts.bob.address, curatorFee)
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
   await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
     Origins: 'Treasurer',
   })
@@ -2543,7 +2549,7 @@ async function hasActiveChildBountyTest<
 
   // Bob accepts curator role
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
-  await sendTransaction(acceptCuratorTx.signAsync(devAccounts.bob))
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -2559,7 +2565,7 @@ async function hasActiveChildBountyTest<
     childBountyValue,
     childBountyDescription,
   )
-  await sendTransaction(addChildBountyTx.signAsync(devAccounts.bob))
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
@@ -2573,8 +2579,8 @@ async function hasActiveChildBountyTest<
   expect(parentBounty.status.isActive).toBe(true)
 
   // award the parent bounty
-  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, devAccounts.bob.address)
-  await sendTransaction(awardBountyTx.signAsync(devAccounts.bob))
+  const awardBountyTx = client.api.tx.bounties.awardBounty(bountyIndex, testAccounts.bob.address)
+  await sendTransaction(awardBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
 
