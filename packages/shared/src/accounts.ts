@@ -3450,6 +3450,147 @@ async function forceAdjustTotalIssuanceSuccessTest<
 // `burn`
 // ------
 
+/**
+ * Test `burn`ing of funds.
+ *
+ * 1. Create Alice with 1000 ED
+ * 2. Burn 500 ED
+ * 3. Verify balance changes and total issuance decrease
+ */
+async function burnTestBaseCase<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create Alice with 1000 ED
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 1000n
+  const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // Initialize fee tracking map
+  const cumulativeFees = new Map<string, bigint>()
+
+  // Query initial total issuance
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  // 2. Alice burns 500 ED of her own
+
+  const burnAmount = existentialDeposit * 500n
+  const firstBurnTx = client.api.tx.balances.burn(burnAmount, false)
+  const firstBurnEvents = await sendTransaction(firstBurnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Update cumulative fees
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  await checkEvents(firstBurnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
+    'events when Alice self-burns funds',
+  )
+
+  // 3. Verify that funds were burned, and total issuance updated
+
+  // Verify Alice is still alive
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  const burnFee = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!
+
+  // Verify Alice's balance after burn
+  const aliceAccountAfterBurn = await client.api.query.system.account(alice.address)
+  const expectedBalanceAfterBurn = initialBalance - burnAmount - burnFee
+  expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedBalanceAfterBurn)
+
+  // Check total issuance decreased by burn amount (fees are not included)
+  const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
+  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - burnAmount)
+
+  // Check burn event
+  const eventsAfterBurn = await client.api.query.system.events()
+  const burnEvent = eventsAfterBurn.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Burned'
+  })
+  expect(burnEvent).toBeDefined()
+  assert(client.api.events.balances.Burned.is(burnEvent!.event))
+
+  const burnEventData = burnEvent!.event.data
+  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
+}
+
+/**
+ * Test that burning all of an accounts funds leads to it being reaped.
+ *
+ * 1. Create Alice with 1000 ED
+ * 2. Burn 999 ED (with `keep_alive` set to `false`)
+ * 3. Verify that the account is reaped
+ * 4. Verify that the total issuance is decreased by the amount burned
+ */
+async function burnTestWithReaping<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Create Alice with 1000 ED
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const initialBalance = existentialDeposit * 1000n
+  const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
+
+  expect(await isAccountReaped(client, alice.address)).toBe(false)
+
+  // Query initial total issuance
+  const initialTotalIssuance = await client.api.query.balances.totalIssuance()
+
+  const cumulativeFees = new Map<string, bigint>()
+
+  // 2. Burn 999 ED
+
+  const burnAmount = initialBalance - existentialDeposit
+  const firstBurnTx = client.api.tx.balances.burn(burnAmount, false)
+  const firstBurnEvents = await sendTransaction(firstBurnTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  await checkEvents(firstBurnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for first burn')
+
+  // 3. Verify that the account is reaped
+
+  expect(await isAccountReaped(client, alice.address)).toBe(true)
+
+  const events = await client.api.query.system.events()
+  const burnEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Burned'
+  })
+  expect(burnEvent).toBeDefined()
+  assert(client.api.events.balances.Burned.is(burnEvent!.event))
+  const burnEventData = burnEvent!.event.data
+  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
+  const dustLostEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'DustLost'
+  })
+  expect(dustLostEvent).toBeDefined()
+  assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
+  const dustLostEventData = dustLostEvent!.event.data
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+  const dustLostAmount = dustLostEventData.amount.toBigInt()
+
+  // 4. Verify that the total issuance is decreased by the amount burned
+
+  const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
+  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - (burnAmount + dustLostAmount))
+}
+
 // ---------------------------------------
 // Various currency/fungible-related tests
 // ---------------------------------------
@@ -3471,9 +3612,9 @@ async function forceAdjustTotalIssuanceSuccessTest<
  *
  * Overall test structure:
  *
- * 1. Credits an account with 1000000 ED
- * 2. Executes the provided reserve action for 900000 ED
- * 3. Executes the provided lock action for 900000 ED
+ * 1. Credits an account with 1_000_000 ED
+ * 2. Executes the provided reserve action for 900_000 ED
+ * 3. Executes the provided lock action for 900_000 ED
  * 4. Tries to execute the provided deposit action
  * 5. Checks that `balances.LiquidityRestrictions` is raised
  * 6. Verify that the account has, in fact, funds to perform the operation
@@ -3506,7 +3647,7 @@ async function testLiquidityRestrictionForAction<
   // Step 1: Create account with 1000000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const totalBalance = existentialDeposit * 1000000n
+  const totalBalance = existentialDeposit * 1_000_000n
   const alice = testAccounts.alice
 
   // Set initial balance
@@ -3523,7 +3664,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
 
-  const reserveAmount = existentialDeposit * 900000n
+  const reserveAmount = existentialDeposit * 900_000n
   const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
 
   await client.dev.newBlock()
@@ -3532,7 +3673,7 @@ async function testLiquidityRestrictionForAction<
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
 
-  const lockAmount = existentialDeposit * 900000n
+  const lockAmount = existentialDeposit * 900_000n
   await lockAction.execute(client, alice, lockAmount, testConfig)
 
   await client.dev.newBlock()
@@ -3699,6 +3840,43 @@ const transferKeepAliveNormalEDTests = (chain: Chain, testConfig: TestConfig): R
   ],
 })
 
+/**
+ * Tests for `burn` that can run on any chain.
+ */
+const commonBurnTests = (chain: Chain, testConfig: TestConfig) => [
+  {
+    kind: 'test' as const,
+    label: 'burning funds from account works',
+    testFn: () => burnTestBaseCase(chain, testConfig),
+  },
+]
+
+/**
+ * Tests for `burn` on low ED chains.
+ */
+const burnLowEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+  kind: 'describe',
+  label: '`burn`',
+  children: commonBurnTests(chain, testConfig),
+})
+
+/**
+ * Tests for `burn` that require the chain's ED to be at least as large as the usual transaction fee.
+ */
+const burnNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree => ({
+  kind: 'describe',
+  label: '`burn`',
+  children: [
+    ...commonBurnTests(chain, testConfig),
+
+    {
+      kind: 'test',
+      label: 'burning all funds from account leads to account reaping',
+      testFn: () => burnTestWithReaping(chain, testConfig),
+    },
+  ],
+})
+
 export const accountsE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
@@ -3856,6 +4034,11 @@ export const accountsE2ETests = <
         },
       ],
     },
+    // `burn` tests
+    match(testConfig.chainEd)
+      .with('LowEd', () => burnLowEDTests(chain, testConfig))
+      .with('Normal', () => burnNormalEDTests(chain, testConfig))
+      .otherwise(() => burnNormalEDTests(chain, testConfig)),
     {
       kind: 'describe',
       label: 'currency tests',
