@@ -17,8 +17,8 @@ exports[`Kusama Bridge Hub Accounts > \`force_adjust_total_issuance\` > successf
 [
   {
     "data": {
-      "new_": "(rounded 5400000000000000)",
-      "old": "(rounded 5400000000000000)",
+      "new_": "(rounded 5500000000000000)",
+      "old": "(rounded 5500000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -30,8 +30,8 @@ exports[`Kusama Bridge Hub Accounts > \`force_adjust_total_issuance\` > successf
 [
   {
     "data": {
-      "new_": "(rounded 5400000000000000)",
-      "old": "(rounded 5400000000000000)",
+      "new_": "(rounded 5500000000000000)",
+      "old": "(rounded 5500000000000000)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
