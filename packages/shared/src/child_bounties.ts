@@ -1162,6 +1162,110 @@ export async function childBountyInvalidValueErrorTest<
 }
 
 /**
+ * Test: child bounty errors - InvalidFee
+ *
+ * 1. Create active parent bounty and child bounty
+ * 2. Try to propose curator with fee >= child bounty value - should fail
+ */
+export async function childBountyInvalidFeeErrorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty for invalid fee testing'
+
+  // Create and activate parent bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve and fund the bounty
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // Assign and accept curator for parent bounty
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Create child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty for invalid fee'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // Try to propose curator with fee >= child bounty value
+  const invalidCuratorFee = childBountyValue // Fee equals child bounty value
+  const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    invalidCuratorFee,
+  )
+
+  await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.InvalidFee.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * Base set of childBounties end-to-end tests.
  *
  */
@@ -1200,18 +1304,23 @@ export function baseChildBountiesE2ETests<
       },
       {
         kind: 'test',
-        label: 'parent bounty not active error',
+        label: 'parent bounty not active',
         testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'insufficient bounty balance error test',
+        label: 'insufficient bounty balance',
         testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'invalid value error test',
+        label: 'invalid child bounty value',
         testFn: async () => await childBountyInvalidValueErrorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'invalid child bounty curator fee',
+        testFn: async () => await childBountyInvalidFeeErrorTest(chain),
       },
     ],
   }
