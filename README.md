@@ -83,12 +83,31 @@ LOG_LEVEL=info             # General logging (error/warn/info/debug/trace)
 This repository contains E2E tests for the Polkadot/Kusama networks.
 
 These include:
+- E2E suite for accounts and currency-related operations:
+  - tests for transfer functions: `transfer_allow_death`, `transfer_keep_alive`, `transfer_all`
+      - these tests include scenarios for successful transfers, transfers from accounts with insufficient funds,
+        transfers of values below ED, account reaping, and self-transfers
+  - tests for privileged functions: `force_transfer`, `force_unreserve`, `force_set_balance`, `force_adjust_total_issuance`
+      - these include cover both successful operations and insufficient priviledge failures
+      - in the case of `force_transfer`, they include cases similar to those of signed transfer operations
+      - `force_set_balance` tests include reaping checks when a balance below the chain's ED is set
+  - tests to `burn` check the proper modification of total issuance, as well as burns that can cause reaping
+  - tests to liquidity restrictions arising from the mixing of `Currency` and `Fungible` traits
+      - these tests combinatorially generate accounts with reserves and freezes from pallets that use the new `Fungible`
+      trait, and then attempts to create a reserve with an operation using the deprecated `Currency::reserve` functions.
+      - these tests currently expect the operation to fail, but will gradually start passing as networks' runtimes are
+      upgraded
+      - the actions used to trigger this bug are `proxy::add_proxy`, `multisig::as_multi`, and `referenda::submit`, althout
+        any pallet using `Currency::reserve` is at risk
+      - see https://github.com/paritytech/polkadot-sdk/pull/8108, and https://github.com/paritytech/polkadot-sdk/pull/9560/
+        for the fixes
 - E2E suite for proxy accounts:
   - proxy account creation, removal
   - pure proxy account creation, removal
   - execution of proxy calls
   - test delay in proxy actions, as well as announcement/removal, and executing of announced action
-  - proxy call filtering works both positively and negatively; in particular, for every proxy type in Polkadot/Kusama relay and system parachains, it is checked that:
+  - proxy call filtering works both positively and negatively; in particular, for every proxy type in Polkadot/Kusama
+    relay and system parachains, it is checked that:
       - a proxy of a given type can always execute calls which that proxy type is allowed to execute
       - a proxy of a given type can never execute calls that its proxy type disallowws it from running
         - see the section below for more
