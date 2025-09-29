@@ -195,6 +195,15 @@ async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   })
 }
 
+async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<any> {
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  return ev
+}
+
 /// -------
 /// Tests
 /// -------
@@ -1065,11 +1074,7 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1337,12 +1342,7 @@ export async function childBountyParentBountyNotActiveErrorTest<
   await client.dev.newBlock()
 
   // Check the result of dispatched event
-  const events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1422,11 +1422,7 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1507,11 +1503,7 @@ export async function childBountyInvalidValueErrorTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1603,11 +1595,7 @@ export async function childBountyInvalidFeeErrorTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1693,11 +1681,7 @@ export async function childBountyUnexpectedStatusErrorTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -1811,11 +1795,7 @@ export async function childBountyPendingPayoutErrorTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
