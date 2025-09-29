@@ -505,7 +505,7 @@ export function createAccountsConfig<
   overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>>,
 ): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> {
   return {
-    expectation: 'failure',
+    ...defaultAccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>(),
     ...overrides,
   }
 }
@@ -4448,6 +4448,8 @@ export const accountsE2ETests = <
       label: 'currency tests',
       children: (() => {
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
+
+        console.log('accountsCfg', accountsCfg)
 
         // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
         // trigger the liquidity restriction error.
