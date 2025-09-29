@@ -4449,8 +4449,6 @@ export const accountsE2ETests = <
       children: (() => {
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
-        console.log('accountsCfg', accountsCfg)
-
         // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
         // trigger the liquidity restriction error.
         // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
