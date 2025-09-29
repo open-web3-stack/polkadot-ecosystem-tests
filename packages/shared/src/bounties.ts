@@ -111,6 +111,19 @@ async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   expect(fetchedLastSpendPeriodBlockNumber.unwrap().toNumber()).toBe(newLastSpendPeriodBlockNumber)
 }
 
+async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<any> {
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  if (!ev) {
+    throw new Error('No ExtrinsicFailed event found')
+  }
+  return ev
+}
+
 /// -------
 /// Tests
 /// -------
@@ -2154,12 +2167,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   await client.dev.newBlock()
 
   // Check the result of dispatched event
-  const events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -2203,12 +2211,7 @@ async function reasonTooBigTest<
   await client.dev.newBlock()
 
   // Check for ExtrinsicFailed event
-  const events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -2247,12 +2250,7 @@ async function invalidValueTest<
   await client.dev.newBlock()
 
   // Check for ExtrinsicFailed event
-  const events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -2416,12 +2414,7 @@ async function requireCuratorAcceptTest<
   await client.dev.newBlock()
 
   // Check for ExtrinsicFailed event
-  const events = await client.api.query.system.events()
-
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
 
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
@@ -2522,11 +2515,7 @@ async function hasActiveChildBountyTest<
 
   await client.dev.newBlock()
 
-  const events = await client.api.query.system.events()
-  const [ev] = events.filter((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  const ev = await extractExtrinsicFailedEvent(client)
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
 
