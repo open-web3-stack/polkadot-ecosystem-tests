@@ -921,7 +921,7 @@ export async function childBountyRejectionAndCancellationTest<
 }
 
 /**
- * Test: child bounty errors - ParentBountyNotActive
+ * Test: parent bounty not active error
  *
  * 1. Create parent bounty but don't make it active
  * 2. Try to create child bounty - should fail with ParentBountyNotActive
@@ -978,6 +978,97 @@ export async function childBountyParentBountyNotActiveErrorTest<
 }
 
 /**
+ * Test: child bounty errors - InsufficientBountyBalance
+ *
+ * 1. Create parent bounty with minimal value
+ * 2. Try to create child bounty with value larger than parent - should fail
+ */
+export async function childBountyInsufficientBountyBalanceErrorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  // Create parent bounty with minimal value
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty with minimal value'
+
+  // Create and activate parent bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve and fund the bounty
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // Assign and accept curator for parent bounty
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Try to create child bounty with value larger than parent bounty balance
+  const childBountyValue = bountyValue + 1n // Larger than parent bounty
+  const childBountyDescription = 'Test child bounty that should fail'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.childBounties.InsufficientBountyBalance.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * Base set of childBounties end-to-end tests.
  *
  */
@@ -1018,6 +1109,11 @@ export function baseChildBountiesE2ETests<
         kind: 'test',
         label: 'parent bounty not active error',
         testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'insufficient bounty balance error test',
+        testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(chain),
       },
     ],
   }
