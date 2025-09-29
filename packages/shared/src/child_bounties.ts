@@ -916,6 +916,252 @@ export async function childBountyRejectionAndCancellationTest<
 }
 
 /**
+ * Test: unassign curator edge cases
+ *
+ * 1. Create parent bounty and child bounty with active curator
+ * 2. Test different unassign scenarios:
+ *    - Child curator self-unassigns (refund deposit)
+ *    - Parent curator unassigns child curator (slash deposit)
+ *    - Community unassigns active curator (Premature error)
+ */
+export async function childBountyUnassignCuratorEdgeCasesTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave', 'eve'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty for unassign curator edge cases'
+
+  // Create and activate parent bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve and fund the bounty
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // Assign and accept curator for parent bounty
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Create child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty for unassign edge cases'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // Assign and accept curator for child bounty
+  const childCuratorFee = existentialDeposit.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
+  const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
+  await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Verify child bounty is active
+  const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(activeChildBounty.status.isActive).toBe(true)
+
+  // get charlie's free balance before unassign
+  const charlieAccountBeforeSelfUnassign = await client.api.query.system.account(testAccounts.charlie.address)
+  const freeBalanceBeforeSelfUnassign = charlieAccountBeforeSelfUnassign.data.free.toBigInt()
+
+  // Test 1: Child curator self-unassigns (should refund deposit)
+  const unassignCuratorTx1 = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
+  await sendTransaction(unassignCuratorTx1.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // get charlie's free balance after self unassign
+  const charlieAccountAfterSelfUnassign = await client.api.query.system.account(testAccounts.charlie.address)
+  const freeBalanceAfterSelfUnassign = charlieAccountAfterSelfUnassign.data.free.toBigInt()
+  // reserve balance is refunded to curator after self unassign
+  expect(freeBalanceAfterSelfUnassign).toBeGreaterThan(freeBalanceBeforeSelfUnassign)
+
+  // Verify child bounty status is back to Added
+  const unassignedChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(unassignedChildBounty.status.isAdded).toBe(true)
+
+  // Re-assign curator for next test
+  const proposeChildCuratorTx2 = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx2.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const acceptChildCuratorTx2 = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
+  await sendTransaction(acceptChildCuratorTx2.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // get charlie's free balance before unassign
+  const charlieAccountBeforeUnassign = await client.api.query.system.account(testAccounts.charlie.address)
+  const freeBalanceBeforeUnassign = charlieAccountBeforeUnassign.data.free.toBigInt()
+
+  // Test 2: Parent curator unassigns child curator (should slash deposit)
+  const unassignCuratorTx2 = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
+  await sendTransaction(unassignCuratorTx2.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify charlie's reserve balance is slashed event
+  await checkSystemEvents(client, { section: 'balances', method: 'Slashed' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('balances slash events')
+
+  // get charlie's free balance after unassign
+  const charlieAccountAfterUnassign = await client.api.query.system.account(testAccounts.charlie.address)
+  const freeBalanceAfterUnassign = charlieAccountAfterUnassign.data.free.toBigInt()
+  // should be the same as reserved balance is slashed
+  expect(freeBalanceAfterUnassign).toBe(freeBalanceBeforeUnassign)
+
+  //   await logAllEvents(client)
+
+  // Verify child bounty status is back to Added
+  const slashedChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(slashedChildBounty.status.isAdded).toBe(true)
+
+  // Re-assign curator for next test
+  const proposeChildCuratorTx3 = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx3.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const acceptChildCuratorTx3 = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
+  await sendTransaction(acceptChildCuratorTx3.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Test 3: Community member tries to unassign active curator (should fail with Premature)
+  const unassignCuratorTx3 = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
+  await sendTransaction(unassignCuratorTx3.signAsync(testAccounts.dave))
+
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.Premature.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
+ * All child bounty success tests
+ *
+ */
+export function allChildBountiesSuccessTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'All child bounties success tests',
+    children: [
+      {
+        kind: 'test',
+        label: 'child bounty creation',
+        testFn: async () => await childBountyCreationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'assigning and accepting a child bounty curator',
+        testFn: async () => await childBountyAssigningAndAcceptingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'awarding and claiming a child bounty',
+        testFn: async () => await childBountyAwardingAndClaimingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'closure and payout of a child bounty',
+        testFn: async () => await childBountyClosureAndPayoutTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'rejection and cancellation of a child bounty',
+        testFn: async () => await childBountyRejectionAndCancellationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'unassign curator different cases',
+        testFn: async () => await childBountyUnassignCuratorEdgeCasesTest(chain),
+      },
+    ],
+  } as RootTestTree
+}
+
+/**
  * Test: parent bounty not active error
  *
  * 1. Create parent bounty but don't make it active
@@ -1482,47 +1728,6 @@ export async function childBountyPendingPayoutErrorTest<
   expect(client.api.errors.bounties.PendingPayout.is(dispatchError.asModule)).toBeTruthy()
 
   await client.teardown()
-}
-
-/**
- * All child bounty success tests
- *
- */
-export function allChildBountiesSuccessTests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  return {
-    kind: 'describe',
-    label: 'All child bounties success tests',
-    children: [
-      {
-        kind: 'test',
-        label: 'child bounty creation',
-        testFn: async () => await childBountyCreationTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'assigning and accepting a child bounty curator',
-        testFn: async () => await childBountyAssigningAndAcceptingTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'awarding and claiming a child bounty',
-        testFn: async () => await childBountyAwardingAndClaimingTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'closure and payout of a child bounty',
-        testFn: async () => await childBountyClosureAndPayoutTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'rejection and cancellation of a child bounty',
-        testFn: async () => await childBountyRejectionAndCancellationTest(chain),
-      },
-    ],
-  } as RootTestTree
 }
 
 /**
