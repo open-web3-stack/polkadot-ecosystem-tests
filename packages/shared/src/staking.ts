@@ -3,7 +3,6 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
-import type { ApiPromise } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { BlockHash } from '@polkadot/types/interfaces'
@@ -22,45 +21,12 @@ import {
   expectPjsEqual,
   scheduleInlineCallWithOrigin,
   type TestConfig,
+  updateCumulativeFees,
 } from './helpers/index.js'
 
 /// -------
 /// Helpers
 /// -------
-
-/**
- * Helper to track transaction fees paid by each staker.
- *
- * Traverses the most recent events, using the given `ApiPromise`, to find transaction fee payment events.
- * It then uses this information to update the given `feeMap`.
- *
- * @param api - The API instance to query events
- * @param feeMap - Map from staker addresses to their cumulative paid fees
- * @param addressEncoding - The address encoding to use
- * @returns Updated fee map with new fees added
- */
-async function updateStakerFees(
-  api: ApiPromise,
-  feeMap: Map<string, bigint>,
-  addressEncoding: number,
-): Promise<Map<string, bigint>> {
-  const events = await api.query.system.events()
-
-  for (const record of events) {
-    const { event } = record
-    if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
-      assert(api.events.transactionPayment.TransactionFeePaid.is(event))
-      const [who, actualFee, tip] = event.data
-      expect(tip.toNumber()).toBe(0)
-      const address = encodeAddress(who.toString(), addressEncoding)
-      const fee = BigInt(actualFee.toString())
-
-      const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + fee)
-    }
-  }
-  return feeMap
-}
 
 /**
  * Locate the block number at which the current era ends.
@@ -1338,7 +1304,7 @@ async function unappliedSlashTest<
 
   // Track transaction fees for each staker.
   // Ths is needed to keep accurate track of each account's free balance, which should not be affected by this test.
-  await updateStakerFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
   let slashKey: any
@@ -1882,7 +1848,7 @@ async function setInvulnerablesTest<
   // Initialize fee tracking map for the 3 stakers
   const stakerFees = new Map<string, bigint>()
 
-  await updateStakerFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
 
   // Set them as validators
   const minCommission = await client.api.query.staking.minCommission()
@@ -1893,7 +1859,7 @@ async function setInvulnerablesTest<
 
   await client.dev.newBlock()
 
-  await updateStakerFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
 
   // Sort the addresses to make the test simpler.
 
