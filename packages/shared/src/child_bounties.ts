@@ -637,6 +637,144 @@ export async function childBountyAwardingAndClaimingTest<
 }
 
 /**
+ * Test: closure and payout of a child bounty
+ * 1. Create parent bounty and make it active
+ * 2. Create child bounty with active curator
+ * 3. Close child bounty before awarding
+ * 4. Verify funds are returned to parent bounty
+ */
+export async function childBountyClosureAndPayoutTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty for child bounty closure'
+
+  // Create and activate parent bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve and fund the bounty
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // Get the bounty account address from the NewAccount event that was emitted when the bounty was funded
+  const parentBountyAccount = await getBountyAccountFromEvent(client)
+
+  await client.dev.newBlock()
+
+  // Assign and accept curator for parent bounty
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Create child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty for closure'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // Assign and accept curator for child bounty
+  const childCuratorFee = existentialDeposit.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
+  const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
+  await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Verify child bounty is active
+  const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(activeChildBounty.status.isActive).toBe(true)
+
+  // get the parent bounty account balance before closing the child bounty
+  const parentBalanceBeforeClosing = await client.api.query.system.account(parentBountyAccount)
+  const parentBalanceBeforeClosingValue = (parentBalanceBeforeClosing as any).data.free.toBigInt()
+
+  // Close child bounty (by parent curator)
+  const closeChildBountyTx = client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex)
+  await sendTransaction(closeChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Check for ChildBountyCanceled event
+  await checkSystemEvents(client, { section: 'childBounties', method: 'Canceled' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty canceled events')
+
+  // Verify child bounty is removed from storage
+  const closedChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(closedChildBounty).toBeNull()
+
+  // Verify child bounty description is removed
+  const childBountyDesc = await getChildBountyDescription(client, parentIndex, childIndex)
+  expect(childBountyDesc).toBeNull()
+
+  // Verify parent bounty account balance increased (funds returned to parent bounty)
+  const parentBalanceAfter = await client.api.query.system.account(parentBountyAccount)
+  const parentBalanceAfterValue = (parentBalanceAfter as any).data.free.toBigInt()
+  expect(parentBalanceAfterValue).toBe(parentBalanceBeforeClosingValue + childBountyValue)
+
+  // Verify child bounties count decreased
+  const childBountiesCount = await getParentChildBountiesCount(client, parentIndex)
+  expect(childBountiesCount).toBe(0)
+
+  await client.teardown()
+}
+
+/**
  * Base set of childBounties end-to-end tests.
  *
  */
@@ -662,6 +800,11 @@ export function baseChildBountiesE2ETests<
         kind: 'test',
         label: 'awarding and claiming a child bounty',
         testFn: async () => await childBountyAwardingAndClaimingTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'closure and payout of a child bounty',
+        testFn: async () => await childBountyClosureAndPayoutTest(chain),
       },
     ],
   }
