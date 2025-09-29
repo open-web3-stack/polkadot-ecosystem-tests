@@ -184,6 +184,10 @@ async function logAllEvents(client: any) {
   })
 }
 
+/**
+ * Sets the treasury's last spend period block number to enable bounty funding
+ * @param client - The chain client
+ */
 async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const spendPeriod = await client.api.consts.treasury.spendPeriod
   const currentBlock = await client.api.rpc.chain.getHeader()
@@ -201,6 +205,10 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
     const { event } = record
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
+
+  if (!ev) {
+    throw new Error('No ExtrinsicFailed event found')
+  }
   return ev
 }
 
