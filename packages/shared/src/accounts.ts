@@ -3904,17 +3904,21 @@ async function burnDoubleAttemptTest<
  * 3. another action that internally uses `Currency::reserve` to reserve funds not exceeding the remaining free balance
  *
  * These actions (and tests) are generated at the test-tree level, so each network will have a different set of test
- * cases, depending on the pallets it has available.
- * See the {@link DepositAction}, {@link ReserveAction}, and {@link LockAction} interfaces for details.
+ * cases, depending on the pallets it has available, and whether it's been updated.
+ * See the {@link DepositAction}, {@link ReserveAction}, and {@link LockAction} interfaces for more.
  *
  * Overall test structure:
  *
- * 1. Credits an account with 1_000_000 ED
- * 2. Executes the provided reserve action for 900_000 ED
- * 3. Executes the provided lock action for 900_000 ED
- * 4. Tries to execute the provided deposit action
- * 5. Checks that `balances.LiquidityRestrictions` is raised
- * 6. Verify that the account has, in fact, funds to perform the operation
+ * 1. Credit an account with 1_000_000 ED
+ * 2. Execute the provided reserve action for 900_000 ED
+ * 3. Execute the provided lock action for 900_000 ED
+ * 4. Try to execute the provided deposit action
+ * Depending on whether the runtime has been upstreamed a fix:
+ * 5. Check that the transaction failed with the appropriate liquidity restriction error
+ * 6. Verify that the account did, in fact, have enough funds to perform the operation
+ * or
+ * 5. Check that the transaction succeeded
+ * 6. Verify that the deposit action placed the new expected reserve
  */
 async function testLiquidityRestrictionForAction<
   TCustom extends Record<string, unknown>,
