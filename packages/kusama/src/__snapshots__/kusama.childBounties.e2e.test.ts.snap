@@ -1,0 +1,401 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Awarded",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty claimed events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > child bounty creation > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > rejection and cancellation of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > child bounty curator balance is reserved 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Reserved",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > awarding and claiming a child bounty > child bounty awarded events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Awarded",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > awarding and claiming a child bounty > child bounty claimed events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Child Bounties > child bounty creation > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation test > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation test > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Child Bounties > child bounty creation test > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation test > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation test > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > child bounty creation test > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > closure and payout of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > rejection and cancellation of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
