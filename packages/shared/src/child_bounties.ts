@@ -12,6 +12,12 @@ import type { RootTestTree } from './types.js'
 /// Helpers
 /// -------
 
+// initial funding balance for accounts
+const TEST_ACCOUNT_BALANCE = 100000000000000n
+
+// 4 blocks before the spend period block
+const TREASURY_SETUP_OFFSET = 4
+
 // multipliers for the bounty and curator fee
 // 1000x existential deposit for substantial bounty value
 const BOUNTY_MULTIPLIER = 1000n
@@ -70,7 +76,7 @@ async function setupTestAccounts(client: Client<any, any>, accounts: string[] = 
     .filter((account) => accountMap[account as keyof typeof accountMap])
     .map((account) => [
       [accountMap[account as keyof typeof accountMap]],
-      { providers: 1, data: { free: 100000000000000n } },
+      { providers: 1, data: { free: TEST_ACCOUNT_BALANCE } },
     ])
 
   await client.dev.setStorage({
@@ -178,6 +184,17 @@ async function logAllEvents(client: any) {
   })
 }
 
+async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+}
+
 /// -------
 /// Tests
 /// -------
@@ -185,7 +202,7 @@ async function logAllEvents(client: any) {
 /**
  * Test: child bounty creation test.
  *
- * 1. Alice creates a pa≠rent bounty
+ * 1. Alice creates a parent bounty
  * 2. Verify that Alice makes a deposit for the parent bounty creation
  * 3. Bob creates a child bounty from the parent bounty
  */
@@ -197,18 +214,7 @@ export async function childBountyCreationTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
-
-  // ensure the last spend period block number is updated in storage
-  const fetchedLastSpendPeriodBlockNumber = await client.api.query.treasury.lastSpendPeriod()
-  expect(fetchedLastSpendPeriodBlockNumber.unwrap().toNumber()).toBe(newLastSpendPeriodBlockNumber)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -246,8 +252,8 @@ export async function childBountyCreationTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -334,15 +340,7 @@ export async function childBountyAssigningAndAcceptingTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -380,8 +378,8 @@ export async function childBountyAssigningAndAcceptingTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -502,15 +500,7 @@ export async function childBountyAwardingAndClaimingTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -646,15 +636,7 @@ export async function childBountyClosureAndPayoutTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -736,7 +718,7 @@ export async function childBountyClosureAndPayoutTest<
 
   // get the parent bounty account balance before closing the child bounty
   const parentBalanceBeforeClosing = await client.api.query.system.account(parentBountyAccount)
-  const parentBalanceBeforeClosingValue = (parentBalanceBeforeClosing as any).data.free.toBigInt()
+  const parentBalanceBeforeClosingValue = parentBalanceBeforeClosing.data.free.toBigInt()
 
   // Close child bounty (by parent curator)
   const closeChildBountyTx = client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex)
@@ -759,7 +741,7 @@ export async function childBountyClosureAndPayoutTest<
 
   // Verify parent bounty account balance increased (funds returned to parent bounty)
   const parentBalanceAfter = await client.api.query.system.account(parentBountyAccount)
-  const parentBalanceAfterValue = (parentBalanceAfter as any).data.free.toBigInt()
+  const parentBalanceAfterValue = parentBalanceAfter.data.free.toBigInt()
   expect(parentBalanceAfterValue).toBe(parentBalanceBeforeClosingValue + childBountyValue)
 
   // Verify child bounties count decreased
@@ -785,15 +767,7 @@ export async function childBountyRejectionAndCancellationTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -932,15 +906,7 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave', 'eve'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1073,8 +1039,6 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
   // should be the same as reserved balance is slashed
   expect(freeBalanceAfterUnassign).toBe(freeBalanceBeforeUnassign)
 
-  //   await logAllEvents(client)
-
   // Verify child bounty status is back to Added
   const slashedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(slashedChildBounty.status.isAdded).toBe(true)
@@ -1130,15 +1094,7 @@ export async function childBountyStorageVerificationTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1411,15 +1367,7 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1502,15 +1450,7 @@ export async function childBountyInvalidValueErrorTest<
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1595,15 +1535,7 @@ export async function childBountyInvalidFeeErrorTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1699,15 +1631,7 @@ export async function childBountyUnexpectedStatusErrorTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1798,15 +1722,7 @@ export async function childBountyPendingPayoutErrorTest<
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
-
-  await client.dev.setStorage({
-    Treasury: {
-      lastSpendPeriod: newLastSpendPeriodBlockNumber,
-    },
-  })
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
