@@ -375,7 +375,7 @@ function createDepositActions<
       calculateDeposit: async (client) => {
         const depositBase = client.api.consts.multisig.depositBase.toBigInt()
         const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
-        return depositBase + depositFactor * 1n
+        return depositBase + depositFactor * 2n
       },
       isAvailable: (client) => !!client.api.tx.multisig,
     },
@@ -466,6 +466,18 @@ async function transferInsufficientFundsTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - txPaymentEventData.actualFee.toBigInt())
 }
+
+/**
+ * Expectation for the result of a liquidity restriction test.
+ * See https://github.com/open-web3-stack/polkadot-ecosystem-tests/issues/417.
+ *
+ * - If `success`, the running chain's runtime has been updated to include a fix to the
+ *   `balances.LiquidityRestrictions` error some actions were incorrectly raising.
+ *   Liqudity restriction tests should thus pass.
+ * - If `failure`, the running chain's runtime has not been updated yet, and the tests should expect
+ *   the reserve-creating action they're using to fail.
+ */
+export type LiqRestrTestResExpectation = 'failure' | 'success'
 
 /// -----
 /// Tests
@@ -3913,6 +3925,7 @@ async function testLiquidityRestrictionForAction<
   reserveAction: ReserveAction<TCustom, TInitStorages>,
   lockAction: LockAction<TCustom, TInitStorages>,
   depositAction: DepositAction<TCustom, TInitStorages>,
+  expectation: LiqRestrTestResExpectation,
 ) {
   const [client] = await setupNetworks(chain)
 
@@ -3965,7 +3978,7 @@ async function testLiquidityRestrictionForAction<
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 4: Try to execute the deposit action - this should fail due to liquidity restrictions
+  // Step 4: Try to execute the deposit action
 
   const actionTx = await depositAction.createTransaction(client)
   const actionEvents = await sendTransaction(actionTx.signAsync(alice))
@@ -3974,39 +3987,77 @@ async function testLiquidityRestrictionForAction<
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 5: Check that the transaction failed with the appropriate error
+  // Step 5: Check the result of the transation
 
-  await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'liquidity restricted action events',
-  )
+  // Step 6: Verify account state post action: in case of success, check new balances.
 
-  const finalEvents = await client.api.query.system.events()
-  const failedEvent = finalEvents.find((record) => {
-    const { event } = record
-    return event.section === 'system' && event.method === 'ExtrinsicFailed'
-  })
+  // Reminder: If the chain has not been upgraded, expect the deposit action to fail, and verify accordingly.
+  // If it has, the action should succeed.
+  if (expectation === 'failure') {
+    // Step 5
 
-  expect(failedEvent).toBeDefined()
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-  const dispatchError = failedEvent!.event.data.dispatchError
+    await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+      'liquidity restricted action events',
+    )
 
-  assert(dispatchError.isModule)
-  const moduleError = dispatchError.asModule
-  expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+    const finalEvents = await client.api.query.system.events()
+    const failedEvent = finalEvents.find((record) => {
+      const { event } = record
+      return event.section === 'system' && event.method === 'ExtrinsicFailed'
+    })
 
-  // Step 6: Verify account state should have allowed the operation which just failed
+    expect(failedEvent).toBeDefined()
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+    const dispatchError = failedEvent!.event.data.dispatchError
 
-  const account = await client.api.query.system.account(alice.address)
-  const actionDeposit = await depositAction.calculateDeposit(client)
+    assert(dispatchError.isModule)
+    const moduleError = dispatchError.asModule
+    expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
 
-  expect(account.data.free.toBigInt()).toBe(
-    totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
-  )
-  expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
-  expect(account.data.frozen.toBigInt()).toBe(lockAmount)
+    // Step 6
 
-  // The operation failed, even though the account had enough funds to place the required deposit
-  expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
+    const account = await client.api.query.system.account(alice.address)
+    const actionDeposit = await depositAction.calculateDeposit(client)
+
+    expect(account.data.free.toBigInt()).toBe(
+      totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+    )
+    expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
+    expect(account.data.frozen.toBigInt()).toBe(lockAmount)
+
+    // The operation failed, even though the account had enough funds to place the required deposit
+    expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
+  } else {
+    // Step 5
+
+    await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
+      'deposit action success events',
+    )
+
+    const finalEvents = await client.api.query.system.events()
+    const reservedEvent = finalEvents.find((record) => {
+      const { event } = record
+      return event.section === 'balances' && event.method === 'Reserved'
+    })
+    expect(reservedEvent).toBeDefined()
+    assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
+    const reservedEventData = reservedEvent!.event.data
+    expect(reservedEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+    const actionDeposit = await depositAction.calculateDeposit(client)
+    expect(reservedEventData.amount.toBigInt()).toBe(actionDeposit)
+
+    // Step 6
+    const account = await client.api.query.system.account(alice.address)
+
+    expect(account.data.free.toBigInt()).toBe(
+      totalBalance -
+        lockAmount -
+        actionDeposit -
+        cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+    )
+    expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
+    expect(account.data.frozen.toBigInt()).toBe(lockAmount)
+  }
 }
 
 /// ----------
@@ -4184,6 +4235,7 @@ export const accountsE2ETests = <
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
+  expectation: LiqRestrTestResExpectation = 'failure',
   relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ): RootTestTree => ({
   kind: 'describe',
@@ -4360,7 +4412,14 @@ export const accountsE2ETests = <
                 kind: 'test' as const,
                 label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
                 testFn: () =>
-                  testLiquidityRestrictionForAction(chain, testConfig, reserveAction, lockAction, depositAction),
+                  testLiquidityRestrictionForAction(
+                    chain,
+                    testConfig,
+                    reserveAction,
+                    lockAction,
+                    depositAction,
+                    expectation,
+                  ),
               })
             }
           }
