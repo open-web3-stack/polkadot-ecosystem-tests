@@ -921,6 +921,63 @@ export async function childBountyRejectionAndCancellationTest<
 }
 
 /**
+ * Test: child bounty errors - ParentBountyNotActive
+ *
+ * 1. Create parent bounty but don't make it active
+ * 2. Try to create child bounty - should fail with ParentBountyNotActive
+ */
+export async function childBountyParentBountyNotActiveErrorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob'])
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty for error testing'
+
+  // Create parent bounty but don't activate it
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Try to create child bounty while parent is still Proposed (not active)
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty that should fail'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Check the result of dispatched event
+  const events = await client.api.query.system.events()
+
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.childBounties.ParentBountyNotActive.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * Base set of childBounties end-to-end tests.
  *
  */
@@ -956,6 +1013,11 @@ export function baseChildBountiesE2ETests<
         kind: 'test',
         label: 'rejection and cancellation of a child bounty',
         testFn: async () => await childBountyRejectionAndCancellationTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'parent bounty not active error',
+        testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
       },
     ],
   }
