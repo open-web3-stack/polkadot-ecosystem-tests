@@ -164,22 +164,17 @@ async function getChildBountyEvents(client: Client<any, any>): Promise<any[]> {
 }
 
 /**
- *  Log the bounty events
- */
-async function logBountyEvents(client: any) {
-  const events = await getBountyEvents(client)
-  events.forEach((evt: any, idx: number) => {
-    console.log(`Event #${idx}:`, evt.event?.toHuman?.() ?? evt.event)
-  })
-}
-
-/**
- * Log all events
+ * Log filtered events (system, balances, childBounties, treasury)
  */
 async function logAllEvents(client: any) {
   const events = await client.api.query.system.events()
+  const allowedSections = ['system', 'balances', 'childBounties', 'treasury']
+
   events.forEach((evt: any, idx: number) => {
-    console.log(`Event #${idx}:`, evt.event?.toHuman?.() ?? evt.event)
+    const section = evt.event?.section
+    if (allowedSections.includes(section)) {
+      console.log(`Event #${idx} [${section}]:`, evt.event?.toHuman?.() ?? evt.event)
+    }
   })
 }
 
@@ -200,7 +195,7 @@ export async function childBountyCreationTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
   const spendPeriod = await client.api.consts.treasury.spendPeriod
   const currentBlock = await client.api.rpc.chain.getHeader()
@@ -337,7 +332,7 @@ export async function childBountyAssigningAndAcceptingTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
   const spendPeriod = await client.api.consts.treasury.spendPeriod
   const currentBlock = await client.api.rpc.chain.getHeader()
@@ -1173,7 +1168,7 @@ export async function childBountyInvalidFeeErrorTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
   const spendPeriod = await client.api.consts.treasury.spendPeriod
   const currentBlock = await client.api.rpc.chain.getHeader()
@@ -1277,7 +1272,7 @@ export async function childBountyUnexpectedStatusErrorTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
   const spendPeriod = await client.api.consts.treasury.spendPeriod
   const currentBlock = await client.api.rpc.chain.getHeader()
