@@ -1490,16 +1490,16 @@ export async function childBountyPendingPayoutErrorTest<
 }
 
 /**
- * Base set of childBounties end-to-end tests.
+ * All child bounty success tests
  *
  */
-export function baseChildBountiesE2ETests<
+export function allChildBountiesSuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
-    label: testConfig.testSuiteName,
+    label: 'All child bounties success tests',
     children: [
       {
         kind: 'test',
@@ -1526,6 +1526,22 @@ export function baseChildBountiesE2ETests<
         label: 'rejection and cancellation of a child bounty',
         testFn: async () => await childBountyRejectionAndCancellationTest(chain),
       },
+    ],
+  } as RootTestTree
+}
+
+/**
+ *  All failure tests for child bounties
+ *
+ */
+export function allChildBountiesFailureTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+  return {
+    kind: 'describe',
+    label: 'All child bounties failure tests',
+    children: [
       {
         kind: 'test',
         label: 'parent bounty not active',
@@ -1557,5 +1573,20 @@ export function baseChildBountiesE2ETests<
         testFn: async () => await childBountyPendingPayoutErrorTest(chain),
       },
     ],
+  } as RootTestTree
+}
+
+/**
+ * Base set of childBounties end-to-end tests.
+ *
+ */
+export function baseChildBountiesE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [allChildBountiesSuccessTests(chain), allChildBountiesFailureTests(chain)],
   }
 }
