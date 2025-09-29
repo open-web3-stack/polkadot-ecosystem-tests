@@ -164,6 +164,26 @@ exports[`Kusama Child Bounties > All child bounties success tests > rejection an
 ]
 `;
 
+exports[`Kusama Child Bounties > All child bounties success tests > unassign curator different cases > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Child Bounties > All child bounties success tests > unassign curator edge cases > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Child Bounties > assigning and accepting a child bounty curator > bounty approved events 1`] = `
 [
   {

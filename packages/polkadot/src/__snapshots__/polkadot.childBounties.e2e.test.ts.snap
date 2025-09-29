@@ -164,6 +164,16 @@ exports[`Polkadot Child Bounties > All child bounties success tests > rejection 
 ]
 `;
 
+exports[`Polkadot Child Bounties > All child bounties success tests > unassign curator different cases > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Child Bounties > assigning and accepting a child bounty curator > bounty approved events 1`] = `
 [
   {
