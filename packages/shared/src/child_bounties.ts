@@ -30,27 +30,12 @@ const CHILD_BOUNTY_MULTIPLIER = 100n
 const CHILD_CURATOR_FEE_MULTIPLIER = 10n
 
 /**
- * Get the current bounty count
- */
-async function getBountyCount(client: Client<any, any>): Promise<number> {
-  return (await client.api.query.bounties.bountyCount()).toNumber()
-}
-
-/**
  * Get a bounty by index
  */
 async function getBounty(client: Client<any, any>, bountyIndex: number): Promise<any | null> {
   const bounty = await client.api.query.bounties.bounties(bountyIndex)
   if (!bounty) return null
   return bounty.isSome ? bounty.unwrap() : null
-}
-
-/**
- * Get bounty description by index
- */
-async function getBountyDescription(client: Client<any, any>, bountyIndex: number): Promise<string | null> {
-  const description = await client.api.query.bounties.bountyDescriptions(bountyIndex)
-  return description.isSome ? description.unwrap().toUtf8() : null
 }
 
 /**
@@ -153,35 +138,6 @@ async function getChildBountyDescription(
  */
 async function getParentChildBountiesCount(client: Client<any, any>, parentIndex: number): Promise<number> {
   return (await client.api.query.childBounties.parentChildBounties(parentIndex)).toNumber()
-}
-
-/**
- * Get bounty events
- */
-async function getBountyEvents(client: Client<any, any>): Promise<any[]> {
-  return (await client.api.query.system.events()).filter((evt: any) => evt.event?.section === 'bounties')
-}
-
-/**
- * Get childBounties events
- */
-async function getChildBountyEvents(client: Client<any, any>): Promise<any[]> {
-  return (await client.api.query.system.events()).filter((evt: any) => evt.event?.section === 'childBounties')
-}
-
-/**
- * Log filtered events (system, balances, childBounties, treasury)
- */
-async function logAllEvents(client: any) {
-  const events = await client.api.query.system.events()
-  const allowedSections = ['system', 'balances', 'childBounties', 'treasury']
-
-  events.forEach((evt: any, idx: number) => {
-    const section = evt.event?.section
-    if (allowedSections.includes(section)) {
-      console.log(`Event #${idx} [${section}]:`, evt.event?.toHuman?.() ?? evt.event)
-    }
-  })
 }
 
 /**
