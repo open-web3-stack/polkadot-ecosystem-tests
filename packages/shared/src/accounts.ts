@@ -189,11 +189,12 @@ interface DepositAction<
 }
 
 /**
- * Define the list of reserve actions to be used in the liquidity restriction tests.
+ * Create default reserve actions to be used in the liquidity restriction tests.
  *
  * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
+ * Networks can still override these by providing custom actions in their config.
  */
-function createReserveActions<
+export function createDefaultReserveActions<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(): ReserveAction<TCustom, TInitStorages>[] {
@@ -273,7 +274,7 @@ function createReserveActions<
  *
  * Recall that in the case a network does not support one of these, it'll be skipped when generating the test cases.
  */
-function createLockActions<
+export function createDefaultLockActions<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(): LockAction<TCustom, TInitStorages>[] {
@@ -293,12 +294,7 @@ function createLockActions<
         })
         await sendTransaction(vestedTransferTx.signAsync(alice))
       },
-      isAvailable: (client) => {
-        // Vesting is filtered on Asset Hubs while the AHM is pending.
-        const chainName = client.config.name.toLowerCase()
-        if (chainName.includes('assethub')) return false
-        return !!client.api.tx.vesting
-      },
+      isAvailable: (client) => !!client.api.tx.vesting,
     },
     // This action manually sets storage to simulate an existing lock.
     // Helpful on networks where vesting is not available i.e. most of them.
@@ -344,10 +340,12 @@ function createLockActions<
  *
  * Recall that if a network does not support one of these, it'll be skipped when generating the test cases.
  *
- * On every network where this error is raised, proxy and multisig are available, so the test is guaranteed to run
+ * On almost every network, proxy and/or multisig are available, so the test is guaranteed to run
  * at least once each network.
+ *
+ * Even still, networks can override these action by providing custom actions in their config.
  */
-function createDepositActions<
+export function createDefaultDepositActions<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(): DepositAction<TCustom, TInitStorages>[] {
@@ -478,6 +476,55 @@ async function transferInsufficientFundsTest<
  *   the reserve-creating action they're using to fail.
  */
 export type LiqRestrTestResExpectation = 'failure' | 'success'
+
+export interface AccountsTestConfig<
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+  TInitStoragesRelay extends Record<string, Record<string, any>>,
+> {
+  /** Expected behavior for liquidity restriction tests */
+  expectation: LiqRestrTestResExpectation
+  /** Optional relay chain for XCM-based operations */
+  relayChain?: Chain<TCustom, TInitStoragesRelay>
+  /** Custom action lists - if not provided, defaults will be used */
+  actions?: {
+    reserveActions: ReserveAction<TCustom, TInitStoragesBase>[]
+    lockActions: LockAction<TCustom, TInitStoragesBase>[]
+    depositActions: DepositAction<TCustom, TInitStoragesBase>[]
+  }
+}
+
+/**
+ * Create default accounts test configuration
+ */
+export function createAccountsConfig<
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+  TInitStoragesRelay extends Record<string, Record<string, any>>,
+>(
+  overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>>,
+): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> {
+  return {
+    expectation: 'failure',
+    ...overrides,
+  }
+}
+
+/**
+ * Default accounts E2E test configuration.
+ */
+const defaultAccountsTestConfig = <
+  TCustom extends Record<string, unknown>,
+  TInitStoragesBase extends Record<string, Record<string, any>>,
+  TInitStoragesRelay extends Record<string, Record<string, any>>,
+>(): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> => ({
+  expectation: 'failure',
+  actions: {
+    reserveActions: createDefaultReserveActions(),
+    lockActions: createDefaultLockActions(),
+    depositActions: createDefaultDepositActions(),
+  },
+})
 
 /// -----
 /// Tests
@@ -852,7 +899,7 @@ async function transferAllowDeathWithReserveTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Create a reserve action - use the first available one
-  const reserveActions = createReserveActions<TCustom, TInitStorages>()
+  const reserveActions = createDefaultReserveActions<TCustom, TInitStorages>()
   const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
 
   if (!availableReserveAction) {
@@ -1450,7 +1497,7 @@ async function forceTransferWithReserveTest<
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
 
   // Create a reserve action - use the first available one
-  const reserveActions = createReserveActions<TCustom, TInitStoragesBase>()
+  const reserveActions = createDefaultReserveActions<TCustom, TInitStoragesBase>()
   const availableReserveAction = reserveActions.find((action) => action.isAvailable(baseClient))
 
   if (!availableReserveAction) {
@@ -1904,7 +1951,7 @@ async function transferAllWithReserveTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Create a reserve action - use the first available one
-  const reserveActions = createReserveActions<TCustom, TInitStorages>()
+  const reserveActions = createDefaultReserveActions<TCustom, TInitStorages>()
   const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
 
   if (!availableReserveAction) {
@@ -3997,71 +4044,73 @@ async function testLiquidityRestrictionForAction<
 
   // Reminder: If the chain has not been upgraded, expect the deposit action to fail, and verify accordingly.
   // If it has, the action should succeed.
-  if (expectation === 'failure') {
-    // Step 5
+  match(expectation)
+    .with('failure', async () => {
+      // Step 5
 
-    await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-      'liquidity restricted action events',
-    )
+      await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+        'liquidity restricted action events',
+      )
 
-    const finalEvents = await client.api.query.system.events()
-    const failedEvent = finalEvents.find((record) => {
-      const { event } = record
-      return event.section === 'system' && event.method === 'ExtrinsicFailed'
+      const finalEvents = await client.api.query.system.events()
+      const failedEvent = finalEvents.find((record) => {
+        const { event } = record
+        return event.section === 'system' && event.method === 'ExtrinsicFailed'
+      })
+
+      expect(failedEvent).toBeDefined()
+      assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+      const dispatchError = failedEvent!.event.data.dispatchError
+
+      assert(dispatchError.isModule)
+      const moduleError = dispatchError.asModule
+      expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+
+      // Step 6
+
+      const account = await client.api.query.system.account(alice.address)
+      const actionDeposit = await depositAction.calculateDeposit(client)
+
+      expect(account.data.free.toBigInt()).toBe(
+        totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+      )
+      expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
+      expect(account.data.frozen.toBigInt()).toBe(lockAmount)
+
+      // The operation failed, even though the account had enough funds to place the required deposit
+      expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
     })
+    .with('success', async () => {
+      // Step 5
 
-    expect(failedEvent).toBeDefined()
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-    const dispatchError = failedEvent!.event.data.dispatchError
+      await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
+        'deposit action success events',
+      )
 
-    assert(dispatchError.isModule)
-    const moduleError = dispatchError.asModule
-    expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+      const finalEvents = await client.api.query.system.events()
+      const reservedEvent = finalEvents.find((record) => {
+        const { event } = record
+        return event.section === 'balances' && event.method === 'Reserved'
+      })
+      expect(reservedEvent).toBeDefined()
+      assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
+      const reservedEventData = reservedEvent!.event.data
+      expect(reservedEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
+      const actionDeposit = await depositAction.calculateDeposit(client)
+      expect(reservedEventData.amount.toBigInt()).toBe(actionDeposit)
 
-    // Step 6
+      // Step 6
+      const account = await client.api.query.system.account(alice.address)
 
-    const account = await client.api.query.system.account(alice.address)
-    const actionDeposit = await depositAction.calculateDeposit(client)
-
-    expect(account.data.free.toBigInt()).toBe(
-      totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
-    )
-    expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
-    expect(account.data.frozen.toBigInt()).toBe(lockAmount)
-
-    // The operation failed, even though the account had enough funds to place the required deposit
-    expect(account.data.free.toBigInt()).toBeGreaterThanOrEqual(actionDeposit)
-  } else {
-    // Step 5
-
-    await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
-      'deposit action success events',
-    )
-
-    const finalEvents = await client.api.query.system.events()
-    const reservedEvent = finalEvents.find((record) => {
-      const { event } = record
-      return event.section === 'balances' && event.method === 'Reserved'
+      expect(account.data.free.toBigInt()).toBe(
+        totalBalance -
+          lockAmount -
+          actionDeposit -
+          cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
+      )
+      expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
+      expect(account.data.frozen.toBigInt()).toBe(lockAmount)
     })
-    expect(reservedEvent).toBeDefined()
-    assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
-    const reservedEventData = reservedEvent!.event.data
-    expect(reservedEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-    const actionDeposit = await depositAction.calculateDeposit(client)
-    expect(reservedEventData.amount.toBigInt()).toBe(actionDeposit)
-
-    // Step 6
-    const account = await client.api.query.system.account(alice.address)
-
-    expect(account.data.free.toBigInt()).toBe(
-      totalBalance -
-        lockAmount -
-        actionDeposit -
-        cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
-    )
-    expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
-    expect(account.data.frozen.toBigInt()).toBe(lockAmount)
-  }
 }
 
 /// ----------
@@ -4235,12 +4284,11 @@ const burnNormalEDTests = (chain: Chain, testConfig: TestConfig): RootTestTree =
 export const accountsE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>>,
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
-  expectation: LiqRestrTestResExpectation = 'failure',
-  relayChain?: Chain<TCustom, TInitStoragesRelay>,
+  accountsCfg: AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> = defaultAccountsTestConfig(),
 ): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
@@ -4257,22 +4305,22 @@ export const accountsE2ETests = <
         {
           kind: 'test' as const,
           label: 'force transferring origin below ED can kill it',
-          testFn: () => forceTransferKillTest(chain, testConfig, relayChain),
+          testFn: () => forceTransferKillTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test' as const,
           label: 'force transfer below existential deposit fails',
-          testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig, relayChain),
+          testFn: () => forceTransferBelowExistentialDepositTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test' as const,
           label: 'force transfer with insufficient funds fails',
-          testFn: () => forceTransferInsufficientFundsTest(chain, testConfig, relayChain),
+          testFn: () => forceTransferInsufficientFundsTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
           label: 'account with reserves cannot be force transferred from',
-          testFn: () => forceTransferWithReserveTest(chain, testConfig, relayChain),
+          testFn: () => forceTransferWithReserveTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
@@ -4282,7 +4330,7 @@ export const accountsE2ETests = <
         {
           kind: 'test',
           label: 'self-transfer is a no-op',
-          testFn: () => forceTransferSelfTest(chain, testConfig, relayChain),
+          testFn: () => forceTransferSelfTest(chain, testConfig, accountsCfg.relayChain),
         },
       ],
     },
@@ -4334,17 +4382,17 @@ export const accountsE2ETests = <
         {
           kind: 'test',
           label: 'unreserving 0 from account with no reserves is a no-op',
-          testFn: () => forceUnreserveNoReservesTest(chain, testConfig, relayChain),
+          testFn: () => forceUnreserveNoReservesTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
           label: 'unreserving from non-existent account is a no-op',
-          testFn: () => forceUnreserveNonExistentAccountTest(chain, testConfig, relayChain),
+          testFn: () => forceUnreserveNonExistentAccountTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
           label: 'unreserving from account with reserves works correctly',
-          testFn: () => forceUnreserveWithReservesTest(chain, testConfig, relayChain),
+          testFn: () => forceUnreserveWithReservesTest(chain, testConfig, accountsCfg.relayChain),
         },
       ],
     },
@@ -4360,12 +4408,12 @@ export const accountsE2ETests = <
         {
           kind: 'test',
           label: 'successfully sets balance and and adjusts total issuance',
-          testFn: () => forceSetBalanceSuccessTest(chain, testConfig, relayChain),
+          testFn: () => forceSetBalanceSuccessTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
           label: 'setting balance below ED reaps account and updates total issuance',
-          testFn: () => forceSetBalanceBelowEdTest(chain, testConfig, relayChain),
+          testFn: () => forceSetBalanceBelowEdTest(chain, testConfig, accountsCfg.relayChain),
         },
       ],
     },
@@ -4381,12 +4429,12 @@ export const accountsE2ETests = <
         {
           kind: 'test',
           label: 'zero delta fails with DeltaZero error in both directions',
-          testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(chain, testConfig, relayChain),
+          testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(chain, testConfig, accountsCfg.relayChain),
         },
         {
           kind: 'test',
           label: 'successful adjustments increase and decrease total issuance',
-          testFn: () => forceAdjustTotalIssuanceSuccessTest(chain, testConfig, relayChain),
+          testFn: () => forceAdjustTotalIssuanceSuccessTest(chain, testConfig, accountsCfg.relayChain),
         },
       ],
     },
@@ -4399,19 +4447,15 @@ export const accountsE2ETests = <
       kind: 'describe',
       label: 'currency tests',
       children: (() => {
-        const reserveActions = createReserveActions<TCustom, TInitStoragesBase>()
-        const lockActions = createLockActions<TCustom, TInitStoragesBase>()
-        const depositActions = createDepositActions<TCustom, TInitStoragesBase>()
-
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
         // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
         // trigger the liquidity restriction error.
         // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
         // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
-        for (const reserveAction of reserveActions) {
-          for (const lockAction of lockActions) {
-            for (const depositAction of depositActions) {
+        for (const reserveAction of accountsCfg.actions?.reserveActions!) {
+          for (const lockAction of accountsCfg.actions?.lockActions!) {
+            for (const depositAction of accountsCfg.actions?.depositActions!) {
               testCases.push({
                 kind: 'test' as const,
                 label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
@@ -4422,7 +4466,7 @@ export const accountsE2ETests = <
                     reserveAction,
                     lockAction,
                     depositAction,
-                    expectation,
+                    accountsCfg.expectation,
                   ),
               })
             }
