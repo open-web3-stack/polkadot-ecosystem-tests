@@ -15,14 +15,14 @@ import type { RootTestTree } from './types.js'
 // initial funding balance for accounts
 const TEST_ACCOUNT_BALANCE = 100000000000000n
 
+const NON_EXISTENT_BOUNTY_INDEX = 999 // randombounty index that doesn't exist
+
 // 4 blocks before the spend period block
 const TREASURY_SETUP_OFFSET = 4
 
 // multipliers for the bounty and curator fee
-// 1000x existential deposit for substantial bounty value
-const BOUNTY_MULTIPLIER = 1000n
-// 10% curator fee (100/1000)
-const CURATOR_FEE_MULTIPLIER = 100n
+const BOUNTY_MULTIPLIER = 1000n // 1000x existential deposit for substantial bounty value
+const CURATOR_FEE_MULTIPLIER = 100n // 10% curator fee (100/1000)
 
 /**
  * Get the current bounty count
@@ -357,8 +357,8 @@ export async function bountyFundingTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -521,8 +521,8 @@ export async function curatorAssignmentAndAcceptanceTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -629,8 +629,8 @@ export async function bountyExtensionTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -768,8 +768,8 @@ export async function bountyAwardingAndClaimingTest<
     .toMatchSnapshot('bounty approved events')
 
   // verify the bounty is added to the approvals queue
-  const approvalsforStorage = await getBountyApprovals(client)
-  expect(approvalsforStorage).toContain(bountyIndex)
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
@@ -2202,7 +2202,7 @@ async function reasonTooBigTest<
   const maxReasonLength = client.api.consts.bounties.maximumReasonLength.toNumber()
 
   // Create a description that exceeds the maximum length
-  const longDescription = 'x'.repeat(maxReasonLength + 1000)
+  const longDescription = 'x'.repeat(maxReasonLength + 1)
 
   const proposeTx = client.api.tx.bounties.proposeBounty(bountyValue, longDescription)
 
@@ -2273,7 +2273,7 @@ async function invalidIndexApprovalTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const nonExistentBountyIndex = 999 // random index that doesn't exist
+  const nonExistentBountyIndex = NON_EXISTENT_BOUNTY_INDEX // random index that doesn't exist
 
   await setupTestAccounts(client, ['alice'])
 
