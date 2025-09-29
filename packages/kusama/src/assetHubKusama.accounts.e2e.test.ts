@@ -1,5 +1,13 @@
 import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
-import { accountsE2ETests, createAccountsConfig, registerTestTree, type TestConfig } from '@e2e-test/shared'
+import {
+  accountsE2ETests,
+  createAccountsConfig,
+  createDefaultDepositActions,
+  createDefaultLockActions,
+  createDefaultReserveActions,
+  registerTestTree,
+  type TestConfig,
+} from '@e2e-test/shared'
 
 const testCfg: TestConfig = {
   testSuiteName: 'Kusama Asset Hub Accounts',
@@ -9,8 +17,16 @@ const testCfg: TestConfig = {
   chainEd: 'LowEd',
 }
 
+// When testing liquidity restrictions on Asset Hubs, to simulate frozen funds, vesting is skipped due to AHM.
+const lockActions = createDefaultLockActions().filter((action) => action.name.includes('vest'))
+
 const accountsCfg = createAccountsConfig({
   relayChain: kusama,
+  actions: {
+    reserveActions: createDefaultReserveActions(),
+    lockActions,
+    depositActions: createDefaultDepositActions(),
+  },
 })
 
 registerTestTree(accountsE2ETests(assetHubKusama, testCfg, accountsCfg))
