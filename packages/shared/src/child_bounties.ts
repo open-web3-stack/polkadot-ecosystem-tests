@@ -775,6 +775,152 @@ export async function childBountyClosureAndPayoutTest<
 }
 
 /**
+ * Test: child bounty rejection and cancellation.
+ *
+ * 1. Create parent bounty and make it active
+ * 2. Create child bounty with proposed curator
+ * 3. Test curator rejection (unassign curator)
+ * 4. Test child bounty cancellation by parent curator
+ */
+export async function childBountyRejectionAndCancellationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
+
+  const spendPeriod = await client.api.consts.treasury.spendPeriod
+  const currentBlock = await client.api.rpc.chain.getHeader()
+  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + 4
+
+  await client.dev.setStorage({
+    Treasury: {
+      lastSpendPeriod: newLastSpendPeriodBlockNumber,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const description = 'Test bounty for child bounty rejection'
+
+  // Create and activate parent bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const bountyIndex = await getBountyIndexFromEvent(client)
+
+  // Approve and fund the bounty
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // Assign and accept curator for parent bounty
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Create child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty for rejection'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // Propose curator for child bounty
+  const childCuratorFee = existentialDeposit.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
+  const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Verify child bounty status is CuratorProposed
+  const proposedChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(proposedChildBounty.status.isCuratorProposed).toBe(true)
+
+  // Test 1: Curator rejects the assignment (unassigns themselves)
+  const unassignCuratorTx = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
+  await sendTransaction(unassignCuratorTx.signAsync(testAccounts.charlie))
+
+  await client.dev.newBlock()
+
+  // Verify child bounty status is back to Added
+  const rejectedChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(rejectedChildBounty.status.isAdded).toBe(true)
+
+  // Test 2: Propose curator again and then cancel the child bounty
+  const proposeChildCuratorTx2 = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    childIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx2.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Verify child bounty status is CuratorProposed again
+  const proposedChildBounty2 = await getChildBounty(client, parentIndex, childIndex)
+  expect(proposedChildBounty2.status.isCuratorProposed).toBe(true)
+
+  // Cancel child bounty by parent curator
+  const closeChildBountyTx = client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex)
+  await sendTransaction(closeChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Check for ChildBountyCanceled event
+  await checkSystemEvents(client, { section: 'childBounties', method: 'Canceled' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty canceled events')
+
+  // Verify child bounty is removed from storage
+  const canceledChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(canceledChildBounty).toBeNull()
+
+  // Verify child bounty description is removed
+  const childBountyDesc = await getChildBountyDescription(client, parentIndex, childIndex)
+  expect(childBountyDesc).toBeNull()
+
+  // Verify child bounties count is 0
+  const childBountiesCount = await getParentChildBountiesCount(client, parentIndex)
+  expect(childBountiesCount).toBe(0)
+
+  await client.teardown()
+}
+
+/**
  * Base set of childBounties end-to-end tests.
  *
  */
@@ -805,6 +951,11 @@ export function baseChildBountiesE2ETests<
         kind: 'test',
         label: 'closure and payout of a child bounty',
         testFn: async () => await childBountyClosureAndPayoutTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'rejection and cancellation of a child bounty',
+        testFn: async () => await childBountyRejectionAndCancellationTest(chain),
       },
     ],
   }
