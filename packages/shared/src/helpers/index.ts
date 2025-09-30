@@ -1,7 +1,7 @@
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
-import { defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -523,4 +523,29 @@ export function assertExpectedEvents(actualEvents: EventRecord[], expectedEvents
   if (missing.length > 0) {
     throw new Error(`Expected events not found:\n- ${missing.join('\n- ')}`)
   }
+}
+
+/**
+ * Computes the XCM `MultiLocation` route from a source chain to a destination chain.
+ *
+ * @param from - The source chain (the chain initiating the XCM message).
+ * @param to - The destination chain (the chain intended to receive and execute the XCM message).
+ */
+export function getXcmRoute(from: Chain, to: Chain) {
+  let parents: number
+  let interior: any
+
+  if (from.isRelayChain) {
+    parents = 0
+  } else {
+    parents = 1
+  }
+
+  if (to.isRelayChain) {
+    interior = 'Here'
+  } else {
+    interior = { X1: [{ Parachain: to.paraId }] }
+  }
+
+  return { parents, interior }
 }
