@@ -476,7 +476,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -510,7 +510,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1254,7 +1254,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1288,7 +1288,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1481,7 +1481,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1514,7 +1514,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1656,7 +1656,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1689,7 +1689,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1793,7 +1793,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1826,7 +1826,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1911,7 +1911,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1944,7 +1944,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -2029,7 +2029,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -2062,7 +2062,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

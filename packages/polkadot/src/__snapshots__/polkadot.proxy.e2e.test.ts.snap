@@ -724,6 +724,14 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
   {
     "data": {
       "account": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
     },
     "method": "VestingCompleted",
     "section": "vesting",
