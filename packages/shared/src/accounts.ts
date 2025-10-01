@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25519, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -3997,7 +3997,7 @@ async function testLiquidityRestrictionForAction<
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 1_000_000n
-  const alice = testAccounts.alice
+  const alice = defaultAccountsSr25519.alice
 
   // Set initial balance
 
@@ -4007,20 +4007,11 @@ async function testLiquidityRestrictionForAction<
     },
   })
 
-  // Initialize fee tracking map before any transactions
+  // Initialize fee tracking map before any transactions§
   const cumulativeFees = new Map<string, bigint>()
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
-
-  const reserveAmount = existentialDeposit * 900_000n
-  const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
-
-  await client.dev.newBlock()
-
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
-
-  // Step 3: Execute lock action (e.g., vested transfer or manual lock)
+  // Step 2: Execute lock action (e.g., vested transfer or manual lock)
 
   const lockAmount = existentialDeposit * 900_000n
   await lockAction.execute(client, alice, lockAmount, testConfig)
@@ -4029,9 +4020,20 @@ async function testLiquidityRestrictionForAction<
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
+  // Step 3: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
+
+  const reserveAmount = existentialDeposit * 900_000n
+  const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
+
+  await client.dev.newBlock()
+
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
   // Step 4: Try to execute the deposit action
 
   const actionTx = await depositAction.createTransaction(client)
+
+  await client.pause()
   const actionEvents = await sendTransaction(actionTx.signAsync(alice))
 
   await client.dev.newBlock()
@@ -4044,7 +4046,7 @@ async function testLiquidityRestrictionForAction<
 
   // Reminder: If the chain has not been upgraded, expect the deposit action to fail, and verify accordingly.
   // If it has, the action should succeed.
-  match(expectation)
+  const result = match(expectation)
     .with('failure', async () => {
       // Step 5
 
@@ -4108,9 +4110,13 @@ async function testLiquidityRestrictionForAction<
           actionDeposit -
           cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
       )
+
       expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
       expect(account.data.frozen.toBigInt()).toBe(lockAmount)
     })
+    .exhaustive()
+
+  await result
 }
 
 /// ----------

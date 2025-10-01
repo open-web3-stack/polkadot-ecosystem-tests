@@ -1,6 +1,7 @@
 export * from './acala.js'
 export * from './assethub.js'
 export * from './astar.js'
+export * from './bifrost.js'
 export * from './bridgehub.js'
 export * from './collectives.js'
 export * from './coretime.js'
