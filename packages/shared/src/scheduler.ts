@@ -805,8 +805,8 @@ export async function scheduledOverweightCallFails<
   // Since the scheduler pallet signaled it as permanently overweight, it should set the
   // `incompleteSince` storage item.
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
-  // TODO: this change only recently made it to Kusama. Update this when resolved.
-  if (chain.name.toLowerCase().includes('kusama')) {
+  // TODO: this change only recently made it to Kusama and Polkadot. Update this when fully resolved.
+  if (chain.name.toLowerCase().includes('collectives')) {
     assert(incompleteSince.isSome)
     expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
   } else {
