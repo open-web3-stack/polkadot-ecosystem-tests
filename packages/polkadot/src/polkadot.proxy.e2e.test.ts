@@ -1,5 +1,12 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { fullProxyE2ETests, PolkadotProxyTypes, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
+import {
+  defaultProxyTypeConfig,
+  fullProxyE2ETests,
+  PolkadotProxyTypes,
+  type ProxyTypeConfig,
+  type RelayTestConfig,
+  registerTestTree,
+} from '@e2e-test/shared'
 
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Proxy',
@@ -7,4 +14,16 @@ const testConfig: RelayTestConfig = {
   blockProvider: 'Local',
 }
 
-registerTestTree(fullProxyE2ETests(polkadot, testConfig, PolkadotProxyTypes))
+const polkadotProxyTypeConfig: ProxyTypeConfig = {
+  ...defaultProxyTypeConfig,
+  [PolkadotProxyTypes.ParaRegistration]: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildParasRegistrarAction(),
+      ...builder.buildUtilityAction(),
+      ...builder.buildProxyRemoveProxyAction(PolkadotProxyTypes.ParaRegistration),
+    ],
+    buildDisallowedActions: (builder) => [...defaultProxyTypeConfig.ParaRegistration.buildDisallowedActions(builder)],
+  },
+}
+
+registerTestTree(fullProxyE2ETests(polkadot, testConfig, PolkadotProxyTypes, polkadotProxyTypeConfig))

@@ -1,5 +1,12 @@
 import { assetHubPolkadot } from '@e2e-test/networks/chains'
-import { AssetHubProxyTypes, fullProxyE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
+import {
+  AssetHubProxyTypes,
+  defaultProxyTypeConfig,
+  fullProxyE2ETests,
+  type ParaTestConfig,
+  type ProxyTypeConfig,
+  registerTestTree,
+} from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot AssetHub Proxy',
@@ -8,4 +15,25 @@ const testConfig: ParaTestConfig = {
   asyncBacking: 'Enabled',
 }
 
-registerTestTree(fullProxyE2ETests(assetHubPolkadot, testConfig, AssetHubProxyTypes))
+const assetHubPolkadotProxyTypeConfig: ProxyTypeConfig = {
+  ...defaultProxyTypeConfig,
+  [AssetHubProxyTypes.Any]: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBalancesAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildProxyAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemRemarkAction(),
+      ...builder.buildUtilityAction(),
+      // Pending AHM, vesting is disabled on asset hubs, so `Any` proxy types will be unable to
+      //...builder.buildVestingAction(),
+    ],
+    buildDisallowedActions: (builder) => [...builder.buildVestingAction()],
+  },
+}
+
+registerTestTree(fullProxyE2ETests(assetHubPolkadot, testConfig, AssetHubProxyTypes, assetHubPolkadotProxyTypeConfig))

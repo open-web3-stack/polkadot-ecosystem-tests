@@ -1,5 +1,12 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { fullProxyE2ETests, KusamaProxyTypes, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
+import {
+  defaultProxyTypeConfig,
+  fullProxyE2ETests,
+  KusamaProxyTypes,
+  type ProxyTypeConfig,
+  type RelayTestConfig,
+  registerTestTree,
+} from '@e2e-test/shared'
 
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Kusama Proxy',
@@ -7,4 +14,16 @@ const testConfig: RelayTestConfig = {
   blockProvider: 'Local',
 }
 
-registerTestTree(fullProxyE2ETests(kusama, testConfig, KusamaProxyTypes))
+const kusamaProxyTypeConfig: ProxyTypeConfig = {
+  ...defaultProxyTypeConfig,
+  [KusamaProxyTypes.ParaRegistration]: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildParasRegistrarAction(),
+      ...builder.buildUtilityAction(),
+      ...builder.buildProxyRemoveProxyAction(KusamaProxyTypes.ParaRegistration),
+    ],
+    buildDisallowedActions: (builder) => [...defaultProxyTypeConfig.ParaRegistration.buildDisallowedActions(builder)],
+  },
+}
+
+registerTestTree(fullProxyE2ETests(kusama, testConfig, KusamaProxyTypes, kusamaProxyTypeConfig))
