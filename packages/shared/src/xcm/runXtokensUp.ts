@@ -44,7 +44,9 @@ export const runXtokensUp = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
       await checkEvents(tx0, 'xTokens').redact({ number: precision }).toMatchSnapshot('tx events')
-      await checkUmp(fromChain).toMatchSnapshot('from chain ump messages')
+      await checkUmp(fromChain)
+        .redact({ redactKeys: /setTopic/ })
+        .toMatchSnapshot('from chain ump messages')
 
       await toChain.chain.newBlock()
 
