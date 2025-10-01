@@ -101,10 +101,7 @@ async function runAuthorizeUpgradeScenarioViaRelay(
   const call = params.call(currentWasmHash).method
 
   const dest = getXcmRoute(relayClient.config, paraClient.config)
-  const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser', {
-    refTime: '50000000000000',
-    proofSize: '5000000000',
-  }).method
+  const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser').method
 
   await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' })
   await relayClient.dev.newBlock({ count: 1 })
@@ -185,10 +182,7 @@ async function runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(
   const authorizeHash = async (someHash) => {
     const call = params.call(someHash).method
     const dest = getXcmRoute(relayClient.config, paraClient.config)
-    const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser', {
-      refTime: '50000000000',
-      proofSize: '5000000',
-    }).method
+    const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser').method
     await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' })
 
     await relayClient.dev.newBlock({ count: 1 })
@@ -306,10 +300,7 @@ async function runSetCodeScenarioViaRelay(
   const call = params.call(compactAddLength(currentWasm)).method
 
   const dest = getXcmRoute(relayClient.config, paraClient.config)
-  const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser', {
-    refTime: '50000000000',
-    proofSize: '5000000',
-  }).method
+  const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser').method
 
   const preimageTx = relayClient.api.tx.preimage.notePreimage(xcmTx.toHex())
   const preimageHash = xcmTx.hash
@@ -516,7 +507,7 @@ export function systemE2ETests<
       },
       {
         kind: 'test',
-        label: 'authorize_upgrade doesnt allow upgrade to the same was',
+        label: 'authorize_upgrade doesnt allow upgrade to the same wasm',
         testFn: async () => await authorizeUpgradeTests(chain),
       },
       {
