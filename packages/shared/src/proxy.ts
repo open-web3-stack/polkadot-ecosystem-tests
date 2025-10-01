@@ -76,7 +76,7 @@ interface ProxyActionBuilder {
   buildAllianceAction(): ProxyAction[]
   buildAllianceMotionAction(): ProxyAction[]
   // The `Asset, `AssetOwner` and `AssetManager` proxy types rely on the same pallets, but different call filters.
-  // They are differentiated here to clarify which all types can make, and which only some can.
+  // They are differentiated here to clarify which calls each proxy type can make, and which only some can.
   // The same applies to `Uniques` and `Nfts`
   buildAmbassadorCollectiveAction(): ProxyAction[]
   buildAmbassadorCoreAction(): ProxyAction[]
@@ -118,6 +118,9 @@ interface ProxyActionBuilder {
   buildParasRegistrarAction(): ProxyAction[]
   buildProxyAction(): ProxyAction[]
   buildProxyRejectAnnouncementAction(): ProxyAction[]
+  // The proxy type parameter is used because proxy type hierarchies form a lattice (order); thus,
+  // a proxy of type A can only remove proxies of type B such that B ≤ A; in other words, the action needs
+  // to be given an appropriate proxy type to remove.
   buildProxyRemoveProxyAction(proxyType?: number): ProxyAction[]
 
   buildSlotsAction(): ProxyAction[]
@@ -167,7 +170,7 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildUtilityAction(),
       ...builder.buildVestingAction(),
     ],
-    buildDisallowedActions: () => [],
+    buildDisallowedActions: (_builder) => [],
   },
 
   NonTransfer: {
