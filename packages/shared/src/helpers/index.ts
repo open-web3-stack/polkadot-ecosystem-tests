@@ -4,6 +4,7 @@ import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
+import { encodeAddress } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { EventRecord } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
@@ -365,6 +366,50 @@ export async function setValidatorsStorage(
 }
 
 /**
+ * Helper to track transaction fees paid by a set of accounts.
+ *
+ * Traverses the most recent events, using the given `ApiPromise`, to find transaction fee payment events.
+ * It then uses this information to update the given `feeMap`.
+ *
+ * @param api - The API instance to query events
+ * @param feeMap - Map from addresses to their cumulative paid fees
+ * @param addressEncoding - The address encoding to use when setting/querying keys (addresses) in the map
+ * @returns Updated fee map with new fees added
+ */
+export async function updateCumulativeFees(
+  api: ApiPromise,
+  feeMap: Map<string, bigint>,
+  addressEncoding: number,
+): Promise<Map<string, bigint>> {
+  const events = await api.query.system.events()
+
+  for (const record of events) {
+    const { event } = record
+    if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
+      assert(api.events.transactionPayment.TransactionFeePaid.is(event))
+      const [who, actualFee, tip] = event.data
+      expect(tip.toNumber()).toBe(0)
+      const address = encodeAddress(who.toString(), addressEncoding)
+      const fee = BigInt(actualFee.toString())
+
+      const currentFee = feeMap.get(address) || 0n
+      feeMap.set(address, currentFee + fee)
+    }
+  }
+  return feeMap
+}
+
+/// Test configuration related types and functions
+
+/**
+ * Whether a chain's ED is lower than typical transaction fees or not.
+ *
+ * An exact comparison is not relevant - this marker only identifies whether transfers at or around the
+ * chain's ED can be made without raising `pallet_balances::FundsUnavailable`.
+ */
+export type ChainED = 'LowEd' | 'Normal'
+
+/**
  * Get the last known block number for a given chain.
  *
  * The block provider might be local or external (e.g. a parachain querying its relay chain).
@@ -423,6 +468,7 @@ export interface RelayTestConfig {
   testSuiteName: string
   addressEncoding: number
   blockProvider: 'Local'
+  chainEd?: ChainED
 }
 
 /**
@@ -437,6 +483,7 @@ export interface ParaTestConfig {
   addressEncoding: number
   blockProvider: BlockProvider
   asyncBacking: AsyncBacking
+  chainEd?: ChainED
 }
 
 /**
