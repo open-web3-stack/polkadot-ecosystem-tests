@@ -435,6 +435,11 @@ async function testMergeVestingSchedules<
   )
 }
 
+/**
+ * Test that vested transfers are filtered on the target chain.
+ *
+ * This applies to asset hubs in the lead-up to the AHM.
+ */
 async function testVestedTransferFiltered<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,

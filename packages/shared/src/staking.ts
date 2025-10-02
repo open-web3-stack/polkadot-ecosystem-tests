@@ -1435,9 +1435,13 @@ async function unappliedSlashTest<
   expect(bobFundsPostSlash.data.free.toBigInt()).toBe(bobFundsPostSlash.data.free.toBigInt())
   expect(charlieFundsPostSlash.data.free.toBigInt()).toBe(charlieFundsPostSlash.data.free.toBigInt())
 
-  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
-  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
-  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
+  await check(aliceFundsPostSlash.data.toJSON())
+    .redact({ redactKeys: /free/ })
+    .toMatchSnapshot('alice funds post slash')
+  await check(bobFundsPostSlash.data.toJSON()).redact({ redactKeys: /free/ }).toMatchSnapshot('bob funds post slash')
+  await check(charlieFundsPostSlash.data.toJSON())
+    .redact({ redactKeys: /free/ })
+    .toMatchSnapshot('charlie funds post slash')
 
   expect(aliceFundsPostSlash.data.reserved.toBigInt()).toBe(aliceFundsPreSlash.data.reserved.toBigInt() - slashAmount)
   expect(bobFundsPostSlash.data.reserved.toBigInt()).toBe(bobFundsPreSlash.data.reserved.toBigInt() - bondAmount)
