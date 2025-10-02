@@ -48,7 +48,7 @@
 		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.6",
-		"tsx": "^4.20.5",
+		"tsx": "^4.20.6",
 		"unplugin-swc": "^1.5.7",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
