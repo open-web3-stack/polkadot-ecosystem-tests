@@ -32,7 +32,7 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -110,6 +110,9 @@ exports[`karura & shiden > karura transfer KAR to shiden > from chain hrmp messa
                 "parents": 0,
               },
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
