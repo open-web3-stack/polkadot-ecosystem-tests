@@ -53,15 +53,21 @@ interface ProxyAction {
 }
 
 /**
- * A builder for proxy action lists.
+ * A builder to generate actions for a proxy account to execute, in order to test proxy call filtering.
  *
- * Each builder method returns a list of actions from a certain pallet that should/should not bevalid for a given proxy
- * type.
- * Returning lists allows for:
+ * Each builder method returns a list of actions from a certain pallet that should/should not be valid for a given
+ * proxy type.
+ *
+ * That lists are returned allows for:
  * 1. no-ops in the form of empty lists, and
  * 2. providing multiple extrinsics of interest per pallet
  *
- * The test for each proxy type is then free to combine these lists as required.
+ * Each proxy type is then free to combine these lists as required.
+ *
+ * Example: allowed `Any` proxy calls could be any selection of the actions below, whereas disallowed actions
+ * would be an empty list.
+ *
+ * Each chain can also implement actions lists for their own proxy types, to test call filtering in those networks.
  */
 interface ProxyActionBuilder {
   buildAllianceAction(): ProxyAction[]
