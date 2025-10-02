@@ -271,6 +271,8 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     buildAllowedActions: (builder) => [...builder.buildSystemRemarkAction()],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
+      // This proxy type can only call remark functions from the system pallet.
+      // All other system calls are disallowed, an instance of which is in `buildSystemNonRemarkAction`.
       ...builder.buildSystemNonRemarkAction(),
       ...builder.buildUtilityAction(),
     ],
@@ -335,8 +337,10 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     buildDisallowedActions: (builder) => [
       ...builder.buildAssetsOwnerAction(),
       ...builder.buildBalancesAction(),
+      ...builder.buildNftsOwnerAction(),
       ...builder.buildStakingAction(),
       ...builder.buildSystemAction(),
+      ...builder.buildUniquesOwnerAction(),
     ],
   },
 
@@ -351,8 +355,10 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     buildDisallowedActions: (builder) => [
       ...builder.buildAssetsManagerAction(),
       ...builder.buildBalancesAction(),
+      ...builder.buildNftsManagerAction(),
       ...builder.buildStakingAction(),
       ...builder.buildSystemAction(),
+      ...builder.buildUniquesManagerAction(),
     ],
   },
 
@@ -366,9 +372,20 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildMultisigAction(),
     ],
     buildDisallowedActions: (builder) => [
+      // Check that ambassador actions are forbidden
+      ...builder.buildAmbassadorCollectiveAction(),
+      ...builder.buildAmbassadorCoreAction(),
+      ...builder.buildAmbassadorReferendaAction(),
+      ...builder.buildAmbassadorSalaryAction(),
+
       ...builder.buildBalancesAction(),
+
+      // and fellowship's as well.
+      ...builder.buildFellowshipCollectiveAction(),
+      ...builder.buildFellowshipCoreAction(),
+      ...builder.buildFellowshipReferendaAction(),
+      ...builder.buildFellowshipSalaryAction(),
       ...builder.buildSystemAction(),
-      ...builder.buildUtilityAction(),
     ],
   },
 
@@ -382,9 +399,18 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildMultisigAction(),
     ],
     buildDisallowedActions: (builder) => [
+      // Check that alliance actions are forbidden
+      ...builder.buildAllianceAction(),
+      ...builder.buildAllianceMotionAction(),
+
+      // Check that ambassador actions are forbidden
+      ...builder.buildAmbassadorCollectiveAction(),
+      ...builder.buildAmbassadorCoreAction(),
+      ...builder.buildAmbassadorReferendaAction(),
+      ...builder.buildAmbassadorSalaryAction(),
+
       ...builder.buildBalancesAction(),
       ...builder.buildSystemAction(),
-      ...builder.buildUtilityAction(),
     ],
   },
 
@@ -398,9 +424,14 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildMultisigAction(),
     ],
     buildDisallowedActions: (builder) => [
+      ...builder.buildAllianceAction(),
+      ...builder.buildAllianceMotionAction(),
       ...builder.buildBalancesAction(),
+      ...builder.buildFellowshipCollectiveAction(),
+      ...builder.buildFellowshipCoreAction(),
+      ...builder.buildFellowshipReferendaAction(),
+      ...builder.buildFellowshipSalaryAction(),
       ...builder.buildSystemAction(),
-      ...builder.buildUtilityAction(),
     ],
   },
 
@@ -428,7 +459,9 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     ],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
-      ...builder.buildBrokerAction(),
+      // TODO: call disabled due to AHM.
+      ...builder.buildBrokerPurchaseCreditAction(),
+      ...builder.buildCollatorSelectionAction(),
       ...builder.buildSystemAction(),
     ],
   },
@@ -437,7 +470,9 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     buildAllowedActions: (builder) => [...builder.buildUtilityAction(), ...builder.buildMultisigAction()],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
-      ...builder.buildBrokerAction(),
+      // TODO: call disabled due to AHM.
+      ...builder.buildBrokerPurchaseCreditAction(),
+      ...builder.buildCollatorSelectionAction(),
       ...builder.buildSystemAction(),
     ],
   },
@@ -452,7 +487,7 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     ],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
-      ...builder.buildIdentityJudgementAction(),
+      ...builder.buildCollatorSelectionAction(),
       ...builder.buildSystemAction(),
     ],
   },
@@ -465,6 +500,7 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     ],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
+      ...builder.buildCollatorSelectionAction(),
       ...builder.buildIdentityNonJudgementAction(),
       ...builder.buildSystemAction(),
     ],
