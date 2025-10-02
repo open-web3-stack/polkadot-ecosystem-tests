@@ -15,7 +15,7 @@ exports[`Polkadot Asset Hub Vesting > attempt to merge when no vesting schedules
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

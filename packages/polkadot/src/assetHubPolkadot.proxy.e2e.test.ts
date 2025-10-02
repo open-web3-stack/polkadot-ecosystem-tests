@@ -11,7 +11,7 @@ import {
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot AssetHub Proxy',
   addressEncoding: 0,
-  blockProvider: 'Local',
+  blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
 }
 
