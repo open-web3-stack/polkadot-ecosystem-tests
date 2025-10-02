@@ -17,7 +17,7 @@ const testConfig: ParaTestConfig = {
 
 const assetHubPolkadotProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
-  [AssetHubProxyTypes.Any]: {
+  ['Any']: {
     buildAllowedActions: (builder) => [
       ...builder.buildAuctionAction(),
       ...builder.buildBalancesAction(),

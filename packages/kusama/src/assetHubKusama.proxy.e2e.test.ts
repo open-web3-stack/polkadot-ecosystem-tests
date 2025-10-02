@@ -17,7 +17,7 @@ const testConfig: ParaTestConfig = {
 
 const assetHubKusamaProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
-  [AssetHubProxyTypes.Any]: {
+  ['Any']: {
     buildAllowedActions: (builder) => [
       ...builder.buildAuctionAction(),
       ...builder.buildBalancesAction(),

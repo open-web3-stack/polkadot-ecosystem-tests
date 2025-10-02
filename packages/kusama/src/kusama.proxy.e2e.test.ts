@@ -16,7 +16,7 @@ const testConfig: RelayTestConfig = {
 
 const kusamaProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
-  [KusamaProxyTypes.ParaRegistration]: {
+  ['ParaRegistration']: {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),

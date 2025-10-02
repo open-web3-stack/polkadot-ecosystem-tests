@@ -16,7 +16,7 @@ const testConfig: RelayTestConfig = {
 
 const polkadotProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
-  [PolkadotProxyTypes.ParaRegistration]: {
+  ['ParaRegistration']: {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),
