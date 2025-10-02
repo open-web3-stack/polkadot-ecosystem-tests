@@ -14,6 +14,21 @@ const testConfig: RelayTestConfig = {
   blockProvider: 'Local',
 }
 
+/**
+ * When removing a proxy account, the calling account's proxy type needs to be at least as powerful as the
+ * proxy type of the account being removed.
+ *
+ * The lattice that relay chain proxy types form is such that
+ * 1. `Any` is the maximum
+ * 2. `NonTransfer` is, barring `Any`, the supremum (least upper bound)of all other types
+ * 3. there is no infimum between the remaining types
+ *
+ * Therefore, to test proxy removal with a `ParaRegistration` proxy type, the proxy type to be removed
+ * must be `ParaRegistration`.
+ *
+ * Thus, relaychains' proxy E2E tests need to provide a custom `ParaRegistration` proxy type config
+ * that specifies the type being passed to the proxy removal action builder.
+ */
 const kusamaProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
   ['ParaRegistration']: {
