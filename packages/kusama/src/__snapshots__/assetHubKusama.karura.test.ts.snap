@@ -25,7 +25,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > from
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -315,7 +315,7 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "withdrawAsset": [
               {
@@ -387,6 +387,9 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > from
                 "parents": 0,
               },
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
