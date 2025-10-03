@@ -1544,6 +1544,29 @@ export async function addRemoveProxyTest<
 }
 
 /**
+ *
+ * Helper function to check that a pure proxy was correctly created.
+ */
+export async function verifyPureProxy(
+  client: Client<any, any>,
+  eventData: any,
+  owner: string,
+  addressEncoding: number,
+) {
+  const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
+
+  expect(pureProxy[0].length).toBe(1)
+  expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
+  expect(pureProxy[0][0].delay.eq(0)).toBe(true)
+  expect(pureProxy[0][0].delegate.eq(encodeAddress(owner, addressEncoding))).toBe(true)
+
+  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
+  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+  const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
+  expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
+}
+
+/**
  * Test pure proxy management.
  *
  * 1. create as many pure proxies as there are proxy types in the current network
@@ -1620,16 +1643,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
-    expect(pureProxy[0].length).toBe(1)
-    expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
-    expect(pureProxy[0][0].delay.eq(0)).toBe(true)
-    expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
-
-    const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
-    const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
-    const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
-    expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
+    await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
   }
 
   // Kill pure proxies

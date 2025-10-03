@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Multisig with Proxy > success tests > basic 2-of-3 multisig-with-proxy creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "14ruuS1fueLAR8mtBxNg9FG9D8989CfgitXEU42M9r3mrcjk",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > basic 2-of-3 multisig-with-proxy creation and execution > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "1VebnHxZvRHNe1EZRfFYeWS4sx6LYoDdKARVBuSDvbf28vU",
+      "callHash": "(hash)",
+      "multisig": "14ruuS1fueLAR8mtBxNg9FG9D8989CfgitXEU42M9r3mrcjk",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
