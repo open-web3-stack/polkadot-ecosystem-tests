@@ -4,7 +4,7 @@ import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
-import { encodeAddress } from '@polkadot/keyring'
+import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { EventRecord } from '@polkadot/types/interfaces'
 import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
@@ -464,6 +464,26 @@ export function blockProviderOffset(cfg: TestConfig): number {
 
   // On a parachain without async backing.
   return 1
+}
+
+/**
+ * Sort a list of addresses by their byte representation and the address encoding of the chain.
+ * The sorted list can then be safely used as a signatories list in multisig calls.
+ */
+export function sortAddressesByBytes(addresses: string[], addressEncoding: number): string[] {
+  return addresses
+    .map((addr) => decodeAddress(addr))
+    .sort((a, b) => {
+      for (let i = 0; ; i++) {
+        const overA = i >= a.length
+        const overB = i >= b.length
+        if (overA && overB) return 0
+        else if (overA) return -1
+        else if (overB) return 1
+        else if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1
+      }
+    })
+    .map((bytes) => encodeAddress(bytes, addressEncoding))
 }
 
 /**

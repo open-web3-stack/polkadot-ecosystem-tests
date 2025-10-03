@@ -736,6 +736,20 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
 ]
 `;
 
+exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama AssetHub Proxy base tests > pure proxy ownership change test > events when creating a pure proxy for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
 [
   {
