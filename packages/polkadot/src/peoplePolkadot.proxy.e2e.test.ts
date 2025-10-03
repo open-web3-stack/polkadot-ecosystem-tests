@@ -1,5 +1,12 @@
 import { peoplePolkadot } from '@e2e-test/networks/chains'
-import { fullProxyE2ETests, type ParaTestConfig, PeopleProxyTypes, registerTestTree } from '@e2e-test/shared'
+import {
+  createProxyConfig,
+  fullProxyE2ETests,
+  type ParaTestConfig,
+  PeopleProxyTypes,
+  type ProxyTestConfig,
+  registerTestTree,
+} from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
   testSuiteName: 'People Polkadot Proxy',
@@ -8,4 +15,6 @@ const testConfig: ParaTestConfig = {
   asyncBacking: 'Disabled',
 }
 
-registerTestTree(fullProxyE2ETests(peoplePolkadot, testConfig, PeopleProxyTypes))
+const peoplePolkadotProxyCfg: ProxyTestConfig = createProxyConfig(PeopleProxyTypes)
+
+registerTestTree(fullProxyE2ETests(peoplePolkadot, testConfig, peoplePolkadotProxyCfg))

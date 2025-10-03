@@ -291,7 +291,7 @@ exports[`polkadot & bridgeHubPolkadot > polkadot transfer DOT to bridgeHubPolkad
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 900000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -303,8 +303,8 @@ exports[`polkadot & bridgeHubPolkadot > polkadot transfer DOT to bridgeHubPolkad
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

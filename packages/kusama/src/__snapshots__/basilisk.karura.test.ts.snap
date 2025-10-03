@@ -13,7 +13,7 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > balance on to cha
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 978000000000000,
+    "free": "(rounded 973000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
@@ -96,6 +96,9 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
               },
             },
           },
+          {
+            "setTopic": "(redacted)",
+          },
         ],
       },
     ],
@@ -115,7 +118,7 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > to chain xcm even
       "success": true,
       "weightUsed": {
         "proofSize": 0,
-        "refTime": 400000000,
+        "refTime": 500000000,
       },
     },
     "method": "Processed",
@@ -209,7 +212,7 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > balance on to cha
 exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump messages 1`] = `
 [
   {
-    "v4": [
+    "v5": [
       {
         "withdrawAsset": [
           {
@@ -306,6 +309,9 @@ exports[`basilisk & karura > karura transfer KSM to basilisk > from chain ump me
             },
           ],
         },
+      },
+      {
+        "setTopic": "(redacted)",
       },
     ],
   },

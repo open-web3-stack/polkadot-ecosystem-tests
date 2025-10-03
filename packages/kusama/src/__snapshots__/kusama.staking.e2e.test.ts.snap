@@ -808,7 +808,7 @@ exports[`Kusama Staking > slashing tests > cancel deferred slash with bad origin
 exports[`Kusama Staking > slashing tests > unapplied slash > alice funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 33232889962721,
+  "free": "(redacted)",
   "frozen": 0,
   "reserved": 50000000000,
 }
@@ -828,7 +828,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > balances slash even
 exports[`Kusama Staking > slashing tests > unapplied slash > bob funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 33232889962721,
+  "free": "(redacted)",
   "frozen": 0,
   "reserved": 0,
 }
@@ -846,7 +846,7 @@ exports[`Kusama Staking > slashing tests > unapplied slash > bob funds pre slash
 exports[`Kusama Staking > slashing tests > unapplied slash > charlie funds post slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": 33232889962721,
+  "free": "(redacted)",
   "frozen": 0,
   "reserved": 0,
 }
