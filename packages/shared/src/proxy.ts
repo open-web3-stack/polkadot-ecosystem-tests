@@ -396,7 +396,7 @@ class ProxyActionBuilderImpl<
 
   buildFastUnstakeAction(): ProxyAction[] {
     const fastUnstakeCalls: ProxyAction[] = []
-    if (this.client.api.tx.staking) {
+    if (this.client.api.tx.fastUnstake) {
       fastUnstakeCalls.push({
         pallet: 'staking',
         extrinsic: 'register_fast_unstake',
