@@ -194,7 +194,7 @@ exports[`Polkadot People Chain Accounts > currency tests > liquidity restriction
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

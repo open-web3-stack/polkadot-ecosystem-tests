@@ -193,6 +193,15 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "spawner": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -462,7 +471,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1005,7 +1014,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1174,7 +1183,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1292,7 +1301,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1429,7 +1438,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1585,7 +1594,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
