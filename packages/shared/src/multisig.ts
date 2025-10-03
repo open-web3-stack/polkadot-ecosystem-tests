@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { setupNetworks } from '@e2e-test/shared'
+import { setupBalances, setupNetworks } from '@e2e-test/shared'
 
 import { encodeAddress } from '@polkadot/util-crypto'
 
@@ -43,11 +43,12 @@ async function basicMultisigTest<
   const dave = defaultAccountsSr25519.dave
 
   // Fund test accounts
-  await client.dev.setStorage({
-    System: {
-      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
-    },
-  })
+  await setupBalances(client, [
+    { address: alice.address, amount: 1000e10 },
+    { address: bob.address, amount: 1000e10 },
+    { address: charlie.address, amount: 0 },
+    { address: dave.address, amount: 0 },
+  ])
 
   // Create a simple call to transfer funds to Dave from the 2-of-3 multisig
   const transferAmount = 100e10
@@ -102,11 +103,7 @@ async function basicMultisigTest<
 
   // Funds the multisig account to execute the call
   const multisigFunds = 101e10
-  await client.dev.setStorage({
-    System: {
-      account: [[[multisigAddress], { providers: 1, data: { free: multisigFunds } }]],
-    },
-  })
+  await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // Approve the multisig call. This is the final approval, so `multisig.asMulti` is used.
 
