@@ -1636,25 +1636,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
 ]
 `;
 
-exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 42,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch 1`] = `
 [
   {
