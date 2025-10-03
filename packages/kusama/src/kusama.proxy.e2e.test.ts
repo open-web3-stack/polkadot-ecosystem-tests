@@ -1,8 +1,10 @@
 import { kusama } from '@e2e-test/networks/chains'
 import {
+  createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
   KusamaProxyTypes,
+  type ProxyTestConfig,
   type ProxyTypeConfig,
   type RelayTestConfig,
   registerTestTree,
@@ -41,4 +43,6 @@ const kusamaProxyTypeConfig: ProxyTypeConfig = {
   },
 }
 
-registerTestTree(fullProxyE2ETests(kusama, testConfig, KusamaProxyTypes, kusamaProxyTypeConfig))
+const kusamaProxyCfg: ProxyTestConfig = createProxyConfig(KusamaProxyTypes, kusamaProxyTypeConfig)
+
+registerTestTree(fullProxyE2ETests(kusama, testConfig, kusamaProxyCfg))

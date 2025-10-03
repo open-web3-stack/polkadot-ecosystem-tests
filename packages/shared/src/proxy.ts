@@ -1,7 +1,14 @@
 import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, type DescribeNode, type RootTestTree, setupNetworks, type TestNode } from '@e2e-test/shared'
+import {
+  type Client,
+  type DescribeNode,
+  type ProxyTypeMap,
+  type RootTestTree,
+  setupNetworks,
+  type TestNode,
+} from '@e2e-test/shared'
 
 import type { Keyring } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -1328,52 +1335,16 @@ async function proxyCallFilteringSingleTestRunner<
 function proxyCallFilteringTestTree<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(
-  chain: Chain<TCustom, TInitStorages>,
-  proxyTypes: Record<string, number>,
-  testType: ProxyCallFilteringTestType,
-  proxyTypeConfig: ProxyTypeConfig,
-): DescribeNode {
+>(chain: Chain<TCustom, TInitStorages>, testType: ProxyCallFilteringTestType, proxyCfg: ProxyTestConfig): DescribeNode {
   const kr = testAccounts.keyring
+
+  const proxyTypes = proxyCfg.proxyTypes
+  const proxyTypeConfig = proxyCfg.proxyTypeConfig ?? defaultProxyTypeConfig
 
   const proxyAccounts = createProxyAccounts('Alice', kr, proxyTypes)
 
-  const proxyTypesToTest = [
-    'Any',
-    'Governance',
-    'NonTransfer',
-    'Staking',
-    'NominationPools',
-    'CancelProxy',
-    'Auction',
-    'Society',
-    'Spokesperson',
-    'ParaRegistration',
-
-    'Assets',
-    'AssetOwner',
-    'AssetManager',
-    'Collator',
-
-    'Alliance',
-    'Fellowship',
-    'Ambassador',
-
-    'Broker',
-    'CoretimeRenewer',
-    'OnDemandPurchaser',
-
-    'Identity',
-    'IdentityJudgement',
-  ]
-
   const children: TestNode[] = []
   for (const [proxyType, proxyTypeIx] of Object.entries(proxyTypes)) {
-    // In this network, there might be some proxy types that should not/cannot be tested.
-    if (!proxyTypesToTest.includes(proxyType)) {
-      continue
-    }
-
     children.push({
       kind: 'test' as const,
       label: `${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`,
@@ -1393,6 +1364,23 @@ function proxyCallFilteringTestTree<
     kind: 'describe',
     label: `filtering tests for ${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls`,
     children,
+  }
+}
+
+export interface ProxyTestConfig {
+  /** Proxy types mapping for the chain */
+  proxyTypes: ProxyTypeMap
+  /** Configuration for proxy type behavior */
+  proxyTypeConfig?: ProxyTypeConfig
+}
+
+/**
+ * Create default proxy test configuration - t
+ */
+export function createProxyConfig(proxyTypes: ProxyTypeMap, proxyTypeConfig?: ProxyTypeConfig): ProxyTestConfig {
+  return {
+    proxyTypes,
+    proxyTypeConfig: proxyTypeConfig ?? defaultProxyTypeConfig,
   }
 }
 
@@ -1922,26 +1910,11 @@ export function baseProxyE2ETests<
 export function fullProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(
-  chain: Chain<TCustom, TInitStorages>,
-  testConfig: TestConfig,
-  proxyTypes: Record<string, number>,
-  proxyTypeConfig: ProxyTypeConfig = defaultProxyTypeConfig,
-): RootTestTree {
-  const allowedFilteringTests = proxyCallFilteringTestTree(
-    chain,
-    proxyTypes,
-    ProxyCallFilteringTestType.Permitted,
-    proxyTypeConfig,
-  )
-  const forbiddenFilteringTests = proxyCallFilteringTestTree(
-    chain,
-    proxyTypes,
-    ProxyCallFilteringTestType.Forbidden,
-    proxyTypeConfig,
-  )
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyCfg: ProxyTestConfig): RootTestTree {
+  const allowedFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Permitted, proxyCfg)
+  const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Forbidden, proxyCfg)
 
-  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyTypes)
+  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyCfg.proxyTypes)
 
   return {
     kind: 'describe' as const,

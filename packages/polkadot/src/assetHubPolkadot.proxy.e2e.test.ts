@@ -1,9 +1,11 @@
 import { assetHubPolkadot } from '@e2e-test/networks/chains'
 import {
   AssetHubProxyTypes,
+  createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
   type ParaTestConfig,
+  type ProxyTestConfig,
   type ProxyTypeConfig,
   registerTestTree,
 } from '@e2e-test/shared'
@@ -36,4 +38,6 @@ const assetHubPolkadotProxyTypeConfig: ProxyTypeConfig = {
   },
 }
 
-registerTestTree(fullProxyE2ETests(assetHubPolkadot, testConfig, AssetHubProxyTypes, assetHubPolkadotProxyTypeConfig))
+const assetHubPolkadotProxyCfg: ProxyTestConfig = createProxyConfig(AssetHubProxyTypes, assetHubPolkadotProxyTypeConfig)
+
+registerTestTree(fullProxyE2ETests(assetHubPolkadot, testConfig, assetHubPolkadotProxyCfg))

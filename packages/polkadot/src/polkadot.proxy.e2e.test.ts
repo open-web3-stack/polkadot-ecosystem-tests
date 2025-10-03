@@ -3,6 +3,7 @@ import {
   defaultProxyTypeConfig,
   fullProxyE2ETests,
   PolkadotProxyTypes,
+  type ProxyTestConfig,
   type ProxyTypeConfig,
   type RelayTestConfig,
   registerTestTree,
@@ -41,4 +42,9 @@ const polkadotProxyTypeConfig: ProxyTypeConfig = {
   },
 }
 
-registerTestTree(fullProxyE2ETests(polkadot, testConfig, PolkadotProxyTypes, polkadotProxyTypeConfig))
+const polkadotProxyCfg: ProxyTestConfig = {
+  proxyTypes: PolkadotProxyTypes,
+  proxyTypeConfig: polkadotProxyTypeConfig,
+}
+
+registerTestTree(fullProxyE2ETests(polkadot, testConfig, polkadotProxyCfg))

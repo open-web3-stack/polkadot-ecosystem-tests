@@ -1,9 +1,11 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
 import {
   AssetHubProxyTypes,
+  createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
   type ParaTestConfig,
+  type ProxyTestConfig,
   type ProxyTypeConfig,
   registerTestTree,
 } from '@e2e-test/shared'
@@ -36,4 +38,6 @@ const assetHubKusamaProxyTypeConfig: ProxyTypeConfig = {
   },
 }
 
-registerTestTree(fullProxyE2ETests(assetHubKusama, testConfig, AssetHubProxyTypes, assetHubKusamaProxyTypeConfig))
+const assetHubKusamaProxyCfg: ProxyTestConfig = createProxyConfig(AssetHubProxyTypes, assetHubKusamaProxyTypeConfig)
+
+registerTestTree(fullProxyE2ETests(assetHubKusama, testConfig, assetHubKusamaProxyCfg))
