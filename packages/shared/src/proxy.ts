@@ -804,7 +804,8 @@ class ProxyActionBuilderImpl<
 }
 
 /**
- * Default proxy type configuration that provides base behavior for common proxy types.
+ * Default proxy type configuration. Provides samples of allowed/disallowed actions for common proxy types i.e.
+ * those of relay and system parachains.
  * Chains can use this as a starting point and override specific proxy types as needed.
  */
 export const defaultProxyTypeConfig: ProxyTypeConfig = {
@@ -1367,15 +1368,21 @@ function proxyCallFilteringTestTree<
   }
 }
 
+/**
+ * Configuration for proxy E2E tests; if no `proxyTypeConfig` is provided, the default proxy type config is used.
+ */
 export interface ProxyTestConfig {
-  /** Proxy types mapping for the chain */
+  /** Proxy types mapping for the chain: proxy type name -> type index  */
   proxyTypes: ProxyTypeMap
-  /** Configuration for proxy type behavior */
+  /** Custom allow/disallow lists for the network's proxy types. Optional. */
   proxyTypeConfig?: ProxyTypeConfig
 }
 
 /**
- * Create default proxy test configuration - t
+ * Create a proxy test configuration.
+ *
+ * If no custom proxy filtering lists are provided, the default action lists are used.
+ * See {@link defaultProxyTypeConfig} for the default action lists.
  */
 export function createProxyConfig(proxyTypes: ProxyTypeMap, proxyTypeConfig?: ProxyTypeConfig): ProxyTestConfig {
   return {
