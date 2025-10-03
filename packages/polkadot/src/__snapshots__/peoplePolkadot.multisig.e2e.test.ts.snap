@@ -65,7 +65,7 @@ exports[`PeoplePolkadot Multisig > failure tests > cancellation with sender in s
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`PeoplePolkadot Multisig > failure tests > cancelling a non-existent mul
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`PeoplePolkadot Multisig > failure tests > cancelling a non-existent mul
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -204,7 +204,7 @@ exports[`PeoplePolkadot Multisig > failure tests > multisig cancellation with re
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -229,7 +229,7 @@ exports[`PeoplePolkadot Multisig > failure tests > multisig cancellation with th
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -318,7 +318,7 @@ exports[`PeoplePolkadot Multisig > failure tests > non-depositor tries to cancel
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

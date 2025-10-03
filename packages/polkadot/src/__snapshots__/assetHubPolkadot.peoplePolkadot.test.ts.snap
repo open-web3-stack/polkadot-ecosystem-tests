@@ -116,8 +116,8 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
       },
       "success": true,
       "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
