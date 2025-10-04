@@ -480,7 +480,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "amount": "(rounded 590000000)",
+      "amount": "(rounded 420000000)",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -507,14 +507,14 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
   },
   {
     "data": {
-      "amount": "(rounded 590000000)",
+      "amount": "(rounded 420000000)",
     },
     "method": "Deposit",
     "section": "balances",
   },
   {
     "data": {
-      "actualFee": "(rounded 590000000)",
+      "actualFee": "(rounded 420000000)",
       "tip": 0,
     },
     "method": "TransactionFeePaid",
@@ -526,7 +526,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": "(rounded 100000)",
           "refTime": "(rounded 2000000000)",
         },
       },

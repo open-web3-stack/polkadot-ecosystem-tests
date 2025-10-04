@@ -902,7 +902,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -1924,7 +1924,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -2055,7 +2055,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -2340,7 +2340,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -2534,7 +2534,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -2690,7 +2690,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -2846,7 +2846,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3002,7 +3002,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3158,7 +3158,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3314,7 +3314,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3489,7 +3489,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3721,7 +3721,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -3896,7 +3896,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -4199,7 +4199,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },

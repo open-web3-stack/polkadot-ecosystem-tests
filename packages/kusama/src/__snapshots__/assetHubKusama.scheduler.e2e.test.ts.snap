@@ -157,7 +157,7 @@ exports[`Kusama Asset Hub Scheduler > schedule named task with wrong origin > ev
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 60000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -177,7 +177,7 @@ exports[`Kusama Asset Hub Scheduler > schedule task with wrong origin > events w
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 60000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },

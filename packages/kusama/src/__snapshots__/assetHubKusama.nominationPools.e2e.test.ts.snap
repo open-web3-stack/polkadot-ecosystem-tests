@@ -509,7 +509,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pools update roles test 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
