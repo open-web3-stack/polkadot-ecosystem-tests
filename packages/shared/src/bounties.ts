@@ -13,7 +13,7 @@ import type { RootTestTree } from './types.js'
 /// -------
 
 // initial funding balance for accounts
-const TEST_ACCOUNT_BALANCE = 100000000000000n
+const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
 const NON_EXISTENT_BOUNTY_INDEX = 999 // randombounty index that doesn't exist
 
@@ -36,7 +36,6 @@ async function getBountyCount(client: Client<any, any>): Promise<number> {
  */
 async function getBounty(client: Client<any, any>, bountyIndex: number): Promise<any | null> {
   const bounty = await client.api.query.bounties.bounties(bountyIndex)
-  if (!bounty) return null
   return bounty.isSome ? bounty.unwrap() : null
 }
 
@@ -66,11 +65,14 @@ async function setupTestAccounts(client: Client<any, any>, accounts: string[] = 
     charlie: testAccounts.charlie.address,
   }
 
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const testAccountBalance = TEST_ACCOUNT_BALANCE_MULTIPLIER * existentialDeposit
+
   const accountData = accounts
     .filter((account) => accountMap[account as keyof typeof accountMap])
     .map((account) => [
       [accountMap[account as keyof typeof accountMap]],
-      { providers: 1, data: { free: TEST_ACCOUNT_BALANCE } },
+      { providers: 1, data: { free: testAccountBalance } },
     ])
 
   await client.dev.setStorage({
@@ -129,13 +131,18 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
 /// -------
 
 /**
- * Test 1: Creating a bounty
- * Propose a bounty
- * Verifies:
- * - Bounty proposal is successful
- * - Correct events are emitted
- * - Bounty data is stored correctly
- * - Bounty count increases
+ * Test: Bounty Creation
+ *
+ * This test verifies that users can successfully propose bounties to the treasury system.
+ * Bounty proposals are the foundation of the bounty workflow and must correctly store
+ * proposal data, emit appropriate events, and increment the bounty counter.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty with a substantial value and description
+ * - Verifying the `BountyProposed` event is emitted with correct data
+ * - Checking that the bounty count increases by one
+ * - Confirming the bounty data is properly stored in chain state
+ * - Validating the bounty description is correctly saved
  */
 export async function bountyCreationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -183,13 +190,18 @@ export async function bountyCreationTest<
 }
 
 /**
- * Test 2: Bounty approval flow
+ * Test: Bounty Approval Flow
  *
- * Verifies:
- * - Bounty can be approved by treasurer
- * - Status changes from Proposed to Approved
- * - Bounty is added to approvals queue
- * - Correct events are emitted
+ * This test verifies that treasury administrators can approve bounty proposals,
+ * transitioning them from the proposed state to the approved state. This is
+ * a critical governance step that ensures only legitimate bounties receive funding.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty
+ * - Using the `Treasurer` origin to approve the bounty
+ * - Verifying the status changes from `Proposed` to `Approved`
+ * - Confirming the bounty is added to the approvals queue
+ * - Checking that appropriate `BountyApproved` events are emitted
  */
 export async function bountyApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -239,13 +251,19 @@ export async function bountyApprovalTest<
 }
 
 /**
- * Bounty approval flow with curator
+ * Test: Bounty Approval with Curator Assignment
  *
- * Verifies:
- * - Bounty can be approved by treasurer with curator
- * - Status changes from Proposed to ApprovedWithCurator
- * - Bounty is added to approvals queue
- * - Correct events are emitted
+ * This test verifies that treasury administrators can approve bounty proposals
+ * while simultaneously assigning a curator. This streamlines the workflow by
+ * combining approval and curator assignment into a single operation, reducing
+ * the number of transactions needed to activate a bounty.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty
+ * - Using the `Treasurer` origin to approve the bounty with a curator
+ * - Verifying the status changes from `Proposed` to `ApprovedWithCurator`
+ * - Confirming the bounty is added to the approvals queue
+ * - Checking that both `BountyApproved` and `CuratorProposed` events are emitted
  */
 export async function bountyApprovalWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -304,12 +322,19 @@ export async function bountyApprovalWithCuratorTest<
 }
 
 /**
- * Bounty funding for Approved Bounties
+ * Test: Automatic Bounty Funding for Approved Bounties
  *
- * Verifies:
- * - Approved Bounties get funded by treasury automatically
- * - Status changes from Approved -> Funded
- * - Correct events are emitted
+ * This test verifies that approved bounties are automatically funded by the
+ * treasury during the spend period. This ensures that approved bounties receive
+ * their allocated funds without manual intervention, maintaining the automated
+ * nature of the bounty system.
+ *
+ * The test achieves this by:
+ * - Setting up the treasury spend period timing
+ * - Having Alice propose and get a bounty approved
+ * - Advancing blocks to trigger the spend period
+ * - Verifying the bounty status changes from `Approved` to `Funded`
+ * - Confirming the `BountyBecameActive` event is emitted
  */
 export async function bountyFundingTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -362,12 +387,13 @@ export async function bountyFundingTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -377,13 +403,20 @@ export async function bountyFundingTest<
 }
 
 /**
- *  Bounty funding for ApprovedWithCurator Bounties
+ * Test: Automatic Bounty Funding for `ApprovedWithCurator` Bounties
  *
- * Verifies:
- * - When a bounty is approved with curator, status changes to ApprovedWithCurator
- * - ApprovedWithCurator Bounties get funded by treasury automatically
- * - Status changes from ApprovedWithCurator -> CuratorProposed
- * - Correct events are emitted
+ * This test verifies that bounties approved with a curator are automatically
+ * funded by the treasury and transition to the `CuratorProposed` state. This
+ * ensures that curator-assigned bounties receive funding and are ready for
+ * curator acceptance without additional manual steps.
+ *
+ * The test achieves this by:
+ * - Setting up the treasury spend period timing
+ * - Having Alice propose a bounty
+ * - Approving the bounty with a curator assignment
+ * - Advancing blocks to trigger the spend period
+ * - Verifying the status changes from `ApprovedWithCurator` to `CuratorProposed`
+ * - Confirming appropriate events are emitted
  */
 export async function bountyFundingForApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -450,12 +483,13 @@ export async function bountyFundingForApprovedWithCuratorTest<
 
   await client.dev.newBlock()
   // In this block the bounty is funded and the status changes to CuratorProposed
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the bounty status is CuratorProposed
   const bountyStatusAfterFunding = await getBounty(client, bountyIndex)
@@ -465,15 +499,19 @@ export async function bountyFundingForApprovedWithCuratorTest<
 }
 
 /**
- * Curator assignment and acceptance
+ * Test: Curator Assignment and Acceptance Workflow
  *
- * Verifies:
- * - Curator can be proposed for a funded bounty
- * - Status changes from Funded -> CuratorProposed
- * - Curator can accept the role
- * - Status changes from CuratorProposed -> Active
- * - Curator deposit is reserved
- * - Correct events are emitted
+ * This test verifies the complete curator lifecycle from assignment to acceptance.
+ * Curators are responsible for managing bounties and must deposit funds as collateral
+ * to ensure they fulfill their responsibilities.
+ *
+ * The test achieves this by:
+ * - Creating a funded bounty through the approval process
+ * - Having the `Treasurer` propose Bob as curator
+ * - Verifying the status changes from `Funded` to `CuratorProposed`
+ * - Having Bob accept the curator role
+ * - Confirming the status changes to `Active` and curator deposit is reserved
+ * - Checking that appropriate events are emitted throughout the process
  */
 export async function curatorAssignmentAndAcceptanceTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -526,12 +564,13 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -576,12 +615,18 @@ export async function curatorAssignmentAndAcceptanceTest<
 }
 
 /**
- * Bounty extension
+ * Test: Bounty Expiry Extension
  *
- * Verifies:
- * - Curator can extend bounty expiry
- * - Update due date is extended
- * - Correct events are emitted
+ * This test verifies that curators can extend the expiry date of active bounties.
+ * This functionality is crucial for allowing curators additional time to complete
+ * their work or find suitable beneficiaries when needed.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with a curator
+ * - Having the curator extend the bounty expiry
+ * - Verifying the `updateDue` date is extended
+ * - Confirming the `BountyExtended` event is emitted
+ * - Checking that the bounty remains in `Active` state
  */
 export async function bountyExtensionTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -634,12 +679,13 @@ export async function bountyExtensionTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -714,13 +760,21 @@ export async function bountyExtensionTest<
 }
 
 /**
- * Bounty awarding and claiming
+ * Test: Complete Bounty Awarding and Claiming Workflow
  *
- * Verifies:
- * - Curator can award bounty to beneficiary
- * - Status changes to PendingPayout
- * - Curator can claim the bounty after delay period
- * - Correct events are emitted
+ * This test verifies the end-to-end process of awarding a bounty to a beneficiary
+ * and allowing them to claim the funds after the required delay period. This
+ * ensures that completed work is properly rewarded while maintaining security
+ * through the delay mechanism.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with a curator
+ * - Having the curator award the bounty to Alice
+ * - Verifying the status changes to `PendingPayout`
+ * - Advancing blocks to reach the claimable period
+ * - Having Alice claim the bounty
+ * - Confirming the bounty is removed from storage
+ * - Checking that appropriate events are emitted throughout
  */
 export async function bountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -773,12 +827,13 @@ export async function bountyAwardingAndClaimingTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -837,13 +892,11 @@ export async function bountyAwardingAndClaimingTest<
   const bountyAwarded = await getBounty(client, bountyIndex)
   expect(bountyAwarded.status.isPendingPayout).toBe(true)
 
-  // Calculate the claimable at block number
-  const currentBlock = await client.api.rpc.chain.getHeader()
+  // get the bounty deposit payout delay
   const bountyDepositPayoutDelay = await client.api.consts.bounties.bountyDepositPayoutDelay
-  const claimableAtBlock = currentBlock.number.toNumber() + Number(bountyDepositPayoutDelay.toNumber())
 
   // wait for the unlock at block number
-  await client.dev.setHead(claimableAtBlock)
+  await client.dev.newBlock({ blocks: bountyDepositPayoutDelay.toNumber() })
 
   await client.dev.newBlock()
 
@@ -870,13 +923,19 @@ export async function bountyAwardingAndClaimingTest<
 }
 
 /**
- * Test: Bounty closure in Proposed state
+ * Test: Bounty Closure in `Proposed` State
  *
- * Verifies:
- * - Bounty can be closed by GeneralAdmin when in Proposed state
- * - Proposer's bond is slashed
- * - Bounty is removed from storage
- * - BountyRejected event is emitted
+ * This test verifies that treasury administrators can close bounties that are
+ * still in the proposed state, rejecting them before they receive approval.
+ * This is important for governance as it allows removal of inappropriate or
+ * outdated bounty proposals while penalizing proposers for wasted resources.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty
+ * - Using the `Treasurer` origin to close the bounty
+ * - Verifying the proposer's bond is slashed (not returned)
+ * - Confirming the bounty is removed from storage
+ * - Checking that `BountyRejected` and `Slashed` events are emitted
  */
 export async function bountyClosureProposedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -938,13 +997,18 @@ export async function bountyClosureProposedTest<
 }
 
 /**
- * Test: Bounty closure in Funded state
+ * Test: Bounty Closure in ``Funded`` State
  *
- * Verifies:
- * - Bounty can be closed when in Funded state
- * - Funds are transferred back to treasury
- * - Bounty is removed from storage
- * - BountyCanceled event is emitted
+ * This test verifies that treasury administrators can close bounties that have
+ * been funded but not yet assigned to curators. This allows recovery of treasury
+ * funds from bounties that are no longer needed or have become obsolete.
+ *
+ * The test achieves this by:
+ * - Creating a funded bounty through the approval process
+ * - Using the `Treasurer` origin to close the bounty
+ * - Verifying the bounty funds are transferred back to treasury
+ * - Confirming the bounty is removed from storage
+ * - Checking that `BountyCanceled` and `Transfer` events are emitted
  */
 export async function bountyClosureFundedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -984,12 +1048,13 @@ export async function bountyClosureFundedTest<
 
   await client.dev.newBlock()
   // Bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // Verify bounty is funded
   const fundedBounty = await getBounty(client, bountyIndex)
@@ -1016,7 +1081,7 @@ export async function bountyClosureFundedTest<
   // verify the transfer event
   await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
     .redact({ redactKeys: /from|to/ })
-    .toMatchSnapshot('bounty value transfered to treasury')
+    .toMatchSnapshot('bounty value transferred to treasury')
 
   // get treasury balance after closure
   const treasuryAccountAfterClosureInfo = await client.api.query.system.account(treasuryAccountId)
@@ -1037,14 +1102,19 @@ export async function bountyClosureFundedTest<
 }
 
 /**
- * Test: Bounty closure in Active state
+ * Test: Bounty Closure in Active State
  *
- * Verifies:
- * - Bounty can be closed when in Active state
- * - Curator deposit is refunded
- * - Funds are transferred back to treasury
- * - Bounty is removed from storage
- * - BountyCanceled event is emitted
+ * This test verifies that treasury administrators can close bounties that are
+ * currently active with assigned curators. This allows recovery of both treasury
+ * funds and curator deposits when bounties need to be terminated.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with an assigned curator
+ * - Using the `Treasurer` origin to close the bounty
+ * - Verifying the curator deposit is refunded
+ * - Confirming the bounty funds are transferred back to treasury
+ * - Checking that the bounty is removed from storage
+ * - Validating that `BountyCanceled` and `Transfer` events are emitted
  */
 export async function bountyClosureActiveTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1085,12 +1155,13 @@ export async function bountyClosureActiveTest<
 
   await client.dev.newBlock()
   // Bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
@@ -1153,12 +1224,18 @@ export async function bountyClosureActiveTest<
 }
 
 /**
- * Test: Unassign curator in ApprovedWithCurator state
+ * Test: Curator Unassignment in ApprovedWithCurator State
  *
- * Verifies:
- * - Treasurer can unassign curator from ApprovedWithCurator state
- * - Status changes back to Approved
- * - CuratorUnassigned event is emitted
+ * This test verifies that treasury administrators can unassign curators from
+ * bounties that are in the `ApprovedWithCurator` state. This provides flexibility
+ * to change curator assignments before the bounty becomes active.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty
+ * - Approving the bounty with a curator assignment
+ * - Using the `Treasurer` origin to unassign the curator
+ * - Verifying the status changes back to `Approved`
+ * - Confirming the `CuratorUnassigned` event is emitted
  */
 export async function unassignCuratorApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1215,12 +1292,18 @@ export async function unassignCuratorApprovedWithCuratorTest<
 }
 
 /**
- * Test: Unassign curator in CuratorProposed state
+ * Test: Curator Unassignment in `CuratorProposed` State
  *
- * Verifies:
- * - Treasurer can unassign curator from CuratorProposed state
- * - Status changes to Funded
- * - CuratorUnassigned event is emitted
+ * This test verifies that treasury administrators can unassign curators from
+ * bounties that are in the `CuratorProposed` state. This allows changing curator
+ * assignments even after the bounty has been funded but before the curator
+ * has accepted their role.
+ *
+ * The test achieves this by:
+ * - Creating a funded bounty with a proposed curator
+ * - Using the `Treasurer` origin to unassign the curator
+ * - Verifying the status changes to `Funded`
+ * - Confirming the `CuratorUnassigned` event is emitted
  */
 export async function unassignCuratorCuratorProposedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1311,13 +1394,19 @@ export async function unassignCuratorCuratorProposedTest<
 }
 
 /**
- * Test: Unassign curator in Active state by curator themselves
+ * Test: Curator Self-Unassignment in Active State
  *
- * Verifies:
- * - Curator can unassign themselves from Active state
- * - Curator deposit is refunded
- * - Status changes to Funded
- * - CuratorUnassigned event is emitted
+ * This test verifies that curators can voluntarily unassign themselves from
+ * active bounties. This provides curators with an exit mechanism when they
+ * cannot fulfill their responsibilities, with their deposit being refunded
+ * since they initiated the unassignment.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with Bob as curator
+ * - Having Bob unassign himself from the bounty
+ * - Verifying the status changes to `Funded`
+ * - Confirming the curator deposit is refunded (not slashed)
+ * - Checking that the `CuratorUnassigned` event is emitted
  */
 export async function unassignCuratorActiveByCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1441,13 +1530,18 @@ export async function unassignCuratorActiveByCuratorTest<
 }
 
 /**
- * Test: Unassign curator in Active state by Treasurer (slashes curator)
+ * Test: Curator Unassignment by `Treasurer` in `Active` State
  *
- * Verifies:
- * - Treasurer can unassign curator from Active state
- * - Curator deposit is slashed
- * - Status changes to Funded
- * - CuratorUnassigned event is emitted
+ * This test verifies that treasury administrators can forcibly unassign curators
+ * from active bounties. This is a disciplinary action where the curator's
+ * deposit is slashed as a penalty for not fulfilling their responsibilities or acting maliciously.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with Bob as curator
+ * - Using the `Treasurer` origin to unassign Bob
+ * - Verifying the status changes to `Funded`
+ * - Confirming the curator deposit is slashed (not refunded)
+ * - Checking that `CuratorUnassigned`, `Slashed`, and `Deposit` events are emitted
  */
 export async function unassignCuratorActiveByTreasurerTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1583,13 +1677,18 @@ export async function unassignCuratorActiveByTreasurerTest<
 }
 
 /**
- * Test: Unassign curator in PendingPayout state by Treasurer
+ * Test: Curator Unassignment in `PendingPayout` State
  *
- * Verifies:
- * - Treasurer can unassign curator from PendingPayout state
- * - Curator deposit is slashed
- * - Status changes to Funded
- * - CuratorUnassigned event is emitted
+ * This test verifies that treasury administrators can unassign curators from
+ * bounties that are in the `PendingPayout` state. By doing so, they are claiming the curator is acting maliciously,
+ * so we slash the curator.
+ *
+ * The test achieves this by:
+ * - Creating a bounty that has been awarded (`PendingPayout` state)
+ * - Using the `Treasurer` origin to unassign the curator
+ * - Verifying the status changes to `Funded`
+ * - Confirming the curator deposit is slashed
+ * - Checking that appropriate events are emitted
  */
 export async function unassignCuratorPendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1919,11 +2018,17 @@ export function allBountySuccessTests<
 }
 
 /**
- * Test: Bounty closure in Approved state (should fail)
+ * Test: Bounty Closure Failure in Approved State
  *
- * Verifies:
- * - Bounty closure fails with UnexpectedStatus when in Approved state (GeneralAdmin cannot close approved bounties)
- * - Bounty remains in storage
+ * This test verifies that treasury(council) administrators cannot close bounties that are
+ * in the `Approved` state. For weight reasons, we don't allow a council to cancel in this phase.
+ *
+ * The test achieves this by:
+ * - Having Alice propose and get a bounty approved
+ * - Attempting to close the bounty using the `Treasurer` (council) origin
+ * - Verifying the transaction fails with `UnexpectedStatus` error
+ * - Confirming the bounty remains in Approved state
+ * - Checking that the error is properly reported through scheduler events
  */
 export async function bountyClosureApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1997,11 +2102,20 @@ export async function bountyClosureApprovedTest<
 }
 
 /**
- * Test: Bounty closure in PendingPayout state (should fail)
+ * Test: Bounty Closure Failure in `PendingPayout` State
  *
- * Verifies:
- * - Bounty closure fails with PendingPayout error when in PendingPayout state (GeneralAdmin must unassign curator first)
- * - Bounty remains in storage
+ * This test verifies that treasury administrators cannot directly close bounties
+ * that are in the `PendingPayout` state. If council wants to cancel
+ * this bounty, it should mean the curator was acting maliciously.
+ * So the council should first unassign the curator, slashing their
+ * deposit.
+ *
+ * The test achieves this by:
+ * - Creating a bounty that has been awarded (`PendingPayout` state)
+ * - Attempting to close the bounty using the `Treasurer` origin
+ * - Verifying the transaction fails with `PendingPayout` error
+ * - Confirming the bounty remains in `PendingPayout` state
+ * - Checking that the error is properly reported through scheduler events
  */
 export async function bountyClosurePendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2099,11 +2213,19 @@ export async function bountyClosurePendingPayoutTest<
 }
 
 /**
- * Test that unassigning curator in Active state by public fails with `Premature`.
+ * Test: Premature Curator Unassignment by Public User
  *
- * 1. Alice proposes a bounty, it gets approved, curator is proposed and accepted
- * 2. Public user attempts to unassign curator immediately (before proper timing)
- * 3. Verify that the transaction fails with the appropriate error
+ * This test verifies that public users cannot immediately unassign curators
+ * from active bounties. There is a timing restriction to prevent malicious
+ * actors from disrupting bounty operations. Users must wait for the proper
+ * timing window before they can unassign curators.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with an assigned curator
+ * - Having Charlie (public user) attempt to unassign the curator immediately
+ * - Verifying the transaction fails with `Premature` error
+ * - Confirming the bounty remains in Active state
+ * - Checking that the error is properly reported through `ExtrinsicFailed` event
  */
 async function unassignCuratorActiveStateByPublicPrematureTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2160,7 +2282,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   expect(bountyStatus.status.isActive).toBe(true)
 
   // Charlie (public user) tries to unassign curator immediately (premature)
-  // Using scheduleInlineCallWithOrigin to simulate public call
+  // Using sendTransaction to simulate public call
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
   await sendTransaction(unassignCuratorTx.signAsync(testAccounts.charlie))
 
@@ -2184,10 +2306,16 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 }
 
 /**
- * Test that proposing a bounty with description too long fails with `ReasonTooBig`.
+ * Test: Bounty Proposal with Oversized Description
  *
- * 1. Alice attempts to propose a bounty with a description that exceeds the maximum length
- * 2. Verify that the transaction fails with the appropriate error
+ * This test verifies that the system properly rejects bounty proposals with
+ * descriptions that exceed the maximum allowed length. This prevents storage
+ * bloat and ensures reasonable description sizes for governance efficiency.
+ *
+ * The test achieves this by:
+ * - Having Alice attempt to propose a bounty with an oversized description
+ * - Verifying the transaction fails with `ReasonTooBig` error
+ * - Confirming the error is properly reported through `ExtrinsicFailed` event
  */
 async function reasonTooBigTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2223,10 +2351,16 @@ async function reasonTooBigTest<
 }
 
 /**
- * Test that proposing a bounty with value below minimum fails with `InvalidValue`.
+ * Test: Bounty Proposal with Insufficient Value
  *
- * 1. Alice attempts to propose a bounty with value below the minimum required
- * 2. Verify that the transaction fails with the appropriate error
+ * This test verifies that the system properly rejects bounty proposals with
+ * values below the minimum threshold. This ensures bounties have meaningful
+ * value and prevents spam proposals with negligible amounts.
+ *
+ * The test achieves this by:
+ * - Having Alice attempt to propose a bounty with value below the minimum
+ * - Verifying the transaction fails with `InvalidValue` error
+ * - Confirming the error is properly reported through `ExtrinsicFailed` event
  */
 async function invalidValueTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2262,10 +2396,16 @@ async function invalidValueTest<
 }
 
 /**
- * Test that approving a non-existent bounty fails with `InvalidIndex`.
+ * Test: Approval of Non-Existent Bounty
  *
- * 1. Treasurer attempts to approve a bounty that doesn't exist
- * 2. Verify that the transaction fails with the appropriate error
+ * This test verifies that the system properly handles attempts to approve
+ * bounties that do not exist. This prevents errors and ensures robust error
+ * handling when invalid bounty indices are provided.
+ *
+ * The test achieves this by:
+ * - Attempting to approve a bounty with a non-existent index
+ * - Verifying the transaction fails with `InvalidIndex` error
+ * - Confirming the error is properly reported through scheduler events
  */
 async function invalidIndexApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2303,11 +2443,17 @@ async function invalidIndexApprovalTest<
 }
 
 /**
- * Test that proposing a curator for a non-funded bounty fails with `UnexpectedStatus`.
+ * Test: Curator Proposal Before Bounty Funding
  *
- * 1. Alice proposes a bounty
- * 2. Treasurer attempts to propose a curator before the bounty is funded
- * 3. Verify that the transaction fails with the appropriate error
+ * This test verifies that curators cannot be proposed for bounties that
+ * have not yet been funded. This ensures the proper sequence of operations:
+ * bounty must be funded before curator assignment can occur.
+ *
+ * The test achieves this by:
+ * - Having Alice propose a bounty
+ * - Attempting to propose a curator before the bounty is funded
+ * - Verifying the transaction fails with `UnexpectedStatus` error
+ * - Confirming the error is properly reported through scheduler events
  */
 async function unexpectedStatusProposeCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2356,11 +2502,17 @@ async function unexpectedStatusProposeCuratorTest<
 }
 
 /**
- * Test that a non-curator trying to accept curator role fails with `RequireCurator`.
+ * Test: Unauthorized Curator Acceptance
  *
- * 1. Alice proposes a bounty and treasurer proposes Bob as curator
- * 2. Charlie attempts to accept the curator role (should be Bob)
- * 3. Verify that the transaction fails with the appropriate error
+ * This test verifies that only the designated curator can accept a curator
+ * role for a bounty. This prevents unauthorized users from accepting
+ * curator positions they were not assigned to.
+ *
+ * The test achieves this by:
+ * - Creating a funded bounty with Bob proposed as curator
+ * - Having Charlie attempt to accept the curator role
+ * - Verifying the transaction fails with `RequireCurator` error
+ * - Confirming the error is properly reported through `ExtrinsicFailed` event
  */
 async function requireCuratorAcceptTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2426,12 +2578,18 @@ async function requireCuratorAcceptTest<
 }
 
 /**
- * Test creating a child bounty from an active parent bounty and then trying to close it should fail with `HasActiveChildBounty`.
+ * Test: Bounty Awarding with Active Child Bounties
  *
- * Verifies:
- * - Curator can create child bounty when parent bounty is in Active state
- * - ChildBountyAdded event is emitted
- * - Child bounty gets proper funding from parent bounty
+ * This test verifies that bounties with active child bounties cannot be
+ * awarded. This prevents disruption of ongoing child bounty work and
+ * ensures proper completion of all related child bounty activities.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with a curator
+ * - Having the curator create a child bounty
+ * - Attempting to award the parent bounty
+ * - Verifying the transaction fails with `HasActiveChildBounty` error
+ * - Confirming the parent bounty remains in Active state
  */
 async function hasActiveChildBountyTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2530,6 +2688,137 @@ async function hasActiveChildBountyTest<
 }
 
 /**
+ * Test: Premature Bounty Claiming in Active State
+ *
+ * This test verifies that beneficiaries cannot claim bounties that are
+ * still in the Active state. Bounties must first be awarded by the curator
+ * and reach the `PendingPayout` state before they can be claimed.
+ *
+ * The test achieves this by:
+ * - Creating an active bounty with a curator
+ * - Having Alice(beneficiary) attempt to claim the bounty while it's still active
+ * - Verifying the transaction fails with `UnexpectedStatus` error
+ * - Confirming the error is properly reported through `ExtrinsicFailed` event
+ */
+export async function bountyAwardingAndClaimingInActiveStateTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
+
+  await setLastSpendPeriodBlockNumber(client)
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const description = 'Test bounty for funding'
+
+  // propose a bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // verify the bounty is added to the storage
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
+  // approve the bounty with origin treasurer
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the bounty is added to the approvals queue
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+
+  // assign curator to the bounty
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the bounty status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  await client.dev.newBlock()
+
+  // accept the curator
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the bounty status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  await client.dev.newBlock()
+
+  // try to claim the bounty by beneficiary in active state
+  const claimBountyTx = client.api.tx.bounties.claimBounty(bountyIndex)
+  await sendTransaction(claimBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  const ev = await extractExtrinsicFailedEvent(client)
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.UnexpectedStatus.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
+/**
  * All the failure cases for bounty
  *
  * @param chain
@@ -2587,6 +2876,11 @@ export function allBountyFailureTests<
         kind: 'test',
         label: 'Bounty cannot be awarded if it has an active child bounty',
         testFn: async () => await hasActiveChildBountyTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'Bounty cannot be claimed in active state',
+        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(chain),
       },
     ],
   } as RootTestTree
