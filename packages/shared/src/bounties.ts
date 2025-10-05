@@ -83,7 +83,7 @@ async function setupTestAccounts(client: Client<any, any>, accounts: string[] = 
 }
 
 /**
- * Get bounty index from BountyProposed event
+ * Get bounty index from `BountyProposed` event
  */
 async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number> {
   const [bountyProposedEvent] = (await client.api.query.system.events()).filter(
@@ -138,7 +138,7 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
  * proposal data, emit appropriate events, and increment the bounty counter.
  *
  * The test achieves this by:
- * - Having Alice propose a bounty with a substantial value and description
+ * - Having `Alice` propose a bounty with a substantial value and description
  * - Verifying the `BountyProposed` event is emitted with correct data
  * - Checking that the bounty count increases by one
  * - Confirming the bounty data is properly stored in chain state
@@ -322,7 +322,7 @@ export async function bountyApprovalWithCuratorTest<
 }
 
 /**
- * Test: Automatic Bounty Funding for Approved Bounties
+ * Test: Automatic Bounty Funding for `Approved` Bounties
  *
  * This test verifies that approved bounties are automatically funded by the
  * treasury during the spend period. This ensures that approved bounties receive
@@ -769,7 +769,7 @@ export async function bountyExtensionTest<
  *
  * The test achieves this by:
  * - Creating an active bounty with a curator
- * - Having the curator award the bounty to Alice
+ * - Having the curator award the bounty to `Alice`
  * - Verifying the status changes to `PendingPayout`
  * - Advancing blocks to reach the claimable period
  * - Having Alice claim the bounty
@@ -997,7 +997,7 @@ export async function bountyClosureProposedTest<
 }
 
 /**
- * Test: Bounty Closure in ``Funded`` State
+ * Test: Bounty Closure in `Funded` State
  *
  * This test verifies that treasury administrators can close bounties that have
  * been funded but not yet assigned to curators. This allows recovery of treasury
@@ -1102,7 +1102,7 @@ export async function bountyClosureFundedTest<
 }
 
 /**
- * Test: Bounty Closure in Active State
+ * Test: Bounty Closure in `Active` State
  *
  * This test verifies that treasury administrators can close bounties that are
  * currently active with assigned curators. This allows recovery of both treasury
@@ -1224,7 +1224,7 @@ export async function bountyClosureActiveTest<
 }
 
 /**
- * Test: Curator Unassignment in ApprovedWithCurator State
+ * Test: Curator Unassignment in `ApprovedWithCurator` State
  *
  * This test verifies that treasury administrators can unassign curators from
  * bounties that are in the `ApprovedWithCurator` state. This provides flexibility
@@ -1394,7 +1394,7 @@ export async function unassignCuratorCuratorProposedTest<
 }
 
 /**
- * Test: Curator Self-Unassignment in Active State
+ * Test: Curator Self-Unassignment in `Active` State
  *
  * This test verifies that curators can voluntarily unassign themselves from
  * active bounties. This provides curators with an exit mechanism when they
@@ -2018,7 +2018,7 @@ export function allBountySuccessTests<
 }
 
 /**
- * Test: Bounty Closure Failure in Approved State
+ * Test: Bounty Closure Failure in `Approved` State
  *
  * This test verifies that treasury(council) administrators cannot close bounties that are
  * in the `Approved` state. For weight reasons, we don't allow a council to cancel in this phase.
@@ -2027,7 +2027,7 @@ export function allBountySuccessTests<
  * - Having Alice propose and get a bounty approved
  * - Attempting to close the bounty using the `Treasurer` (council) origin
  * - Verifying the transaction fails with `UnexpectedStatus` error
- * - Confirming the bounty remains in Approved state
+ * - Confirming the bounty remains in `Approved` state
  * - Checking that the error is properly reported through scheduler events
  */
 export async function bountyClosureApprovedTest<
@@ -2224,7 +2224,7 @@ export async function bountyClosurePendingPayoutTest<
  * - Creating an active bounty with an assigned curator
  * - Having Charlie (public user) attempt to unassign the curator immediately
  * - Verifying the transaction fails with `Premature` error
- * - Confirming the bounty remains in Active state
+ * - Confirming the bounty remains in `Active` state
  * - Checking that the error is properly reported through `ExtrinsicFailed` event
  */
 async function unassignCuratorActiveStateByPublicPrematureTest<
@@ -2578,7 +2578,7 @@ async function requireCuratorAcceptTest<
 }
 
 /**
- * Test: Bounty Awarding with Active Child Bounties
+ * Test: Bounty Awarding with `Active` Child Bounties
  *
  * This test verifies that bounties with active child bounties cannot be
  * awarded. This prevents disruption of ongoing child bounty work and
@@ -2589,7 +2589,7 @@ async function requireCuratorAcceptTest<
  * - Having the curator create a child bounty
  * - Attempting to award the parent bounty
  * - Verifying the transaction fails with `HasActiveChildBounty` error
- * - Confirming the parent bounty remains in Active state
+ * - Confirming the parent bounty remains in `Active` state
  */
 async function hasActiveChildBountyTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2688,15 +2688,15 @@ async function hasActiveChildBountyTest<
 }
 
 /**
- * Test: Premature Bounty Claiming in Active State
+ * Test: Premature Bounty Claiming in `Active` State
  *
  * This test verifies that beneficiaries cannot claim bounties that are
- * still in the Active state. Bounties must first be awarded by the curator
+ * still in the `Active` state. Bounties must first be awarded by the curator
  * and reach the `PendingPayout` state before they can be claimed.
  *
  * The test achieves this by:
  * - Creating an active bounty with a curator
- * - Having Alice(beneficiary) attempt to claim the bounty while it's still active
+ * - Having `Alice` (beneficiary) attempt to claim the bounty while it's still active
  * - Verifying the transaction fails with `UnexpectedStatus` error
  * - Confirming the error is properly reported through `ExtrinsicFailed` event
  */
