@@ -10,6 +10,68 @@ exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be awarded
 ]
 `;
 
+exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be claimed in active state > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Bounties > All bounty failure tests > Bounty cannot be claimed in active state > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
 exports[`Polkadot Bounties > All bounty failure tests > Bounty closure in approved state > scheduler events when closing bounty with approved state fails 1`] = `
 [
   {
@@ -407,7 +469,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty canceled event 1`] = `
 [
@@ -459,7 +531,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty canceled events 1`] = `
 [
@@ -473,7 +555,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty value transfered to treasury 1`] = `
+exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty value transferred to treasury 1`] = `
 [
   {
     "data": {
@@ -575,7 +657,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and claiming > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and claiming > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and claiming > bounty claimed events 1`] = `
 [
@@ -641,7 +733,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty extension > bount
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty extension > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty extension > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty extension > bounty extended events 1`] = `
 [
@@ -705,7 +807,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > B
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty proposed events 1`] = `
 [
@@ -731,7 +843,17 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > B
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty proposed events 1`] = `
 [
@@ -782,7 +904,17 @@ exports[`Polkadot Bounties > All bounty success tests > Curator assignment and a
 ]
 `;
 
-exports[`Polkadot Bounties > All bounty success tests > Curator assignment and acceptance > bounty became active events 1`] = `[]`;
+exports[`Polkadot Bounties > All bounty success tests > Curator assignment and acceptance > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Polkadot Bounties > All bounty success tests > Curator assignment and acceptance > bounty proposed events 1`] = `
 [
