@@ -13,7 +13,7 @@ import type { RootTestTree } from './types.js'
 /// -------
 
 // initial funding balance for accounts
-const TEST_ACCOUNT_BALANCE = 100000000000000n
+const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
 // 4 blocks before the spend period block
 const TREASURY_SETUP_OFFSET = 4
@@ -57,11 +57,14 @@ async function setupTestAccounts(client: Client<any, any>, accounts: string[] = 
     dave: testAccounts.dave.address,
   }
 
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+  const testAccountBalance = TEST_ACCOUNT_BALANCE_MULTIPLIER * existentialDeposit
+
   const accountData = accounts
     .filter((account) => accountMap[account as keyof typeof accountMap])
     .map((account) => [
       [accountMap[account as keyof typeof accountMap]],
-      { providers: 1, data: { free: TEST_ACCOUNT_BALANCE } },
+      { providers: 1, data: { free: testAccountBalance } },
     ])
 
   await client.dev.setStorage({
