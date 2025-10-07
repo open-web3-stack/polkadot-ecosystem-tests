@@ -26,7 +26,7 @@ type AuthorizeUpgradeFn = (codeHash: string | Uint8Array<ArrayBufferLike>) => Su
 type ExpectedEvents = Parameters<typeof assertExpectedEvents>[1]
 
 /**
- * Runs the authorize upgrade + apply authrozied upgrade scenario
+ * Runs the authorize upgrade + apply authorized upgrade scenario
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  *
  * Calls are run locally via scheduler to impersonate Root account
