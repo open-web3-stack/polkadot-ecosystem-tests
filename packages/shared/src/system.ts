@@ -29,6 +29,8 @@ type ExpectedEvents = Parameters<typeof assertExpectedEvents>[1]
  * Runs the authorize upgrade + apply authorized upgrade scenario
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  *
+ * Focus of this test is solely the RU's authorization + application process
+ *
  * Calls are run locally via scheduler to impersonate Root account
  *
  * via `call` param allows to either use `authorizeUpgrade` or `authorizeUpgradeWithoutChecks`
@@ -73,9 +75,11 @@ async function runAuthorizeUpgradeScenario(
 }
 
 /**
- * Runs the authorize upgrade + apply authrozied upgrade scenario
+ * Runs the authorize upgrade + apply authorized upgrade scenario
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  * Calls are run via scheduler on Relay using XCM Transact to send the actual call to the destination parachain
+ *
+ * Focus of this test is solely the RU's authorization + application process
  *
  * via `call` param allows to either use `authorizeUpgrade` or `authorizeUpgradeWithoutChecks`
  *
@@ -165,6 +169,8 @@ async function runAuthorizeUpgradeAllowToOverrideScenario(
  * Runs multiple authorizeUpgrade calls to confirm possibility to override previously authorized code
  * Calls are run via scheduler on Relay using XCM Transact to send the actual call to the destination parachain
  *
+ * Focus of this test is solely the RU's authorization + application process
+ *
  * via `call` param allows to either use `authorizeUpgrade` or `authorizeUpgradeWithoutChecks`
  *
  * 1. Schedules an authorizeUpgrade call using some hash (exact hash is not important)
@@ -210,6 +216,8 @@ async function runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(
  * Runs upgrade scenario via direct set_code
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  * Calls are run locally via scheduler to impersonate Root account
+ *
+ * Focus of this test is to solely verify working of direct runtime upgrade (as opposed to 2-step apply+authorize method)
  *
  * via `call` param allows to either use `setCode` or `setCodeWithoutChecks`
  *
@@ -271,6 +279,8 @@ async function runSetCodeScenario(
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  * Calls are run via scheduler on Relay using XCM Transact to send the actual call to the destination parachain
  *
+ * Focus of this test is to solely verify working of direct runtime upgrade (as opposed to 2-step apply+authorize method)
+ *
  * via `call` param allows to either use `setCode` or `setCodeWithoutChecks`
  *
  * 1. Fetches current runtime WASM and hashes it.
@@ -331,6 +341,9 @@ async function runSetCodeScenarioViaRelay(
   ])
 }
 
+/**
+ * Tests `setCode` flow — ensures runtime upgrade to the same WASM fails.
+ */
 export async function setCodeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -347,6 +360,10 @@ export async function setCodeTests<
   })
 }
 
+/**
+ * Tests `setCode` flow — ensures runtime upgrade to the same WASM fails
+ * Initiated remotely from Relay Chain
+ */
 export async function setCodeViaRelayTests<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -360,6 +377,9 @@ export async function setCodeViaRelayTests<
   })
 }
 
+/**
+ * Tests `setCodeWithoutChecks` flow — ensures upgrade to same WASM succeeds.
+ */
 export async function setCodeWithoutChecksTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -377,6 +397,9 @@ export async function setCodeWithoutChecksTests<
   })
 }
 
+/**
+ * Tests `authorizeUpgrade` flow — upgrade to same WASM should fail validation.
+ */
 export async function authorizeUpgradeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -390,6 +413,9 @@ export async function authorizeUpgradeTests<
   })
 }
 
+/**
+ * Tests `authorizeUpgradeWithoutChecks` — upgrade to same WASM should succeed.
+ */
 export async function authorizeUpgradeWithoutChecksTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -401,6 +427,9 @@ export async function authorizeUpgradeWithoutChecksTests<
   })
 }
 
+/**
+ * Tests `authorizeUpgrade` executed via Relay Chain (XCM Transact) — upgrade to same WASM should fail validation.
+ */
 export async function authorizeUpgradeViaRelayTests<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -416,6 +445,9 @@ export async function authorizeUpgradeViaRelayTests<
   })
 }
 
+/**
+ * Tests `authorizeUpgrade` executed via Relay Chain (XCM Transact) — upgrade to same WASM should succeed.
+ */
 export async function authorizeUpgradeWithoutChecksViaRelayTests<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -433,6 +465,9 @@ export async function authorizeUpgradeWithoutChecksViaRelayTests<
   })
 }
 
+/**
+ * Tests`authorizeUpgrade` ability to override previously authorized upgrade executed via Relay Chain (XCM Transact)
+ */
 export async function authorizeUpgradeAllowToOverrideViaRelay<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -445,6 +480,9 @@ export async function authorizeUpgradeAllowToOverrideViaRelay<
   })
 }
 
+/**
+ * Tests `authorizeUpgradeWithoutChecks` ability to override previously authorized upgrade executed via Relay Chain (XCM Transact)
+ */
 export async function authorizeUpgradeWithoutChecksAllowToOverrideViaRelay<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -457,6 +495,9 @@ export async function authorizeUpgradeWithoutChecksAllowToOverrideViaRelay<
   })
 }
 
+/**
+ * Tests `authorizeUpgrade` ability to override previously authorized upgrade.
+ */
 export async function authorizeUpgradeAllowToOverride<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -467,6 +508,9 @@ export async function authorizeUpgradeAllowToOverride<
   })
 }
 
+/**
+ * Tests `authorizeUpgradeWithoutChecks` ability to override previously authorized upgrade.
+ */
 export async function authorizeUpgradeWithoutChecksAllowToOverride<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,

@@ -491,8 +491,21 @@ export interface ParaTestConfig {
  */
 export type TestConfig = RelayTestConfig | ParaTestConfig
 
+/**
+ * Matcher for an event argument.
+ * Can be a literal (compared via `.toString()`) or a function `(actual) => boolean`.
+ */
 type ArgMatcher = unknown | ((actual: unknown) => boolean)
 
+/**
+ * Criteria to match a specific Substrate event.
+ * - `type`: event constructor (e.g. `api.events.system.ExtrinsicSuccess`)
+ * - `args` (optional): map of argument names to `ArgMatcher`s
+ *
+ * Examples:
+ * { type: api.events.balances.Transfer, args: { from: ALICE, to: BOB } }
+ * { type: api.events.scheduler.Dispatched, args: { result: (r) => r.isErr } }
+ */
 type EventMatchCriteria<T extends AnyTuple = AnyTuple, N = unknown> = {
   type: IsEvent<T, N>
   args?: { [K in keyof N]?: ArgMatcher }
@@ -573,10 +586,15 @@ export function assertExpectedEvents(actualEvents: EventRecord[], expectedEvents
 }
 
 /**
- * Computes the XCM `MultiLocation` route from a source chain to a destination chain.
+ * Util to build the XCM `MultiLocation` describing the route from one chain to another.
  *
- * @param from - The source chain (the chain initiating the XCM message).
- * @param to - The destination chain (the chain intended to receive and execute the XCM message).
+ * Determines how to reach `to` from `from` within a relay–parachain topology:
+ * - Relay → Parachain: `{ parents: 0, interior: { X1: [{ Parachain: id }] } }`
+ * - Parachain → Relay: `{ parents: 1, interior: "Here" }`
+ *
+ * @param from - The chain sending the XCM message.
+ * @param to - The target chain receiving the XCM message.
+ * @returns The computed `MultiLocation` route.
  */
 export function getXcmRoute(from: Chain, to: Chain) {
   let parents: number
