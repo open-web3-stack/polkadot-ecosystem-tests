@@ -5,7 +5,6 @@ import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
 
-import { logAllEvents } from './helpers/bounties.js' // TODO : remove this after testing
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
