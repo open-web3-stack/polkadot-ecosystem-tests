@@ -40,17 +40,9 @@ const custom = {
       },
     },
   },
-  assetHubPaseo: {
-    pas: { Concrete: { parents: 1, interior: 'Here' } },
-    usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
-    usdtIndex: 1984,
-    eth: null,
-  },
 }
 
-const getInitStorages = (
-  config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama | typeof custom.assetHubPaseo,
-) => ({
+const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
@@ -85,12 +77,4 @@ export const assetHubKusama = defineChain({
   paraId: 1000,
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
-})
-
-export const assetHubPaseo = defineChain({
-  name: 'assetHubPaseo',
-  endpoint: 'wss://sys.ibp.network/asset-hub-paseo',
-  paraId: 1000,
-  custom: custom.assetHubPaseo,
-  initStorages: getInitStorages(custom.assetHubPaseo),
 })
