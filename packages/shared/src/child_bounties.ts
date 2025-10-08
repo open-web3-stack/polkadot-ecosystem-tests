@@ -5,6 +5,7 @@ import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
 
+import { logAllEvents } from './helpers/bounties.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -141,6 +142,13 @@ async function getChildBountyDescription(
  */
 async function getParentChildBountiesCount(client: Client<any, any>, parentIndex: number): Promise<number> {
   return (await client.api.query.childBounties.parentChildBounties(parentIndex)).toNumber()
+}
+
+/**
+ * Get parent total child bounties count per parent bounty index including completed bounties
+ */
+async function getParentTotalChildBountiesCount(client: Client<any, any>, parentIndex: number): Promise<number> {
+  return (await client.api.query.childBounties.parentTotalChildBounties(parentIndex)).toNumber()
 }
 
 /**
@@ -286,6 +294,9 @@ export async function childBountyCreationTest<
   const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
+  const parentChildBountiesCountBefore = await getParentChildBountiesCount(client, bountyIndex)
+  const parentTotalChildBountiesCountBefore = await getParentTotalChildBountiesCount(client, bountyIndex)
+
   // Note: The curator (Bob) should create the child bounty, not Alice
   const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER // Smaller value for child bounty
   const childBountyDescription = 'Test child bounty'
@@ -303,6 +314,24 @@ export async function childBountyCreationTest<
   await checkSystemEvents(client, { section: 'childBounties', method: 'Added' })
     .redact({ redactKeys: /index|data/ })
     .toMatchSnapshot('child bounty added events')
+
+  // get child bounty index
+  const { childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // verify the count of ParentChildBounties and ParentTotalChildBounties increased by 1
+  const parentChildBountiesCountAfter = await getParentChildBountiesCount(client, bountyIndex)
+  const parentTotalChildBountiesCountAfter = await getParentTotalChildBountiesCount(client, bountyIndex)
+  expect(parentChildBountiesCountAfter).toBe(parentChildBountiesCountBefore + 1)
+  expect(parentTotalChildBountiesCountAfter).toBe(parentTotalChildBountiesCountBefore + 1)
+
+  // verify the description of the child bounty is set
+  const retrievedChildBountyDescription = await getChildBountyDescription(client, bountyIndex, childIndex)
+  expect(retrievedChildBountyDescription).toBe(childBountyDescription)
+
+  // verify the child bounty is added to the ChildBounties storage
+  const childBounty = await getChildBounty(client, bountyIndex, childIndex)
+  expect(childBounty).toBeTruthy()
+  expect(childBounty.status.isAdded).toBe(true)
 
   await client.teardown()
 }
