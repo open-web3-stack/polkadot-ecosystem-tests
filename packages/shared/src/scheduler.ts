@@ -805,13 +805,8 @@ export async function scheduledOverweightCallFails<
   // Since the scheduler pallet signaled it as permanently overweight, it should set the
   // `incompleteSince` storage item.
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
-  // TODO: this change only recently made it to Kusama. Update this when resolved.
-  if (chain.name.toLowerCase().includes('kusama')) {
-    assert(incompleteSince.isSome)
-    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
-  } else {
-    assert(incompleteSince.isNone)
-  }
+  assert(incompleteSince.isSome)
+  expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
 }
 
 /**
@@ -1416,24 +1411,18 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  if (chain.name.toLowerCase().includes('kusama')) {
-    // Kusama is using a new version of the scheduler pallet prepared for general applicability, including in
-    // post-AHM asset hubs.
-    // It always sets `incompleteSince` to `n + 1`, where `n` is the block in which the agenda was last
-    // serviced.
-    // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
-    expect(finalIncompleteSince.isSome).toBeTruthy()
-    match(testConfig.blockProvider)
-      .with('Local', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
-      })
-      .with('NonLocal', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
-      })
-      .exhaustive()
-  } else {
-    expect(finalIncompleteSince.isNone).toBeTruthy()
-  }
+  // The behavior of the scheduler pallet going forward is now such that it always sets `incompleteSince` to `n + 1`,
+  // where `n` is the block in which the agenda was last serviced.
+  // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
+  expect(finalIncompleteSince.isSome).toBeTruthy()
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+    })
+    .with('NonLocal', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+    })
+    .exhaustive()
 
   // Check that the agenda for the block in which the 2 priority tasks were scheduled is empty
   scheduled = await client.api.query.scheduler.agenda(priorityTargetBlock!)

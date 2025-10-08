@@ -61,7 +61,7 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 3000000000)",
         },
       },
     },
@@ -81,7 +81,7 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > settin
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 7000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -192,7 +192,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim comm
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },

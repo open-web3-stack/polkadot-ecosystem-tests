@@ -1,4 +1,5 @@
 export * from './accounts.js'
+export * from './bounties.js'
 export * from './child_bounties.js'
 export * from './collectives.js'
 export * from './governance.js'

@@ -41,14 +41,14 @@
 		"vitest": "^3.2.4"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.2",
+		"@biomejs/biome": "2.2.4",
 		"@types/lodash": "^4.17.20",
 		"@types/node": "^24.3.0",
 		"@vitest/ui": "^3.2.4",
-		"dotenv": "^17.2.1",
+		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.6",
-		"tsx": "^4.20.5",
+		"tsx": "^4.20.6",
 		"unplugin-swc": "^1.5.7",
 		"vite-tsconfig-paths": "^5.1.4"
 	},

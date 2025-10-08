@@ -251,6 +251,15 @@ exports[`Polkadot Proxy full tests (includes call filtering) > Polkadot Proxy ba
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "spawner": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -721,6 +730,14 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
 [
+  {
+    "data": {
+      "account": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
@@ -1385,6 +1402,25 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 ]
 `;
 
+exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet fast_unstake, call register_fast_unstake 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 40,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet nomination_pools, call chill 1`] = `
 [
   {
@@ -1417,25 +1453,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
   {
     "data": {
       "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 40,
-          },
-        },
-      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",

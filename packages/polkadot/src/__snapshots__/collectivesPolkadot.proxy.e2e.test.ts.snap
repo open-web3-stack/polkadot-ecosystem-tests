@@ -222,6 +222,15 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > Polka
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "spawner": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -723,7 +732,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1196,7 +1205,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1499,7 +1508,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1712,7 +1721,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1830,7 +1839,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -1948,7 +1957,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -2180,7 +2189,7 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

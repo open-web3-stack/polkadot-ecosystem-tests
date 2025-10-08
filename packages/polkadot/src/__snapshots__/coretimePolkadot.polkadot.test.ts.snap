@@ -303,8 +303,8 @@ exports[`polkadot & coretimePolkadot > polkadot transfer DOT to coretimePolkadot
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
