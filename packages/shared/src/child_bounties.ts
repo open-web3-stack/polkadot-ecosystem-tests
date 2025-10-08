@@ -2183,6 +2183,140 @@ export async function childBountyTooManyChildBountiesErrorTest<
   await client.teardown()
 }
 
+// create child bounty with description larger than `MaximumReasonLength` throws `ReasonTooBig` error
+/**
+ * Test: child bounty description larger than `MaximumReasonLength` throws `ReasonTooBig` error
+ *
+ * This test verifies the `ReasonTooBig` error condition to ensure that:
+ * - Child bounty descriptions cannot exceed the allowed maximum length
+ * - The system enforces maximum length constraints for child bounty descriptions
+ * - Attempts to create descriptions exceeding the limit fail appropriately
+ *
+ * Test structure:
+ * 1. Create active parent bounty
+ * 2. Attempt to create child bounty with description larger than `MaximumReasonLength`
+ * 3. Verify the transaction fails with `ReasonTooBig` error
+ */
+export async function childBountyReasonTooBigErrorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
+
+  await setLastSpendPeriodBlockNumber(client)
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const description = 'Test bounty for child bounty creation'
+
+  // propose a bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // verify the bounty status is Proposed
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
+  // approve the bounty with origin Treasurer
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event is emitted
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the bounty is added to the approvals queue
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  // assign curator to the bounty
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the bounty status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  await client.dev.newBlock()
+
+  // accept the curator
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the bounty status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Note: The curator (Bob) should create the child bounty, not Alice
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER // Smaller value for child bounty
+  const maximumReasonLength = client.api.consts.bounties.maximumReasonLength.toNumber()
+  const longChildBountyDescription = 'X'.repeat(maximumReasonLength + 1) // Description larger than `MaximumReasonLength`
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    longChildBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const ev = await extractExtrinsicFailedEvent(client)
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.ReasonTooBig.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
 /**
  *  All failure tests for child bounties
  *
@@ -2236,6 +2370,12 @@ export function allChildBountiesFailureTests<
         label:
           'parent already has `MaxActiveChildBountyCount` child bounties, trying to create a new one throws `TooManyChildBounties` error',
         testFn: async () => await childBountyTooManyChildBountiesErrorTest(chain),
+      },
+      // ReasonTooBig
+      {
+        kind: 'test',
+        label: 'child bounty description larger than `MaximumReasonLength` throws `ReasonTooBig` error',
+        testFn: async () => await childBountyReasonTooBigErrorTest(chain),
       },
     ],
   } as RootTestTree
