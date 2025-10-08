@@ -34,7 +34,6 @@ const CHILD_CURATOR_FEE_MULTIPLIER = 10n
  */
 async function getBounty(client: Client<any, any>, bountyIndex: number): Promise<any | null> {
   const bounty = await client.api.query.bounties.bounties(bountyIndex)
-  if (!bounty) return null
   return bounty.isSome ? bounty.unwrap() : null
 }
 
@@ -2327,6 +2326,9 @@ export async function childBountyReasonTooBigErrorTest<
  * - Attempts to propose curators with invalid indexes fail appropriately
  *
  * Test structure:
+ * 1. Create active parent bounty
+ * 2. Attempt to propose curator for invalid child bounty index
+ * 3. Verify the transaction fails with `InvalidIndex` error
  */
 export async function childBountyProposingCuratorForInvalidIndexErrorTest<
   TCustom extends Record<string, unknown> | undefined,
