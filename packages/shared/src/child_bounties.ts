@@ -178,9 +178,15 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
 /**
  * Test: child bounty creation test.
  *
- * 1. Alice creates a parent bounty
- * 2. Verify that Alice makes a deposit for the parent bounty creation
- * 3. Bob creates a child bounty from the parent bounty
+ * This test verifies the fundamental child bounty creation workflow to ensure that:
+ * - Child bounties can only be created from active parent bounties
+ * - The parent bounty curator has the authority to create child bounties
+ * - Proper events are emitted and storage is updated during creation
+ *
+ * Test structure:
+ * 1. Alice creates a parent bounty and it goes through the full lifecycle (propose → approve → fund → assign curator → accept curator)
+ * 2. Bob (as parent curator) creates a child bounty from the active parent bounty
+ * 3. Verify proper events are emitted and child bounty is stored correctly
  */
 export async function childBountyCreationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -233,12 +239,13 @@ export async function childBountyCreationTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -303,10 +310,16 @@ export async function childBountyCreationTest<
 /**
  * Test: assigning and accepting a child bounty curator.
  *
- * 1. Create parent bounty and make it active
- * 2. Create child bounty
- * 3. Propose curator for child bounty
- * 4. Accept curator role
+ * This test verifies the child bounty curator assignment workflow to ensure that:
+ * - Child bounties can have their own dedicated curators separate from parent bounty curators
+ * - Curator assignment follows the same propose/accept pattern as parent bounties
+ * - Proper state transitions occur when curators are assigned and accepted
+ *
+ * Test structure:
+ * 1. Create parent bounty and make it active with Bob as curator
+ * 2. Bob creates a child bounty from the parent bounty
+ * 3. Bob proposes Charlie as curator for the child bounty
+ * 4. Charlie accepts the curator role, transitioning child bounty to Active status
  */
 export async function childBountyAssigningAndAcceptingTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -359,12 +372,13 @@ export async function childBountyAssigningAndAcceptingTest<
 
   await client.dev.newBlock()
   // This is the spendPeriodBlock i.e bounty will be funded in this block
-  await client.dev.newBlock()
 
   // verify the BountyBecameActive event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
 
   // verify the status of the bounty after funding is funded
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
@@ -463,10 +477,18 @@ export async function childBountyAssigningAndAcceptingTest<
 /**
  * Test: awarding and claiming a child bounty.
  *
- * 1. Create parent bounty and make it active
- * 2. Create child bounty with active curator
- * 3. Award child bounty to beneficiary
- * 4. Wait for payout delay and claim the bounty
+ * This test verifies the complete child bounty lifecycle from award to claim to ensure that:
+ * - Child bounty curators can award bounties to beneficiaries
+ * - The payout delay mechanism works correctly for child bounties
+ * - Beneficiaries can successfully claim awarded child bounties after the delay
+ * - Proper cleanup occurs after successful claim
+ *
+ * Test structure:
+ * 1. Create parent bounty and make it active with Bob as curator
+ * 2. Bob creates child bounty and assigns Charlie as child curator
+ * 3. Charlie awards the child bounty to Dave (beneficiary)
+ * 4. Wait for payout delay period and Dave claims the bounty
+ * 5. Verify proper events and storage cleanup
  */
 export async function childBountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -599,10 +621,18 @@ export async function childBountyAwardingAndClaimingTest<
 
 /**
  * Test: closure and payout of a child bounty
- * 1. Create parent bounty and make it active
- * 2. Create child bounty with active curator
- * 3. Close child bounty before awarding
- * 4. Verify funds are returned to parent bounty
+ *
+ * This test verifies the child bounty closure mechanism to ensure that:
+ * - Parent bounty curators can close child bounties before they are awarded
+ * - Funds are properly returned to the parent bounty account when child bounties are closed
+ * - Storage is correctly cleaned up when child bounties are closed
+ * - Child bounty counters are properly decremented
+ *
+ * Test structure:
+ * 1. Create parent bounty and make it active with Bob as curator
+ * 2. Bob creates child bounty and assigns Charlie as child curator
+ * 3. Bob closes the child bounty before it's awarded
+ * 4. Verify funds are returned to parent bounty account and storage is cleaned up
  */
 export async function childBountyClosureAndPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -728,12 +758,20 @@ export async function childBountyClosureAndPayoutTest<
 }
 
 /**
- * Test: child bounty rejection and cancellation.
+ * Test: rejection by child curator and closure by parent curator of a child bounty
  *
- * 1. Create parent bounty and make it active
- * 2. Create child bounty with proposed curator
- * 3. Test curator rejection (unassign curator)
- * 4. Test child bounty cancellation by parent curator
+ * This test verifies the child bounty rejection and closure workflows to ensure that:
+ * - Proposed child bounty curators can reject their assignment (unassign themselves)
+ * - Parent bounty curators can cancel child bounties at any time
+ * - Proper state transitions occur during rejection and cancellation
+ * - Storage cleanup happens correctly in both scenarios
+ *
+ * Test structure:
+ * 1. Create parent bounty and make it active with Bob as curator
+ * 2. Bob creates child bounty and proposes Charlie as curator
+ * 3. Charlie rejects the assignment (unassigns himself)
+ * 4. Bob proposes Charlie again, then cancels the child bounty
+ * 5. Verify proper events and storage cleanup in both cases
  */
 export async function childBountyRejectionAndCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -866,13 +904,19 @@ export async function childBountyRejectionAndCancellationTest<
 }
 
 /**
- * Test: unassign curator edge cases
+ * Test: unassign curator different cases
  *
- * 1. Create parent bounty and child bounty with active curator
- * 2. Test different unassign scenarios:
- *    - Child curator self-unassigns (refund deposit)
- *    - Parent curator unassigns child curator (slash deposit)
- *    - Community unassigns active curator (Premature error)
+ * This test verifies the different curator unassignment scenarios to ensure that:
+ * - Self-unassignment by child curators refunds their deposit
+ * - Unassignment by parent curators slashes the child curator's deposit
+ * - Unauthorized unassignment attempts fail with appropriate errors
+ * - Different deposit handling based on who initiates the unassignment
+ *
+ * Test structure:
+ * 1. Create parent bounty and child bounty with active curator (Charlie)
+ * 2. Test child curator self-unassignment (should refund deposit)
+ * 3. Re-assign and test parent curator unassignment (should slash deposit)
+ * 4. Re-assign and test unauthorized unassignment (should fail with Premature error)
  */
 export async function childBountyUnassignCuratorEdgeCasesTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1054,9 +1098,17 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 /**
  * Test: storage verification
  *
- * 1. Create parent bounty and multiple child bounties
- * 2. Verify all storage items are correctly updated
- * 3. Test storage cleanup after child bounty completion
+ * This test verifies the child bounty storage management to ensure that:
+ * - All child bounty storage items are correctly updated during operations
+ * - Counters (active and total) are properly maintained
+ * - Storage cleanup occurs correctly after child bounty completion
+ * - Multiple child bounties are handled correctly
+ *
+ * Test structure:
+ * 1. Create parent bounty and make it active
+ * 2. Create multiple child bounties and verify storage updates
+ * 3. Complete one child bounty (award and claim) and verify storage cleanup
+ * 4. Verify counters and remaining storage items are correct
  */
 export async function childBountyStorageVerificationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1251,7 +1303,7 @@ export function allChildBountiesSuccessTests<
       },
       {
         kind: 'test',
-        label: 'rejection and cancellation of a child bounty',
+        label: 'rejection by child curator and closure by parent curator of a child bounty',
         testFn: async () => await childBountyRejectionAndCancellationTest(chain),
       },
       {
@@ -1269,10 +1321,17 @@ export function allChildBountiesSuccessTests<
 }
 
 /**
- * Test: parent bounty not active error
+ * Test: create child bounty from non-active parent bounty throws `ParentBountyNotActive` error
  *
- * 1. Create parent bounty but don't make it active
- * 2. Try to create child bounty - should fail with ParentBountyNotActive
+ * This test verifies the `ParentBountyNotActive` error condition to ensure that:
+ * - Child bounties can only be created from active parent bounties
+ * - Attempting to create child bounties from non-active parent bounties fails appropriately
+ * - The error handling provides clear feedback about the invalid state
+ *
+ * Test structure:
+ * 1. Create parent bounty but don't activate it (leave it in Proposed state)
+ * 2. Attempt to create child bounty from the non-active parent bounty
+ * 3. Verify the transaction fails with `ParentBountyNotActive` error
  */
 export async function childBountyParentBountyNotActiveErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1321,10 +1380,17 @@ export async function childBountyParentBountyNotActiveErrorTest<
 }
 
 /**
- * Test: child bounty errors - InsufficientBountyBalance
+ * Test: create child bounty with value larger than parent bounty balance throws `InsufficientBountyBalance` error
  *
- * 1. Create parent bounty with minimal value
- * 2. Try to create child bounty with value larger than parent - should fail
+ * This test verifies the `InsufficientBountyBalance` error condition to ensure that:
+ * - Child bounty values cannot exceed the available parent bounty balance
+ * - The system prevents creating child bounties that would overdraw parent bounty funds
+ * - Proper error handling occurs when attempting to create oversized child bounties
+ *
+ * Test structure:
+ * 1. Create active parent bounty with a specific value
+ * 2. Attempt to create child bounty with value larger than parent bounty balance
+ * 3. Verify the transaction fails with `InsufficientBountyBalance` error
  */
 export async function childBountyInsufficientBountyBalanceErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1400,10 +1466,17 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
 }
 
 /**
- * Test: child bounty errors - InvalidValue
+ * Test: create child bounty with value below minimum throws `InvalidValue` error
  *
+ * This test verifies the `InvalidValue` error condition to ensure that:
+ * - Child bounty values must meet the minimum value requirement
+ * - The system enforces minimum value constraints for child bounties
+ * - Attempts to create child bounties below the minimum fail appropriately
+ *
+ * Test structure:
  * 1. Create active parent bounty
- * 2. Try to create child bounty with value below minimum - should fail
+ * 2. Attempt to create child bounty with value below the minimum threshold
+ * 3. Verify the transaction fails with `InvalidValue` error
  */
 export async function childBountyInvalidValueErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1481,10 +1554,17 @@ export async function childBountyInvalidValueErrorTest<
 }
 
 /**
- * Test: child bounty errors - InvalidFee
+ * Test: propose curator with fee >= child bounty value throws `InvalidFee` error
  *
+ * This test verifies the `InvalidFee` error condition to ensure that:
+ * - Child bounty curator fees cannot equal or exceed the child bounty value
+ * - The system prevents setting curator fees that would consume the entire bounty
+ * - Proper validation occurs when proposing child bounty curators
+ *
+ * Test structure:
  * 1. Create active parent bounty and child bounty
- * 2. Try to propose curator with fee >= child bounty value - should fail
+ * 2. Attempt to propose curator with fee >= child bounty value
+ * 3. Verify the transaction fails with `InvalidFee` error
  */
 export async function childBountyInvalidFeeErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1573,10 +1653,17 @@ export async function childBountyInvalidFeeErrorTest<
 }
 
 /**
- * Test: child bounty errors - UnexpectedStatus
+ * Test: accept curator when child bounty is in `Added` status throws `UnexpectedStatus` error
  *
+ * This test verifies the UnexpectedStatus error condition to ensure that:
+ * - Curator acceptance can only occur when child bounty is in `CuratorProposed` status
+ * - The system enforces proper state transitions for child bounty operations
+ * - Attempts to accept curators in wrong states fail with appropriate errors
+ *
+ * Test structure:
  * 1. Create active parent bounty and child bounty
- * 2. Try to accept curator when child bounty is in wrong status - should fail
+ * 2. Attempt to accept curator when child bounty is in Added status (not `CuratorProposed`)
+ * 3. Verify the transaction fails with `UnexpectedStatus` error
  */
 export async function childBountyUnexpectedStatusErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1659,11 +1746,18 @@ export async function childBountyUnexpectedStatusErrorTest<
 }
 
 /**
- * Test: child bounty errors - PendingPayout
+ * Test: close child bounty in `PendingPayout` status throws `PendingPayout` error
  *
+ * This test verifies the `PendingPayout` error condition to ensure that:
+ * - Child bounties in `PendingPayout` status cannot be closed
+ * - The system prevents premature closure of awarded child bounties
+ * - Proper state management prevents invalid operations during payout period
+ *
+ * Test structure:
  * 1. Create active parent bounty and child bounty
- * 2. Award child bounty
- * 3. Try to close child bounty in PendingPayout status - should fail
+ * 2. Award child bounty to beneficiary (transitions to `PendingPayout`)
+ * 3. Attempt to close child bounty while in `PendingPayout` status
+ * 4. Verify the transaction fails with `PendingPayout` error
  */
 export async function childBountyPendingPayoutErrorTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1786,32 +1880,33 @@ export function allChildBountiesFailureTests<
     children: [
       {
         kind: 'test',
-        label: 'parent bounty not active',
+        label: 'create child bounty from non-active parent bounty throws `ParentBountyNotActive` error',
         testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'insufficient bounty balance',
+        label:
+          'create child bounty with value larger than parent bounty balance throws `InsufficientBountyBalance` error',
         testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'invalid child bounty value',
+        label: 'create child bounty with value below minimum throws `InvalidValue` error',
         testFn: async () => await childBountyInvalidValueErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'invalid child bounty curator fee',
+        label: 'propose curator with fee >= child bounty value throws `InvalidFee` error',
         testFn: async () => await childBountyInvalidFeeErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'accept curator when child bounty is in added state',
+        label: 'accept curator when child bounty is in `Added` status throws `UnexpectedStatus` error',
         testFn: async () => await childBountyUnexpectedStatusErrorTest(chain),
       },
       {
         kind: 'test',
-        label: 'close child bounty in pending payout status',
+        label: 'close child bounty in `PendingPayout` status throws `PendingPayout` error',
         testFn: async () => await childBountyPendingPayoutErrorTest(chain),
       },
     ],
