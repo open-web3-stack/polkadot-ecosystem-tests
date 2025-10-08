@@ -2317,6 +2317,165 @@ export async function childBountyReasonTooBigErrorTest<
 
   await client.teardown()
 }
+
+// proposing curator for invalid child bounty index throws `InvalidIndex` error'
+/**
+ * Test: proposing curator for invalid child bounty index throws `InvalidIndex` error
+ *
+ * This test verifies the `InvalidIndex` error condition to ensure that:
+ * - Invalid child bounty indexes cannot be used for proposing curators
+ * - The system enforces validation for child bounty index references
+ * - Attempts to propose curators with invalid indexes fail appropriately
+ *
+ * Test structure:
+ */
+export async function childBountyProposingCuratorForInvalidIndexErrorTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
+
+  await setLastSpendPeriodBlockNumber(client)
+
+  await client.dev.newBlock()
+
+  const existentialDeposit = client.api.consts.balances.existentialDeposit
+  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const description = 'Test bounty for assigning and accepting a child bounty curator'
+
+  // propose a bounty
+  const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // verify the BountyProposed event
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty proposed events')
+
+  // verify the bounty status is Proposed
+  const bountyIndex = await getBountyIndexFromEvent(client)
+  const bountyFromStorage = await getBounty(client, bountyIndex)
+  expect(bountyFromStorage.status.isProposed).toBe(true)
+
+  // approve the bounty with origin Treasurer
+  const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
+  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the BountyApproved event is emitted
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty approved events')
+
+  // verify the bounty is added to the approvals queue
+  const approvalsFromStorage = await getBountyApprovals(client)
+  expect(approvalsFromStorage).toContain(bountyIndex)
+
+  await client.dev.newBlock()
+  // This is the spendPeriodBlock i.e bounty will be funded in this block
+
+  // verify the BountyBecameActive event
+  await checkSystemEvents(client, { section: 'bounties', method: 'BountyBecameActive' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('bounty became active events')
+
+  await client.dev.newBlock()
+
+  // verify the status of the bounty after funding is funded
+  const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
+
+  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  // assign curator to the bounty
+  const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
+  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
+    Origins: 'Treasurer',
+  })
+
+  await client.dev.newBlock()
+
+  // verify the CuratorProposed event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorProposed' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator proposed events')
+
+  // verify the bounty status is CuratorProposed
+  const bountyStatusAfterCuratorProposed = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  await client.dev.newBlock()
+
+  // accept the curator
+  const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
+  await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // verify the CuratorAccepted event
+  await checkSystemEvents(client, { section: 'bounties', method: 'CuratorAccepted' })
+    .redact({ redactKeys: /bountyId/ })
+    .toMatchSnapshot('curator accepted events')
+
+  // verify the bounty status is Active
+  const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
+  expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
+
+  // Create child bounty
+  const childBountyValue = existentialDeposit.toBigInt() * CHILD_BOUNTY_MULTIPLIER
+  const childBountyDescription = 'Test child bounty for curator assignment'
+
+  const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
+    bountyIndex,
+    childBountyValue,
+    childBountyDescription,
+  )
+  await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  // Check for ChildBountyAdded event
+  await checkSystemEvents(client, { section: 'childBounties', method: 'Added' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty added events')
+
+  // Get child bounty indices
+  const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+  expect(parentIndex).toBe(bountyIndex)
+
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
+  const invalidChildIndex = childIndex + 1 // one more than the last child index
+
+  // Propose curator for child bounty
+  const childCuratorFee = existentialDeposit.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
+  const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
+    parentIndex,
+    invalidChildIndex,
+    testAccounts.charlie.address,
+    childCuratorFee,
+  )
+  await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
+
+  await client.dev.newBlock()
+
+  const ev = await extractExtrinsicFailedEvent(client)
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.bounties.InvalidIndex.is(dispatchError.asModule)).toBeTruthy()
+
+  await client.teardown()
+}
+
 /**
  *  All failure tests for child bounties
  *
@@ -2376,6 +2535,12 @@ export function allChildBountiesFailureTests<
         kind: 'test',
         label: 'child bounty description larger than `MaximumReasonLength` throws `ReasonTooBig` error',
         testFn: async () => await childBountyReasonTooBigErrorTest(chain),
+      },
+      // InvalidIndex
+      {
+        kind: 'test',
+        label: 'proposing curator for invalid child bounty index throws `InvalidIndex` error',
+        testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(chain),
       },
     ],
   } as RootTestTree
