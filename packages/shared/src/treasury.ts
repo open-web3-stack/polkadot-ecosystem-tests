@@ -22,7 +22,7 @@ const SPEND_ORIGIN = 'BigSpender'
 // initial funding balance for accounts
 const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
-const SPEND_AMOUNT_MULTIPLIER = 1000n // 1000x existential deposit
+const SPEND_AMOUNT_MULTIPLIER = 100n // 100x existential deposit
 
 // AssetHub parachain ID
 const ASSET_HUB_PARA_ID = 1000
@@ -61,7 +61,7 @@ const ASSET_KIND = {
   },
 } as unknown as FrameSupportTokensFungibleUnionOfNativeOrWithId
 
-// Beneficiary location(bob) for the treasury spend
+// Beneficiary location(alice) for the treasury spend
 const BENEFICIARY_LOCATION = {
   v4: {
     parents: 0,
@@ -70,7 +70,7 @@ const BENEFICIARY_LOCATION = {
         {
           accountId32: {
             network: null,
-            id: testAccounts.bob.addressRaw,
+            id: testAccounts.alice.addressRaw,
           },
         },
       ],
@@ -378,8 +378,6 @@ export async function voidApprovedTreasurySpendProposal<
 
   await relayClient.dev.newBlock()
 
-  await logAllEvents(relayClient)
-
   // Check that AssetSpendVoided event was emitted
   await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendVoided' })
     .redact({ redactKeys: /index/ })
@@ -388,6 +386,90 @@ export async function voidApprovedTreasurySpendProposal<
   // Verify the spend was removed from the storage
   const spendAfter = await relayClient.api.query.treasury.spends(spendIndex)
   expect(spendAfter.isNone).toBe(true)
+
+  await relayClient.teardown()
+}
+
+/**
+ * Test: Claim a spend
+ *
+ * Verifies that the treasury's spend claiming mechanism correctly processes approved spends
+ * and properly updates the spend status. This test ensures that authorized users can claim
+ * approved spends after the payout period has ended, ensuring proper fund disbursement and
+ * tracking of successful transactions.
+ *
+ * Test Structure:
+ * 1. Create and approve a treasury spend proposal for USDT on Asset Hub
+ * 2. Verify the spend is properly stored and approved
+ * 3. Claim the approved spend using Alice's account (beneficiary)
+ * 4. Check that Paid event is emitted with correct data
+ * 5. Confirm Alice's USDT balance increases by the spend amount on Asset Hub
+ */
+export async function claimTreasurySpend<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, ahChain: Chain<TCustom, TInitStoragesPara>) {
+  const [relayClient, assetHubClient] = await setupNetworks(relayChain, ahChain)
+
+  // Setup test accounts
+  await setupTestAccounts(relayClient, ['alice', 'bob'])
+
+  // Get initial spend count
+  const initialSpendCount = await getSpendCount(relayClient)
+
+  // Create a spend proposal
+  const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
+  const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
+
+  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
+  const hexSpendTx = spendTx.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+
+  await relayClient.dev.newBlock()
+
+  // Check that AssetSpendApproved event was emitted
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
+    .redact({ redactKeys: /expireAt|validFrom|index/ })
+    .toMatchSnapshot('treasury spend approval events')
+
+  // Verify spend count increased
+  const newSpendCount = await getSpendCount(relayClient)
+  expect(newSpendCount).toBe(initialSpendCount + 1)
+
+  // Verify the spend was stored correctly
+  const spendIndex = await getSpendIndexFromEvent(relayClient, 'AssetSpendApproved')
+  const spend = await relayClient.api.query.treasury.spends(spendIndex)
+
+  expect(spend.isSome).toBeTruthy()
+  const spendData = spend.unwrap()
+  expect(spendData.amount.toBigInt()).toBe(spendAmount)
+  expect(spendData.status.isPending).toBe(true)
+
+  // Alice's account should have some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
+  const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, testAccounts.alice.address)
+  await relayClient.dev.newBlock()
+
+  // Claim the spend by the beneficiary i.e alice
+  const claimSpendTx = relayClient.api.tx.treasury.payout(spendIndex)
+  const payoutEvents = await sendTransaction(claimSpendTx.signAsync(testAccounts.alice))
+
+  await relayClient.dev.newBlock()
+
+  await checkEvents(payoutEvents, { section: 'treasury', method: 'Paid' })
+    .redact({ redactKeys: /paymentId|index/ })
+    .toMatchSnapshot('payout events')
+
+  const payoutIndex = await getSpendIndexFromEvent(relayClient, 'Paid')
+  expect(payoutIndex).toBe(spendIndex)
+
+  // / treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
+  await assetHubClient.dev.newBlock()
+
+  const balanceAfter = await assetHubClient.api.query.assets.account(USDT_ID, testAccounts.alice.address)
+  const balanceAfterAmount = balanceAfter.isNone ? 0n : balanceAfter.unwrap().balance.toBigInt()
+  const balanceBeforeAmount = balanceBefore.isNone ? 0n : balanceBefore.unwrap().balance.toBigInt()
+  expect(balanceAfterAmount - balanceBeforeAmount).toBe(spendAmount)
 
   await relayClient.teardown()
 }
@@ -420,6 +502,12 @@ export function baseTreasuryE2ETests<
         kind: 'test',
         label: 'Void previously approved spend',
         testFn: async () => await voidApprovedTreasurySpendProposal(relayChain),
+      },
+      // Claim a spend
+      {
+        kind: 'test',
+        label: 'Claim a spend',
+        testFn: async () => await claimTreasurySpend(relayChain, ahChain),
       },
     ],
   }
