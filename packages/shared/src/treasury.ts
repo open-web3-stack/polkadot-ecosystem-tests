@@ -245,7 +245,7 @@ export async function treasurySpendForeignAssetTest<
 }
 
 /**
- * Test: Basic treasury spend functionality
+ * Test: Propose and approve a spend of treasury funds.
  *
  * Verifies that the treasury's foreign asset spending mechanism correctly processes spend proposals
  * and maintains proper state tracking. This test ensures that when authorized users create spend
@@ -306,6 +306,40 @@ export async function treasurySpendBasicTest<
   await relayClient.teardown()
 }
 
+/**
+ * Test: Treasury spend proposal rejection
+ *
+ * Verifies that the treasury's foreign asset spending mechanism correctly rejects spend proposals
+ * and maintains proper state tracking. This test ensures that when unauthorized users create spend
+ * proposals for foreign assets (like USDT on Asset Hub), the treasury system properly rejects them.
+ */
+export async function treasurySpendProposalRejection<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  // Setup test accounts
+  await setupTestAccounts(relayClient, ['alice', 'bob'])
+
+  // Get initial spend count
+  const initialSpendCount = await getSpendCount(relayClient)
+
+  // Create a spend proposal
+  const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
+  const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
+
+  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
+  const hexSpendTx = spendTx.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: 'BigSpender' })
+  await relayClient.dev.newBlock()
+
+  // Check that AssetSpendRejected event was emitted
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendRejected' })
+    .redact({ redactKeys: /expireAt|validFrom|index/ })
+    .toMatchSnapshot('treasury spend rejection events')
+}
+
 export function baseTreasuryE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -326,8 +360,14 @@ export function baseTreasuryE2ETests<
       },
       {
         kind: 'test',
-        label: 'Basic treasury spend functionality',
+        label: 'Propose and approve a spend of treasury funds.',
         testFn: async () => await treasurySpendBasicTest(relayChain),
+      },
+      // Treasury spend proposal rejection
+      {
+        kind: 'test',
+        label: 'Removal of approved Treasury spend proposal',
+        testFn: async () => await treasurySpendProposalRejection(relayChain),
       },
     ],
   }
