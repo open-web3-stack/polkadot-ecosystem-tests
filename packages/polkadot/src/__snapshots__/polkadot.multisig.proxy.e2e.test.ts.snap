@@ -1,0 +1,81 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy creation and execution > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "callHash": "(hash)",
+      "multisig": "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "13pd2MECgrBVYAbVtZZG9NLibKoSZnuimF9oJQFCvWTYjftK",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy creation and execution > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "15wAyRiC3e1R2AiLU4DwJB1pMJrCphFNKy6p3t5ATLrGPFLw",
+      "callHash": "(hash)",
+      "multisig": "13pd2MECgrBVYAbVtZZG9NLibKoSZnuimF9oJQFCvWTYjftK",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy multisig creation and execution > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "callHash": "(hash)",
+      "multisig": "13TRAKwmp175eET55VQDUK9EqbtxgDNvUGDT3Zjq4gYpZs6W",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
