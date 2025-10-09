@@ -53,7 +53,6 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
   Assets: {
     account: [
       [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
-      [[config.usdtIndex, testAccounts.alice.address], { balance: 1000e6 }], // USDT
     ],
   },
   ForeignAssets: {
