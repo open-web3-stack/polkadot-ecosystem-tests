@@ -251,13 +251,25 @@ export async function treasurySpendForeignAssetTest<
 /**
  * Creates and schedules a treasury spend proposal
  */
-export async function createSpendProposal<
+async function createSpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayClient: Client<TCustom, TInitStoragesRelay>, spendAmount: bigint) {
   const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
   const hexSpendTx = spendTx.method.toHex()
   await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+}
+
+/**
+ * Verify that the AssetSpendApproved event was emitted
+ */
+async function verifySystemEventAssetSpendApproved<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayClient: Client<TCustom, TInitStoragesRelay>) {
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
+    .redact({ redactKeys: /expireAt|validFrom|index/ })
+    .toMatchSnapshot('treasury spend approval events')
 }
 
 /**
@@ -294,10 +306,8 @@ export async function treasurySpendBasicTest<
 
   await relayClient.dev.newBlock()
 
-  // Check that AssetSpendApproved event was emitted
-  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
-    .redact({ redactKeys: /expireAt|validFrom|index/ })
-    .toMatchSnapshot('treasury spend approval events')
+  // Verify that the AssetSpendApproved event was emitted
+  await verifySystemEventAssetSpendApproved(relayClient)
 
   // Verify spend count increased
   const newSpendCount = await getSpendCount(relayClient)
@@ -354,10 +364,8 @@ export async function voidApprovedTreasurySpendProposal<
 
   await relayClient.dev.newBlock()
 
-  // Check that AssetSpendApproved event was emitted
-  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
-    .redact({ redactKeys: /expireAt|validFrom|index/ })
-    .toMatchSnapshot('treasury spend approval events')
+  // Verify that the AssetSpendApproved event was emitted
+  await verifySystemEventAssetSpendApproved(relayClient)
 
   // Verify spend count increased
   const newSpendCount = await getSpendCount(relayClient)
@@ -433,10 +441,8 @@ export async function claimTreasurySpend<
 
   await relayClient.dev.newBlock()
 
-  // Check that AssetSpendApproved event was emitted
-  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
-    .redact({ redactKeys: /expireAt|validFrom|index/ })
-    .toMatchSnapshot('treasury spend approval events')
+  // Verify that the AssetSpendApproved event was emitted
+  await verifySystemEventAssetSpendApproved(relayClient)
 
   // Verify spend count increased
   const newSpendCount = await getSpendCount(relayClient)
