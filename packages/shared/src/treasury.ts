@@ -3,7 +3,9 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
+import type { KeyringPair } from '@polkadot/keyring/types'
 import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
+import type { Codec } from '@polkadot/types/types'
 
 import { assert, expect } from 'vitest'
 
@@ -330,6 +332,30 @@ export async function treasurySpendBasicTest<
 }
 
 /**
+ * Void a previously approved spend proposal
+ */
+async function voidApprovedSpendProposal<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayClient: Client<TCustom, TInitStoragesRelay>, spendIndex: number) {
+  const removeApprovedSpendTx = relayClient.api.tx.treasury.voidSpend(spendIndex)
+  const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexRemoveApprovedSpendTx, { Origins: REJECT_ORIGIN })
+}
+
+/**
+ * Verify that the AssetSpendVoided event was emitted
+ */
+async function verifySystemEventAssetSpendVoided<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayClient: Client<TCustom, TInitStoragesRelay>) {
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendVoided' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('treasury spend voided events')
+}
+
+/**
  * Test: Void a previously approved proposal
  *
  * Verifies that the treasury's spend voiding mechanism correctly cancels previously approved
@@ -386,23 +412,39 @@ export async function voidApprovedTreasurySpendProposal<
 
   await relayClient.dev.newBlock()
 
-  // Void a the approved proposal
-  const removeApprovedSpendTx = relayClient.api.tx.treasury.voidSpend(spendIndex)
-  const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexRemoveApprovedSpendTx, { Origins: REJECT_ORIGIN })
+  // Void the approved proposal
+  await voidApprovedSpendProposal(relayClient, spendIndex)
 
   await relayClient.dev.newBlock()
 
   // Check that AssetSpendVoided event was emitted
-  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendVoided' })
-    .redact({ redactKeys: /index/ })
-    .toMatchSnapshot('treasury spend voided events')
+  await verifySystemEventAssetSpendVoided(relayClient)
 
   // Verify the spend was removed from the storage
   const spendAfter = await relayClient.api.query.treasury.spends(spendIndex)
   expect(spendAfter.isNone).toBe(true)
 
   await relayClient.teardown()
+}
+
+/**
+ *  Create a function sendPayoutTx by the beneficiary
+ */
+async function sendPayoutTx<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayClient: Client<TCustom, TInitStoragesRelay>, spendIndex: number, beneficiary: KeyringPair) {
+  const payoutTx = relayClient.api.tx.treasury.payout(spendIndex)
+  return await sendTransaction(payoutTx.signAsync(beneficiary))
+}
+
+/**
+ * Verify that the Paid event was emitted
+ */
+async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
+  await checkEvents(events, { section: 'treasury', method: 'Paid' })
+    .redact({ redactKeys: /paymentId|index/ })
+    .toMatchSnapshot('payout events')
 }
 
 /**
@@ -462,14 +504,11 @@ export async function claimTreasurySpend<
   await relayClient.dev.newBlock()
 
   // Claim the spend by the beneficiary i.e alice
-  const claimSpendTx = relayClient.api.tx.treasury.payout(spendIndex)
-  const payoutEvents = await sendTransaction(claimSpendTx.signAsync(testAccounts.alice))
+  const payoutEvents = await sendPayoutTx(relayClient, spendIndex, testAccounts.alice)
 
   await relayClient.dev.newBlock()
 
-  await checkEvents(payoutEvents, { section: 'treasury', method: 'Paid' })
-    .redact({ redactKeys: /paymentId|index/ })
-    .toMatchSnapshot('payout events')
+  await verifyEventPaid(payoutEvents)
 
   const payoutIndex = await getSpendIndexFromEvent(relayClient, 'Paid')
   expect(payoutIndex).toBe(spendIndex)
