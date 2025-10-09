@@ -251,7 +251,7 @@ export async function treasurySpendForeignAssetTest<
 }
 
 /**
- * Creates and schedules a treasury spend proposal
+ * Helper: Creates and schedules a treasury spend proposal
  */
 async function createSpendProposal<
   TCustom extends Record<string, unknown> | undefined,
@@ -263,7 +263,7 @@ async function createSpendProposal<
 }
 
 /**
- * Verify that the AssetSpendApproved event was emitted
+ * Helper: Verify that the AssetSpendApproved event was emitted
  */
 async function verifySystemEventAssetSpendApproved<
   TCustom extends Record<string, unknown> | undefined,
@@ -332,7 +332,7 @@ export async function treasurySpendBasicTest<
 }
 
 /**
- * Void a previously approved spend proposal
+ * Helper: Void a previously approved spend proposal
  */
 async function voidApprovedSpendProposal<
   TCustom extends Record<string, unknown> | undefined,
@@ -344,7 +344,7 @@ async function voidApprovedSpendProposal<
 }
 
 /**
- * Verify that the AssetSpendVoided event was emitted
+ * Helper: Verify that the AssetSpendVoided event was emitted
  */
 async function verifySystemEventAssetSpendVoided<
   TCustom extends Record<string, unknown> | undefined,
@@ -428,7 +428,7 @@ export async function voidApprovedTreasurySpendProposal<
 }
 
 /**
- *  Create a function sendPayoutTx by the beneficiary
+ *  Helper: Create a function sendPayoutTx by the beneficiary
  */
 async function sendPayoutTx<
   TCustom extends Record<string, unknown> | undefined,
@@ -439,7 +439,7 @@ async function sendPayoutTx<
 }
 
 /**
- * Verify that the Paid event was emitted
+ * Helper: Verify that the Paid event was emitted
  */
 async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
   await checkEvents(events, { section: 'treasury', method: 'Paid' })
@@ -472,6 +472,13 @@ export async function claimTreasurySpend<
   // Setup test accounts
   await setupTestAccounts(relayClient, ['alice', 'bob'])
 
+  // Ensure that Alice's account has some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
+  await assetHubClient.dev.setStorage({
+    Assets: {
+      account: [[[USDT_ID, testAccounts.alice.address], { balance: 1000e6 }]],
+    },
+  })
+
   // Get initial spend count
   const initialSpendCount = await getSpendCount(relayClient)
 
@@ -499,7 +506,6 @@ export async function claimTreasurySpend<
   expect(spendData.amount.toBigInt()).toBe(spendAmount)
   expect(spendData.status.isPending).toBe(true)
 
-  // Alice's account should have some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
   const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, testAccounts.alice.address)
   await relayClient.dev.newBlock()
 
