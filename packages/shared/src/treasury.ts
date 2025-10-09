@@ -308,6 +308,8 @@ export async function treasurySpendBasicTest<
 
   await relayClient.dev.newBlock()
 
+  await logAllEvents(relayClient)
+
   // Verify that the AssetSpendApproved event was emitted
   await verifySystemEventAssetSpendApproved(relayClient)
 
@@ -530,21 +532,6 @@ export async function claimTreasurySpend<
   await relayClient.teardown()
 }
 
-/**
- * Test: Check the status of the spend and remove it from the storage if processed
- *
- * Verifies that the treasury's spend status checking mechanism correctly processes approved spends
- * and properly updates the spend status. This test ensures that authorized users can check the
- * status of a spend and remove it from the storage if processed.
- */
-export async function checkStatusOfTreasurySpend<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>) {
-  // const [relayClient] = await setupNetworks(relayChain)
-  console.log('checkStatusOfTreasurySpend')
-}
-
 export function baseTreasuryE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -579,12 +566,6 @@ export function baseTreasuryE2ETests<
         kind: 'test',
         label: 'Claim a spend',
         testFn: async () => await claimTreasurySpend(relayChain, ahChain),
-      },
-      // Check the status of the spend and remove it from the storage if processed
-      {
-        kind: 'test',
-        label: 'Check status of a spend and remove it from the storage if processed',
-        testFn: async () => await checkStatusOfTreasurySpend(relayChain),
       },
     ],
   }
