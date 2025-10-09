@@ -448,6 +448,33 @@ async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
 }
 
 /**
+ * Helper: Get the balance amount of the account on Asset Hub
+ */
+async function getAssetHubBalanceAmount<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(assetHubClient: Client<TCustom, TInitStoragesPara>, accountId: string): Promise<bigint> {
+  const balance = await assetHubClient.api.query.assets.account(USDT_ID, accountId)
+  return balance.isNone ? 0n : balance.unwrap().balance.toBigInt()
+}
+
+/**
+ * Helper: Set the initial balance amount of the account on Asset Hub
+ *
+ * This is required to ensure that the account exists on Asset Hub for the payout to happen
+ */
+async function setInitialUSDTBalanceOnAssetHub<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(assetHubClient: Client<TCustom, TInitStoragesPara>, accountAddress: string): Promise<void> {
+  await assetHubClient.dev.setStorage({
+    Assets: {
+      account: [[[USDT_ID, accountAddress], { balance: 1000e6 }]],
+    },
+  })
+}
+
+/**
  * Test: Claim a spend
  *
  * Verifies that the treasury's spend claiming mechanism correctly processes approved spends
@@ -473,11 +500,7 @@ export async function claimTreasurySpend<
   await setupTestAccounts(relayClient, ['alice', 'bob'])
 
   // Ensure that Alice's account has some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
-  await assetHubClient.dev.setStorage({
-    Assets: {
-      account: [[[USDT_ID, testAccounts.alice.address], { balance: 1000e6 }]],
-    },
-  })
+  await setInitialUSDTBalanceOnAssetHub(assetHubClient, testAccounts.alice.address)
 
   // Get initial spend count
   const initialSpendCount = await getSpendCount(relayClient)
@@ -506,7 +529,8 @@ export async function claimTreasurySpend<
   expect(spendData.amount.toBigInt()).toBe(spendAmount)
   expect(spendData.status.isPending).toBe(true)
 
-  const balanceBefore = await assetHubClient.api.query.assets.account(USDT_ID, testAccounts.alice.address)
+  const balanceAmountBefore = await getAssetHubBalanceAmount(assetHubClient, testAccounts.alice.address)
+
   await relayClient.dev.newBlock()
 
   // Claim the spend by the beneficiary i.e alice
@@ -522,10 +546,9 @@ export async function claimTreasurySpend<
   // / treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
   await assetHubClient.dev.newBlock()
 
-  const balanceAfter = await assetHubClient.api.query.assets.account(USDT_ID, testAccounts.alice.address)
-  const balanceAfterAmount = balanceAfter.isNone ? 0n : balanceAfter.unwrap().balance.toBigInt()
-  const balanceBeforeAmount = balanceBefore.isNone ? 0n : balanceBefore.unwrap().balance.toBigInt()
-  expect(balanceAfterAmount - balanceBeforeAmount).toBe(spendAmount)
+  // Ensure that Alice's balance is increased by the `amount`
+  const balanceAmountAfter = await getAssetHubBalanceAmount(assetHubClient, testAccounts.alice.address)
+  expect(balanceAmountAfter - balanceAmountBefore).toBe(spendAmount)
 
   await relayClient.teardown()
 }
