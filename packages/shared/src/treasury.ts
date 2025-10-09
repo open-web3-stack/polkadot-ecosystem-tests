@@ -245,7 +245,7 @@ export async function treasurySpendForeignAssetTest<
 }
 
 /**
- * Test: Propose and approve a spend of treasury funds.
+ * Test: Propose and approve a spend of treasury funds
  *
  * Verifies that the treasury's foreign asset spending mechanism correctly processes spend proposals
  * and maintains proper state tracking. This test ensures that when authorized users create spend
@@ -307,13 +307,21 @@ export async function treasurySpendBasicTest<
 }
 
 /**
- * Test: Treasury spend proposal rejection
+ * Test: Void a previously approved proposal
  *
- * Verifies that the treasury's foreign asset spending mechanism correctly rejects spend proposals
- * and maintains proper state tracking. This test ensures that when unauthorized users create spend
- * proposals for foreign assets (like USDT on Asset Hub), the treasury system properly rejects them.
+ * Verifies that the treasury's spend voiding mechanism correctly cancels previously approved
+ * spend proposals and properly cleans up associated state. This test ensures that authorized
+ * users can cancel approved spends before they are executed, preventing unintended fund
+ * disbursements and maintaining proper treasury governance controls.
+ *
+ * Test Structure:
+ * 1. Create and approve a treasury spend proposal for USDT on Asset Hub
+ * 2. Verify the spend is properly stored and approved
+ * 3. Void the approved spend proposal using authorized origin
+ * 4. Check that AssetSpendVoided event is emitted with correct data
+ * 5. Confirm the spend is completely removed from treasury storage
  */
-export async function treasurySpendProposalRejection<
+export async function voidApprovedTreasurySpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(relayChain: Chain<TCustom, TInitStoragesRelay>) {
@@ -332,12 +340,52 @@ export async function treasurySpendProposalRejection<
   const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
   const hexSpendTx = spendTx.method.toHex()
   await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: 'BigSpender' })
+
   await relayClient.dev.newBlock()
 
-  // Check that AssetSpendRejected event was emitted
-  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendRejected' })
+  // Check that AssetSpendApproved event was emitted
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendApproved' })
     .redact({ redactKeys: /expireAt|validFrom|index/ })
-    .toMatchSnapshot('treasury spend rejection events')
+    .toMatchSnapshot('treasury spend approval events')
+
+  // Verify spend count increased
+  const newSpendCount = await getSpendCount(relayClient)
+  expect(newSpendCount).toBe(initialSpendCount + 1)
+
+  // Verify the spend was stored correctly
+  const spendIndex = await getSpendIndexFromEvent(relayClient, 'AssetSpendApproved')
+  const spend = await relayClient.api.query.treasury.spends(spendIndex)
+
+  expect(spend.isSome).toBeTruthy()
+  const spendData = spend.unwrap()
+  expect(spendData.amount.toBigInt()).toBe(spendAmount)
+  expect(spendData.status.isPending).toBe(true)
+
+  const validFrom = spendData.validFrom.toNumber()
+  const payoutPeriod = relayClient.api.consts.treasury.payoutPeriod.toNumber()
+  expect(spendData.expireAt.toNumber()).toBe(validFrom + payoutPeriod)
+
+  await relayClient.dev.newBlock()
+
+  // Void a the approved proposal
+  const removeApprovedSpendTx = relayClient.api.tx.treasury.voidSpend(spendIndex)
+  const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexRemoveApprovedSpendTx, { Origins: 'Treasurer' })
+
+  await relayClient.dev.newBlock()
+
+  await logAllEvents(relayClient)
+
+  // Check that AssetSpendVoided event was emitted
+  await checkSystemEvents(relayClient, { section: 'treasury', method: 'AssetSpendVoided' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('treasury spend voided events')
+
+  // Verify the spend was removed from the storage
+  const spendAfter = await relayClient.api.query.treasury.spends(spendIndex)
+  expect(spendAfter.isNone).toBe(true)
+
+  await relayClient.teardown()
 }
 
 export function baseTreasuryE2ETests<
@@ -360,14 +408,14 @@ export function baseTreasuryE2ETests<
       },
       {
         kind: 'test',
-        label: 'Propose and approve a spend of treasury funds.',
+        label: 'Propose and approve a spend of treasury funds',
         testFn: async () => await treasurySpendBasicTest(relayChain),
       },
       // Treasury spend proposal rejection
       {
         kind: 'test',
-        label: 'Removal of approved Treasury spend proposal',
-        testFn: async () => await treasurySpendProposalRejection(relayChain),
+        label: 'Void previously approved spend',
+        testFn: async () => await voidApprovedTreasurySpendProposal(relayChain),
       },
     ],
   }
