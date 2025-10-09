@@ -9,7 +9,7 @@ import type { Codec } from '@polkadot/types/types'
 
 import { assert, expect } from 'vitest'
 
-import { logAllEvents } from './helpers/helper_functions.js'
+//import { logAllEvents } from './helpers/helper_functions.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -307,8 +307,6 @@ export async function treasurySpendBasicTest<
   await createSpendProposal(relayClient, spendAmount)
 
   await relayClient.dev.newBlock()
-
-  await logAllEvents(relayClient)
 
   // Verify that the AssetSpendApproved event was emitted
   await verifySystemEventAssetSpendApproved(relayClient)
