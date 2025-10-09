@@ -15,6 +15,10 @@ import type { RootTestTree } from './types.js'
 /// Helpers
 /// -------
 
+// Origins
+const REJECT_ORIGIN = 'Treasurer'
+const SPEND_ORIGIN = 'BigSpender'
+
 // initial funding balance for accounts
 const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
@@ -277,7 +281,7 @@ export async function treasurySpendBasicTest<
 
   const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
   const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: 'BigSpender' })
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
 
   await relayClient.dev.newBlock()
 
@@ -339,7 +343,7 @@ export async function voidApprovedTreasurySpendProposal<
 
   const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
   const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: 'BigSpender' })
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
 
   await relayClient.dev.newBlock()
 
@@ -370,7 +374,7 @@ export async function voidApprovedTreasurySpendProposal<
   // Void a the approved proposal
   const removeApprovedSpendTx = relayClient.api.tx.treasury.voidSpend(spendIndex)
   const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexRemoveApprovedSpendTx, { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(relayClient, hexRemoveApprovedSpendTx, { Origins: REJECT_ORIGIN })
 
   await relayClient.dev.newBlock()
 
