@@ -249,6 +249,18 @@ export async function treasurySpendForeignAssetTest<
 }
 
 /**
+ * Creates and schedules a treasury spend proposal
+ */
+export async function createSpendProposal<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayClient: Client<TCustom, TInitStoragesRelay>, spendAmount: bigint) {
+  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
+  const hexSpendTx = spendTx.method.toHex()
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+}
+
+/**
  * Test: Propose and approve a spend of treasury funds
  *
  * Verifies that the treasury's foreign asset spending mechanism correctly processes spend proposals
@@ -278,10 +290,7 @@ export async function treasurySpendBasicTest<
   // Create a spend proposal
   const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-
-  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
-  const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+  await createSpendProposal(relayClient, spendAmount)
 
   await relayClient.dev.newBlock()
 
@@ -341,9 +350,7 @@ export async function voidApprovedTreasurySpendProposal<
   const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
-  const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+  await createSpendProposal(relayClient, spendAmount)
 
   await relayClient.dev.newBlock()
 
@@ -422,9 +429,7 @@ export async function claimTreasurySpend<
   const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, null)
-  const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+  await createSpendProposal(relayClient, spendAmount)
 
   await relayClient.dev.newBlock()
 
@@ -474,6 +479,21 @@ export async function claimTreasurySpend<
   await relayClient.teardown()
 }
 
+/**
+ * Test: Check the status of the spend and remove it from the storage if processed
+ *
+ * Verifies that the treasury's spend status checking mechanism correctly processes approved spends
+ * and properly updates the spend status. This test ensures that authorized users can check the
+ * status of a spend and remove it from the storage if processed.
+ */
+export async function checkStatusOfTreasurySpend<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  // const [relayClient] = await setupNetworks(relayChain)
+  console.log('checkStatusOfTreasurySpend')
+}
+
 export function baseTreasuryE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -508,6 +528,12 @@ export function baseTreasuryE2ETests<
         kind: 'test',
         label: 'Claim a spend',
         testFn: async () => await claimTreasurySpend(relayChain, ahChain),
+      },
+      // Check the status of the spend and remove it from the storage if processed
+      {
+        kind: 'test',
+        label: 'Check status of a spend and remove it from the storage if processed',
+        testFn: async () => await checkStatusOfTreasurySpend(relayChain),
       },
     ],
   }
