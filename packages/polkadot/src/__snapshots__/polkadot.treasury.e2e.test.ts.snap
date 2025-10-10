@@ -1,0 +1,349 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Treasury > Check status of a spend and remove it from the storage if processed > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Check status of a spend and remove it from the storage if processed > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Check status of a spend and remove it from the storage if processed > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": 1000,
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": 0,
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Claim a spend > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Claim a spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": 1000,
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": 0,
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Foreign asset spend from Relay treasury is reflected on AssetHub > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Foreign asset spend from Relay treasury is reflected on AssetHub > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "123,123,123,123",
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": "50",
+                },
+                {
+                  "GeneralIndex": "1,984",
+                },
+              ],
+            },
+            "parents": "0",
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": "1,000",
+                },
+              ],
+            },
+            "parents": "0",
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": "0",
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Propose and approve a spend of treasury funds > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": 1000,
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": 0,
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Void previously approved spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X1": [
+                {
+                  "Parachain": 1000,
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "interior": {
+            "X1": [
+              {
+                "AccountId32": {
+                  "id": "(hash)",
+                  "network": null,
+                },
+              },
+            ],
+          },
+          "parents": 0,
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Treasury > Void previously approved spend > treasury spend voided events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "AssetSpendVoided",
+    "section": "treasury",
+  },
+]
+`;
