@@ -20,6 +20,7 @@ import type { RootTestTree } from './types.js'
 // Origins
 const REJECT_ORIGIN = 'Treasurer'
 const SPEND_ORIGIN = 'BigSpender'
+const SMALL_TIPPER_ORIGIN = 'SmallTipper'
 
 // initial funding balance for accounts
 const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
@@ -256,10 +257,15 @@ export async function treasurySpendForeignAssetTest<
 async function createSpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayClient: Client<TCustom, TInitStoragesRelay>, spendAmount: bigint, validFrom: number | null = null) {
+>(
+  relayClient: Client<TCustom, TInitStoragesRelay>,
+  spendAmount: bigint,
+  origin: string = SPEND_ORIGIN,
+  validFrom: number | null = null,
+) {
   const spendTx = relayClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, validFrom)
   const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: SPEND_ORIGIN })
+  await scheduleInlineCallWithOrigin(relayClient, hexSpendTx, { Origins: origin })
 }
 
 /**
@@ -684,7 +690,7 @@ export async function proposeExpiredSpend<
   const currentBlockNumber = await relayClient.api.query.system.number()
   const payoutPeriod = relayClient.api.consts.treasury.payoutPeriod.toNumber()
   const validFrom = currentBlockNumber.toNumber() - payoutPeriod - 1 // subtracting any number to ensure that the spend is expired
-  await createSpendProposal(relayClient, spendAmount, validFrom)
+  await createSpendProposal(relayClient, spendAmount, SPEND_ORIGIN, validFrom)
 
   await relayClient.dev.newBlock()
 
@@ -706,6 +712,54 @@ export async function proposeExpiredSpend<
   const dispatchError = dispatchedData.result.asErr
   assert(dispatchError.isModule)
   expect(relayClient.api.errors.treasury.SpendExpired.is(dispatchError.asModule)).toBeTruthy()
+
+  await relayClient.teardown()
+}
+
+/**
+ * Test: Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error
+ *
+ * Verifies that the treasury's spend proposal mechanism correctly processes smalltipper trying to spend more than the origin allows
+ * and emits `InsufficientPermission` error.
+ *
+ * Test Structure:
+ * 1. Create a spend proposal with `SmallTipper` origin which does not have permission to spend the spendAmount
+ * 2. Verify that the `InsufficientPermission` error is emitted on the dispatched event
+ */
+export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>) {
+  const [relayClient] = await setupNetworks(relayChain)
+
+  // Setup test accounts
+  await setupTestAccounts(relayClient, ['alice', 'bob'])
+
+  // Create a spend proposal
+  const existentialDeposit = relayClient.api.consts.balances.existentialDeposit.toBigInt()
+  const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
+  await createSpendProposal(relayClient, spendAmount, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
+
+  await relayClient.dev.newBlock()
+
+  // check the result of dispatched event
+  const events = await relayClient.api.query.system.events()
+  // Find the Dispatched event from scheduler
+  const dispatchedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(dispatchedEvent)
+  assert(relayClient.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+
+  const dispatchedData = dispatchedEvent.event.data
+  expect(dispatchedData.result.isErr).toBe(true)
+
+  // Decode the module error to get human-readable details
+  const dispatchError = dispatchedData.result.asErr
+  assert(dispatchError.isModule)
+  expect(relayClient.api.errors.treasury.InsufficientPermission.is(dispatchError.asModule)).toBeTruthy()
 
   await relayClient.teardown()
 }
@@ -756,6 +810,12 @@ export function baseTreasuryE2ETests<
         kind: 'test',
         label: 'Proposing a expired spend emits `SpendExpired` error',
         testFn: async () => await proposeExpiredSpend(relayChain),
+      },
+      // smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error
+      {
+        kind: 'test',
+        label: 'Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error',
+        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(relayChain),
       },
     ],
   }
