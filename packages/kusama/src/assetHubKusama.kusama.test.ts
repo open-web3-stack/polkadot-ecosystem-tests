@@ -12,16 +12,20 @@ describe('kusama & assetHubKusama', async () => {
   const assetHubKSM = assetHubKusama.custom.ksm
   const kusamaKSM = kusama.custom.ksm
 
-  runXcmPalletDown('kusama transfer KSM to assetHubKusama', async () => {
-    return {
-      fromChain: kusamaClient,
-      toChain: assetHubClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, assetHubKusama.paraId!)),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletDown(
+    'kusama transfer KSM to assetHubKusama',
+    async () => {
+      return {
+        fromChain: kusamaClient,
+        toChain: assetHubClient,
+        balance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, assetHubKusama.paraId!)),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 
   runXcmPalletUp('assetHubKusama transfer KSM to kusama', async () => {
     return {

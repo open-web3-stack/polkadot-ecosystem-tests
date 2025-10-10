@@ -25,9 +25,9 @@ export const runXcmPalletHorizontal = (
     precision?: number
     totalIssuanceProvider?: GetTotalIssuance
   }>,
-  options: { only?: boolean } = {},
+  options: { only?: boolean; skip?: boolean } = {},
 ) => {
-  const itfn = options.only ? it.only : it
+  const itfn = options.skip ? it.skip : options.only ? it.only : it
   itfn(
     name,
     async () => {
