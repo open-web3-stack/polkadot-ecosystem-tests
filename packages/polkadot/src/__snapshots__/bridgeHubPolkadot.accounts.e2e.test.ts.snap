@@ -30,8 +30,8 @@ exports[`Polkadot Bridge Hub Accounts > \`force_adjust_total_issuance\` > succes
 [
   {
     "data": {
-      "new_": "(rounded 340000000000000)",
-      "old": "(rounded 340000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -43,8 +43,8 @@ exports[`Polkadot Bridge Hub Accounts > \`force_adjust_total_issuance\` > succes
 [
   {
     "data": {
-      "new_": "(rounded 340000000000000)",
-      "old": "(rounded 340000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",

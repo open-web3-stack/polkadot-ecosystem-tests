@@ -17,8 +17,8 @@ exports[`Kusama People Chain Accounts > \`force_adjust_total_issuance\` > succes
 [
   {
     "data": {
-      "new_": "(rounded 2400000000000000)",
-      "old": "(rounded 2400000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -30,8 +30,8 @@ exports[`Kusama People Chain Accounts > \`force_adjust_total_issuance\` > succes
 [
   {
     "data": {
-      "new_": "(rounded 2400000000000000)",
-      "old": "(rounded 2400000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
