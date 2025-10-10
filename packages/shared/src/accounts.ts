@@ -3454,9 +3454,9 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for first issuance change',
-  )
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({ number: true })
+    .toMatchSnapshot('events for first issuance change')
 
   // 3. Verify the increase worked
 
@@ -3510,9 +3510,9 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for second issuance change',
-  )
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({ number: true })
+    .toMatchSnapshot('events for second issuance change')
 
   // 5. Verify the decrease worked
 
