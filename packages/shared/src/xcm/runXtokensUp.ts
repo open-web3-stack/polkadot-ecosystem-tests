@@ -21,9 +21,9 @@ export const runXtokensUp = (
     toAccount?: KeyringPair
     precision?: number
   }>,
-  options: { only?: boolean } = {},
+  options: { only?: boolean; skip?: boolean } = {},
 ) => {
-  const itfn = options.only ? it.only : it
+  const itfn = options.skip ? it.skip : options.only ? it.only : it
   itfn(
     name,
     async () => {

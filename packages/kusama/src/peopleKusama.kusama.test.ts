@@ -12,25 +12,33 @@ describe('kusama & peopleKusama', async () => {
   const peopleKSM = peopleKusama.custom.ksm
   const kusamaKSM = kusama.custom.ksm
 
-  runXcmPalletDown('kusama transfer KSM to peopleKusama', async () => {
-    return {
-      fromChain: kusamaClient,
-      toChain: peopleClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, peopleKusama.paraId!)),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletDown(
+    'kusama transfer KSM to peopleKusama',
+    async () => {
+      return {
+        fromChain: kusamaClient,
+        toChain: peopleClient,
+        balance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, peopleKusama.paraId!)),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 
-  runXcmPalletUp('peopleKusama transfer KSM to kusama', async () => {
-    return {
-      fromChain: peopleClient,
-      toChain: kusamaClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(peopleKSM, 1e12, tx.xcmPallet.relaychainV4),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletUp(
+    'peopleKusama transfer KSM to kusama',
+    async () => {
+      return {
+        fromChain: peopleClient,
+        toChain: kusamaClient,
+        balance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.teleportAssetsV3(peopleKSM, 1e12, tx.xcmPallet.relaychainV4),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 })

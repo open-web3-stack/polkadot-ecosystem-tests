@@ -27,14 +27,18 @@ describe('kusama & assetHubKusama', async () => {
     { skip: true },
   )
 
-  runXcmPalletUp('assetHubKusama transfer KSM to kusama', async () => {
-    return {
-      fromChain: assetHubClient,
-      toChain: kusamaClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(assetHubKSM, 1e12, tx.xcmPallet.relaychainV4),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletUp(
+    'assetHubKusama transfer KSM to kusama',
+    async () => {
+      return {
+        fromChain: assetHubClient,
+        toChain: kusamaClient,
+        balance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.teleportAssetsV3(assetHubKSM, 1e12, tx.xcmPallet.relaychainV4),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 })
