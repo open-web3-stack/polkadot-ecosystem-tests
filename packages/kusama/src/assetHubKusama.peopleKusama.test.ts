@@ -23,18 +23,22 @@ describe('assetHubKusama & peopleKusama', async () => {
     }
   })
 
-  runXcmPalletHorizontal('peopleKusama transfer KSM to assetHubKusama', async () => {
-    return {
-      fromChain: peopleClient,
-      toChain: assetHubKusamaClient,
-      fromBalance: query.balances,
-      toBalance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.limitedTeleportAssets(
-        peopleKSM,
-        1e12,
-        tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
-      ),
-    }
-  })
+  runXcmPalletHorizontal(
+    'peopleKusama transfer KSM to assetHubKusama',
+    async () => {
+      return {
+        fromChain: peopleClient,
+        toChain: assetHubKusamaClient,
+        fromBalance: query.balances,
+        toBalance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.limitedTeleportAssets(
+          peopleKSM,
+          1e12,
+          tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 })

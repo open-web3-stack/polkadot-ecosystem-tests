@@ -1,6 +1,6 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
 import {
-  AssetHubProxyTypes,
+  AssetHubKusamaProxyTypes,
   createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
@@ -36,8 +36,38 @@ const assetHubKusamaProxyTypeConfig: ProxyTypeConfig = {
     ],
     buildDisallowedActions: (builder) => [...builder.buildVestingAction()],
   },
+  // The `Auction` proxy type cannot execute any calls on the AH without the `remote_proxy` pallet.
+  // Its call filter is set to block all calls.
+  ['Auction']: {
+    buildAllowedActions: (_builder) => [],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBalancesAction(),
+      ...builder.buildCrowdloanAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildSlotsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+  ['ParaRegistration']: {
+    buildAllowedActions: (_builder) => [],
+    // The `ParaRegistration` proxy type cannot execute any calls on the AH without the `remote_proxy` pallet.
+    // Its call filter is set to block all calls.
+    buildDisallowedActions: (builder) => [
+      ...defaultProxyTypeConfig.ParaRegistration.buildDisallowedActions(builder),
+      // Post-AHM won't have the `paras_registrar` pallet, so the below action will result in an empty list.
+      ...builder.buildParasRegistrarAction(),
+      ...builder.buildUtilityAction(),
+      ...builder.buildProxyRemovalAction(AssetHubKusamaProxyTypes.ParaRegistration),
+    ],
+  },
 }
 
-const assetHubKusamaProxyCfg: ProxyTestConfig = createProxyConfig(AssetHubProxyTypes, assetHubKusamaProxyTypeConfig)
+const assetHubKusamaProxyCfg: ProxyTestConfig = createProxyConfig(
+  AssetHubKusamaProxyTypes,
+  assetHubKusamaProxyTypeConfig,
+)
 
 registerTestTree(fullProxyE2ETests(assetHubKusama, testConfig, assetHubKusamaProxyCfg))

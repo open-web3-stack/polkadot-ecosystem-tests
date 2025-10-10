@@ -36,7 +36,7 @@ const polkadotProxyTypeConfig: ProxyTypeConfig = {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),
-      ...builder.buildProxyRemoveProxyAction(PolkadotProxyTypes.ParaRegistration),
+      ...builder.buildProxyRemovalAction(PolkadotProxyTypes.ParaRegistration),
     ],
     buildDisallowedActions: (builder) => [...defaultProxyTypeConfig.ParaRegistration.buildDisallowedActions(builder)],
   },
