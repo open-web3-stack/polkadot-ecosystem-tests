@@ -60,7 +60,7 @@ const assetHubKusamaProxyTypeConfig: ProxyTypeConfig = {
       // Post-AHM won't have the `paras_registrar` pallet, so the below action will result in an empty list.
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),
-      ...builder.buildProxyRemoveProxyAction(AssetHubKusamaProxyTypes.ParaRegistration),
+      ...builder.buildProxyRemovalAction(AssetHubKusamaProxyTypes.ParaRegistration),
     ],
   },
 }

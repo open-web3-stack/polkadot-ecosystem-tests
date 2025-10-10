@@ -125,7 +125,7 @@ interface ProxyActionBuilder {
   // The proxy type parameter is used because proxy type hierarchies form a lattice (order); thus,
   // a proxy of type A can only remove proxies of type B such that B ≤ A; in other words, the action needs
   // to be given an appropriate proxy type to remove.
-  buildProxyRemoveProxyAction(proxyType?: number): ProxyAction[]
+  buildProxyRemovalAction(proxyType?: number): ProxyAction[]
 
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
@@ -637,13 +637,13 @@ class ProxyActionBuilderImpl<
 
   /**
    * In order to test that proxy removal call filtering works properly, the correct proxy type must be provided.
-   * See {@link ProxyActionBuilder.buildProxyRemoveProxyAction} for more.
+   * See {@link ProxyActionBuilder.buildProxyRemovalAction} for more.
    *
    * If no proxy type is provided, an error is thrown to remind the calling chain to provide custom
    * `ParaRegistration` proxy type filter lists in its `proxy.e2e.test.ts` module.
    */
-  buildProxyRemoveProxyAction(proxyType?: number): ProxyAction[] {
-    if (!proxyType) {
+  buildProxyRemovalAction(proxyType?: number): ProxyAction[] {
+    if (proxyType === undefined) {
       throw new Error('proxy removal action builder requires proxyType')
     }
 
@@ -935,8 +935,10 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),
-      ...builder.buildProxyRemoveProxyAction(),
-      // Note: Chain-specific buildProxyRemoveProxyAction calls need to be added by individual chains
+      ...builder.buildProxyRemovalAction(),
+      // Note: Chain-specific proxy removal action needs to be further specified by individual chains
+      // at call-site.
+      // Otherwise, the test will raise an error about a proxy type not having been provided.
     ],
     buildDisallowedActions: (builder) => [
       ...builder.buildBalancesAction(),
