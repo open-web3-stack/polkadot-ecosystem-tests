@@ -33,11 +33,111 @@ const testConfig: RelayTestConfig = {
  */
 const kusamaProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
+  ['Any']: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildProxyAction(),
+      ...builder.buildProxyRejectAnnouncementAction(),
+      ...builder.buildProxyRemovalAction(KusamaProxyTypes.Any),
+      ...builder.buildSystemAction(),
+      ...builder.buildUtilityAction(),
+    ],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+  ['NonTransfer']: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildProxyAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildSystemRemarkAction(),
+      ...builder.buildUtilityAction(),
+    ],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBalancesAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['Auction']: {
+    buildAllowedActions: (builder) => [...builder.buildCrowdloanAction(), ...builder.buildParasRegistrarAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildVestingAction(),
+
+      // TODO: this is not right, see https://github.com/polkadot-fellows/runtimes/blob/main/relay/kusama/src/lib.rs#L1391
+      // Needs an issue
+      ...builder.buildAuctionAction(),
+      ...builder.buildSlotsAction(),
+    ],
+  },
+
+  ['Governance']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildProxyAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['Staking']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildFastUnstakeAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['NominationPools']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+  ['Society']: {
+    buildAllowedActions: (_builder) => [],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildSocietyAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildUtilityAction(),
+    ],
+  },
   ['ParaRegistration']: {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
       ...builder.buildUtilityAction(),
-      ...builder.buildProxyRemoveProxyAction(KusamaProxyTypes.ParaRegistration),
+      ...builder.buildProxyRemovalAction(KusamaProxyTypes.ParaRegistration),
     ],
     buildDisallowedActions: (builder) => [...defaultProxyTypeConfig.ParaRegistration.buildDisallowedActions(builder)],
   },

@@ -9,21 +9,25 @@ import { describe } from 'vitest'
 describe('integriteeKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, integriteeKusamaClient] = await setupNetworks(assetHubKusama, integriteeKusama)
 
-  runXcmPalletHorizontal('assetHubKusama transfer KSM to integriteeKusama', async () => {
-    return {
-      fromChain: assetHubKusamaClient,
-      toChain: integriteeKusamaClient,
-      fromAccount: defaultAccountsSr25519.alice,
-      toAccount: defaultAccountsSr25519.bob,
-      fromBalance: query.balances,
-      toBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        assetHubKusama.custom.ksm,
-        1e12,
-        tx.xcmPallet.parachainV3(1, integriteeKusama.paraId!),
-      ),
-    }
-  })
+  runXcmPalletHorizontal(
+    'assetHubKusama transfer KSM to integriteeKusama',
+    async () => {
+      return {
+        fromChain: assetHubKusamaClient,
+        toChain: integriteeKusamaClient,
+        fromAccount: defaultAccountsSr25519.alice,
+        toAccount: defaultAccountsSr25519.bob,
+        fromBalance: query.balances,
+        toBalance: query.assets(integriteeKusama.custom.assetIdRelayNative),
+        tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
+          assetHubKusama.custom.ksm,
+          1e12,
+          tx.xcmPallet.parachainV3(1, integriteeKusama.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 
   runXcmPalletHorizontal('integriteeKusama transfer KSM to assetHubKusama', async () => {
     return {

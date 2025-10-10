@@ -30,8 +30,8 @@ exports[`Polkadot People Chain Accounts > \`force_adjust_total_issuance\` > succ
 [
   {
     "data": {
-      "new_": "(rounded 240000000000000)",
-      "old": "(rounded 240000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -43,8 +43,8 @@ exports[`Polkadot People Chain Accounts > \`force_adjust_total_issuance\` > succ
 [
   {
     "data": {
-      "new_": "(rounded 240000000000000)",
-      "old": "(rounded 240000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",

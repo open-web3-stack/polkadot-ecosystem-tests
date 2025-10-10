@@ -3,8 +3,8 @@ import {
   accountsE2ETests,
   createAccountsConfig,
   createDefaultDepositActions,
-  createDefaultLockActions,
   createDefaultReserveActions,
+  manualLockAction,
   registerTestTree,
   type TestConfig,
 } from '@e2e-test/shared'
@@ -18,7 +18,7 @@ const testCfg: TestConfig = {
 }
 
 // When testing liquidity restrictions on Asset Hubs, to simulate frozen funds, vesting is skipped due to AHM.
-const lockActions = createDefaultLockActions().filter((action) => !action.name.includes('vest'))
+const lockActions = [manualLockAction()]
 
 const accountsCfg = createAccountsConfig({
   relayChain: polkadot,
