@@ -27,6 +27,7 @@ import { dirname, join } from 'node:path'
 import * as readline from 'node:readline'
 import { fileURLToPath } from 'node:url'
 import {
+  AssetHubKusamaProxyTypes,
   AssetHubPolkadotProxyTypes,
   CollectivesProxyTypes,
   CoretimeProxyTypes,
@@ -80,7 +81,7 @@ const networks: ChainAndProxyTypes[] = [
   { name: 'polkadot', proxyTypes: PolkadotProxyTypes },
   { name: 'kusama', proxyTypes: KusamaProxyTypes },
   { name: 'assetHubPolkadot', proxyTypes: AssetHubPolkadotProxyTypes },
-  { name: 'assetHubKusama', proxyTypes: AssetHubPolkadotProxyTypes },
+  { name: 'assetHubKusama', proxyTypes: AssetHubKusamaProxyTypes },
   { name: 'collectivesPolkadot', proxyTypes: CollectivesProxyTypes },
   { name: 'coretimePolkadot', proxyTypes: CoretimeProxyTypes },
   { name: 'coretimeKusama', proxyTypes: CoretimeProxyTypes },

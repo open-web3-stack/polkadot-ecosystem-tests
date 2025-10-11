@@ -1,4 +1,4 @@
-import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
+import { assetHubKusama } from '@e2e-test/networks/chains'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -22,7 +22,6 @@ const lockActions = [manualLockAction()]
 
 const accountsCfg = createAccountsConfig({
   expectation: 'success',
-  relayChain: kusama,
   actions: {
     reserveActions: createDefaultReserveActions(),
     lockActions,

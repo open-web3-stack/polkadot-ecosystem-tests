@@ -226,8 +226,8 @@ async function stakingLifecycleTest<
 
   await client.dev.setStorage({
     System: {
-      // Min val bond + 100 EDs for fees (to be safe)
-      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 100n } }]),
+      // Min val bond + 1000 EDs for fees (to be safe)
+      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 1000n } }]),
     },
   })
 

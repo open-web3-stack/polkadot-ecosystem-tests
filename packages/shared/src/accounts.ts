@@ -1987,7 +1987,7 @@ async function transferAllWithReserveTest<
 
   // 2. Execute reserve action to create a consumer
 
-  const reservedAmount = await reserveAction.execute(client, alice, existentialDeposit * 20n)
+  const reservedAmount = await reserveAction.execute(client, alice, 1n)
   await client.dev.newBlock()
 
   // Initialize fee tracking map before any transactions
@@ -2008,6 +2008,8 @@ async function transferAllWithReserveTest<
   await client.dev.newBlock()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+
+  //await client.pause()
 
   // Snapshot events
   await checkEvents(
@@ -2044,6 +2046,17 @@ async function transferAllWithReserveTest<
   // 5. Check events
 
   const events = await client.api.query.system.events()
+
+  // Check endowment event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(bobAccount.data.free.toBigInt())
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 
   // Verify no `KilledAccount˝ events are present
   const killedAccountEvent = events.find((record) => {
@@ -4070,7 +4083,7 @@ async function testLiquidityRestrictionForAction<
 
   // Reminder: If the chain has not been upgraded, expect the deposit action to fail, and verify accordingly.
   // If it has, the action should succeed.
-  match(expectation)
+  await match(expectation)
     .with('failure', async () => {
       // Step 5
 
@@ -4137,6 +4150,7 @@ async function testLiquidityRestrictionForAction<
       expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
       expect(account.data.frozen.toBigInt()).toBe(lockAmount)
     })
+    .exhaustive()
 }
 
 /// ----------
