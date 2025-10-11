@@ -794,6 +794,7 @@ export async function scheduledOverweightCallFails<
   // This flag is set to `true` if an overweight event is found immediately after execution.
   // An overweight event is emitted only if the task is the first to be executed in a given block, and fails
   // execution due to being overweight.
+  // If this path is taken, the test is likely running on a pre-AHM runtime, or the collectives network.
   let overweightEventFound = false
   if (overweightEvent) {
     overweightEventFound = true
@@ -801,22 +802,26 @@ export async function scheduledOverweightCallFails<
     assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
     expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
     expect(overweightEvent.event.data.id.toJSON()).toBeNull()
+
+    const incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
   }
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
-
   await check(scheduled[0].unwrap()).toMatchObject(task)
-
-  let incompleteSince = await client.api.query.scheduler.incompleteSince()
-  assert(incompleteSince.isSome)
-  expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber!)
 
   // If the overweight event is not found, even though the task was overweight, it's likely that other scheduled events
   // interfered with the agenda's scheduled tasks - even though the test clears the agenda for this block.
   // Possible cause: `voterList.ScoreUpdated` from the `on_idle` hook. Use `client.pause()` to verify.
+  // IF this path is taken, the test is likely running on a post-migration asset hub runtime.
   if (!overweightEventFound) {
+    let incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber!)
+
     await client.dev.newBlock()
     events = await client.api.query.system.events()
 
