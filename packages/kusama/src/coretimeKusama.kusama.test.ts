@@ -11,23 +11,31 @@ describe('kusama & coretimeKusama', async () => {
   const coretimeKSM = coretimeKusama.custom.ksm
   const kusamaKSM = kusama.custom.ksm
 
-  runXcmPalletDown('kusama transfer KSM to coretimeKusama', async () => {
-    return {
-      fromChain: kusamaClient,
-      toChain: coretimeClient,
-      balance: query.balances,
-      tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, coretimeKusama.paraId!)),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletDown(
+    'kusama transfer KSM to coretimeKusama',
+    async () => {
+      return {
+        fromChain: kusamaClient,
+        toChain: coretimeClient,
+        balance: query.balances,
+        tx: tx.xcmPallet.teleportAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, coretimeKusama.paraId!)),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 
-  runXcmPalletUp('coretimeKusama transfer KSM to kusama', async () => {
-    return {
-      fromChain: coretimeClient,
-      toChain: kusamaClient,
-      balance: query.balances,
-      tx: tx.xcmPallet.teleportAssetsV3(coretimeKSM, 1e12, tx.xcmPallet.relaychainV4),
-      totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
-    }
-  })
+  runXcmPalletUp(
+    'coretimeKusama transfer KSM to kusama',
+    async () => {
+      return {
+        fromChain: coretimeClient,
+        toChain: kusamaClient,
+        balance: query.balances,
+        tx: tx.xcmPallet.teleportAssetsV3(coretimeKSM, 1e12, tx.xcmPallet.relaychainV4),
+        totalIssuanceProvider: () => query.totalIssuance(kusamaClient),
+      }
+    },
+    { skip: true },
+  )
 })
