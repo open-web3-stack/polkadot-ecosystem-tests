@@ -669,7 +669,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -1588,7 +1588,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -1751,7 +1751,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -1990,7 +1990,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -2191,7 +2191,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -2506,7 +2506,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -2650,7 +2650,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -2832,7 +2832,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
@@ -3024,7 +3024,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > filtering tests for
   },
   {
     "data": {
-      "account": "FeeVgsArd4tnkvZ9scbcrmbcyfqR4M73xWFUAPWaJ1Z2Df1",
+      "account": "(redacted)",
     },
     "method": "NewAccount",
     "section": "system",
