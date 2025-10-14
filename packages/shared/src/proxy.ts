@@ -1313,8 +1313,14 @@ async function proxyCallFilteringSingleTestRunner<
     }
 
     let redactKeys: RegExp | undefined
-    if (['referenda', 'bounties'].includes(proxyAction.pallet)) {
-      redactKeys = /^index$/
+    switch (proxyAction.pallet) {
+      case 'referenda':
+      case 'bounties':
+        redactKeys = /^index$/
+        break
+      case 'system':
+        redactKeys = /^account$/ // system.NewAccount for the pure proxy address is based on current block
+        break
     }
 
     await eventChecker
