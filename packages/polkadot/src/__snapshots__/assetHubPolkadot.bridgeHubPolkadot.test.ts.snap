@@ -103,6 +103,106 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > assetHubPolkadot transfer DOT to
     ],
     "recipient": 1002,
   },
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v3": [
+          {
+            "reserveAssetDeposited": [
+              {
+                "fun": {
+                  "fungible": 900454725,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+              {
+                "fun": {
+                  "fungible": "0x00000000000000114b8a913dee1c94f2",
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "x2": [
+                        {
+                          "globalConsensus": {
+                            "ethereum": {
+                              "chainId": 1,
+                            },
+                          },
+                        },
+                        {
+                          "accountKey20": {
+                            "key": "0x56072c95faa701256059aa122697b133aded9279",
+                            "network": null,
+                          },
+                        },
+                      ],
+                    },
+                    "parents": 2,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 309104725,
+                },
+                "id": {
+                  "concrete": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 2,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": {
+                    "accountId32": {
+                      "id": "0x45544800cb5a92f3165b0698c1a9bd8c7aa3e82427fff7c00000000000000000",
+                      "network": null,
+                    },
+                  },
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 2034,
+  },
 ]
 `;
 
@@ -365,6 +465,50 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
 
 exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
 [
+  {
+    "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "XcmpMessageSent",
+    "section": "xcmpQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 20000)",
+        "refTime": "(rounded 3000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "XcmpMessageSent",
+    "section": "xcmpQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 20000)",
+        "refTime": "(rounded 3000000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
   {
     "data": {
       "id": "(hash)",
