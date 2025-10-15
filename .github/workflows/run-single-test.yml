@@ -1,0 +1,33 @@
+name: Run Single Test
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_name:
+        description: 'Test path or pattern to run (e.g., packages/kusama/src/assetHubKusama.bounties.e2e.test.ts)'
+        required: true
+        type: string
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+      
+      - name: Install dependencies
+        run: yarn --immutable
+      
+      - name: Run test
+        run: yarn test ${{ github.event.inputs.test_name }}
+
