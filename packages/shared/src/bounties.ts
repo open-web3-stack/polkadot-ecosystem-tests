@@ -1547,7 +1547,7 @@ export async function unassignCuratorActiveByCuratorTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1557,7 +1557,7 @@ export async function unassignCuratorActiveByCuratorTest<
   expect(bountyStatus.status.isProposed).toBe(true)
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
@@ -1692,12 +1692,12 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
@@ -1854,12 +1854,12 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
