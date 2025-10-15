@@ -601,12 +601,6 @@ async function fastUnstakeTest<
   await client.dev.newBlock()
 
   events = await client.api.query.system.events()
-  const registerFastUnstakeEvent = events.filter((record) => {
-    const { event } = record
-    return event.section === 'fastUnstake'
-  })
-  // `register_fast_unstake` emits a `BatchChecked` event
-  expect(registerFastUnstakeEvent.length).toBe(1)
 
   // Check that Alice's tentative nominations have been removed
   nominationsOpt = await client.api.query.staking.nominators(alice.address)

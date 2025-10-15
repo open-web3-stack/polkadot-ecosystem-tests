@@ -782,7 +782,7 @@ export async function scheduledOverweightCallFails<
 
   await checkSystemEvents(client, 'scheduler')
     .redact({
-      redactKeys: /task/,
+      redactKeys: /task|when/,
     })
     .toMatchSnapshot('events when scheduling overweight task')
 

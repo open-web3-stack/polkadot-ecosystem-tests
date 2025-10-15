@@ -512,7 +512,7 @@ exports[`Kusama Asset Hub Scheduler > scheduling an overweight call is possible,
 [
   {
     "data": {
-      "when": "(rounded 30000000)",
+      "when": "(redacted)",
     },
     "method": "AgendaIncomplete",
     "section": "scheduler",

@@ -1,11 +1,10 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { baseBountiesE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
+import { baseBountiesE2ETests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
 
-const testConfig: TestConfig = {
+const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Bounties',
   addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
+  blockProvider: 'Local',
 }
 
 registerTestTree(baseBountiesE2ETests(polkadot, testConfig))
