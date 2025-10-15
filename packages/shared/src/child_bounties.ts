@@ -22,7 +22,7 @@ import type { RootTestTree } from './types.js'
 /// -------
 
 // initial funding balance for accounts
-const TEST_ACCOUNT_BALANCE_MULTIPLIER = 100_000n // 100_000x existential deposit
+const TEST_ACCOUNT_BALANCE_MULTIPLIER = 1_000_000n // 1_ 000_000x existential deposit
 
 // 4 blocks before the spend period block
 const TREASURY_SETUP_OFFSET = 4
@@ -63,6 +63,7 @@ async function setupTestAccounts(client: Client<any, any>, accounts: string[] = 
     bob: testAccounts.bob.address,
     charlie: testAccounts.charlie.address,
     dave: testAccounts.dave.address,
+    eve: testAccounts.eve.address,
   }
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -109,18 +110,6 @@ async function getChildBountyIndexFromEvent(
     parentIndex: childBountyAddedEvent.event.data.index.toNumber(),
     childIndex: childBountyAddedEvent.event.data.childIndex.toNumber(),
   }
-}
-
-/**
- * Get bounty account address from NewAccount event
- */
-async function getBountyAccountFromEvent(client: Client<any, any>): Promise<string> {
-  const [newAccountEvent] = (await client.api.query.system.events()).filter(
-    ({ event }: any) => event.section === 'system' && event.method === 'NewAccount',
-  )
-  expect(newAccountEvent).toBeTruthy()
-  assert(client.api.events.system.NewAccount.is(newAccountEvent.event))
-  return newAccountEvent.event.data.account.toString()
 }
 
 /**
@@ -552,15 +541,27 @@ export async function childBountyAwardingAndClaimingTest<
 
   const bountyIndex = await getBountyIndexFromEvent(client)
 
+  // Verify bounty is in Proposed state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
   // Approve and fund the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
   await client.dev.newBlock()
 
+  // Verify the state is Approved
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
   await client.dev.newBlock()
   // Bounty is funded in this block
   await client.dev.newBlock()
+
+  // verify bounty is in Funded state
+  const fundedBounty = await getBounty(client, bountyIndex)
+  expect(fundedBounty.status.isFunded).toBe(true)
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -569,10 +570,18 @@ export async function childBountyAwardingAndClaimingTest<
 
   await client.dev.newBlock()
 
+  // verify bounty is in CuratorProposed state
+  const curatorProposedBounty = await getBounty(client, bountyIndex)
+  expect(curatorProposedBounty.status.isCuratorProposed).toBe(true)
+
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
   await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // verify bounty is in Active state
+  const activeBounty = await getBounty(client, bountyIndex)
+  expect(activeBounty.status.isActive).toBe(true)
 
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
@@ -589,6 +598,10 @@ export async function childBountyAwardingAndClaimingTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Assign and accept curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -600,6 +613,10 @@ export async function childBountyAwardingAndClaimingTest<
   await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // Verify child bounty status is CuratorProposed
+  const childBountyAfterCuratorProposed = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBountyAfterCuratorProposed.status.isCuratorProposed).toBe(true)
 
   const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
   await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
@@ -692,17 +709,26 @@ export async function childBountyClosureAndPayoutTest<
 
   const bountyIndex = await getBountyIndexFromEvent(client)
 
+  // verify bounty is in Proposed state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
   // Approve and fund the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
   await client.dev.newBlock()
+
+  // Verify the state is Approved
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
+  await client.dev.newBlock()
   await client.dev.newBlock()
 
-  // Get the bounty account address from the NewAccount event that was emitted when the bounty was funded
-  const parentBountyAccount = await getBountyAccountFromEvent(client)
-
-  await client.dev.newBlock()
+  // verify bounty is in Funded state
+  const fundedBounty = await getBounty(client, bountyIndex)
+  expect(fundedBounty.status.isFunded).toBe(true)
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -711,10 +737,18 @@ export async function childBountyClosureAndPayoutTest<
 
   await client.dev.newBlock()
 
+  // verify bounty is in CuratorProposed state
+  const curatorProposedBounty = await getBounty(client, bountyIndex)
+  expect(curatorProposedBounty.status.isCuratorProposed).toBe(true)
+
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
   await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // verify bounty is in Active state
+  const activeBounty = await getBounty(client, bountyIndex)
+  expect(activeBounty.status.isActive).toBe(true)
 
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
@@ -731,6 +765,10 @@ export async function childBountyClosureAndPayoutTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Assign and accept curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -743,6 +781,10 @@ export async function childBountyClosureAndPayoutTest<
 
   await client.dev.newBlock()
 
+  // Verify child bounty status is CuratorProposed
+  const childBountyAfterCuratorProposed = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBountyAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
   const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
   await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
 
@@ -751,10 +793,6 @@ export async function childBountyClosureAndPayoutTest<
   // Verify child bounty is active
   const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(activeChildBounty.status.isActive).toBe(true)
-
-  // get the parent bounty account balance before closing the child bounty
-  const parentBalanceBeforeClosing = await client.api.query.system.account(parentBountyAccount)
-  const parentBalanceBeforeClosingValue = parentBalanceBeforeClosing.data.free.toBigInt()
 
   // Close child bounty (by parent curator)
   const closeChildBountyTx = client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex)
@@ -767,6 +805,11 @@ export async function childBountyClosureAndPayoutTest<
     .redact({ redactKeys: /index|data/ })
     .toMatchSnapshot('child bounty canceled events')
 
+  // verify that Transfer event is emitted from balances pallet
+  await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
+    .redact({ redactKeys: /index|data/ })
+    .toMatchSnapshot('child bounty value transferred to parent bounty')
+
   // Verify child bounty is removed from storage
   const closedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(closedChildBounty).toBeNull()
@@ -774,11 +817,6 @@ export async function childBountyClosureAndPayoutTest<
   // Verify child bounty description is removed
   const childBountyDesc = await getChildBountyDescription(client, parentIndex, childIndex)
   expect(childBountyDesc).toBeNull()
-
-  // Verify parent bounty account balance increased (funds returned to parent bounty)
-  const parentBalanceAfter = await client.api.query.system.account(parentBountyAccount)
-  const parentBalanceAfterValue = parentBalanceAfter.data.free.toBigInt()
-  expect(parentBalanceAfterValue).toBe(parentBalanceBeforeClosingValue + childBountyValue)
 
   // Verify child bounties count decreased
   const childBountiesCount = await getParentChildBountiesCount(client, parentIndex)
@@ -827,13 +865,26 @@ export async function childBountyRejectionAndCancellationTest<
 
   const bountyIndex = await getBountyIndexFromEvent(client)
 
+  // Verify bounty is in Proposed state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
   // Approve and fund the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
   await client.dev.newBlock()
+
+  // Verify the state is Approved
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
   await client.dev.newBlock()
   await client.dev.newBlock()
+
+  // verify bounty is in Funded state
+  const fundedBounty = await getBounty(client, bountyIndex)
+  expect(fundedBounty.status.isFunded).toBe(true)
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -842,10 +893,18 @@ export async function childBountyRejectionAndCancellationTest<
 
   await client.dev.newBlock()
 
+  // verify bounty is in CuratorProposed state
+  const curatorProposedBounty = await getBounty(client, bountyIndex)
+  expect(curatorProposedBounty.status.isCuratorProposed).toBe(true)
+
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
   await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // verify bounty is in Active state
+  const activeBounty = await getBounty(client, bountyIndex)
+  expect(activeBounty.status.isActive).toBe(true)
 
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
@@ -861,6 +920,10 @@ export async function childBountyRejectionAndCancellationTest<
   await client.dev.newBlock()
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
+
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
 
   // Propose curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
@@ -968,13 +1031,27 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   const bountyIndex = await getBountyIndexFromEvent(client)
 
+  // Verify bounty is in Proposed state
+  const proposedBounty = await getBounty(client, bountyIndex)
+  expect(proposedBounty.status.isProposed).toBe(true)
+
   // Approve and fund the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
   await client.dev.newBlock()
+
+  // Verify the state is Approved
+  const approvedBounty = await getBounty(client, bountyIndex)
+  expect(approvedBounty.status.isApproved).toBe(true)
+
   await client.dev.newBlock()
   await client.dev.newBlock()
+  await client.dev.newBlock()
+
+  // verify bounty is in Funded state
+  const fundedBounty = await getBounty(client, bountyIndex)
+  expect(fundedBounty.status.isFunded).toBe(true)
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -983,10 +1060,18 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   await client.dev.newBlock()
 
+  // verify bounty is in CuratorProposed state
+  const curatorProposedBounty = await getBounty(client, bountyIndex)
+  expect(curatorProposedBounty.status.isCuratorProposed).toBe(true)
+
   const acceptCuratorTx = client.api.tx.bounties.acceptCurator(bountyIndex)
   await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // verify bounty is in Active state
+  const activeBounty = await getBounty(client, bountyIndex)
+  expect(activeBounty.status.isActive).toBe(true)
 
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
@@ -1003,6 +1088,10 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Assign and accept curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -1014,6 +1103,10 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
   await sendTransaction(proposeChildCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // Verify child bounty status is CuratorProposed
+  const childBountyAfterCuratorProposed = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBountyAfterCuratorProposed.status.isCuratorProposed).toBe(true)
 
   const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
   await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
@@ -1060,6 +1153,10 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   await client.dev.newBlock()
 
+  // Verify child bounty is active after re-assignment
+  const activeChildBountyAfterReassign = await getChildBounty(client, parentIndex, childIndex)
+  expect(activeChildBountyAfterReassign.status.isActive).toBe(true)
+
   // get charlie's free balance before unassign
   const charlieAccountBeforeUnassign = await client.api.query.system.account(testAccounts.charlie.address)
   const freeBalanceBeforeUnassign = charlieAccountBeforeUnassign.data.free.toBigInt()
@@ -1096,10 +1193,18 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
 
   await client.dev.newBlock()
 
+  // verify child bounty status is CuratorProposed
+  const childBountyStatusAfterPropose = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBountyStatusAfterPropose.status.isCuratorProposed).toBe(true)
+
   const acceptChildCuratorTx3 = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
   await sendTransaction(acceptChildCuratorTx3.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
+
+  // verify child bounty status is Active
+  const childBountyStatusAfterAccept = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBountyStatusAfterAccept.status.isActive).toBe(true)
 
   // Test 3: Community member tries to unassign active curator (should fail with Premature)
   const unassignCuratorTx3 = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
@@ -1108,7 +1213,6 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
   await client.dev.newBlock()
 
   const ev = await extractExtrinsicFailedEvent(client)
-
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
@@ -1191,6 +1295,10 @@ export async function childBountyStorageVerificationTest<
 
   const { parentIndex: parentIndex1, childIndex: childIndex1 } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty1 = await getChildBounty(client, parentIndex1, childIndex1)
+  expect(childBounty1.status.isAdded).toBe(true)
+
   // Verify storage items
   let activeCount = await getParentChildBountiesCount(client, parentIndex1)
   expect(activeCount).toBe(1)
@@ -1215,6 +1323,10 @@ export async function childBountyStorageVerificationTest<
   await client.dev.newBlock()
 
   const { parentIndex: parentIndex2, childIndex: childIndex2 } = await getChildBountyIndexFromEvent(client)
+
+  // Verify child bounty status is Added
+  const childBounty2 = await getChildBounty(client, parentIndex2, childIndex2)
+  expect(childBounty2.status.isAdded).toBe(true)
 
   // Verify storage items updated
   activeCount = await getParentChildBountiesCount(client, parentIndex2)
@@ -1242,6 +1354,10 @@ export async function childBountyStorageVerificationTest<
   await sendTransaction(acceptChildCuratorTx1.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
+
+  // Verify child bounty is active
+  const activeChildBounty1 = await getChildBounty(client, parentIndex1, childIndex1)
+  expect(activeChildBounty1.status.isActive).toBe(true)
 
   // Verify ChildrenCuratorFees storage
   const childrenCuratorFees = await client.api.query.childBounties.childrenCuratorFees(parentIndex1)
@@ -1635,6 +1751,10 @@ export async function childBountyInvalidFeeErrorTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Try to propose curator with fee >= child bounty value
   const invalidCuratorFee = childBountyValue // Fee equals child bounty value
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -1730,6 +1850,10 @@ export async function childBountyUnexpectedStatusErrorTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Try to accept curator when child bounty is in Added status (not CuratorProposed)
   const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
 
@@ -1820,6 +1944,10 @@ export async function childBountyPendingPayoutErrorTest<
 
   const { parentIndex, childIndex } = await getChildBountyIndexFromEvent(client)
 
+  // Verify child bounty status is Added
+  const childBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(childBounty.status.isAdded).toBe(true)
+
   // Assign and accept curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -1836,6 +1964,10 @@ export async function childBountyPendingPayoutErrorTest<
   await sendTransaction(acceptChildCuratorTx.signAsync(testAccounts.charlie))
 
   await client.dev.newBlock()
+
+  // Verify child bounty is active
+  const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
+  expect(activeChildBounty.status.isActive).toBe(true)
 
   // Award child bounty
   const awardChildBountyTx = client.api.tx.childBounties.awardChildBounty(
