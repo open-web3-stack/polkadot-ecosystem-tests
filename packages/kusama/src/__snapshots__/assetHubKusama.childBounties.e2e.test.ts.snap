@@ -1,0 +1,408 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Awarded",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty claimed events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Claimed",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty value transferred to parent bounty 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": "(redacted)",
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > rejection by child curator and closure by parent curator of a child bounty > child bounty canceled events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Canceled",
+    "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > unassign curator different cases > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;

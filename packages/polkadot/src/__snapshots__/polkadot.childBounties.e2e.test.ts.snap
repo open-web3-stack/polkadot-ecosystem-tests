@@ -432,6 +432,16 @@ exports[`Polkadot Child Bounties > All child bounties success tests > closure an
 ]
 `;
 
+exports[`Polkadot Child Bounties > All child bounties success tests > closure and payout of a child bounty > child bounty value transferred to parent bounty 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Transfer",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Child Bounties > All child bounties success tests > rejection by child curator and closure by parent curator of a child bounty > child bounty canceled events 1`] = `
 [
   {
