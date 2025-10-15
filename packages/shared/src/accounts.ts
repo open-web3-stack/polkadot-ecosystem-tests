@@ -2009,8 +2009,6 @@ async function transferAllWithReserveTest<
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
-  //await client.pause()
-
   // Snapshot events
   await checkEvents(
     transferEvents,
