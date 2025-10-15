@@ -1,4 +1,4 @@
-import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import {
@@ -1303,33 +1303,12 @@ async function proxyCallFilteringSingleTestRunner<
     }
 
     // Snapshot the `Proxy.ProxyExecuted`event for the proxied call
-    // If the pallet being tested is `balances`, its events should not be included in the snapshot
-    // to avoid including block-specific fee events, which are unstable inbetween runs.
-    let eventChecker: Checker
-    if (proxyAction.pallet !== 'balances') {
-      eventChecker = checkEvents(result, 'proxy', proxyAction.pallet)
-    } else {
-      eventChecker = checkEvents(result, 'proxy')
-    }
-
-    let redactKeys: RegExp | undefined
-    switch (proxyAction.pallet) {
-      case 'referenda':
-      case 'bounties':
-        redactKeys = /^index$/
-        break
-      case 'system':
-        redactKeys = /^account$/ // system.NewAccount for the pure proxy address is based on current block
-        break
-    }
-
-    await eventChecker
-      .redact({
-        redactKeys,
-      })
-      .toMatchSnapshot(
-        `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
-      )
+    // No other other event need be snapshot: it is not worthwhile, as in most cases, the operations chosen
+    // as representative for a given pallet won't succeed; the extrinsic's signature event won't be emitted,
+    // and will quite often have unstable datum that can cause false positives.
+    await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+      `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+    )
   }
 }
 
