@@ -22,7 +22,17 @@ exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty cannot be
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty failure tests > Bounty cannot be claimed in active state > bounty proposed events 1`] = `
 [
@@ -126,7 +136,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by Treasurer > bounty proposed events 1`] = `
 [
@@ -203,7 +223,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in Active state by curator themselves > bounty proposed events 1`] = `
 [
@@ -279,7 +309,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in CuratorProposed state > curator unassigned curator proposed events 1`] = `
 [
@@ -328,7 +368,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unassign tests > Unassign curator in PendingPayout state > bounty proposed events 1`] = `
 [
@@ -428,7 +478,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty canceled event 1`] = `
 [
@@ -480,7 +540,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty canceled events 1`] = `
 [
@@ -507,7 +577,7 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
   },
   {
     "data": {
-      "amount": "(rounded 7400000)",
+      "amount": "(rounded 6300000)",
       "from": "(redacted)",
       "to": "(redacted)",
     },
@@ -605,7 +675,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty awarding 
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty awarding and claiming > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty awarding and claiming > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty awarding and claiming > bounty claimed events 1`] = `
 [
@@ -671,7 +751,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty extension
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty extension > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty extension > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty extension > bounty extended events 1`] = `
 [
@@ -735,7 +825,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding t
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for Approved Bounties > bounty proposed events 1`] = `
 [
@@ -761,7 +861,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding t
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty funding tests > Bounty funding for ApprovedWithCurator Bounties > bounty proposed events 1`] = `
 [
@@ -812,7 +922,17 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Curator assignme
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Curator assignment and acceptance > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All bounty success tests > Curator assignment and acceptance > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Curator assignment and acceptance > bounty proposed events 1`] = `
 [

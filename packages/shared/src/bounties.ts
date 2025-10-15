@@ -5,6 +5,7 @@ import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
 
+import { match } from 'ts-pattern'
 import {
   checkEvents,
   checkSystemEvents,
@@ -110,7 +111,10 @@ async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfi
   const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = schedulerOffset(testConfig)
 
-  const newLastSpendPeriodBlockNumber = currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset
+  const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
+    .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
+    .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
+    .exhaustive()
   await client.dev.setStorage({
     Treasury: {
       lastSpendPeriod: newLastSpendPeriodBlockNumber,
@@ -1109,6 +1113,8 @@ export async function bountyClosureFundedTest<
   )
 
   await client.dev.newBlock()
+
+  // ------>
 
   // verify the BountyApproved event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
