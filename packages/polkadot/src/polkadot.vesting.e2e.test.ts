@@ -1,5 +1,5 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { type RelayTestConfig, registerTestTree, relayVestingE2ETests } from '@e2e-test/shared'
+import { fullVestingE2ETests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
 
 const testConfig: RelayTestConfig = {
   testSuiteName: 'Polkadot Vesting',
@@ -7,4 +7,4 @@ const testConfig: RelayTestConfig = {
   blockProvider: 'Local',
 }
 
-registerTestTree(relayVestingE2ETests(polkadot, testConfig))
+registerTestTree(fullVestingE2ETests(polkadot, testConfig))

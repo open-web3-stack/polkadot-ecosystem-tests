@@ -21,6 +21,7 @@ const testCfg: TestConfig = {
 const lockActions = [manualLockAction()]
 
 const accountsCfg = createAccountsConfig({
+  expectation: 'success',
   relayChain: polkadot,
   actions: {
     reserveActions: createDefaultReserveActions(),
