@@ -1045,9 +1045,7 @@ export async function childBountyUnassignCuratorEdgeCasesTest<
   const approvedBounty = await getBounty(client, bountyIndex)
   expect(approvedBounty.status.isApproved).toBe(true)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // verify bounty is in Funded state
   const fundedBounty = await getBounty(client, bountyIndex)
@@ -1264,9 +1262,7 @@ export async function childBountyStorageVerificationTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -1555,9 +1551,7 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -1636,9 +1630,7 @@ export async function childBountyInvalidValueErrorTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -1720,9 +1712,7 @@ export async function childBountyInvalidFeeErrorTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -1819,9 +1809,7 @@ export async function childBountyUnexpectedStatusErrorTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
@@ -1913,9 +1901,7 @@ export async function childBountyPendingPayoutErrorTest<
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
   await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
 
-  await client.dev.newBlock()
-  await client.dev.newBlock()
-  await client.dev.newBlock()
+  await client.dev.newBlock({ count: 3 })
 
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
