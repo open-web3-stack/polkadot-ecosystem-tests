@@ -21,7 +21,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
-import { check, checkEvents, getBlockNumber, schedulerOffset, type TestConfig } from './helpers/index.js'
+import { blockProviderOffset, check, checkEvents, getBlockNumber, type TestConfig } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1822,7 +1822,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
