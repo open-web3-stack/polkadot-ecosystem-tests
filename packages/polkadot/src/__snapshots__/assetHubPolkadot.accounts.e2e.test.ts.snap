@@ -154,69 +154,23 @@ exports[`Polkadot Asset Hub Accounts > \`transfer_all\` > transfer all with keep
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 10,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 900000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 10,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, deposit=referendum submission"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, deposit=referendum submission"`;
+exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
 
