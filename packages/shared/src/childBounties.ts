@@ -223,6 +223,8 @@ export async function childBountyCreationTest<
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for child bounty creation'
 
+  // ===== SECTION 1: Create parent bounty and go through full lifecycle =====
+
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
   const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
@@ -301,6 +303,8 @@ export async function childBountyCreationTest<
   const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
+  // ===== SECTION 2: Bob (as parent curator) creates a child bounty =====
+
   const parentChildBountiesCountBefore = await getParentChildBountiesCount(client, bountyIndex)
   const parentTotalChildBountiesCountBefore = await getParentTotalChildBountiesCount(client, bountyIndex)
 
@@ -316,6 +320,8 @@ export async function childBountyCreationTest<
   await sendTransaction(addChildBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 3: Verify proper events and storage =====
 
   // Check for ChildBountyAdded event
   await checkSystemEvents(client, { section: 'childBounties', method: 'Added' })
@@ -373,6 +379,8 @@ export async function childBountyAssigningAndAcceptingTest<
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
   const description = 'Test bounty for assigning and accepting a child bounty curator'
 
+  // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
+
   // propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
   const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
@@ -451,6 +459,8 @@ export async function childBountyAssigningAndAcceptingTest<
   const bountyStatusAfterCuratorAccepted = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
+  // ===== SECTION 2: Bob creates a child bounty from the parent bounty =====
+
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
   const childBountyDescription = 'Test child bounty for curator assignment'
@@ -477,6 +487,8 @@ export async function childBountyAssigningAndAcceptingTest<
   const childBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(childBounty.status.isAdded).toBe(true)
 
+  // ===== SECTION 3: Bob proposes Charlie as curator for the child bounty =====
+
   // Propose curator for child bounty
   const childCuratorFee = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx = client.api.tx.childBounties.proposeCurator(
@@ -492,6 +504,8 @@ export async function childBountyAssigningAndAcceptingTest<
   // Verify child bounty status is CuratorProposed
   const childBountyAfterCuratorProposed = await getChildBounty(client, parentIndex, childIndex)
   expect(childBountyAfterCuratorProposed.status.isCuratorProposed).toBe(true)
+
+  // ===== SECTION 4: Charlie accepts the curator role, transitioning child bounty to Active status =====
 
   // Accept child bounty curator
   const acceptChildCuratorTx = client.api.tx.childBounties.acceptCurator(parentIndex, childIndex)
@@ -537,6 +551,8 @@ export async function childBountyAwardingAndClaimingTest<
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'awarding and claiming a child bounty'
+
+  // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
 
   // Create and activate parent bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
@@ -588,6 +604,8 @@ export async function childBountyAwardingAndClaimingTest<
   const activeBounty = await getBounty(client, bountyIndex)
   expect(activeBounty.status.isActive).toBe(true)
 
+  // ===== SECTION 2: Bob creates child bounty and assigns Charlie as child curator =====
+
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
   const childBountyDescription = 'Test child bounty for awarding'
@@ -632,6 +650,8 @@ export async function childBountyAwardingAndClaimingTest<
   const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(activeChildBounty.status.isActive).toBe(true)
 
+  // ===== SECTION 3: Charlie awards the child bounty to Dave (beneficiary) =====
+
   // Award child bounty to beneficiary (Dave)
   const awardChildBountyTx = client.api.tx.childBounties.awardChildBounty(
     parentIndex,
@@ -651,6 +671,8 @@ export async function childBountyAwardingAndClaimingTest<
   const awardedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(awardedChildBounty.status.isPendingPayout).toBe(true)
 
+  // ===== SECTION 4: Wait for payout delay period and Dave claims the bounty =====
+
   // Get payout delay from constants
   const payoutDelay = await client.api.consts.bounties.bountyDepositPayoutDelay
 
@@ -662,6 +684,8 @@ export async function childBountyAwardingAndClaimingTest<
   await sendTransaction(claimChildBountyTx.signAsync(testAccounts.dave))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 5: Verify proper events and storage cleanup =====
 
   // Check for ChildBountyClaimed event
   await checkSystemEvents(client, { section: 'childBounties', method: 'Claimed' })
@@ -705,6 +729,8 @@ export async function childBountyClosureAndPayoutTest<
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for child bounty closure'
+
+  // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
 
   // Create and activate parent bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
@@ -755,6 +781,8 @@ export async function childBountyClosureAndPayoutTest<
   const activeBounty = await getBounty(client, bountyIndex)
   expect(activeBounty.status.isActive).toBe(true)
 
+  // ===== SECTION 2: Bob creates child bounty and assigns Charlie as child curator =====
+
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
   const childBountyDescription = 'Test child bounty for closure'
@@ -799,11 +827,15 @@ export async function childBountyClosureAndPayoutTest<
   const activeChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(activeChildBounty.status.isActive).toBe(true)
 
+  // ===== SECTION 3: Bob closes the child bounty before it's awarded =====
+
   // Close child bounty (by parent curator)
   const closeChildBountyTx = client.api.tx.childBounties.closeChildBounty(parentIndex, childIndex)
   await sendTransaction(closeChildBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 4: Verify funds are returned to parent bounty account and storage is cleaned up =====
 
   // Check for ChildBountyCanceled event
   await checkSystemEvents(client, { section: 'childBounties', method: 'Canceled' })
@@ -862,6 +894,8 @@ export async function childBountyRejectionAndCancellationTest<
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for child bounty rejection'
 
+  // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
+
   // Create and activate parent bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
   await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
@@ -911,6 +945,8 @@ export async function childBountyRejectionAndCancellationTest<
   const activeBounty = await getBounty(client, bountyIndex)
   expect(activeBounty.status.isActive).toBe(true)
 
+  // ===== SECTION 2: Bob creates child bounty and proposes Charlie as curator =====
+
   // Create child bounty
   const childBountyValue = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
   const childBountyDescription = 'Test child bounty for rejection'
@@ -946,6 +982,8 @@ export async function childBountyRejectionAndCancellationTest<
   const proposedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(proposedChildBounty.status.isCuratorProposed).toBe(true)
 
+  // ===== SECTION 3: Charlie rejects the assignment (unassigns himself) =====
+
   // Test 1: Curator rejects the assignment (unassigns themselves)
   const unassignCuratorTx = client.api.tx.childBounties.unassignCurator(parentIndex, childIndex)
   await sendTransaction(unassignCuratorTx.signAsync(testAccounts.charlie))
@@ -955,6 +993,8 @@ export async function childBountyRejectionAndCancellationTest<
   // Verify child bounty status is back to Added
   const rejectedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(rejectedChildBounty.status.isAdded).toBe(true)
+
+  // ===== SECTION 4: Bob proposes Charlie again, then cancels the child bounty =====
 
   // Test 2: Propose curator again and then cancel the child bounty
   const proposeChildCuratorTx2 = client.api.tx.childBounties.proposeCurator(
@@ -976,6 +1016,8 @@ export async function childBountyRejectionAndCancellationTest<
   await sendTransaction(closeChildBountyTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 5: Verify proper events and storage cleanup in both cases =====
 
   // Check for ChildBountyCanceled event
   await checkSystemEvents(client, { section: 'childBounties', method: 'Canceled' })
@@ -1143,7 +1185,7 @@ export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
 
   await client.dev.newBlock()
 
-  // Create and activate parent bounty with Bob as curator
+  // 1: Create and activate parent bounty with Bob as curator
   const bountyIndex = await createActiveParentBountyWithCurator(
     client,
     testConfig,
@@ -1151,7 +1193,7 @@ export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
     testAccounts.bob,
   )
 
-  // Create and activate child bounty with Charlie as curator
+  // 2: Create and activate child bounty with Charlie as curator
   const { parentIndex, childIndex } = await createActiveChildBountyWithCurator(
     client,
     bountyIndex,
@@ -1339,6 +1381,8 @@ export async function childBountyStorageVerificationTest<
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for storage verification'
 
+  // ===== SECTION 1: Create parent bounty and make it active =====
+
   // Create and activate parent bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
   await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
@@ -1364,6 +1408,8 @@ export async function childBountyStorageVerificationTest<
   await sendTransaction(acceptCuratorTx.signAsync(testAccounts.bob))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 2: Create multiple child bounties and verify storage updates =====
 
   // Create first child bounty
   const childBountyValue1 = bountyValueMinimum.toBigInt() * CHILD_BOUNTY_MULTIPLIER
@@ -1423,6 +1469,8 @@ export async function childBountyStorageVerificationTest<
   const childBountyDesc2 = await getChildBountyDescription(client, parentIndex2, childIndex2)
   expect(childBountyDesc2).toBe(childBountyDescription2)
 
+  // ===== SECTION 3: Complete one child bounty (award and claim) and verify storage cleanup =====
+
   // Assign and accept curator for first child bounty
   const childCuratorFee1 = bountyValueMinimum.toBigInt() * CHILD_CURATOR_FEE_MULTIPLIER
   const proposeChildCuratorTx1 = client.api.tx.childBounties.proposeCurator(
@@ -1466,6 +1514,8 @@ export async function childBountyStorageVerificationTest<
   await sendTransaction(claimChildBountyTx1.signAsync(testAccounts.dave))
 
   await client.dev.newBlock()
+
+  // ===== SECTION 4: Verify counters and remaining storage items are correct =====
 
   // Verify storage cleanup after claim
   const claimedChildBounty = await getChildBounty(client, parentIndex1, childIndex1)
