@@ -190,7 +190,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
 [
   {
     "data": {
-      "amount": 500000000000,
+      "amount": 2000000000000,
       "who": "(redacted)",
     },
     "method": "Slashed",
@@ -422,7 +422,7 @@ exports[`Polkadot Bounties > All bounty success tests > All curator unassign tes
 [
   {
     "data": {
-      "amount": 500000000000,
+      "amount": 2000000000000,
       "who": "(redacted)",
     },
     "method": "Slashed",
@@ -447,7 +447,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
 [
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "from": "(redacted)",
       "to": "(redacted)",
     },
@@ -559,7 +559,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty Closure Tests > B
 [
   {
     "data": {
-      "amount": 10000000000000,
+      "amount": 100000000000000,
       "from": "(redacted)",
       "to": "(redacted)",
     },
@@ -675,7 +675,7 @@ exports[`Polkadot Bounties > All bounty success tests > Bounty awarding and clai
     "data": {
       "beneficiary": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "index": "(redacted)",
-      "payout": 9000000000000,
+      "payout": 90000000000000,
     },
     "method": "BountyClaimed",
     "section": "bounties",

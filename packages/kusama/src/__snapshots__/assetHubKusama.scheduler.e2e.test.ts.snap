@@ -1,0 +1,612 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Scheduler > cancel named scheduled task with wrong origin > events when cancelling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > cancel scheduled task with wrong origin > events when cancelling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 50000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Canceled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > execution of scheduled preimage lookup call works > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > priority-based execution of weighted tasks works correctly > events for priority weighted tasks execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "when": "(redacted)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > schedule named task with wrong origin > events when scheduling named task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 60000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > schedule task with wrong origin > events when scheduling task with insufficient origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 60000)",
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a call using a preimage that gets removed > events for failing scheduled lookup-task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "CallUnavailable",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a call using a preimage that gets removed > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named call is possible, and the call itself succeeds > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named periodic is possible > events for named periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named periodic is possible > events for named periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named periodic is possible > events for named periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a named task after a delay is possible > events when scheduling task with delay 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 1 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 2 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a periodic task is possible > events for  periodic task execution 3 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a task after a delay is possible > events for scheduled task execution 1`] = `
+[
+  {
+    "data": {
+      "new_": "(redacted)",
+      "old": "(redacted)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling a task after a delay is possible > events when scheduling task with delay 1`] = `
+[
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > scheduling an overweight call is possible, but the call itself fails > events when scheduling overweight task 1`] = `
+[
+  {
+    "data": {
+      "when": "(redacted)",
+    },
+    "method": "AgendaIncomplete",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > setting and canceling retry configuration for named scheduled tasks > events for failed named task execution 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > setting and canceling retry configuration for named scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x01000000",
+            "index": 7,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for failed anonymous task execution 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "index": 0,
+      "when": "(redacted)",
+    },
+    "method": "Scheduled",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Scheduler > setting and canceling retry configuration for unnamed scheduled tasks > events for retry config cancellation 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "task": "(redacted)",
+    },
+    "method": "RetryCancelled",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;

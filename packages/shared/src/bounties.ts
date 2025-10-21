@@ -5,7 +5,15 @@ import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import { assert, expect } from 'vitest'
 
-import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { match } from 'ts-pattern'
+import {
+  blockProviderOffset,
+  checkEvents,
+  checkSystemEvents,
+  getBlockNumber,
+  scheduleInlineCallWithOrigin,
+  type TestConfig,
+} from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
 /// -------
@@ -13,7 +21,7 @@ import type { RootTestTree } from './types.js'
 /// -------
 
 // initial funding balance for accounts
-const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
+const TEST_ACCOUNT_BALANCE_MULTIPLIER = 100_000n // 100_000x existential deposit
 
 const NON_EXISTENT_BOUNTY_INDEX = 999 // randombounty index that doesn't exist
 
@@ -98,10 +106,15 @@ async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number
  * Sets the treasury's last spend period block number to enable bounty funding
  * @param client - The chain client
  */
-async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
-  const spendPeriod = await client.api.consts.treasury.spendPeriod
-  const currentBlock = await client.api.rpc.chain.getHeader()
-  const newLastSpendPeriodBlockNumber = currentBlock.number.toNumber() - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET
+async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfig: TestConfig) {
+  const spendPeriod = client.api.consts.treasury.spendPeriod
+  const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
+
+  const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
+    .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
+    .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
+    .exhaustive()
   await client.dev.setStorage({
     Treasury: {
       lastSpendPeriod: newLastSpendPeriodBlockNumber,
@@ -155,8 +168,8 @@ export async function bountyCreationTest<
 
   const initialBountyCount = await getBountyCount(client)
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for development work'
 
   // Propose a bounty
@@ -206,13 +219,13 @@ export async function bountyCreationTest<
 export async function bountyApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for approval'
 
   // Propose a bounty
@@ -228,9 +241,14 @@ export async function bountyApprovalTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -268,14 +286,14 @@ export async function bountyApprovalTest<
 export async function bountyApprovalWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 EDs
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // 100 EDs (10% fee)
+  const minimumBounty = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = minimumBounty.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = minimumBounty.toBigInt() * CURATOR_FEE_MULTIPLIER // 10% fee
   const description = 'Test bounty for approval with curator'
 
   // Propose a bounty
@@ -295,9 +313,14 @@ export async function bountyApprovalWithCuratorTest<
     testAccounts.bob.address,
     curatorFee,
   )
-  await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyWithCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -339,17 +362,17 @@ export async function bountyApprovalWithCuratorTest<
 export async function bountyFundingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -370,9 +393,14 @@ export async function bountyFundingTest<
 
   // approve the bounty with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -421,18 +449,18 @@ export async function bountyFundingTest<
 export async function bountyFundingForApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // 100 tokens (10% fee)
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER // 10% fee
   const description = 'Test bounty for funding with curator'
 
   // propose a bounty
@@ -457,9 +485,14 @@ export async function bountyFundingForApprovedWithCuratorTest<
     testAccounts.bob.address,
     curatorFee,
   )
-  await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyWithCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -516,17 +549,17 @@ export async function bountyFundingForApprovedWithCuratorTest<
 export async function curatorAssignmentAndAcceptanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -547,9 +580,14 @@ export async function curatorAssignmentAndAcceptanceTest<
 
   // approve the bounty with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -576,12 +614,17 @@ export async function curatorAssignmentAndAcceptanceTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -631,17 +674,17 @@ export async function curatorAssignmentAndAcceptanceTest<
 export async function bountyExtensionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -662,9 +705,14 @@ export async function bountyExtensionTest<
 
   // approve the bounty with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -691,13 +739,18 @@ export async function bountyExtensionTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -779,17 +832,17 @@ export async function bountyExtensionTest<
 export async function bountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -810,9 +863,14 @@ export async function bountyAwardingAndClaimingTest<
 
   // approve the bounty with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -839,13 +897,18 @@ export async function bountyAwardingAndClaimingTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -940,13 +1003,13 @@ export async function bountyAwardingAndClaimingTest<
 export async function bountyClosureProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in proposed state'
 
   // Propose a bounty
@@ -962,9 +1025,14 @@ export async function bountyClosureProposedTest<
 
   // Close the bounty using Treasurer origin
   const closeBountyTx = client.api.tx.bounties.closeBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, closeBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    closeBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1013,17 +1081,17 @@ export async function bountyClosureProposedTest<
 export async function bountyClosureFundedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in funded state'
 
   // Propose a bounty
@@ -1035,11 +1103,18 @@ export async function bountyClosureFundedTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
+
+  // ------>
 
   // verify the BountyApproved event
   await checkSystemEvents(client, { section: 'bounties', method: 'BountyApproved' })
@@ -1067,9 +1142,14 @@ export async function bountyClosureFundedTest<
 
   // Close the bounty
   const closeBountyTx = client.api.tx.bounties.closeBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, closeBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    closeBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1119,18 +1199,18 @@ export async function bountyClosureFundedTest<
 export async function bountyClosureActiveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for closure in active state'
 
   // Propose a bounty
@@ -1142,9 +1222,14 @@ export async function bountyClosureActiveTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1165,7 +1250,12 @@ export async function bountyClosureActiveTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1195,9 +1285,14 @@ export async function bountyClosureActiveTest<
 
   // Close the bounty
   const closeBountyTx = client.api.tx.bounties.closeBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, closeBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    closeBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1240,14 +1335,14 @@ export async function bountyClosureActiveTest<
 export async function unassignCuratorApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator in approved with curator state'
 
   // Propose a bounty
@@ -1263,7 +1358,12 @@ export async function unassignCuratorApprovedWithCuratorTest<
     testAccounts.bob.address,
     curatorFee,
   )
-  await scheduleInlineCallWithOrigin(client, approveBountyWithCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyWithCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1273,9 +1373,14 @@ export async function unassignCuratorApprovedWithCuratorTest<
 
   // Unassign curator using Treasurer
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, unassignCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    unassignCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1308,18 +1413,18 @@ export async function unassignCuratorApprovedWithCuratorTest<
 export async function unassignCuratorCuratorProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator in curator proposed state'
 
   // Propose a bounty
@@ -1335,9 +1440,14 @@ export async function unassignCuratorCuratorProposedTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1365,7 +1475,12 @@ export async function unassignCuratorCuratorProposedTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1375,9 +1490,14 @@ export async function unassignCuratorCuratorProposedTest<
 
   // Unassign curator using Treasurer
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, unassignCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    unassignCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1411,23 +1531,23 @@ export async function unassignCuratorCuratorProposedTest<
 export async function unassignCuratorActiveByCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator active by curator'
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
@@ -1437,15 +1557,20 @@ export async function unassignCuratorActiveByCuratorTest<
   expect(bountyStatus.status.isProposed).toBe(true)
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1474,7 +1599,12 @@ export async function unassignCuratorActiveByCuratorTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1546,28 +1676,28 @@ export async function unassignCuratorActiveByCuratorTest<
 export async function unassignCuratorActiveByTreasurerTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator active by treasurer'
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
@@ -1578,9 +1708,14 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1609,7 +1744,12 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1643,9 +1783,14 @@ export async function unassignCuratorActiveByTreasurerTest<
 
   // Unassign curator by Treasurer
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, unassignCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    unassignCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1693,28 +1838,28 @@ export async function unassignCuratorActiveByTreasurerTest<
 export async function unassignCuratorPendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for unassign curator pending payout'
 
   // Propose a bounty
   const proposeBountyTx = client.api.tx.bounties.proposeBounty(bountyValue, description)
-  await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
+  const bountyProposedEvents = await sendTransaction(proposeBountyTx.signAsync(testAccounts.alice))
 
   await client.dev.newBlock()
 
   // verify the BountyProposed event
-  await checkSystemEvents(client, { section: 'bounties', method: 'BountyProposed' })
+  await checkEvents(bountyProposedEvents, { section: 'bounties', method: 'BountyProposed' })
     .redact({ redactKeys: /index/ })
     .toMatchSnapshot('bounty proposed events')
 
@@ -1726,9 +1871,14 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1757,7 +1907,12 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1806,9 +1961,14 @@ export async function unassignCuratorPendingPayoutTest<
 
   // Unassign curator by Treasurer
   const unassignCuratorTx = client.api.tx.bounties.unassignCurator(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, unassignCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    unassignCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -1851,7 +2011,7 @@ export async function unassignCuratorPendingPayoutTest<
 export function bountyClosureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty Closure Tests',
@@ -1859,17 +2019,17 @@ export function bountyClosureTests<
       {
         kind: 'test',
         label: 'Bounty closure in proposed state',
-        testFn: async () => await bountyClosureProposedTest(chain),
+        testFn: async () => await bountyClosureProposedTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty closure in funded state',
-        testFn: async () => await bountyClosureFundedTest(chain),
+        testFn: async () => await bountyClosureFundedTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty closure in active state',
-        testFn: async () => await bountyClosureActiveTest(chain),
+        testFn: async () => await bountyClosureActiveTest(chain, testConfig),
       },
     ],
   } as RootTestTree
@@ -1883,7 +2043,7 @@ export function bountyClosureTests<
 export function allCuratorUnassignTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'All curator unassign tests',
@@ -1891,27 +2051,27 @@ export function allCuratorUnassignTests<
       {
         kind: 'test',
         label: 'Unassign curator in ApprovedWithCurator state',
-        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
+        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unassign curator in CuratorProposed state',
-        testFn: async () => await unassignCuratorCuratorProposedTest(chain),
+        testFn: async () => await unassignCuratorCuratorProposedTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by curator themselves',
-        testFn: async () => await unassignCuratorActiveByCuratorTest(chain),
+        testFn: async () => await unassignCuratorActiveByCuratorTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by Treasurer',
-        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain),
+        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unassign curator in PendingPayout state',
-        testFn: async () => await unassignCuratorPendingPayoutTest(chain),
+        testFn: async () => await unassignCuratorPendingPayoutTest(chain, testConfig),
       },
     ],
   } as RootTestTree
@@ -1926,7 +2086,7 @@ export function allCuratorUnassignTests<
 export function bountyApprovalTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty approval tests',
@@ -1934,12 +2094,12 @@ export function bountyApprovalTests<
       {
         kind: 'test',
         label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(chain),
+        testFn: async () => await bountyApprovalTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(chain),
+        testFn: async () => await bountyApprovalWithCuratorTest(chain, testConfig),
       },
     ],
   } as RootTestTree
@@ -1955,7 +2115,7 @@ export function bountyApprovalTests<
 export function bountyFundingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty funding tests',
@@ -1963,12 +2123,12 @@ export function bountyFundingTests<
       {
         kind: 'test',
         label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(chain),
+        testFn: async () => await bountyFundingTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain, testConfig),
       },
     ],
   } as RootTestTree
@@ -1984,7 +2144,7 @@ export function bountyFundingTests<
 export function allBountySuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty success tests',
@@ -1997,22 +2157,22 @@ export function allBountySuccessTests<
       {
         kind: 'test',
         label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty extension',
-        testFn: async () => await bountyExtensionTest(chain),
+        testFn: async () => await bountyExtensionTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty awarding and claiming',
-        testFn: async () => await bountyAwardingAndClaimingTest(chain),
+        testFn: async () => await bountyAwardingAndClaimingTest(chain, testConfig),
       },
-      bountyFundingTests(chain),
-      bountyApprovalTests(chain),
-      bountyClosureTests(chain),
-      allCuratorUnassignTests(chain),
+      bountyFundingTests(chain, testConfig),
+      bountyApprovalTests(chain, testConfig),
+      bountyClosureTests(chain, testConfig),
+      allCuratorUnassignTests(chain, testConfig),
     ],
   } as RootTestTree
 }
@@ -2033,13 +2193,13 @@ export function allBountySuccessTests<
 export async function bountyClosureApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for closure in approved state'
 
   // Propose a bounty
@@ -2051,9 +2211,14 @@ export async function bountyClosureApprovedTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2063,9 +2228,14 @@ export async function bountyClosureApprovedTest<
 
   // Try to close the bounty - should fail
   const closeBountyTx = client.api.tx.bounties.closeBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, closeBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    closeBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2120,18 +2290,18 @@ export async function bountyClosureApprovedTest<
 export async function bountyClosurePendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for closure in pending payout state'
 
   // Propose a bounty
@@ -2143,9 +2313,14 @@ export async function bountyClosurePendingPayoutTest<
   // Approve the bounty
   const bountyIndex = await getBountyIndexFromEvent(client)
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2155,7 +2330,12 @@ export async function bountyClosurePendingPayoutTest<
 
   // Propose a curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), { Origins: 'Treasurer' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2177,9 +2357,14 @@ export async function bountyClosurePendingPayoutTest<
 
   // Try to close the bounty - should fail
   const closeBountyTx = client.api.tx.bounties.closeBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, closeBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    closeBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2230,18 +2415,18 @@ export async function bountyClosurePendingPayoutTest<
 async function unassignCuratorActiveStateByPublicPrematureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const description = 'Test bounty for premature unassign curator by public'
 
   // Propose a bounty
@@ -2253,9 +2438,14 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   // Approve the bounty
   const bountyIndex = await getBountyIndexFromEvent(client)
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2265,9 +2455,14 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 
   // Propose Bob as curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2325,8 +2520,8 @@ async function reasonTooBigTest<
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const maxReasonLength = client.api.consts.bounties.maximumReasonLength.toNumber()
 
   // Create a description that exceeds the maximum length
@@ -2374,8 +2569,7 @@ async function invalidValueTest<
   const description = 'Test bounty with invalid value'
 
   // Use a value below the minimum
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const invalidValue = bountyValueMinimum - existentialDeposit.toBigInt()
+  const invalidValue = bountyValueMinimum - 1n
 
   const proposeTx = client.api.tx.bounties.proposeBounty(invalidValue, description)
 
@@ -2410,7 +2604,7 @@ async function invalidValueTest<
 async function invalidIndexApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const nonExistentBountyIndex = NON_EXISTENT_BOUNTY_INDEX // random index that doesn't exist
@@ -2419,9 +2613,14 @@ async function invalidIndexApprovalTest<
 
   // approve transaction with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(nonExistentBountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2458,13 +2657,13 @@ async function invalidIndexApprovalTest<
 async function unexpectedStatusProposeCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for curator proposal'
 
   // Propose a bounty
@@ -2474,13 +2673,18 @@ async function unexpectedStatusProposeCuratorTest<
   await client.dev.newBlock()
   const bountyIndex = await getBountyIndexFromEvent(client)
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // propose curator by Treasurer
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2517,17 +2721,17 @@ async function unexpectedStatusProposeCuratorTest<
 async function requireCuratorAcceptTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for curator requirement'
 
   // Propose a bounty
@@ -2539,9 +2743,14 @@ async function requireCuratorAcceptTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2549,13 +2758,18 @@ async function requireCuratorAcceptTest<
   // Bounty will be funded in this block
   await client.dev.newBlock()
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // Propose Bob as curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2594,17 +2808,17 @@ async function requireCuratorAcceptTest<
 async function hasActiveChildBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for child bounty check'
 
   // Propose a bounty
@@ -2616,9 +2830,14 @@ async function hasActiveChildBountyTest<
 
   // Approve the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2626,13 +2845,18 @@ async function hasActiveChildBountyTest<
   // Bounty will be funded in this block
   await client.dev.newBlock()
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // Propose Bob as curator
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2647,7 +2871,7 @@ async function hasActiveChildBountyTest<
   expect(bountyStatusAfterCuratorAccepted.status.isActive).toBe(true)
 
   // Note: The curator (Bob) should create the child bounty, not Alice
-  const childBountyValue = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER // value for child bounty
+  const childBountyValue = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER // value for child bounty
   const childBountyDescription = 'Test child bounty'
   const addChildBountyTx = client.api.tx.childBounties.addChildBounty(
     bountyIndex,
@@ -2703,17 +2927,17 @@ async function hasActiveChildBountyTest<
 export async function bountyAwardingAndClaimingInActiveStateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client)
+  await setLastSpendPeriodBlockNumber(client, testConfig)
 
   await client.dev.newBlock()
 
-  const existentialDeposit = client.api.consts.balances.existentialDeposit
-  const bountyValue = existentialDeposit.toBigInt() * BOUNTY_MULTIPLIER // 1000 tokens
+  const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
+  const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
   const description = 'Test bounty for funding'
 
   // propose a bounty
@@ -2734,9 +2958,14 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
 
   // approve the bounty with origin treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOrigin(client, approveBountyTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    approveBountyTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2763,13 +2992,18 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
   const bountyStatusAfterApproval = await getBounty(client, bountyIndex)
   expect(bountyStatusAfterApproval.status.isFunded).toBe(true)
 
-  const curatorFee = existentialDeposit.toBigInt() * CURATOR_FEE_MULTIPLIER
+  const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
 
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOrigin(client, proposeCuratorTx.method.toHex(), {
-    Origins: 'Treasurer',
-  })
+  await scheduleInlineCallWithOrigin(
+    client,
+    proposeCuratorTx.method.toHex(),
+    {
+      Origins: 'Treasurer',
+    },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -2827,7 +3061,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
 export function allBountyFailureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty failure tests',
@@ -2835,17 +3069,17 @@ export function allBountyFailureTests<
       {
         kind: 'test',
         label: 'Bounty closure in approved state',
-        testFn: async () => await bountyClosureApprovedTest(chain),
+        testFn: async () => await bountyClosureApprovedTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty closure in pending payout state',
-        testFn: async () => await bountyClosurePendingPayoutTest(chain),
+        testFn: async () => await bountyClosurePendingPayoutTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unassign curator in active state by public premature',
-        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
+        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain, testConfig),
       },
       {
         kind: 'test',
@@ -2860,27 +3094,27 @@ export function allBountyFailureTests<
       {
         kind: 'test',
         label: 'Invalid bounty index approval',
-        testFn: async () => await invalidIndexApprovalTest(chain),
+        testFn: async () => await invalidIndexApprovalTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Unexpected status when proposing curator before bounty is funded',
-        testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
+        testFn: async () => await unexpectedStatusProposeCuratorTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Non-curator trying to accept curator role',
-        testFn: async () => await requireCuratorAcceptTest(chain),
+        testFn: async () => await requireCuratorAcceptTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be awarded if it has an active child bounty',
-        testFn: async () => await hasActiveChildBountyTest(chain),
+        testFn: async () => await hasActiveChildBountyTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be claimed in active state',
-        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(chain),
+        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(chain, testConfig),
       },
     ],
   } as RootTestTree
@@ -2897,10 +3131,10 @@ export function allBountyFailureTests<
 export function baseBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allBountySuccessTests(chain), allBountyFailureTests(chain)],
+    children: [allBountySuccessTests(chain, testConfig), allBountyFailureTests(chain, testConfig)],
   }
 }

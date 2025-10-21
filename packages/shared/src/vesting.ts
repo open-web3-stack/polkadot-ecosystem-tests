@@ -9,7 +9,15 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { check, checkEvents, expectPjsEqual, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
+import {
+  blockProviderOffset,
+  check,
+  checkEvents,
+  expectPjsEqual,
+  getBlockNumber,
+  scheduleInlineCallWithOrigin,
+  type TestConfig,
+} from './helpers/index.js'
 
 /**
  * Test that a vested transfer works as expected.
@@ -37,15 +45,19 @@ async function testVestedTransfer<
     },
   })
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
 
-  const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
-  const perBlock = Math.floor(locked / 4)
+  // On KAH, the minimum vested amount is not divisible by 8 (it isn't even even :) ), so this multiplication is needed.
+  const locked = client.api.consts.vesting.minVestedTransfer.toNumber() * 8
+  // Recall that asset hubs' block provider is nonlocal i.e. the relay's, and each AH block will unvest 2 relay blocks'
+  // worth of funds.
+  const perRelayBlock = Math.floor(locked / (4 * offset))
 
   const vestedTransferTx = client.api.tx.vesting.vestedTransfer(bob.address, {
-    perBlock,
+    perBlock: perRelayBlock,
     locked,
-    startingBlock: currBlockNumber - 1,
+    startingBlock: currBlockNumber - offset,
   })
   const vestedTransferEvents = await sendTransaction(vestedTransferTx.signAsync(alice))
 
@@ -65,7 +77,7 @@ async function testVestedTransfer<
   expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
   // the unvested amount in the event emitted in this block.
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 2)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 2 * offset)
 
   // The act of vesting does not change the `Vesting` storage item - to see how much was unlocked, events
   // must be queried.
@@ -74,8 +86,8 @@ async function testVestedTransfer<
   assert(vestingBalance.isSome)
   expect(vestingBalance.unwrap().length).toBe(1)
   expect(vestingBalance.unwrap()[0].locked.toNumber()).toBe(locked)
-  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perBlock)
-  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - 1)
+  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perRelayBlock)
+  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - offset)
 
   // Check Bob's free and frozen balances
 
@@ -107,7 +119,7 @@ async function testVestedTransfer<
   assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
   expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perBlock * 3)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 3 * offset)
 
   // Check Bob's free and frozen balances after Alice's vesting
 
@@ -177,10 +189,10 @@ async function testForceVestedTransfer<
   const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
-  const perBlock = Math.floor(locked / 4)
+  const perRelayBlock = Math.floor(locked / 4)
 
   const forcedVestingTx = client.api.tx.vesting.forceVestedTransfer(charlie.address, alice.address, {
-    perBlock,
+    perBlock: perRelayBlock,
     locked,
     startingBlock: currBlockNumber,
   })
@@ -249,24 +261,30 @@ async function testForceRemoveVestedSchedule<
 async function testForceVestedTransferAndRemoval<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
   const dave = defaultAccountsSr25519.dave
 
-  const currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
-  const perBlock = Math.floor(locked / 4)
+  const perRelayBlock = Math.floor(locked / (4 * offset))
 
   const forceVestingTx = client.api.tx.vesting.forceVestedTransfer(alice.address, dave.address, {
-    perBlock,
+    perBlock: perRelayBlock,
     locked,
-    startingBlock: currBlockNumber - 1,
+    startingBlock: currBlockNumber - offset,
   })
 
-  await scheduleInlineCallWithOrigin(client, forceVestingTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceVestingTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -295,13 +313,18 @@ async function testForceVestedTransferAndRemoval<
   assert(vestingBalance.isSome)
   expect(vestingBalance.unwrap().length).toBe(1)
   expect(vestingBalance.unwrap()[0].locked.toNumber()).toBe(locked)
-  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perBlock)
-  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - 1)
+  expect(vestingBalance.unwrap()[0].perBlock.toNumber()).toBe(perRelayBlock)
+  expect(vestingBalance.unwrap()[0].startingBlock.toNumber()).toBe(currBlockNumber - offset)
 
   // Forcibly remove the vesting schedule.
 
   const forceRemoveVestingTx = client.api.tx.vesting.forceRemoveVestingSchedule(dave.address, 0)
-  await scheduleInlineCallWithOrigin(client, forceRemoveVestingTx.method.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceRemoveVestingTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -342,7 +365,7 @@ async function testForceVestedTransferAndRemoval<
 async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const alice = defaultAccountsSr25519.alice
@@ -354,7 +377,8 @@ async function testMergeVestingSchedules<
     },
   })
 
-  let currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
   const initialBlockNumber = currBlockNumber
 
   const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber() * 3
@@ -373,12 +397,12 @@ async function testMergeVestingSchedules<
   const vestingSchedule1 = {
     perBlock: perBlock1,
     locked: locked1,
-    startingBlock: currBlockNumber - 1,
+    startingBlock: currBlockNumber - offset,
   }
   const vestingSchedule2 = {
     perBlock: perBlock2,
     locked: locked2,
-    startingBlock: currBlockNumber - 2,
+    startingBlock: currBlockNumber - offset * 2,
   }
 
   // Perform vested transfers to Eve, to create two vesting schedules.
@@ -396,7 +420,7 @@ async function testMergeVestingSchedules<
   await checkEvents(vestingEvents1, 'vesting').toMatchSnapshot('vesting events 1')
   await checkEvents(vestingEvents2, 'vesting').toMatchSnapshot('vesting events 2')
 
-  currBlockNumber += 1
+  currBlockNumber += offset
 
   // Check that two vesting schedules were created.
 
@@ -412,7 +436,7 @@ async function testMergeVestingSchedules<
 
   await client.dev.newBlock()
 
-  currBlockNumber += 1
+  currBlockNumber += offset
 
   await checkEvents(mergeVestingEvents, 'vesting').toMatchSnapshot('vesting schedules merger events')
 
@@ -423,15 +447,15 @@ async function testMergeVestingSchedules<
   const mergedVestingSchedule = vestingBalance2.unwrap()[0]
   // Merging schedules will unlock hitherto unvested funds, so the locked amount is the sum of the two schedules'
   // locked amounts, minus the sum of the two schedules' unvested amounts.
-  const newLocked = locked1 + locked2 - (perBlock1 * 3 + perBlock2 * 4)
+  const newLocked = locked1 + locked2 - (perBlock1 * 3 * offset + perBlock2 * 4 * offset)
   expect(mergedVestingSchedule.locked.toNumber()).toBe(newLocked)
 
   // The remainder of the merged schedule's duration should be the longest of the two schedules.
-  const blocksToUnlock = Math.max(blocksToUnlock1 - 3, blocksToUnlock2 - 4)
+  const blocksToUnlock = Math.max(blocksToUnlock1 - 3 * offset, blocksToUnlock2 - 4 * offset)
   const newPerBlock = Math.floor(newLocked / blocksToUnlock)
   expect(mergedVestingSchedule.perBlock.toNumber()).toBe(newPerBlock)
   expect(mergedVestingSchedule.startingBlock.toNumber()).toBe(
-    Math.max(currBlockNumber, initialBlockNumber - 1, initialBlockNumber - 2),
+    Math.max(currBlockNumber, initialBlockNumber - offset, initialBlockNumber - offset * 2),
   )
 }
 
@@ -505,7 +529,7 @@ async function testMergeSchedulesNoSchedule<
   assert(client.api.errors.vesting.NotVesting.is(dispatchErr.asModule))
 }
 
-export function relayVestingE2ETests<
+export function fullVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
@@ -531,12 +555,12 @@ export function relayVestingE2ETests<
       {
         kind: 'test',
         label: 'forced vested transfer and forced removal of vesting schedule work',
-        testFn: () => testForceVestedTransferAndRemoval(chain),
+        testFn: () => testForceVestedTransferAndRemoval(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'test merger of two vesting schedules',
-        testFn: () => testMergeVestingSchedules(chain),
+        testFn: () => testMergeVestingSchedules(chain, testConfig),
       },
       {
         kind: 'test',

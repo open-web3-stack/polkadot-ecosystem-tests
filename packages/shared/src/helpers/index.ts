@@ -385,12 +385,11 @@ export async function updateCumulativeFees(
     if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
       assert(api.events.transactionPayment.TransactionFeePaid.is(event))
       const [who, actualFee, tip] = event.data
-      expect(tip.toNumber()).toBe(0)
       const address = encodeAddress(who.toString(), addressEncoding)
-      const fee = BigInt(actualFee.toString())
+      const totalFee = BigInt(actualFee.add(tip).toString())
 
       const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + fee)
+      feeMap.set(address, currentFee + totalFee)
     }
   }
   return feeMap
@@ -433,19 +432,25 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
 }
 
 /**
- * Get the offset at which the block numbers that key the scheduler's agenda are incremented.
+ * Get the offset at which the calling network's block provider moves, for every block created in that network.
  *
- * * If on a relay chain, the offset is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
+ * To exemplify, this is useful when injecting tasks into the runtime's scheduler agenda, as the key to the
+ * agenda may be a non-local block number.
+ *
+ * What it outputs:
+ *
+ * * If on a relay chain, the output is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
  *   every block number is available.
- * * If on a parachain without AB, with the same meaning as above.
+ * * If on a parachain without AB, 1, with the same meaning as above.
  * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
- *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number.
+ *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number. Also applies
+ *   to vesting and treasury spend periods.
  *
  * @param blockProvider Whether the call is being scheduled on a relay or parachain.
  * @param asyncBacking Whether async backing is enabled on the parachain.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function schedulerOffset(cfg: TestConfig): number {
+export function blockProviderOffset(cfg: TestConfig): number {
   if (cfg.blockProvider === 'Local') {
     return 1
   }

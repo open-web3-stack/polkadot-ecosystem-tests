@@ -1,4 +1,4 @@
-import { type Checker, sendTransaction } from '@acala-network/chopsticks-testing'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import {
@@ -21,7 +21,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
-import { check, checkEvents, getBlockNumber, schedulerOffset, type TestConfig } from './helpers/index.js'
+import { blockProviderOffset, check, checkEvents, getBlockNumber, type TestConfig } from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1303,27 +1303,12 @@ async function proxyCallFilteringSingleTestRunner<
     }
 
     // Snapshot the `Proxy.ProxyExecuted`event for the proxied call
-    // If the pallet being tested is `balances`, its events should not be included in the snapshot
-    // to avoid including block-specific fee events, which are unstable inbetween runs.
-    let eventChecker: Checker
-    if (proxyAction.pallet !== 'balances') {
-      eventChecker = checkEvents(result, 'proxy', proxyAction.pallet)
-    } else {
-      eventChecker = checkEvents(result, 'proxy')
-    }
-
-    let redactKeys: RegExp | undefined
-    if (['referenda', 'bounties'].includes(proxyAction.pallet)) {
-      redactKeys = /^index$/
-    }
-
-    await eventChecker
-      .redact({
-        redactKeys,
-      })
-      .toMatchSnapshot(
-        `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
-      )
+    // No other other event need be snapshot: it is not worthwhile, as in most cases, the operations chosen
+    // as representative for a given pallet won't succeed; the extrinsic's signature event won't be emitted,
+    // and will quite often have unstable datum that can cause false positives.
+    await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+      `events for proxy type ${proxyType}, pallet ${proxyAction.pallet}, call ${proxyAction.extrinsic}`,
+    )
   }
 }
 
@@ -1837,7 +1822,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)

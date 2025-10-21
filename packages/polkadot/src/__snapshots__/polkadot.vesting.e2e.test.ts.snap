@@ -126,7 +126,7 @@ exports[`Polkadot Vesting > vesting schedule lifecycle > vest events 1`] = `
   {
     "data": {
       "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 5000000000,
+      "unvested": 40000000000,
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -151,7 +151,7 @@ exports[`Polkadot Vesting > vesting schedule lifecycle > vest other events 1`] =
   {
     "data": {
       "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 2500000000,
+      "unvested": 20000000000,
     },
     "method": "VestingUpdated",
     "section": "vesting",
