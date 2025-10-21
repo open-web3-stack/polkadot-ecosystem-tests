@@ -8,12 +8,13 @@ import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
+import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   checkEvents,
   checkSystemEvents,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
 } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
@@ -155,9 +156,12 @@ async function getParentTotalChildBountiesCount(client: Client<any, any>, parent
 async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfig: TestConfig) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
   const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
-  const newLastSpendPeriodBlockNumber = currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset
+  const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
+    .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
+    .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
+    .exhaustive()
   await client.dev.setStorage({
     Treasury: {
       lastSpendPeriod: newLastSpendPeriodBlockNumber,
@@ -2677,56 +2681,56 @@ export function allChildBountiesFailureTests<
     children: [
       {
         kind: 'test',
-        label: 'create child bounty from non-active parent bounty throws `ParentBountyNotActive` error',
+        label: 'create child bounty from non-active parent bounty throws ParentBountyNotActive error',
         testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
       },
       {
         kind: 'test',
         label:
-          'create child bounty with value larger than parent bounty balance throws `InsufficientBountyBalance` error',
+          'create child bounty with value larger than parent bounty balance throws InsufficientBountyBalance error',
         testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
-        label: 'create child bounty with value below minimum throws `InvalidValue` error',
+        label: 'create child bounty with value below minimum throws InvalidValue error',
         testFn: async () => await childBountyInvalidValueErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
-        label: 'propose curator with fee >= child bounty value throws `InvalidFee` error',
+        label: 'propose curator with fee >= child bounty value throws InvalidFee error',
         testFn: async () => await childBountyInvalidFeeErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
-        label: 'accept curator when child bounty is in `Added` status throws `UnexpectedStatus` error',
+        label: 'accept curator when child bounty is in Added status throws UnexpectedStatus error',
         testFn: async () => await childBountyUnexpectedStatusErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
-        label: 'close child bounty in `PendingPayout` status throws `PendingPayout` error',
+        label: 'close child bounty in PendingPayout status throws PendingPayout error',
         testFn: async () => await childBountyPendingPayoutErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
-        label: 'non-curator trying to create child bounty throws `RequireCurator` error',
+        label: 'non-curator trying to create child bounty throws RequireCurator error',
         testFn: async () => await childBountyRequireCuratorErrorTest(chain, testConfig),
       },
       {
         kind: 'test',
         label:
-          'parent already has `MaxActiveChildBountyCount` child bounties, trying to create a new one throws `TooManyChildBounties` error',
+          'parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error',
         testFn: async () => await childBountyTooManyChildBountiesErrorTest(chain, testConfig),
       },
       // ReasonTooBig
       {
         kind: 'test',
-        label: 'child bounty description larger than `MaximumReasonLength` throws `ReasonTooBig` error',
+        label: 'child bounty description larger than MaximumReasonLength throws ReasonTooBig error',
         testFn: async () => await childBountyReasonTooBigErrorTest(chain, testConfig),
       },
       // InvalidIndex
       {
         kind: 'test',
-        label: 'proposing curator for invalid child bounty index throws `InvalidIndex` error',
+        label: 'proposing curator for invalid child bounty index throws InvalidIndex error',
         testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(chain, testConfig),
       },
     ],

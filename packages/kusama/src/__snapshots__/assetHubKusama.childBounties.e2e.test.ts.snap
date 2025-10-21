@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty approved events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -12,9 +12,19 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bo
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > bounty proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -26,7 +36,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bo
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > curator accepted events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -39,7 +49,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bo
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than \`MaximumReasonLength\` throws \`ReasonTooBig\` error > curator proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bounty description larger than MaximumReasonLength throws ReasonTooBig error > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -52,7 +62,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > child bo
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty approved events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws RequireCurator error > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -64,9 +74,19 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-cura
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws RequireCurator error > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > bounty proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws RequireCurator error > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -78,7 +98,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-cura
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > curator accepted events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws RequireCurator error > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -91,7 +111,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-cura
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws \`RequireCurator\` error > curator proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-curator trying to create child bounty throws RequireCurator error > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -104,7 +124,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > non-cura
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty approved events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -116,9 +136,19 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent a
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > bounty proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -130,7 +160,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent a
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > curator accepted events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -143,7 +173,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent a
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has \`MaxActiveChildBountyCount\` child bounties, trying to create a new one throws \`TooManyChildBounties\` error > curator proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -156,7 +186,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > parent a
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty approved events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > bounty approved events 1`] = `
 [
   {
     "data": {
@@ -168,9 +198,19 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > bounty proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > bounty proposed events 1`] = `
 [
   {
     "data": {
@@ -182,7 +222,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > child bounty added events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > child bounty added events 1`] = `
 [
   {
     "data": "(redacted)",
@@ -192,7 +232,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > curator accepted events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > curator accepted events 1`] = `
 [
   {
     "data": {
@@ -205,7 +245,7 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws \`InvalidIndex\` error > curator proposed events 1`] = `
+exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposing curator for invalid child bounty index throws InvalidIndex error > curator proposed events 1`] = `
 [
   {
     "data": {
@@ -240,7 +280,17 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > assignin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty proposed events 1`] = `
 [
@@ -290,42 +340,6 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > assignin
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty approved events 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyApproved",
-    "section": "bounties",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty became active events 1`] = `[]`;
-
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty proposed events 1`] = `
-[
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty added events 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Added",
-    "section": "childBounties",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
 [
   {
@@ -346,32 +360,6 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > curator accepted events 1`] = `
-[
-  {
-    "data": {
-      "bountyId": "(redacted)",
-      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "CuratorAccepted",
-    "section": "bounties",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > curator proposed events 1`] = `
-[
-  {
-    "data": {
-      "bountyId": "(redacted)",
-      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "CuratorProposed",
-    "section": "bounties",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty approved events 1`] = `
 [
   {
@@ -384,7 +372,17 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bo
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty became active events 1`] = `[]`;
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > child bounty creation > bounty proposed events 1`] = `
 [
@@ -465,16 +463,6 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > rejectio
     "data": "(redacted)",
     "method": "Canceled",
     "section": "childBounties",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Bounties > All child bounties success tests > unassign curator different cases > balances slash events 1`] = `
-[
-  {
-    "data": "(redacted)",
-    "method": "Slashed",
-    "section": "balances",
   },
 ]
 `;
