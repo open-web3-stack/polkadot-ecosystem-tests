@@ -271,7 +271,7 @@ async function testForceVestedTransferAndRemoval<
   const offset = blockProviderOffset(testConfig)
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
-  const perRelayBlock = Math.floor(locked / 8)
+  const perRelayBlock = Math.floor(locked / (4 * offset))
 
   const forceVestingTx = client.api.tx.vesting.forceVestedTransfer(alice.address, dave.address, {
     perBlock: perRelayBlock,

@@ -3,7 +3,7 @@
 exports[`Polkadot Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
 [
   "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
-  7500000000,
+  5000000000,
 ]
 `;
 
