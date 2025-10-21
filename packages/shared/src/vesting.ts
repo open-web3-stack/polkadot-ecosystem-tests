@@ -48,10 +48,11 @@ async function testVestedTransfer<
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   const offset = blockProviderOffset(testConfig)
 
-  const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
+  // On KAH, the minimum vested amount is not divisible by 8 (it isn't even even :) ), so this multiplication is needed.
+  const locked = client.api.consts.vesting.minVestedTransfer.toNumber() * 8
   // Recall that asset hubs' block provider is nonlocal i.e. the relay's, and each AH block will unvest 2 relay blocks'
   // worth of funds.
-  const perRelayBlock = Math.floor(locked / 8)
+  const perRelayBlock = Math.floor(locked / (4 * offset))
 
   const vestedTransferTx = client.api.tx.vesting.vestedTransfer(bob.address, {
     perBlock: perRelayBlock,
@@ -76,7 +77,7 @@ async function testVestedTransfer<
   expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
   // the unvested amount in the event emitted in this block.
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 4)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 2 * offset)
 
   // The act of vesting does not change the `Vesting` storage item - to see how much was unlocked, events
   // must be queried.
@@ -118,7 +119,7 @@ async function testVestedTransfer<
   assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
   expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 6)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 3 * offset)
 
   // Check Bob's free and frozen balances after Alice's vesting
 

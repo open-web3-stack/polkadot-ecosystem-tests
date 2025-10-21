@@ -1,30 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub Vesting > attempt to merge when no vesting schedules exist fails > merge schedules extrinsic failed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 14,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
 exports[`Polkadot Asset Hub Vesting > forced vested transfer and forced removal of vesting schedule work > forced vested transfer event 1`] = `
 [
   "126TwBzBM4jUEK2gTphmW4oLoBWWnYvPp8hygmduTr4uds57",
@@ -151,7 +126,7 @@ exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest events 1
   {
     "data": {
       "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 50000000,
+      "unvested": 400000000,
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -176,7 +151,7 @@ exports[`Polkadot Asset Hub Vesting > vesting schedule lifecycle > vest other ev
   {
     "data": {
       "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
-      "unvested": 25000000,
+      "unvested": 200000000,
     },
     "method": "VestingUpdated",
     "section": "vesting",
