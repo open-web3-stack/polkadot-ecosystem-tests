@@ -1,5 +1,5 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
-import { assetHubVestingE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
+import { fullVestingE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
 
 const kahTestConfig: ParaTestConfig = {
   testSuiteName: 'Kusama Asset Hub Vesting',
@@ -8,4 +8,4 @@ const kahTestConfig: ParaTestConfig = {
   asyncBacking: 'Enabled',
 }
 
-registerTestTree(assetHubVestingE2ETests(assetHubKusama, kahTestConfig))
+registerTestTree(fullVestingE2ETests(assetHubKusama, kahTestConfig))

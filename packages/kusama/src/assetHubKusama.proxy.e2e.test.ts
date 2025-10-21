@@ -31,10 +31,9 @@ const assetHubKusamaProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildStakingAction(),
       ...builder.buildSystemRemarkAction(),
       ...builder.buildUtilityAction(),
-      // Pending AHM, vesting is disabled on asset hubs, so `Any` proxy types will be unable to
-      //...builder.buildVestingAction(),
+      ...builder.buildVestingAction(),
     ],
-    buildDisallowedActions: (builder) => [...builder.buildVestingAction()],
+    buildDisallowedActions: (_builder) => [],
   },
   // The `Auction` proxy type cannot execute any calls on the AH without the `remote_proxy` pallet.
   // Its call filter is set to block all calls.

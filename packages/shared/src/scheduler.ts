@@ -12,6 +12,7 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   check,
   checkEvents,
   checkSystemEvents,
@@ -19,7 +20,6 @@ import {
   nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
 } from './helpers/index.js'
 
@@ -167,7 +167,7 @@ export async function cancelScheduledTaskBadOriginTest<
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -218,7 +218,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -275,7 +275,7 @@ export async function scheduledCallExecutes<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -345,7 +345,7 @@ export async function scheduledNamedCallExecutes<
   const taskId = sha256AsU8a('task_id')
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -417,7 +417,7 @@ export async function cancelScheduledTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -478,7 +478,7 @@ export async function cancelScheduledNamedTask<
   const taskId = sha256AsU8a('task_id')
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -549,7 +549,7 @@ export async function scheduleTaskAfterDelay<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // In case of non-local block providers, spans of blocks must be specified in terms of the nonlocal
   // provider.
   // This multiplication is because on parachains with AB, each para block spans 2 relay blocks.
@@ -641,7 +641,7 @@ export async function scheduleNamedTaskAfterDelay<
 
   let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // See above note in `scheduleTaskAfterDelay`
   const delay = 5 * offset
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, delay, null, 0, adjustIssuanceTx)
@@ -733,7 +733,7 @@ export async function scheduledOverweightCallFails<
 
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // Target block is two blocks in the future - see the notes about parachain scheduling differences.
   let targetBlockNumber: number
@@ -939,7 +939,7 @@ export async function schedulePreimagedCall<
 
   // Schedule using the preimage hash
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
   // at `n + 2`.
   let targetBlockNumber: number
@@ -1084,7 +1084,7 @@ async function testPeriodicTask<
 ) {
   const [client] = await setupNetworks(chain)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   // Manually schedule `scheduleTx` to run on the next block.
   await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
@@ -1221,7 +1221,7 @@ export async function schedulePeriodicTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const delay = match(testConfig.blockProvider)
     .with('Local', () => 2 * offset)
     // Parachain scheduling differences - see notes above.
@@ -1258,7 +1258,7 @@ export async function scheduleNamedPeriodicTask<
   const taskId = sha256AsU8a('task_id')
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const delay = match(testConfig.blockProvider)
     .with('Local', () => 2 * offset)
     // Recall: to schedule a task on the next block of a parachain, the offset is 0. On the block after that one,
@@ -1310,7 +1310,7 @@ export async function schedulePriorityWeightedTasks<
 
   const initBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   let currBlockNumber = initBlockNumber
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let priorityTargetBlock: number
   match(testConfig.blockProvider)
     .with('Local', async () => {
@@ -1516,7 +1516,7 @@ export async function scheduleWithRetryConfig<
     },
   }
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   const period = 3 * offset
 
@@ -1655,7 +1655,7 @@ export async function scheduleNamedWithRetryConfig<
     },
   }
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   const period = 3 * offset
 

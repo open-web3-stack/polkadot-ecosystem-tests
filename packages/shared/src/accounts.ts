@@ -14,13 +14,13 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   check,
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
   updateCumulativeFees,
 } from './helpers/index.js'
@@ -297,7 +297,7 @@ export const vestedTransferLockAction = <
     amount: bigint,
     testConfig: TestConfig,
   ): Promise<void> => {
-    const offset = schedulerOffset(testConfig)
+    const offset = blockProviderOffset(testConfig)
     const number = await getBlockNumber(client.api, testConfig.blockProvider)
     const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
     const startingBlock = BigInt(number) + 3n * BigInt(offset)
