@@ -167,8 +167,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > deposit action success events 1`] = `
 [
   {
@@ -181,8 +179,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
   },
 ]
 `;
-
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > deposit action success events 1`] = `
 [
@@ -197,8 +193,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > deposit action success events 1`] = `
 [
   {
@@ -211,8 +205,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
   },
 ]
 `;
-
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > deposit action success events 1`] = `
 [
@@ -227,8 +219,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > deposit action success events 1`] = `
 [
   {
@@ -241,8 +231,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
   },
 ]
 `;
-
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > deposit action success events 1`] = `
 [
@@ -257,8 +245,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > deposit action success events 1`] = `
 [
   {
@@ -272,8 +258,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 ]
 `;
 
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `[]`;
-
 exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > deposit action success events 1`] = `
 [
   {
@@ -286,8 +270,6 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
   },
 ]
 `;
-
-exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
 
