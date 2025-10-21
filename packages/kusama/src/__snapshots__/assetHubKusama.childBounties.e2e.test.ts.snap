@@ -218,6 +218,16 @@ exports[`Kusama Asset Hub Bounties > All child bounties failure tests > proposin
 ]
 `;
 
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > All unassign child bounty curator tests > parent curator unassign slashes child curator deposit > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty approved events 1`] = `
 [
   {
@@ -280,6 +290,42 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > assignin
 ]
 `;
 
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty became active events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
 [
   {
@@ -296,6 +342,32 @@ exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding
     "data": "(redacted)",
     "method": "Claimed",
     "section": "childBounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Bounties > All child bounties success tests > awarding and claiming a child bounty > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
   },
 ]
 `;

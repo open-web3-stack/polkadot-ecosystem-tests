@@ -258,7 +258,29 @@ exports[`Polkadot Child Bounties > All child bounties failure tests > proposing 
 ]
 `;
 
+exports[`Polkadot Child Bounties > All child bounties success tests > All unassign child bounty curator tests > parent curator unassign slashes child curator deposit > balances slash events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Slashed",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty approved events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyApproved",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty approved events 2`] = `
 [
   {
     "data": {
@@ -283,6 +305,18 @@ exports[`Polkadot Child Bounties > All child bounties success tests > assigning 
 `;
 
 exports[`Polkadot Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty proposed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyProposed",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Child Bounties > All child bounties success tests > assigning and accepting a child bounty curator > bounty proposed events 2`] = `
 [
   {
     "data": {
@@ -330,6 +364,28 @@ exports[`Polkadot Child Bounties > All child bounties success tests > assigning 
 ]
 `;
 
+exports[`Polkadot Child Bounties > All child bounties success tests > awarding and claiming a child bounty > bounty became active events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "BountyBecameActive",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty added events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "Added",
+    "section": "childBounties",
+  },
+]
+`;
+
 exports[`Polkadot Child Bounties > All child bounties success tests > awarding and claiming a child bounty > child bounty awarded events 1`] = `
 [
   {
@@ -346,6 +402,32 @@ exports[`Polkadot Child Bounties > All child bounties success tests > awarding a
     "data": "(redacted)",
     "method": "Claimed",
     "section": "childBounties",
+  },
+]
+`;
+
+exports[`Polkadot Child Bounties > All child bounties success tests > awarding and claiming a child bounty > curator accepted events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "CuratorAccepted",
+    "section": "bounties",
+  },
+]
+`;
+
+exports[`Polkadot Child Bounties > All child bounties success tests > awarding and claiming a child bounty > curator proposed events 1`] = `
+[
+  {
+    "data": {
+      "bountyId": "(redacted)",
+      "curator": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "CuratorProposed",
+    "section": "bounties",
   },
 ]
 `;
