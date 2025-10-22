@@ -761,7 +761,77 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
   assert(dispatchError.isModule)
   expect(relayClient.api.errors.treasury.InsufficientPermission.is(dispatchError.asModule)).toBeTruthy()
 
-  await relayClient.teardown()
+  await assetHubClient.teardown()
+}
+
+/**
+ * Test: Check treasury payouts which are already approved can be paid
+ *
+ * Verifies that the treasury's payout mechanism correctly processes already approved spends
+ * and properly disburses funds to beneficiaries. This test ensures that approved treasury
+ * spends can be successfully paid out
+ *
+ * Test Structure:
+ * 1. Get all the spends which are pending or failed and is neither expired nor early payout
+ * 2. Call payout tx for each pending or failed spend
+ * 3. Verify the Paid event is emitted
+ * 4. Verify the spend status is attempted
+ */
+export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, ahChain: Chain<TCustom, TInitStoragesPara>) {
+  const [assetHubClient, relayClient] = await setupNetworks(ahChain, relayChain)
+
+  await setupTestAccounts(assetHubClient, ['alice', 'bob'])
+
+  // get all the spends
+  const spends = await assetHubClient.api.query.treasury.spends.entries()
+
+  // get current relay chain block number
+  const currentRelayChainBlockNumber = (await relayClient.api.query.system.number()).toNumber()
+
+  // filter those spends which are pending or failed and is neither expired nor early payout
+  const pendingOrFailedSpends = spends.filter((spend) => {
+    const spendData = spend[1]?.unwrap()
+    return (
+      (spendData?.status.isPending || spendData?.status.isFailed) && // not pending or failed
+      spendData?.validFrom.toNumber() < currentRelayChainBlockNumber && //not early payout
+      spendData?.expireAt.toNumber() > currentRelayChainBlockNumber // not expired
+    )
+  })
+
+  await assetHubClient.dev.newBlock()
+
+  const spendIndices: number[] = []
+
+  // call payout tx for each pending or failed spend
+  for (const spend of pendingOrFailedSpends) {
+    const spendIndex = spend[0].toHuman?.() as number
+    spendIndices.push(spendIndex)
+    const payoutTx = assetHubClient.api.tx.treasury.payout(spendIndex)
+    await sendTransaction(payoutTx.signAsync(testAccounts.alice))
+
+    await assetHubClient.dev.newBlock()
+
+    // verify the Paid event is emitted
+    const treasuryEvents = await assetHubClient.api.query.system.events()
+    const paidEvent = treasuryEvents.find((record) => {
+      const { event } = record
+      return event.section === 'treasury' && event.method === 'Paid'
+    })
+    assert(paidEvent)
+    assert(assetHubClient.api.events.treasury.Paid.is(paidEvent.event))
+  }
+
+  // verify the spends status is attempted
+  for (const spendIndex of spendIndices) {
+    const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
+    expect(spend?.unwrap()?.status.isAttempted).toBe(true)
+  }
+
+  await assetHubClient.teardown()
 }
 
 export function baseTreasuryE2ETests<
@@ -815,7 +885,12 @@ export function baseTreasuryE2ETests<
       {
         kind: 'test',
         label: 'Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error',
-        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(relayChain),
+        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain),
+      },
+      {
+        kind: 'test',
+        label: 'Check treasury payouts which are already approved can be paid',
+        testFn: async () => await checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid(relayChain, ahChain),
       },
     ],
   }
