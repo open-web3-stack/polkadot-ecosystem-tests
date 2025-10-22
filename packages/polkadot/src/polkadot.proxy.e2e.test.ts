@@ -1,5 +1,6 @@
 import { polkadot } from '@e2e-test/networks/chains'
 import {
+  createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
   PolkadotProxyTypes,
@@ -32,6 +33,97 @@ const testConfig: RelayTestConfig = {
  */
 const polkadotProxyTypeConfig: ProxyTypeConfig = {
   ...defaultProxyTypeConfig,
+  ['Any']: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildProxyAction(),
+      ...builder.buildProxyRejectAnnouncementAction(),
+      ...builder.buildProxyRemovalAction(PolkadotProxyTypes.Any),
+      ...builder.buildSystemAction(),
+      ...builder.buildUtilityAction(),
+    ],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+  ['NonTransfer']: {
+    buildAllowedActions: (builder) => [
+      ...builder.buildProxyAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildSystemRemarkAction(),
+      ...builder.buildUtilityAction(),
+    ],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildAuctionAction(),
+      ...builder.buildBalancesAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['Auction']: {
+    buildAllowedActions: (builder) => [...builder.buildCrowdloanAction(), ...builder.buildParasRegistrarAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildVestingAction(),
+
+      // TODO: this is not right, see https://github.com/polkadot-fellows/runtimes/blob/main/relay/polkadot/src/lib.rs#L1391
+      // Needs an issue
+      ...builder.buildAuctionAction(),
+      ...builder.buildSlotsAction(),
+    ],
+  },
+
+  ['Governance']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildBountyAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildMultisigAction(),
+      ...builder.buildProxyAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['Staking']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildFastUnstakeAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
+
+  ['NominationPools']: {
+    buildAllowedActions: (builder) => [...builder.buildUtilityAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildGovernanceAction(),
+      ...builder.buildNominationPoolsAction(),
+      ...builder.buildStakingAction(),
+      ...builder.buildSystemAction(),
+      ...builder.buildVestingAction(),
+    ],
+  },
   ['ParaRegistration']: {
     buildAllowedActions: (builder) => [
       ...builder.buildParasRegistrarAction(),
@@ -42,9 +134,6 @@ const polkadotProxyTypeConfig: ProxyTypeConfig = {
   },
 }
 
-const polkadotProxyCfg: ProxyTestConfig = {
-  proxyTypes: PolkadotProxyTypes,
-  proxyTypeConfig: polkadotProxyTypeConfig,
-}
+const polkadotProxyCfg: ProxyTestConfig = createProxyConfig(PolkadotProxyTypes, polkadotProxyTypeConfig)
 
 registerTestTree(fullProxyE2ETests(polkadot, testConfig, polkadotProxyCfg))
