@@ -25,6 +25,7 @@ permissions:
 
 jobs:
   define-matrix:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     outputs:
       tests: ${{ steps.tests.outputs.tests }}
