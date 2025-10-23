@@ -29,7 +29,7 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
 export const hydration = defineChain({
   name: 'hydration',
   paraId: 2034,
-  endpoint: 'wss://rpc.hydradx.cloud',
+  endpoint: 'wss://hydration.ibp.network',
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
 })
