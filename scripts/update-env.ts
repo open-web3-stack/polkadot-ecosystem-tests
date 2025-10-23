@@ -3,6 +3,7 @@ import { cryptoWaitReady } from '@polkadot/util-crypto'
 import fs from 'node:fs'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 
@@ -25,15 +26,11 @@ const readEnvFile = () => {
 const main = async () => {
   await cryptoWaitReady()
 
-  let envFile = readEnvFile()
+  const envFileContent = readEnvFile()
+  const currentEnv = dotenv.parse(envFileContent)
 
-  // comment out current ones
-  envFile = envFile.replaceAll(/(^[A-Z0-9]+_BLOCK_NUMBER=\d+)/gm, '# $1')
-
-  // prepend new ones
-  const blockNumbers: Promise<string>[] = []
-  for (const [name, chain] of Object.entries(chains)) {
-    const fn = async () => {
+  const blockNumberPromises = Object.entries(chains).map(async ([name, chain]) => {
+    const fetchBlockNumber = async () => {
       const api = await ApiPromise.create({
         provider:
           Array.isArray(chain.endpoint) || chain.endpoint.startsWith('ws')
@@ -41,23 +38,45 @@ const main = async () => {
             : new HttpProvider(chain.endpoint),
         noInitWarn: true,
       })
-      const header = await api.rpc.chain.getHeader()
-      const blockNumber = header.number.toNumber()
-      return `${name.toUpperCase()}_BLOCK_NUMBER=${blockNumber}`
+      try {
+        const header = await api.rpc.chain.getHeader()
+        const blockNumber = header.number.toNumber()
+        return `${name.toUpperCase()}_BLOCK_NUMBER=${blockNumber}`
+      } finally {
+        await api.disconnect()
+      }
     }
-    blockNumbers.push(fn())
-  }
 
-  const blockNumbersStr = (await Promise.all(blockNumbers)).join('\n')
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout fetching block number for ${name}`)), 60000),
+    )
 
+    try {
+      return await Promise.race([fetchBlockNumber(), timeout])
+    } catch (error: any) {
+      console.error(`Failed to fetch block number for ${name}: ${error.message}`)
+      const fallback = currentEnv[`${name.toUpperCase()}_BLOCK_NUMBER`]
+      if (fallback) {
+        console.log(`Using fallback for ${name}: ${fallback}`)
+        return `${name.toUpperCase()}_BLOCK_NUMBER=${fallback}`
+      }
+      return null
+    }
+  })
+
+  const results = await Promise.all(blockNumberPromises)
+  const newBlockNumbers = results.filter((x): x is string => x !== null).join('\n')
+
+  let newEnvFileContent: string
   if (isUpdateKnownGood) {
-    envFile = `${blockNumbersStr}\n`
+    newEnvFileContent = `${newBlockNumbers}\n`
   } else {
-    envFile = `${blockNumbersStr}\n\n${envFile}`
+    const commentedOldContent = envFileContent.replaceAll(/(^[A-Z0-9]+_BLOCK_NUMBER=\d+)/gm, '# $1')
+    newEnvFileContent = `${newBlockNumbers}\n\n${commentedOldContent}`
   }
 
-  console.log(blockNumbersStr)
-  fs.writeFileSync(envPath, envFile)
+  console.log(newBlockNumbers)
+  fs.writeFileSync(envPath, newEnvFileContent)
 }
 
 main()
