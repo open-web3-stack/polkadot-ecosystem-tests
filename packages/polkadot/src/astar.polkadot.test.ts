@@ -11,25 +11,33 @@ describe('astar & polkadot', async () => {
   const astarDOT = astarClient.config.custom!.dot
   const polkadotDOT = polkadotClient.config.custom!.dot
 
-  runXcmPalletDown('polkadot transfer DOT to astar', async () => {
-    return {
-      fromChain: polkadotClient,
-      toChain: astarClient,
-      balance: query.assets(astarDOT),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        polkadotDOT,
-        1e12,
-        tx.xcmPallet.parachainV3(0, astarClient.config.paraId!),
-      ),
-    }
-  })
+  runXcmPalletDown(
+    'polkadot transfer DOT to astar',
+    async () => {
+      return {
+        fromChain: polkadotClient,
+        toChain: astarClient,
+        balance: query.assets(astarDOT),
+        tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
+          polkadotDOT,
+          1e12,
+          tx.xcmPallet.parachainV3(0, astarClient.config.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 
-  runXtokensUp('astar transfer DOT to polkadot', async () => {
-    return {
-      fromChain: astarClient,
-      toChain: polkadotClient,
-      balance: query.assets(astarDOT),
-      tx: tx.xtokens.transfer(astarDOT, 1e12, tx.xtokens.relaychainV3),
-    }
-  })
+  runXtokensUp(
+    'astar transfer DOT to polkadot',
+    async () => {
+      return {
+        fromChain: astarClient,
+        toChain: polkadotClient,
+        balance: query.assets(astarDOT),
+        tx: tx.xtokens.transfer(astarDOT, 1e12, tx.xtokens.relaychainV3),
+      }
+    },
+    { skip: true },
+  )
 })

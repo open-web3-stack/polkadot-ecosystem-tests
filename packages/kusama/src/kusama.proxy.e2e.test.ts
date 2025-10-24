@@ -79,8 +79,8 @@ const kusamaProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildGovernanceAction(),
       ...builder.buildVestingAction(),
 
-      // TODO: this is not right, see https://github.com/polkadot-fellows/runtimes/blob/main/relay/kusama/src/lib.rs#L1391
-      // Needs an issue
+      // Since the AHM has completed in Kusama, there will be no more auctions in the relay chain,
+      // and these shall remain filtered.
       ...builder.buildAuctionAction(),
       ...builder.buildSlotsAction(),
     ],
