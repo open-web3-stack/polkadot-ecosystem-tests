@@ -10,7 +10,7 @@ import type { Codec } from '@polkadot/types/types'
 import { assert, expect } from 'vitest'
 
 //import { logAllEvents } from './helpers/helper_functions.js'
-import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
 /// -------
@@ -251,12 +251,13 @@ async function createSpendProposal<
 >(
   assetHubClient: Client<TCustom, TInitStoragesPara>,
   spendAmount: bigint,
+  testConfig: TestConfig,
   origin: string = SPEND_ORIGIN,
   validFrom: number | null = null,
 ) {
   const spendTx = assetHubClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, validFrom)
   const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(assetHubClient, hexSpendTx, { Origins: origin })
+  await scheduleInlineCallWithOrigin(assetHubClient, hexSpendTx, { Origins: origin }, testConfig.blockProvider)
 }
 
 /**
@@ -289,7 +290,7 @@ async function verifySystemEventAssetSpendApproved<
 export async function treasurySpendBasicTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -301,7 +302,8 @@ export async function treasurySpendBasicTest<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount) // validFrom will default to null and the spend call will take current block number as validFrom block number
+  console.log('block provider:  ', testConfig.blockProvider)
+  await createSpendProposal(assetHubClient, spendAmount, testConfig) // validFrom will default to null and the spend call will take current block number as validFrom block number
 
   await assetHubClient.dev.newBlock()
 
@@ -370,7 +372,7 @@ async function verifySystemEventAssetSpendVoided<
 export async function voidApprovedTreasurySpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -383,7 +385,7 @@ export async function voidApprovedTreasurySpendProposal<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount)
+  await createSpendProposal(assetHubClient, spendAmount, testConfig)
 
   await assetHubClient.dev.newBlock()
 
@@ -489,7 +491,7 @@ async function setInitialUSDTBalanceOnAssetHub<
 export async function claimTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -506,7 +508,7 @@ export async function claimTreasurySpend<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount) // Not working after moving to asset hub
+  await createSpendProposal(assetHubClient, spendAmount, testConfig) // Not working after moving to asset hub
 
   await assetHubClient.dev.newBlock()
 
@@ -592,7 +594,7 @@ async function sendCheckStatusTx<
 export async function checkStatusOfTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -608,7 +610,7 @@ export async function checkStatusOfTreasurySpend<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount)
+  await createSpendProposal(assetHubClient, spendAmount, testConfig)
 
   await assetHubClient.dev.newBlock()
 
@@ -679,7 +681,7 @@ export async function checkStatusOfTreasurySpend<
 export async function proposeExpiredSpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -691,7 +693,7 @@ export async function proposeExpiredSpend<
   const currentBlockNumber = await assetHubClient.api.query.system.number()
   const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
   const validFrom = currentBlockNumber.toNumber() - payoutPeriod - 1 // subtracting any number to ensure that the spend is expired
-  await createSpendProposal(assetHubClient, spendAmount, SPEND_ORIGIN, validFrom)
+  await createSpendProposal(assetHubClient, spendAmount, testConfig, SPEND_ORIGIN, validFrom)
 
   await assetHubClient.dev.newBlock()
 
@@ -730,7 +732,7 @@ export async function proposeExpiredSpend<
 export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>) {
+>(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
   const [assetHubClient] = await setupNetworks(ahChain)
 
   // Setup test accounts
@@ -739,7 +741,7 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
+  await createSpendProposal(assetHubClient, spendAmount, testConfig, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
 
   await assetHubClient.dev.newBlock()
 
@@ -842,7 +844,7 @@ export function baseTreasuryE2ETests<
 >(
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   ahChain: Chain<TCustom, TInitStoragesPara>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
+  testConfig: TestConfig,
 ): RootTestTree {
   return {
     kind: 'describe',
@@ -853,35 +855,36 @@ export function baseTreasuryE2ETests<
         label: 'Foreign asset spend from Relay treasury is reflected on AssetHub',
         testFn: async () => await treasurySpendForeignAssetTest(relayChain, ahChain),
       },
+      // yarn test treasury -t "Propose and approve a spend of treasury funds"
       {
         kind: 'test',
         label: 'Propose and approve a spend of treasury funds',
-        testFn: async () => await treasurySpendBasicTest(ahChain),
+        testFn: async () => await treasurySpendBasicTest(ahChain, testConfig),
       },
       {
         kind: 'test',
         label: 'Void previously approved spend',
-        testFn: async () => await voidApprovedTreasurySpendProposal(ahChain),
+        testFn: async () => await voidApprovedTreasurySpendProposal(ahChain, testConfig),
       },
       {
         kind: 'test',
         label: 'Claim a spend',
-        testFn: async () => await claimTreasurySpend(ahChain),
+        testFn: async () => await claimTreasurySpend(ahChain, testConfig),
       },
       {
         kind: 'test',
         label: 'Check status of a spend and remove it from the storage if processed',
-        testFn: async () => await checkStatusOfTreasurySpend(ahChain),
+        testFn: async () => await checkStatusOfTreasurySpend(ahChain, testConfig),
       },
       {
         kind: 'test',
         label: 'Proposing a expired spend emits `SpendExpired` error',
-        testFn: async () => await proposeExpiredSpend(ahChain),
+        testFn: async () => await proposeExpiredSpend(ahChain, testConfig),
       },
       {
         kind: 'test',
         label: 'Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error',
-        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain),
+        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain, testConfig),
       },
       {
         kind: 'test',
