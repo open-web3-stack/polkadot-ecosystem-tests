@@ -337,7 +337,12 @@ async function voidApprovedSpendProposal<
 >(assetHubClient: Client<TCustom, TInitStoragesPara>, spendIndex: number) {
   const removeApprovedSpendTx = assetHubClient.api.tx.treasury.voidSpend(spendIndex)
   const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(assetHubClient, hexRemoveApprovedSpendTx, { Origins: REJECT_ORIGIN })
+  await scheduleInlineCallWithOrigin(
+    assetHubClient,
+    hexRemoveApprovedSpendTx,
+    { Origins: REJECT_ORIGIN },
+    testConfig.blockProvider,
+  )
 }
 
 /**
