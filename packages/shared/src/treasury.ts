@@ -353,7 +353,7 @@ export async function claimTreasurySpend<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount, testConfig) // Not working after moving to asset hub
+  await createSpendProposal(assetHubClient, spendAmount, testConfig)
 
   await assetHubClient.dev.newBlock()
 
