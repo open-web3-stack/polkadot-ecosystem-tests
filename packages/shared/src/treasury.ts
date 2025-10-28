@@ -297,13 +297,10 @@ export async function treasurySpendBasicTest<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  console.log('block provider:  ', testConfig.blockProvider)
+
   await createSpendProposal(assetHubClient, spendAmount, testConfig) // validFrom will default to null and the spend call will take current block number as validFrom block number
 
   await assetHubClient.dev.newBlock()
-
-  // Extract and log detailed scheduler error information
-  await extractSchedulerErrorDetails(assetHubClient)
 
   // Verify that the AssetSpendApproved event was emitted
   await verifySystemEventAssetSpendApproved(assetHubClient)
@@ -450,17 +447,6 @@ async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
 }
 
 /**
- * Helper: Get the balance amount of the account on Asset Hub for USDT
- */
-async function getAssetHubUSDTBalanceAmount<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(assetHubClient: Client<TCustom, TInitStoragesPara>, accountAddress: string): Promise<bigint> {
-  const balance = await assetHubClient.api.query.assets.account(USDT_ID, accountAddress)
-  return balance.isNone ? 0n : balance.unwrap().balance.toBigInt()
-}
-
-/**
  * Helper: Set the initial balance amount of the account on Asset Hub for USDT
  *
  * This is required to ensure that the account exists on Asset Hub for the payout to happen
@@ -510,7 +496,6 @@ export async function claimTreasurySpend<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-
   await createSpendProposal(assetHubClient, spendAmount, testConfig) // Not working after moving to asset hub
 
   await assetHubClient.dev.newBlock()
@@ -592,9 +577,6 @@ export async function checkStatusOfTreasurySpend<
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Ensure that Alice's account has some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
-  await setInitialUSDTBalanceOnAssetHub(assetHubClient, testAccounts.alice.address)
-
   // Get initial spend count
   const initialSpendCount = await getSpendCount(assetHubClient)
 
@@ -637,7 +619,6 @@ export async function checkStatusOfTreasurySpend<
   const payoutIndex = await getSpendIndexFromEvent(assetHubClient, 'Paid')
   expect(payoutIndex).toBe(spendIndex)
 
-  // / treasury spend does not emit any event on AH so we need to check that Alice's balance is increased by the `amount` directly
   await assetHubClient.dev.newBlock()
 
   // Ensure that Alice's balance is increased
