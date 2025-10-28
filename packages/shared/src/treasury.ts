@@ -26,10 +26,7 @@ const SMALL_TIPPER_ORIGIN = 'SmallTipper'
 const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
 const SPEND_AMOUNT_MULTIPLIER = 100n // 100x existential deposit
-
-// Assets pallet ID
-// const ASSETS_PALLET_ID = 50
-
+const LARGE_SPEND_AMOUNT_MULTIPLIER = 100_000_000n // 100,000x existential deposit
 // USDT asset ID
 const USDT_ID = 1984
 
@@ -730,8 +727,8 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
 
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
-  const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount, testConfig, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
+  const largeSpendAmount = existentialDeposit * LARGE_SPEND_AMOUNT_MULTIPLIER
+  await createSpendProposal(assetHubClient, largeSpendAmount, testConfig, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
 
   await assetHubClient.dev.newBlock()
 
