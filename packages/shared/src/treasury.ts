@@ -9,7 +9,7 @@ import type { Codec } from '@polkadot/types/types'
 
 import { assert, expect } from 'vitest'
 
-//import { logAllEvents } from './helpers/helper_functions.js'
+import { extractSchedulerErrorDetails, logAllEvents } from './helpers/helper_functions.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -295,6 +295,9 @@ export async function treasurySpendBasicTest<
 
   await assetHubClient.dev.newBlock()
 
+  // Extract and log detailed scheduler error information
+  await extractSchedulerErrorDetails(assetHubClient)
+
   // Verify that the AssetSpendApproved event was emitted
   await verifySystemEventAssetSpendApproved(assetHubClient)
 
@@ -499,17 +502,6 @@ export async function claimTreasurySpend<
   await createSpendProposal(assetHubClient, spendAmount, testConfig) // Not working after moving to asset hub
 
   await assetHubClient.dev.newBlock()
-
-  // check the result of dispatched event
-  const events = await assetHubClient.api.query.system.events()
-
-  // Find the Dispatched event from scheduler
-  const dispatchedEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'scheduler' && event.method === 'Dispatched'
-  })
-
-  // assert(dispatchedEvent) not getting the dispatch event nor any extrinsic falied event or error.
 
   // Verify that the AssetSpendApproved event was emitted
   await verifySystemEventAssetSpendApproved(assetHubClient)
@@ -885,6 +877,7 @@ export function baseTreasuryE2ETests<
         label: 'Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error',
         testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain, testConfig),
       },
+      // yarn test treasury -t "Check treasury payouts which are already approved can be paid"
       {
         kind: 'test',
         label: 'Check treasury payouts which are already approved can be paid',
