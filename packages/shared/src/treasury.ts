@@ -35,10 +35,14 @@ const USDT_ID = 1984
 
 // Native asset kind for spend tests
 const ASSET_KIND = {
-  v4: {
+  v5: {
     location: {
       parents: 0,
       interior: 'Here', // Native asset
+    },
+    assetId: {
+      parents: 1,
+      interior: 'Here',
     },
   },
 } as unknown as FrameSupportTokensFungibleUnionOfNativeOrWithId
@@ -46,16 +50,22 @@ const ASSET_KIND = {
 // Beneficiary location(alice) for the treasury spend
 const BENEFICIARY_LOCATION = {
   v4: {
-    parents: 0,
-    interior: {
-      x1: [
-        {
-          accountId32: {
-            network: null,
-            id: testAccounts.alice.addressRaw,
+    location: {
+      parents: 0,
+      interior: { Here: null }, // Location is Here for same parachain
+    },
+    accountId: {
+      parents: 0,
+      interior: {
+        x1: [
+          {
+            accountId32: {
+              network: null,
+              id: testAccounts.alice.addressRaw,
+            },
           },
-        },
-      ],
+        ],
+      },
     },
   },
 } as unknown as XcmVersionedLocation
