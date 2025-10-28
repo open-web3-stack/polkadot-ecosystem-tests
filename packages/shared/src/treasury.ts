@@ -822,6 +822,17 @@ export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
     expect(spend?.unwrap()?.status.isAttempted).toBe(true)
   }
 
+  // call check_status tx for each spend
+  for (const spendIndex of spendIndices) {
+    const checkStatusEvents = await sendCheckStatusTx(assetHubClient, spendIndex)
+    await assetHubClient.dev.newBlock()
+    await verifyEventSpendProcessed(checkStatusEvents)
+
+    // verify the spend is removed from the storage
+    const spendAfterCheckStatus = await assetHubClient.api.query.treasury.spends(spendIndex)
+    expect(spendAfterCheckStatus.isNone).toBe(true)
+  }
+
   await assetHubClient.teardown()
 }
 
