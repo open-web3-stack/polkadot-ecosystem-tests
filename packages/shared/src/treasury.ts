@@ -651,11 +651,10 @@ export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
   // filter those spends which are pending or failed and is neither expired nor early payout
   const pendingOrFailedSpends = spends.filter((spend) => {
     const spendData = spend[1]?.unwrap()
-    return (
-      (spendData?.status.isPending || spendData?.status.isFailed) && // not pending or failed
-      spendData?.validFrom.toNumber() < currentRelayChainBlockNumber && //not early payout
-      spendData?.expireAt.toNumber() > currentRelayChainBlockNumber // not expired
-    )
+    const isSpendPendingOrFailed = spendData?.status.isPending || spendData?.status.isFailed
+    const isSpendNotEarlyPayout = spendData?.validFrom.toNumber() < currentRelayChainBlockNumber
+    const isSpendNotExpired = currentRelayChainBlockNumber < spendData?.expireAt.toNumber()
+    return isSpendPendingOrFailed && isSpendNotEarlyPayout && isSpendNotExpired
   })
 
   await assetHubClient.dev.newBlock()
@@ -714,7 +713,6 @@ export function baseTreasuryE2ETests<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // yarn test treasury -t "Propose and approve a spend of treasury funds"
       {
         kind: 'test',
         label: 'Propose and approve a spend of treasury funds',
