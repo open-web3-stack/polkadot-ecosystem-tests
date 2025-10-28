@@ -9,11 +9,6 @@ import type { Codec } from '@polkadot/types/types'
 
 import { assert, expect } from 'vitest'
 
-// import {
-//   extractExtrinsicFailedErrorDetails,
-//   extractSchedulerErrorDetails,
-//   logAllEvents,
-// } from './helpers/helper_functions.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -31,8 +26,6 @@ const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 
 const SPEND_AMOUNT_MULTIPLIER = 100n // 100x existential deposit
 const LARGE_SPEND_AMOUNT_MULTIPLIER = 100_000_000n // 100,000x existential deposit
-// USDT asset ID
-const USDT_ID = 1984
 
 // Native asset kind for spend tests
 const ASSET_KIND = {
@@ -723,15 +716,14 @@ export function baseTreasuryE2ETests<
       },
       {
         kind: 'test',
-        label: 'Proposing a expired spend emits `SpendExpired` error',
+        label: 'Proposing a expired spend emits SpendExpired error',
         testFn: async () => await proposeExpiredSpend(ahChain, testConfig),
       },
       {
         kind: 'test',
-        label: 'Smalltipper trying to spend more than the origin allows emits `InsufficientPermission` error',
+        label: 'Smalltipper trying to spend more than the origin allows emits InsufficientPermission error',
         testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain, testConfig),
       },
-      // yarn test treasury -t "Check treasury payouts which are already approved can be paid"
       {
         kind: 'test',
         label: 'Check treasury payouts which are already approved can be paid',
