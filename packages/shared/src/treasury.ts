@@ -28,29 +28,17 @@ const TEST_ACCOUNT_BALANCE_MULTIPLIER = 10000n // 10,000x existential deposit
 const SPEND_AMOUNT_MULTIPLIER = 100n // 100x existential deposit
 
 // Assets pallet ID
-const ASSETS_PALLET_ID = 50
+// const ASSETS_PALLET_ID = 50
 
 // USDT asset ID
 const USDT_ID = 1984
 
+// Native asset kind for spend tests
 const ASSET_KIND = {
   v4: {
     location: {
       parents: 0,
-      interior: 'Here', // Asset is local to Asset Hub
-    },
-    assetId: {
-      parents: 0,
-      interior: {
-        x2: [
-          {
-            palletInstance: ASSETS_PALLET_ID,
-          },
-          {
-            generalIndex: USDT_ID,
-          },
-        ],
-      },
+      interior: 'Here', // Native asset
     },
   },
 } as unknown as FrameSupportTokensFungibleUnionOfNativeOrWithId
