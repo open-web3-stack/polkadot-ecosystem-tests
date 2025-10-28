@@ -559,9 +559,9 @@ async function verifyEventSpendProcessed(events: { events: Promise<Codec | Codec
 
 async function sendCheckStatusTx<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(relayClient: Client<TCustom, TInitStoragesRelay>, spendIndex: number) {
-  const checkStatusTx = relayClient.api.tx.treasury.checkStatus(spendIndex)
+  TInitStoragesAssetHub extends Record<string, Record<string, any>> | undefined,
+>(assetHubClient: Client<TCustom, TInitStoragesAssetHub>, spendIndex: number) {
+  const checkStatusTx = assetHubClient.api.tx.treasury.checkStatus(spendIndex)
   return await sendTransaction(checkStatusTx.signAsync(testAccounts.alice))
 }
 
