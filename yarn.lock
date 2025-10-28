@@ -5,11 +5,11 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@acala-network/chopsticks-core@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks-core@npm:1.2.1"
+"@acala-network/chopsticks-core@npm:1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks-core@npm:1.2.3"
   dependencies:
-    "@acala-network/chopsticks-executor": "npm:1.2.1"
+    "@acala-network/chopsticks-executor": "npm:1.2.3"
     "@polkadot/rpc-provider": "npm:^16.4.1"
     "@polkadot/types": "npm:^16.4.1"
     "@polkadot/types-codec": "npm:^16.4.1"
@@ -24,51 +24,51 @@ __metadata:
     pino-pretty: "npm:^13.0.0"
     rxjs: "npm:^7.8.2"
     zod: "npm:^3.25.76"
-  checksum: 10c0/86249a8bbd364b57c72e9fc298bbc58018d99f55a3070bd10123041cc6f15337835471702a5c4be61c5d8ffb273377f9e43c2b7fd13596ea6b82ac67c6ab87b5
+  checksum: 10c0/2011f8de4475f6960e91b8b50ca7bd5837d1154b91461ce8a17ff650b90f5efd18511eb30bbf8066e60abb162cce946f5431f96b1003d95c21f3c7e6e0f79f77
   languageName: node
   linkType: hard
 
-"@acala-network/chopsticks-db@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks-db@npm:1.2.1"
+"@acala-network/chopsticks-db@npm:1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks-db@npm:1.2.3"
   dependencies:
-    "@acala-network/chopsticks-core": "npm:1.2.1"
+    "@acala-network/chopsticks-core": "npm:1.2.3"
     "@polkadot/util": "npm:^13.5.3"
     idb: "npm:^8.0.3"
     reflect-metadata: "npm:^0.2.2"
     sqlite3: "npm:^5.1.7"
     typeorm: "npm:^0.3.25"
-  checksum: 10c0/58e2bcec3a8579ada061ec3c136b446550e555ce9c99e38d85ab6a687c35e7af8f196e47a21394c38add4f94bd57b46b5ac2f6a3136133e74970ffa6c1764171
+  checksum: 10c0/c4058c68bfdae75afad81ad35c078a7007cedc527373739d00c667ef38802e885022dc4a2a4cbd50bd4489a423a91f114c2ee635523f892a4549c59d635fcc18
   languageName: node
   linkType: hard
 
-"@acala-network/chopsticks-executor@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks-executor@npm:1.2.1"
+"@acala-network/chopsticks-executor@npm:1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks-executor@npm:1.2.3"
   dependencies:
     "@polkadot/util": "npm:^13.5.3"
     "@polkadot/wasm-util": "npm:^7.4.1"
-  checksum: 10c0/6784b3f98480dc9df4adaa067a910ff631df93c75c3de7d23969e1abcc000b15f20f186fc068c2725f6c45cc129b5a76a3df3fefda849b1bd0cca29cdcc70e78
+  checksum: 10c0/231759c3582ced39fb5d06fbdba1c7cc18d3f4b9f050f48ac3d16d8946afba3717d468c3b53af03efdb1d208bcbe2d99672cafe33ed3d576f684d5f76d4f0674
   languageName: node
   linkType: hard
 
-"@acala-network/chopsticks-testing@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks-testing@npm:1.2.1"
+"@acala-network/chopsticks-testing@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks-testing@npm:1.2.3"
   dependencies:
-    "@acala-network/chopsticks-utils": "npm:1.2.1"
+    "@acala-network/chopsticks-utils": "npm:1.2.3"
     "@polkadot/api": "npm:^16.4.1"
     "@polkadot/types": "npm:^16.4.1"
-  checksum: 10c0/939e3c0a513fb027ad717e1bc4dc753f45b7b586615d00cf6d21b43c746a85c9e2835b5823ef178c665ef5f01470a53ce8d6373c0c5c387497c2f819c7ecdb96
+  checksum: 10c0/7000de3c488224aa0f09ac5714bf365e7c2dbf830e253311dfb338709ae6c98d291233c19b911e7acc5a59198c90b0f95d8558b18bf95abf643a3d759523d86b
   languageName: node
   linkType: hard
 
-"@acala-network/chopsticks-utils@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks-utils@npm:1.2.1"
+"@acala-network/chopsticks-utils@npm:1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks-utils@npm:1.2.3"
   dependencies:
-    "@acala-network/chopsticks": "npm:1.2.1"
-    "@acala-network/chopsticks-core": "npm:1.2.1"
+    "@acala-network/chopsticks": "npm:1.2.3"
+    "@acala-network/chopsticks-core": "npm:1.2.3"
     "@polkadot-labs/hdkd": "npm:^0.0.19"
     "@polkadot-labs/hdkd-helpers": "npm:^0.0.19"
     "@polkadot/api": "npm:^16.4.1"
@@ -77,16 +77,16 @@ __metadata:
     "@polkadot/types": "npm:^16.4.1"
     "@polkadot/util": "npm:^13.5.3"
     polkadot-api: "npm:^1.14.1"
-  checksum: 10c0/7a7f896e7fe8fda07cfa2389cef9c1edd05950c7fb2a7ef0074f6e37ac549ff86e362727d81f07041860c468c4f93a103a58530b3860d91ac63b939aa45e8feb
+  checksum: 10c0/f8cd7ebf5aa74c7a5f07f50f031780a4c906fbaee706a5f78b3f97e980394e9edf6ccb92df6186b2f758831960ed3ba6ad7c9abb334215c0eab86561e6d0f98f
   languageName: node
   linkType: hard
 
-"@acala-network/chopsticks@npm:1.2.1, @acala-network/chopsticks@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@acala-network/chopsticks@npm:1.2.1"
+"@acala-network/chopsticks@npm:1.2.3, @acala-network/chopsticks@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "@acala-network/chopsticks@npm:1.2.3"
   dependencies:
-    "@acala-network/chopsticks-core": "npm:1.2.1"
-    "@acala-network/chopsticks-db": "npm:1.2.1"
+    "@acala-network/chopsticks-core": "npm:1.2.3"
+    "@acala-network/chopsticks-db": "npm:1.2.3"
     "@pnpm/npm-conf": "npm:^3.0.0"
     "@polkadot/api": "npm:^16.4.1"
     "@polkadot/api-augment": "npm:^16.4.1"
@@ -94,7 +94,7 @@ __metadata:
     "@polkadot/types": "npm:^16.4.1"
     "@polkadot/util": "npm:^13.5.3"
     "@polkadot/util-crypto": "npm:^13.5.3"
-    axios: "npm:^1.10.0"
+    axios: "npm:^1.12.0"
     comlink: "npm:^4.4.2"
     dotenv: "npm:^16.6.1"
     global-agent: "npm:^3.0.0"
@@ -106,7 +106,7 @@ __metadata:
     zod: "npm:^3.25.76"
   bin:
     chopsticks: ./chopsticks.cjs
-  checksum: 10c0/af72c130fe7141c18d3f464411987efb7170f266e7e38b00b64fb76af4785df356408538ac908e8f112f1f8e2e83d1a9e8aea86c4418c6290e119a7ce092b9ea
+  checksum: 10c0/1c7957c3fe51d1f3337501ce48578520717dd524de73a26f70f6b4571ced70e810a6b1d81a894cd3651ebd417cbd63b612223fc7397e40dbbeaf1b41103d912f
   languageName: node
   linkType: hard
 
@@ -128,18 +128,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/biome@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/biome@npm:2.2.4"
+"@biomejs/biome@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/biome@npm:2.3.2"
   dependencies:
-    "@biomejs/cli-darwin-arm64": "npm:2.2.4"
-    "@biomejs/cli-darwin-x64": "npm:2.2.4"
-    "@biomejs/cli-linux-arm64": "npm:2.2.4"
-    "@biomejs/cli-linux-arm64-musl": "npm:2.2.4"
-    "@biomejs/cli-linux-x64": "npm:2.2.4"
-    "@biomejs/cli-linux-x64-musl": "npm:2.2.4"
-    "@biomejs/cli-win32-arm64": "npm:2.2.4"
-    "@biomejs/cli-win32-x64": "npm:2.2.4"
+    "@biomejs/cli-darwin-arm64": "npm:2.3.2"
+    "@biomejs/cli-darwin-x64": "npm:2.3.2"
+    "@biomejs/cli-linux-arm64": "npm:2.3.2"
+    "@biomejs/cli-linux-arm64-musl": "npm:2.3.2"
+    "@biomejs/cli-linux-x64": "npm:2.3.2"
+    "@biomejs/cli-linux-x64-musl": "npm:2.3.2"
+    "@biomejs/cli-win32-arm64": "npm:2.3.2"
+    "@biomejs/cli-win32-x64": "npm:2.3.2"
   dependenciesMeta:
     "@biomejs/cli-darwin-arm64":
       optional: true
@@ -159,62 +159,62 @@ __metadata:
       optional: true
   bin:
     biome: bin/biome
-  checksum: 10c0/7229fcc743db48f3cfd7417fb3f33d1cd9e7dfe42a12ed3c1046cd3110718237bb71ea3fe5c8b0de9bd3df2b918d0be58027602aa3720b64904b63d9cedf53e3
+  checksum: 10c0/f9f132e87fd6ab00bcac7f24dffa89a838087b04ff983398f6ce5d2b2de6a45ee05ba05140a9718153780e5e7dc02ed18955e7a1fde4769484ed4a80df82efe1
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-arm64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-darwin-arm64@npm:2.2.4"
+"@biomejs/cli-darwin-arm64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-darwin-arm64@npm:2.3.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-x64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-darwin-x64@npm:2.2.4"
+"@biomejs/cli-darwin-x64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-darwin-x64@npm:2.3.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64-musl@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.2.4"
+"@biomejs/cli-linux-arm64-musl@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.3.2"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-linux-arm64@npm:2.2.4"
+"@biomejs/cli-linux-arm64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-linux-arm64@npm:2.3.2"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64-musl@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-linux-x64-musl@npm:2.2.4"
+"@biomejs/cli-linux-x64-musl@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-linux-x64-musl@npm:2.3.2"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-linux-x64@npm:2.2.4"
+"@biomejs/cli-linux-x64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-linux-x64@npm:2.3.2"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-arm64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-win32-arm64@npm:2.2.4"
+"@biomejs/cli-win32-arm64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-win32-arm64@npm:2.3.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-x64@npm:2.2.4":
-  version: 2.2.4
-  resolution: "@biomejs/cli-win32-x64@npm:2.2.4"
+"@biomejs/cli-win32-x64@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@biomejs/cli-win32-x64@npm:2.3.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -232,7 +232,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e-test/kusama@workspace:packages/kusama"
   dependencies:
-    "@acala-network/chopsticks-testing": "npm:^1.2.1"
+    "@acala-network/chopsticks-testing": "npm:^1.2.3"
     "@e2e-test/shared": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -241,7 +241,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e-test/networks@workspace:packages/networks"
   dependencies:
-    "@acala-network/chopsticks-testing": "npm:^1.2.1"
+    "@acala-network/chopsticks-testing": "npm:^1.2.3"
   languageName: unknown
   linkType: soft
 
@@ -249,7 +249,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e-test/polkadot@workspace:packages/polkadot"
   dependencies:
-    "@acala-network/chopsticks-testing": "npm:^1.2.1"
+    "@acala-network/chopsticks-testing": "npm:^1.2.3"
     "@e2e-test/shared": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -258,12 +258,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e-test/shared@workspace:packages/shared"
   dependencies:
-    "@acala-network/chopsticks": "npm:^1.2.1"
-    "@acala-network/chopsticks-testing": "npm:^1.2.1"
+    "@acala-network/chopsticks": "npm:^1.2.3"
+    "@acala-network/chopsticks-testing": "npm:^1.2.3"
     "@e2e-test/networks": "workspace:*"
-    "@polkadot/api": "npm:^16.4.8"
-    "@polkadot/types": "npm:^16.4.3"
-    "@polkadot/types-augment": "npm:^16.4.3"
+    "@polkadot/api": "npm:^16.4.9"
+    "@polkadot/types": "npm:^16.4.9"
+    "@polkadot/types-augment": "npm:^16.4.9"
   languageName: unknown
   linkType: soft
 
@@ -2138,14 +2138,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.10.0":
-  version: 1.12.1
-  resolution: "axios@npm:1.12.1"
+"axios@npm:^1.12.0":
+  version: 1.13.1
+  resolution: "axios@npm:1.13.1"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/eda4dff56c02d13b950fd9487b678ac197ce5f21dfc98df73632df29e45d8dd24602a34e8d9b6e016d84a41ef7fd7fc4a7618060a72cc536b91cda1eaa9cd907
+  checksum: 10c0/de9c3c6de43d3ee1146d3afe78645f19450cac6a5d7235bef8b8e8eeb705c2e47e2d231dea99cecaec4dae1897c521118ca9413b9d474063c719c4d94c5b9adc
   languageName: node
   linkType: hard
 
@@ -2742,7 +2742,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "e2e-tests@workspace:."
   dependencies:
-    "@biomejs/biome": "npm:2.2.4"
+    "@biomejs/biome": "npm:2.3.2"
     "@e2e-test/networks": "workspace:*"
     "@swc/core": "npm:^1.13.5"
     "@types/lodash": "npm:^4.17.20"

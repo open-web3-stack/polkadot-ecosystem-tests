@@ -2,7 +2,7 @@
 	"name": "@e2e-test/polkadot",
 	"type": "module",
 	"dependencies": {
-		"@acala-network/chopsticks-testing": "^1.2.1",
+		"@acala-network/chopsticks-testing": "^1.2.3",
 		"@e2e-test/shared": "workspace:*"
 	}
 }
