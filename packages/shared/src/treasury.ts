@@ -447,22 +447,6 @@ async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
 }
 
 /**
- * Helper: Set the initial balance amount of the account on Asset Hub for USDT
- *
- * This is required to ensure that the account exists on Asset Hub for the payout to happen
- */
-async function setInitialUSDTBalanceOnAssetHub<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(assetHubClient: Client<TCustom, TInitStoragesPara>, accountAddress: string): Promise<void> {
-  await assetHubClient.dev.setStorage({
-    Assets: {
-      account: [[[USDT_ID, accountAddress], { balance: 1000e6 }]],
-    },
-  })
-}
-
-/**
  * Test: Claim a spend
  *
  * Verifies that the treasury's spend claiming mechanism correctly processes approved spends
@@ -486,12 +470,8 @@ export async function claimTreasurySpend<
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Ensure that Alice's account has some USDT balance on Asset Hub i.e her account should exist on Asset Hub for the payout to happen
-  await setInitialUSDTBalanceOnAssetHub(assetHubClient, testAccounts.alice.address)
-
   // Get initial spend count
-  // const initialSpendCount = await getSpendCount(assetHubClient)
-  const initialSpendCount = (await assetHubClient.api.query.treasury.spendCount()).toNumber()
+  const initialSpendCount = await getSpendCount(assetHubClient)
 
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
