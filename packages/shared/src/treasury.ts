@@ -532,22 +532,31 @@ export async function proposeExpiredSpend<
   // check the result of dispatched event
   const events = await assetHubClient.api.query.system.events()
   // Find the Dispatched event from scheduler
-  const dispatchedEvent = events.find((record) => {
+  const dispatchedEvents = events.filter((record) => {
     const { event } = record
     return event.section === 'scheduler' && event.method === 'Dispatched'
   })
 
-  assert(dispatchedEvent)
-  assert(assetHubClient.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+  assert(dispatchedEvents.length > 0)
+  // the spend is expired, at least one of the dispatched events should be an error with SpendExpired
+  let foundSpendExpiredError = false
+  for (const dispatchedEvent of dispatchedEvents) {
+    assert(assetHubClient.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+    const dispatchedData = dispatchedEvent.event.data
 
-  const dispatchedData = dispatchedEvent.event.data
-  expect(dispatchedData.result.isErr).toBe(true)
-
-  // Decode the module error to get human-readable details
-  const dispatchError = dispatchedData.result.asErr
-  assert(dispatchError.isModule)
-  expect(assetHubClient.api.errors.treasury.SpendExpired.is(dispatchError.asModule)).toBeTruthy()
-
+    // if the result is an error
+    if (dispatchedData.result.isErr) {
+      const dispatchError = dispatchedData.result.asErr
+      if (dispatchError.isModule) {
+        // Check if this is the SpendExpired error
+        if (assetHubClient.api.errors.treasury.SpendExpired.is(dispatchError.asModule)) {
+          foundSpendExpiredError = true
+        }
+      }
+    }
+  }
+  // Ensure at least one error was SpendExpired
+  assert(foundSpendExpiredError, 'Expected at least one Dispatched event to have a SpendExpired error')
   await assetHubClient.teardown()
 }
 
@@ -580,21 +589,33 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
   // check the result of dispatched event
   const events = await assetHubClient.api.query.system.events()
   // Find the Dispatched event from scheduler
-  const dispatchedEvent = events.find((record) => {
+  const dispatchedEvents = events.filter((record) => {
     const { event } = record
     return event.section === 'scheduler' && event.method === 'Dispatched'
   })
 
-  assert(dispatchedEvent)
-  assert(assetHubClient.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+  assert(dispatchedEvents.length > 0)
+  let foundInsufficientPermissionError = false
+  // check if at least one of the dispatched events is an error with InsufficientPermission
+  for (const dispatchedEvent of dispatchedEvents) {
+    assert(assetHubClient.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+    const dispatchedData = dispatchedEvent.event.data
 
-  const dispatchedData = dispatchedEvent.event.data
-  expect(dispatchedData.result.isErr).toBe(true)
+    // if the result is an error
+    if (dispatchedData.result.isErr) {
+      const dispatchError = dispatchedData.result.asErr
+      assert(dispatchError.isModule)
+      if (assetHubClient.api.errors.treasury.InsufficientPermission.is(dispatchError.asModule)) {
+        foundInsufficientPermissionError = true
+      }
+    }
+  }
 
-  // Decode the module error to get human-readable details
-  const dispatchError = dispatchedData.result.asErr
-  assert(dispatchError.isModule)
-  expect(assetHubClient.api.errors.treasury.InsufficientPermission.is(dispatchError.asModule)).toBeTruthy()
+  // Ensure at least one error was InsufficientPermission
+  assert(
+    foundInsufficientPermissionError,
+    'Expected at least one Dispatched event to have a InsufficientPermission error',
+  )
 
   await assetHubClient.teardown()
 }
