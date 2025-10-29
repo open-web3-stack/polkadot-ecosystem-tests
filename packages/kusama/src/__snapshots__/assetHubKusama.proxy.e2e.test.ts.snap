@@ -920,6 +920,18 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
+exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for AssetManager > events for proxy type AssetManager, pallet assets, call mint 1`] = `
 [
   {
@@ -1838,25 +1850,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
   {
     "data": {
       "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",

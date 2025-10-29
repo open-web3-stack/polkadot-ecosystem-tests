@@ -7,11 +7,11 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   checkEvents,
   checkSystemEvents,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
 } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
@@ -109,7 +109,7 @@ async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number
 async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfig: TestConfig) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
   const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
     .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
