@@ -1,10 +1,11 @@
 import { bridgeHubKusama, kusama } from '@e2e-test/networks/chains'
-import { type RelayTestConfig, registerTestTree, systemE2ETestsViaRelay } from '@e2e-test/shared'
+import { type ParaTestConfig, registerTestTree, systemE2ETestsViaRelay } from '@e2e-test/shared'
 
-const testConfig: RelayTestConfig = {
+const testConfig: ParaTestConfig = {
   testSuiteName: 'Kusama BridgeHub System',
-  addressEncoding: 0,
+  addressEncoding: 2,
   blockProvider: 'Local',
+  asyncBacking: 'Enabled',
 }
 
 registerTestTree(systemE2ETestsViaRelay(kusama, bridgeHubKusama, testConfig))

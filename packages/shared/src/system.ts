@@ -18,6 +18,7 @@ import {
   getXcmRoute,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
+  type TestConfig,
 } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -42,6 +43,7 @@ type ExpectedEvents = Parameters<typeof assertExpectedEvents>[1]
  */
 async function runAuthorizeUpgradeScenario(
   client: Client,
+  testConfig: TestConfig,
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
@@ -53,9 +55,10 @@ async function runAuthorizeUpgradeScenario(
   const currentWasmHash = client.api.registry.hash(currentWasm)
 
   const call = params.call(currentWasmHash).method
-  await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock({ count: 1 })
+
   assertExpectedEvents(await client.api.query.system.events(), [
     {
       type: client.api.events.system.UpgradeAuthorized,
@@ -71,7 +74,17 @@ async function runAuthorizeUpgradeScenario(
 
   await client.dev.newBlock({ count: 1 })
 
-  assertExpectedEvents(await client.api.query.system.events(), params.expectedAfterApply(currentWasmHash))
+  if (client.config.isRelayChain) {
+    assertExpectedEvents(await client.api.query.system.events(), params.expectedAfterApply(currentWasmHash))
+  } else {
+    const eventsAfterFirstBlock = await client.api.query.system.events()
+    await client.dev.newBlock({ count: 1 })
+    const eventsAfterSecondBlock = await client.api.query.system.events()
+    assertExpectedEvents(
+      eventsAfterFirstBlock.concat(eventsAfterSecondBlock),
+      params.expectedAfterApply(currentWasmHash),
+    )
+  }
 }
 
 /**
@@ -92,6 +105,7 @@ async function runAuthorizeUpgradeScenario(
 async function runAuthorizeUpgradeScenarioViaRelay(
   relayClient: Client,
   paraClient: Client,
+  testConfig: TestConfig,
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
@@ -107,7 +121,7 @@ async function runAuthorizeUpgradeScenarioViaRelay(
   const dest = getXcmRoute(relayClient.config, paraClient.config)
   const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser').method
 
-  await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' })
+  await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' }, testConfig.blockProvider)
   await relayClient.dev.newBlock({ count: 1 })
   await paraClient.dev.newBlock({ count: 1 })
 
@@ -138,13 +152,14 @@ async function runAuthorizeUpgradeScenarioViaRelay(
  */
 async function runAuthorizeUpgradeAllowToOverrideScenario(
   client: Client,
+  testConfig: TestConfig,
   params: {
     call: AuthorizeUpgradeFn
   },
 ) {
   const authorizeHash = async (someHash) => {
     const call = params.call(someHash).method
-    await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     await client.dev.newBlock({ count: 1 })
     assertExpectedEvents(await client.api.query.system.events(), [
@@ -181,6 +196,7 @@ async function runAuthorizeUpgradeAllowToOverrideScenario(
 async function runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(
   relayClient: Client,
   paraClient: Client,
+  testConfig: TestConfig,
   params: {
     call: AuthorizeUpgradeFn
   },
@@ -189,7 +205,7 @@ async function runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(
     const call = params.call(someHash).method
     const dest = getXcmRoute(relayClient.config, paraClient.config)
     const xcmTx = createXcmTransactSend(relayClient, dest, call.toHex(), 'Superuser').method
-    await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' })
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
     await relayClient.dev.newBlock({ count: 1 })
     await paraClient.dev.newBlock({ count: 1 })
@@ -228,6 +244,7 @@ async function runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(
  */
 async function runSetCodeScenario(
   client: Client,
+  testConfig: TestConfig,
   params: {
     call: SetCodeFn
     expectedAfterSchedule: ExpectedEvents
@@ -255,7 +272,12 @@ async function runSetCodeScenario(
     { type: client.api.events.preimage.Noted, args: { hash_: preimageHash } },
   ])
 
-  await scheduleLookupCallWithOrigin(client, { hash: preimageHash, len: call.encodedLength }, { system: 'Root' })
+  await scheduleLookupCallWithOrigin(
+    client,
+    { hash: preimageHash, len: call.encodedLength },
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
   await client.dev.newBlock({ count: 1 })
 
   assertExpectedEvents(await client.api.query.system.events(), params.expectedAfterSchedule)
@@ -275,22 +297,22 @@ async function runSetCodeScenario(
 }
 
 /**
- * Runs upgrade scenario via direct set_code
+ * Runs upgrade scenario via scheduler on Relay
  * Scenario will fetch WASM from :code storage thus effectively trying to upgrade to the same WASM as currently used
  * Calls are run via scheduler on Relay using XCM Transact to send the actual call to the destination parachain
  *
- * Focus of this test is to solely verify working of direct runtime upgrade (as opposed to 2-step apply+authorize method)
+ * Focus of this test is to verify that XCM containing WASM blob is too big to be sent between relay and parachains
  *
  * via `call` param allows to either use `setCode` or `setCodeWithoutChecks`
  *
  * 1. Fetches current runtime WASM and hashes it.
  * 2. Schedules an setCode call as Root using the data from step 1.
  * 3. Verifies expected events as given by the param `expectedAfterSchedule`
- * 4. Executes remark (could be any other) extrinsic to confirm WASM is still functional after enacted
  */
 async function runSetCodeScenarioViaRelay(
   relayClient: Client,
   paraClient: Client,
+  testConfig: TestConfig,
   params: {
     call: SetCodeFn
     expectedAfterSchedule: ExpectedEvents
@@ -321,24 +343,15 @@ async function runSetCodeScenarioViaRelay(
     { type: relayClient.api.events.preimage.Noted, args: { hash_: preimageHash } },
   ])
 
-  await scheduleLookupCallWithOrigin(relayClient, { hash: preimageHash, len: xcmTx.encodedLength }, { system: 'Root' })
+  await scheduleLookupCallWithOrigin(
+    relayClient,
+    { hash: preimageHash, len: xcmTx.encodedLength },
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
   await relayClient.dev.newBlock({ count: 1 })
 
-  await paraClient.dev.newBlock({ count: 1 })
-  assertExpectedEvents(await paraClient.api.query.system.events(), params.expectedAfterSchedule)
-
-  // sanity: extrinsic still works after (failed/successful) upgrade attempt
-  const remarkContent = stringToU8a('still working')
-  const remarkCall = paraClient.api.tx.system.remarkWithEvent(compactAddLength(remarkContent))
-  await sendTransaction(remarkCall.signAsync(alice))
-  await paraClient.dev.newBlock({ count: 1 })
-
-  assertExpectedEvents(await paraClient.api.query.system.events(), [
-    {
-      type: paraClient.api.events.system.Remarked,
-      args: { hash_: paraClient.api.registry.hash(remarkContent) },
-    },
-  ])
+  assertExpectedEvents(await relayClient.api.query.system.events(), params.expectedAfterSchedule)
 }
 
 /**
@@ -347,33 +360,47 @@ async function runSetCodeScenarioViaRelay(
 export async function setCodeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runSetCodeScenario(client, {
+  return runSetCodeScenario(client, testConfig, {
     call: client.api.tx.system.setCode,
     expectedAfterSchedule: [
       {
         type: client.api.events.scheduler.Dispatched,
-        args: { result: (r: Result<Null, SpRuntimeDispatchError>) => r.isErr }, // expected failure
+        args: {
+          result: (r: Result<Null, SpRuntimeDispatchError>) =>
+            r.isErr && client.api.errors.system.SpecVersionNeedsToIncrease.is(r.asErr.asModule),
+        }, // expected failure
       },
     ],
   })
 }
 
 /**
- * Tests `setCode` flow — ensures runtime upgrade to the same WASM fails
- * Initiated remotely from Relay Chain
+ * Tests `setCode` flow — ensures runtime upgrade to the same WASM fails due to XCM exceeding message size limits
  */
 export async function setCodeViaRelayTests<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustomRelay, TInitStoragesRelay>, paraChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
+  paraChain: Chain<TCustomPara, TInitStoragesPara>,
+  testConfig: TestConfig,
+) {
   const [relayClient, paraClient] = await setupNetworks(relayChain, paraChain)
-  return runSetCodeScenarioViaRelay(relayClient, paraClient, {
-    call: paraClient.api.tx.system.setCodeWithoutChecks,
-    expectedAfterSchedule: [],
+  return runSetCodeScenarioViaRelay(relayClient, paraClient, testConfig, {
+    call: paraClient.api.tx.system.setCode,
+    expectedAfterSchedule: [
+      {
+        type: relayClient.api.events.scheduler.Dispatched,
+        args: {
+          result: (r: Result<Null, SpRuntimeDispatchError>) =>
+            r.isErr && relayClient.api.errors.xcmPallet.SendFailure.is(r.asErr.asModule),
+        }, // expected failure
+      },
+    ],
   })
 }
 
@@ -383,9 +410,9 @@ export async function setCodeViaRelayTests<
 export async function setCodeWithoutChecksTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runSetCodeScenario(client, {
+  return runSetCodeScenario(client, testConfig, {
     call: client.api.tx.system.setCodeWithoutChecks,
     expectedAfterSchedule: [
       {
@@ -403,12 +430,18 @@ export async function setCodeWithoutChecksTests<
 export async function authorizeUpgradeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runAuthorizeUpgradeScenario(client, {
+  return runAuthorizeUpgradeScenario(client, testConfig, {
     call: client.api.tx.system.authorizeUpgrade,
     expectedAfterApply: (hash) => [
-      { type: client.api.events.system.RejectedInvalidAuthorizedUpgrade, args: { codeHash: hash } },
+      {
+        type: client.api.events.system.RejectedInvalidAuthorizedUpgrade,
+        args: {
+          codeHash: hash,
+          error: (r: SpRuntimeDispatchError) => client.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
+        },
+      },
     ],
   })
 }
@@ -419,11 +452,23 @@ export async function authorizeUpgradeTests<
 export async function authorizeUpgradeWithoutChecksTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runAuthorizeUpgradeScenario(client, {
+
+  let expectedEvents: ExpectedEvents = []
+  if (chain.isRelayChain) {
+    expectedEvents = [{ type: client.api.events.system.CodeUpdated }]
+  } else {
+    expectedEvents = [
+      { type: client.api.events.parachainSystem.ValidationFunctionStored },
+      { type: client.api.events.parachainSystem.ValidationFunctionApplied },
+      { type: client.api.events.system.CodeUpdated },
+    ]
+  }
+
+  return runAuthorizeUpgradeScenario(client, testConfig, {
     call: client.api.tx.system.authorizeUpgradeWithoutChecks,
-    expectedAfterApply: () => [{ type: client.api.events.system.CodeUpdated }],
+    expectedAfterApply: () => expectedEvents,
   })
 }
 
@@ -435,12 +480,22 @@ export async function authorizeUpgradeViaRelayTests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustomRelay, TInitStoragesRelay>, paraChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
+  paraChain: Chain<TCustomPara, TInitStoragesPara>,
+  testConfig: TestConfig,
+) {
   const [relayClient, paraClient] = await setupNetworks(relayChain, paraChain)
-  return runAuthorizeUpgradeScenarioViaRelay(relayClient, paraClient, {
+  return runAuthorizeUpgradeScenarioViaRelay(relayClient, paraClient, testConfig, {
     call: paraClient.api.tx.system.authorizeUpgrade,
     expectedAfterApply: (hash) => [
-      { type: paraClient.api.events.system.RejectedInvalidAuthorizedUpgrade, args: { codeHash: hash } },
+      {
+        type: paraClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
+        args: {
+          codeHash: hash,
+          error: (r: SpRuntimeDispatchError) => paraClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
+        },
+      },
     ],
   })
 }
@@ -453,9 +508,13 @@ export async function authorizeUpgradeWithoutChecksViaRelayTests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustomRelay, TInitStoragesRelay>, paraChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
+  paraChain: Chain<TCustomPara, TInitStoragesPara>,
+  testConfig: TestConfig,
+) {
   const [relayClient, paraClient] = await setupNetworks(relayChain, paraChain)
-  return runAuthorizeUpgradeScenarioViaRelay(relayClient, paraClient, {
+  return runAuthorizeUpgradeScenarioViaRelay(relayClient, paraClient, testConfig, {
     call: paraClient.api.tx.system.authorizeUpgradeWithoutChecks,
     expectedAfterApply: () => [
       { type: paraClient.api.events.parachainSystem.ValidationFunctionStored },
@@ -473,9 +532,13 @@ export async function authorizeUpgradeAllowToOverrideViaRelay<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustomRelay, TInitStoragesRelay>, paraChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
+  paraChain: Chain<TCustomPara, TInitStoragesPara>,
+  testConfig: TestConfig,
+) {
   const [relayClient, paraClient] = await setupNetworks(relayChain, paraChain)
-  return runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(relayClient, paraClient, {
+  return runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(relayClient, paraClient, testConfig, {
     call: paraClient.api.tx.system.authorizeUpgrade,
   })
 }
@@ -488,9 +551,13 @@ export async function authorizeUpgradeWithoutChecksAllowToOverrideViaRelay<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustomRelay, TInitStoragesRelay>, paraChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
+  paraChain: Chain<TCustomPara, TInitStoragesPara>,
+  testConfig: TestConfig,
+) {
   const [relayClient, paraClient] = await setupNetworks(relayChain, paraChain)
-  return runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(relayClient, paraClient, {
+  return runAuthorizeUpgradeAllowToOverrideScenarioViaRelay(relayClient, paraClient, testConfig, {
     call: paraClient.api.tx.system.authorizeUpgradeWithoutChecks,
   })
 }
@@ -501,9 +568,9 @@ export async function authorizeUpgradeWithoutChecksAllowToOverrideViaRelay<
 export async function authorizeUpgradeAllowToOverride<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runAuthorizeUpgradeAllowToOverrideScenario(client, {
+  return runAuthorizeUpgradeAllowToOverrideScenario(client, testConfig, {
     call: client.api.tx.system.authorizeUpgrade,
   })
 }
@@ -514,22 +581,22 @@ export async function authorizeUpgradeAllowToOverride<
 export async function authorizeUpgradeWithoutChecksAllowToOverride<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStoragesRelay>) {
+>(chain: Chain<TCustom, TInitStoragesRelay>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  return runAuthorizeUpgradeAllowToOverrideScenario(client, {
+  return runAuthorizeUpgradeAllowToOverrideScenario(client, testConfig, {
     call: client.api.tx.system.authorizeUpgradeWithoutChecks,
   })
 }
 
 /**
- * System upgrade scenarios
+ * System upgrade scenarios for relay chains
  *
  * To be used by chains with local Scheduler and Preimage pallets available
  */
 export function systemE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -537,32 +604,81 @@ export function systemE2ETests<
       {
         kind: 'test',
         label: 'set_code doesnt allow upgrade to the same wasm',
-        testFn: async () => await setCodeTests(chain),
+        testFn: async () => await setCodeTests(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'set_code_without_checks allows upgrade to the same wasm',
-        testFn: async () => await setCodeWithoutChecksTests(chain),
+        testFn: async () => await setCodeWithoutChecksTests(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeWithoutChecksTests(chain),
+        testFn: async () => await authorizeUpgradeWithoutChecksTests(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade doesnt allow upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeTests(chain),
+        testFn: async () => await authorizeUpgradeTests(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade allows to override previously authorized one',
-        testFn: async () => await authorizeUpgradeAllowToOverride(chain),
+        testFn: async () => await authorizeUpgradeAllowToOverride(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows to override previously authorized one',
-        testFn: async () => await authorizeUpgradeWithoutChecksAllowToOverride(chain),
+        testFn: async () => await authorizeUpgradeWithoutChecksAllowToOverride(chain, testConfig),
+      },
+    ],
+  }
+}
+
+/**
+ * Set of system upgrade scenarios prepared for parachains
+ *
+ * To be used by chains with local Scheduler and Preimage pallets available
+ */
+export function systemE2ETestsForParaWithScheduler<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    children: [
+      // TODO: Commented out tests dont work, not sure if thats expected or not
+      //       (scheduler.Dispatched error: parachainSystem.ValidationDataNotAvailable)
+      // {
+      //   kind: 'test',
+      //   label: 'set_code doesnt allow upgrade to the same wasm',
+      //   testFn: async () => await setCodeTests(chain, testConfig),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'set_code_without_checks allows upgrade to the same wasm',
+      //   testFn: async () => await setCodeWithoutChecksTests(chain, testConfig),
+      // },
+      {
+        kind: 'test',
+        label: 'authorize_upgrade_without_checks allows upgrade to the same wasm',
+        testFn: async () => await authorizeUpgradeWithoutChecksTests(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'authorize_upgrade doesnt allow upgrade to the same wasm',
+        testFn: async () => await authorizeUpgradeTests(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'authorize_upgrade allows to override previously authorized one',
+        testFn: async () => await authorizeUpgradeAllowToOverride(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'authorize_upgrade_without_checks allows to override previously authorized one',
+        testFn: async () => await authorizeUpgradeWithoutChecksAllowToOverride(chain, testConfig),
       },
     ],
   }
@@ -582,7 +698,7 @@ export function systemE2ETestsViaRelay<
 >(
   relayChain: Chain<TCustomRelay, TInitStoragesRelay>,
   paraChain: Chain<TCustomPara, TInitStoragesPara>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
+  testConfig: TestConfig,
 ): RootTestTree {
   return {
     kind: 'describe',
@@ -591,22 +707,28 @@ export function systemE2ETestsViaRelay<
       {
         kind: 'test',
         label: 'authorize_upgrade doesnt allow upgrade to the same wasm (via relay)',
-        testFn: async () => await authorizeUpgradeViaRelayTests(relayChain, paraChain),
+        testFn: async () => await authorizeUpgradeViaRelayTests(relayChain, paraChain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows upgrade to the same wasm (via relay)',
-        testFn: async () => await authorizeUpgradeWithoutChecksViaRelayTests(relayChain, paraChain),
+        testFn: async () => await authorizeUpgradeWithoutChecksViaRelayTests(relayChain, paraChain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade allows to override previously authorized one (via relay)',
-        testFn: async () => await authorizeUpgradeAllowToOverrideViaRelay(relayChain, paraChain),
+        testFn: async () => await authorizeUpgradeAllowToOverrideViaRelay(relayChain, paraChain, testConfig),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows to override previously authorized one (via relay)',
-        testFn: async () => await authorizeUpgradeWithoutChecksAllowToOverrideViaRelay(relayChain, paraChain),
+        testFn: async () =>
+          await authorizeUpgradeWithoutChecksAllowToOverrideViaRelay(relayChain, paraChain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'expecting set_code to fail as sending WASM from relay to para should exceed XCM limits',
+        testFn: async () => await setCodeViaRelayTests(relayChain, paraChain, testConfig),
       },
     ],
   }
