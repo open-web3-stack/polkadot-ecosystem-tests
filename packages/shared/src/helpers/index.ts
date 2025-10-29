@@ -388,12 +388,11 @@ export async function updateCumulativeFees(
     if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
       assert(api.events.transactionPayment.TransactionFeePaid.is(event))
       const [who, actualFee, tip] = event.data
-      expect(tip.toNumber()).toBe(0)
       const address = encodeAddress(who.toString(), addressEncoding)
-      const fee = BigInt(actualFee.toString())
+      const totalFee = BigInt(actualFee.add(tip).toString())
 
       const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + fee)
+      feeMap.set(address, currentFee + totalFee)
     }
   }
   return feeMap

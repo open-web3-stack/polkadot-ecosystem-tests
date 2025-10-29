@@ -623,7 +623,7 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 2000000000)",
+        "refTime": "(rounded 800000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -635,8 +635,8 @@ exports[`collectives & polkadot > polkadot teleport DOT to collectivesPolkadot >
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

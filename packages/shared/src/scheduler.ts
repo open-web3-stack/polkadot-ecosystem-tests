@@ -782,35 +782,62 @@ export async function scheduledOverweightCallFails<
 
   await checkSystemEvents(client, 'scheduler')
     .redact({
-      redactKeys: /task/,
+      redactKeys: /task|when/,
     })
     .toMatchSnapshot('events when scheduling overweight task')
 
-  const events = await client.api.query.system.events()
-  const [overweightEvent] = events.filter((record) => {
+  let events = await client.api.query.system.events()
+  let overweightEvent = events.find((record) => {
     const { event } = record
     return event.section === 'scheduler' && event.method === 'PermanentlyOverweight'
   })
+  // This flag is set to `true` if an overweight event is found immediately after execution.
+  // An overweight event is emitted only if the task is the first to be executed in a given block, and fails
+  // execution due to being overweight.
+  // If this path is taken, the test is likely running on a pre-AHM runtime, or the collectives network.
+  let overweightEventFound = false
+  if (overweightEvent) {
+    overweightEventFound = true
 
-  assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
-  expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
-  expect(overweightEvent.event.data.id.toJSON()).toBeNull()
+    assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
+    expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
+    expect(overweightEvent.event.data.id.toJSON()).toBeNull()
+
+    const incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
+  }
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
-
   await check(scheduled[0].unwrap()).toMatchObject(task)
 
-  // Since the scheduler pallet signaled it as permanently overweight, it should set the
-  // `incompleteSince` storage item.
-  const incompleteSince = await client.api.query.scheduler.incompleteSince()
-  // TODO: this change only recently made it to Kusama. Update this when resolved.
-  if (chain.name.toLowerCase().includes('kusama')) {
+  // If the overweight event is not found, even though the task was overweight, it's likely that other scheduled events
+  // interfered with the agenda's scheduled tasks - even though the test clears the agenda for this block.
+  // Possible cause: `voterList.ScoreUpdated` from the `on_idle` hook. Use `client.pause()` to verify.
+  // IF this path is taken, the test is likely running on a post-migration asset hub runtime.
+  if (!overweightEventFound) {
+    let incompleteSince = await client.api.query.scheduler.incompleteSince()
     assert(incompleteSince.isSome)
-    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
-  } else {
-    assert(incompleteSince.isNone)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber!)
+
+    await client.dev.newBlock()
+    events = await client.api.query.system.events()
+
+    overweightEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'PermanentlyOverweight'
+    })
+
+    expect(overweightEvent).toBeDefined()
+    assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent!.event))
+    expect(overweightEvent!.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
+    expect(overweightEvent!.event.data.id.toJSON()).toBeNull()
+
+    incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + offset + 1)
   }
 }
 
@@ -1416,24 +1443,18 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  if (chain.name.toLowerCase().includes('kusama')) {
-    // Kusama is using a new version of the scheduler pallet prepared for general applicability, including in
-    // post-AHM asset hubs.
-    // It always sets `incompleteSince` to `n + 1`, where `n` is the block in which the agenda was last
-    // serviced.
-    // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
-    expect(finalIncompleteSince.isSome).toBeTruthy()
-    match(testConfig.blockProvider)
-      .with('Local', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
-      })
-      .with('NonLocal', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
-      })
-      .exhaustive()
-  } else {
-    expect(finalIncompleteSince.isNone).toBeTruthy()
-  }
+  // The behavior of the scheduler pallet going forward is now such that it always sets `incompleteSince` to `n + 1`,
+  // where `n` is the block in which the agenda was last serviced.
+  // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
+  expect(finalIncompleteSince.isSome).toBeTruthy()
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+    })
+    .with('NonLocal', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+    })
+    .exhaustive()
 
   // Check that the agenda for the block in which the 2 priority tasks were scheduled is empty
   scheduled = await client.api.query.scheduler.agenda(priorityTargetBlock!)

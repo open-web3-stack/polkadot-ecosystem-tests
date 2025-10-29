@@ -177,7 +177,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 200000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

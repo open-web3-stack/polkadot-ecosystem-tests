@@ -142,6 +142,18 @@ These include:
   - Requesting judgement requests on registrars, and providing it
   - Adding registrars to the people chain by sending, from the relay chain, an XCM call with root origin
   - Adding, modifying, and removing subidentities for an account
+- E2E test suite for bounties infrastructure:
+  - Bounty creation, approval, and funding workflows
+  - Curator assignment, acceptance, and management
+  - Bounty extension, awarding, and claiming processes
+  - Bounty closure in various states (proposed, funded, active)
+  - Curator unassignment scenarios (by curator themselves vs. treasurer)
+  - Comprehensive failure mode testing:
+    - Invalid bounty values and descriptions
+    - Premature curator unassignment
+    - Bounty closure restrictions (approved/pending payout states)
+    - Non-curator attempting to accept curator role
+    - Child bounty constraints preventing parent bounty closure
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.

@@ -251,6 +251,15 @@ exports[`Polkadot Proxy full tests (includes call filtering) > Polkadot Proxy ba
 [
   {
     "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "spawner": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureKilled",
+    "section": "proxy",
+  },
+  {
+    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -474,13 +483,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -569,17 +571,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -590,14 +581,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet staking, call bond 1`] = `
 [
-  {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
   {
     "data": {
       "result": "Ok",
@@ -617,20 +600,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -638,43 +607,16 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "hash_": "(hash)",
-      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -688,11 +630,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -705,11 +642,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet utility, call force_batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -721,13 +653,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet vesting, call vested_transfer 1`] = `
 [
-  {
-    "data": {
-      "account": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
-    },
-    "method": "VestingCompleted",
-    "section": "vesting",
-  },
   {
     "data": {
       "result": "Ok",
@@ -836,11 +761,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -853,11 +773,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -869,11 +784,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for CancelProxy > events for proxy type CancelProxy, pallet utility, call force_batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -888,13 +798,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -905,17 +808,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet referenda, call submit 1`] = `
 [
-  {
-    "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
   {
     "data": {
       "result": "Ok",
@@ -929,11 +821,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -946,11 +833,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -962,11 +844,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Governance > events for proxy type Governance, pallet utility, call force_batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -999,11 +876,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -1016,11 +888,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -1032,11 +899,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NominationPools > events for proxy type NominationPools, pallet utility, call force_batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1068,13 +930,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet bounties, call propose_bounty 1`] = `
 [
-  {
-    "data": {
-      "index": "(redacted)",
-    },
-    "method": "BountyProposed",
-    "section": "bounties",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1165,17 +1020,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "index": "(redacted)",
-      "proposal": {
-        "Inline": "0x00001468656c6c6f",
-      },
-      "track": 30,
-    },
-    "method": "Submitted",
-    "section": "referenda",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
@@ -1186,14 +1030,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet staking, call bond 1`] = `
 [
-  {
-    "data": {
-      "amount": 1000000000000,
-      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1213,20 +1049,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1234,43 +1056,16 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "hash_": "(hash)",
-      "sender": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Remarked",
-    "section": "system",
-  },
-  {
-    "data": {
       "result": "Ok",
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1284,11 +1079,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -1300,11 +1090,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for NonTransfer > events for proxy type NonTransfer, pallet utility, call force_batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1337,11 +1122,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -1353,11 +1133,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call batch_all 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1371,13 +1146,27 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet utility, call force_batch 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet fast_unstake, call register_fast_unstake 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 40,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1408,34 +1197,7 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 [
   {
     "data": {
-      "amount": 1000000000000,
-      "stash": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-  {
-    "data": {
       "result": "Ok",
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet staking, call register_fast_unstake 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x00000000",
-            "index": 40,
-          },
-        },
-      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1445,11 +1207,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1463,11 +1220,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call batch_all 1`] = `
 [
   {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
-  {
     "data": {
       "result": "Ok",
     },
@@ -1479,11 +1231,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Staking > events for proxy type Staking, pallet utility, call force_batch 1`] = `
 [
-  {
-    "data": {},
-    "method": "BatchCompleted",
-    "section": "utility",
-  },
   {
     "data": {
       "result": "Ok",
@@ -1521,7 +1268,7 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": "(redacted)",
+            "index": 0,
           },
         },
       },
@@ -1567,20 +1314,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1600,20 +1333,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1632,20 +1351,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
@@ -1723,20 +1428,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1756,20 +1447,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1788,20 +1465,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
@@ -1860,20 +1523,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1893,20 +1542,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -1925,20 +1560,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
@@ -1989,7 +1610,7 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": "(redacted)",
+            "index": 0,
           },
         },
       },
@@ -2035,20 +1656,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2068,20 +1675,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2100,20 +1693,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
@@ -2248,20 +1827,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2281,20 +1846,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2313,20 +1864,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;
@@ -2358,7 +1895,7 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
         "Err": {
           "Module": {
             "error": "0x05000000",
-            "index": "(redacted)",
+            "index": 0,
           },
         },
       },
@@ -2385,20 +1922,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 100000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2418,20 +1941,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     "method": "ProxyExecuted",
     "section": "proxy",
   },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
-  },
 ]
 `;
 
@@ -2450,20 +1959,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
     },
     "method": "ProxyExecuted",
     "section": "proxy",
-  },
-  {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicSuccess",
-    "section": "system",
   },
 ]
 `;

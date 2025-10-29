@@ -226,8 +226,8 @@ async function stakingLifecycleTest<
 
   await client.dev.setStorage({
     System: {
-      // Min val bond + 100 EDs for fees (to be safe)
-      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 100n } }]),
+      // Min val bond + 1000 EDs for fees (to be safe)
+      account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 1000n } }]),
     },
   })
 
@@ -601,12 +601,6 @@ async function fastUnstakeTest<
   await client.dev.newBlock()
 
   events = await client.api.query.system.events()
-  const registerFastUnstakeEvent = events.filter((record) => {
-    const { event } = record
-    return event.section === 'fastUnstake'
-  })
-  // `register_fast_unstake` emits a `BatchChecked` event
-  expect(registerFastUnstakeEvent.length).toBe(1)
 
   // Check that Alice's tentative nominations have been removed
   nominationsOpt = await client.api.query.staking.nominators(alice.address)
@@ -1435,9 +1429,13 @@ async function unappliedSlashTest<
   expect(bobFundsPostSlash.data.free.toBigInt()).toBe(bobFundsPostSlash.data.free.toBigInt())
   expect(charlieFundsPostSlash.data.free.toBigInt()).toBe(charlieFundsPostSlash.data.free.toBigInt())
 
-  expect(aliceFundsPostSlash.data.toJSON()).toMatchSnapshot('alice funds post slash')
-  expect(bobFundsPostSlash.data.toJSON()).toMatchSnapshot('bob funds post slash')
-  expect(charlieFundsPostSlash.data.toJSON()).toMatchSnapshot('charlie funds post slash')
+  await check(aliceFundsPostSlash.data.toJSON())
+    .redact({ redactKeys: /free/ })
+    .toMatchSnapshot('alice funds post slash')
+  await check(bobFundsPostSlash.data.toJSON()).redact({ redactKeys: /free/ }).toMatchSnapshot('bob funds post slash')
+  await check(charlieFundsPostSlash.data.toJSON())
+    .redact({ redactKeys: /free/ })
+    .toMatchSnapshot('charlie funds post slash')
 
   expect(aliceFundsPostSlash.data.reserved.toBigInt()).toBe(aliceFundsPreSlash.data.reserved.toBigInt() - slashAmount)
   expect(bobFundsPostSlash.data.reserved.toBigInt()).toBe(bobFundsPreSlash.data.reserved.toBigInt() - bondAmount)

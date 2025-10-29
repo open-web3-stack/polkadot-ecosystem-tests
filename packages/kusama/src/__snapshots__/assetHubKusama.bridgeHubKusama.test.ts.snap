@@ -373,7 +373,7 @@ exports[`assetHubKusama & bridgeHubKusama > bridgeHubKusama transfer KSM to asse
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7000)",
+        "proofSize": "(rounded 9000)",
         "refTime": "(rounded 600000000)",
       },
     },

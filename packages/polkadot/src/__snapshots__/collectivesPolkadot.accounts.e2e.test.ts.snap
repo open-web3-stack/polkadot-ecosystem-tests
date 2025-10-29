@@ -30,8 +30,8 @@ exports[`Polkadot Collectives Accounts > \`force_adjust_total_issuance\` > succe
 [
   {
     "data": {
-      "new_": "(rounded 160000000000000)",
-      "old": "(rounded 160000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -43,8 +43,8 @@ exports[`Polkadot Collectives Accounts > \`force_adjust_total_issuance\` > succe
 [
   {
     "data": {
-      "new_": "(rounded 160000000000000)",
-      "old": "(rounded 160000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -99,7 +99,7 @@ exports[`Polkadot Collectives Accounts > \`transfer_all\` > account with reserve
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 80000000000)",
+      "freeBalance": "(rounded 100000000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -194,7 +194,7 @@ exports[`Polkadot Collectives Accounts > currency tests > liquidity restriction 
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

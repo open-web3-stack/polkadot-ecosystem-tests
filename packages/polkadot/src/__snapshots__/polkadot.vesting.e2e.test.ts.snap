@@ -63,6 +63,14 @@ exports[`Polkadot Vesting > test merger of two vesting schedules > vesting event
   {
     "data": {
       "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
       "unvested": "(rounded 25000000000)",
     },
     "method": "VestingUpdated",
@@ -73,6 +81,14 @@ exports[`Polkadot Vesting > test merger of two vesting schedules > vesting event
 
 exports[`Polkadot Vesting > test merger of two vesting schedules > vesting events 2 1`] = `
 [
+  {
+    "data": {
+      "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
+      "scheduleIndex": 1,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
@@ -99,6 +115,14 @@ exports[`Polkadot Vesting > test merger of two vesting schedules > vesting sched
 
 exports[`Polkadot Vesting > vesting schedule lifecycle > vest events 1`] = `
 [
+  {
+    "data": {
+      "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "scheduleIndex": 0,
+    },
+    "method": "VestingCreated",
+    "section": "vesting",
+  },
   {
     "data": {
       "account": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
