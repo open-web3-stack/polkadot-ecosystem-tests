@@ -1,5 +1,5 @@
 import { peoplePolkadot, polkadot } from '@e2e-test/networks/chains'
-import { type ParaTestConfig, registerTestTree, systemE2ETestsViaRelay } from '@e2e-test/shared'
+import { type ParaTestConfig, registerTestTree, systemE2ETestsViaRemoteScheduler } from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
   testSuiteName: 'Polkadot People System',
@@ -8,4 +8,15 @@ const testConfig: ParaTestConfig = {
   asyncBacking: 'Enabled',
 }
 
-registerTestTree(systemE2ETestsViaRelay(polkadot, peoplePolkadot, testConfig))
+registerTestTree(systemE2ETestsViaRemoteScheduler(polkadot, peoplePolkadot, testConfig))
+
+// TODO: Uncomment Post-AHM on Polkadot
+
+// const testConfigForAssetHub: ParaTestConfig = {
+//   testSuiteName: 'Polkadot People System',
+//   addressEncoding: 0,
+//   blockProvider: 'NonLocal',
+//   asyncBacking: 'Enabled',
+// }
+
+// registerTestTree(systemE2ETestsViaRemoteScheduler(assetHubPolkadot, peoplePolkadot, testConfigForAssetHub))
