@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub PreImage > Kusama Asset Hub PreImage > preimage tests > preimage single note and unnote test > note preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub PreImage > Kusama Asset Hub PreImage > preimage tests > preimage single note and unnote test > unnote preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Cleared",
+    "section": "preimage",
+  },
+]
+`;
