@@ -25,7 +25,7 @@ exports[`acala & assetHubPolkadot > acala transfer ETH to assetHubPolkadot > fro
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "withdrawAsset": [
               {
@@ -294,7 +294,7 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > fr
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "withdrawAsset": [
               {
@@ -366,6 +366,9 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > fr
                 "parents": 0,
               },
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
@@ -492,7 +495,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > fro
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -774,7 +777,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > fr
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {

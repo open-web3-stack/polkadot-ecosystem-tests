@@ -32,7 +32,7 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "reserveAssetDeposited": [
               {
@@ -110,6 +110,9 @@ exports[`acala & astar > acala transfer ACA to astar > from chain hrmp messages 
                 "parents": 0,
               },
             },
+          },
+          {
+            "setTopic": "(redacted)",
           },
         ],
       },
