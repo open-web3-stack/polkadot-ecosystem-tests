@@ -1,38 +1,19 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, type Client, defaultAccounts } from '@e2e-test/networks'
+import { type Client, defaultAccounts } from '@e2e-test/networks'
 import { sendWhitelistCallViaXcmTransact } from '@e2e-test/shared'
 
 import type { HexString } from '@polkadot/util/types'
 
 import { assert } from 'vitest'
 
-import { checkEvents, checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
-
-/**
- * Computes the XCM `MultiLocation` route from a source chain to a destination chain.
- *
- * @param from - The source chain (the chain initiating the XCM message).
- * @param to - The destination chain (the chain intended to receive and execute the XCM message).
- */
-function getXcmRoute(from: Chain, to: Chain) {
-  let parents: number
-  let interior: any
-
-  if (from.isRelayChain) {
-    parents = 0
-  } else {
-    parents = 1
-  }
-
-  if (to.isRelayChain) {
-    interior = 'Here'
-  } else {
-    interior = { X1: [{ Parachain: to.paraId }] }
-  }
-
-  return { parents, interior }
-}
+import {
+  checkEvents,
+  checkSystemEvents,
+  createXcmTransactSend,
+  getXcmRoute,
+  scheduleInlineCallWithOrigin,
+} from './helpers/index.js'
 
 /**
  * Constructs an XCM forceBatch transaction that authorizes a runtime upgrade on a destination chain.
