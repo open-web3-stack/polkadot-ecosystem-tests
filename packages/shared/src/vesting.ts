@@ -17,7 +17,6 @@ import {
   getBlockNumber,
   scheduleInlineCallWithOrigin,
   type TestConfig,
-  testCallsFilteredViaForceBatch,
 } from './helpers/index.js'
 
 /**
@@ -572,47 +571,6 @@ export function fullVestingE2ETests<
   }
 }
 
-/**
- * Test that all vesting extrinsics are filtered on the calling chain.
- */
-async function vestingCallsFilteredTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  // 1. Verify the vesting pallet is available
-  const vestingPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Vesting')
-  expect(vestingPalletMeta).toBeDefined()
-  expect(vestingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.vesting).toBeDefined()
-
-  const alice = defaultAccountsSr25519.alice
-  const bob = defaultAccountsSr25519.bob
-
-  // 2. Create a `utility.forceBatch` with all vesting extrinsics using garbage but well-formed arguments
-  const batchCalls = [
-    // call index 0
-    client.api.tx.vesting.vest(),
-    // 1
-    client.api.tx.vesting.vestOther(bob.address),
-    // 2
-    client.api.tx.vesting.vestedTransfer(bob.address, { perBlock: 1_000_000n, locked: 10_000_000n, startingBlock: 0 }),
-    // 3
-    client.api.tx.vesting.forceVestedTransfer(alice.address, bob.address, {
-      perBlock: 1_000_000n,
-      locked: 10_000_000n,
-      startingBlock: 0,
-    }),
-    // 4
-    client.api.tx.vesting.mergeSchedules(0, 1),
-    // 5
-    client.api.tx.vesting.forceRemoveVestingSchedule(bob.address, 0),
-  ]
-
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
-}
-
 export function assetHubVestingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -640,23 +598,6 @@ export function assetHubVestingE2ETests<
         kind: 'test',
         label: 'attempt to merge when no vesting schedules exist fails',
         testFn: () => testMergeSchedulesNoSchedule(chain),
-      },
-    ],
-  }
-}
-
-export function relayVestingE2ETests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
-  return {
-    kind: 'describe' as const,
-    label: testConfig.testSuiteName,
-    children: [
-      {
-        kind: 'test' as const,
-        label: 'all vesting calls are filtered via utility.forceBatch',
-        testFn: async () => await vestingCallsFilteredTest(chain),
       },
     ],
   }

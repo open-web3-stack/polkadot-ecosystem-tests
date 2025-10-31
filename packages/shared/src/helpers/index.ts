@@ -622,6 +622,44 @@ export function getXcmRoute(from: Chain, to: Chain) {
 }
 
 /**
+ * Test that calls executed via `utility.forceBatch` are NOT filtered (i.e., they pass the filter check).
+ * The calls may still fail for other reasons (invalid arguments, etc.), but they should not fail with `CallFiltered`.
+ *
+ * @param client - The API client instance
+ * @param batchCalls - Array of extrinsics to test
+ * @param signer - Keyring pair to sign the transaction
+ */
+export async function testCallsNotFilteredViaForceBatch(
+  client: Client<any, any>,
+  batchCalls: any[],
+  signer: KeyringPair,
+): Promise<void> {
+  // Execute the `utility.forceBatch` transaction
+  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
+  await sendTransaction(forceBatchTx.signAsync(signer))
+  await client.dev.newBlock()
+
+  // Check events to ensure no calls failed with `CallFiltered` error
+  const events = await client.api.query.system.events()
+
+  const itemFailedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'utility' && event.method === 'ItemFailed'
+  })
+
+  // Verify that none of the failures were due to `CallFiltered`
+  for (const record of itemFailedEvents) {
+    assert(client.api.events.utility.ItemFailed.is(record.event))
+    const dispatchError = record.event.data.error
+
+    if (dispatchError.isModule) {
+      // If it's a module error, check that it's NOT CallFiltered
+      expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(false)
+    }
+  }
+}
+
+/**
  * Test that all extrinsics in a batch are filtered when called through `utility.forceBatch`.
  *
  * This helper verifies that all calls in the batch fail with `CallFiltered` errors,

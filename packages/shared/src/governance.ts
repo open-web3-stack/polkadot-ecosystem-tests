@@ -26,7 +26,6 @@ import {
   objectCmp,
   scheduleInlineCallWithOrigin,
   type TestConfig,
-  testCallsFilteredViaForceBatch,
 } from './helpers/index.js'
 
 /// -------
@@ -923,125 +922,6 @@ export async function preimageTest<
   preimage = await client.api.query.preimage.preimageFor([encodedProposal.hash.toHex(), encodedProposal.encodedLength])
 
   assert(preimage.isNone)
-}
-
-/**
- * Test that all referenda extrinsics are filtered on the calling chain.
- */
-export async function referendaCallsFilteredTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const referendaPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Referenda',
-  )
-  expect(referendaPalletMeta).toBeDefined()
-  expect(referendaPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.referenda).toBeDefined()
-
-  const alice = devAccounts.alice
-
-  const batchCalls = [
-    // call index 0
-    client.api.tx.referenda.submit(
-      { system: 'Root' },
-      { Inline: client.api.tx.system.remark('0x00').method.toHex() },
-      { At: 0 },
-    ),
-    // 1
-    client.api.tx.referenda.placeDecisionDeposit(0),
-    // 2
-    client.api.tx.referenda.refundDecisionDeposit(0),
-    // 3
-    client.api.tx.referenda.cancel(0),
-    // 4
-    client.api.tx.referenda.kill(0),
-    // 5
-    client.api.tx.referenda.nudgeReferendum(0),
-    // 6
-    client.api.tx.referenda.oneFewerDeciding(0),
-    // 7
-    client.api.tx.referenda.refundSubmissionDeposit(0),
-    // 8
-    client.api.tx.referenda.setMetadata(0, null),
-  ]
-
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
-}
-
-/**
- * Test that all conviction-voting extrinsics are filtered on the calling chain.
- */
-export async function convictionVotingCallsFilteredTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const convictionVotingPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'ConvictionVoting',
-  )
-  expect(convictionVotingPalletMeta).toBeDefined()
-  expect(convictionVotingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.convictionVoting).toBeDefined()
-
-  const alice = devAccounts.alice
-  const bob = devAccounts.bob
-
-  const batchCalls = [
-    // call index 0
-    client.api.tx.convictionVoting.vote(0, {
-      Standard: { vote: { aye: true, conviction: 0 }, balance: 1_000_000_000n },
-    }),
-    // 1
-    client.api.tx.convictionVoting.delegate(0, bob.address, 0, 1_000_000_000n),
-    // 2
-    client.api.tx.convictionVoting.undelegate(0),
-    // 3
-    client.api.tx.convictionVoting.unlock(0, bob.address),
-    // 4
-    client.api.tx.convictionVoting.removeVote(null, 0),
-    // 5
-    client.api.tx.convictionVoting.removeOtherVote(bob.address, 0, 0),
-  ]
-
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
-}
-
-/**
- * Test that all preimage extrinsics are filtered on the calling chain.
- */
-export async function preimageCallsFilteredTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const preimagePalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Preimage',
-  )
-  expect(preimagePalletMeta).toBeDefined()
-  expect(preimagePalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.preimage).toBeDefined()
-
-  const alice = devAccounts.alice
-
-  const batchCalls = [
-    // call index 0
-    client.api.tx.preimage.notePreimage('0x00'),
-    // 1
-    client.api.tx.preimage.unnotePreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
-    // 2
-    client.api.tx.preimage.requestPreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
-    // 3
-    client.api.tx.preimage.unrequestPreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
-    // 4
-    client.api.tx.preimage.ensureUpdated(['0x0000000000000000000000000000000000000000000000000000000000000000']),
-  ]
-
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
 }
 
 export function baseGovernanceE2ETests<
