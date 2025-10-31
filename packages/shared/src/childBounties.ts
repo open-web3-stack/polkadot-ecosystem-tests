@@ -16,6 +16,7 @@ import {
   getBlockNumber,
   scheduleInlineCallWithOrigin,
   type TestConfig,
+  testCallsFilteredViaForceBatch,
 } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
@@ -2570,6 +2571,45 @@ export function allChildBountiesFailureTests<
  * Base set of childBounties end-to-end tests.
  *
  */
+/**
+ * Test that all child-bounties extrinsics are filtered on the calling chain.
+ */
+export async function childBountiesCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const childBountiesPalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'ChildBounties',
+  )
+  expect(childBountiesPalletMeta).toBeDefined()
+  expect(childBountiesPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.childBounties).toBeDefined()
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.childBounties.addChildBounty(0, 1_000_000_000n, '0x00'),
+    // 1
+    client.api.tx.childBounties.proposeCurator(0, 0, bob.address, 1_000_000n),
+    // 2
+    client.api.tx.childBounties.acceptCurator(0, 0),
+    // 3
+    client.api.tx.childBounties.unassignCurator(0, 0),
+    // 4
+    client.api.tx.childBounties.awardChildBounty(0, 0, bob.address),
+    // 5
+    client.api.tx.childBounties.claimChildBounty(0, 0),
+    // 6
+    client.api.tx.childBounties.closeChildBounty(0, 0),
+  ]
+
+  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+}
+
 export function baseChildBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,

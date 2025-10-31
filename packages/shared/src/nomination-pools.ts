@@ -23,6 +23,7 @@ import {
   scheduleInlineCallWithOrigin,
   setValidatorsStorage,
   type TestConfig,
+  testCallsFilteredViaForceBatch,
 } from './helpers/index.js'
 
 /// -------
@@ -1154,6 +1155,107 @@ async function nominationPoolsUpdateRolesTest<
     nominator: encodeAddress(testAccounts.dave.address, testConfig.addressEncoding),
     bouncer: encodeAddress(testAccounts.eve.address, testConfig.addressEncoding),
   })
+}
+
+/**
+ * Test that all nomination-pools extrinsics are filtered on the calling chain.
+ */
+export async function nominationPoolsCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const nominationPoolsPalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'NominationPools',
+  )
+  expect(nominationPoolsPalletMeta).toBeDefined()
+  expect(nominationPoolsPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.nominationPools).toBeDefined()
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.nominationPools.join(1_000_000_000n, 0),
+    // 1
+    client.api.tx.nominationPools.bondExtra({ FreeBalance: 1_000_000_000n }),
+    // 2
+    client.api.tx.nominationPools.claimPayout(),
+    // 3
+    client.api.tx.nominationPools.unbond(bob.address, 1_000_000_000n),
+    // 4
+    client.api.tx.nominationPools.poolWithdrawUnbonded(0, 0),
+    // 5
+    client.api.tx.nominationPools.withdrawUnbonded(bob.address, 0),
+    // 6
+    client.api.tx.nominationPools.create(1_000_000_000n, bob.address, bob.address, bob.address),
+    // 7
+    client.api.tx.nominationPools.createWithPoolId(1_000_000_000n, bob.address, bob.address, bob.address, 0),
+    // 8
+    client.api.tx.nominationPools.nominate(0, [bob.address]),
+    // 9
+    client.api.tx.nominationPools.setState(0, 'Destroying'),
+    // 10
+    client.api.tx.nominationPools.setMetadata(0, '0x00'),
+    // 11
+    client.api.tx.nominationPools.setConfigs(
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+    ),
+    // 12
+    client.api.tx.nominationPools.updateRoles(0, { Noop: null }, { Noop: null }, { Noop: null }),
+    // 13
+    client.api.tx.nominationPools.chill(0),
+    // 14
+    client.api.tx.nominationPools.bondExtra({ FreeBalance: 1_000_000_000n }),
+    // 15
+    client.api.tx.nominationPools.setClaimPermission('Permissioned'),
+    // 16
+    client.api.tx.nominationPools.claimPayoutOther(bob.address),
+    // 17
+    client.api.tx.nominationPools.setCommission(0, [1e7, bob.address]),
+    // 18
+    client.api.tx.nominationPools.setCommissionMax(0, 1e7),
+    // 19
+    client.api.tx.nominationPools.setCommissionChangeRate(0, { maxIncrease: 1e7, minDelay: 0 }),
+    // 20
+    client.api.tx.nominationPools.claimCommission(0),
+    // 21
+    client.api.tx.nominationPools.adjustPoolDeposit(0),
+    // 22
+    client.api.tx.nominationPools.setCommissionClaimPermission(0, 'Permissionless'),
+    // 23
+    client.api.tx.nominationPools.applySlash(bob.address),
+    // 24
+    client.api.tx.nominationPools.migrateDelegation(bob.address),
+    // 25
+    client.api.tx.nominationPools.migratePoolToDelegateStake(0),
+  ]
+
+  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+}
+
+export function relayNominationPoolsE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  return {
+    kind: 'describe' as const,
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test' as const,
+        label: 'all nomination pools calls are filtered',
+        testFn: async () => await nominationPoolsCallsFilteredTest(chain),
+      },
+    ],
+  }
 }
 
 export function baseNominationPoolsE2ETests<

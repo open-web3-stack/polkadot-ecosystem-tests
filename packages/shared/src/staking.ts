@@ -21,6 +21,7 @@ import {
   expectPjsEqual,
   scheduleInlineCallWithOrigin,
   type TestConfig,
+  testCallsFilteredViaForceBatch,
   updateCumulativeFees,
 } from './helpers/index.js'
 
@@ -2062,7 +2063,6 @@ export function slashingTests<
 
 /**
  * Test that all staking extrinsics are filtered on the calling chain.
- *
  */
 async function stakingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2152,30 +2152,7 @@ async function stakingCallsFilteredTest<
     client.api.tx.staking.manualSlash(testAccounts.alice.address, 0, 0),
   ]
 
-  // 3. Execute the `utility.forceBatch` transaction
-  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
-  await sendTransaction(forceBatchTx.signAsync(testAccounts.alice))
-  await client.dev.newBlock()
-
-  // 4. Check that all calls failed with `CallFiltered` error
-  const events = await client.api.query.system.events()
-
-  const itemFailedEvents = events.filter((record) => {
-    const { event } = record
-    return event.section === 'utility' && event.method === 'ItemFailed'
-  })
-
-  // Should have one `ItemFailed` event per staking call
-  expect(itemFailedEvents.length).toBe(batchCalls.length)
-
-  // Verify each failure was due to `CallFiltered`
-  for (const record of itemFailedEvents) {
-    assert(client.api.events.utility.ItemFailed.is(record.event))
-    const dispatchError = record.event.data.error
-
-    assert(dispatchError.isModule, 'Expected module error')
-    expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
-  }
+  await testCallsFilteredViaForceBatch(client, batchCalls, testAccounts.alice)
 }
 
 export function baseStakingE2ETests<
