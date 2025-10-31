@@ -1,6 +1,5 @@
 import { collectivesPolkadot, coretimePolkadot, polkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
-import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
+import { authorizeUpgradeViaCollectives, setupNetworks } from '@e2e-test/shared'
 
 import { describe, test } from 'vitest'
 

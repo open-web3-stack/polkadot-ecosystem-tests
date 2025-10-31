@@ -38,3 +38,16 @@ describe('assetHubPolkadot & peoplePolkadot', async () => {
     }
   })
 })
+
+// TODO: Uncomment Post-AHM on Polkadot
+
+// const testConfigForLocalScheduler: ParaTestConfig = {
+//   testSuiteName: 'assetHubPolkadot & peoplePolkadot',
+//   addressEncoding: 0,
+//   blockProvider: 'NonLocal',
+//   asyncBacking: 'Enabled',
+// }
+
+// registerTestTree(
+//   governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, peoplePolkadot, testConfigForLocalScheduler),
+// )
