@@ -554,6 +554,162 @@ async function parasSlashingCallsFilteredTest<
   await testCallsNotFilteredViaForceBatch(client, batchCalls, testAccounts.alice)
 }
 
+/**
+ * Test that Slots extrinsics are filtered on the calling chain.
+ */
+async function slotsCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const slotsPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Slots')
+  expect(slotsPalletMeta).toBeDefined()
+  expect(slotsPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.slots).toBeDefined()
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.slots.forceLease(1000, alice.address, 1_000_000_000n, 0, 1),
+    // call index 1
+    client.api.tx.slots.clearAllLeases(1000),
+    // call index 2
+    client.api.tx.slots.triggerOnboard(1000),
+  ]
+
+  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+}
+
+/**
+ * Test that Auctions extrinsics are filtered on the calling chain.
+ */
+async function auctionsCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const auctionsPalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'Auctions',
+  )
+  expect(auctionsPalletMeta).toBeDefined()
+  expect(auctionsPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.auctions).toBeDefined()
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.auctions.newAuction(1000, 0),
+    // call index 1
+    client.api.tx.auctions.bid(1000, 0, 0, 1, 1_000_000_000n),
+    // call index 2
+    client.api.tx.auctions.cancelAuction(),
+  ]
+
+  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+}
+
+/**
+ * Test the crowdloan extrinsics which are NOT filtered (withdraw, refund, dissolve) on the calling chain.
+ */
+async function crowdloanCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const crowdloanPalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'Crowdloan',
+  )
+  expect(crowdloanPalletMeta).toBeDefined()
+  expect(crowdloanPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.crowdloan).toBeDefined()
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 2 - withdraw (OFF, ON)
+    client.api.tx.crowdloan.withdraw(alice.address, 1000),
+    // call index 3 - refund (OFF, ON)
+    client.api.tx.crowdloan.refund(1000),
+    // call index 4 - dissolve (OFF, ON)
+    client.api.tx.crowdloan.dissolve(1000),
+  ]
+
+  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+}
+
+/**
+ * Test that Crowdloan extrinsics that are filtered on the calling chain.
+ */
+async function crowdloanCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const crowdloanPalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'Crowdloan',
+  )
+  expect(crowdloanPalletMeta).toBeDefined()
+  expect(crowdloanPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.crowdloan).toBeDefined()
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0 - create
+    client.api.tx.crowdloan.create(1000, 1_000_000_000n, 0, 1, 1000, null),
+    // call index 1 - contribute
+    client.api.tx.crowdloan.contribute(1000, 1_000_000n, null),
+    // call index 5 - edit
+    client.api.tx.crowdloan.edit(1000, 1_000_000_000n, 0, 1, 1000, null),
+    // call index 6 - add_memo
+    client.api.tx.crowdloan.addMemo(1000, '0x00'),
+    // call index 7 - poke
+    client.api.tx.crowdloan.poke(1000),
+    // call index 8 - contribute_all
+    client.api.tx.crowdloan.contributeAll(1000, null),
+  ]
+
+  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+}
+
+/**
+ * Test that Coretime extrinsics are NOT filtered on the calling chain.
+ */
+async function coretimeCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const coretimePalletMeta = client.api.registry.metadata.pallets.find(
+    (pallet) => pallet.name.toString() === 'Coretime',
+  )
+  expect(coretimePalletMeta).toBeDefined()
+  expect(coretimePalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.coretime).toBeDefined()
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 1 - request_core_count (ON, ON)
+    client.api.tx.coretime.requestCoreCount(10),
+    // call index 2 - request_revenue_at (OFF, ON)
+    client.api.tx.coretime.requestRevenueAt(1000),
+    // call index 3 - credit_account (ON, ON)
+    client.api.tx.coretime.creditAccount(alice.address, 1_000_000_000n),
+    // call index 4 - assign_core (ON, ON)
+    client.api.tx.coretime.assignCore(0, 1000, [], null),
+  ]
+
+  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+}
+
 export function postAhmFilteringE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -606,6 +762,21 @@ export function postAhmFilteringE2ETests<
             label: 'child-bounties calls are filtered',
             testFn: async () => await childBountiesCallsFilteredTest(chain),
           },
+          {
+            kind: 'test',
+            label: 'slots calls are filtered',
+            testFn: async () => await slotsCallsFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'auctions calls are filtered',
+            testFn: async () => await auctionsCallsFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'crowdloan calls (create, contribute, edit, etc) are filtered',
+            testFn: async () => await crowdloanCallsFilteredTest(chain),
+          },
         ],
       },
       {
@@ -631,6 +802,16 @@ export function postAhmFilteringE2ETests<
             kind: 'test',
             label: 'paras-slashing calls are not filtered',
             testFn: async () => await parasSlashingCallsFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'crowdloan calls (withdraw, refund, dissolve) are not filtered',
+            testFn: async () => await crowdloanCallsNotFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'coretime calls are not filtered',
+            testFn: async () => await coretimeCallsNotFilteredTest(chain),
           },
         ],
       },
