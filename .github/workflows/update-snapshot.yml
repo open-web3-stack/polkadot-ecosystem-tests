@@ -46,8 +46,8 @@ jobs:
           }
 
           await exec.exec(`git checkout -b ${branchName}`);
-          await exec.exec('git', ['add', `packages/${network}`]);
-          await exec.exec('git', ['add', `KNOWN_GOOD_BLOCK_NUMBERS_${upperNetwork}.env`]);
+          await exec.exec('git', ['add', '-A', `packages/${network}`]);
+          await exec.exec('git', ['add', '-A', `KNOWN_GOOD_BLOCK_NUMBERS_${upperNetwork}.env`]);
           await exec.exec('git', ['commit', '-m', `Update snapshots for ${network}`]);
           await exec.exec(`git push origin HEAD:${branchName}`);
 

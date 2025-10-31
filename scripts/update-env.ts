@@ -84,6 +84,7 @@ const main = async () => {
   } else {
     // Local development: create a single .env file
     const envFileContent = readEnvFile()
+    const currentEnv = dotenv.parse(envFileContent)
     const blockNumberPromises = Object.entries(chains).map(async ([name, chain]) => {
       const fetchBlockNumber = async () => {
         const api = await ApiPromise.create({
@@ -108,11 +109,19 @@ const main = async () => {
         return await Promise.race([fetchBlockNumber(), timeout])
       } catch (error: any) {
         console.error(`Failed to fetch block number for ${name}: ${error.message}`)
+        const fallback = currentEnv[`${name.toUpperCase()}_BLOCK_NUMBER`]
+        if (fallback) {
+          console.log(`Using fallback for ${name}: ${fallback}`)
+          return `${name.toUpperCase()}_BLOCK_NUMBER=${fallback}`
+        }
         return null
       }
     })
     const results = await Promise.all(blockNumberPromises)
-    const newBlockNumbers = results.filter((x): x is string => x !== null).join('\n')
+    const newBlockNumbers = results
+      .filter((x): x is string => x !== null)
+      .sort()
+      .join('\n')
     const commentedOldContent = envFileContent.replaceAll(/(^[A-Z0-9]+_BLOCK_NUMBER=\d+)/gm, '# $1')
     const newEnvFileContent = `${newBlockNumbers}\n\n${commentedOldContent}`
     console.log(newBlockNumbers)
