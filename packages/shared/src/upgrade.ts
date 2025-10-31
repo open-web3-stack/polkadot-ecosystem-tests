@@ -16,6 +16,7 @@ import {
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
+  getBlockNumber,
   getXcmRoute,
   nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
@@ -230,8 +231,7 @@ async function createAndFastTrackReferendum(
   // Get total issuance for realistic tally values
   const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
 
-  // Get current block number
-  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const currentBlock = await getBlockNumber(client.api, blockProvider)
 
   // Support Lookup, Inline or Legacy proposals
   const callHash = ongoing.proposal.isLookup
