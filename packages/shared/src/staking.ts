@@ -2060,6 +2060,124 @@ export function slashingTests<
   }
 }
 
+/**
+ * Test that all staking extrinsics are filtered on the calling chain.
+ *
+ */
+async function stakingCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. Verify the staking pallet is available
+  const stakingPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Staking')
+  expect(stakingPalletMeta).toBeDefined()
+  expect(stakingPalletMeta?.calls).toBeDefined()
+  expect(client.api.tx.staking).toBeDefined()
+
+  // 2. Create a `utility.forceBatch` with all staking extrinsics using garbage but well-formed arguments
+  const batchCalls = [
+    // call index 0
+    client.api.tx.staking.bond(1_000_000_000n, { Staked: null }),
+    // 1
+    client.api.tx.staking.bondExtra(1_000_000_000n),
+    // 2
+    client.api.tx.staking.unbond(1_000_000_000n),
+    // 3
+    client.api.tx.staking.withdrawUnbonded(0),
+    // 4
+    client.api.tx.staking.validate({ commission: 1e7, blocked: false }),
+    // 5
+    client.api.tx.staking.nominate([testAccounts.alice.address]),
+    // 6
+    client.api.tx.staking.chill(),
+    // 7
+    client.api.tx.staking.setPayee({ Staked: null }),
+    // 8
+    client.api.tx.staking.setController(),
+    // 9
+    client.api.tx.staking.setValidatorCount(100),
+    // 10
+    client.api.tx.staking.increaseValidatorCount(10),
+    // 11
+    client.api.tx.staking.scaleValidatorCount(10),
+    // 12
+    client.api.tx.staking.forceNoEras(),
+    // 13
+    client.api.tx.staking.forceNewEra(),
+    // 14
+    client.api.tx.staking.setInvulnerables([testAccounts.alice.address]),
+    // 15
+    client.api.tx.staking.forceUnstake(testAccounts.alice.address, 0),
+    // 16
+    client.api.tx.staking.forceNewEraAlways(),
+    // 17
+    client.api.tx.staking.cancelDeferredSlash(0, [0]),
+    // 18
+    client.api.tx.staking.payoutStakers(testAccounts.alice.address, 0),
+    // 19
+    client.api.tx.staking.rebond(1_000_000_000n),
+    // 20
+    client.api.tx.staking.reapStash(testAccounts.alice.address, 0),
+    // 21
+    client.api.tx.staking.kick([testAccounts.alice.address]),
+    // 22
+    client.api.tx.staking.setStakingConfigs(
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+      { Noop: null },
+    ),
+    // 23
+    client.api.tx.staking.chillOther(testAccounts.alice.address),
+    // 24
+    client.api.tx.staking.forceApplyMinCommission(testAccounts.alice.address),
+    // 25
+    client.api.tx.staking.setMinCommission(10_000_000),
+    // 26
+    client.api.tx.staking.payoutStakersByPage(testAccounts.alice.address, 0, 0),
+    // 27
+    client.api.tx.staking.updatePayee(testAccounts.alice.address),
+    // 28
+    client.api.tx.staking.deprecateControllerBatch([testAccounts.alice.address]),
+    // 29
+    client.api.tx.staking.restoreLedger(testAccounts.alice.address, null, null, null),
+    // 30
+    client.api.tx.staking.migrateCurrency(testAccounts.alice.address),
+    // 33
+    client.api.tx.staking.manualSlash(testAccounts.alice.address, 0, 0),
+  ]
+
+  // 3. Execute the `utility.forceBatch` transaction
+  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
+  await sendTransaction(forceBatchTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  // 4. Check that all calls failed with `CallFiltered` error
+  const events = await client.api.query.system.events()
+
+  const itemFailedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'utility' && event.method === 'ItemFailed'
+  })
+
+  // Should have one `ItemFailed` event per staking call
+  expect(itemFailedEvents.length).toBe(batchCalls.length)
+
+  // Verify each failure was due to `CallFiltered`
+  for (const record of itemFailedEvents) {
+    assert(client.api.events.utility.ItemFailed.is(record.event))
+    const dispatchError = record.event.data.error
+
+    assert(dispatchError.isModule, 'Expected module error')
+    expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
+  }
+}
+
 export function baseStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -2182,5 +2300,22 @@ export function completeStakingE2ETests<
     kind: 'describe' as const,
     label: testConfig.testSuiteName,
     children: [basalTestTree, slashingTestTree, fastUnstakeTestTree],
+  }
+}
+
+export function relayStakingE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  return {
+    kind: 'describe' as const,
+    label: testConfig.testSuiteName,
+    children: [
+      {
+        kind: 'test' as const,
+        label: 'all staking calls are filtered',
+        testFn: async () => await stakingCallsFilteredTest(chain),
+      },
+    ],
   }
 }
