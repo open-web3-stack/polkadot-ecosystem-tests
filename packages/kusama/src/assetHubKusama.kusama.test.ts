@@ -1,11 +1,13 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
-import { type ParaTestConfig, registerTestTree, setupNetworks } from '@e2e-test/shared'
-import { query, tx } from '@e2e-test/shared/api'
 import {
   governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite,
   governanceChainUpgradesOtherChainViaRootReferendumSuite,
-} from '@e2e-test/shared/upgrade'
+  type ParaTestConfig,
+  registerTestTree,
+  setupNetworks,
+} from '@e2e-test/shared'
+import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
