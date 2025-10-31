@@ -5,6 +5,8 @@
 		"lint": "tsc --noEmit && biome check .",
 		"fix": "biome check --write .",
 		"test": "vitest",
+		"test:polkadot": "vitest packages/polkadot",
+		"test:kusama": "vitest packages/kusama",
 		"test:ui": "vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
 		"update-known-good": "tsx scripts/update-env.ts --update-known-good",

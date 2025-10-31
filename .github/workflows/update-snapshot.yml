@@ -14,6 +14,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        network: [polkadot, kusama]
     steps:
     - uses: actions/checkout@v4
     - name: setup node env
@@ -23,22 +27,35 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-known-good
-    - run: yarn test -u
+    - run: yarn test:${{ matrix.network }} -u
     - name: Commit and Create PR
       uses: actions/github-script@v6
       with:
         script: |
-          const branchName = `update-snapshots-${context.sha.slice(0, 7)}`
-          await exec.exec(`git config --global user.name 'github-actions[bot]'`)
-          await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'"`)
-          await exec.exec(`git checkout -b ${branchName}`)
-          await exec.exec(`git`, ['commit', '-am', 'update snapshots'])
-          await exec.exec(`git push origin HEAD:${branchName}`)
+          const { network } = context.payload.inputs || { network: '${{ matrix.network }}' };
+          const branchName = `update-snapshots-${network}-${context.sha.slice(0, 7)}`;
+          const upperNetwork = network.toUpperCase();
+
+          await exec.exec(`git config --global user.name 'github-actions[bot]'`);
+          await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`);
+
+          const { stdout: status } = await exec.getExecOutput('git', ['status', '--porcelain']);
+          if (!status) {
+            console.log('No changes to commit.');
+            return;
+          }
+
+          await exec.exec(`git checkout -b ${branchName}`);
+          await exec.exec('git', ['add', `packages/${network}`]);
+          await exec.exec('git', ['add', `KNOWN_GOOD_BLOCK_NUMBERS_${upperNetwork}.env`]);
+          await exec.exec('git', ['commit', '-m', `Update snapshots for ${network}`]);
+          await exec.exec(`git push origin HEAD:${branchName}`);
+
           await github.rest.pulls.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            title: 'Update Snapshots',
+            title: `Update Snapshots for ${network}`,
             head: branchName,
             base: 'master',
-            body: 'Update Snapshots\n\nClose and reopen this PR to trigger CI.',
-          })
+            body: `Update Snapshots for ${network}\n\nClose and reopen this PR to trigger CI.`,
+          });
