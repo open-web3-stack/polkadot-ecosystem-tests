@@ -13,7 +13,7 @@ env:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
     - uses: actions/checkout@v4
     - name: setup node env

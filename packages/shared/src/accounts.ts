@@ -4487,13 +4487,17 @@ export const accountsE2ETests = <
       children: (() => {
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
+        if (!accountsCfg.actions) {
+          throw new Error('accountsCfg.actions is required')
+        }
+
         // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
         // trigger the liquidity restriction error.
         // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
         // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
-        for (const reserveAction of accountsCfg.actions?.reserveActions!) {
-          for (const lockAction of accountsCfg.actions?.lockActions!) {
-            for (const depositAction of accountsCfg.actions?.depositActions!) {
+        for (const reserveAction of accountsCfg.actions.reserveActions!) {
+          for (const lockAction of accountsCfg.actions.lockActions!) {
+            for (const depositAction of accountsCfg.actions.depositActions!) {
               testCases.push({
                 kind: 'test' as const,
                 label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,
