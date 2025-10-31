@@ -665,7 +665,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > trying to become a va
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
