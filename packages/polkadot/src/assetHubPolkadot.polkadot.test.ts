@@ -6,7 +6,7 @@ import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('asset hub & polkadot', async () => {
+describe('assetHubPolkadot & polkadot', async () => {
   const [polkadotClient, ahClient] = await setupNetworks(polkadot, assetHubPolkadot)
 
   runXcmPalletUp('Teleport DOT from Asset Hub to Polkadot', async () => {
@@ -175,3 +175,16 @@ describe('asset hub & polkadot', async () => {
     }
   })
 })
+
+// TODO: Uncomment Post-AHM on Polkadot
+
+// const testConfigForLocalScheduler: ParaTestConfig = {
+//   testSuiteName: 'assetHubPolkadot & polkadot',
+//   addressEncoding: 0,
+//   blockProvider: 'NonLocal',
+//   asyncBacking: 'Enabled',
+// }
+
+// registerTestTree(
+//   governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, polkadot, testConfigForLocalScheduler),
+// )

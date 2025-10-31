@@ -20,3 +20,5 @@ registerTestTree(systemE2ETestsViaRemoteScheduler(polkadot, assetHubPolkadot, te
 // }
 
 // registerTestTree(systemE2ETestsForParaWithScheduler(assetHubPolkadot, testConfigForLocalScheduler))
+
+// registerTestTree(governanceChainSelfUpgradeViaRootReferendumSuite(assetHubPolkadot, testConfigForLocalScheduler))

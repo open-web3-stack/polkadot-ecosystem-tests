@@ -1,7 +1,8 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubKusama, peopleKusama } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import { type ParaTestConfig, registerTestTree, setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
+import { governanceChainUpgradesOtherChainViaRootReferendumSuite } from '@e2e-test/shared/upgrade'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
@@ -42,3 +43,14 @@ describe('assetHubKusama & peopleKusama', async () => {
     { skip: true },
   )
 })
+
+const testConfigForLocalScheduler: ParaTestConfig = {
+  testSuiteName: 'assetHubKusama & peopleKusama',
+  addressEncoding: 2,
+  blockProvider: 'NonLocal',
+  asyncBacking: 'Enabled',
+}
+
+registerTestTree(
+  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubKusama, peopleKusama, testConfigForLocalScheduler),
+)
