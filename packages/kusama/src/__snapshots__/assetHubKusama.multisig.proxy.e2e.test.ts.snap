@@ -1,0 +1,180 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama AssetHub Multisig Proxy > failure tests > 2-of-3 multisig as standard proxy (non-transfer) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > failure tests > 2-of-3 multisig as standard proxy (non-transfer) > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig as standard proxy (any) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig as standard proxy (any) > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig as standard proxy with announcement and rejection > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "callHash": "(hash)",
+      "multisig": "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig with pure proxy (any) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "Gt27FR9ZcmuTraGmgkoYoKRWawb8wvgo4BCFs5XE1WA9BEk",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig with pure proxy (any) > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "Hhvfu3grnYT1j7Ny1TPGM3BX4EWYo89MtGckg86cyBK7Rdf",
+      "callHash": "(hash)",
+      "multisig": "Gt27FR9ZcmuTraGmgkoYoKRWawb8wvgo4BCFs5XE1WA9BEk",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig with pure proxy (non-transfer) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "G3jx6aL2vuFkrDT4yZr8KL1MHYq4ZoYumeDMtJ2rR5aiCBa",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig with pure proxy (non-transfer) > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "FDcAU5Xm97R2zhmESvYUviWbdoEZRdJbwyKYsvQnzcJSdkW",
+      "callHash": "(hash)",
+      "multisig": "G3jx6aL2vuFkrDT4yZr8KL1MHYq4ZoYumeDMtJ2rR5aiCBa",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > 2-of-3 multisig with pure proxy multisig > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "callHash": "(hash)",
+      "multisig": "H7VkoAmJqdvzBQsmPkHzqSfJNdRWtWfDUhvoyZoE6vAEasD",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Multisig Proxy > success tests > Cancel 2-of-3 multisig with pure proxy before any other approvals > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "ExyZqo6Q2PDcxaS3KBn3EjAQZBuHznB9Tbt2sE6fWtQ4N7d",
+      "callHash": "(hash)",
+      "multisig": "FjxQj4uEh6TUTtTatsoWdYfBGE5vxwEaYAHvFVUBo4SkvCp",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
