@@ -575,6 +575,43 @@ async function crowdloanCallsFilteredTest<
 }
 
 /**
+ * Test that all scheduler extrinsics are filtered on the calling chain.
+ */
+async function schedulerCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = devAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.scheduler.schedule(1000, null, 0, client.api.tx.system.remark('0x00')),
+    // call index 1
+    client.api.tx.scheduler.cancel(1000, 0),
+    // call index 2
+    client.api.tx.scheduler.scheduleNamed('0x00', 1000, null, 0, client.api.tx.system.remark('0x00')),
+    // call index 3
+    client.api.tx.scheduler.cancelNamed('0x00'),
+    // call index 4
+    client.api.tx.scheduler.scheduleAfter(10, null, 0, client.api.tx.system.remark('0x00')),
+    // call index 5
+    client.api.tx.scheduler.scheduleNamedAfter('0x00', 10, null, 0, client.api.tx.system.remark('0x00')),
+    // call index 6
+    client.api.tx.scheduler.setRetry([1000, 0], 3, 10),
+    // call index 7
+    client.api.tx.scheduler.setRetryNamed('0x00', 3, 10),
+    // call index 8
+    client.api.tx.scheduler.cancelRetry([1000, 0]),
+    // call index 9
+    client.api.tx.scheduler.cancelRetryNamed('0x00'),
+  ]
+
+  await testCallsViaForceBatch(client, 'Scheduler', batchCalls, alice, 'Filtered')
+}
+
+/**
  * Test that Coretime extrinsics are NOT filtered on the calling chain.
  */
 async function coretimeCallsNotFilteredTest<
@@ -665,6 +702,11 @@ export function postAhmFilteringE2ETests<
             kind: 'test',
             label: 'crowdloan calls (create, contribute, edit, etc) are filtered',
             testFn: async () => await crowdloanCallsFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'scheduler calls are filtered',
+            testFn: async () => await schedulerCallsFilteredTest(chain),
           },
         ],
       },
