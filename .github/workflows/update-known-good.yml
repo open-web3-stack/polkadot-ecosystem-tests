@@ -51,8 +51,10 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KNOWN_GOOD_BLOCK_NUMBERS.env
-          path: KNOWN_GOOD_BLOCK_NUMBERS.env
+          name: KNOWN_GOOD_BLOCK_NUMBERS
+          path: |
+            KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+            KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
           retention-days: 1
   tests:
     needs: define-matrix
@@ -73,7 +75,7 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
-        name: KNOWN_GOOD_BLOCK_NUMBERS.env
+        name: KNOWN_GOOD_BLOCK_NUMBERS
     - run: yarn test packages/${{ matrix.tests }}
   save:
     needs: tests
@@ -91,14 +93,14 @@ jobs:
     - name: Download a single artifact
       uses: actions/download-artifact@v4
       with:
-        name: KNOWN_GOOD_BLOCK_NUMBERS.env
+        name: KNOWN_GOOD_BLOCK_NUMBERS
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
-        git add KNOWN_GOOD_BLOCK_NUMBERS.env
+        git add -A 'KNOWN_GOOD_BLOCK_NUMBERS_*.env'
         if ! git diff --cached --quiet; then
-          git commit -m "[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS"
+          git commit -m "[ci skip] Update known good block numbers"
           git push
         else
           echo "No changes to commit"

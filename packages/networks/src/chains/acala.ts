@@ -68,6 +68,7 @@ export const acala = defineChain({
   name: 'acala',
   endpoint: 'wss://acala-rpc.n.dwellir.com',
   paraId: 2000,
+  networkGroup: 'polkadot',
   custom: custom.acala,
   initStorages: getInitStorages(custom.acala),
 })
@@ -76,6 +77,7 @@ export const karura = defineChain({
   name: 'karura',
   endpoint: 'wss://karura-rpc.n.dwellir.com',
   paraId: 2000,
+  networkGroup: 'kusama',
   custom: custom.karura,
   initStorages: getInitStorages(custom.karura),
 })

@@ -20,6 +20,7 @@ export const encointerKusama = defineChain({
   name: 'encointerKusama',
   endpoint: 'wss://kusama.api.encointer.org',
   paraId: 1001,
+  networkGroup: 'kusama',
   custom: custom.encointerKusama,
   initStorages: getInitStorages(custom.encointerKusama),
 })

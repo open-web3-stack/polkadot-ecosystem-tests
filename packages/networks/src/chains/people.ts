@@ -42,6 +42,7 @@ export const peoplePolkadot = defineChain({
   name: 'peoplePolkadot',
   endpoint: 'wss://polkadot-people-rpc.polkadot.io',
   paraId: 1004,
+  networkGroup: 'polkadot',
   custom: custom.peoplePolkadot,
   initStorages: getInitStorages(custom.peoplePolkadot),
 })
@@ -50,6 +51,7 @@ export const peopleKusama = defineChain({
   name: 'peopleKusama',
   endpoint: 'wss://kusama-people-rpc.polkadot.io',
   paraId: 1004,
+  networkGroup: 'kusama',
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),
 })

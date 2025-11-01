@@ -24,6 +24,7 @@ export const coretimePolkadot = defineChain({
   name: 'coretimePolkadot',
   endpoint: 'wss://polkadot-coretime-rpc.polkadot.io',
   paraId: 1005,
+  networkGroup: 'polkadot',
   custom: custom.coretimePolkadot,
   initStorages: getInitStorages(custom.coretimePolkadot),
 })
@@ -32,6 +33,7 @@ export const coretimeKusama = defineChain({
   name: 'coretimeKusama',
   endpoint: 'wss://kusama-coretime-rpc.polkadot.io',
   paraId: 1005,
+  networkGroup: 'kusama',
   custom: custom.coretimeKusama,
   initStorages: getInitStorages(custom.coretimeKusama),
 })
