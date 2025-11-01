@@ -1,5 +1,7 @@
-import { type Chain, defaultAccountsSr25519 as devAccounts, testAccounts } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+
+import { sha256AsU8a } from '@polkadot/util-crypto'
 
 import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 
@@ -100,8 +102,8 @@ async function vestingCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = devAccounts.alice
-  const bob = devAccounts.bob
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
 
   const batchCalls = [
     // call index 0
@@ -134,7 +136,7 @@ async function referendaCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = devAccounts.alice
+  const alice = testAccounts.alice
 
   const batchCalls = [
     // call index 0
@@ -173,8 +175,8 @@ async function convictionVotingCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = devAccounts.alice
-  const bob = devAccounts.bob
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
 
   const batchCalls = [
     // call index 0
@@ -205,7 +207,7 @@ async function preimageCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = devAccounts.alice
+  const alice = testAccounts.alice
 
   const batchCalls = [
     // call index 0
@@ -583,32 +585,182 @@ async function schedulerCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const alice = devAccounts.alice
+  const alice = testAccounts.alice
 
   const batchCalls = [
     // call index 0
-    client.api.tx.scheduler.schedule(1000, null, 0, client.api.tx.system.remark('0x00')),
+    client.api.tx.scheduler.schedule(1000, null, 0, client.api.tx.system.remark('0x00').method.toHex()),
     // call index 1
     client.api.tx.scheduler.cancel(1000, 0),
     // call index 2
-    client.api.tx.scheduler.scheduleNamed('0x00', 1000, null, 0, client.api.tx.system.remark('0x00')),
+    client.api.tx.scheduler.scheduleNamed(
+      sha256AsU8a('task_id'),
+      1000,
+      null,
+      0,
+      client.api.tx.system.remark('0x00').method.toHex(),
+    ),
     // call index 3
-    client.api.tx.scheduler.cancelNamed('0x00'),
+    client.api.tx.scheduler.cancelNamed(sha256AsU8a('task_id')),
     // call index 4
     client.api.tx.scheduler.scheduleAfter(10, null, 0, client.api.tx.system.remark('0x00')),
     // call index 5
-    client.api.tx.scheduler.scheduleNamedAfter('0x00', 10, null, 0, client.api.tx.system.remark('0x00')),
+    client.api.tx.scheduler.scheduleNamedAfter(
+      sha256AsU8a('task_id'),
+      10,
+      null,
+      0,
+      client.api.tx.system.remark('0x00'),
+    ),
     // call index 6
     client.api.tx.scheduler.setRetry([1000, 0], 3, 10),
     // call index 7
-    client.api.tx.scheduler.setRetryNamed('0x00', 3, 10),
+    client.api.tx.scheduler.setRetryNamed(sha256AsU8a('task_id'), 3, 10),
     // call index 8
     client.api.tx.scheduler.cancelRetry([1000, 0]),
     // call index 9
-    client.api.tx.scheduler.cancelRetryNamed('0x00'),
+    client.api.tx.scheduler.cancelRetryNamed(sha256AsU8a('task_id')),
   ]
 
   await testCallsViaForceBatch(client, 'Scheduler', batchCalls, alice, 'Filtered')
+}
+
+/**
+ * Test that all treasury extrinsics are filtered on the calling chain.
+ */
+async function treasuryCallsFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 3
+    client.api.tx.treasury.spendLocal(1_000_000_000n, alice.address),
+    // call index 4
+    client.api.tx.treasury.removeApproval(0),
+    // call index 5
+    client.api.tx.treasury.spend({ v4: {} } as any, 1_000_000_000n, { v4: {} } as any, null),
+    // call index 6
+    client.api.tx.treasury.payout(0),
+    // call index 7
+    client.api.tx.treasury.checkStatus(0),
+    // call index 8
+    client.api.tx.treasury.voidSpend(0),
+  ]
+
+  await testCallsViaForceBatch(client, 'Treasury', batchCalls, alice, 'Filtered')
+}
+
+/**
+ * Test that System extrinsics are NOT filtered on the calling chain.
+ */
+async function systemCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.system.remark('0x00'),
+    // call index 1
+    client.api.tx.system.setHeapPages(0),
+    // call index 2
+    client.api.tx.system.setCode('0x00'),
+    // call index 3
+    client.api.tx.system.setCodeWithoutChecks('0x00'),
+    // call index 4
+    client.api.tx.system.setStorage([]),
+    // call index 5
+    client.api.tx.system.killStorage([]),
+    // call index 6
+    client.api.tx.system.killPrefix('0x00', 0),
+    // call index 7
+    client.api.tx.system.remarkWithEvent('0x00'),
+  ]
+
+  await testCallsViaForceBatch(client, 'System', batchCalls, alice, 'NotFiltered')
+}
+
+/**
+ * Test that StakingAhClient extrinsics are NOT filtered on the calling chain.
+ */
+async function stakingAhClientCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.stakingAhClient.validatorSet({} as any),
+    // call index 1
+    client.api.tx.stakingAhClient.setMode('Active'),
+    // call index 2
+    client.api.tx.stakingAhClient.forceOnMigrationEnd(),
+  ]
+
+  await testCallsViaForceBatch(client, 'StakingAhClient', batchCalls, alice, 'NotFiltered')
+}
+
+/**
+ * Test that Paras extrinsics are NOT filtered on the calling chain.
+ */
+async function parasCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.paras.forceSetCurrentCode(1000, '0x00'),
+    // call index 1
+    client.api.tx.paras.forceSetCurrentHead(1000, '0x00'),
+    // call index 2
+    client.api.tx.paras.forceScheduleCodeUpgrade(1000, '0x00', 1000),
+    // call index 3
+    client.api.tx.paras.forceNoteNewHead(1000, '0x00'),
+    // call index 4
+    client.api.tx.paras.forceQueueAction(1000),
+    // call index 5
+    client.api.tx.paras.addTrustedValidationCode('0x00'),
+    // call index 6
+    client.api.tx.paras.pokeUnusedValidationCode('0x0000000000000000000000000000000000000000000000000000000000000000'),
+    // call index 7
+    client.api.tx.paras.includePvfCheckStatement(
+      {
+        accept: true,
+        subject: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        session_index: 1000,
+        validator_index: 0,
+      },
+      '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    ),
+    // call index 8
+    client.api.tx.paras.forceSetMostRecentContext(1000, 1000),
+    // call index 9
+    client.api.tx.paras.removeUpgradeCooldown(1000),
+    // call index 10
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(
+      1000,
+      '0x0000000000000000000000000000000000000000000000000000000000000000',
+      1000,
+    ),
+    // call index 11
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(1000, '0x00'),
+  ]
+
+  await testCallsViaForceBatch(client, 'Paras', batchCalls, alice, 'NotFiltered')
 }
 
 /**
@@ -633,7 +785,7 @@ async function coretimeCallsNotFilteredTest<
     client.api.tx.coretime.assignCore(0, 1000, [], null),
   ]
 
-  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Coretime', batchCalls, alice, 'NotFiltered')
 }
 
 export function postAhmFilteringE2ETests<
@@ -708,6 +860,11 @@ export function postAhmFilteringE2ETests<
             label: 'scheduler calls are filtered',
             testFn: async () => await schedulerCallsFilteredTest(chain),
           },
+          {
+            kind: 'test',
+            label: 'treasury calls are filtered',
+            testFn: async () => await treasuryCallsFilteredTest(chain),
+          },
         ],
       },
       {
@@ -731,13 +888,28 @@ export function postAhmFilteringE2ETests<
           },
           {
             kind: 'test',
-            label: 'paras-slashing calls are not filtered',
+            label: 'parasSlashing calls are not filtered',
             testFn: async () => await parasSlashingCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
             label: 'crowdloan calls (withdraw, refund, dissolve) are not filtered',
             testFn: async () => await crowdloanCallsNotFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'system calls are not filtered',
+            testFn: async () => await systemCallsNotFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'stakingAhClient calls are not filtered',
+            testFn: async () => await stakingAhClientCallsNotFilteredTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'paras calls are not filtered',
+            testFn: async () => await parasCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
