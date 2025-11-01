@@ -622,24 +622,38 @@ export function getXcmRoute(from: Chain, to: Chain) {
 }
 
 /**
- * Test that calls executed via `utility.forceBatch` are NOT filtered (i.e., they pass the filter check).
- * The calls may still fail for other reasons (invalid arguments, etc.), but they should not fail with `CallFiltered`.
+ * Test that calls executed via `utility.forceBatch` are filtered or not filtered based on the expected behavior.
+ *
+ * This helper:
+ * 1. Verifies the pallet exists and has calls metadata
+ * 2. Executes the `utility.forceBatch` transaction with the provided calls
+ * 3. Checks events to verify filtering behavior matches expectations
  *
  * @param client - The API client instance
+ * @param palletName - Name of the pallet being tested (e.g., 'Staking', 'Beefy')
  * @param batchCalls - Array of extrinsics to test
  * @param signer - Keyring pair to sign the transaction
+ * @param expectedFiltered - 'Filtered' expects all calls to be filtered (CallFiltered error). 'NotFiltered' expects calls not to be filtered.
  */
-export async function testCallsNotFilteredViaForceBatch(
+export async function testCallsViaForceBatch(
   client: Client<any, any>,
+  palletName: string,
   batchCalls: any[],
   signer: KeyringPair,
+  expectedFiltered: 'Filtered' | 'NotFiltered',
 ): Promise<void> {
+  // Verify the pallet exists and has calls metadata
+  const palletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === palletName)
+  expect(palletMeta).toBeDefined()
+  expect(palletMeta?.calls).toBeDefined()
+  expect((client.api.tx as any)[palletName.charAt(0).toLowerCase() + palletName.slice(1)]).toBeDefined()
+
   // Execute the `utility.forceBatch` transaction
   const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
   await sendTransaction(forceBatchTx.signAsync(signer))
   await client.dev.newBlock()
 
-  // Check events to ensure no calls failed with `CallFiltered` error
+  // Check events
   const events = await client.api.query.system.events()
 
   const itemFailedEvents = events.filter((record) => {
@@ -647,55 +661,28 @@ export async function testCallsNotFilteredViaForceBatch(
     return event.section === 'utility' && event.method === 'ItemFailed'
   })
 
-  // Verify that none of the failures were due to `CallFiltered`
-  for (const record of itemFailedEvents) {
-    assert(client.api.events.utility.ItemFailed.is(record.event))
-    const dispatchError = record.event.data.error
+  if (expectedFiltered === 'Filtered') {
+    // Should have one `ItemFailed` event per call
+    expect(itemFailedEvents.length).toBe(batchCalls.length)
 
-    if (dispatchError.isModule) {
-      // If it's a module error, check that it's NOT CallFiltered
-      expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(false)
+    // Verify each failure was due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
+
+      assert(dispatchError.isModule, 'Expected module error')
+      expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
     }
-  }
-}
+  } else {
+    // Verify that none of the failures were due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
 
-/**
- * Test that all extrinsics in a batch are filtered when called through `utility.forceBatch`.
- *
- * This helper verifies that all calls in the batch fail with `CallFiltered` errors,
- * ensuring that the pallet's calls cannot be executed via `utility.forceBatch`.
- *
- * @param client - The API client instance
- * @param batchCalls - Array of extrinsics to test
- * @param signer - Keyring pair to sign the transaction
- */
-export async function testCallsFilteredViaForceBatch(
-  client: Client<any, any>,
-  batchCalls: any[],
-  signer: KeyringPair,
-): Promise<void> {
-  // Execute the `utility.forceBatch` transaction
-  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
-  await sendTransaction(forceBatchTx.signAsync(signer))
-  await client.dev.newBlock()
-
-  // Check that all calls failed with `CallFiltered` error
-  const events = await client.api.query.system.events()
-
-  const itemFailedEvents = events.filter((record) => {
-    const { event } = record
-    return event.section === 'utility' && event.method === 'ItemFailed'
-  })
-
-  // Should have one `ItemFailed` event per call
-  expect(itemFailedEvents.length).toBe(batchCalls.length)
-
-  // Verify each failure was due to `CallFiltered`
-  for (const record of itemFailedEvents) {
-    assert(client.api.events.utility.ItemFailed.is(record.event))
-    const dispatchError = record.event.data.error
-
-    assert(dispatchError.isModule, 'Expected module error')
-    expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
+      if (dispatchError.isModule) {
+        // If it's a module error, check that it's NOT CallFiltered
+        expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(false)
+      }
+    }
   }
 }

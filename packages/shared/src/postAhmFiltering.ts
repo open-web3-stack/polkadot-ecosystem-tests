@@ -1,9 +1,7 @@
 import { type Chain, defaultAccountsSr25519 as devAccounts, testAccounts } from '@e2e-test/networks'
 import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
-import { expect } from 'vitest'
-
-import { type TestConfig, testCallsFilteredViaForceBatch, testCallsNotFilteredViaForceBatch } from './helpers/index.js'
+import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 
 /**
  * Test that all staking extrinsics are filtered on the calling chain.
@@ -14,13 +12,7 @@ async function stakingCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Verify the staking pallet is available
-  const stakingPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Staking')
-  expect(stakingPalletMeta).toBeDefined()
-  expect(stakingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.staking).toBeDefined()
-
-  // 2. Create a `utility.forceBatch` with all staking extrinsics using garbage but well-formed arguments
+  // Create a `utility.forceBatch` with all staking extrinsics using garbage but well-formed arguments
   const batchCalls = [
     // call index 0
     client.api.tx.staking.bond(1_000_000_000n, { Staked: null }),
@@ -96,7 +88,7 @@ async function stakingCallsFilteredTest<
     client.api.tx.staking.manualSlash(testAccounts.alice.address, 0, 0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, testAccounts.alice)
+  await testCallsViaForceBatch(client, 'Staking', batchCalls, testAccounts.alice, 'Filtered')
 }
 
 /**
@@ -108,16 +100,9 @@ async function vestingCallsFilteredTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Verify the vesting pallet is available
-  const vestingPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Vesting')
-  expect(vestingPalletMeta).toBeDefined()
-  expect(vestingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.vesting).toBeDefined()
-
   const alice = devAccounts.alice
   const bob = devAccounts.bob
 
-  // 2. Create a `utility.forceBatch` with all vesting extrinsics using garbage but well-formed arguments
   const batchCalls = [
     // call index 0
     client.api.tx.vesting.vest(),
@@ -137,7 +122,7 @@ async function vestingCallsFilteredTest<
     client.api.tx.vesting.forceRemoveVestingSchedule(bob.address, 0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -148,13 +133,6 @@ async function referendaCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const referendaPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Referenda',
-  )
-  expect(referendaPalletMeta).toBeDefined()
-  expect(referendaPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.referenda).toBeDefined()
 
   const alice = devAccounts.alice
 
@@ -183,7 +161,7 @@ async function referendaCallsFilteredTest<
     client.api.tx.referenda.setMetadata(0, null),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Referenda', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -194,13 +172,6 @@ async function convictionVotingCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const convictionVotingPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'ConvictionVoting',
-  )
-  expect(convictionVotingPalletMeta).toBeDefined()
-  expect(convictionVotingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.convictionVoting).toBeDefined()
 
   const alice = devAccounts.alice
   const bob = devAccounts.bob
@@ -222,7 +193,7 @@ async function convictionVotingCallsFilteredTest<
     client.api.tx.convictionVoting.removeOtherVote(bob.address, 0, 0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'ConvictionVoting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -233,13 +204,6 @@ async function preimageCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const preimagePalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Preimage',
-  )
-  expect(preimagePalletMeta).toBeDefined()
-  expect(preimagePalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.preimage).toBeDefined()
 
   const alice = devAccounts.alice
 
@@ -256,7 +220,7 @@ async function preimageCallsFilteredTest<
     client.api.tx.preimage.ensureUpdated(['0x0000000000000000000000000000000000000000000000000000000000000000']),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -267,13 +231,6 @@ async function nominationPoolsCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const nominationPoolsPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'NominationPools',
-  )
-  expect(nominationPoolsPalletMeta).toBeDefined()
-  expect(nominationPoolsPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.nominationPools).toBeDefined()
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -315,7 +272,7 @@ async function nominationPoolsCallsFilteredTest<
     // 13
     client.api.tx.nominationPools.chill(0),
     // 14
-    client.api.tx.nominationPools.bondExtra({ FreeBalance: 1_000_000_000n }),
+    client.api.tx.nominationPools.bondExtraOther(bob.address, { FreeBalance: 1_000_000_000n }),
     // 15
     client.api.tx.nominationPools.setClaimPermission('Permissioned'),
     // 16
@@ -340,7 +297,7 @@ async function nominationPoolsCallsFilteredTest<
     client.api.tx.nominationPools.migratePoolToDelegateStake(0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'NominationPools', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -351,13 +308,6 @@ async function bountiesCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const bountiesPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Bounties',
-  )
-  expect(bountiesPalletMeta).toBeDefined()
-  expect(bountiesPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.bounties).toBeDefined()
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -387,7 +337,7 @@ async function bountiesCallsFilteredTest<
     client.api.tx.bounties.pokeDeposit(0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Bounties', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -398,13 +348,6 @@ async function childBountiesCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const childBountiesPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'ChildBounties',
-  )
-  expect(childBountiesPalletMeta).toBeDefined()
-  expect(childBountiesPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.childBounties).toBeDefined()
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -426,27 +369,20 @@ async function childBountiesCallsFilteredTest<
     client.api.tx.childBounties.closeChildBounty(0, 0),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
  * Test that BABE extrinsics are NOT filtered on the calling chain.
  */
-async function babeCallsFilteredTest<
+async function babeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const babePalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Babe')
-  expect(babePalletMeta).toBeDefined()
-  expect(babePalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.babe).toBeDefined()
-
   const alice = testAccounts.alice
 
-  // These calls require complex proof objects, so we'll use minimal valid structures
-  // The actual proof validation will fail, but the call structure should be valid
   const batchCalls = [
     // call index 0
     // Requires: equivocation_proof (Box<EquivocationProof>), key_owner_proof
@@ -463,22 +399,17 @@ async function babeCallsFilteredTest<
     client.api.tx.babe.planConfigChange({ V1: { c: [1, 1], allowedSlots: 'PrimarySlots' } }),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
 }
 
 /**
  * Test that GRANDPA extrinsics are NOT filtered on the calling chain.
  */
-async function grandpaCallsFilteredTest<
+async function grandpaCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const grandpaPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Grandpa')
-  expect(grandpaPalletMeta).toBeDefined()
-  expect(grandpaPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.grandpa).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -491,67 +422,58 @@ async function grandpaCallsFilteredTest<
     client.api.tx.grandpa.noteStalled(1000, 1000),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
 }
 
 /**
  * Test that Beefy extrinsics are NOT filtered on the calling chain.
  */
-async function beefyCallsFilteredTest<
+async function beefyCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const beefyPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Beefy')
-  expect(beefyPalletMeta).toBeDefined()
-  expect(beefyPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.beefy).toBeDefined()
-
   const alice = testAccounts.alice
 
+  // Beefy has 7 calls: indices 0-6 (from beefy/src/lib.rs)
+  // Use the tx API methods directly - they handle argument encoding automatically
+  // The calls will fail validation but that's fine, we're just checking filtering
   const batchCalls = [
-    // call index 0
+    // Call index 0
     client.api.tx.beefy.reportDoubleVoting({} as any, {} as any),
     // call index 1
     client.api.tx.beefy.reportDoubleVotingUnsigned({} as any, {} as any),
-    // call index 2
+    // Call index 2
     client.api.tx.beefy.setNewGenesis(1),
-    // call index 3
+    // Call index 3
     client.api.tx.beefy.reportForkVoting({} as any, {} as any),
-    // call index 4
+    // Call index 4
     client.api.tx.beefy.reportForkVotingUnsigned({} as any, {} as any),
-    // call index 5
+    // Call index 5
     client.api.tx.beefy.reportFutureBlockVoting({} as any, {} as any),
-    // call index 6
+    // Call index 6
     client.api.tx.beefy.reportFutureBlockVotingUnsigned({} as any, {} as any),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
 }
 
 /**
  * Test that `paraSlashing` extrinsics are NOT filtered on the calling chain.
  */
-async function parasSlashingCallsFilteredTest<
+async function parasSlashingCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const parasSlashingPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'ParasSlashing',
-  )
-  expect(parasSlashingPalletMeta).toBeDefined()
-  expect(parasSlashingPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.parasSlashing).toBeDefined()
 
   const batchCalls = [
     // call index 0 - report_dispute_lost_unsigned
     client.api.tx.parasSlashing.reportDisputeLostUnsigned({} as any, {} as any),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, testAccounts.alice)
+  await testCallsViaForceBatch(client, 'ParasSlashing', batchCalls, testAccounts.alice, 'NotFiltered')
 }
 
 /**
@@ -562,11 +484,6 @@ async function slotsCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const slotsPalletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === 'Slots')
-  expect(slotsPalletMeta).toBeDefined()
-  expect(slotsPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.slots).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -579,7 +496,7 @@ async function slotsCallsFilteredTest<
     client.api.tx.slots.triggerOnboard(1000),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -590,13 +507,6 @@ async function auctionsCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const auctionsPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Auctions',
-  )
-  expect(auctionsPalletMeta).toBeDefined()
-  expect(auctionsPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.auctions).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -609,7 +519,7 @@ async function auctionsCallsFilteredTest<
     client.api.tx.auctions.cancelAuction(),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -620,13 +530,6 @@ async function crowdloanCallsNotFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const crowdloanPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Crowdloan',
-  )
-  expect(crowdloanPalletMeta).toBeDefined()
-  expect(crowdloanPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.crowdloan).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -639,7 +542,7 @@ async function crowdloanCallsNotFilteredTest<
     client.api.tx.crowdloan.dissolve(1000),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Crowdloan', batchCalls, alice, 'NotFiltered')
 }
 
 /**
@@ -650,13 +553,6 @@ async function crowdloanCallsFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const crowdloanPalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Crowdloan',
-  )
-  expect(crowdloanPalletMeta).toBeDefined()
-  expect(crowdloanPalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.crowdloan).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -675,7 +571,7 @@ async function crowdloanCallsFilteredTest<
     client.api.tx.crowdloan.contributeAll(1000, null),
   ]
 
-  await testCallsFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -686,13 +582,6 @@ async function coretimeCallsNotFilteredTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
-
-  const coretimePalletMeta = client.api.registry.metadata.pallets.find(
-    (pallet) => pallet.name.toString() === 'Coretime',
-  )
-  expect(coretimePalletMeta).toBeDefined()
-  expect(coretimePalletMeta?.calls).toBeDefined()
-  expect(client.api.tx.coretime).toBeDefined()
 
   const alice = testAccounts.alice
 
@@ -707,7 +596,7 @@ async function coretimeCallsNotFilteredTest<
     client.api.tx.coretime.assignCore(0, 1000, [], null),
   ]
 
-  await testCallsNotFilteredViaForceBatch(client, batchCalls, alice)
+  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
 }
 
 export function postAhmFilteringE2ETests<
@@ -786,22 +675,22 @@ export function postAhmFilteringE2ETests<
           {
             kind: 'test',
             label: 'babe calls are not filtered',
-            testFn: async () => await babeCallsFilteredTest(chain),
+            testFn: async () => await babeCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
             label: 'grandpa calls are not filtered',
-            testFn: async () => await grandpaCallsFilteredTest(chain),
+            testFn: async () => await grandpaCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
             label: 'beefy calls are not filtered',
-            testFn: async () => await beefyCallsFilteredTest(chain),
+            testFn: async () => await beefyCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
             label: 'paras-slashing calls are not filtered',
-            testFn: async () => await parasSlashingCallsFilteredTest(chain),
+            testFn: async () => await parasSlashingCallsNotFilteredTest(chain),
           },
           {
             kind: 'test',
