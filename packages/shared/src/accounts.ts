@@ -539,7 +539,8 @@ export interface AccountsTestConfig<
 }
 
 /**
- * Create default accounts test configuration
+ * Create accounts test configuration, with optional overrides for each of field.
+ * If none are provided, the default configuration is returned.
  */
 export function createAccountsConfig<
   TCustom extends Record<string, unknown>,
@@ -556,6 +557,10 @@ export function createAccountsConfig<
 
 /**
  * Default accounts E2E test configuration.
+ *
+ * 1. Liquidity restriction tests are expected to fail
+ * 2. The relay chain field is empty, meaning the chain has the `scheduler` pallet available
+ * 3. The action lists used in liq. restriction tests are all defaults
  */
 const defaultAccountsTestConfig = <
   TCustom extends Record<string, unknown>,
