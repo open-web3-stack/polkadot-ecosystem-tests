@@ -15,6 +15,7 @@ import type { HexString } from '@polkadot/util/types'
 import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
+import type { Client } from '../types.js'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
   expectFn: (x: any) => ({
@@ -618,4 +619,70 @@ export function getXcmRoute(from: Chain, to: Chain) {
   }
 
   return { parents, interior }
+}
+
+/**
+ * Test that calls executed via `utility.forceBatch` are filtered or not filtered based on the expected behavior.
+ *
+ * This helper:
+ * 1. Verifies the pallet exists and has calls metadata
+ * 2. Executes the `utility.forceBatch` transaction with the provided calls
+ * 3. Checks events to verify filtering behavior matches expectations
+ *
+ * @param client - The API client instance
+ * @param palletName - Name of the pallet being tested (e.g., 'Staking', 'Beefy')
+ * @param batchCalls - Array of extrinsics to test
+ * @param signer - Keyring pair to sign the transaction
+ * @param expectedFiltered - 'Filtered' expects all calls to be filtered (CallFiltered error). 'NotFiltered' expects calls not to be filtered.
+ */
+export async function testCallsViaForceBatch(
+  client: Client<any, any>,
+  palletName: string,
+  batchCalls: any[],
+  signer: KeyringPair,
+  expectedFiltered: 'Filtered' | 'NotFiltered',
+): Promise<void> {
+  // Verify the pallet exists and has calls metadata
+  const palletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === palletName)
+  expect(palletMeta).toBeDefined()
+  expect(palletMeta?.calls).toBeDefined()
+  expect((client.api.tx as any)[palletName.charAt(0).toLowerCase() + palletName.slice(1)]).toBeDefined()
+
+  // Execute the `utility.forceBatch` transaction
+  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
+  await sendTransaction(forceBatchTx.signAsync(signer))
+  await client.dev.newBlock()
+
+  // Check events
+  const events = await client.api.query.system.events()
+
+  const itemFailedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'utility' && event.method === 'ItemFailed'
+  })
+
+  if (expectedFiltered === 'Filtered') {
+    // Should have one `ItemFailed` event per call
+    expect(itemFailedEvents.length).toBe(batchCalls.length)
+
+    // Verify each failure was due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
+
+      assert(dispatchError.isModule, 'Expected module error')
+      expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
+    }
+  } else {
+    // Verify that none of the failures were due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
+
+      if (dispatchError.isModule) {
+        // If it's a module error, check that it's NOT CallFiltered
+        expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(false)
+      }
+    }
+  }
 }
