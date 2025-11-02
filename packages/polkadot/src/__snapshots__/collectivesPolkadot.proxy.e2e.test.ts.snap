@@ -400,6 +400,20 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > Polka
 ]
 `;
 
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > Polkadot Collectives Proxy base tests > pure proxy ownership change test > events when creating a pure proxy for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Alliance > events for proxy type Alliance, pallet alliance, call join_alliance 1`] = `
 [
   {
