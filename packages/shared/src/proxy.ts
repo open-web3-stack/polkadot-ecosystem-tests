@@ -6,6 +6,7 @@ import {
   type DescribeNode,
   type ProxyTypeMap,
   type RootTestTree,
+  setupBalances,
   setupNetworks,
   type TestNode,
 } from '@e2e-test/shared'
@@ -1531,6 +1532,29 @@ export async function addRemoveProxyTest<
 }
 
 /**
+ *
+ * Helper function to check that a pure proxy was correctly created.
+ */
+export async function verifyPureProxy(
+  client: Client<any, any>,
+  eventData: any,
+  owner: string,
+  addressEncoding: number,
+) {
+  const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
+
+  expect(pureProxy[0].length).toBe(1)
+  expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
+  expect(pureProxy[0][0].delay.eq(0)).toBe(true)
+  expect(pureProxy[0][0].delegate.eq(encodeAddress(owner, addressEncoding))).toBe(true)
+
+  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
+  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+  const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
+  expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
+}
+
+/**
  * Test pure proxy management.
  *
  * 1. create as many pure proxies as there are proxy types in the current network
@@ -1607,16 +1631,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    const pureProxy = await client.api.query.proxy.proxies(eventData.pure)
-    expect(pureProxy[0].length).toBe(1)
-    expect(pureProxy[0][0].proxyType.eq(eventData.proxyType)).toBe(true)
-    expect(pureProxy[0][0].delay.eq(0)).toBe(true)
-    expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
-
-    const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
-    const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
-    const proxyDepositTotal = proxyDepositBase.add(proxyDepositFactor)
-    expect(pureProxy[1].eq(proxyDepositTotal)).toBe(true)
+    await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
   }
 
   // Kill pure proxies
@@ -1864,6 +1879,111 @@ export async function proxyAnnouncementLifecycleTest<
 }
 
 /**
+ * Test pure proxy ownership change.
+ *
+ * 1. Alice creates a pure proxy of type `Any`
+ * 2. Alice uses her pure proxy to transfer some funds to Charlie
+ * 3. Alice adds Bob as co-owner of the pure proxy
+ * 4. Alice drops ownership of the pure proxy
+ * 5. Bob uses the obtained pure proxy to also transfer some funds to Charlie
+ */
+export async function pureProxyOwnershipChangeTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyType: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  const charlie = testAccounts.charlie
+
+  await setupBalances(client, [
+    { address: alice.address, amount: 100e10 },
+    { address: bob.address, amount: 100e10 },
+    { address: charlie.address, amount: 0e10 },
+  ])
+
+  // Create a pure proxy for Alice of type `Any`
+  const createPureProxyTx = client.api.tx.proxy.createPure(proxyType, 0, 0)
+  const createPureProxyEvents = await sendTransaction(createPureProxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  await checkEvents(createPureProxyEvents, 'proxy')
+    .redact({ removeKeys: /pure/ })
+    .toMatchSnapshot(`events when creating a pure proxy for Alice`)
+
+  const events = await client.api.query.system.events()
+
+  const proxyEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'PureCreated'
+  })
+
+  assert(proxyEvents.length === 1, 'Expected exactly one PureCreated event')
+
+  assert(client.api.events.proxy.PureCreated.is(proxyEvents[0].event))
+  const eventData = proxyEvents[0].event.data
+  const pureProxyAddress = eventData.pure.toString()
+
+  // Verify the pure proxy was created correctly.
+  await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
+
+  // Add funds to the pure proxy account.
+  await setupBalances(client, [{ address: pureProxyAddress, amount: 300e10 }])
+
+  const transferAmount: number = 100e10
+  const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
+
+  // Alice uses her pure proxy to transfer some funds to Charlie.
+  let proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, transferCall)
+  await sendTransaction(proxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Confirm that Charlie received the funds.
+  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+
+  expect(charlieBalance, 'Charlie should have received the funds').toBe(transferAmount)
+
+  // Alice adds Bob as co-owner of the pure proxy.
+  const addPureProxyOwnerTx = client.api.tx.proxy.addProxy(bob.address, proxyType, 0)
+  proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, addPureProxyOwnerTx)
+
+  await sendTransaction(proxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Alice drops ownership of the pure proxy.
+  const removePureProxyOwnerTx = client.api.tx.proxy.removeProxy(alice.address, proxyType, 0)
+  proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, removePureProxyOwnerTx)
+  await sendTransaction(proxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Bob uses the obtained pure proxy to also transfer some funds to Charlie.
+  proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, transferCall)
+  await sendTransaction(proxyTx.signAsync(bob))
+
+  await client.dev.newBlock()
+
+  // Confirm that Charlie received the funds again.
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+
+  expect(charlieBalance, 'Charlie should have received the funds again').toBe(2 * transferAmount)
+
+  // Check that Alice can no longer use the pure proxy.
+  proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, transferCall)
+  await sendTransaction(proxyTx.signAsync(alice))
+
+  await client.dev.newBlock()
+
+  // Also confirm that Charlie did not receive any additional funds.
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+  expect(charlieBalance, 'Charlie should not have received any additional funds').toBe(2 * transferAmount)
+}
+
+/**
  * E2E tests for proxy functionality:
  * - Adding and removing proxies
  * - Executing calls through proxies
@@ -1896,6 +2016,11 @@ export function baseProxyE2ETests<
         kind: 'test',
         label: 'proxy announcement lifecycle test',
         testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'pure proxy ownership change test',
+        testFn: async () => await pureProxyOwnershipChangeTest(chain, testConfig, proxyTypes['Any']),
       },
     ],
   }

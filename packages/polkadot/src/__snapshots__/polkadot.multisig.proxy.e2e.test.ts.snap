@@ -1,0 +1,182 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Multisig with Proxy > failure tests > 2-of-3 multisig as standard proxy (non-transfer) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "callHash": "(hash)",
+      "multisig": "12BtfvVr1dH42xFTjMbF5c4MAMLRBRGfiHY24cN7KkueFPFF",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > failure tests > 2-of-3 multisig as standard proxy (non-transfer) > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "callHash": "(hash)",
+      "multisig": "12BtfvVr1dH42xFTjMbF5c4MAMLRBRGfiHY24cN7KkueFPFF",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy (any) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "callHash": "(hash)",
+      "multisig": "12BtfvVr1dH42xFTjMbF5c4MAMLRBRGfiHY24cN7KkueFPFF",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy (any) > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "callHash": "(hash)",
+      "multisig": "12BtfvVr1dH42xFTjMbF5c4MAMLRBRGfiHY24cN7KkueFPFF",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy with announcement and rejection > events when Bob approves multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+      "callHash": "(hash)",
+      "multisig": "12BtfvVr1dH42xFTjMbF5c4MAMLRBRGfiHY24cN7KkueFPFF",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig as standard proxy with announcement and rejection > events when Dave rejects the announced call 1`] = `[]`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy (any) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "callHash": "(hash)",
+      "multisig": "15XhvoPhKscNTfxew4CGo2ym8NFjBtoDaFrWJNFohJRPCJ3",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy (any) > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "14VkEZvhXxXAm7F4U76iRJzDnFu9i27txAmPzs6tExR4DjkF",
+      "callHash": "(hash)",
+      "multisig": "15XhvoPhKscNTfxew4CGo2ym8NFjBtoDaFrWJNFohJRPCJ3",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy (non-transfer) > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "callHash": "(hash)",
+      "multisig": "1rsMwdwR5tNTepoxC2St46h4DpdCzfELtkaChmA269rdCmW",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy (non-transfer) > events when Bob's proxy approves the multisig call 1`] = `
+[
+  {
+    "data": {
+      "approving": "138b1VD4YSaExK3Hn81ML2ERwcjQnsS7YDrcrCgz3ARdxGL1",
+      "callHash": "(hash)",
+      "multisig": "1rsMwdwR5tNTepoxC2St46h4DpdCzfELtkaChmA269rdCmW",
+      "result": "Ok",
+      "timepoint": {
+        "height": "(redacted)",
+        "index": 2,
+      },
+    },
+    "method": "MultisigExecuted",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > 2-of-3 multisig with pure proxy multisig > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "callHash": "(hash)",
+      "multisig": "12neAX3rBtQXX9FVymgwXHEbS1MdagYEk2C3HetU5F6B2xsQ",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
+
+exports[`Polkadot Multisig with Proxy > success tests > Cancel 2-of-3 multisig with pure proxy before any other approvals > events when Alice creates multisig 1`] = `
+[
+  {
+    "data": {
+      "approving": "125rxbVBgvEG55z54Dk9sWuksXGxDrmM1Tf8WF3qaKYUXwjo",
+      "callHash": "(hash)",
+      "multisig": "128wRnRJzTfWZvgg6SDa2bxDFesRDmrC7rQeJ1WBmmQW5vty",
+    },
+    "method": "NewMultisig",
+    "section": "multisig",
+  },
+]
+`;
