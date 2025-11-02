@@ -400,6 +400,20 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > pure proxy ownership change test > events when creating a pure proxy for Alice 1`] = `
+[
+  {
+    "data": {
+      "disambiguationIndex": 0,
+      "proxyType": "Any",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "PureCreated",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
 [
   {

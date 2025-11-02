@@ -49,7 +49,7 @@ import {
  * 1. on a relay chain at block `r`, to schedule a task for execution next block, use `r + 1`
  * 2. on a parachain at block `p` and with last known relay block number `r`, to schedule a task for execution next
  *    block, use `r` - **not** `p + 1` or `r + 1`
- *    - on parachains with async backing, use `r + 2` to schedule a task for execution the block after the next,
+ *    - on parachains with async backing, use `r` to schedule a task for execution the block after the next,
  *      **not** `r + 2`
  */
 
