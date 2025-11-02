@@ -6,7 +6,8 @@ import swc from 'unplugin-swc'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 dotenv.config()
-dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS.env') })
+dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env') })
+dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env') })
 if (process.env.LOG_LEVEL === undefined) {
 	process.env.LOG_LEVEL = 'error'
 }
