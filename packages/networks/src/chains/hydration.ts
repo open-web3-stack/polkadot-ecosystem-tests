@@ -29,7 +29,8 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
 export const hydration = defineChain({
   name: 'hydration',
   paraId: 2034,
-  endpoint: 'wss://hydration.ibp.network',
+  endpoint: 'wss://rpc.hydradx.cloud',
+  networkGroup: 'polkadot',
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
 })
@@ -38,6 +39,7 @@ export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
   endpoint: 'wss://basilisk-rpc.n.dwellir.com',
+  networkGroup: 'kusama',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
 })

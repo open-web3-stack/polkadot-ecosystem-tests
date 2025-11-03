@@ -47,6 +47,7 @@ export const astar = defineChain({
   name: 'astar',
   paraId: 2006,
   endpoint: 'wss://astar-rpc.n.dwellir.com',
+  networkGroup: 'polkadot',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
 })
@@ -55,6 +56,7 @@ export const shiden = defineChain({
   name: 'shiden',
   paraId: 2007,
   endpoint: 'wss://shiden-rpc.n.dwellir.com',
+  networkGroup: 'kusama',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
 })
