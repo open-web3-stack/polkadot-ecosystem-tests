@@ -47,6 +47,7 @@ export const moonbeam = defineChain({
   name: 'moonbeam',
   paraId: 2004,
   endpoint: 'wss://wss.api.moonbeam.network',
+  networkGroup: 'polkadot',
   custom: custom.moonbeam,
   initStorages: getInitStorages(),
 })
@@ -55,6 +56,7 @@ export const moonriver = defineChain({
   name: 'moonriver',
   paraId: 2023,
   endpoint: 'wss://wss.api.moonriver.moonbeam.network',
+  networkGroup: 'kusama',
   custom: custom.moonriver,
   initStorages: getInitStorages(),
 })

@@ -34,6 +34,7 @@ export const polkadot = defineChain({
   custom: custom.polkadot,
   initStorages: getInitStorages(),
   isRelayChain: true,
+  networkGroup: 'polkadot',
 })
 
 export const kusama = defineChain({
@@ -42,4 +43,5 @@ export const kusama = defineChain({
   custom: custom.kusama,
   initStorages: getInitStorages(),
   isRelayChain: true,
+  networkGroup: 'kusama',
 })
