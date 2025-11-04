@@ -4,6 +4,7 @@ import {
   baseMultisigProxyE2Etests,
   type ParaTestConfig,
   registerTestTree,
+  setupNetworksForAssetHub,
 } from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
@@ -11,6 +12,7 @@ const testConfig: ParaTestConfig = {
   addressEncoding: 0,
   blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
+  setupNetworks: setupNetworksForAssetHub,
 }
 
 registerTestTree(baseMultisigProxyE2Etests(assetHubPolkadot, testConfig, AssetHubPolkadotProxyTypes))

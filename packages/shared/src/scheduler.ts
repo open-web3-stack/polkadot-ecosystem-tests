@@ -121,7 +121,8 @@ export async function scheduleBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
@@ -140,7 +141,8 @@ export async function scheduleNamedBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const targetBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
@@ -163,7 +165,8 @@ export async function cancelScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
@@ -214,7 +217,8 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
@@ -270,7 +274,8 @@ export async function scheduledCallExecutes<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -338,7 +343,8 @@ export async function scheduledNamedCallExecutes<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -412,7 +418,8 @@ export async function cancelScheduledTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -471,7 +478,8 @@ export async function cancelScheduledNamedTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -545,7 +553,8 @@ export async function scheduleTaskAfterDelay<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -634,7 +643,8 @@ export async function scheduleNamedTaskAfterDelay<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
@@ -724,7 +734,8 @@ export async function scheduledOverweightCallFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   // Call whose weight will be artifically inflated
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -858,7 +869,8 @@ async function scheduleLookupCall<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -925,7 +937,8 @@ export async function schedulePreimagedCall<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const encodedProposal = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1).method
 
@@ -1216,7 +1229,8 @@ export async function schedulePeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
@@ -1252,7 +1266,8 @@ export async function scheduleNamedPeriodicTask<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
@@ -1293,7 +1308,8 @@ export async function schedulePriorityWeightedTasks<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
   const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
@@ -1498,7 +1514,8 @@ export async function scheduleWithRetryConfig<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
@@ -1636,7 +1653,8 @@ export async function scheduleNamedWithRetryConfig<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const taskId = sha256AsU8a('retry_task')

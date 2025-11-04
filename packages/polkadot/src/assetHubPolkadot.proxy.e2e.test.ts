@@ -8,6 +8,7 @@ import {
   type ProxyTestConfig,
   type ProxyTypeConfig,
   registerTestTree,
+  setupNetworksForAssetHub,
 } from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
@@ -15,6 +16,7 @@ const testConfig: ParaTestConfig = {
   addressEncoding: 0,
   blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
+  setupNetworks: setupNetworksForAssetHub,
 }
 
 const assetHubPolkadotProxyTypeConfig: ProxyTypeConfig = {

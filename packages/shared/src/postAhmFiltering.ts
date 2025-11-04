@@ -11,8 +11,8 @@ import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 async function stakingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   // Create a `utility.forceBatch` with all staking extrinsics using garbage but well-formed arguments
   const batchCalls = [
@@ -99,8 +99,8 @@ async function stakingCallsFilteredTest<
 async function vestingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -133,8 +133,8 @@ async function vestingCallsFilteredTest<
 async function referendaCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -172,8 +172,8 @@ async function referendaCallsFilteredTest<
 async function convictionVotingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -204,8 +204,8 @@ async function convictionVotingCallsFilteredTest<
 async function preimageCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -231,8 +231,8 @@ async function preimageCallsFilteredTest<
 async function nominationPoolsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -308,8 +308,8 @@ async function nominationPoolsCallsFilteredTest<
 async function bountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -348,8 +348,8 @@ async function bountiesCallsFilteredTest<
 async function childBountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -380,8 +380,8 @@ async function childBountiesCallsFilteredTest<
 async function babeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -410,8 +410,8 @@ async function babeCallsNotFilteredTest<
 async function grandpaCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -433,8 +433,8 @@ async function grandpaCallsNotFilteredTest<
 async function beefyCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -467,8 +467,8 @@ async function beefyCallsNotFilteredTest<
 async function parasSlashingCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const batchCalls = [
     // call index 0 - report_dispute_lost_unsigned
@@ -484,8 +484,8 @@ async function parasSlashingCallsNotFilteredTest<
 async function slotsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -507,8 +507,8 @@ async function slotsCallsFilteredTest<
 async function auctionsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -530,8 +530,8 @@ async function auctionsCallsFilteredTest<
 async function crowdloanCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -553,8 +553,8 @@ async function crowdloanCallsNotFilteredTest<
 async function crowdloanCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -582,8 +582,8 @@ async function crowdloanCallsFilteredTest<
 async function schedulerCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -631,8 +631,8 @@ async function schedulerCallsFilteredTest<
 async function treasuryCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -660,8 +660,8 @@ async function treasuryCallsFilteredTest<
 async function systemCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -693,8 +693,8 @@ async function systemCallsNotFilteredTest<
 async function stakingAhClientCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -716,8 +716,8 @@ async function stakingAhClientCallsNotFilteredTest<
 async function parasCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -769,8 +769,8 @@ async function parasCallsNotFilteredTest<
 async function coretimeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, setupFn: typeof setupNetworks) {
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
 
@@ -792,6 +792,8 @@ export function postAhmFilteringE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -803,67 +805,67 @@ export function postAhmFilteringE2ETests<
           {
             kind: 'test',
             label: 'staking calls are filtered',
-            testFn: async () => await stakingCallsFilteredTest(chain),
+            testFn: async () => await stakingCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'vesting calls are filtered',
-            testFn: async () => await vestingCallsFilteredTest(chain),
+            testFn: async () => await vestingCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'referenda calls are filtered',
-            testFn: async () => await referendaCallsFilteredTest(chain),
+            testFn: async () => await referendaCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'conviction-voting calls are filtered',
-            testFn: async () => await convictionVotingCallsFilteredTest(chain),
+            testFn: async () => await convictionVotingCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'preimage calls are filtered',
-            testFn: async () => await preimageCallsFilteredTest(chain),
+            testFn: async () => await preimageCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'nomination pools calls are filtered',
-            testFn: async () => await nominationPoolsCallsFilteredTest(chain),
+            testFn: async () => await nominationPoolsCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'bounties calls are filtered',
-            testFn: async () => await bountiesCallsFilteredTest(chain),
+            testFn: async () => await bountiesCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'child-bounties calls are filtered',
-            testFn: async () => await childBountiesCallsFilteredTest(chain),
+            testFn: async () => await childBountiesCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'slots calls are filtered',
-            testFn: async () => await slotsCallsFilteredTest(chain),
+            testFn: async () => await slotsCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'auctions calls are filtered',
-            testFn: async () => await auctionsCallsFilteredTest(chain),
+            testFn: async () => await auctionsCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'crowdloan calls (create, contribute, edit, etc) are filtered',
-            testFn: async () => await crowdloanCallsFilteredTest(chain),
+            testFn: async () => await crowdloanCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'scheduler calls are filtered',
-            testFn: async () => await schedulerCallsFilteredTest(chain),
+            testFn: async () => await schedulerCallsFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'treasury calls are filtered',
-            testFn: async () => await treasuryCallsFilteredTest(chain),
+            testFn: async () => await treasuryCallsFilteredTest(chain, setupFn),
           },
         ],
       },
@@ -874,47 +876,47 @@ export function postAhmFilteringE2ETests<
           {
             kind: 'test',
             label: 'babe calls are not filtered',
-            testFn: async () => await babeCallsNotFilteredTest(chain),
+            testFn: async () => await babeCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'grandpa calls are not filtered',
-            testFn: async () => await grandpaCallsNotFilteredTest(chain),
+            testFn: async () => await grandpaCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'beefy calls are not filtered',
-            testFn: async () => await beefyCallsNotFilteredTest(chain),
+            testFn: async () => await beefyCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'parasSlashing calls are not filtered',
-            testFn: async () => await parasSlashingCallsNotFilteredTest(chain),
+            testFn: async () => await parasSlashingCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'crowdloan calls (withdraw, refund, dissolve) are not filtered',
-            testFn: async () => await crowdloanCallsNotFilteredTest(chain),
+            testFn: async () => await crowdloanCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'system calls are not filtered',
-            testFn: async () => await systemCallsNotFilteredTest(chain),
+            testFn: async () => await systemCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'stakingAhClient calls are not filtered',
-            testFn: async () => await stakingAhClientCallsNotFilteredTest(chain),
+            testFn: async () => await stakingAhClientCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'paras calls are not filtered',
-            testFn: async () => await parasCallsNotFilteredTest(chain),
+            testFn: async () => await parasCallsNotFilteredTest(chain, setupFn),
           },
           {
             kind: 'test',
             label: 'coretime calls are not filtered',
-            testFn: async () => await coretimeCallsNotFilteredTest(chain),
+            testFn: async () => await coretimeCallsNotFilteredTest(chain, setupFn),
           },
         ],
       },

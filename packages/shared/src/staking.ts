@@ -204,7 +204,8 @@ async function stakingLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   ///
   /// Generate validators, and fund them.
   ///
@@ -452,7 +453,8 @@ async function forceUnstakeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -622,7 +624,8 @@ async function setMinCommission<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
 
   await client.dev.setStorage({
@@ -713,7 +716,8 @@ async function setStakingConfigsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
 
   await client.dev.setStorage({
@@ -834,7 +838,8 @@ async function forceApplyValidatorCommissionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   /// Create some Sr25519 accounts and fund them
 
   const alice = testAccounts.alice
@@ -933,7 +938,8 @@ async function modifyValidatorCountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
 
   ///
@@ -1060,7 +1066,8 @@ async function chillOtherTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   /// Rquired information for this test, to set appropriate thresholds later
 
   const minNominatorBond = (await client.api.query.staking.minNominatorBond()).toBigInt()
@@ -1248,7 +1255,8 @@ async function unappliedSlashTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -1720,7 +1728,8 @@ async function setInvulnerablesTestBadOrigin<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
   const alice = testAccounts.alice
 
   const invulnerables = (await client.api.query.staking.invulnerables())
@@ -1789,7 +1798,8 @@ async function setInvulnerablesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   //
   // Locate era change

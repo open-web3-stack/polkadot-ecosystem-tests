@@ -6,6 +6,7 @@ import {
   createDefaultReserveActions,
   manualLockAction,
   registerTestTree,
+  setupNetworksForAssetHub,
   type TestConfig,
 } from '@e2e-test/shared'
 
@@ -15,6 +16,7 @@ const testCfg: TestConfig = {
   blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
   chainEd: 'Normal',
+  setupNetworks: setupNetworksForAssetHub,
 }
 
 // When testing liquidity restrictions on Asset Hubs, to simulate frozen funds, vesting is skipped due to AHM.

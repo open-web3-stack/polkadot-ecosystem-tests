@@ -1760,7 +1760,8 @@ export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob

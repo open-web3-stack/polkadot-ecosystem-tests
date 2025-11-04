@@ -10,6 +10,7 @@ import {
   type RelayTestConfig,
   type RootTestTree,
   registerTestTree,
+  setupNetworksForRelay,
   type TestNode,
 } from '@e2e-test/shared'
 
@@ -20,6 +21,7 @@ const generalTestConfig: RelayTestConfig = {
   addressEncoding: 0,
   chainEd: 'Normal',
   blockProvider: 'Local',
+  setupNetworks: setupNetworksForRelay,
 }
 
 // Staking and nomination pools are disabled on Polkadot relay, so the only reserve action available is manual.

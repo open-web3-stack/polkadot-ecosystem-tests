@@ -68,7 +68,8 @@ export async function preimageSingleRequestUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
@@ -106,7 +107,8 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
@@ -156,7 +158,8 @@ export async function preimageRequestAndNoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
@@ -224,7 +227,8 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method

@@ -15,6 +15,7 @@ import type { HexString } from '@polkadot/util/types'
 import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
+import type { setupNetworks as SetupNetworksFn } from '../setup.js'
 import type { Client } from '../types.js'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
@@ -495,6 +496,7 @@ export interface RelayTestConfig {
   addressEncoding: number
   blockProvider: 'Local'
   chainEd?: ChainED
+  setupNetworks?: typeof SetupNetworksFn
 }
 
 /**
@@ -510,6 +512,7 @@ export interface ParaTestConfig {
   blockProvider: BlockProvider
   asyncBacking: AsyncBacking
   chainEd?: ChainED
+  setupNetworks?: typeof SetupNetworksFn
 }
 
 /**

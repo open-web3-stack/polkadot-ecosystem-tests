@@ -596,7 +596,8 @@ async function transferAllowDeathTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -746,7 +747,8 @@ async function transferAllowDeathNoKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -934,7 +936,8 @@ async function transferAllowDeathWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create fresh addresses, one with 10 ED (plus some extra for fees)
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -1125,7 +1128,8 @@ async function forceTransferKillTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
   // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
@@ -1137,7 +1141,7 @@ async function forceTransferKillTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -1285,7 +1289,8 @@ async function forceTransferBelowExistentialDepositTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -1296,7 +1301,7 @@ async function forceTransferBelowExistentialDepositTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -1401,7 +1406,8 @@ async function forceTransferInsufficientFundsTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -1412,7 +1418,7 @@ async function forceTransferInsufficientFundsTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -1512,7 +1518,8 @@ async function forceTransferWithReserveTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
   // and the base client needs to be recreated simultaneously - otherwise, they would be unable to communicate.
@@ -1524,7 +1531,7 @@ async function forceTransferWithReserveTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -1691,7 +1698,8 @@ async function forceTransferSelfTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -1702,7 +1710,7 @@ async function forceTransferSelfTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -1803,7 +1811,8 @@ async function transferAllKeepAliveTrueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create and fund accounts
 
@@ -1889,7 +1898,8 @@ async function transferAllKeepAliveFalseTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create and fund accounts
 
@@ -1975,7 +1985,8 @@ async function transferAllWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -2095,7 +2106,8 @@ async function transferAllSelfKeepAliveTrueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice's account
 
@@ -2171,7 +2183,8 @@ async function transferAllSelfKeepAliveFalseTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice's account
 
@@ -2330,7 +2343,8 @@ async function transferKeepAliveSelfSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice's account
 
@@ -2398,7 +2412,8 @@ async function transferKeepAliveBelowEdTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create accounts, and endow Alice with funds
 
@@ -2480,7 +2495,8 @@ async function transferKeepAliveBelowEdLowEdTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create accounts, and endow Alice with funds
 
@@ -2597,7 +2613,8 @@ async function forceUnreserveNoReservesTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -2609,7 +2626,7 @@ async function forceUnreserveNoReservesTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
 
@@ -2698,7 +2715,8 @@ async function forceUnreserveNonExistentAccountTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -2710,7 +2728,7 @@ async function forceUnreserveNonExistentAccountTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
 
@@ -2792,7 +2810,8 @@ async function forceUnreserveWithReservesTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -2804,7 +2823,7 @@ async function forceUnreserveWithReservesTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
 
@@ -2962,7 +2981,8 @@ async function forceSetBalanceSuccessTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -2973,7 +2993,7 @@ async function forceSetBalanceSuccessTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -3085,7 +3105,8 @@ async function forceSetBalanceBelowEdTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -3096,7 +3117,7 @@ async function forceSetBalanceBelowEdTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
   }
@@ -3240,7 +3261,8 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -3252,7 +3274,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
 
@@ -3410,7 +3432,8 @@ async function forceAdjustTotalIssuanceSuccessTest<
 ) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
   let baseClient: Client<TCustom, TInitStoragesBase>
-  const [bc] = await setupNetworks(baseChain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [bc] = await setupFn(baseChain)
 
   // Check if scheduler pallet is available
   const hasScheduler = !!bc.api.tx.scheduler
@@ -3422,7 +3445,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseChain)
+    const [rc, bc] = await setupFn(relayChain, baseChain)
     relayClient = rc
     baseClient = bc
 
@@ -3565,7 +3588,8 @@ async function burnTestBaseCase<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice with 1000 ED
 
@@ -3639,7 +3663,8 @@ async function burnTestWithReaping<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice with 1000 ED
 
@@ -3709,7 +3734,8 @@ async function burnKeepAliveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice with 1000 ED
 
@@ -3785,7 +3811,8 @@ async function burnWithDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice with 1000 ED + multisig deposit amount
 
@@ -3893,7 +3920,8 @@ async function burnDoubleAttemptTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // 1. Create Alice with 100 ED
 
