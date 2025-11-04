@@ -160,8 +160,9 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
 export async function bountyCreationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   // Setup test accounts
   await setupTestAccounts(client, ['alice'])
@@ -220,7 +221,8 @@ export async function bountyApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -287,7 +289,8 @@ export async function bountyApprovalWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -363,7 +366,8 @@ export async function bountyFundingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -450,7 +454,8 @@ export async function bountyFundingForApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -550,7 +555,8 @@ export async function curatorAssignmentAndAcceptanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -675,7 +681,8 @@ export async function bountyExtensionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -833,7 +840,8 @@ export async function bountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1004,7 +1012,8 @@ export async function bountyClosureProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -1082,7 +1091,8 @@ export async function bountyClosureFundedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1200,7 +1210,8 @@ export async function bountyClosureActiveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1336,7 +1347,8 @@ export async function unassignCuratorApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob'])
 
@@ -1414,7 +1426,8 @@ export async function unassignCuratorCuratorProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1532,7 +1545,8 @@ export async function unassignCuratorActiveByCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1677,7 +1691,8 @@ export async function unassignCuratorActiveByTreasurerTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -1839,7 +1854,8 @@ export async function unassignCuratorPendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -2152,7 +2168,7 @@ export function allBountySuccessTests<
       {
         kind: 'test',
         label: 'Creating a bounty',
-        testFn: async () => await bountyCreationTest(chain),
+        testFn: async () => await bountyCreationTest(chain, testConfig),
       },
       {
         kind: 'test',
@@ -2194,7 +2210,8 @@ export async function bountyClosureApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -2291,7 +2308,8 @@ export async function bountyClosurePendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -2416,7 +2434,8 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -2515,8 +2534,9 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
 async function reasonTooBigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -2560,8 +2580,9 @@ async function reasonTooBigTest<
 async function invalidValueTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -2605,7 +2626,8 @@ async function invalidIndexApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const nonExistentBountyIndex = NON_EXISTENT_BOUNTY_INDEX // random index that doesn't exist
 
@@ -2658,7 +2680,8 @@ async function unexpectedStatusProposeCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice'])
 
@@ -2722,7 +2745,8 @@ async function requireCuratorAcceptTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -2809,7 +2833,8 @@ async function hasActiveChildBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -2928,7 +2953,8 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -3084,12 +3110,12 @@ export function allBountyFailureTests<
       {
         kind: 'test',
         label: 'Reason too big',
-        testFn: async () => await reasonTooBigTest(chain),
+        testFn: async () => await reasonTooBigTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'Invalid value',
-        testFn: async () => await invalidValueTest(chain),
+        testFn: async () => await invalidValueTest(chain, testConfig),
       },
       {
         kind: 'test',

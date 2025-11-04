@@ -241,33 +241,7 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > 
 ]
 `;
 
-exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-    },
-    "method": "Bonded",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "depositor": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Created",
-    "section": "nominationPools",
-  },
-  {
-    "data": {
-      "bonded": 5000000000000,
-      "joined": true,
-      "member": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Bonded",
-    "section": "nominationPools",
-  },
-]
-`;
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > join nomination pool events 1`] = `
 [

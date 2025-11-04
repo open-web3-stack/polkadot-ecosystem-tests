@@ -32,7 +32,8 @@ async function testVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = defaultAccountsSr25519.alice
   const bob = defaultAccountsSr25519.bob
@@ -180,8 +181,9 @@ async function testVestedTransfer<
 async function testForceVestedTransfer<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = defaultAccountsSr25519.alice
   const charlie = defaultAccountsSr25519.charlie
@@ -230,8 +232,9 @@ async function testForceVestedTransfer<
 async function testForceRemoveVestedSchedule<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = defaultAccountsSr25519.alice
   const charlie = defaultAccountsSr25519.charlie
@@ -262,7 +265,8 @@ async function testForceVestedTransferAndRemoval<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = defaultAccountsSr25519.alice
   const dave = defaultAccountsSr25519.dave
@@ -366,7 +370,8 @@ async function testMergeVestingSchedules<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = defaultAccountsSr25519.alice
   const eve = defaultAccountsSr25519.eve
@@ -498,8 +503,9 @@ async function testVestedTransferFiltered<
 async function testMergeSchedulesNoSchedule<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const charlie = defaultAccountsSr25519.charlie
 
@@ -545,12 +551,12 @@ export function fullVestingE2ETests<
       {
         kind: 'test',
         label: 'signed-origin forced removal of vesting schedule fails',
-        testFn: () => testForceRemoveVestedSchedule(chain),
+        testFn: () => testForceRemoveVestedSchedule(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'signed-origin force-vested transfer fails',
-        testFn: () => testForceVestedTransfer(chain),
+        testFn: () => testForceVestedTransfer(chain, testConfig),
       },
       {
         kind: 'test',
@@ -565,7 +571,7 @@ export function fullVestingE2ETests<
       {
         kind: 'test',
         label: 'merging vesting schedules when none exist fails',
-        testFn: () => testMergeSchedulesNoSchedule(chain),
+        testFn: () => testMergeSchedulesNoSchedule(chain, testConfig),
       },
     ],
   }
@@ -587,17 +593,17 @@ export function assetHubVestingE2ETests<
       {
         kind: 'test',
         label: 'signed-origin forced removal of vesting schedule fails',
-        testFn: () => testForceRemoveVestedSchedule(chain),
+        testFn: () => testForceRemoveVestedSchedule(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'signed-origin force-vested transfer fails',
-        testFn: () => testForceVestedTransfer(chain),
+        testFn: () => testForceVestedTransfer(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'attempt to merge when no vesting schedules exist fails',
-        testFn: () => testMergeSchedulesNoSchedule(chain),
+        testFn: () => testMergeSchedulesNoSchedule(chain, testConfig),
       },
     ],
   }

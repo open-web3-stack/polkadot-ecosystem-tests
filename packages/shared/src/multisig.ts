@@ -7,7 +7,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { checkEvents, sortAddressesByBytes } from './helpers/index.js'
+import { checkEvents, sortAddressesByBytes, type TestConfig } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
 /// -------
@@ -34,8 +34,9 @@ import type { RootTestTree } from './types.js'
 async function basicMultisigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -56,7 +57,7 @@ async function basicMultisigTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
 
   // First and last approvals require encoded call; the following approvals - the non-final ones - require a hash.
@@ -97,7 +98,7 @@ async function basicMultisigTest<
   const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
 
   const newMultisigEventData = multisigEvent.event.data
-  expect(newMultisigEventData.approving.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(newMultisigEventData.approving.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   const multisigAddress = newMultisigEventData.multisig
   const multisigCallHash = newMultisigEventData.callHash
 
@@ -109,7 +110,7 @@ async function basicMultisigTest<
 
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
-    sortAddressesByBytes([alice.address, charlie.address], addressEncoding),
+    sortAddressesByBytes([alice.address, charlie.address], testConfig.addressEncoding),
     {
       height: currBlockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -157,7 +158,7 @@ async function basicMultisigTest<
   })
   assert(client.api.events.multisig.MultisigExecuted.is(multisigExecutedEvent.event))
   const multisigExecutedEventData = multisigExecutedEvent.event.data
-  expect(multisigExecutedEventData.approving.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(multisigExecutedEventData.approving.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(multisigExecutedEventData.timepoint.height.toNumber()).toBe(currBlockNumber + 1)
   expect(multisigExecutedEventData.multisig.toString()).toBe(multisigAddress.toString())
   expect(multisigExecutedEventData.callHash.toString()).toBe(multisigCallHash.toString())
@@ -175,8 +176,9 @@ async function basicMultisigTest<
 async function multisigCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -196,7 +198,7 @@ async function multisigCancellationTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -235,7 +237,7 @@ async function multisigCancellationTest<
   const multisigExtrinsicIndex = multisigEvent.phase.asApplyExtrinsic.toNumber()
 
   const newMultisigEventData = multisigEvent.event.data
-  expect(newMultisigEventData.approving.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(newMultisigEventData.approving.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
   const multisigAddress = newMultisigEventData.multisig
   const multisigCallHash = newMultisigEventData.callHash
 
@@ -277,7 +279,9 @@ async function multisigCancellationTest<
   })
   assert(client.api.events.multisig.MultisigCancelled.is(multisigCancelledEvent.event))
   const multisigCancelledEventData = multisigCancelledEvent.event.data
-  expect(multisigCancelledEventData.cancelling.toString()).toBe(encodeAddress(alice.address, addressEncoding))
+  expect(multisigCancelledEventData.cancelling.toString()).toBe(
+    encodeAddress(alice.address, testConfig.addressEncoding),
+  )
   expect(multisigCancelledEventData.timepoint.height.toNumber()).toBe(currBlockNumber + 1)
   expect(multisigCancelledEventData.multisig.toString()).toBe(multisigAddress.toString())
   expect(multisigCancelledEventData.callHash.toString()).toBe(multisigCallHash.toString())
@@ -295,8 +299,9 @@ async function multisigCancellationTest<
 async function approveAsMulti2Of3DoesNotExecuteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -316,7 +321,7 @@ async function approveAsMulti2Of3DoesNotExecuteTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -363,7 +368,7 @@ async function approveAsMulti2Of3DoesNotExecuteTest<
   // Bob calls approveAsMulti (not asMulti) to approve the operation
   const approveTx = client.api.tx.multisig.approveAsMulti(
     threshold,
-    sortAddressesByBytes([alice.address, charlie.address], addressEncoding),
+    sortAddressesByBytes([alice.address, charlie.address], testConfig.addressEncoding),
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -400,7 +405,7 @@ async function approveAsMulti2Of3DoesNotExecuteTest<
 
   assert(client.api.events.multisig.MultisigApproval.is(multisigApprovalEvent.event))
   const multisigApprovalEventData = multisigApprovalEvent.event.data
-  expect(multisigApprovalEventData.approving.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(multisigApprovalEventData.approving.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(multisigApprovalEventData.timepoint.height.toNumber()).toBe(blockNumber + 1)
   expect(multisigApprovalEventData.multisig.toString()).toBe(multisigAddress.toString())
   expect(multisigApprovalEventData.callHash.toString()).toBe(multisigCallHash.toString())
@@ -421,7 +426,7 @@ async function approveAsMulti2Of3DoesNotExecuteTest<
 
   const approveTx2 = client.api.tx.multisig.asMulti(
     threshold,
-    sortAddressesByBytes([bob.address, alice.address], addressEncoding),
+    sortAddressesByBytes([bob.address, alice.address], testConfig.addressEncoding),
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -458,8 +463,9 @@ async function approveAsMulti2Of3DoesNotExecuteTest<
 async function finalApprovalApproveAsMultiTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -588,8 +594,9 @@ async function finalApprovalApproveAsMultiTest<
 async function approveAsMultiFirstTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -609,7 +616,7 @@ async function approveAsMultiFirstTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   // Alice calls approveAsMulti first with the call hash
@@ -658,7 +665,7 @@ async function approveAsMultiFirstTest<
   // Bob calls asMulti to execute the call
   const executeTx = client.api.tx.multisig.asMulti(
     threshold,
-    sortAddressesByBytes([alice.address, charlie.address], addressEncoding),
+    sortAddressesByBytes([alice.address, charlie.address], testConfig.addressEncoding),
     {
       height: blockNumber,
       index: multisigExtrinsicIndex,
@@ -691,7 +698,7 @@ async function approveAsMultiFirstTest<
   // Dissect multisig execution event
   assert(client.api.events.multisig.MultisigExecuted.is(multisigExecutedEvent.event))
   const multisigExecutedEventData = multisigExecutedEvent.event.data
-  expect(multisigExecutedEventData.approving.toString()).toBe(encodeAddress(bob.address, addressEncoding))
+  expect(multisigExecutedEventData.approving.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
   expect(multisigExecutedEventData.timepoint.height.toNumber()).toBe(blockNumber)
   expect(multisigExecutedEventData.multisig.toString()).toBe(multisigAddress.toString())
   expect(multisigExecutedEventData.callHash.toString()).toBe(multisigCallHash.toString())
@@ -710,8 +717,9 @@ async function approveAsMultiFirstTest<
 async function minimumThresholdCancelTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -777,8 +785,9 @@ async function minimumThresholdCancelTest<
 async function minimumThresholdAsMultiTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -841,8 +850,9 @@ async function minimumThresholdAsMultiTest<
 async function approveAsMultiAlreadyApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -951,8 +961,9 @@ async function approveAsMultiAlreadyApprovedTest<
 async function tooFewSignatoriesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const dave = testAccounts.dave
@@ -1003,8 +1014,9 @@ async function tooFewSignatoriesTest<
 async function tooManySignatoriesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const dave = testAccounts.dave
@@ -1071,8 +1083,9 @@ async function tooManySignatoriesTest<
 async function signatoriesOutOfOrderInExecutionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1092,7 +1105,7 @@ async function signatoriesOutOfOrderInExecutionTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2) in correct order
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding) // Correct order
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding) // Correct order
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1125,7 +1138,7 @@ async function signatoriesOutOfOrderInExecutionTest<
   // Bob attempts to execute but passes remaining signatories out of order
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
-    sortAddressesByBytes([charlie.address, alice.address], addressEncoding).reverse(), // Out of alphabetical order
+    sortAddressesByBytes([charlie.address, alice.address], testConfig.addressEncoding).reverse(), // Out of alphabetical order
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1167,8 +1180,9 @@ async function signatoriesOutOfOrderInExecutionTest<
 async function cancelWithSignatoriesOutOfOrderTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1188,7 +1202,7 @@ async function cancelWithSignatoriesOutOfOrderTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1224,7 +1238,7 @@ async function cancelWithSignatoriesOutOfOrderTest<
   // Alice attempts to cancel but passes remaining signatories out of order
   const cancelTx = client.api.tx.multisig.cancelAsMulti(
     threshold,
-    sortAddressesByBytes([charlie.address, bob.address], addressEncoding).reverse(), // Out of order
+    sortAddressesByBytes([charlie.address, bob.address], testConfig.addressEncoding).reverse(), // Out of order
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1266,8 +1280,9 @@ async function cancelWithSignatoriesOutOfOrderTest<
 async function signatoriesOutOfOrderInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1287,7 +1302,7 @@ async function signatoriesOutOfOrderInApprovalTest<
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], testConfig.addressEncoding)
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1320,7 +1335,7 @@ async function signatoriesOutOfOrderInApprovalTest<
   // Bob calls `approveAsMulti` but passes the remaining signatories out of order.
   const approveTx = client.api.tx.multisig.approveAsMulti(
     threshold,
-    sortAddressesByBytes([alice.address, charlie.address], addressEncoding).reverse(),
+    sortAddressesByBytes([alice.address, charlie.address], testConfig.addressEncoding).reverse(),
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1361,8 +1376,9 @@ async function signatoriesOutOfOrderInApprovalTest<
 async function senderInSignatoriesInExecutionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1381,7 +1397,7 @@ async function senderInSignatoriesInExecutionTest<
 
   // Alice attempts to create a multisig with Bob (threshold: 2), but includes herself in the signatories
   const threshold = 2
-  const otherSignatories = sortAddressesByBytes([alice.address, bob.address], addressEncoding) // Alice includes herself!
+  const otherSignatories = sortAddressesByBytes([alice.address, bob.address], testConfig.addressEncoding) // Alice includes herself!
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 }
 
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -1424,8 +1440,9 @@ async function senderInSignatoriesInExecutionTest<
 async function senderInSignatoriesInCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1475,7 +1492,7 @@ async function senderInSignatoriesInCancellationTest<
   // Alice calls cancelAsMulti to cancel the operation, but includes herself in the signatories.
   const cancelTx = client.api.tx.multisig.cancelAsMulti(
     threshold,
-    sortAddressesByBytes([alice.address, bob.address], addressEncoding), // Alice includes herself!
+    sortAddressesByBytes([alice.address, bob.address], testConfig.addressEncoding), // Alice includes herself!
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1517,8 +1534,9 @@ async function senderInSignatoriesInCancellationTest<
 async function senderInSignatoriesInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1570,7 +1588,7 @@ async function senderInSignatoriesInApprovalTest<
   // Bob calls approveAsMulti to approve the operation, including himself in the signatories.
   const approveTx = client.api.tx.multisig.approveAsMulti(
     threshold,
-    sortAddressesByBytes([alice.address, bob.address], addressEncoding),
+    sortAddressesByBytes([alice.address, bob.address], testConfig.addressEncoding),
     {
       height: blockNumber + 1,
       index: multisigExtrinsicIndex,
@@ -1612,8 +1630,9 @@ async function senderInSignatoriesInApprovalTest<
 async function notFoundCancelTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1745,8 +1764,9 @@ async function notFoundCancelTest<
 async function notOwnerCancelTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1839,8 +1859,9 @@ async function notOwnerCancelTest<
 async function noTimepointTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -1918,8 +1939,9 @@ async function noTimepointTest<
 async function wrongTimepointTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -2045,8 +2067,9 @@ async function wrongTimepointTest<
 async function unexpectedTimepointTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -2116,8 +2139,9 @@ async function unexpectedTimepointTest<
 async function maxWeightTooLowTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const setupFn = testConfig.setupNetworks || setupNetworks
+  const [client] = await setupFn(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
@@ -2202,7 +2226,7 @@ async function maxWeightTooLowTest<
 export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
@@ -2210,28 +2234,28 @@ export function successMultisigE2ETests<
       {
         kind: 'test',
         label: 'basic 2-of-3 multisig creation and execution',
-        testFn: () => basicMultisigTest(chain, testConfig.addressEncoding),
+        testFn: () => basicMultisigTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'multisig cancellation works',
-        testFn: () => multisigCancellationTest(chain, testConfig.addressEncoding),
+        testFn: () => multisigCancellationTest(chain, testConfig),
       },
       {
         kind: 'test',
         label:
           'second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution',
-        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding),
+        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'final approval with `approveAsMulti` does not lead to execution',
-        testFn: () => finalApprovalApproveAsMultiTest(chain),
+        testFn: () => finalApprovalApproveAsMultiTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'beginning multisig approval with `approveAsMulti` works',
-        testFn: () => approveAsMultiFirstTest(chain, testConfig.addressEncoding),
+        testFn: () => approveAsMultiFirstTest(chain, testConfig),
       },
     ],
   }
@@ -2240,7 +2264,7 @@ export function successMultisigE2ETests<
 export function failureMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -2248,87 +2272,87 @@ export function failureMultisigE2ETests<
       {
         kind: 'test',
         label: 'multisig cancellation with threshold < 2 fails',
-        testFn: () => minimumThresholdCancelTest(chain),
+        testFn: () => minimumThresholdCancelTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'creating a multisig with threshold < 2 fails',
-        testFn: () => minimumThresholdAsMultiTest(chain),
+        testFn: () => minimumThresholdAsMultiTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'repeated approval with `approveAsMulti` fails',
-        testFn: () => approveAsMultiAlreadyApprovedTest(chain),
+        testFn: () => approveAsMultiAlreadyApprovedTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'multisig creation with too few signatories fails',
-        testFn: () => tooFewSignatoriesTest(chain),
+        testFn: () => tooFewSignatoriesTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'multisig creation with too many signatories fails',
-        testFn: () => tooManySignatoriesTest(chain),
+        testFn: () => tooManySignatoriesTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'multisig execution with remaining signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInExecutionTest(chain, testConfig.addressEncoding),
+        testFn: () => signatoriesOutOfOrderInExecutionTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'multisig cancellation with remaining signatories out of order fails',
-        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain, testConfig.addressEncoding),
+        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'approval with signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInApprovalTest(chain, testConfig.addressEncoding),
+        testFn: () => signatoriesOutOfOrderInApprovalTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'execution with sender in signatories fails',
-        testFn: () => senderInSignatoriesInExecutionTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInExecutionTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'cancellation with sender in signatories fails',
-        testFn: () => senderInSignatoriesInCancellationTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInCancellationTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'approval with sender in signatories fails',
-        testFn: () => senderInSignatoriesInApprovalTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInApprovalTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'cancelling a non-existent multisig operation fails',
-        testFn: () => notFoundCancelTest(chain),
+        testFn: () => notFoundCancelTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'non-depositor tries to cancel multisig fails',
-        testFn: () => notOwnerCancelTest(chain),
+        testFn: () => notOwnerCancelTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'approval without timepoint fails',
-        testFn: () => noTimepointTest(chain),
+        testFn: () => noTimepointTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'approval with wrong timepoint fails',
-        testFn: () => wrongTimepointTest(chain),
+        testFn: () => wrongTimepointTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'first call with unexpected timepoint fails',
-        testFn: () => unexpectedTimepointTest(chain),
+        testFn: () => unexpectedTimepointTest(chain, testConfig),
       },
       {
         kind: 'test',
         label: 'approval with max weight too low fails',
-        testFn: () => maxWeightTooLowTest(chain),
+        testFn: () => maxWeightTooLowTest(chain, testConfig),
       },
     ],
   }
@@ -2348,7 +2372,7 @@ export function failureMultisigE2ETests<
 export function baseMultisigE2Etests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
