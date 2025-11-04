@@ -25,7 +25,7 @@ describe('acala & polkadot', async () => {
   )
 
   runXtokensUp(
-    'acala transfer DOT wiht limited weight',
+    'acala transfer DOT with limited weight',
     async () => {
       return {
         fromChain: acalaClient,

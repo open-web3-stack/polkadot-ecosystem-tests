@@ -25,7 +25,7 @@ describe('karura & kusama', async () => {
   )
 
   runXtokensUp(
-    'karura transfer KSM to kusama wiht limited weight',
+    'karura transfer KSM to kusama with limited weight',
     async () => {
       return {
         fromChain: karuraClient,

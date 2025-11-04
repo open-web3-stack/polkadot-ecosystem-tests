@@ -22,13 +22,13 @@ const generalTestConfig: RelayTestConfig = {
   blockProvider: 'Local',
 }
 
-// Staking and nomination pools are disabled on Kusama relay, so the only reserve action available is manual.
+// Staking and nomination pools are disabled on Polkadot relay, so the only reserve action available is manual.
 const reserveActions = [manualReserveAction()]
 
-// Vesting is disabled on Kusama relay, so the only lock action available is the manual lock.
+// Vesting is also disabled, so the only lock action available is the manual lock.
 const lockActions = [manualLockAction()]
 
-// Referenda submission is no longer available on Kusama relay.
+// Referenda submission is no longer available, either.
 const depositActions = [proxyAdditionDepositAction(), multisigCreationDepositAction()]
 
 const accountsTestCfg = createAccountsConfig({
