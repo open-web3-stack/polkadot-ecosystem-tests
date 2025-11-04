@@ -449,6 +449,11 @@ exports[`Polkadot Asset Hub Child Bounties > All child bounties success tests > 
     "method": "Transfer",
     "section": "balances",
   },
+  {
+    "data": "(redacted)",
+    "method": "Transfer",
+    "section": "balances",
+  },
 ]
 `;
 

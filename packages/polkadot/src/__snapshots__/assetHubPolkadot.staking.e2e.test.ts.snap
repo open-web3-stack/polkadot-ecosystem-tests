@@ -527,6 +527,8 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > n
 
 exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `[]`;
 
+exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 2`] = `[]`;
+
 exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > validate (blocked) events 1`] = `
 [
   {
