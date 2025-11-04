@@ -5,7 +5,6 @@ import { type Client, setupBalances, setupNetworks, verifyPureProxy } from '@e2e
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { AccountId32 } from '@polkadot/types/interfaces/runtime'
-import type { FrameSystemAccountInfo } from '@polkadot/types/lookup'
 import type { U8aFixed } from '@polkadot/types-codec'
 import { encodeAddress } from '@polkadot/util-crypto'
 
@@ -16,6 +15,8 @@ import {
   check,
   checkEvents,
   getBlockNumber,
+  getFreeFunds,
+  getReservedFunds,
   sortAddressesByBytes,
   type TestConfig,
 } from './helpers/index.js'
@@ -84,22 +85,6 @@ async function getAndVerifyMultisigEventData(
   const multisigCallHash = newMultisigEventData.callHash
 
   return [multisigAddress, multisigExtrinsicIndex, multisigCallHash]
-}
-
-/**
- * Get the free funds of an account.
- */
-async function getFreeFunds(client: Client<any, any>, address: any): Promise<number> {
-  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.free.toNumber()
-}
-
-/**
- * Get the reserved funds of an account.
- */
-async function getReservedFunds(client: Client<any, any>, address: any): Promise<number> {
-  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.reserved.toNumber()
 }
 
 /**

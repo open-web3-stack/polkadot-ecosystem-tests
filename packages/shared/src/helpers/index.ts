@@ -7,7 +7,7 @@ import type { ApiPromise } from '@polkadot/api'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { EventRecord } from '@polkadot/types/interfaces'
-import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { FrameSystemAccountInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
 import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
@@ -108,6 +108,79 @@ export type BlockProvider = 'Local' | 'NonLocal'
 export type AsyncBacking = 'Enabled' | 'Disabled'
 
 /**
+ * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the list of extrinsics
+ * in the next block.
+ *
+ * The calls can be either inline calls or lookup calls, which in the latter case *must* have been noted
+ * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
+ *
+ * @param blockProvider Whether the calls are being scheduled on a chain that uses a local or nonlocal block provider.
+ *        This chain's runtime *must* have the scheduler pallet available.
+ */
+export async function scheduleCallListWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  calls: {
+    call:
+      | { Inline: any }
+      | {
+          Lookup: {
+            hash: any
+            len: any
+          }
+        }
+    origin: any
+  }[],
+  blockProvider: BlockProvider = 'Local',
+) {
+  const scheduledBlock = await match(blockProvider)
+    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('NonLocal', async () =>
+      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
+    )
+    .exhaustive()
+
+  const agenda = [
+    [
+      [scheduledBlock],
+      calls.map(({ call, origin }) => ({
+        call,
+        origin,
+      })),
+    ],
+  ]
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: agenda,
+    },
+  })
+}
+
+/**
+ * Given a PJS client and a list of inline calls with the same origin, modify the `scheduler`
+ * pallet's `agenda` storage to execute the extrinsic in the next block.
+ */
+export async function scheduleInlineCallListWithSameOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  encodedCall: HexString[],
+  origin: any,
+  blockProvider: BlockProvider = 'Local',
+) {
+  const callList = encodedCall.map((call) => ({ call: { Inline: call }, origin }))
+  await scheduleCallListWithOrigin(client, callList, blockProvider)
+}
+
+/**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
  *
@@ -135,28 +208,7 @@ export async function scheduleCallWithOrigin(
   origin: any,
   blockProvider: BlockProvider = 'Local',
 ) {
-  const scheduledBlock = await match(blockProvider)
-    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('NonLocal', async () =>
-      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
-    )
-    .exhaustive()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [scheduledBlock],
-          [
-            {
-              call,
-              origin: origin,
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  await scheduleCallListWithOrigin(client, [{ call, origin }], blockProvider)
 }
 
 /**
@@ -485,6 +537,22 @@ export function sortAddressesByBytes(addresses: string[], addressEncoding: numbe
       }
     })
     .map((bytes) => encodeAddress(bytes, addressEncoding))
+}
+
+/**
+ * Get the free funds of an account.
+ */
+export async function getFreeFunds(client: Client<any, any>, address: any): Promise<number> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.free.toNumber()
+}
+
+/**
+ * Get the reserved funds of an account.
+ */
+export async function getReservedFunds(client: Client<any, any>, address: any): Promise<number> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.reserved.toNumber()
 }
 
 /**
