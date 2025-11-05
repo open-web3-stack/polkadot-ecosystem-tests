@@ -93,7 +93,7 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
     "data": {
       "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "callHash": "(hash)",
-      "multisig": "1PNckbg48SWNUx5cmTLMPcxGY8mL9zGL9sD7BCcXKzf95x6",
+      "multisig": "15nZbCKW1B93r1N8ujsbZA1jrGhn98zb7f8NMzt8T9h5LU9H",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -105,9 +105,9 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
 [
   {
     "data": {
-      "approving": "12zwmqfur4YR49CoYDppDjh6UEPaMnN1HmM7fcionKqRk5bT",
+      "approving": "12eUtnNZ7DazknnqPeHtpXKyEr9R1GBWkQj1Hmdyj4W3DM5f",
       "callHash": "(hash)",
-      "multisig": "1PNckbg48SWNUx5cmTLMPcxGY8mL9zGL9sD7BCcXKzf95x6",
+      "multisig": "15nZbCKW1B93r1N8ujsbZA1jrGhn98zb7f8NMzt8T9h5LU9H",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -126,7 +126,7 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
     "data": {
       "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "callHash": "(hash)",
-      "multisig": "16LsnnUbQgzENLwtAetRzLQZftzH1W7qnTSp7SfDYEns9Qrr",
+      "multisig": "14tcsxxKnj2rcXsE1F6agPetVvbGVHqnisaHfE5g8KPwHCEo",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -138,9 +138,9 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
 [
   {
     "data": {
-      "approving": "12ikWQxPyxKyosnSsY6qgFX14rMVrUSczeJM4xPMykoY79Dr",
+      "approving": "16WT4XaBMsZkBiGzTjb1t1dGm9EywRAtRB7tM9W4zZuoHrGP",
       "callHash": "(hash)",
-      "multisig": "16LsnnUbQgzENLwtAetRzLQZftzH1W7qnTSp7SfDYEns9Qrr",
+      "multisig": "14tcsxxKnj2rcXsE1F6agPetVvbGVHqnisaHfE5g8KPwHCEo",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -159,7 +159,7 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
     "data": {
       "approving": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
       "callHash": "(hash)",
-      "multisig": "15WN71YEbvfpsxGj83LgHEQYMMoRprNJfMeQM78UpRyZQUYN",
+      "multisig": "15vMkxdHARZaJnKeA56PBj7j418MebVkWXak3z7PDu2umvWH",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -171,9 +171,9 @@ exports[`People Polkadot Multisig Proxy > success tests > Cancel 2-of-3 multisig
 [
   {
     "data": {
-      "approving": "16JC1RXrNjMWB7zFKs6JZzK4J2qStbYXBDDTuHtHz2AA6fk8",
+      "approving": "15Xo3aia1T3SCVRyfa49Bd3eNxGa4XWD2Te9ugFitFkGGm2K",
       "callHash": "(hash)",
-      "multisig": "14eL38XdrGTqQnwP89VJ7pEHZgYiquyZydeYFHyEKJoE8HQT",
+      "multisig": "13e4kuNjoUpfTitPuqbrgyL9ZgYfvcADFTp7tQ344YudrFWZ",
     },
     "method": "NewMultisig",
     "section": "multisig",
