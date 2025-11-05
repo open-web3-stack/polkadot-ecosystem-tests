@@ -154,6 +154,19 @@ exports[`Polkadot Coretime Accounts > \`transfer_all\` > transfer all with keepA
 ]
 `;
 
+exports[`Polkadot Coretime Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > deposit action success events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 2000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Reserved",
+    "section": "balances",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
 [
   {
@@ -175,6 +188,19 @@ exports[`Polkadot Coretime Accounts > currency tests > liquidity restriction err
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > deposit action success events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 2000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Reserved",
+    "section": "balances",
   },
 ]
 `;
