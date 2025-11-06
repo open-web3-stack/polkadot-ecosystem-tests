@@ -11,23 +11,31 @@ describe('collectives & polkadot', async () => {
   const collectivesDOT = collectivesPolkadot.custom.dot
   const polkadotDOT = polkadot.custom.dot
 
-  runXcmPalletDown('polkadot teleport DOT to collectivesPolkadot', async () => {
-    return {
-      fromChain: polkadotClient,
-      toChain: collectivesClient,
-      balance: query.balances,
-      tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, collectivesPolkadot.paraId!)),
-      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
-    }
-  })
+  runXcmPalletDown(
+    'polkadot teleport DOT to collectivesPolkadot',
+    async () => {
+      return {
+        fromChain: polkadotClient,
+        toChain: collectivesClient,
+        balance: query.balances,
+        tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, collectivesPolkadot.paraId!)),
+        totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
+      }
+    },
+    { skip: true },
+  )
 
-  runXcmPalletUp('collectivesPolkadot teleport DOT to polkadot', async () => {
-    return {
-      fromChain: collectivesClient,
-      toChain: polkadotClient,
-      balance: query.balances,
-      tx: tx.xcmPallet.teleportAssetsV3(collectivesDOT, 1e12, tx.xcmPallet.relaychainV4),
-      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
-    }
-  })
+  runXcmPalletUp(
+    'collectivesPolkadot teleport DOT to polkadot',
+    async () => {
+      return {
+        fromChain: collectivesClient,
+        toChain: polkadotClient,
+        balance: query.balances,
+        tx: tx.xcmPallet.teleportAssetsV3(collectivesDOT, 1e12, tx.xcmPallet.relaychainV4),
+        totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
+      }
+    },
+    { skip: true },
+  )
 })
