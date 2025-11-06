@@ -6,7 +6,7 @@ exports[`People Kusama Multisig Proxy > failure tests > 2-of-3 multisig as stand
     "data": {
       "approving": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "callHash": "(hash)",
-      "multisig": "DmDBuaenD2WM54PYRMHqQbCTKd1HnXi6AeHHyeiFU6cosXp",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -20,7 +20,7 @@ exports[`People Kusama Multisig Proxy > failure tests > 2-of-3 multisig as stand
     "data": {
       "approving": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
       "callHash": "(hash)",
-      "multisig": "DmDBuaenD2WM54PYRMHqQbCTKd1HnXi6AeHHyeiFU6cosXp",
+      "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -39,7 +39,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig as stand
     "data": {
       "approving": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "callHash": "(hash)",
-      "multisig": "DmDBuaenD2WM54PYRMHqQbCTKd1HnXi6AeHHyeiFU6cosXp",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -53,7 +53,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig as stand
     "data": {
       "approving": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
       "callHash": "(hash)",
-      "multisig": "DmDBuaenD2WM54PYRMHqQbCTKd1HnXi6AeHHyeiFU6cosXp",
+      "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -72,7 +72,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig as stand
     "data": {
       "approving": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
       "callHash": "(hash)",
-      "multisig": "DmDBuaenD2WM54PYRMHqQbCTKd1HnXi6AeHHyeiFU6cosXp",
+      "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
         "height": "(redacted)",
@@ -93,7 +93,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig with pur
     "data": {
       "approving": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "callHash": "(hash)",
-      "multisig": "DimeW5rwQGByXz3vENZTk4VnrHC4MtRX3QnLbT5cewuA8cW",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -105,12 +105,12 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig with pur
 [
   {
     "data": {
-      "approving": "E33vQtnbiV8LGWCWxA8LoRsxyoYGXdvVapvXpHYkW46vuZN",
+      "approving": "(redacted)",
       "callHash": "(hash)",
-      "multisig": "DimeW5rwQGByXz3vENZTk4VnrHC4MtRX3QnLbT5cewuA8cW",
+      "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(redacted)",
+        "height": "(rounded 6500000)",
         "index": 2,
       },
     },
@@ -126,7 +126,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig with pur
     "data": {
       "approving": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "callHash": "(hash)",
-      "multisig": "CtQQSxkvMVeVGD4SXA2qDQnZby6WR6gjomGGRgjjuhL2HQW",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -138,12 +138,12 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig with pur
 [
   {
     "data": {
-      "approving": "CqeyPnJH47PR16p7Dkk3gu2hgWPdxC7Zd8N5GT2gqierXBm",
+      "approving": "(redacted)",
       "callHash": "(hash)",
-      "multisig": "CtQQSxkvMVeVGD4SXA2qDQnZby6WR6gjomGGRgjjuhL2HQW",
+      "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(redacted)",
+        "height": "(rounded 6500000)",
         "index": 2,
       },
     },
@@ -159,7 +159,7 @@ exports[`People Kusama Multisig Proxy > success tests > 2-of-3 multisig with pur
     "data": {
       "approving": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
       "callHash": "(hash)",
-      "multisig": "GSgJhYU4H2xYHVEFi8THp11Wj7Dys4zFsvHRQuaaZWTguvz",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
@@ -171,9 +171,9 @@ exports[`People Kusama Multisig Proxy > success tests > Cancel 2-of-3 multisig w
 [
   {
     "data": {
-      "approving": "J2br632gonmsrZoYsTSfdpyNq1LEM4tNEmM5GBMcxLjXPQx",
+      "approving": "FnSPhHnifMvsruFbjfCvDw42bgyrJ3CF759DZbLTJRE5Tka",
       "callHash": "(hash)",
-      "multisig": "D6SrGw5yAy7S7k2Zfuny8wWLq9SiKPBiwy22NwzH5VhWnKi",
+      "multisig": "(redacted)",
     },
     "method": "NewMultisig",
     "section": "multisig",
