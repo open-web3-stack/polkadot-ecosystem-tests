@@ -577,7 +577,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure
   },
   {
     "data": {
-      "amount": "(rounded 1000000)",
+      "amount": "(rounded 1200000)",
       "from": "(redacted)",
       "to": "(redacted)",
     },
