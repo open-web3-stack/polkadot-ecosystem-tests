@@ -49,17 +49,7 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
 ]
 `;
 
-exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > events after notePreimge 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Noted",
-    "section": "preimage",
-  },
-]
-`;
+exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > events after notePreimge 1`] = `[]`;
 
 exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
 [
@@ -69,8 +59,8 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
       "result": {
         "Err": {
           "Module": {
-            "error": "0x03000000",
-            "index": 23,
+            "error": "0x05000000",
+            "index": 0,
           },
         },
       },
@@ -88,7 +78,12 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
     "data": {
       "id": null,
       "result": {
-        "Err": "BadOrigin",
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
       },
       "task": "(redacted)",
     },
@@ -98,36 +93,10 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
 ]
 `;
 
-exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
-[
-  {
-    "data": {
-      "callHash": "0xf2c2a9c39f6739fafc398dbf1d47610daa6c6deaa774e9885ad95fa6a3bdebac",
-      "result": {
-        "Ok": {
-          "actualWeight": {
-            "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 300000000)",
-          },
-          "paysFee": "Yes",
-        },
-      },
-    },
-    "method": "WhitelistedCallDispatched",
-    "section": "whitelist",
-  },
-]
-`;
+exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `[]`;
 
 exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
 [
-  {
-    "data": {
-      "callHash": "0xf2c2a9c39f6739fafc398dbf1d47610daa6c6deaa774e9885ad95fa6a3bdebac",
-    },
-    "method": "CallWhitelisted",
-    "section": "whitelist",
-  },
   {
     "data": {
       "id": "(redacted)",
@@ -138,7 +107,7 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
+        "proofSize": "(rounded 6000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -148,28 +117,4 @@ exports[`polkadot & people & collectives > Relay authorizes People upgrade via C
 ]
 `;
 
-exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
-[
-  {
-    "data": {
-      "checkVersion": true,
-      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
-    },
-    "method": "UpgradeAuthorized",
-    "section": "system",
-  },
-  {
-    "data": {
-      "id": "(redacted)",
-      "origin": "Parent",
-      "success": true,
-      "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 100000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
+exports[`polkadot & people & collectives > Relay authorizes People upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `[]`;
