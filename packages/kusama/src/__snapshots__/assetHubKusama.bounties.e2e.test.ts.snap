@@ -443,29 +443,6 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > All curator unas
 ]
 `;
 
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > Bounty value is transferred to the treasury 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 67000000000000)",
-      "from": "(redacted)",
-      "to": "(redacted)",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 45000000)",
-      "from": "(redacted)",
-      "to": "(redacted)",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in active state > bounty approved events 1`] = `
 [
   {
@@ -560,29 +537,6 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
     },
     "method": "BountyCanceled",
     "section": "bounties",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure Tests > Bounty closure in funded state > bounty value transferred to treasury 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 67000000000000)",
-      "from": "(redacted)",
-      "to": "(redacted)",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 23000000)",
-      "from": "(redacted)",
-      "to": "(redacted)",
-    },
-    "method": "Transfer",
-    "section": "balances",
   },
 ]
 `;
