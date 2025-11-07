@@ -13,10 +13,7 @@ const testConfig: ParaTestConfig = {
   asyncBacking: 'Enabled',
 }
 
-//registerTestTree(systemE2ETestsViaRemoteScheduler(polkadot, collectivesPolkadot, testConfig))
 registerTestTree(systemE2ETestsForParaWithScheduler(collectivesPolkadot, testConfig))
-
-// TODO: Uncomment Post-AHM on Polkadot
 
 const testConfigForAssetHub: ParaTestConfig = {
   testSuiteName: 'Polkadot Collectives System',

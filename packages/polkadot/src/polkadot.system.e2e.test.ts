@@ -9,14 +9,3 @@ const testConfigForAssetHub: ParaTestConfig = {
 }
 
 registerTestTree(systemE2ETestsViaRemoteScheduler(assetHubPolkadot, polkadot, testConfigForAssetHub))
-
-// TODO: Uncomment Post-AHM on Polkadot
-
-// const testConfigForAssetHub: ParaTestConfig = {
-//   testSuiteName: 'Polkadot System',
-//   addressEncoding: 0,
-//   blockProvider: 'NonLocal',
-//   asyncBacking: 'Enabled',
-// }
-
-// registerTestTree(systemE2ETestsViaRemoteScheduler(assetHubPolkadot, polkadot, testConfigForAssetHub))
