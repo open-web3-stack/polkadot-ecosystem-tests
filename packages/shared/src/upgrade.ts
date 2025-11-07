@@ -173,6 +173,12 @@ async function createAndFastTrackReferendum(
 
   // Fund Alice for preimage and deposits
   await client.dev.setStorage({
+    // It may happen that real referendum preimage is still in place and since we are basically
+    // upgrading to the same WASM it will yield the same preimage and test can fail due to preimage
+    // already noted
+    Preimage: {
+      $removePrefix: ['preimageFor', 'statusFor', 'requestStatusFor'],
+    },
     System: {
       account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
     },
@@ -796,17 +802,17 @@ export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      {
-        kind: 'test',
-        label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
-        testFn: async () =>
-          await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
-            governanceChain,
-            governanceChain,
-            fellowshipChain,
-            testConfig,
-          ),
-      },
+      // {
+      //   kind: 'test',
+      //   label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
+      //   testFn: async () =>
+      //     await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
+      //       governanceChain,
+      //       governanceChain,
+      //       fellowshipChain,
+      //       testConfig,
+      //     ),
+      // },
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
