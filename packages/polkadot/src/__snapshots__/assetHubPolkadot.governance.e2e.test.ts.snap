@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
 [
   {
     "data": {
@@ -10,7 +10,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 90000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -20,7 +20,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -29,7 +29,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after casting his 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after casting his 1`] = `
 {
   "standard": {
     "balance": 50000000000,
@@ -38,7 +38,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after referendum's cancellation 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after referendum's cancellation 1`] = `
 {
   "standard": {
     "balance": 50000000000,
@@ -47,7 +47,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > charlie's votes after rescission 1`] = `
 {
   "delegations": {
     "capital": 0,
@@ -61,7 +61,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after their vote's rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -70,7 +70,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after casting his 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after casting his 1`] = `
 {
   "split": {
     "aye": 50000000000,
@@ -79,7 +79,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after referendum's cancellation 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after referendum's cancellation 1`] = `
 {
   "split": {
     "aye": 50000000000,
@@ -88,7 +88,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > dave's votes after rescission 1`] = `
 {
   "delegations": {
     "capital": 0,
@@ -102,7 +102,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after their vote's rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's class locks after their vote's rescission 1`] = `
 [
   [
     30,
@@ -111,7 +111,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after casting hers 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after casting hers 1`] = `
 {
   "splitAbstain": {
     "abstain": 20000000000,
@@ -121,7 +121,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after referendum's cancellation 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after referendum's cancellation 1`] = `
 {
   "splitAbstain": {
     "abstain": 20000000000,
@@ -131,7 +131,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after rescission 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > eve's votes after rescission 1`] = `
 {
   "delegations": {
     "capital": 0,
@@ -145,7 +145,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for bob's decision deposit 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for bob's decision deposit 1`] = `
 [
   {
     "data": {
@@ -158,7 +158,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for charlie's vote 1`] = `
 [
   {
     "data": {
@@ -179,7 +179,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for dave's vote 1`] = `
 [
   {
     "data": {
@@ -197,7 +197,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > events for eve's vote 1`] = `
 [
   {
     "data": {
@@ -216,7 +216,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after charlie's vote 1`] = `
 {
   "ongoing": {
     "deciding": {
@@ -234,7 +234,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
@@ -250,7 +250,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after dave's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after dave's vote 1`] = `
 {
   "ongoing": {
     "deciding": {
@@ -268,7 +268,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
@@ -284,7 +284,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after eve's vote 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info after eve's vote 1`] = `
 {
   "ongoing": {
     "deciding": {
@@ -302,7 +302,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
@@ -318,7 +318,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info before decision deposit 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info before decision deposit 1`] = `
 {
   "ongoing": {
     "deciding": null,
@@ -331,7 +331,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
@@ -347,7 +347,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info post decision deposit 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum info post decision deposit 1`] = `
 {
   "ongoing": {
     "deciding": null,
@@ -363,7 +363,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
       "origins": "SmallTipper",
     },
     "proposal": {
-      "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+      "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
       "amount": 10000000000,
@@ -379,7 +379,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum submission events 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum submission events 1`] = `
 [
   {
     "data": {
@@ -394,7 +394,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum upon start of decision period 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > referendum upon start of decision period 1`] = `
 {
   "deciding": {
     "confirming": null,
@@ -411,7 +411,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
     "origins": "SmallTipper",
   },
   "proposal": {
-    "inline": "0x13030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+    "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
   },
   "submissionDeposit": {
     "amount": 10000000000,
@@ -426,7 +426,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 }
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of decision deposit 1`] = `
 [
   {
     "data": {
@@ -439,7 +439,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > refund of submission deposit 1`] = `
 [
   {
     "data": {
@@ -452,11 +452,11 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > removal of votes in cancelled referendum 1`] = `
 [
   {
     "data": {
-      "amount": "(rounded 220000000)",
+      "amount": "(rounded 62000000)",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -483,21 +483,14 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
   },
   {
     "data": {
-      "amount": "(rounded 180000000)",
+      "amount": "(rounded 62000000)",
     },
     "method": "Deposit",
     "section": "balances",
   },
   {
     "data": {
-      "amount": "(rounded 44000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "actualFee": "(rounded 220000000)",
+      "actualFee": "(rounded 62000000)",
       "tip": 0,
     },
     "method": "TransactionFeePaid",
@@ -509,7 +502,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": "(rounded 100000)",
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -520,7 +513,7 @@ exports[`Polkadot Governance > referenda tests > referendum lifecycle test - sub
 ]
 `;
 
-exports[`Polkadot Governance > referenda tests > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 2 - submission, decision deposit, and killing should work > killing referendum with signed origin 1`] = `
 [
   {
     "data": {

@@ -3,6 +3,8 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, setupNetworks } from '@e2e-test/shared'
 
+import { encodeAddress } from '@polkadot/util-crypto'
+
 import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
@@ -1159,9 +1161,22 @@ export async function bountyClosureFundedTest<
     .toMatchSnapshot('bounty canceled events')
 
   // verify the transfer event
-  await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
-    .redact({ redactKeys: /from|to/ })
-    .toMatchSnapshot('bounty value transferred to treasury')
+  const events = await client.api.query.system.events()
+  const treasuryTransferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      return (
+        event.data.to.toString() ===
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), testConfig.addressEncoding)
+      )
+    }
+    return false
+  })
+  expect(treasuryTransferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(treasuryTransferEvent!.event))
+  const treasuryTransferEventData = treasuryTransferEvent!.event.data
+  expect(treasuryTransferEventData.amount.toBigInt()).toBe(bountyValue)
 
   // get treasury balance after closure
   const treasuryAccountAfterClosureInfo = await client.api.query.system.account(treasuryAccountId)
@@ -1302,9 +1317,23 @@ export async function bountyClosureActiveTest<
     .toMatchSnapshot('bounty canceled event')
 
   // verify the curator transfer of balance event to the treasury
-  await checkSystemEvents(client, { section: 'balances', method: 'Transfer' })
-    .redact({ redactKeys: /from|to/ })
-    .toMatchSnapshot('Bounty value is transferred to the treasury')
+  const events = await client.api.query.system.events()
+  const treasuryTransferEvent = events.find((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Transfer') {
+      assert(client.api.events.balances.Transfer.is(event))
+      return (
+        event.data.to.toString() ===
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), testConfig.addressEncoding)
+      )
+    }
+    return false
+  })
+  expect(treasuryTransferEvent).toBeDefined()
+  assert(client.api.events.balances.Transfer.is(treasuryTransferEvent!.event))
+  const treasuryTransferEventData = treasuryTransferEvent!.event.data
+  // TODO: @dhirajs0, shouldn't this be unnecessary?
+  expect(treasuryTransferEventData.amount.toBigInt()).toBe(curatorFee * 10n)
 
   // Verify bounty is removed from storage
   const bountyAfterClosure = await getBounty(client, bountyIndex)

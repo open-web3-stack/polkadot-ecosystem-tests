@@ -49,17 +49,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
 ]
 `;
 
-exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > events after notePreimge 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Noted",
-    "section": "preimage",
-  },
-]
-`;
+exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > events after notePreimge 1`] = `[]`;
 
 exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
 [
@@ -69,8 +59,8 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       "result": {
         "Err": {
           "Module": {
-            "error": "0x03000000",
-            "index": 23,
+            "error": "0x05000000",
+            "index": 0,
           },
         },
       },
@@ -88,7 +78,12 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
     "data": {
       "id": null,
       "result": {
-        "Err": "BadOrigin",
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
       },
       "task": "(redacted)",
     },
@@ -98,36 +93,10 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
 ]
 `;
 
-exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
-[
-  {
-    "data": {
-      "callHash": "0xbec38f9174094d5d36794d04bd0b9d4a4da7ad1db83473bce75b31b465d95a7b",
-      "result": {
-        "Ok": {
-          "actualWeight": {
-            "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 300000000)",
-          },
-          "paysFee": "Yes",
-        },
-      },
-    },
-    "method": "WhitelistedCallDispatched",
-    "section": "whitelist",
-  },
-]
-`;
+exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `[]`;
 
 exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
 [
-  {
-    "data": {
-      "callHash": "0xbec38f9174094d5d36794d04bd0b9d4a4da7ad1db83473bce75b31b465d95a7b",
-    },
-    "method": "CallWhitelisted",
-    "section": "whitelist",
-  },
   {
     "data": {
       "id": "(redacted)",
@@ -138,7 +107,7 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
+        "proofSize": "(rounded 6000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -148,28 +117,4 @@ exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrad
 ]
 `;
 
-exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
-[
-  {
-    "data": {
-      "checkVersion": true,
-      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
-    },
-    "method": "UpgradeAuthorized",
-    "section": "system",
-  },
-  {
-    "data": {
-      "id": "(redacted)",
-      "origin": "Parent",
-      "success": true,
-      "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 100000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
+exports[`polkadot & bridgeHub & collectives > Relay authorizes Bridge Hub upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `[]`;

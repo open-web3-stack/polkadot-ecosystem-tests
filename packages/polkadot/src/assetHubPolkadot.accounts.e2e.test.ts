@@ -1,4 +1,4 @@
-import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
+import { assetHubPolkadot } from '@e2e-test/networks/chains'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -21,7 +21,7 @@ const testCfg: TestConfig = {
 const lockActions = [manualLockAction()]
 
 const accountsCfg = createAccountsConfig({
-  relayChain: polkadot,
+  expectation: 'success',
   actions: {
     reserveActions: createDefaultReserveActions(),
     lockActions,

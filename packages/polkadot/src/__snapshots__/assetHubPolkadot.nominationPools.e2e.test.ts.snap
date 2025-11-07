@@ -1,20 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x08000000",
-          "index": 39,
+          "index": 80,
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
+          "proofSize": "(rounded 20000)",
           "refTime": "(rounded 3000000000)",
         },
       },
@@ -25,7 +25,7 @@ exports[`Polkadot Nomination Pools > nomination pool creation with insufficient 
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join nomination pool events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join nomination pool events 1`] = `
 [
   {
     "data": {
@@ -46,14 +46,14 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join second nomination pool events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool double join test: an account can only ever be in one pool at a time > join second nomination pool events 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x04000000",
-          "index": 39,
+          "index": 80,
         },
       },
       "dispatchInfo": {
@@ -71,7 +71,7 @@ exports[`Polkadot Nomination Pools > nomination pool double join test: an accoun
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool global config test > setting global nomination pool configs with signed origin 1`] = `
 [
   {
     "data": {
@@ -80,7 +80,7 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > settin
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 7000)",
+          "proofSize": "(rounded 10000)",
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -91,7 +91,7 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > settin
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool global config test > system events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool global config test > system events 1`] = `
 [
   {
     "data": {
@@ -108,7 +108,7 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > system
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool global config test > system events 2`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool global config test > system events 2`] = `
 [
   {
     "data": {
@@ -125,7 +125,7 @@ exports[`Polkadot Nomination Pools > nomination pool global config test > system
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > bond extra funds events 1`] = `
 [
   {
     "data": {
@@ -146,7 +146,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > bond extra
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > chill events 1`] = `
 [
   {
     "data": {},
@@ -177,14 +177,14 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > chill even
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > claim commission events 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x1a000000",
-          "index": 39,
+          "index": 80,
         },
       },
       "dispatchInfo": {
@@ -192,7 +192,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim comm
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -202,7 +202,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > claim comm
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > commission alteration events 1`] = `
 [
   {
     "data": {
@@ -241,7 +241,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > commission
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > create nomination pool events 1`] = `
 [
   {
     "data": {
@@ -269,7 +269,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > create nom
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomination pool events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > join nomination pool events 1`] = `
 [
   {
     "data": {
@@ -290,7 +290,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > join nomin
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > nomination pool validator selection events 1`] = `
 [
   {
     "data": {
@@ -316,7 +316,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > nomination
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > set state events 1`] = `
 [
   {
     "data": {
@@ -328,7 +328,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state 
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state to destroying events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > set state to destroying events 1`] = `
 [
   {
     "data": {
@@ -340,22 +340,22 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > set state 
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (depositor) events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > unbond (depositor) events 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x08000000",
-          "index": 39,
+          "index": 80,
         },
       },
       "dispatchInfo": {
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 2000000000)",
+          "proofSize": "(rounded 40000)",
+          "refTime": "(rounded 3000000000)",
         },
       },
     },
@@ -365,7 +365,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (de
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (kick) events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > unbond (kick) events 1`] = `
 [
   {
     "data": {
@@ -386,7 +386,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond (ki
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > unbond events 1`] = `
 [
   {
     "data": {
@@ -407,7 +407,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > unbond eve
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool lifecycle test > update roles events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > update roles events 1`] = `
 [
   {
     "data": {
@@ -421,7 +421,7 @@ exports[`Polkadot Nomination Pools > nomination pool lifecycle test > update rol
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool metadata test > create nomination pool events 1`] = `
 [
   {
     "data": {
@@ -449,7 +449,7 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > create nomi
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadata events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool metadata test > set metadata events 1`] = `
 [
   {
     "data": {
@@ -461,7 +461,7 @@ exports[`Polkadot Nomination Pools > nomination pool metadata test > set metadat
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
 [
   {
     "event": {
@@ -470,7 +470,7 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
         "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
         "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
       ],
-      "index": "0x2708",
+      "index": "0x5008",
     },
     "phase": {
       "initialization": null,
@@ -480,7 +480,7 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pools update roles test > update roles events 1`] = `
 [
   {
     "data": {
@@ -494,14 +494,14 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles failure events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pools update roles test > update roles failure events 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x11000000",
-          "index": 39,
+          "index": 80,
         },
       },
       "dispatchInfo": {
@@ -509,7 +509,7 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -519,7 +519,7 @@ exports[`Polkadot Nomination Pools > nomination pools update roles test > update
 ]
 `;
 
-exports[`Polkadot Nomination Pools > nomination pools update roles test > update roles remove self events 1`] = `
+exports[`Polkadot Asset Hub Nomination Pools > nomination pools update roles test > update roles remove self events 1`] = `
 [
   {
     "data": {

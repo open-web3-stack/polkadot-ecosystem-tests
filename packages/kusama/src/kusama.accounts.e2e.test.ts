@@ -1,5 +1,5 @@
 import { kusama } from '@e2e-test/networks/chains'
-import type { RootTestTree } from '@e2e-test/shared'
+import type { RelayTestConfig, RootTestTree } from '@e2e-test/shared'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -10,6 +10,13 @@ import {
   registerTestTree,
 } from '@e2e-test/shared'
 
+const generalTestConfig: RelayTestConfig = {
+  testSuiteName: 'Kusama Accounts',
+  addressEncoding: 2,
+  blockProvider: 'Local',
+  chainEd: 'LowEd',
+}
+
 // Staking and nomination pools are disabled on Kusama relay, so the only reserve action available is manual.
 const reserveActions = [manualReserveAction()]
 
@@ -19,7 +26,7 @@ const lockActions = [manualLockAction()]
 // Referenda submission is no longer available on Kusama relay.
 const depositActions = [proxyAdditionDepositAction(), multisigCreationDepositAction()]
 
-const accountsCfg = createAccountsConfig({
+const accountsTestCfg = createAccountsConfig({
   expectation: 'success',
   actions: {
     reserveActions,
@@ -53,17 +60,4 @@ const filterOutBurnTests = (tree: RootTestTree): RootTestTree => {
   }
 }
 
-registerTestTree(
-  filterOutBurnTests(
-    accountsE2ETests(
-      kusama,
-      {
-        testSuiteName: 'Kusama Accounts',
-        addressEncoding: 2,
-        blockProvider: 'Local',
-        chainEd: 'LowEd',
-      },
-      accountsCfg,
-    ),
-  ),
-)
+registerTestTree(filterOutBurnTests(accountsE2ETests(kusama, generalTestConfig, accountsTestCfg)))

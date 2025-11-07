@@ -87,7 +87,7 @@ export async function authorizeUpgradeViaCollectives(
   await checkEvents(noteEvents, 'preimage').toMatchSnapshot('events after notePreimge')
 
   // try to dispatch a call that has not yet been whitelisted - should result in dispatching error
-  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), okOrigin)
+  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), okOrigin, 'NonLocal')
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'scheduler')
     .redact({ hash: false, redactKeys: /task/ })
@@ -109,7 +109,7 @@ export async function authorizeUpgradeViaCollectives(
     .toMatchSnapshot('governing chain events emitted on receiving xcm from collectives')
 
   // trying to dispatch whitelisted call using bad origin - should result in error
-  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), badOrigin)
+  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), badOrigin, 'NonLocal')
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'scheduler')
     .redact({ hash: false, redactKeys: /task/ })
@@ -117,7 +117,7 @@ export async function authorizeUpgradeViaCollectives(
   await assertAuthorizedUpgradeUnchanged()
 
   // call is whitelisted, origin is ok - success expected
-  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), okOrigin)
+  await scheduleInlineCallWithOrigin(governingChain, whiteListCall.method.toHex(), okOrigin, 'NonLocal')
   await governingChain.dev.newBlock()
   await checkSystemEvents(governingChain, 'whitelist')
     .redact({ hash: false })

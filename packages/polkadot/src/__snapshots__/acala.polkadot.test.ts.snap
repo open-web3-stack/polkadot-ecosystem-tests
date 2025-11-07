@@ -29,7 +29,7 @@ exports[`acala & polkadot > acala transfer DOT to polkadot > to chain ump events
 
 exports[`acala & polkadot > acala transfer DOT to polkadot > tx events 1`] = `[]`;
 
-exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on from chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT with limited weight > balance on from chain 1`] = `
 {
   "free": 10000000000000,
   "frozen": 0,
@@ -37,7 +37,7 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on 
 }
 `;
 
-exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on to chain 1`] = `
+exports[`acala & polkadot > acala transfer DOT with limited weight > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -52,11 +52,11 @@ exports[`acala & polkadot > acala transfer DOT wiht limited weight > balance on 
 }
 `;
 
-exports[`acala & polkadot > acala transfer DOT wiht limited weight > from chain ump messages 1`] = `[]`;
+exports[`acala & polkadot > acala transfer DOT with limited weight > from chain ump messages 1`] = `[]`;
 
-exports[`acala & polkadot > acala transfer DOT wiht limited weight > to chain ump events 1`] = `[]`;
+exports[`acala & polkadot > acala transfer DOT with limited weight > to chain ump events 1`] = `[]`;
 
-exports[`acala & polkadot > acala transfer DOT wiht limited weight > tx events 1`] = `[]`;
+exports[`acala & polkadot > acala transfer DOT with limited weight > tx events 1`] = `[]`;
 
 exports[`acala & polkadot > polkadot transfer DOT to acala > balance on from chain 1`] = `
 {

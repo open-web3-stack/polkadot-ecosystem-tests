@@ -36,6 +36,11 @@ export const AssetHubPolkadotProxyTypes: ProxyTypeMap = {
   AssetOwner: 4,
   AssetManager: 5,
   Collator: 6,
+  Governance: 7,
+  Staking: 8,
+  NominationPools: 9,
+  Auction: 10,
+  ParaRegistration: 11,
 }
 
 export const AssetHubKusamaProxyTypes: ProxyTypeMap = {
