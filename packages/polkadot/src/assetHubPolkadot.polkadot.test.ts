@@ -1,6 +1,11 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import {
+  governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  type ParaTestConfig,
+  registerTestTree,
+  setupNetworks,
+} from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
@@ -176,15 +181,13 @@ describe('assetHubPolkadot & polkadot', async () => {
   })
 })
 
-// TODO: Uncomment Post-AHM on Polkadot
+const testConfigForLocalScheduler: ParaTestConfig = {
+  testSuiteName: 'assetHubPolkadot & polkadot',
+  addressEncoding: 0,
+  blockProvider: 'NonLocal',
+  asyncBacking: 'Enabled',
+}
 
-// const testConfigForLocalScheduler: ParaTestConfig = {
-//   testSuiteName: 'assetHubPolkadot & polkadot',
-//   addressEncoding: 0,
-//   blockProvider: 'NonLocal',
-//   asyncBacking: 'Enabled',
-// }
-
-// registerTestTree(
-//   governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, polkadot, testConfigForLocalScheduler),
-// )
+registerTestTree(
+  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, polkadot, testConfigForLocalScheduler),
+)

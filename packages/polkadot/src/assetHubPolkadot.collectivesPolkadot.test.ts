@@ -1,6 +1,12 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, collectivesPolkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import {
+  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite,
+  governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  type ParaTestConfig,
+  registerTestTree,
+  setupNetworks,
+} from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
@@ -47,19 +53,25 @@ describe('assetHubPolkadot & collectivesPolkadot', async () => {
   )
 })
 
-// // TODO: Uncomment Post-AHM on Polkadot
+const testConfigForLocalScheduler: ParaTestConfig = {
+  testSuiteName: 'assetHubPolkadot & collectivesPolkadot',
+  addressEncoding: 0,
+  blockProvider: 'NonLocal',
+  asyncBacking: 'Enabled',
+}
 
-// const testConfigForLocalScheduler: ParaTestConfig = {
-//   testSuiteName: 'assetHubPolkadot & collectivesPolkadot',
-//   addressEncoding: 0,
-//   blockProvider: 'NonLocal',
-//   asyncBacking: 'Enabled',
-// }
+registerTestTree(
+  governanceChainUpgradesOtherChainViaRootReferendumSuite(
+    assetHubPolkadot,
+    collectivesPolkadot,
+    testConfigForLocalScheduler,
+  ),
+)
 
-// registerTestTree(
-//   governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfigForLocalScheduler),
-// )
-
-// registerTestTree(
-//   governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfigForLocalScheduler),
-// )
+registerTestTree(
+  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(
+    assetHubPolkadot,
+    collectivesPolkadot,
+    testConfigForLocalScheduler,
+  ),
+)
