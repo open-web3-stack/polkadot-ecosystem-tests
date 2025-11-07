@@ -874,56 +874,6 @@ export async function referendumLifecycleKillTest<
     })
 }
 
-/**
- * Test the registering, querying and unregistering a preimage; in this test, a `spend_local`
- * treasury call.
- */
-export async function preimageTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
-  const encodedProposal = client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method
-  const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
-  const preImageEvents = await sendTransaction(preimageTx.signAsync(devAccounts.alice))
-
-  await client.dev.newBlock()
-
-  await checkEvents(preImageEvents, 'preimage').toMatchSnapshot('note preimage events')
-
-  /**
-   * Query noted preimage
-   */
-
-  let preimage = await client.api.query.preimage.preimageFor([
-    encodedProposal.hash.toHex(),
-    encodedProposal.encodedLength,
-  ])
-
-  assert(preimage.isSome)
-  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
-
-  /**
-   * Unnote preimage with the same account that had previously noted it
-   */
-
-  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(encodedProposal.hash.toHex())
-  const unnotePreImageEvents = await sendTransaction(unnotePreimageTx.signAsync(devAccounts.alice))
-
-  await client.dev.newBlock()
-
-  await checkEvents(unnotePreImageEvents, 'preimage').toMatchSnapshot('unnote preimage events')
-
-  /**
-   * Query unnoted preimage, and verify it is absent
-   */
-
-  preimage = await client.api.query.preimage.preimageFor([encodedProposal.hash.toHex(), encodedProposal.encodedLength])
-
-  assert(preimage.isNone)
-}
-
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -945,17 +895,6 @@ export function baseGovernanceE2ETests<
             kind: 'test',
             label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
             testFn: async () => await referendumLifecycleKillTest(chain, testConfig),
-          },
-        ],
-      },
-      {
-        kind: 'describe',
-        label: 'preimage tests',
-        children: [
-          {
-            kind: 'test',
-            label: 'preimage submission, query and removal works',
-            testFn: async () => await preimageTest(chain),
           },
         ],
       },

@@ -5,6 +5,8 @@
 		"lint": "tsc --noEmit && biome check .",
 		"fix": "biome check --write .",
 		"test": "vitest",
+		"test:polkadot": "vitest packages/polkadot",
+		"test:kusama": "vitest packages/kusama",
 		"test:ui": "vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
 		"update-known-good": "tsx scripts/update-env.ts --update-known-good",
@@ -49,7 +51,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.6",
 		"tsx": "^4.20.6",
-		"unplugin-swc": "^1.5.7",
+		"unplugin-swc": "^1.5.8",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"lint-staged": {

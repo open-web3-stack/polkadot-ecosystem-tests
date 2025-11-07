@@ -42,6 +42,7 @@ export const integriteePolkadot = defineChain({
   name: 'integritee-polkadot',
   paraId: 2039,
   endpoint: 'wss://polkadot.api.integritee.network',
+  networkGroup: 'polkadot',
   custom: custom.integriteePolkadot,
   initStorages: getInitStorages(custom.integriteePolkadot),
 })
@@ -50,6 +51,7 @@ export const integriteeKusama = defineChain({
   name: 'integritee-kusama',
   paraId: 2015,
   endpoint: 'wss://kusama.api.integritee.network',
+  networkGroup: 'kusama',
   custom: custom.integriteeKusama,
   initStorages: getInitStorages(custom.integriteeKusama),
 })

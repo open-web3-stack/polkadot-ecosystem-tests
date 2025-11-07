@@ -24,6 +24,7 @@ export const bridgeHubPolkadot = defineChain({
   name: 'bridgeHubPolkadot',
   endpoint: 'wss://sys.ibp.network/bridgehub-polkadot',
   paraId: 1002,
+  networkGroup: 'polkadot',
   custom: custom.bridgeHubPolkadot,
   initStorages: getInitStorages(custom.bridgeHubPolkadot),
 })
@@ -32,6 +33,7 @@ export const bridgeHubKusama = defineChain({
   name: 'bridgeHubKusama',
   endpoint: 'wss://kusama-bridge-hub-rpc.polkadot.io',
   paraId: 1002,
+  networkGroup: 'kusama',
   custom: custom.bridgeHubKusama,
   initStorages: getInitStorages(custom.bridgeHubKusama),
 })

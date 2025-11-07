@@ -1,4 +1,4 @@
-import { collectivesPolkadot, polkadot } from '@e2e-test/networks/chains'
+import { assetHubPolkadot, collectivesPolkadot } from '@e2e-test/networks/chains'
 import {
   type ParaTestConfig,
   registerTestTree,
@@ -13,16 +13,13 @@ const testConfig: ParaTestConfig = {
   asyncBacking: 'Enabled',
 }
 
-registerTestTree(systemE2ETestsViaRemoteScheduler(polkadot, collectivesPolkadot, testConfig))
 registerTestTree(systemE2ETestsForParaWithScheduler(collectivesPolkadot, testConfig))
 
-// TODO: Uncomment Post-AHM on Polkadot
+const testConfigForAssetHub: ParaTestConfig = {
+  testSuiteName: 'Polkadot Collectives System',
+  addressEncoding: 0,
+  blockProvider: 'NonLocal',
+  asyncBacking: 'Enabled',
+}
 
-// const testConfigForAssetHub: ParaTestConfig = {
-//   testSuiteName: 'Polkadot Collectives System',
-//   addressEncoding: 0,
-//   blockProvider: 'NonLocal',
-//   asyncBacking: 'Enabled',
-// }
-
-// registerTestTree(systemE2ETestsViaRemoteScheduler(assetHubPolkadot, collectivesPolkadot, testConfigForAssetHub))
+registerTestTree(systemE2ETestsViaRemoteScheduler(assetHubPolkadot, collectivesPolkadot, testConfigForAssetHub))
