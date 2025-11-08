@@ -760,7 +760,8 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
-        testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, governanceChain, testConfig),
+        testFn: async () =>
+          await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain, testConfig),
       },
     ],
   }
@@ -802,17 +803,17 @@ export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // {
-      //   kind: 'test',
-      //   label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
-      //   testFn: async () =>
-      //     await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
-      //       governanceChain,
-      //       governanceChain,
-      //       fellowshipChain,
-      //       testConfig,
-      //     ),
-      // },
+      {
+        kind: 'test',
+        label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
+        testFn: async () =>
+          await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
+            governanceChain,
+            governanceChain,
+            fellowshipChain,
+            testConfig,
+          ),
+      },
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
@@ -886,7 +887,7 @@ export function governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumS
         testFn: async () =>
           await authorizeUpgradeViaWhitelistedCallerReferendumTests(
             governanceChain,
-            governanceChain,
+            toBeUpgradedChain,
             fellowshipChain,
             testConfig,
           ),
