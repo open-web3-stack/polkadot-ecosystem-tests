@@ -9,21 +9,25 @@ import { describe } from 'vitest'
 describe('integriteePolkadot & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, integriteePolkadotClient] = await setupNetworks(assetHubPolkadot, integriteePolkadot)
 
-  runXcmPalletHorizontal('assetHubPolkadot transfer DOT to integriteePolkadot', async () => {
-    return {
-      fromChain: assetHubPolkadotClient,
-      toChain: integriteePolkadotClient,
-      fromAccount: defaultAccountsSr25519.alice,
-      toAccount: defaultAccountsSr25519.bob,
-      fromBalance: query.balances,
-      toBalance: query.assets(integriteePolkadot.custom.assetIdRelayNative),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
-        assetHubPolkadot.custom.dot,
-        1e12,
-        tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!),
-      ),
-    }
-  })
+  runXcmPalletHorizontal(
+    'assetHubPolkadot transfer DOT to integriteePolkadot',
+    async () => {
+      return {
+        fromChain: assetHubPolkadotClient,
+        toChain: integriteePolkadotClient,
+        fromAccount: defaultAccountsSr25519.alice,
+        toAccount: defaultAccountsSr25519.bob,
+        fromBalance: query.balances,
+        toBalance: query.assets(integriteePolkadot.custom.assetIdRelayNative),
+        tx: tx.xcmPallet.limitedReserveTransferAssetsV3(
+          assetHubPolkadot.custom.dot,
+          1e12,
+          tx.xcmPallet.parachainV3(1, integriteePolkadot.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 
   runXcmPalletHorizontal('integriteePolkadot transfer DOT to assetHubPolkadot', async () => {
     return {

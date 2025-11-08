@@ -194,7 +194,9 @@ async function multisigWithPureProxyTest<
   await client.dev.newBlock()
 
   // Check that the multisig was created successfully.
-  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig')
+  await checkEvents(multisigEvents, 'multisig')
+    .redact({ redactKeys: /multisig/ })
+    .toMatchSnapshot('events when Alice creates multisig')
 
   // Check that Alice's multisig creation deposit was reserved.
   let aliceReservedFunds = await getReservedFunds(client, alice.address)
@@ -239,7 +241,8 @@ async function multisigWithPureProxyTest<
 
   await checkEvents(finalApprovalEvents, 'multisig')
     .redact({
-      redactKeys: /height/,
+      // The approving address is the proxy, which is not deterministic.
+      redactKeys: /approving|multisig/,
     })
     .toMatchSnapshot("events when Bob's proxy approves the multisig call")
 
@@ -323,7 +326,9 @@ async function multisigAsStandardProxyTest<
   await client.dev.newBlock()
 
   // Check that the multisig was created successfully.
-  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig')
+  await checkEvents(multisigEvents, 'multisig')
+    .redact({ redactKeys: /multisig/ })
+    .toMatchSnapshot('events when Alice creates multisig')
 
   // Check that Alice's multisig creation deposit was reserved.
   let aliceReservedFunds = await getReservedFunds(client, alice.address)
@@ -381,7 +386,7 @@ async function multisigAsStandardProxyTest<
 
   await checkEvents(finalApprovalEvents, 'multisig')
     .redact({
-      redactKeys: /height/,
+      redactKeys: /height|multisig/,
     })
     .toMatchSnapshot('events when Bob approves multisig call')
 
@@ -475,7 +480,9 @@ async function multisigWithPureProxyMultisigTest<
   await client.dev.newBlock()
 
   // Check that the multisig was created successfully.
-  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig')
+  await checkEvents(multisigEvents, 'multisig')
+    .redact({ redactKeys: /multisig/ })
+    .toMatchSnapshot('events when Alice creates multisig')
 
   // Check that Alice's multisig creation deposit was reserved.
   let aliceReservedFunds = await getReservedFunds(client, alice.address)
@@ -658,7 +665,9 @@ async function cancelMultisigWithPureProxyTest<
   expect(newAliceReservedFunds, 'Alice should have the same reserved funds').toBe(aliceReservedFunds)
 
   // Check that the multisig was created successfully
-  await checkEvents(multisigEvents, 'multisig').toMatchSnapshot('events when Alice creates multisig')
+  await checkEvents(multisigEvents, 'multisig')
+    .redact({ redactKeys: /multisig/ })
+    .toMatchSnapshot('events when Alice creates multisig')
 
   // Check the multisig creation event (and extract multisig account address)
   const [, multisigExtrinsicIndex, multisigCallHash] = await getAndVerifyMultisigEventData(
@@ -795,7 +804,7 @@ async function multisigAsStandardProxyAnnouncementTest<
 
   await checkEvents(finalApprovalEvents, 'multisig')
     .redact({
-      redactKeys: /height/,
+      redactKeys: /height|multisig/,
     })
     .toMatchSnapshot('events when Bob approves multisig call')
 

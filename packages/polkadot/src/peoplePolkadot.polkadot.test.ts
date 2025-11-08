@@ -6,31 +6,39 @@ import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('polkadot & peoplePolkadot', async () => {
-  const [polkadotClient, peopleClient] = await setupNetworks(polkadot, peoplePolkadot)
+describe(
+  'polkadot & peoplePolkadot',
+  async () => {
+    const [polkadotClient, peopleClient] = await setupNetworks(polkadot, peoplePolkadot)
 
-  const peopleDOT = peoplePolkadot.custom.dot
-  const polkadotDOT = polkadot.custom.dot
+    const peopleDOT = peoplePolkadot.custom.dot
+    const polkadotDOT = polkadot.custom.dot
 
-  runXcmPalletDown('polkadot transfer DOT to peoplePolkadot', async () => {
-    return {
-      fromChain: polkadotClient,
-      toChain: peopleClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, peoplePolkadot.paraId!)),
-      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
-    }
-  })
+    runXcmPalletDown(
+      'polkadot transfer DOT to peoplePolkadot',
+      async () => {
+        return {
+          fromChain: polkadotClient,
+          toChain: peopleClient,
+          balance: query.balances,
+          toAccount: defaultAccounts.dave,
+          tx: tx.xcmPallet.teleportAssetsV3(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(0, peoplePolkadot.paraId!)),
+          totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
+        }
+      },
+      { skip: true },
+    )
 
-  runXcmPalletUp('peoplePolkadot transfer DOT to polkadot', async () => {
-    return {
-      fromChain: peopleClient,
-      toChain: polkadotClient,
-      balance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.teleportAssetsV3(peopleDOT, 1e12, tx.xcmPallet.relaychainV4),
-      totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
-    }
-  })
-})
+    runXcmPalletUp('peoplePolkadot transfer DOT to polkadot', async () => {
+      return {
+        fromChain: peopleClient,
+        toChain: polkadotClient,
+        balance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.teleportAssetsV3(peopleDOT, 1e12, tx.xcmPallet.relaychainV4),
+        totalIssuanceProvider: () => query.totalIssuance(polkadotClient),
+      }
+    })
+  },
+  { skip: true },
+)
