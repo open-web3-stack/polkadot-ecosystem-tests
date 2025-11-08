@@ -264,22 +264,9 @@ async function createAndFastTrackReferendum(
     },
   }
 
-  let fastProposal: any
-  try {
-    fastProposal = client.api.registry.createType('Option<PalletReferendaReferendumInfo>', fastProposalData)
-  } catch {
-    try {
-      fastProposal = client.api.registry.createType(
-        'Option<PalletReferendaReferendumInfoConvictionVotingTally>',
-        fastProposalData,
-      )
-    } catch {
-      fastProposal = client.api.registry.createType(
-        'Option<PalletReferendaReferendumInfoOriginCaller>',
-        fastProposalData,
-      )
-    }
-  }
+  const refMeta = client.api.query.referenda.referendumInfoFor.creator.meta
+  const refValueType = client.api.registry.lookup.getTypeDef(refMeta.type.asMap.value).type
+  const fastProposal = client.api.registry.createType(refValueType, fastProposalData)
 
   const referendumKey = client.api.query.referenda.referendumInfoFor.key(referendumIndex)
   await client.api.rpc('dev_setStorage', [[referendumKey, fastProposal.toHex()]])
@@ -306,7 +293,9 @@ async function createAndFastTrackReferendum(
 
             if (lookup.isSome) {
               const lookupKey = await client.api.query.scheduler.lookup.key(id)
-              const fastLookup = client.api.registry.createType('Option<(u32,u32)>', [nextBlockNumber, 0])
+              const lookupMeta = client.api.query.scheduler.lookup.creator.meta
+              const lookupValueType = client.api.registry.lookup.getTypeDef(lookupMeta.type.asMap.value).type
+              const fastLookup = client.api.registry.createType(lookupValueType, [nextBlockNumber, 0])
               await client.api.rpc('dev_setStorage', [[lookupKey, fastLookup.toHex()]])
             }
           }
