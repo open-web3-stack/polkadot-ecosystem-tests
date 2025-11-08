@@ -8,6 +8,7 @@ import { describe } from 'vitest'
 
 describe(
   'hydration & moonbeam',
+  { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
   async () => {
     const [hydrationClient, moonbeamClient, polkadotClient] = await setupNetworks(hydration, moonbeam, polkadot)
 
@@ -75,5 +76,4 @@ describe(
       }
     })
   },
-  { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
 )
