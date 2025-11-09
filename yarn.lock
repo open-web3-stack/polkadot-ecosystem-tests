@@ -261,9 +261,9 @@ __metadata:
     "@acala-network/chopsticks": "npm:^1.2.4"
     "@acala-network/chopsticks-testing": "npm:^1.2.4"
     "@e2e-test/networks": "workspace:*"
-    "@polkadot/api": "npm:^16.4.9"
-    "@polkadot/types": "npm:^16.4.9"
-    "@polkadot/types-augment": "npm:^16.4.9"
+    "@polkadot/api": "npm:^16.5.1"
+    "@polkadot/types": "npm:^16.5.1"
+    "@polkadot/types-augment": "npm:^16.5.1"
   languageName: unknown
   linkType: soft
 
