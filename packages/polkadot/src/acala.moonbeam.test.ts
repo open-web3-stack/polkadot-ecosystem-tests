@@ -8,6 +8,7 @@ import { describe } from 'vitest'
 
 describe(
   'acala & moonbeam',
+  { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
   async () => {
     const [acalaClient, moonbeamClient, polkadotClient] = await setupNetworks(acala, moonbeam, polkadot)
 
@@ -122,5 +123,4 @@ describe(
       }
     })
   },
-  { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
 )
