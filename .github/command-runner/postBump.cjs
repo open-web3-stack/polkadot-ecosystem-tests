@@ -28,5 +28,7 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
     },
   })
 
-  return comment.createOrUpdateComment(`**KNOWN_GOOD_BLOCK_NUMBERS files have been updated**<br/>**Commit**: ${commitId}`)
+  return comment.createOrUpdateComment(
+    `**KNOWN_GOOD_BLOCK_NUMBERS files have been updated**<br/>**Commit**: ${commitId}`,
+  )
 }
