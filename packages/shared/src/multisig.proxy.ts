@@ -666,7 +666,7 @@ async function cancelMultisigWithPureProxyTest<
 
   // Check that the multisig was created successfully
   await checkEvents(multisigEvents, 'multisig')
-    .redact({ redactKeys: /multisig/ })
+    .redact({ redactKeys: /multisig|approving/ })
     .toMatchSnapshot('events when Alice creates multisig')
 
   // Check the multisig creation event (and extract multisig account address)

@@ -171,7 +171,7 @@ exports[`Polkadot Coretime Multisig Proxy > success tests > Cancel 2-of-3 multis
 [
   {
     "data": {
-      "approving": "1AZPXKv7JjFeP2HinaAgtVUxJHkfz5kkHS4RsSAbSp5v9CG",
+      "approving": "(redacted)",
       "callHash": "(hash)",
       "multisig": "(redacted)",
     },
