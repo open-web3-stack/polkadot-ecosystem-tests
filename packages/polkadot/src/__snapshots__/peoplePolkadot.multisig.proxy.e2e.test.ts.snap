@@ -171,7 +171,7 @@ exports[`People Polkadot Multisig Proxy > success tests > Cancel 2-of-3 multisig
 [
   {
     "data": {
-      "approving": "16HDq2bXYHcGUY81ESHc7yWZ4D2hNCPecF88LWD9FUmaB1Mi",
+      "approving": "(redacted)",
       "callHash": "(hash)",
       "multisig": "(redacted)",
     },

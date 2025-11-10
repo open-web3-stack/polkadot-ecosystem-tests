@@ -171,7 +171,7 @@ exports[`Kusama AssetHub Multisig Proxy > success tests > Cancel 2-of-3 multisig
 [
   {
     "data": {
-      "approving": "ELPF5Yb4cyVYneiw5esrkLJP1pFCdyw35owdHFHfVef9EUh",
+      "approving": "(redacted)",
       "callHash": "(hash)",
       "multisig": "(redacted)",
     },

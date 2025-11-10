@@ -171,7 +171,7 @@ exports[`Kusama Multisig with Proxy > success tests > Cancel 2-of-3 multisig wit
 [
   {
     "data": {
-      "approving": "EayYEA3eXV8Ey5oEqXZ7vet1XRYAxTDtBbuZ9nEvVVLDmZ4",
+      "approving": "(redacted)",
       "callHash": "(hash)",
       "multisig": "(redacted)",
     },
