@@ -242,7 +242,7 @@ async function multisigWithPureProxyTest<
   await checkEvents(finalApprovalEvents, 'multisig')
     .redact({
       // The approving address is the proxy, which is not deterministic.
-      redactKeys: /approving|multisig/,
+      redactKeys: /approving|multisig|height/,
     })
     .toMatchSnapshot("events when Bob's proxy approves the multisig call")
 
