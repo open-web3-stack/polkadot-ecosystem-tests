@@ -110,7 +110,7 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
       "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 3300000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -143,7 +143,7 @@ exports[`People Polkadot Multisig Proxy > success tests > 2-of-3 multisig with p
       "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 3300000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
