@@ -74,7 +74,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'wss://sys.ibp.network/asset-hub-kusama',
+  endpoint: 'wss://asset-hub-kusama-rpc.n.dwellir.com',
   paraId: 1000,
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,
