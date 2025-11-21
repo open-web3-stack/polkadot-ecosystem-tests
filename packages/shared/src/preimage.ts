@@ -693,10 +693,12 @@ async function preimageEmptyTest<
 }
 
 /**
- * Test the registering (noting) and unregistering (unnoting) of an oversized preimage.
+ * Test the maximum preimage size limit.
  *
- * 1. Alice registers an oversized preimage.
- * 2. The registration fails and no preimage is stored.
+ * 1. Alice successfully registers a preimage at exactly the maximum size (4 MB).
+ * 2. Verify the max-sized preimage is stored correctly.
+ * 3. Alice attempts to register an oversized preimage (4 MB + 1 byte).
+ * 4. The oversized registration fails with `TooBig` error and no preimage is stored.
  */
 async function preimageOversizedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -707,23 +709,42 @@ async function preimageOversizedTest<
   const alice = testAccounts.alice
   setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
 
-  // 1. Alice registers an oversized preimage (more than 4 MB).
   const maxPreimageSize = 4 * 1024 * 1024
-  const oversizedBytesArray = Array(maxPreimageSize + 1).fill(1)
-  const oversizedBytes = client.api.createType('Bytes', oversizedBytesArray)
 
-  console.info(`Image of size ${oversizedBytes.length} has hash: ${blake2AsHex(oversizedBytes, 256)}`)
+  // 1. Alice successfully registers a preimage at exactly the maximum size.
+  const maxSizeBytesArray = Array(maxPreimageSize).fill(2)
+  const maxSizeBytes = client.api.createType('Bytes', maxSizeBytesArray)
+  const maxSizeHash = blake2AsHex(maxSizeBytes, 256)
 
-  const notePreimageTx = client.api.tx.preimage.notePreimage(oversizedBytes)
-  const notePreimageEvents = await sendTransaction(notePreimageTx.signAsync(alice))
+  const noteMaxSizeTx = client.api.tx.preimage.notePreimage(maxSizeBytes)
+  const noteMaxSizeEvents = await sendTransaction(noteMaxSizeTx.signAsync(alice))
   await client.dev.newBlock()
 
-  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+  await checkEvents(noteMaxSizeEvents, 'preimage').toMatchSnapshot('note max size preimage events')
 
-  // We expect an "ExtrinsicFailed" preimage event because the preimage exceeds the maximum allowed size.
+  // 2. Verify the max-sized preimage is stored correctly.
+  const storedMaxSizePreimage = await client.api.query.preimage.preimageFor([maxSizeHash, maxPreimageSize])
+  assert(storedMaxSizePreimage.isSome, 'Max size preimage should be stored')
+  expect(storedMaxSizePreimage.unwrap().length).toBe(maxPreimageSize)
+
+  // 3. Alice attempts to register an oversized preimage (more than 4 MB).
+  const oversizedBytesArray = Array(maxPreimageSize + 1).fill(1)
+  const oversizedBytes = client.api.createType('Bytes', oversizedBytesArray)
+  const oversizedHash = blake2AsHex(oversizedBytes, 256)
+
+  const noteOversizedTx = client.api.tx.preimage.notePreimage(oversizedBytes)
+  const noteOversizedEvents = await sendTransaction(noteOversizedTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(noteOversizedEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+
+  // 4. Verify the oversized registration failed with `TooBig` error and no preimage is stored.
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
   expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
   await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
+
+  const storedOversizedPreimage = await client.api.query.preimage.preimageFor([oversizedHash, maxPreimageSize + 1])
+  expect(storedOversizedPreimage.isNone, 'Oversized preimage should not be stored').toBe(true)
 }
 
 /**
