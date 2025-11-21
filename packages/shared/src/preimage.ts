@@ -709,7 +709,8 @@ async function preimageOversizedTest<
 
   // 1. Alice registers an oversized preimage (more than 4 MB).
   const maxPreimageSize = 4 * 1024 * 1024
-  const oversizedBytes = new Uint8Array(maxPreimageSize + 1).fill(1)
+  const oversizedBytesArray = Array(maxPreimageSize + 1).fill(1)
+  const oversizedBytes = client.api.createType('Bytes', oversizedBytesArray)
 
   console.info(`Image of size ${oversizedBytes.length} has hash: ${blake2AsHex(oversizedBytes, 256)}`)
 
@@ -719,12 +720,10 @@ async function preimageOversizedTest<
 
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
 
-  // TODO: Verify that no preimage events were emitted, and that an "ExtrinsicFailed" event was emitted!
-  // We expect the "ExtrinsicFailed" preimage event because the preimage exceeds the maximum allowed size,
-
-  // expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  // expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
-  // expectFailedExtrinsicWithType(client, client.api.errors.preimage.PreimageTooLarge)
+  // We expect an "ExtrinsicFailed" preimage event because the preimage exceeds the maximum allowed size.
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
 }
 
 /**
