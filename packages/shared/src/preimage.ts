@@ -752,7 +752,7 @@ async function preimageEnsureUpdatedTest<
   ])
 
   const expectFees = oldPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
-  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+  let bobNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
   // 1. Simulate a number of pre-deprecation preimages
   const bogusPreimageLength = 3
@@ -801,7 +801,7 @@ async function preimageEnsureUpdatedTest<
   for (let i = 1; i <= newPreimagesCount; i++) {
     const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT + i, testAccounts.bob.address).method
     const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
-    await sendTransaction(notePreimageTx.signAsync(testAccounts.bob, { nonce: aliceNonce++ }))
+    await sendTransaction(notePreimageTx.signAsync(testAccounts.bob, { nonce: bobNonce++ }))
 
     preimageHashes.push([encodedProposal.hash.toHex(), encodedProposal.encodedLength])
   }
@@ -904,7 +904,7 @@ async function preimageEnsureUpdatedTest<
   const txPaymentEventData = txPaymentEvent!.event.data
   const txPaymentFee = txPaymentEventData.actualFee.toBigInt()
   expect(txPaymentEventData.tip.toBigInt(), 'Unexpected extrinsic tip').toBe(0n)
-  // If the ratio of old to total preimages is more than 90%, fees were paid.
+  // If the ratio of old to total preimages is more than 90%, fees are not paid.
   if (expectFees) {
     expect(txPaymentFee).toBeGreaterThan(0n)
   } else {
