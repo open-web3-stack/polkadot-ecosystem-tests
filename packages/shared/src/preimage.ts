@@ -4,13 +4,13 @@ import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupBalances, setupNetworks } from '@e2e-test/shared'
 
 import type { IsError } from '@polkadot/types/metadata/decorate/types'
-import { blake2AsHex } from '@polkadot/util-crypto'
+import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import {
+  check,
   checkEvents,
-  getFreeFunds,
   getReservedFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -733,16 +733,19 @@ async function preimageOversizedTest<
  * 2. Bob registers a number of unrequested preimages - these will go into the `RequestStatusFor` storage.
  * 3. Ensure that all preimages are in storage.
  * 4. Alice calls "ensure_updated" for all the above preimages.
- * 5. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
+ * 5. Check that the old preimages moved from `StatusFor` storage to `RequestStatusFor` storage.
+ * 6. Check that the new preimages are still in `RequestStatusFor` storage.
+ * 7. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
  *    fees.
  */
 async function preimageEnsureUpdatedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, oldPreimagesCount: number, newPreimagesCount: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
+  const addressEncoding = testConfig.addressEncoding
   setupBalances(client, [
     { address: alice.address, amount: 1000e10 },
     { address: testAccounts.bob.address, amount: 1000e10 },
@@ -759,15 +762,34 @@ async function preimageEnsureUpdatedTest<
   ])
 
   // Manually insert the obsolete preimages into `StatusFor` storage
-  const statusForEntries = preimageHashes.slice(0, oldPreimagesCount).map(([hash, len]) => [
-    [hash],
-    {
-      unrequested: {
-        deposit: [testAccounts.bob.address, 1000000],
-        len,
-      },
-    },
-  ])
+  // Half are unrequested, half are requested
+  const statusForEntries = preimageHashes.slice(0, oldPreimagesCount).map(([hash, len], i) => {
+    const halfwayPoint = Math.floor(oldPreimagesCount / 2)
+    if (i < halfwayPoint) {
+      // Unrequested variant
+      return [
+        [hash],
+        {
+          unrequested: {
+            deposit: [alice.address, 1000000],
+            len,
+          },
+        },
+      ]
+    } else {
+      // Requested variant
+      return [
+        [hash],
+        {
+          requested: {
+            deposit: [alice.address, 1000000],
+            count: 1,
+            len,
+          },
+        },
+      ]
+    }
+  })
 
   await client.dev.setStorage({
     Preimage: {
@@ -789,13 +811,38 @@ async function preimageEnsureUpdatedTest<
   }
 
   // 3. Ensure that all preimages are in storage.
+  const halfwayPoint = Math.floor(oldPreimagesCount / 2)
   for (let i = 0; i < oldPreimagesCount + newPreimagesCount; i++) {
     if (i < oldPreimagesCount) {
       const statusFor = await client.api.query.preimage.statusFor(preimageHashes[i][0])
-      expect(statusFor.isSome).toBe(true)
+      assert(statusFor.isSome)
+
+      if (i < halfwayPoint) {
+        // Check unrequested variant
+        await check(statusFor.unwrap()).toMatchObject({
+          unrequested: {
+            deposit: [encodeAddress(alice.address, addressEncoding), 1000000],
+            len: preimageHashes[i][1],
+          },
+        })
+      } else {
+        // Check requested variant
+        await check(statusFor.unwrap()).toMatchObject({
+          requested: {
+            deposit: [encodeAddress(alice.address, addressEncoding), 1000000],
+            count: 1,
+            len: preimageHashes[i][1],
+          },
+        })
+      }
     } else {
       const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
-      expect(requestStatusFor.isSome).toBe(true)
+      assert(requestStatusFor.isSome)
+      const unwrapped = requestStatusFor.unwrap()
+      expect(unwrapped.isUnrequested).toBe(true)
+      const unrequested = unwrapped.asUnrequested
+      expect(unrequested.ticket[0].toString()).toBe(encodeAddress(testAccounts.bob.address, addressEncoding))
+      expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
     }
   }
 
@@ -806,7 +853,44 @@ async function preimageEnsureUpdatedTest<
 
   await checkEvents(ensureUpdatedEvents, 'preimage').toMatchSnapshot('ensure updated preimage events')
 
-  // 5. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
+  // 5. Check that the old preimages moved from `StatusFor` storage to `RequestStatusFor` storage.
+  for (let i = 0; i < oldPreimagesCount; i++) {
+    const statusFor = await client.api.query.preimage.statusFor(preimageHashes[i][0])
+    expect(statusFor.isNone).toBe(true)
+
+    const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
+    assert(requestStatusFor.isSome)
+
+    const unwrapped = requestStatusFor.unwrap()
+
+    if (i < halfwayPoint) {
+      // Was unrequested, now unrequested in new storage
+      expect(unwrapped.isUnrequested).toBe(true)
+      const unrequested = unwrapped.asUnrequested
+      expect(unrequested.ticket[0].toString()).toBe(encodeAddress(alice.address, addressEncoding))
+      expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
+    } else {
+      // Was requested, now requested in new storage
+      expect(unwrapped.isRequested).toBe(true)
+      const requested = unwrapped.asRequested
+      expect(requested.maybeTicket.unwrap()[0].toString()).toBe(encodeAddress(alice.address, addressEncoding))
+      expect(requested.count.toNumber()).toBe(1)
+      expect(requested.maybeLen.unwrap().toNumber()).toBe(preimageHashes[i][1])
+    }
+  }
+
+  // 6. Check that the new preimages are still in `RequestStatusFor` storage.
+  for (let i = oldPreimagesCount; i < oldPreimagesCount + newPreimagesCount; i++) {
+    const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
+    assert(requestStatusFor.isSome)
+    const unwrapped = requestStatusFor.unwrap()
+    expect(unwrapped.isUnrequested).toBe(true)
+    const unrequested = unwrapped.asUnrequested
+    expect(unrequested.ticket[0].toString()).toBe(encodeAddress(testAccounts.bob.address, addressEncoding))
+    expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
+  }
+
+  // 7. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
   //    fees.
 
   // Get the transaction fee from the payment event.
@@ -878,12 +962,12 @@ export function successPreimageE2ETests<
           {
             kind: 'test',
             label: 'preimage ensure updated test (no fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 10, 1),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 10, 1),
           },
           {
             kind: 'test',
             label: 'preimage ensure updated test (fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 5, 5),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 5, 5),
           },
         ],
       },
