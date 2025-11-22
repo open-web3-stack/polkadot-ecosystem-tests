@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage empty test > note empty preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage empty test > note empty preimage events 1`] = `
 [
   {
     "data": {
@@ -12,7 +12,7 @@ exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage te
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage empty test > unnote empty preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage empty test > unnote empty preimage events 1`] = `
 [
   {
     "data": {
@@ -24,11 +24,11 @@ exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage te
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage ensure updated test (fees due) > ensure updated preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage ensure updated test (fees due) > ensure updated preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage ensure updated test (no fees due) > ensure updated preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage ensure updated test (no fees due) > ensure updated preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage single note and unnote test > note preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage single note and unnote test > note preimage events 1`] = `
 [
   {
     "data": {
@@ -40,7 +40,7 @@ exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage te
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage tests > preimage single note and unnote test > unnote preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > Polkadot Asset Hub Preimage > preimage tests > preimage single note and unnote test > unnote preimage events 1`] = `
 [
   {
     "data": {
@@ -52,7 +52,7 @@ exports[`Polkadot Asset Hub PreImage > Polkadot Asset Hub PreImage > preimage te
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage oversized test > note max size preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage oversized test > note max size preimage events 1`] = `
 [
   {
     "data": {
@@ -64,9 +64,9 @@ exports[`Polkadot Asset Hub PreImage > failure tests > preimage oversized test >
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage oversized test > note oversized preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage oversized test > note oversized preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note and unnote test > note preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage repeated note and unnote test > note preimage events 1`] = `
 [
   {
     "data": {
@@ -78,11 +78,11 @@ exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note an
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note and unnote test > repeat note preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage repeated note and unnote test > repeat note preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note and unnote test > repeat unnote preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage repeated note and unnote test > repeat unnote preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note and unnote test > unnote preimage events 1`] = `
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage repeated note and unnote test > unnote preimage events 1`] = `
 [
   {
     "data": {
@@ -94,6 +94,6 @@ exports[`Polkadot Asset Hub PreImage > failure tests > preimage repeated note an
 ]
 `;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage single request and unrequest test as non-root > request preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > request preimage events 1`] = `[]`;
 
-exports[`Polkadot Asset Hub PreImage > failure tests > preimage single request and unrequest test as non-root > unrequest preimage events 1`] = `[]`;
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > unrequest preimage events 1`] = `[]`;
