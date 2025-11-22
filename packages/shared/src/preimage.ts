@@ -4,13 +4,13 @@ import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupBalances, setupNetworks } from '@e2e-test/shared'
 
 import type { IsError } from '@polkadot/types/metadata/decorate/types'
-import { blake2AsHex } from '@polkadot/util-crypto'
+import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import {
+  check,
   checkEvents,
-  getFreeFunds,
   getReservedFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -693,10 +693,12 @@ async function preimageEmptyTest<
 }
 
 /**
- * Test the registering (noting) and unregistering (unnoting) of an oversized preimage.
+ * Test the maximum preimage size limit.
  *
- * 1. Alice registers an oversized preimage.
- * 2. The registration fails and no preimage is stored.
+ * 1. Alice successfully registers a preimage at exactly the maximum size (4 MB).
+ * 2. Verify the max-sized preimage is stored correctly.
+ * 3. Alice attempts to register an oversized preimage (4 MB + 1 byte).
+ * 4. The oversized registration fails with `TooBig` error and no preimage is stored.
  */
 async function preimageOversizedTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -707,60 +709,120 @@ async function preimageOversizedTest<
   const alice = testAccounts.alice
   setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
 
-  // 1. Alice registers an oversized preimage (more than 4 MB).
   const maxPreimageSize = 4 * 1024 * 1024
-  const oversizedBytes = new Uint8Array(maxPreimageSize + 1).fill(1)
 
-  console.info(`Image of size ${oversizedBytes.length} has hash: ${blake2AsHex(oversizedBytes, 256)}`)
+  // 1. Alice successfully registers a preimage at exactly the maximum size.
+  const maxSizeBytesArray = Array(maxPreimageSize).fill(2)
+  const maxSizeBytes = client.api.createType('Bytes', maxSizeBytesArray)
+  const maxSizeHash = blake2AsHex(maxSizeBytes, 256)
 
-  const notePreimageTx = client.api.tx.preimage.notePreimage(oversizedBytes)
-  const notePreimageEvents = await sendTransaction(notePreimageTx.signAsync(alice))
+  const noteMaxSizeTx = client.api.tx.preimage.notePreimage(maxSizeBytes)
+  const noteMaxSizeEvents = await sendTransaction(noteMaxSizeTx.signAsync(alice))
   await client.dev.newBlock()
 
-  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+  await checkEvents(noteMaxSizeEvents, 'preimage').toMatchSnapshot('note max size preimage events')
 
-  // TODO: Verify that no preimage events were emitted, and that an "ExtrinsicFailed" event was emitted!
-  // We expect the "ExtrinsicFailed" preimage event because the preimage exceeds the maximum allowed size,
+  // 2. Verify the max-sized preimage is stored correctly.
+  const storedMaxSizePreimage = await client.api.query.preimage.preimageFor([maxSizeHash, maxPreimageSize])
+  assert(storedMaxSizePreimage.isSome, 'Max size preimage should be stored')
+  expect(storedMaxSizePreimage.unwrap().length).toBe(maxPreimageSize)
 
-  // expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  // expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
-  // expectFailedExtrinsicWithType(client, client.api.errors.preimage.PreimageTooLarge)
+  // 3. Alice attempts to register an oversized preimage (more than 4 MB).
+  const oversizedBytesArray = Array(maxPreimageSize + 1).fill(1)
+  const oversizedBytes = client.api.createType('Bytes', oversizedBytesArray)
+  const oversizedHash = blake2AsHex(oversizedBytes, 256)
+
+  const noteOversizedTx = client.api.tx.preimage.notePreimage(oversizedBytes)
+  const noteOversizedEvents = await sendTransaction(noteOversizedTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(noteOversizedEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+
+  // 4. Verify the oversized registration failed with `TooBig` error and no preimage is stored.
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
+
+  const storedOversizedPreimage = await client.api.query.preimage.preimageFor([oversizedHash, maxPreimageSize + 1])
+  expect(storedOversizedPreimage.isNone, 'Oversized preimage should not be stored').toBe(true)
 }
 
 /**
- * Test the "ensure_updated" preimage functionality.
+ * Test `preimage::ensure_updated`, including the fee waiving.
  *
- * 1. Simulate a number of pre-deprecation preimages with bogus hashes.
- * 2. Alice registers a number of post-deprecation (valid) preimages.
- * 3. Ensure that all valid preimages have been registered.
- * 4. Alice calls "ensure_updated" for all hashes (valid and bogus).
- * 5. Verify that Alice's reserved funds remain the same after the update.
- * 6. If the ratio of new to total preimages is less than 90%, check that fees have been paid.
+ * 1. Manually inject a number of preimages into the deprecated `StatusFor` storage.
+ * 2. Bob registers a number of unrequested preimages - these will go into the `RequestStatusFor` storage.
+ * 3. Ensure that all preimages are in storage.
+ * 4. Alice calls "ensure_updated" for all the above preimages.
+ * 5. Check that the old preimages moved from `StatusFor` storage to `RequestStatusFor` storage.
+ * 6. Check that the new preimages are still in `RequestStatusFor` storage.
+ * 7. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
+ *    fees.
  */
 async function preimageEnsureUpdatedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, oldPreimagesCount: number, newPreimagesCount: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  const addressEncoding = testConfig.addressEncoding
+  setupBalances(client, [
+    { address: alice.address, amount: 1000e10 },
+    { address: testAccounts.bob.address, amount: 1000e10 },
+  ])
 
-  const expectFees = newPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
-  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+  const expectFees = oldPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
+  let bobNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
 
-  // 1. Simulate a number of pre-deprecation preimages with bogus hashes.
+  // 1. Simulate a number of pre-deprecation preimages
   const bogusPreimageLength = 3
   const preimageHashes: [string, number][] = Array.from({ length: oldPreimagesCount }, (_, i) => [
     blake2AsHex(new Uint8Array(bogusPreimageLength).fill(i + 1), 256),
     bogusPreimageLength,
   ])
 
-  // 2. Alice registers a number of post-deprecation (valid) preimages.
-  for (let i = 0; i < newPreimagesCount; i++) {
+  // Manually insert the obsolete preimages into `StatusFor` storage
+  // Half are unrequested, half are requested
+  const statusForEntries = preimageHashes.slice(0, oldPreimagesCount).map(([hash, len], i) => {
+    const halfwayPoint = Math.floor(oldPreimagesCount / 2)
+    if (i < halfwayPoint) {
+      // Unrequested variant
+      return [
+        [hash],
+        {
+          unrequested: {
+            deposit: [alice.address, 1000000],
+            len,
+          },
+        },
+      ]
+    } else {
+      // Requested variant
+      return [
+        [hash],
+        {
+          requested: {
+            deposit: [alice.address, 1000000],
+            count: 1,
+            len,
+          },
+        },
+      ]
+    }
+  })
+
+  await client.dev.setStorage({
+    Preimage: {
+      statusFor: statusForEntries,
+    },
+  })
+
+  // 2. Bob registers a number of unrequested preimages
+  for (let i = 1; i <= newPreimagesCount; i++) {
     const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT + i, testAccounts.bob.address).method
     const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
-    await sendTransaction(notePreimageTx.signAsync(alice, { nonce: aliceNonce++ }))
+    await sendTransaction(notePreimageTx.signAsync(testAccounts.bob, { nonce: bobNonce++ }))
 
     preimageHashes.push([encodedProposal.hash.toHex(), encodedProposal.encodedLength])
   }
@@ -769,31 +831,88 @@ async function preimageEnsureUpdatedTest<
     await client.dev.newBlock()
   }
 
-  // 3. Ensure that all valid preimages have been registered.
+  // 3. Ensure that all preimages are in storage.
+  const halfwayPoint = Math.floor(oldPreimagesCount / 2)
   for (let i = 0; i < oldPreimagesCount + newPreimagesCount; i++) {
-    const preimage = await client.api.query.preimage.preimageFor(preimageHashes[i])
+    if (i < oldPreimagesCount) {
+      const statusFor = await client.api.query.preimage.statusFor(preimageHashes[i][0])
+      assert(statusFor.isSome)
 
-    // The first hashes are bogus and we expect them to not actually be stored.
-    expect(preimage.isNone).toBe(i < oldPreimagesCount)
+      if (i < halfwayPoint) {
+        // Check unrequested variant
+        await check(statusFor.unwrap()).toMatchObject({
+          unrequested: {
+            deposit: [encodeAddress(alice.address, addressEncoding), 1000000],
+            len: preimageHashes[i][1],
+          },
+        })
+      } else {
+        // Check requested variant
+        await check(statusFor.unwrap()).toMatchObject({
+          requested: {
+            deposit: [encodeAddress(alice.address, addressEncoding), 1000000],
+            count: 1,
+            len: preimageHashes[i][1],
+          },
+        })
+      }
+    } else {
+      const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
+      assert(requestStatusFor.isSome)
+      const unwrapped = requestStatusFor.unwrap()
+      expect(unwrapped.isUnrequested).toBe(true)
+      const unrequested = unwrapped.asUnrequested
+      expect(unrequested.ticket[0].toString()).toBe(encodeAddress(testAccounts.bob.address, addressEncoding))
+      expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
+    }
   }
 
-  // Check Alice's reserved funds.
-  const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
-  const aliceFreeFundsAfterNote = await getFreeFunds(client, alice.address)
-
-  // 4. Alice calls "ensure_updated" for all hashes (valid and bogus).
+  // 4. Alice calls "ensure_updated" for all preimages.
   const ensureUpdatedTx = client.api.tx.preimage.ensureUpdated(preimageHashes.map(([hash]) => hash))
   const ensureUpdatedEvents = await sendTransaction(ensureUpdatedTx.signAsync(alice))
   await client.dev.newBlock()
 
   await checkEvents(ensureUpdatedEvents, 'preimage').toMatchSnapshot('ensure updated preimage events')
 
-  // Check Alice's reserved funds again.
-  const aliceReservedFundsAfterUpdate = await getReservedFunds(client, alice.address)
-  const aliceFreeFundsAfterUpdate = await getFreeFunds(client, alice.address)
+  // 5. Check that the old preimages moved from `StatusFor` storage to `RequestStatusFor` storage.
+  for (let i = 0; i < oldPreimagesCount; i++) {
+    const statusFor = await client.api.query.preimage.statusFor(preimageHashes[i][0])
+    expect(statusFor.isNone).toBe(true)
 
-  // 5. Verify that Alice's reserved funds remain the same after the update.
-  expect(aliceReservedFundsAfterUpdate).toBe(aliceReservedFundsAfterNote)
+    const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
+    assert(requestStatusFor.isSome)
+
+    const unwrapped = requestStatusFor.unwrap()
+
+    if (i < halfwayPoint) {
+      // Was unrequested, now unrequested in new storage
+      expect(unwrapped.isUnrequested).toBe(true)
+      const unrequested = unwrapped.asUnrequested
+      expect(unrequested.ticket[0].toString()).toBe(encodeAddress(alice.address, addressEncoding))
+      expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
+    } else {
+      // Was requested, now requested in new storage
+      expect(unwrapped.isRequested).toBe(true)
+      const requested = unwrapped.asRequested
+      expect(requested.maybeTicket.unwrap()[0].toString()).toBe(encodeAddress(alice.address, addressEncoding))
+      expect(requested.count.toNumber()).toBe(1)
+      expect(requested.maybeLen.unwrap().toNumber()).toBe(preimageHashes[i][1])
+    }
+  }
+
+  // 6. Check that the new preimages are still in `RequestStatusFor` storage.
+  for (let i = oldPreimagesCount; i < oldPreimagesCount + newPreimagesCount; i++) {
+    const requestStatusFor = await client.api.query.preimage.requestStatusFor(preimageHashes[i][0])
+    assert(requestStatusFor.isSome)
+    const unwrapped = requestStatusFor.unwrap()
+    expect(unwrapped.isUnrequested).toBe(true)
+    const unrequested = unwrapped.asUnrequested
+    expect(unrequested.ticket[0].toString()).toBe(encodeAddress(testAccounts.bob.address, addressEncoding))
+    expect(unrequested.len.toNumber()).toBe(preimageHashes[i][1])
+  }
+
+  // 7. If more than 90% of the preimages were updated from `StatusFor` to `RequestStatusFor`, check that Alice paid
+  //    fees.
 
   // Get the transaction fee from the payment event.
   const events = await client.api.query.system.events()
@@ -802,23 +921,15 @@ async function preimageEnsureUpdatedTest<
     return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
   })
 
-  // In all scenarios we expect an additional flat fee to also be paid.
   assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
   const txPaymentEventData = txPaymentEvent!.event.data
-  const txPaymentFee = txPaymentEventData.actualFee.toNumber()
-
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'Unexpected extrinsic tip')
-  expect(txPaymentFee).toBeGreaterThan(0)
-
-  const ensureUpdatedFee = aliceFreeFundsAfterNote - txPaymentFee - aliceFreeFundsAfterUpdate
-
-  // 6. If the ratio of new to total preimages is less than 90%, check that fees have been paid.
+  const txPaymentFee = txPaymentEventData.actualFee.toBigInt()
+  expect(txPaymentEventData.tip.toBigInt(), 'Unexpected extrinsic tip').toBe(0n)
+  // If the ratio of old to total preimages is more than 90%, fees are not paid.
   if (expectFees) {
-    // TODO: The "ensure_updated" fee should be strictly positive in this case, because less than
-    // 90 % of the preimages were updated (since the others were bogus)!
-    // expect(ensureUpdatedFee).toBeGreaterThan(0)
+    expect(txPaymentFee).toBeGreaterThan(0n)
   } else {
-    expect(ensureUpdatedFee).toBe(0)
+    expect(txPaymentFee).toBe(0n)
   }
 }
 
@@ -872,12 +983,12 @@ export function successPreimageE2ETests<
           {
             kind: 'test',
             label: 'preimage ensure updated test (no fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 1, 10),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 10, 1),
           },
           {
             kind: 'test',
             label: 'preimage ensure updated test (fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 2, 7),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 5, 5),
           },
         ],
       },
