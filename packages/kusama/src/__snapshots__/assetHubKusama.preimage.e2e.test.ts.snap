@@ -52,6 +52,18 @@ exports[`Kusama Asset Hub PreImage > Kusama Asset Hub PreImage > preimage tests 
 ]
 `;
 
+exports[`Kusama Asset Hub PreImage > failure tests > preimage oversized test > note max size preimage events 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub PreImage > failure tests > preimage oversized test > note oversized preimage events 1`] = `[]`;
 
 exports[`Kusama Asset Hub PreImage > failure tests > preimage repeated note and unnote test > note preimage events 1`] = `
