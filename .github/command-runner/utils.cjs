@@ -44,14 +44,18 @@ async function runCommand({ cmd, comment, exec }) {
 function writeNewEnv({ env }) {
   const fs = require('node:fs')
 
-  const envContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS.env', 'utf8').toString()
+  const kusamaEnvContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env', 'utf8').toString()
+  const polkadotEnvContent = fs.readFileSync('KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env', 'utf8').toString()
 
   fs.writeFileSync('.env', env)
   return `# .env
 ${env}
 
-# KNOWN_GOOD_BLOCK_NUMBERS.env
-${envContent}
+# KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
+${kusamaEnvContent}
+
+# KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+${polkadotEnvContent}
 `
 }
 

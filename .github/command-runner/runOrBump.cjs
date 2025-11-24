@@ -79,12 +79,12 @@ module.exports = async ({ github, core, context, commentId, exec, env, command, 
 
     await exec.exec(`git config --global user.name 'github-actions[bot]'`)
     await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`)
-    await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS.env`)
+    await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env`)
     const diffCachedResult = await exec.exec('git diff --cached --exit-code', null, { ignoreReturnCode: true })
 
     if (!diffCachedResult) {
-      core.setFailed('KNOWN_GOOD_BLOCK_NUMBERS.env not updated')
-      await comment.createOrUpdateComment(`    **KNOWN_GOOD_BLOCK_NUMBERS.env not updated**`)
+      core.setFailed('KNOWN_GOOD_BLOCK_NUMBERS files not updated')
+      await comment.createOrUpdateComment(`    **KNOWN_GOOD_BLOCK_NUMBERS files not updated**`)
       process.exit(1)
     }
 

@@ -1,15 +1,57 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Client, type RootTestTree, setupBalances, setupNetworks } from '@e2e-test/shared'
+
+import type { IsError } from '@polkadot/types/metadata/decorate/types'
+import { blake2AsHex } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { checkEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
+import {
+  checkEvents,
+  getFreeFunds,
+  getReservedFunds,
+  scheduleInlineCallListWithSameOrigin,
+  scheduleInlineCallWithOrigin,
+  type TestConfig,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
 /// -------
+
+/**
+ * Query the latest list of events, retaining only those with a given section type.
+ */
+async function getEventsWithType(client: Client<any, any>, eventType: string) {
+  const events = await client.api.query.system.events()
+
+  return events.filter((record) => {
+    const { event } = record
+    return event.section === eventType
+  })
+}
+
+/**
+ * Expect the latest extrinsic to have failed with a given error type.
+ */
+async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType: IsError) {
+  // We expect an "ExtrinsicFailed" preimage event because the preimage has already been noted.
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  const dispatchError = ev.event.data.dispatchError
+
+  assert(dispatchError.isModule)
+  expect(errorType.is(dispatchError.asModule)).toBeTruthy()
+}
+
+const SPEND_AMOUNT = 10e10
 
 /**
  * Test the registering, querying and unregistering a preimage.
@@ -26,7 +68,7 @@ export async function preimageSingleNoteUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(1e10, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(testAccounts.alice))
 
@@ -71,7 +113,7 @@ export async function preimageSingleRequestUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -109,12 +151,36 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
   await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
+
   await client.dev.newBlock()
+
+  // Expect a "Requested" event from the preimage pallet.
+  let events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Requested.is(events[0].event))
+
+  // Also expect a "Dispatched" event from the scheduler.
+  events = await getEventsWithType(client, 'scheduler')
+  expect(events.length).toBe(1)
+  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
+
+  events = await getEventsWithType(client, 'balances')
+
+  const hasBalanceEvents = events.length > 0
+
+  // On some chains, a "Transfer" event also occurs.
+  if (hasBalanceEvents) {
+    expect(events.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(events[0].event))
+  }
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -122,10 +188,41 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   assert(status.isSome)
   expect(status.unwrap().type).toBe('Requested')
 
-  // 3. The root account unrequests the preimage multiple times.
-  const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  // Create a new block to reset events.
   await client.dev.newBlock()
+
+  // 3. The root account unrequests the preimage multiple times.
+  const numUnrequests = 3
+  const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
+  const encodedCall = unrequestTx.method.toHex()
+  const encodedCallList = Array(numUnrequests).fill(encodedCall)
+  await scheduleInlineCallListWithSameOrigin(client, encodedCallList, { system: 'Root' }, testConfig.blockProvider)
+
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
+
+  await client.dev.newBlock()
+
+  // No explicit "Unrequest" event from the preimage pallet.
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+
+  // "Dispatched" events do appear from the scheduler.
+  events = await getEventsWithType(client, 'scheduler')
+  expect(events.length).toBe(numUnrequests)
+
+  events.forEach((eventRecord) => {
+    assert(client.api.events.scheduler.Dispatched.is(eventRecord.event))
+  })
+
+  events = await getEventsWithType(client, 'balances')
+
+  // If the request generated a "Transfer" event, then so will the unrequest(s).
+  if (hasBalanceEvents) {
+    expect(events.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(events[0].event))
+  } else {
+    expect(events.length).toBe(0)
+  }
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
   assert(status.isNone)
@@ -133,6 +230,20 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   // Attempt to unrequest again.
   await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
   await client.dev.newBlock()
+
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+
+  events = await getEventsWithType(client, 'scheduler')
+  expect(events.length).toBe(1)
+  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
+
+  events = await getEventsWithType(client, 'balances')
+  if (hasBalanceEvents) {
+    expect(events.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(events[0].event))
+  } else {
+    expect(events.length).toBe(0)
+  }
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -144,27 +255,34 @@ export async function preimageSingleRequestMultipleUnrequestTest<
  * Test the requesting and unrequesting of a previously-registered preimage.
  *
  * 1. Alice registers (notes) a preimage for a treasury spend proposal.
- * 2. The request status is queried to ensure it is marked as "Unrequested".
- * 3. A root account requests the preimage.
- * 4. The request status is queried to ensure it is marked as "Requested".
- * 5. The root account unrequests the preimage.
- * 6. The request status is queried again to ensure it is marked as "Unrequested".
- * 7. Alice unregisters (unnotes) the preimage.
- * 8. The preimage is queried again to ensure it was removed.
+ *    - The request status is queried to ensure it is marked as "Unrequested".
+ * 2. A root account requests the preimage.
+ *    - The request status is queried to ensure it is marked as "Requested".
+ * 3. The root account unrequests the preimage.
+ *    - The request status is queried again to ensure it is marked as "Unrequested".
+ * 4. Alice unregisters (unnotes) the preimage.
+ * 5. The preimage is queried again to ensure it was removed.
  */
-export async function preimageRequestAndNoteTest<
+export async function preimageNoteThenRequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
   const proposalHash = encodedProposal.hash.toHex()
 
-  let preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
-  await sendTransaction(preimageTx.signAsync(testAccounts.alice))
+  const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  await sendTransaction(notePreimageTx.signAsync(alice))
   await client.dev.newBlock()
+
+  // Some of Alice's funds are now reserved since the preimage was noted without being requested.
+  const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterNote).toBeGreaterThan(0)
 
   // Verify that the preimage was stored correctly.
   let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
@@ -174,40 +292,215 @@ export async function preimageRequestAndNoteTest<
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
-  // 2. The request status is queried to ensure it is marked as "Unrequested".
+  // The request status is queried to ensure it is marked as "Unrequested".
   assert(status.isSome)
   expect(status.unwrap().type).toBe('Unrequested')
 
-  // 3. A root account requests the preimage.
+  // 2. A root account requests the preimage.
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
   await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
   await client.dev.newBlock()
 
+  // Alice's previously-reserved funds are still reserved after the preimage has been requested.
+  const aliceReservedFundsAfterRequest = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterRequest).toBe(aliceReservedFundsAfterNote)
+
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
-  // 4. The request status is queried to ensure it is marked as "Requested".
+  // The request status is queried to ensure it is marked as "Requested".
   assert(status.isSome)
   expect(status.unwrap().type).toBe('Requested')
 
-  // 5. The root account unrequests the preimage.
+  // 3. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
   await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
   await client.dev.newBlock()
 
-  // 6. The request status is queried again to ensure it is marked as "Unrequested".
+  // Alice's previously-reserved funds are still reserved after the preimage has been unrequested.
+  const aliceReservedFundsAfterUnrequest = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterUnrequest).toBe(aliceReservedFundsAfterNote)
+
+  // The request status is queried again to ensure it is marked as "Unrequested".
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
   assert(status.isSome)
   expect(status.unwrap().type).toBe('Unrequested')
 
-  // 7. Alice unregisters (unnotes) the preimage.
-  preimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
-  await sendTransaction(preimageTx.signAsync(testAccounts.alice))
+  // 4. Alice unregisters (unnotes) the preimage.
+  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
+  await sendTransaction(unnotePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  // 8. The preimage is queried again to ensure it was removed.
+  // 5. The preimage is queried again to ensure it was removed.
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+  assert(preimage.isNone)
+
+  status = await client.api.query.preimage.requestStatusFor(proposalHash)
+  assert(status.isNone)
+
+  // All of Alice's reserved funds have been released after the preimage was unnoted.
+  const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterUnnote).toBe(0)
+}
+
+/**
+ * Test the registering and unregistering of a previously-requested preimage.
+ *
+ * 1. Alice registers (notes) a preimage for a treasury spend proposal.
+ * 2. A root account requests the preimage.
+ *    - The request status is queried to ensure it is marked as "Requested".
+ * 3. Alice unregisters (unnotes) the preimage.
+ *    - The request status is queried again to ensure it is still marked as "Requested".
+ * 4. The root account unrequests the preimage.
+ * 5. The preimage is queried again to ensure it was removed.
+ */
+export async function preimageRequestAndUnnoteTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  // 1. Alice registers (notes) a preimage for a treasury spend proposal.
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const proposalHash = encodedProposal.hash.toHex()
+
+  const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  await sendTransaction(notePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  // Some of Alice's funds are now reserved since the preimage was noted without being requested.
+  const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterNote).toBeGreaterThan(0)
+
+  // Verify that the preimage was stored correctly.
+  let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+
+  assert(preimage.isSome)
+  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
+
+  // 2. A root account requests the preimage.
+  const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
+  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await client.dev.newBlock()
+
+  let status = await client.api.query.preimage.requestStatusFor(proposalHash)
+
+  // The request status is queried to ensure it is marked as "Requested".
+  assert(status.isSome)
+  expect(status.unwrap().type).toBe('Requested')
+
+  // 3. Alice unregisters (unnotes) the preimage.
+  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
+  await sendTransaction(unnotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  // The preimage is queried again to ensure it is still present since it was requested earlier.
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
 
+  assert(preimage.isSome)
+  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
+
+  // The request status is queried again to ensure it is still marked as "Requested".
+  status = await client.api.query.preimage.requestStatusFor(proposalHash)
+  assert(status.isSome)
+  expect(status.unwrap().type).toBe('Requested')
+
+  const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterUnnote).toBe(0)
+
+  // 4. The root account unrequests the preimage.
+  const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
+  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await client.dev.newBlock()
+
+  // 5. The preimage is queried again to ensure it was removed.
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
+
+  status = await client.api.query.preimage.requestStatusFor(proposalHash)
+  assert(status.isNone)
+}
+
+/**
+ * Test the registering (noting) of a preimage after it has been requested.
+ *
+ * 1. A root account requests a preimage
+ * 2. Alice registers (notes) the previously-requested preimage
+ *    - No funds should be reserved from Alice's acount since the preimage has already been requested
+ * 3. The root account unrequests the preimage
+ * 4. Alice also attempts to unregister (unnote) the preimage, but finds it has already been cleared
+ */
+export async function preimageRequestThenNoteTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // 1. A root account requests a preimage for a treasury spend proposal.
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const proposalHash = encodedProposal.hash.toHex()
+  const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
+
+  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await client.dev.newBlock()
+
+  let events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Requested.is(events[0].event))
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  // 2. Alice registers (notes) the previously-requested preimage
+  const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  await sendTransaction(notePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Noted.is(events[0].event))
+
+  // No funds should be reserved from Alice's acount since the preimage has already been requested.
+  const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
+  expect(aliceReservedFundsAfterNote).toBe(0)
+
+  let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+  assert(preimage.isSome)
+
+  let status = await client.api.query.preimage.requestStatusFor(proposalHash)
+  assert(status.isSome)
+
+  // 3. The root account unrequests the preimage.
+  const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
+  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await client.dev.newBlock()
+
+  // Following the unrequest, the preimage is cleared.
+  events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Cleared.is(events[0].event))
+
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+  assert(preimage.isNone)
+
+  status = await client.api.query.preimage.requestStatusFor(proposalHash)
+  assert(status.isNone)
+
+  // 4. Alice also attempts to unregister (unnote) the preimage, but finds it has already been cleared.
+  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
+  await sendTransaction(unnotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(0)
+
+  events = await getEventsWithType(client, 'system')
+  expect(events.length).toBeGreaterThan(0)
+
+  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
 /**
@@ -227,11 +520,12 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(10e10, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
   const requestTx = client.api.tx.preimage.requestPreimage(encodedProposal.hash.toHex())
 
-  await sendTransaction(requestTx.signAsync(testAccounts.alice))
+  const requestPreimageEvents = await sendTransaction(requestTx.signAsync(testAccounts.alice))
   await client.dev.newBlock()
+  await checkEvents(requestPreimageEvents, 'preimage').toMatchSnapshot('request preimage events')
 
   let status = await client.api.query.preimage.requestStatusFor(encodedProposal.hash.toHex())
 
@@ -251,14 +545,281 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   // 5. The standard account attempts unsuccessfully to unrequest the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(encodedProposal.hash.toHex())
 
-  await sendTransaction(unrequestTx.signAsync(testAccounts.alice))
+  const unrequestPreimageEvents = await sendTransaction(unrequestTx.signAsync(testAccounts.alice))
   await client.dev.newBlock()
+  await checkEvents(unrequestPreimageEvents, 'preimage').toMatchSnapshot('unrequest preimage events')
 
   status = await client.api.query.preimage.requestStatusFor(encodedProposal.hash.toHex())
 
   // 6. The request status is queried again to ensure it is still marked as "Requested".
   assert(status.isSome)
   expect(status.unwrap().type).toBe('Requested')
+}
+
+/**
+ * Test the repeated registering (noting) and unregistering (unnoting) of the same preimage.
+ *
+ * 1. Alice registers (notes) a preimage for a treasury spend proposal.
+ * 2. Alice attempts to register (note) the same preimage again, which should fail.
+ * 3. Alice unregisters (unnotes) the preimage.
+ * 4. Alice attempts to unregister (unnote) the same preimage again, which should fail.
+ */
+export async function preimageRepeatedNoteUnnoteTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  // 1. Alice registers (notes) a preimage for a treasury spend proposal.
+  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const proposalHash = encodedProposal.hash.toHex()
+  const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+
+  let notePreimageEvents = await sendTransaction(notePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note preimage events')
+
+  let events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Noted.is(events[0].event))
+
+  let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+
+  assert(preimage.isSome)
+  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
+
+  // 2. Alice attempts to register (note) the same preimage again.
+  const repeatNotePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+  notePreimageEvents = await sendTransaction(repeatNotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('repeat note preimage events')
+
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+
+  // We expect an "ExtrinsicFailed" preimage event because the preimage has already been noted.
+  expectFailedExtrinsicWithType(client, client.api.errors.preimage.AlreadyNoted)
+
+  // The preimage is queried to ensure it remains stored correctly.
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+
+  assert(preimage.isSome)
+  expect(preimage.unwrap().toHex()).toBe(encodedProposal.toHex())
+
+  // 3. Alice unregisters (unnotes) the preimage.
+  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
+  let unnotePreimageEvents = await sendTransaction(unnotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(unnotePreimageEvents, 'preimage').toMatchSnapshot('unnote preimage events')
+
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+  assert(preimage.isNone)
+
+  events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Cleared.is(events[0].event))
+
+  // 4. Alice attempts to unregister (unnote) the same preimage again.
+  const repeatUnnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
+
+  unnotePreimageEvents = await sendTransaction(repeatUnnotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(unnotePreimageEvents, 'preimage').toMatchSnapshot('repeat unnote preimage events')
+
+  preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
+  assert(preimage.isNone)
+
+  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+
+  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
+}
+
+/**
+ * Test the registering (noting) and unregistering (unnoting) of an empty preimage.
+ *
+ * 1. Alice registers an empty preimage.
+ * 2. The registration succeeds, but the stored preimage contains 1 byte of value 0 instead of being empty.
+ * 3. Alice suceeds in unregistering (unnoting) the empty preimage.
+ */
+async function preimageEmptyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  // 1. Alice registers an empty preimage.
+  const emptyBytes = new Uint8Array(0)
+  const emptyBytesHash = blake2AsHex(emptyBytes, 256)
+
+  const notePreimageTx = client.api.tx.preimage.notePreimage(emptyBytes)
+  const notePreimageEvents = await sendTransaction(notePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note empty preimage events')
+
+  // 2. The registration succeeds, but the stored preimage contains 1 byte of value 0 instead of being empty.
+  const events = await getEventsWithType(client, 'preimage')
+  expect(events.length).toBe(1)
+  assert(client.api.events.preimage.Noted.is(events[0].event))
+
+  let preimage = await client.api.query.preimage.preimageFor([emptyBytesHash, 0])
+  const preimageRaw = preimage.unwrap().toU8a()
+
+  assert(preimage.isSome)
+  expect(preimageRaw).not.toStrictEqual(emptyBytes)
+  expect(preimageRaw).toStrictEqual(new Uint8Array([0]))
+
+  // 3. Alice suceeds in unregistering (unnoting) the empty preimage.
+  const unnotePreimageTx = client.api.tx.preimage.unnotePreimage(emptyBytesHash)
+  const unnotePreimageEvents = await sendTransaction(unnotePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(unnotePreimageEvents, 'preimage').toMatchSnapshot('unnote empty preimage events')
+
+  preimage = await client.api.query.preimage.preimageFor([emptyBytesHash, 0])
+  assert(preimage.isNone)
+}
+
+/**
+ * Test the registering (noting) and unregistering (unnoting) of an oversized preimage.
+ *
+ * 1. Alice registers an oversized preimage.
+ * 2. The registration fails and no preimage is stored.
+ */
+async function preimageOversizedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  // 1. Alice registers an oversized preimage (more than 4 MB).
+  const maxPreimageSize = 4 * 1024 * 1024
+  const oversizedBytes = new Uint8Array(maxPreimageSize + 1).fill(1)
+
+  console.info(`Image of size ${oversizedBytes.length} has hash: ${blake2AsHex(oversizedBytes, 256)}`)
+
+  const notePreimageTx = client.api.tx.preimage.notePreimage(oversizedBytes)
+  const notePreimageEvents = await sendTransaction(notePreimageTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+
+  // TODO: Verify that no preimage events were emitted, and that an "ExtrinsicFailed" event was emitted!
+  // We expect the "ExtrinsicFailed" preimage event because the preimage exceeds the maximum allowed size,
+
+  // expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  // expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  // expectFailedExtrinsicWithType(client, client.api.errors.preimage.PreimageTooLarge)
+}
+
+/**
+ * Test the "ensure_updated" preimage functionality.
+ *
+ * 1. Simulate a number of pre-deprecation preimages with bogus hashes.
+ * 2. Alice registers a number of post-deprecation (valid) preimages.
+ * 3. Ensure that all valid preimages have been registered.
+ * 4. Alice calls "ensure_updated" for all hashes (valid and bogus).
+ * 5. Verify that Alice's reserved funds remain the same after the update.
+ * 6. If the ratio of new to total preimages is less than 90%, check that fees have been paid.
+ */
+async function preimageEnsureUpdatedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+
+  const expectFees = newPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
+  let aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+  // 1. Simulate a number of pre-deprecation preimages with bogus hashes.
+  const bogusPreimageLength = 3
+  const preimageHashes: [string, number][] = Array.from({ length: oldPreimagesCount }, (_, i) => [
+    blake2AsHex(new Uint8Array(bogusPreimageLength).fill(i + 1), 256),
+    bogusPreimageLength,
+  ])
+
+  // 2. Alice registers a number of post-deprecation (valid) preimages.
+  for (let i = 0; i < newPreimagesCount; i++) {
+    const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT + i, testAccounts.bob.address).method
+    const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
+    await sendTransaction(notePreimageTx.signAsync(alice, { nonce: aliceNonce++ }))
+
+    preimageHashes.push([encodedProposal.hash.toHex(), encodedProposal.encodedLength])
+  }
+
+  if (newPreimagesCount > 0) {
+    await client.dev.newBlock()
+  }
+
+  // 3. Ensure that all valid preimages have been registered.
+  for (let i = 0; i < oldPreimagesCount + newPreimagesCount; i++) {
+    const preimage = await client.api.query.preimage.preimageFor(preimageHashes[i])
+
+    // The first hashes are bogus and we expect them to not actually be stored.
+    expect(preimage.isNone).toBe(i < oldPreimagesCount)
+  }
+
+  // Check Alice's reserved funds.
+  const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
+  const aliceFreeFundsAfterNote = await getFreeFunds(client, alice.address)
+
+  // 4. Alice calls "ensure_updated" for all hashes (valid and bogus).
+  const ensureUpdatedTx = client.api.tx.preimage.ensureUpdated(preimageHashes.map(([hash]) => hash))
+  const ensureUpdatedEvents = await sendTransaction(ensureUpdatedTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkEvents(ensureUpdatedEvents, 'preimage').toMatchSnapshot('ensure updated preimage events')
+
+  // Check Alice's reserved funds again.
+  const aliceReservedFundsAfterUpdate = await getReservedFunds(client, alice.address)
+  const aliceFreeFundsAfterUpdate = await getFreeFunds(client, alice.address)
+
+  // 5. Verify that Alice's reserved funds remain the same after the update.
+  expect(aliceReservedFundsAfterUpdate).toBe(aliceReservedFundsAfterNote)
+
+  // Get the transaction fee from the payment event.
+  const events = await client.api.query.system.events()
+  const txPaymentEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+  })
+
+  // In all scenarios we expect an additional flat fee to also be paid.
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
+  const txPaymentEventData = txPaymentEvent!.event.data
+  const txPaymentFee = txPaymentEventData.actualFee.toNumber()
+
+  assert(txPaymentEventData.tip.toBigInt() === 0n, 'Unexpected extrinsic tip')
+  expect(txPaymentFee).toBeGreaterThan(0)
+
+  const ensureUpdatedFee = aliceFreeFundsAfterNote - txPaymentFee - aliceFreeFundsAfterUpdate
+
+  // 6. If the ratio of new to total preimages is less than 90%, check that fees have been paid.
+  if (expectFees) {
+    // TODO: The "ensure_updated" fee should be strictly positive in this case, because less than
+    // 90 % of the preimages were updated (since the others were bogus)!
+    // expect(ensureUpdatedFee).toBeGreaterThan(0)
+  } else {
+    expect(ensureUpdatedFee).toBe(0)
+  }
 }
 
 export function successPreimageE2ETests<
@@ -290,8 +851,33 @@ export function successPreimageE2ETests<
           },
           {
             kind: 'test',
-            label: 'preimage request and note test',
-            testFn: async () => await preimageRequestAndNoteTest(chain, testConfig),
+            label: 'preimage note and then request test',
+            testFn: async () => await preimageNoteThenRequestTest(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'preimage request and unnote test',
+            testFn: async () => await preimageRequestAndUnnoteTest(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'preimage request and then note test',
+            testFn: async () => await preimageRequestThenNoteTest(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'preimage empty test',
+            testFn: async () => await preimageEmptyTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'preimage ensure updated test (no fees due)',
+            testFn: async () => await preimageEnsureUpdatedTest(chain, 1, 10),
+          },
+          {
+            kind: 'test',
+            label: 'preimage ensure updated test (fees due)',
+            testFn: async () => await preimageEnsureUpdatedTest(chain, 2, 7),
           },
         ],
       },
@@ -311,6 +897,16 @@ export function failurePreimageE2ETests<
         kind: 'test',
         label: 'preimage single request and unrequest test as non-root',
         testFn: async () => await preimageSingleRequestUnrequestAsNonRootTest(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'preimage repeated note and unnote test',
+        testFn: async () => await preimageRepeatedNoteUnnoteTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'preimage oversized test',
+        testFn: async () => await preimageOversizedTest(chain),
       },
     ],
   }
