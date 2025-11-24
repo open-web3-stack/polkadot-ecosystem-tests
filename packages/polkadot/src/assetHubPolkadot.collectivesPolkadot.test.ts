@@ -3,6 +3,7 @@ import { assetHubPolkadot, collectivesPolkadot } from '@e2e-test/networks/chains
 import {
   governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite,
   governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite,
   type ParaTestConfig,
   registerTestTree,
   setupNetworks,
@@ -63,6 +64,15 @@ const testConfigForLocalScheduler: ParaTestConfig = {
 registerTestTree(
   governanceChainUpgradesOtherChainViaRootReferendumSuite(
     assetHubPolkadot,
+    collectivesPolkadot,
+    testConfigForLocalScheduler,
+  ),
+)
+
+registerTestTree(
+  governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite(
+    assetHubPolkadot,
+    collectivesPolkadot,
     collectivesPolkadot,
     testConfigForLocalScheduler,
   ),

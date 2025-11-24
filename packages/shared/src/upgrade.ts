@@ -782,10 +782,11 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
 export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+  TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
-  fellowshipChain: Chain<TCustomRelay, TInitStoragesPara>,
+  fellowshipChain: Chain<TCustomPara, TInitStoragesPara>,
   testConfig: TestConfig,
 ): RootTestTree {
   return {
@@ -847,12 +848,14 @@ export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
 export function governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite<
   TCustomRelay extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TCustomPara extends Record<string, unknown> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+  TCustomChain extends Record<string, unknown> | undefined,
+  TInitStoragesChain extends Record<string, Record<string, any>> | undefined,
+  TCustomCollectives extends Record<string, unknown> | undefined,
+  TInitStoragesCollectives extends Record<string, Record<string, any>> | undefined,
 >(
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
-  toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
-  fellowshipChain: Chain<TCustomRelay, TInitStoragesPara>,
+  toBeUpgradedChain: Chain<TCustomChain, TInitStoragesChain>,
+  fellowshipChain: Chain<TCustomCollectives, TInitStoragesCollectives>,
   testConfig: TestConfig,
 ): RootTestTree {
   return {
