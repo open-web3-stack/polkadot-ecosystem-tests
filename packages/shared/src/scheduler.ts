@@ -58,6 +58,104 @@ import {
 /// -------
 
 /**
+ * Prepend a task to the agenda at the given block number.
+ *
+ * In the below tests involving the scheduler, a common pattern is to assume the agenda under test to be empty, as the
+ * `scheduleInlineCallWithOrigin` helper function erases the block number's agenda before inserting a task into it.
+ * However, if the task being inserted is itself a scheduling call, then this second call will be scheduled normally,
+ * and won't truncate its block's agenda.
+ *
+ * If the block that the subsequent `schedule.schedule` call runs on contains tasks, then accessing the agenda, during
+ * tests with `agenda[0]` may fail, as the first task in the agenda may or may not be the one being tested.
+ *
+ * This function necessarily *prepends* the task to the block number's agenda.
+ * By optionally using this in test code, it helps avoid spurious occasional test failures, as the `agenda[0]` access
+ * antipattern will fail when combined with it.
+ * @param client
+ * @param targetBlockNumber
+ */
+async function prependTaskToAgenda<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, targetBlockNumber: number): Promise<void> {
+  const currentAgenda = await client.api.query.scheduler.agenda(targetBlockNumber!)
+  const bogusCall = client.api.tx.system.remarkWithEvent('bogus task').method.toHex()
+  const modifiedAgenda = [...currentAgenda]
+
+  // `.unshift()` prepends, `.push()` would append.
+  modifiedAgenda.unshift(
+    client.api.createType('Option<PalletSchedulerScheduled>', {
+      call: { Inline: bogusCall },
+      maybeId: null,
+      priority: 1,
+      maybePeriodic: null,
+      origin: { system: 'Root' },
+    }),
+  )
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[targetBlockNumber], modifiedAgenda]],
+    },
+  })
+}
+
+/**
+ * Find a scheduled task in the agenda that matches the specified criteria.
+ *
+ * @param client The test client connected to the forked chain.
+ * @param blockNumber The block number in which to search the agenda.
+ * @param callHex The hex-encoded call to look for.
+ * @param priority Priority of the task being looked for.
+ * @param taskId Optional task ID to match. If provided, only matches tasks with this ID. If `null`, only matches unnamed tasks.
+ * @returns An object containing the task (if found), its index, and the full scheduled agenda.
+ */
+async function findScheduledTask<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  client: Client<TCustom, TInitStorages>,
+  blockNumber: number,
+  callHex: string,
+  priority: number,
+  taskId?: Uint8Array | null,
+) {
+  const scheduled = await client.api.query.scheduler.agenda(blockNumber)
+
+  let taskIndex = -1
+  const task = scheduled.find((item, index) => {
+    if (!item.isSome) return false
+    const unwrapped = item.unwrap()
+
+    // Check if call matches
+    const callMatches = unwrapped.call.isInline && unwrapped.call.asInline.toHex() === callHex
+    if (!callMatches) return false
+
+    // Check priority
+    if (unwrapped.priority.toNumber() !== priority) return false
+
+    // Check task ID if specified
+    if (taskId === null) {
+      // Looking for unnamed tasks only
+      if (unwrapped.maybeId.isSome) return false
+    } else {
+      // Looking for a specific named task
+      if (unwrapped.maybeId.isNone) return false
+      if (unwrapped.maybeId.unwrap().toU8a().toString() !== taskId!.toString()) return false
+    }
+
+    taskIndex = index
+    return true
+  })
+
+  return {
+    task: task?.isSome ? task.unwrap() : undefined,
+    taskIndex,
+    scheduled,
+  }
+}
+
+/**
  * Helper used in tests to origin checks on `Root`-gated scheduler extrinsics.
  *
  * @param scheduleTx The extrinsinc to be deliberately executed with a signed origin.
@@ -184,41 +282,13 @@ export async function cancelScheduledTaskBadOriginTest<
 
   await client.dev.newBlock()
 
-  // Add a bogus task to the agenda to test robustness
-  const currentAgenda = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  const bogusCall = client.api.tx.system.remarkWithEvent('bogus task').method.toHex()
-  const modifiedAgenda = [...currentAgenda]
-
-  modifiedAgenda.push(
-    client.api.createType('Option<PalletSchedulerScheduled>', {
-      call: { Inline: bogusCall },
-      maybeId: null,
-      priority: 1,
-      maybePeriodic: null,
-      origin: { system: 'Root' },
-    }),
-  )
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [[[targetBlockNumber!], modifiedAgenda]],
-    },
-  })
-
   const scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBeGreaterThan(0)
-  // Find our scheduled task (unnamed, priority 0, with our specific call)
-  const ourTask = scheduled.find((item) => {
-    if (!item.isSome) return false
-    const task = item.unwrap()
-    return (
-      task.maybeId.isNone && task.priority.toNumber() === 0 && task.call.isInline && task.call.asInline.toHex() === call
-    )
-  })
-
-  expect(ourTask).toBeDefined()
-  expect(ourTask!.isSome).toBeTruthy()
-  await check(ourTask!.unwrap()).toMatchObject({
+  expect(scheduled.length).toBe(1)
+  // Note: Hardcoded index 0 is used, because this test only verifies that the origin is improper.
+  // It doesn't matter which specific task is being canceled - as long as the agenda is not empty,
+  // the test serves its purpose.
+  expect(scheduled[0].isSome).toBeTruthy()
+  await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
     call: { inline: call },
@@ -270,6 +340,9 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
+  // Note: Hardcoded index 0 is used, because this test only verifies that the origin is improper.
+  // It doesn't matter which specific task is being canceled - as long as the agenda is not empty,
+  // the test serves its purpose.
   expect(scheduled[0].isSome).toBeTruthy()
   await check(scheduled[0].unwrap())
     .redact({ redactKeys: /maybeId/ })
@@ -329,6 +402,9 @@ export async function scheduledCallExecutes<
   expect(scheduled.length).toBe(1)
   expect(scheduled[0].isSome).toBeTruthy()
 
+  // Note: Hardcoded index 0 is used, because this test only verifies that the origin is improper.
+  // It doesn't matter which specific task is being canceled - as long as the agenda is not empty,
+  // the test serves its purpose.
   await check(scheduled[0].unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
@@ -465,11 +541,22 @@ export async function cancelScheduledTask<
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
+  // Insert irrelevant task just before the total issuance change that was scheduled above
+  await prependTaskToAgenda(client, targetBlockNumber!)
 
-  const cancelTx = client.api.tx.scheduler.cancel(targetBlockNumber!, 0)
+  // Find this test's scheduled task (unnamed, priority 0, with the `adjustIssuance` call)
+  const adjustIssuanceCall = adjustIssuanceTx.method.toHex()
+  const {
+    task,
+    taskIndex,
+    scheduled: initialScheduled,
+  } = await findScheduledTask(client, targetBlockNumber!, adjustIssuanceCall, 0, null)
+
+  expect(initialScheduled.length).toBeGreaterThan(0)
+  expect(task).toBeDefined()
+  expect(taskIndex).toBeGreaterThanOrEqual(0)
+
+  const cancelTx = client.api.tx.scheduler.cancel(targetBlockNumber!, taskIndex)
 
   await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
@@ -480,14 +567,14 @@ export async function cancelScheduledTask<
   // 2. The other will be a `scheduler.Cancelled` event of the scheduled task
   await checkSystemEvents(client, 'scheduler', { section: 'balances', method: 'TotalIssuanceForced' })
     .redact({
-      redactKeys: /new|old|when|task/,
+      redactKeys: /new|old|when|task|index/,
     })
     .toMatchSnapshot('events for scheduled task cancellation')
 
-  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(0)
-
   await client.dev.newBlock()
+
+  const scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
+  expect(scheduled.length).toBe(0)
 }
 
 /**
@@ -531,9 +618,38 @@ export async function cancelScheduledNamedTask<
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
+  // Add a bogus task to the agenda to test robustness
+  const currentAgenda = await client.api.query.scheduler.agenda(targetBlockNumber!)
+  const bogusCall = client.api.tx.system.remarkWithEvent('bogus task').method.toHex()
+  const modifiedAgenda = [...currentAgenda]
+
+  modifiedAgenda.push(
+    client.api.createType('Option<PalletSchedulerScheduled>', {
+      call: { Inline: bogusCall },
+      maybeId: null,
+      priority: 1,
+      maybePeriodic: null,
+      origin: { system: 'Root' },
+    }),
+  )
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[targetBlockNumber!], modifiedAgenda]],
+    },
+  })
+
+  // Note: cancelNamed finds the task by ID, so position in the agenda doesn't matter.
+  // Verification that the named task exists, but no need to find its specific index.
+  const { task, scheduled: initialScheduled } = await findScheduledTask(
+    client,
+    targetBlockNumber!,
+    adjustIssuanceTx.method.toHex(),
+    0,
+    taskId,
+  )
+  expect(initialScheduled.length).toBeGreaterThan(1)
+  expect(task).toBeDefined()
 
   const cancelTx = client.api.tx.scheduler.cancelNamed(taskId)
 
@@ -547,10 +663,10 @@ export async function cancelScheduledNamedTask<
     })
     .toMatchSnapshot('events for scheduled task cancellation')
 
-  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(0)
-
   await client.dev.newBlock()
+
+  const scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
+  expect(scheduled.length).toBe(0)
 
   const events = await client.api.query.system.events()
   const filteredEvents = events.filter((ev) => {

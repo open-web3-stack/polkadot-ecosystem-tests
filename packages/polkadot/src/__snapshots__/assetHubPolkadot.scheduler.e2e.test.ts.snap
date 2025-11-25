@@ -66,7 +66,7 @@ exports[`Polkadot Asset Hub Scheduler > cancelling a scheduled task is possible 
 [
   {
     "data": {
-      "index": 0,
+      "index": "(redacted)",
       "when": "(redacted)",
     },
     "method": "Canceled",
