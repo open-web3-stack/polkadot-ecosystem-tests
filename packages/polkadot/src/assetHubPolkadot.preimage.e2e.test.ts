@@ -2,7 +2,7 @@ import { assetHubPolkadot } from '@e2e-test/networks/chains'
 import { basePreimageE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
 const testConfig: TestConfig = {
-  testSuiteName: 'Polkadot Asset Hub PreImage',
+  testSuiteName: 'Polkadot Asset Hub Preimage',
   addressEncoding: 0,
   blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
