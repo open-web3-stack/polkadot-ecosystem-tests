@@ -184,10 +184,41 @@ export async function cancelScheduledTaskBadOriginTest<
 
   await client.dev.newBlock()
 
+  // Add a bogus task to the agenda to test robustness
+  const currentAgenda = await client.api.query.scheduler.agenda(targetBlockNumber!)
+  const bogusCall = client.api.tx.system.remarkWithEvent('bogus task').method.toHex()
+  const modifiedAgenda = [...currentAgenda]
+
+  modifiedAgenda.push(
+    client.api.createType('Option<PalletSchedulerScheduled>', {
+      call: { Inline: bogusCall },
+      maybeId: null,
+      priority: 1,
+      maybePeriodic: null,
+      origin: { system: 'Root' },
+    }),
+  )
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[targetBlockNumber!], modifiedAgenda]],
+    },
+  })
+
   const scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  expect(scheduled.length).toBeGreaterThan(0)
+  // Find our scheduled task (unnamed, priority 0, with our specific call)
+  const ourTask = scheduled.find((item) => {
+    if (!item.isSome) return false
+    const task = item.unwrap()
+    return (
+      task.maybeId.isNone && task.priority.toNumber() === 0 && task.call.isInline && task.call.asInline.toHex() === call
+    )
+  })
+
+  expect(ourTask).toBeDefined()
+  expect(ourTask!.isSome).toBeTruthy()
+  await check(ourTask!.unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
     call: { inline: call },
