@@ -2,7 +2,7 @@ import { assetHubKusama } from '@e2e-test/networks/chains'
 import { basePreimageE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
 const testConfig: TestConfig = {
-  testSuiteName: 'Kusama Asset Hub PreImage',
+  testSuiteName: 'Kusama Asset Hub Preimage',
   addressEncoding: 2,
   blockProvider: 'NonLocal',
   asyncBacking: 'Enabled',
