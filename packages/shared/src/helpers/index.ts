@@ -144,19 +144,9 @@ export async function scheduleCallListWithOrigin(
     )
     .exhaustive()
 
-  const agenda = [
-    [
-      [scheduledBlock],
-      calls.map(({ call, origin }) => ({
-        call,
-        origin,
-      })),
-    ],
-  ]
-
   await client.dev.setStorage({
     Scheduler: {
-      agenda: agenda,
+      agenda: [[[scheduledBlock], calls]],
     },
   })
 }
