@@ -18,7 +18,6 @@ import {
   checkSystemEvents,
   getBlockNumber,
   nextSchedulableBlockNum,
-  scheduleCallListWithOrigin,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
@@ -60,23 +59,18 @@ import {
 /// -------
 
 /**
- * Prepend a task to the agenda at the given block number.
+ * Append some tasks to the agenda at the given block number.
  *
  * In the below tests involving the scheduler, a common pattern is to assume the agenda under test to be empty, as the
  * `scheduleInlineCallWithOrigin` helper function erases the block number's agenda before inserting a task into it.
  * However, if the task being inserted is itself a scheduling call, then this second call will be scheduled normally,
  * and won't truncate its block's agenda.
  *
- * If the block that the subsequent `schedule.schedule` call runs on contains tasks, then accessing the agenda, during
+ * Accessing the agenda with `agenda[0]` is an antipattern, and so this function is useful to check whether the method
+ * being used to search for a task (usually `find*ScheduledTask`) in a general manner is correct.
  * tests with `agenda[0]` may fail, as the first task in the agenda may or may not be the one being tested.
- *
- * This function necessarily *prepends* the task to the block number's agenda.
- * By optionally using this in test code, it helps avoid spurious occasional test failures, as the `agenda[0]` access
- * antipattern will fail when combined with it.
- * @param client
- * @param targetBlockNumber
  */
-async function prependTaskToAgenda<
+async function addDummyTasksToAgenda<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, targetBlockNumber: number): Promise<void> {
@@ -418,7 +412,7 @@ export async function scheduledCallExecutes<
   await client.dev.newBlock()
 
   // Insert irrelevant task to test agenda indexing
-  await prependTaskToAgenda(client, targetBlockNumber!)
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
 
   let { task, scheduled } = await findUnnamedScheduledTask(
     client,
@@ -494,7 +488,7 @@ export async function scheduledNamedCallExecutes<
   await client.dev.newBlock()
 
   // Insert irrelevant task to test agenda indexing
-  await prependTaskToAgenda(client, targetBlockNumber!)
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
 
   let { task, scheduled } = await findNamedScheduledTask(
     client,
@@ -555,7 +549,7 @@ export async function cancelScheduledTask<
   await client.dev.newBlock()
 
   // Insert irrelevant tasks just before the total issuance change that was scheduled above
-  await prependTaskToAgenda(client, targetBlockNumber!)
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
 
   // Find this test's scheduled task (unnamed, priority 0, with the `adjustIssuance` call)
   const adjustIssuanceCall = adjustIssuanceTx.method.toHex()
@@ -659,7 +653,7 @@ export async function cancelScheduledNamedTask<
   await client.dev.newBlock()
 
   // Insert irrelevant task to test agenda indexing
-  await prependTaskToAgenda(client, targetBlockNumber!)
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
 
   // -----------------------------------------------------------------------------
   // 2. Check data: verify task is in agenda and lookup points to correct location
@@ -969,7 +963,7 @@ export async function scheduleTaskAfterDelay<
     .exhaustive()
 
   // Insert irrelevant task to test robustness
-  await prependTaskToAgenda(client, targetBlock!)
+  await addDummyTasksToAgenda(client, targetBlock!)
 
   let { task, scheduled } = await findUnnamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0)
   expect(scheduled.length).toBeGreaterThan(1)
@@ -1060,11 +1054,17 @@ export async function scheduleNamedTaskAfterDelay<
     })
     .exhaustive()
 
-  let scheduled = await client.api.query.scheduler.agenda(targetBlock!)
+  const { task, scheduled } = await findNamedScheduledTask(
+    client,
+    targetBlock!,
+    adjustIssuanceTx.method.toHex(),
+    0,
+    taskId,
+  )
   expect(scheduled.length).toBe(1)
-  scheduled = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  expect(task).toBeDefined()
+
+  await check(task).toMatchObject({
     maybeId: `0x${Buffer.from(taskId).toString('hex')}`,
     priority: 0,
     call: { inline: adjustIssuanceTx.method.toHex() },
@@ -1087,8 +1087,8 @@ export async function scheduleNamedTaskAfterDelay<
     .toMatchSnapshot('events for scheduled task execution')
 
   // Check that the call was removed from the agenda
-  scheduled = await client.api.query.scheduler.agenda(currBlockNumber + delay + 1)
-  expect(scheduled.length).toBe(0)
+  const scheduledAfterExecution = await client.api.query.scheduler.agenda(currBlockNumber + delay + 1)
+  expect(scheduledAfterExecution.length).toBe(0)
 
   // Verify total issuance was increased
   const newTotalIssuance = await client.api.query.balances.totalIssuance()
