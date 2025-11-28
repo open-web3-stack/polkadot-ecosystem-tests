@@ -743,6 +743,127 @@ export async function cancelScheduledNamedTask<
 }
 
 /**
+ * Test cancellation of a named task using the unnamed cancellation function.
+ *
+ * This test verifies that a named task can be cancelled using `scheduler.cancel(block, index)`
+ * instead of `scheduler.cancelNamed(taskId)`. It checks that:
+ * 1. Schedule a named task for future execution.
+ * 2. Verify the task is in the agenda and lookup storage, with correct task ID, block number, and index.
+ * 3. Cancel the named task using `scheduler.cancel` with its block number and index.
+ * 4. Verify `Canceled` event is emitted, no `TotalIssuanceForced` event, lookup is removed, and task is removed from agenda.
+ */
+export async function cancelNamedTaskWithUnnamedCancellation<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
+
+  const taskId = sha256AsU8a('task_id')
+
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
+  let targetBlockNumber: number
+  match(testConfig.blockProvider)
+    .with('Local', () => {
+      targetBlockNumber = initialBlockNumber + 3 * offset
+    })
+    .with('NonLocal', () => {
+      targetBlockNumber = initialBlockNumber + 2 * offset
+    })
+    .exhaustive()
+
+  // ----------------------
+  // 1. Schedule named task
+  // ----------------------
+
+  const scheduleNamedTx = client.api.tx.scheduler.scheduleNamed(taskId, targetBlockNumber!, null, 0, adjustIssuanceTx)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleNamedTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  // Insert irrelevant task to test agenda indexing
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
+
+  // -----------------------------------------------------------------------------
+  // 2. Check data: verify task is in agenda and lookup points to correct location
+  // -----------------------------------------------------------------------------
+
+  const { task, taskIndex, scheduled } = await findNamedScheduledTask(
+    client,
+    targetBlockNumber!,
+    adjustIssuanceTx.method.toHex(),
+    0,
+    taskId,
+  )
+  expect(scheduled.length).toBeGreaterThanOrEqual(1)
+  expect(task).toBeDefined()
+  expect(taskIndex).toBeGreaterThanOrEqual(0)
+
+  // Verify lookup entry exists and points to correct block and index
+  const lookupBeforeCancellation = await client.api.query.scheduler.lookup(taskId)
+  expect(lookupBeforeCancellation.isSome).toBeTruthy()
+  const [lookupBlock, lookupIndex] = lookupBeforeCancellation.unwrap()
+  expect(lookupBlock.toNumber()).toBe(targetBlockNumber!)
+  expect(lookupIndex.toNumber()).toBe(taskIndex)
+
+  // -----------------------------------------------------------
+  // 3. Cancel the named task using unnamed cancellation function
+  // -----------------------------------------------------------
+
+  // Use `scheduler.cancel(block, index)` instead of `scheduler.cancelNamed(taskId)`
+  const cancelTx = client.api.tx.scheduler.cancel(targetBlockNumber!, taskIndex)
+
+  await scheduleInlineCallWithOrigin(client, cancelTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+
+  await client.dev.newBlock()
+
+  // -------------------------------------------------------------------------------
+  // 4. Check data and events: verify `Canceled` event, no execution, lookup removed
+  // -------------------------------------------------------------------------------
+
+  const currentBlockNumber = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
+  expect(currentBlockNumber).toBe(targetBlockNumber!)
+
+  // Check events - there should be one `Canceled` event
+  const events = await client.api.query.system.events()
+
+  const canceledEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Canceled'
+  })
+  expect(canceledEvents.length).toBe(1)
+
+  // Verify the `Canceled` event data
+  const canceledEvent = canceledEvents[0]
+  assert(client.api.events.scheduler.Canceled.is(canceledEvent.event))
+  const eventData = canceledEvent.event.data
+  expect(eventData.when.toNumber()).toBe(targetBlockNumber!)
+  expect(eventData.index.toNumber()).toBe(taskIndex)
+
+  // Verify lookup entry is removed after cancellation
+  const lookupAfterCancellation = await client.api.query.scheduler.lookup(taskId)
+  expect(lookupAfterCancellation.isNone).toBeTruthy()
+
+  // Verify the named task is removed from the agenda
+  const afterCancellation = await findNamedScheduledTask(
+    client,
+    targetBlockNumber!,
+    adjustIssuanceTx.method.toHex(),
+    0,
+    taskId,
+  )
+  expect(afterCancellation.task).toBeUndefined()
+}
+
+/**
  * Test cancellation of multiple named scheduled tasks and agenda cleanup.
  *
  * 1. Schedule 3 named tasks with total issuance adjustments of 3, 5, and 7 units
@@ -2305,6 +2426,11 @@ export function baseSchedulerE2ETests<
         kind: 'test',
         label: 'cancelling a named scheduled task is possible',
         testFn: async () => await cancelScheduledNamedTask(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'cancelling a named task with unnamed cancellation function is possible',
+        testFn: async () => await cancelNamedTaskWithUnnamedCancellation(chain, testConfig),
       },
       {
         kind: 'test',
