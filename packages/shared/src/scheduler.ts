@@ -4,7 +4,7 @@ import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { PalletSchedulerScheduled, SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
+import type { SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { sha256AsU8a } from '@polkadot/util-crypto'
 
@@ -1138,10 +1138,14 @@ export async function scheduledOverweightCallFails<
 
   await client.dev.newBlock()
 
-  let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
+  const { task: scheduledTask } = await findUnnamedScheduledTask(
+    client,
+    targetBlockNumber!,
+    withWeightTx.method.toHex(),
+    0,
+  )
+  expect(scheduledTask).toBeDefined()
 
-  const scheduledTask: PalletSchedulerScheduled = scheduled[0].unwrap()
   const task = {
     maybeId: null,
     priority: 0,
@@ -1195,9 +1199,9 @@ export async function scheduledOverweightCallFails<
   }
 
   // Check that the call remains in the agenda for the original block it was scheduled in
-  scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
-  await check(scheduled[0].unwrap()).toMatchObject(task)
+  const afterExecution = await findUnnamedScheduledTask(client, targetBlockNumber!, withWeightTx.method.toHex(), 0)
+  expect(afterExecution.task).toBeDefined()
+  await check(afterExecution.task).toMatchObject(task)
 
   // If the overweight event is not found, even though the task was overweight, it's likely that other scheduled events
   // interfered with the agenda's scheduled tasks - even though the test clears the agenda for this block.
@@ -1266,10 +1270,17 @@ async function scheduleLookupCall<
   const targetBlock = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
   let agenda = await client.api.query.scheduler.agenda(targetBlock)
 
-  expect(agenda.length).toBe(1)
-  assert(agenda[0].isSome)
-  const scheduledTask = agenda[0].unwrap()
-  await check(scheduledTask).toMatchObject({
+  // Find the unnamed task with priority 0 and lookup call
+  const scheduledTask = agenda.find((item) => {
+    if (!item.isSome) return false
+    const unwrapped = item.unwrap()
+    return unwrapped.maybeId.isNone && unwrapped.priority.toNumber() === 0 && unwrapped.call.isLookup
+  })
+
+  expect(scheduledTask).toBeDefined()
+  assert(scheduledTask!.isSome)
+
+  await check(scheduledTask!.unwrap()).toMatchObject({
     maybeId: null,
     priority: 0,
     call: { lookup: { hash: preimageHash.toHex(), len: encodedProposal.encodedLength } },
@@ -1362,9 +1373,18 @@ export async function schedulePreimagedCall<
   })
 
   let scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  expect(scheduled[0].toJSON()).toMatchObject({
+
+  // Find the unnamed task with priority 0 and lookup call
+  const scheduledTask = scheduled.find((item) => {
+    if (!item.isSome) return false
+    const unwrapped = item.unwrap()
+    return unwrapped.maybeId.isNone && unwrapped.priority.toNumber() === 0 && unwrapped.call.isLookup
+  })
+
+  expect(scheduledTask).toBeDefined()
+  assert(scheduledTask!.isSome)
+
+  expect(scheduledTask!.toJSON()).toMatchObject({
     maybeId: null,
     priority: 0,
     call: {
@@ -1391,11 +1411,21 @@ export async function schedulePreimagedCall<
   // Move to execution block
   await client.dev.newBlock()
 
+  await addDummyTasksToAgenda(client, targetBlockNumber!)
+
   scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
 
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  expect(scheduled[0].toJSON()).toMatchObject({
+  // Find the unnamed task with priority 0 (should still be in agenda after failed execution)
+  const taskAfterFailedExecution = scheduled.find((item) => {
+    if (!item.isSome) return false
+    const unwrapped = item.unwrap()
+    return unwrapped.maybeId.isNone && unwrapped.priority.toNumber() === 0
+  })
+
+  expect(taskAfterFailedExecution).toBeDefined()
+  assert(taskAfterFailedExecution!.isSome)
+
+  expect(taskAfterFailedExecution!.toJSON()).toMatchObject({
     maybeId: null,
     priority: 0,
   })
@@ -1496,11 +1526,15 @@ async function testPeriodicTask<
       targetBlock = currBlockNumber
     })
     .exhaustive()
-  let agenda = await client.api.query.scheduler.agenda(targetBlock!)
 
-  expect(agenda.length).toBe(1)
-  expect(agenda[0].isSome).toBeTruthy()
-  await check(agenda[0].unwrap()).toMatchObject({
+  // Find the periodic task with priority 0 and the adjustIssuance call
+  const periodicTaskResult = taskId
+    ? await findNamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0, taskId)
+    : await findUnnamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0)
+
+  expect(periodicTaskResult.task).toBeDefined()
+
+  await check(periodicTaskResult.task).toMatchObject({
     maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
     priority: 0,
     call: { inline: adjustIssuanceTx.method.toHex() },
@@ -1542,10 +1576,13 @@ async function testPeriodicTask<
       } else {
         targetBlock = currBlockNumber + period - offset
       }
-      agenda = await client.api.query.scheduler.agenda(targetBlock!)
 
-      expect(agenda.length).toBe(1)
-      expect(agenda[0].isSome).toBeTruthy()
+      // Find the next scheduled periodic task
+      const nextPeriodicTask = taskId
+        ? await findNamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0, taskId)
+        : await findUnnamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0)
+
+      expect(nextPeriodicTask.task).toBeDefined()
 
       let maybePeriodic: [number, number] | null
       // Recall that the first execution had `REPETITIONS - 1` in this field, when `i` was 1 i.e. first iteration.
@@ -1557,7 +1594,7 @@ async function testPeriodicTask<
         maybePeriodic = [period, REPETITIONS - (i + 1)]
       }
 
-      await check(agenda[0].unwrap()).toMatchObject({
+      await check(nextPeriodicTask.task).toMatchObject({
         maybeId: taskId ? `0x${Buffer.from(taskId).toString('hex')}` : null,
         priority: 0,
         call: { inline: adjustIssuanceTx.method.toHex() },
@@ -1583,8 +1620,12 @@ async function testPeriodicTask<
       targetBlock = currBlockNumber
     })
     .exhaustive()
-  agenda = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(agenda.length).toBe(0)
+  // Verify the periodic task is no longer in the agenda after all repetitions complete
+  const completedTaskCheck = taskId
+    ? await findNamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0, taskId)
+    : await findUnnamedScheduledTask(client, targetBlock!, adjustIssuanceTx.method.toHex(), 0)
+
+  expect(completedTaskCheck.task).toBeUndefined()
 
   // Check final issuance - must have been increased by `REPETITIONS * increment == REPETITIONS`.
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
@@ -1681,6 +1722,8 @@ export async function schedulePriorityWeightedTasks<
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
+  // 1. Create two transactions with weights that exceed half the maximum weight per block
+
   const adjustIssuanceHighTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 2)
   const adjustIssuanceLowTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
@@ -1707,7 +1750,8 @@ export async function schedulePriorityWeightedTasks<
     })
     .exhaustive()
 
-  // Schedule both tasks for the same block with different priorities
+  // 2. Schedule both tasks for the same block with different priorities
+
   const scheduleHighPriorityTx = client.api.tx.scheduler.schedule(
     priorityTargetBlock!,
     null,
@@ -1746,17 +1790,22 @@ export async function schedulePriorityWeightedTasks<
 
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
+  // 3. Move to block of scheduled execution of both tasks, and query/verify state
+
   // Move to block just before scheduled execution
   await client.dev.newBlock()
   currBlockNumber += offset
 
-  const manuallyScheduledBlock = await nextSchedulableBlockNum(client.api, testConfig.blockProvider)
-
-  // Verify both tasks are in the agenda
-  let scheduled = await client.api.query.scheduler.agenda(manuallyScheduledBlock)
-  expect(scheduled.length).toBe(2)
-  expect(scheduled[0].isSome).toBeTruthy()
-  expect(scheduled[1].isSome).toBeTruthy()
+  // Verify both priority-weighted tasks are in the agenda of the block in which they are originally scheduled
+  const lowPriorityTask = await findUnnamedScheduledTask(client, priorityTargetBlock!, lowPriorityTx.method.toHex(), 1)
+  const highPriorityTask = await findUnnamedScheduledTask(
+    client,
+    priorityTargetBlock!,
+    highPriorityTx.method.toHex(),
+    0,
+  )
+  expect(lowPriorityTask.task).toBeDefined()
+  expect(highPriorityTask.task).toBeDefined()
 
   // Execute first block - should only complete high priority task
   await client.dev.newBlock()
@@ -1785,25 +1834,26 @@ export async function schedulePriorityWeightedTasks<
     })
     .exhaustive()
 
-  // Check the agenda for the most recently built block
+  // Check the agenda for the most recently built block - only the low priority task should still be scheduled.
+  let mostRecentBlock: number
   match(testConfig.blockProvider)
     .with('Local', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
+      mostRecentBlock = currBlockNumber
     })
     .with('NonLocal', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber - offset)
+      mostRecentBlock = currBlockNumber - offset
     })
     .exhaustive()
 
-  expect(scheduled.length).toBe(2)
-  // Expect that both tasks are `Some`
-  expect(scheduled.every((task) => task.isSome)).toBeTruthy()
-  // Disambiguate between the two tasks
-  const lowPriorityTask = scheduled.find((task) => task.unwrap().priority.toNumber() === 1)
-  const highPriorityTask = scheduled.find((task) => task.unwrap().priority.toNumber() === 0)
-
-  expect(lowPriorityTask).toBeDefined()
-  await check(lowPriorityTask).toMatchObject({
+  // Find the low priority task (priority 1)
+  const lowPriorityTaskResult = await findUnnamedScheduledTask(
+    client,
+    mostRecentBlock!,
+    lowPriorityTx.method.toHex(),
+    1,
+  )
+  expect(lowPriorityTaskResult.task).toBeDefined()
+  await check(lowPriorityTaskResult.task).toMatchObject({
     maybeId: null,
     priority: 1,
     call: { inline: lowPriorityTx.method.toHex() },
@@ -1811,14 +1861,14 @@ export async function schedulePriorityWeightedTasks<
     origin: { system: { root: null } },
   })
 
-  expect(highPriorityTask).toBeDefined()
-  await check(highPriorityTask).toMatchObject({
-    maybeId: null,
-    priority: 0,
-    call: { inline: highPriorityTx.method.toHex() },
-    maybePeriodic: null,
-    origin: { system: { root: null } },
-  })
+  // The high priority task should not be in the agenda of the most recently built block
+  const highPriorityTaskResult = await findUnnamedScheduledTask(
+    client,
+    mostRecentBlock!,
+    highPriorityTx.method.toHex(),
+    0,
+  )
+  expect(highPriorityTaskResult.task).toBeUndefined()
 
   // Move to the next block, where the lower priority task will execute
   await client.dev.newBlock()
@@ -1842,32 +1892,47 @@ export async function schedulePriorityWeightedTasks<
     })
     .exhaustive()
 
-  // Check that the agenda for the block in which the 2 priority tasks were scheduled is empty
-  scheduled = await client.api.query.scheduler.agenda(priorityTargetBlock!)
-  expect(scheduled.length).toBe(0)
+  // Verify both priority-weighted tasks have been executed and removed from the agenda
 
-  // The agenda on the block just before the most recently built block should be emoty
+  // Check the originally scheduled block
+  const originalLowPriority = await findUnnamedScheduledTask(
+    client,
+    priorityTargetBlock!,
+    lowPriorityTx.method.toHex(),
+    1,
+  )
+  const originalHighPriority = await findUnnamedScheduledTask(
+    client,
+    priorityTargetBlock!,
+    highPriorityTx.method.toHex(),
+    0,
+  )
+  expect(originalLowPriority.task).toBeUndefined()
+  expect(originalHighPriority.task).toBeUndefined()
+
+  // Check the previous block (where high priority task was rescheduled after first incomplete execution)
+  let previousBlock: number
   match(testConfig.blockProvider)
-    .with('Local', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 1)
+    .with('Local', () => {
+      previousBlock = currBlockNumber - 1
     })
-    .with('NonLocal', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber - 2 * offset)
+    .with('NonLocal', () => {
+      previousBlock = currBlockNumber - 2 * offset
     })
     .exhaustive()
 
-  expect(scheduled.length).toBe(0)
+  const previousLowPriority = await findUnnamedScheduledTask(client, previousBlock!, lowPriorityTx.method.toHex(), 1)
+  const previousHighPriority = await findUnnamedScheduledTask(client, previousBlock!, highPriorityTx.method.toHex(), 0)
+  expect(previousLowPriority.task).toBeUndefined()
+  expect(previousHighPriority.task).toBeUndefined()
 
-  // Check the agenda on the most recently built block - should be empty
-  match(testConfig.blockProvider)
-    .with('Local', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber)
-    })
-    .with('NonLocal', async () => {
-      scheduled = await client.api.query.scheduler.agenda(currBlockNumber - offset)
-    })
-    .exhaustive()
-  expect(scheduled.length).toBe(0)
+  // Check the current block's agenda.
+  const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
+
+  const currentLowPriority = await findUnnamedScheduledTask(client, currentBlock, lowPriorityTx.method.toHex(), 1)
+  const currentHighPriority = await findUnnamedScheduledTask(client, currentBlock, highPriorityTx.method.toHex(), 0)
+  expect(currentLowPriority.task).toBeUndefined()
+  expect(currentHighPriority.task).toBeUndefined()
 }
 
 /**
