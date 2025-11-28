@@ -1997,18 +1997,22 @@ export async function scheduleWithRetryConfig<
   await client.dev.newBlock()
 
   // Check initial schedule
-  let scheduled = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+  const initialTask = await findUnnamedScheduledTask(client, targetBlock!, failingTx.method.toHex(), 1)
+  expect(initialTask.task).toBeDefined()
+  expect(initialTask.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(initialTask.task).toMatchObject(baseTask)
 
-  // Set retry configuration
-  const setRetryTx = client.api.tx.scheduler.setRetry([targetBlock!, 0], retryConfig.totalRetries, retryConfig.period)
+  // Set retry configuration using the actual task index
+  const setRetryTx = client.api.tx.scheduler.setRetry(
+    [targetBlock!, initialTask.taskIndex],
+    retryConfig.totalRetries,
+    retryConfig.period,
+  )
   await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
-  let retryOpt = await client.api.query.scheduler.retries([targetBlock!, 0])
+  let retryOpt = await client.api.query.scheduler.retries([targetBlock!, initialTask.taskIndex])
   assert(retryOpt.isSome)
   let retry = retryOpt.unwrap()
   await check(retry).toMatchObject(retryConfig)
@@ -2024,18 +2028,19 @@ export async function scheduleWithRetryConfig<
     .toMatchSnapshot('events for failed anonymous task execution')
 
   const rescheduledBlock = targetBlock! + period
-  // Verify task failed and was rescheduled
-  scheduled = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(scheduled.length).toBe(0)
-  scheduled = await client.api.query.scheduler.agenda(rescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  // Verify task failed and was rescheduled from targetBlock to rescheduledBlock
+  const taskAtOriginalBlock = await findUnnamedScheduledTask(client, targetBlock!, failingTx.method.toHex(), 1)
+  expect(taskAtOriginalBlock.task).toBeUndefined()
+
+  const rescheduledTask = await findUnnamedScheduledTask(client, rescheduledBlock!, failingTx.method.toHex(), 1)
+  expect(rescheduledTask.task).toBeDefined()
+  expect(rescheduledTask.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(rescheduledTask.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
 
-  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, 0])
+  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, rescheduledTask.taskIndex])
   assert(retryOpt.isSome)
   retry = retryOpt.unwrap()
   await check(retry).toMatchObject({
@@ -2043,7 +2048,7 @@ export async function scheduleWithRetryConfig<
     remaining: retryConfig.remaining - 1,
   })
 
-  const cancelRetryTx = client.api.tx.scheduler.cancelRetry([rescheduledBlock!, 0])
+  const cancelRetryTx = client.api.tx.scheduler.cancelRetry([rescheduledBlock!, rescheduledTask.taskIndex])
   await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
@@ -2058,15 +2063,15 @@ export async function scheduleWithRetryConfig<
   await client.dev.newBlock()
 
   // Verify task is still scheduled but without retry config
-  scheduled = await client.api.query.scheduler.agenda(rescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  const taskAfterCancelRetry = await findUnnamedScheduledTask(client, rescheduledBlock!, failingTx.method.toHex(), 1)
+  expect(taskAfterCancelRetry.task).toBeDefined()
+  expect(taskAfterCancelRetry.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(taskAfterCancelRetry.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
 
-  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, 0])
+  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, taskAfterCancelRetry.taskIndex])
   expect(retryOpt.isNone).toBeTruthy()
 }
 
@@ -2136,10 +2141,10 @@ export async function scheduleNamedWithRetryConfig<
   await client.dev.newBlock()
 
   // Check initial schedule
-  let scheduled = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject(baseTask)
+  const initialTask = await findNamedScheduledTask(client, targetBlock!, failingTx.method.toHex(), 1, taskId)
+  expect(initialTask.task).toBeDefined()
+  expect(initialTask.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(initialTask.task).toMatchObject(baseTask)
 
   // Set retry configuration
   const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
@@ -2147,7 +2152,7 @@ export async function scheduleNamedWithRetryConfig<
 
   await client.dev.newBlock()
 
-  let retryOpt = await client.api.query.scheduler.retries([targetBlock!, 0])
+  let retryOpt = await client.api.query.scheduler.retries([targetBlock!, initialTask.taskIndex])
   assert(retryOpt.isSome)
   let retry = retryOpt.unwrap()
   await check(retry).toMatchObject(retryConfig)
@@ -2163,19 +2168,20 @@ export async function scheduleNamedWithRetryConfig<
     .toMatchSnapshot('events for failed named task execution')
 
   const rescheduledBlock = targetBlock! + period
-  // Verify task failed and was rescheduled
-  scheduled = await client.api.query.scheduler.agenda(targetBlock!)
-  expect(scheduled.length).toBe(0)
-  scheduled = await client.api.query.scheduler.agenda(rescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  // Retries of named tasks have no id
-  await check(scheduled[0].unwrap()).toMatchObject({
+  // Verify task failed and was rescheduled from targetBlock to rescheduledBlock
+  const taskAtOriginalBlock = await findNamedScheduledTask(client, targetBlock!, failingTx.method.toHex(), 1, taskId)
+  expect(taskAtOriginalBlock.task).toBeUndefined()
+
+  // Retries of named tasks have no id, so use findUnnamedScheduledTask
+  const rescheduledTask = await findUnnamedScheduledTask(client, rescheduledBlock!, failingTx.method.toHex(), 1)
+  expect(rescheduledTask.task).toBeDefined()
+  expect(rescheduledTask.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(rescheduledTask.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
 
-  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, 0])
+  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, rescheduledTask.taskIndex])
   assert(retryOpt.isSome)
   retry = retryOpt.unwrap()
   await check(retry).toMatchObject({
@@ -2197,18 +2203,23 @@ export async function scheduleNamedWithRetryConfig<
 
   await client.dev.newBlock()
 
-  // Verify task is still scheduled...
-  scheduled = await client.api.query.scheduler.agenda(rescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
+  // Verify task is still scheduled (cancelRetryNamed has no effect on unnamed retries)
+  const taskAfterCancelRetryNamed = await findUnnamedScheduledTask(
+    client,
+    rescheduledBlock!,
+    failingTx.method.toHex(),
+    1,
+  )
+  expect(taskAfterCancelRetryNamed.task).toBeDefined()
+  expect(taskAfterCancelRetryNamed.taskIndex).toBeGreaterThanOrEqual(0)
   // Once again - retries of named tasks have no id
-  await check(scheduled[0].unwrap()).toMatchObject({
+  await check(taskAfterCancelRetryNamed.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
 
-  //  ... *with* a retry config
-  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, 0])
+  //  ... *with* a retry config (cancelRetryNamed has no effect on unnamed retries)
+  retryOpt = await client.api.query.scheduler.retries([rescheduledBlock!, taskAfterCancelRetryNamed.taskIndex])
   // A named task's retry will be unnamed, so its retry configuration must be cancelled
   // via `cancelRetry` - `cancelRetryNamed` has no effect.
   assert(retryOpt.isSome)
@@ -2223,21 +2234,19 @@ export async function scheduleNamedWithRetryConfig<
   const finalRescheduledBlock = rescheduledBlock! + period
 
   // In the meantime, the task has been retried a second time, and has scheduled for a third
-  scheduled = await client.api.query.scheduler.agenda(finalRescheduledBlock!)
-  expect(scheduled.length).toBeGreaterThan(0)
-  // Find the task by its call
-  const taskIndex = scheduled.findIndex((t) => {
-    if (!t.isSome) return false
-    const unwrapped = t.unwrap()
-    return unwrapped.call.isInline && unwrapped.call.asInline.toHex() === failingTx.method.toHex()
-  })
-  expect(taskIndex).toBeGreaterThanOrEqual(0)
-  expect(scheduled[taskIndex].isSome).toBeTruthy()
-  await check(scheduled[taskIndex].unwrap()).toMatchObject({
+  const finalRescheduledTask = await findUnnamedScheduledTask(
+    client,
+    finalRescheduledBlock!,
+    failingTx.method.toHex(),
+    1,
+  )
+  expect(finalRescheduledTask.task).toBeDefined()
+  expect(finalRescheduledTask.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(finalRescheduledTask.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
-  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, taskIndex])
+  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, finalRescheduledTask.taskIndex])
   assert(retryOpt.isSome)
   retry = retryOpt.unwrap()
   await check(retry).toMatchObject({
@@ -2246,26 +2255,24 @@ export async function scheduleNamedWithRetryConfig<
   })
 
   // Cancel the retry configuration with `cancelRetry`
-  cancelRetryTx = client.api.tx.scheduler.cancelRetry([finalRescheduledBlock!, taskIndex])
+  cancelRetryTx = client.api.tx.scheduler.cancelRetry([finalRescheduledBlock!, finalRescheduledTask.taskIndex])
   await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
-  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, taskIndex])
+  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, finalRescheduledTask.taskIndex])
   expect(retryOpt.isNone).toBeTruthy()
 
   // Check that the retry config cancellation does not affect the scheduled third try
-  scheduled = await client.api.query.scheduler.agenda(finalRescheduledBlock!)
-  expect(scheduled.length).toBeGreaterThan(0)
-  // Find the task by its call
-  const finalTaskIndex = scheduled.findIndex((t) => {
-    if (!t.isSome) return false
-    const unwrapped = t.unwrap()
-    return unwrapped.call.isInline && unwrapped.call.asInline.toHex() === failingTx.method.toHex()
-  })
-  expect(finalTaskIndex).toBeGreaterThanOrEqual(0)
-  expect(scheduled[finalTaskIndex].isSome).toBeTruthy()
-  await check(scheduled[finalTaskIndex].unwrap()).toMatchObject({
+  const taskAfterCancelRetry = await findUnnamedScheduledTask(
+    client,
+    finalRescheduledBlock!,
+    failingTx.method.toHex(),
+    1,
+  )
+  expect(taskAfterCancelRetry.task).toBeDefined()
+  expect(taskAfterCancelRetry.taskIndex).toBeGreaterThanOrEqual(0)
+  await check(taskAfterCancelRetry.task).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
