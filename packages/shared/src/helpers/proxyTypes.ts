@@ -28,7 +28,7 @@ export const KusamaProxyTypes: ProxyTypeMap = {
   ParaRegistration: 10,
 }
 
-export const AssetHubProxyTypes: ProxyTypeMap = {
+export const AssetHubPolkadotProxyTypes: ProxyTypeMap = {
   Any: 0,
   NonTransfer: 1,
   CancelProxy: 2,
@@ -36,6 +36,28 @@ export const AssetHubProxyTypes: ProxyTypeMap = {
   AssetOwner: 4,
   AssetManager: 5,
   Collator: 6,
+  Governance: 7,
+  Staking: 8,
+  NominationPools: 9,
+  Auction: 10,
+  ParaRegistration: 11,
+}
+
+export const AssetHubKusamaProxyTypes: ProxyTypeMap = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Assets: 3,
+  AssetOwner: 4,
+  AssetManager: 5,
+  Collator: 6,
+  Governance: 7,
+  Staking: 8,
+  NominationPools: 9,
+  Auction: 10,
+  ParaRegistration: 11,
+  Society: 12,
+  Spokesperson: 13,
 }
 
 export const CollectivesProxyTypes: ProxyTypeMap = {

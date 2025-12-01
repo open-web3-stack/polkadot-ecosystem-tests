@@ -5,6 +5,8 @@
 		"lint": "tsc --noEmit && biome check .",
 		"fix": "biome check --write .",
 		"test": "vitest",
+		"test:polkadot": "vitest packages/polkadot",
+		"test:kusama": "vitest packages/kusama",
 		"test:ui": "vitest --ui",
 		"update-env": "tsx scripts/update-env.ts",
 		"update-known-good": "tsx scripts/update-env.ts --update-known-good",
@@ -29,7 +31,10 @@
 		"@polkadot/types-create": "^16.0",
 		"@polkadot/types-known": "^16.0",
 		"esbuild": "0.25.9",
-		"@esbuild/*": "0.25.9"
+		"@esbuild/*": "0.25.9",
+		"glob": "^11.0.0",
+		"brace-expansion": "2.0.2",
+		"node-gyp": "^11.0.0"
 	},
 	"packageManager": "yarn@4.9.4",
 	"dependencies": {
@@ -38,18 +43,18 @@
 		"lodash": "^4.17.21",
 		"ts-pattern": "^5.8.0",
 		"typescript": "^5.9.2",
-		"vitest": "^3.2.4"
+		"vitest": "^4.0.13"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.2",
+		"@biomejs/biome": "2.3.2",
 		"@types/lodash": "^4.17.20",
-		"@types/node": "^24.3.0",
-		"@vitest/ui": "^3.2.4",
-		"dotenv": "^17.2.1",
+		"@types/node": "^24.9.2",
+		"@vitest/ui": "^4.0.13",
+		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.6",
-		"tsx": "^4.20.5",
-		"unplugin-swc": "^1.5.7",
+		"tsx": "^4.20.6",
+		"unplugin-swc": "^1.5.8",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"lint-staged": {

@@ -14,13 +14,13 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   check,
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
   updateCumulativeFees,
 } from './helpers/index.js'
@@ -139,7 +139,7 @@ interface ReserveAction<
  *
  * Examples: vested transfer, conviction voting.
  */
-interface LockAction<
+export interface LockAction<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 > {
@@ -188,6 +188,85 @@ interface DepositAction<
   isAvailable: (client: Client<TCustom, TInitStorages>) => boolean
 }
 
+// Reserve Actions
+
+export const stakingReserveAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): ReserveAction<TCustom, TInitStorages> => ({
+  name: 'staking bond',
+  execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<bigint> => {
+    const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
+    await sendTransaction(bondTx.signAsync(alice))
+    // Note: Don't call newBlock() here - let the caller handle it so fees can be tracked
+    return amount
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.staking,
+})
+
+export const nominationPoolReserveAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): ReserveAction<TCustom, TInitStorages> => ({
+  name: 'nomination pool',
+  execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<bigint> => {
+    const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+    const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+    // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
+    // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
+    // Thus, here 1 ED is subtracted so that the tests' checks are the same for all actions.
+    const virtualAmount = amount - existentialDeposit
+    const createPoolTx = client.api.tx.nominationPools.create(
+      virtualAmount,
+      alice.address,
+      alice.address,
+      alice.address,
+    )
+    await sendTransaction(createPoolTx.signAsync(alice, { nonce: aliceNonce }))
+    return virtualAmount
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.nominationPools,
+})
+
+export const manualReserveAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): ReserveAction<TCustom, TInitStorages> => ({
+  name: 'manual reserve',
+  execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<bigint> => {
+    // Get current account state
+    const currentAccount = await client.api.query.system.account(alice.address)
+    const currentFree = currentAccount.data.free.toBigInt()
+    const currentFrozen = currentAccount.data.frozen.toBigInt()
+    const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+    // Manually set reserved amount and reduce free balance
+    await client.dev.setStorage({
+      System: {
+        account: [
+          [
+            [alice.address],
+            {
+              nonce: aliceNonce,
+              consumers: 1 + currentAccount.consumers.toNumber(),
+              sufficients: currentAccount.sufficients.toNumber(),
+              providers: currentAccount.providers.toNumber(),
+              data: {
+                free: currentFree - amount,
+                reserved: amount,
+                frozen: currentFrozen,
+                flags: currentAccount.data.flags,
+              },
+            },
+          ],
+        ],
+      },
+    })
+    return amount
+  },
+  isAvailable: () => true, // Always available
+})
+
 /**
  * Create default reserve actions to be used in the liquidity restriction tests.
  *
@@ -199,75 +278,77 @@ export function createDefaultReserveActions<
   TInitStorages extends Record<string, Record<string, any>>,
 >(): ReserveAction<TCustom, TInitStorages>[] {
   return [
-    {
-      name: 'staking bond',
-      execute: async (client, alice, amount) => {
-        const bondTx = client.api.tx.staking.bond(amount, { Staked: null })
-        await sendTransaction(bondTx.signAsync(alice))
-        // Note: Don't call newBlock() here - let the caller handle it so fees can be tracked
-        return amount
-      },
-      isAvailable: (client) => !!client.api.tx.staking,
-    },
-    {
-      name: 'nomination pool',
-      execute: async (client, alice, amount) => {
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-        const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-        // See `nomination_pools::do_create`, but TL;DR is that the total amount reserved from an account
-        // that creates a nomination poolis the amount passed to `create` plus the existential deposit.
-        // Thus, here 1 ED is subtracted so that the tests' checks are the same for all actions.
-        const virtualAmount = amount - existentialDeposit
-        const createPoolTx = client.api.tx.nominationPools.create(
-          virtualAmount,
-          alice.address,
-          alice.address,
-          alice.address,
-        )
-        await sendTransaction(createPoolTx.signAsync(alice, { nonce: aliceNonce }))
-        return virtualAmount
-      },
-      isAvailable: (client) => !!client.api.tx.nominationPools,
-    },
-    // This action manually sets storage to simulate an existing reserve.
-    // Helpful on networks where staking or nomination pools are not available i.e. most of them.
-    {
-      name: 'manual reserve',
-      execute: async (client, alice, amount) => {
-        // Get current account state
-        const currentAccount = await client.api.query.system.account(alice.address)
-        const currentFree = currentAccount.data.free.toBigInt()
-        const currentFrozen = currentAccount.data.frozen.toBigInt()
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-
-        // Manually set reserved amount and reduce free balance
-        await client.dev.setStorage({
-          System: {
-            account: [
-              [
-                [alice.address],
-                {
-                  nonce: aliceNonce,
-                  consumers: 1 + currentAccount.consumers.toNumber(),
-                  sufficients: currentAccount.sufficients.toNumber(),
-                  providers: currentAccount.providers.toNumber(),
-                  data: {
-                    free: currentFree - amount,
-                    reserved: amount,
-                    frozen: currentFrozen,
-                    flags: currentAccount.data.flags,
-                  },
-                },
-              ],
-            ],
-          },
-        })
-        return amount
-      },
-      isAvailable: () => true, // Always available
-    },
+    stakingReserveAction<TCustom, TInitStorages>(),
+    nominationPoolReserveAction<TCustom, TInitStorages>(),
+    manualReserveAction<TCustom, TInitStorages>(),
   ]
 }
+
+// Lock Actions
+
+export const vestedTransferLockAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): LockAction<TCustom, TInitStorages> => ({
+  name: 'vested transfer',
+  execute: async (
+    client: Client<TCustom, TInitStorages>,
+    alice: KeyringPair,
+    amount: bigint,
+    testConfig: TestConfig,
+  ): Promise<void> => {
+    const offset = blockProviderOffset(testConfig)
+    const number = await getBlockNumber(client.api, testConfig.blockProvider)
+    const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
+    const startingBlock = BigInt(number) + 3n * BigInt(offset)
+
+    const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
+      locked: amount,
+      perBlock: perBlock,
+      startingBlock: startingBlock,
+    })
+    await sendTransaction(vestedTransferTx.signAsync(alice))
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.vesting,
+})
+
+export const manualLockAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): LockAction<TCustom, TInitStorages> => ({
+  name: 'manual lock',
+  execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<void> => {
+    // Get current account state
+    const currentAccount = await client.api.query.system.account(alice.address)
+    const currentFree = currentAccount.data.free.toBigInt()
+    const currentReserved = currentAccount.data.reserved.toBigInt()
+    const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
+
+    // Manually set frozen amount, and don't modify free balance as frozen constraint works on the total
+    await client.dev.setStorage({
+      System: {
+        account: [
+          [
+            [alice.address],
+            {
+              nonce: aliceNonce,
+              consumers: 1 + currentAccount.consumers.toNumber(),
+              providers: currentAccount.providers.toNumber(),
+              sufficients: currentAccount.sufficients.toNumber(),
+              data: {
+                free: currentFree,
+                reserved: currentReserved,
+                frozen: amount,
+                flags: currentAccount.data.flags,
+              },
+            },
+          ],
+        ],
+      },
+    })
+  },
+  isAvailable: () => true, // Always available
+})
 
 /**
  * Define the lock actions to be used in the liquidity restriction tests.
@@ -278,62 +359,63 @@ export function createDefaultLockActions<
   TCustom extends Record<string, unknown>,
   TInitStorages extends Record<string, Record<string, any>>,
 >(): LockAction<TCustom, TInitStorages>[] {
-  return [
-    {
-      name: 'vested transfer',
-      execute: async (client, alice, amount, testConfig) => {
-        const offset = schedulerOffset(testConfig)
-        const number = await getBlockNumber(client.api, testConfig.blockProvider)
-        const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
-        const startingBlock = BigInt(number) + 3n * BigInt(offset)
-
-        const vestedTransferTx = client.api.tx.vesting.vestedTransfer(alice.address, {
-          locked: amount,
-          perBlock: perBlock,
-          startingBlock: startingBlock,
-        })
-        await sendTransaction(vestedTransferTx.signAsync(alice))
-      },
-      isAvailable: (client) => !!client.api.tx.vesting,
-    },
-    // This action manually sets storage to simulate an existing lock.
-    // Helpful on networks where vesting is not available i.e. most of them.
-    {
-      name: 'manual lock',
-      execute: async (client, alice, amount) => {
-        // Get current account state
-        const currentAccount = await client.api.query.system.account(alice.address)
-        const currentFree = currentAccount.data.free.toBigInt()
-        const currentReserved = currentAccount.data.reserved.toBigInt()
-        const aliceNonce = (await client.api.rpc.system.accountNextIndex(alice.address)).toNumber()
-
-        // Manually set frozen amount, and don't modify free balance as frozen constraint works on the total
-        await client.dev.setStorage({
-          System: {
-            account: [
-              [
-                [alice.address],
-                {
-                  nonce: aliceNonce,
-                  consumers: 1 + currentAccount.consumers.toNumber(),
-                  providers: currentAccount.providers.toNumber(),
-                  sufficients: currentAccount.sufficients.toNumber(),
-                  data: {
-                    free: currentFree,
-                    reserved: currentReserved,
-                    frozen: amount,
-                    flags: currentAccount.data.flags,
-                  },
-                },
-              ],
-            ],
-          },
-        })
-      },
-      isAvailable: () => true, // Always available
-    },
-  ]
+  return [vestedTransferLockAction<TCustom, TInitStorages>(), manualLockAction<TCustom, TInitStorages>()]
 }
+
+// Deposit Actions
+
+export const proxyAdditionDepositAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): DepositAction<TCustom, TInitStorages> => ({
+  name: 'proxy addition',
+  createTransaction: async (client: Client<TCustom, TInitStorages>) => {
+    const bob = testAccounts.bob
+    return client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  },
+  calculateDeposit: async (client: Client<TCustom, TInitStorages>) => {
+    const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
+    const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
+    return proxyDepositFactor * 1n + proxyDepositBase
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.proxy,
+})
+
+export const multisigCreationDepositAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): DepositAction<TCustom, TInitStorages> => ({
+  name: 'multisig creation',
+  createTransaction: async (client: Client<TCustom, TInitStorages>) => {
+    const bob = testAccounts.bob
+    const call = client.api.tx.system.remark('multisig test')
+    return client.api.tx.multisig.asMulti(2, [bob.address], null, call, { refTime: 1000000, proofSize: 1000 })
+  },
+  calculateDeposit: async (client: Client<TCustom, TInitStorages>) => {
+    const depositBase = client.api.consts.multisig.depositBase.toBigInt()
+    const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
+    return depositBase + depositFactor * 2n
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.multisig,
+})
+
+export const referendumSubmissionDepositAction = <
+  TCustom extends Record<string, unknown>,
+  TInitStorages extends Record<string, Record<string, any>>,
+>(): DepositAction<TCustom, TInitStorages> => ({
+  name: 'referendum submission',
+  createTransaction: async (client: Client<TCustom, TInitStorages>) => {
+    return client.api.tx.referenda.submit(
+      { Origins: 'SmallTipper' } as any,
+      { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
+      { After: 1 },
+    )
+  },
+  calculateDeposit: async (client: Client<TCustom, TInitStorages>) => {
+    return client.api.consts.referenda.submissionDeposit.toBigInt()
+  },
+  isAvailable: (client: Client<TCustom, TInitStorages>) => !!client.api.tx.referenda,
+})
 
 /**
  * Define the deposit-requiring actions that will trigger the liquidity restriction error.
@@ -350,47 +432,9 @@ export function createDefaultDepositActions<
   TInitStorages extends Record<string, Record<string, any>>,
 >(): DepositAction<TCustom, TInitStorages>[] {
   return [
-    {
-      name: 'proxy addition',
-      createTransaction: async (client) => {
-        const bob = testAccounts.bob
-        return client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
-      },
-      calculateDeposit: async (client) => {
-        const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
-        const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
-        return proxyDepositFactor * 1n + proxyDepositBase
-      },
-      isAvailable: (client) => !!client.api.tx.proxy,
-    },
-    {
-      name: 'multisig creation',
-      createTransaction: async (client) => {
-        const bob = testAccounts.bob
-        const call = client.api.tx.system.remark('multisig test')
-        return client.api.tx.multisig.asMulti(2, [bob.address], null, call, { refTime: 1000000, proofSize: 1000 })
-      },
-      calculateDeposit: async (client) => {
-        const depositBase = client.api.consts.multisig.depositBase.toBigInt()
-        const depositFactor = client.api.consts.multisig.depositFactor.toBigInt()
-        return depositBase + depositFactor * 2n
-      },
-      isAvailable: (client) => !!client.api.tx.multisig,
-    },
-    {
-      name: 'referendum submission',
-      createTransaction: async (client) => {
-        return client.api.tx.referenda.submit(
-          { Origins: 'SmallTipper' } as any,
-          { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
-          { After: 1 },
-        )
-      },
-      calculateDeposit: async (client) => {
-        return client.api.consts.referenda.submissionDeposit.toBigInt()
-      },
-      isAvailable: (client) => !!client.api.tx.referenda,
-    },
+    proxyAdditionDepositAction<TCustom, TInitStorages>(),
+    multisigCreationDepositAction<TCustom, TInitStorages>(),
+    referendumSubmissionDepositAction<TCustom, TInitStorages>(),
   ]
 }
 
@@ -495,7 +539,8 @@ export interface AccountsTestConfig<
 }
 
 /**
- * Create default accounts test configuration
+ * Create accounts test configuration, with optional overrides for each of field.
+ * If none are provided, the default configuration is returned.
  */
 export function createAccountsConfig<
   TCustom extends Record<string, unknown>,
@@ -512,6 +557,10 @@ export function createAccountsConfig<
 
 /**
  * Default accounts E2E test configuration.
+ *
+ * 1. Liquidity restriction tests are expected to fail
+ * 2. The relay chain field is empty, meaning the chain has the `scheduler` pallet available
+ * 3. The action lists used in liq. restriction tests are all defaults
  */
 const defaultAccountsTestConfig = <
   TCustom extends Record<string, unknown>,
@@ -898,18 +947,12 @@ async function transferAllowDeathWithReserveTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // Create a reserve action - use the first available one
-  const reserveActions = createDefaultReserveActions<TCustom, TInitStorages>()
-  const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
-
-  if (!availableReserveAction) {
-    console.error('No reserve actions available for this chain')
-    return
-  }
+  // Use the manual reserve action
+  const reserveAction = manualReserveAction<TCustom, TInitStorages>()
 
   // 2. Execute reserve action to create a consumer
 
-  const reservedAmount = await availableReserveAction.execute(client, alice, existentialDeposit * 2n)
+  const reservedAmount = await reserveAction.execute(client, alice, existentialDeposit * 2n)
   await client.dev.newBlock()
 
   // Get Alice's account state after reserve
@@ -1496,18 +1539,12 @@ async function forceTransferWithReserveTest<
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
 
-  // Create a reserve action - use the first available one
-  const reserveActions = createDefaultReserveActions<TCustom, TInitStoragesBase>()
-  const availableReserveAction = reserveActions.find((action) => action.isAvailable(baseClient))
-
-  if (!availableReserveAction) {
-    console.error('No reserve actions available for this chain')
-    return
-  }
+  // Use the manual reserve action for this test to keep it simple
+  const reserveAction = manualReserveAction<TCustom, TInitStoragesBase>()
 
   // 2. Execute reserve action to create a consumer
 
-  const reservedAmount = await availableReserveAction.execute(baseClient, alice, existentialDeposit * 20n)
+  const reservedAmount = await reserveAction.execute(baseClient, alice, existentialDeposit * 20n)
   await baseClient.dev.newBlock()
 
   // Get Alice's account state after reserve
@@ -1950,18 +1987,12 @@ async function transferAllWithReserveTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // Create a reserve action - use the first available one
-  const reserveActions = createDefaultReserveActions<TCustom, TInitStorages>()
-  const availableReserveAction = reserveActions.find((action) => action.isAvailable(client))
-
-  if (!availableReserveAction) {
-    console.error('No reserve actions available for this chain')
-    return
-  }
+  // Use manual reservation action
+  const reserveAction = manualReserveAction<TCustom, TInitStorages>()
 
   // 2. Execute reserve action to create a consumer
 
-  const reservedAmount = await availableReserveAction.execute(client, alice, existentialDeposit * 20n)
+  const reservedAmount = await reserveAction.execute(client, alice, 1n)
   await client.dev.newBlock()
 
   // Initialize fee tracking map before any transactions
@@ -2018,6 +2049,17 @@ async function transferAllWithReserveTest<
   // 5. Check events
 
   const events = await client.api.query.system.events()
+
+  // Check endowment event
+  const endowedEvent = events.find((record) => {
+    const { event } = record
+    return event.section === 'balances' && event.method === 'Endowed'
+  })
+  expect(endowedEvent).toBeDefined()
+  assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
+  const endowedEventData = endowedEvent!.event.data
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(bobAccount.data.free.toBigInt())
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, testConfig.addressEncoding))
 
   // Verify no `KilledAccount˝ events are present
   const killedAccountEvent = events.find((record) => {
@@ -3428,9 +3470,9 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for first issuance change',
-  )
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({ number: true })
+    .toMatchSnapshot('events for first issuance change')
 
   // 3. Verify the increase worked
 
@@ -3484,9 +3526,9 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' }).toMatchSnapshot(
-    'events for second issuance change',
-  )
+  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
+    .redact({ number: true })
+    .toMatchSnapshot('events for second issuance change')
 
   // 5. Verify the decrease worked
 
@@ -4115,8 +4157,11 @@ async function testLiquidityRestrictionForAction<
       expect(account.data.frozen.toBigInt()).toBe(lockAmount)
     })
     .exhaustive()
+<<<<<<< HEAD
 
   await result
+=======
+>>>>>>> master
 }
 
 /// ----------
@@ -4455,13 +4500,17 @@ export const accountsE2ETests = <
       children: (() => {
         const testCases: Array<{ kind: 'test'; label: string; testFn: () => Promise<void> }> = []
 
+        if (!accountsCfg.actions) {
+          throw new Error('accountsCfg.actions is required')
+        }
+
         // Combinatorially generate test cases for as many combinations of reserves, locks and deposit actions that
         // trigger the liquidity restriction error.
         // If a network does not support any of the generated test cases, a log is shown, and the test is skipped.
         // At worst, this will require 3 roundtrips to the chopsticks local node; at best 1.
-        for (const reserveAction of accountsCfg.actions?.reserveActions!) {
-          for (const lockAction of accountsCfg.actions?.lockActions!) {
-            for (const depositAction of accountsCfg.actions?.depositActions!) {
+        for (const reserveAction of accountsCfg.actions.reserveActions!) {
+          for (const lockAction of accountsCfg.actions.lockActions!) {
+            for (const depositAction of accountsCfg.actions.depositActions!) {
               testCases.push({
                 kind: 'test' as const,
                 label: `liquidity restriction error: funds locked via ${reserveAction.name} and ${lockAction.name}, triggered via ${depositAction.name}`,

@@ -12,6 +12,7 @@ import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
 import {
+  blockProviderOffset,
   check,
   checkEvents,
   checkSystemEvents,
@@ -19,7 +20,6 @@ import {
   nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
   scheduleLookupCallWithOrigin,
-  schedulerOffset,
   type TestConfig,
 } from './helpers/index.js'
 
@@ -49,7 +49,7 @@ import {
  * 1. on a relay chain at block `r`, to schedule a task for execution next block, use `r + 1`
  * 2. on a parachain at block `p` and with last known relay block number `r`, to schedule a task for execution next
  *    block, use `r` - **not** `p + 1` or `r + 1`
- *    - on parachains with async backing, use `r + 2` to schedule a task for execution the block after the next,
+ *    - on parachains with async backing, use `r` to schedule a task for execution the block after the next,
  *      **not** `r + 2`
  */
 
@@ -167,7 +167,7 @@ export async function cancelScheduledTaskBadOriginTest<
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -218,7 +218,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
 
   const call = client.api.tx.system.remark('test').method.toHex()
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -275,7 +275,7 @@ export async function scheduledCallExecutes<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -345,7 +345,7 @@ export async function scheduledNamedCallExecutes<
   const taskId = sha256AsU8a('task_id')
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -417,7 +417,7 @@ export async function cancelScheduledTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -478,7 +478,7 @@ export async function cancelScheduledNamedTask<
   const taskId = sha256AsU8a('task_id')
 
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let targetBlockNumber: number
   match(testConfig.blockProvider)
     .with('Local', () => {
@@ -549,7 +549,7 @@ export async function scheduleTaskAfterDelay<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // In case of non-local block providers, spans of blocks must be specified in terms of the nonlocal
   // provider.
   // This multiplication is because on parachains with AB, each para block spans 2 relay blocks.
@@ -641,7 +641,7 @@ export async function scheduleNamedTaskAfterDelay<
 
   let currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // See above note in `scheduleTaskAfterDelay`
   const delay = 5 * offset
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, delay, null, 0, adjustIssuanceTx)
@@ -733,7 +733,7 @@ export async function scheduledOverweightCallFails<
 
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   // Target block is two blocks in the future - see the notes about parachain scheduling differences.
   let targetBlockNumber: number
@@ -782,35 +782,62 @@ export async function scheduledOverweightCallFails<
 
   await checkSystemEvents(client, 'scheduler')
     .redact({
-      redactKeys: /task/,
+      redactKeys: /task|when/,
     })
     .toMatchSnapshot('events when scheduling overweight task')
 
-  const events = await client.api.query.system.events()
-  const [overweightEvent] = events.filter((record) => {
+  let events = await client.api.query.system.events()
+  let overweightEvent = events.find((record) => {
     const { event } = record
     return event.section === 'scheduler' && event.method === 'PermanentlyOverweight'
   })
+  // This flag is set to `true` if an overweight event is found immediately after execution.
+  // An overweight event is emitted only if the task is the first to be executed in a given block, and fails
+  // execution due to being overweight.
+  // If this path is taken, the test is likely running on a pre-AHM runtime, or the collectives network.
+  let overweightEventFound = false
+  if (overweightEvent) {
+    overweightEventFound = true
 
-  assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
-  expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
-  expect(overweightEvent.event.data.id.toJSON()).toBeNull()
+    assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent.event))
+    expect(overweightEvent.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
+    expect(overweightEvent.event.data.id.toJSON()).toBeNull()
+
+    const incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
+  }
 
   // Check that the call remains in the agenda for the original block it was scheduled in
   scheduled = await client.api.query.scheduler.agenda(targetBlockNumber!)
   expect(scheduled.length).toBe(1)
-
   await check(scheduled[0].unwrap()).toMatchObject(task)
 
-  // Since the scheduler pallet signaled it as permanently overweight, it should set the
-  // `incompleteSince` storage item.
-  const incompleteSince = await client.api.query.scheduler.incompleteSince()
-  // TODO: this change only recently made it to Kusama. Update this when resolved.
-  if (chain.name.toLowerCase().includes('kusama')) {
+  // If the overweight event is not found, even though the task was overweight, it's likely that other scheduled events
+  // interfered with the agenda's scheduled tasks - even though the test clears the agenda for this block.
+  // Possible cause: `voterList.ScoreUpdated` from the `on_idle` hook. Use `client.pause()` to verify.
+  // IF this path is taken, the test is likely running on a post-migration asset hub runtime.
+  if (!overweightEventFound) {
+    let incompleteSince = await client.api.query.scheduler.incompleteSince()
     assert(incompleteSince.isSome)
-    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + 1)
-  } else {
-    assert(incompleteSince.isNone)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber!)
+
+    await client.dev.newBlock()
+    events = await client.api.query.system.events()
+
+    overweightEvent = events.find((record) => {
+      const { event } = record
+      return event.section === 'scheduler' && event.method === 'PermanentlyOverweight'
+    })
+
+    expect(overweightEvent).toBeDefined()
+    assert(client.api.events.scheduler.PermanentlyOverweight.is(overweightEvent!.event))
+    expect(overweightEvent!.event.data.task.toJSON()).toMatchObject([targetBlockNumber!, 0])
+    expect(overweightEvent!.event.data.id.toJSON()).toBeNull()
+
+    incompleteSince = await client.api.query.scheduler.incompleteSince()
+    assert(incompleteSince.isSome)
+    expect(incompleteSince.unwrap().toNumber()).toBe(targetBlockNumber! + offset + 1)
   }
 }
 
@@ -912,7 +939,7 @@ export async function schedulePreimagedCall<
 
   // Schedule using the preimage hash
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
   // at `n + 2`.
   let targetBlockNumber: number
@@ -1057,7 +1084,7 @@ async function testPeriodicTask<
 ) {
   const [client] = await setupNetworks(chain)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   // Manually schedule `scheduleTx` to run on the next block.
   await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
@@ -1194,7 +1221,7 @@ export async function schedulePeriodicTask<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const delay = match(testConfig.blockProvider)
     .with('Local', () => 2 * offset)
     // Parachain scheduling differences - see notes above.
@@ -1231,7 +1258,7 @@ export async function scheduleNamedPeriodicTask<
   const taskId = sha256AsU8a('task_id')
   const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   const delay = match(testConfig.blockProvider)
     .with('Local', () => 2 * offset)
     // Recall: to schedule a task on the next block of a parachain, the offset is 0. On the block after that one,
@@ -1283,7 +1310,7 @@ export async function schedulePriorityWeightedTasks<
 
   const initBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
   let currBlockNumber = initBlockNumber
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
   let priorityTargetBlock: number
   match(testConfig.blockProvider)
     .with('Local', async () => {
@@ -1416,24 +1443,18 @@ export async function schedulePriorityWeightedTasks<
 
   // Verify `incompleteSince` has been unset
   const finalIncompleteSince = await client.api.query.scheduler.incompleteSince()
-  if (chain.name.toLowerCase().includes('kusama')) {
-    // Kusama is using a new version of the scheduler pallet prepared for general applicability, including in
-    // post-AHM asset hubs.
-    // It always sets `incompleteSince` to `n + 1`, where `n` is the block in which the agenda was last
-    // serviced.
-    // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
-    expect(finalIncompleteSince.isSome).toBeTruthy()
-    match(testConfig.blockProvider)
-      .with('Local', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
-      })
-      .with('NonLocal', async () => {
-        expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
-      })
-      .exhaustive()
-  } else {
-    expect(finalIncompleteSince.isNone).toBeTruthy()
-  }
+  // The behavior of the scheduler pallet going forward is now such that it always sets `incompleteSince` to `n + 1`,
+  // where `n` is the block in which the agenda was last serviced.
+  // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
+  expect(finalIncompleteSince.isSome).toBeTruthy()
+  match(testConfig.blockProvider)
+    .with('Local', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
+    })
+    .with('NonLocal', async () => {
+      expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber - 1)
+    })
+    .exhaustive()
 
   // Check that the agenda for the block in which the 2 priority tasks were scheduled is empty
   scheduled = await client.api.query.scheduler.agenda(priorityTargetBlock!)
@@ -1495,7 +1516,7 @@ export async function scheduleWithRetryConfig<
     },
   }
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   const period = 3 * offset
 
@@ -1634,7 +1655,7 @@ export async function scheduleNamedWithRetryConfig<
     },
   }
 
-  const offset = schedulerOffset(testConfig)
+  const offset = blockProviderOffset(testConfig)
 
   const period = 3 * offset
 
@@ -1752,13 +1773,20 @@ export async function scheduleNamedWithRetryConfig<
 
   // In the meantime, the task has been retried a second time, and has scheduled for a third
   scheduled = await client.api.query.scheduler.agenda(finalRescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  expect(scheduled.length).toBeGreaterThan(0)
+  // Find the task by its call
+  const taskIndex = scheduled.findIndex((t) => {
+    if (!t.isSome) return false
+    const unwrapped = t.unwrap()
+    return unwrapped.call.isInline && unwrapped.call.asInline.toHex() === failingTx.method.toHex()
+  })
+  expect(taskIndex).toBeGreaterThanOrEqual(0)
+  expect(scheduled[taskIndex].isSome).toBeTruthy()
+  await check(scheduled[taskIndex].unwrap()).toMatchObject({
     ...baseTask,
     maybeId: null,
   })
-  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, 0])
+  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, taskIndex])
   assert(retryOpt.isSome)
   retry = retryOpt.unwrap()
   await check(retry).toMatchObject({
@@ -1767,19 +1795,26 @@ export async function scheduleNamedWithRetryConfig<
   })
 
   // Cancel the retry configuration with `cancelRetry`
-  cancelRetryTx = client.api.tx.scheduler.cancelRetry([finalRescheduledBlock!, 0])
+  cancelRetryTx = client.api.tx.scheduler.cancelRetry([finalRescheduledBlock!, taskIndex])
   await scheduleInlineCallWithOrigin(client, cancelRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
 
   await client.dev.newBlock()
 
-  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, 0])
+  retryOpt = await client.api.query.scheduler.retries([finalRescheduledBlock!, taskIndex])
   expect(retryOpt.isNone).toBeTruthy()
 
   // Check that the retry config cancellation does not affect the scheduled third try
   scheduled = await client.api.query.scheduler.agenda(finalRescheduledBlock!)
-  expect(scheduled.length).toBe(1)
-  expect(scheduled[0].isSome).toBeTruthy()
-  await check(scheduled[0].unwrap()).toMatchObject({
+  expect(scheduled.length).toBeGreaterThan(0)
+  // Find the task by its call
+  const finalTaskIndex = scheduled.findIndex((t) => {
+    if (!t.isSome) return false
+    const unwrapped = t.unwrap()
+    return unwrapped.call.isInline && unwrapped.call.asInline.toHex() === failingTx.method.toHex()
+  })
+  expect(finalTaskIndex).toBeGreaterThanOrEqual(0)
+  expect(scheduled[finalTaskIndex].isSome).toBeTruthy()
+  await check(scheduled[finalTaskIndex].unwrap()).toMatchObject({
     ...baseTask,
     maybeId: null,
   })

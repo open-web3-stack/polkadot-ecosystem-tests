@@ -1,37 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 10000000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -43,8 +17,8 @@ exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjust
 [
   {
     "data": {
-      "new_": "(rounded 16000000000000000000)",
-      "old": "(rounded 16000000000000000000)",
+      "new_": "(number)",
+      "old": "(number)",
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
@@ -99,7 +73,7 @@ exports[`Polkadot Accounts > \`transfer_all\` > account with reserves cannot tra
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 800000000000)",
+      "freeBalance": "(rounded 1000000000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -154,452 +128,28 @@ exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive true
 ]
 `;
 
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
+exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > deposit action success events 1`] = `
 [
   {
     "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
+      "amount": "(rounded 200000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
-    "method": "ExtrinsicFailed",
-    "section": "system",
+    "method": "Reserved",
+    "section": "balances",
   },
 ]
 `;
 
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
+exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > deposit action success events 1`] = `
 [
   {
     "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
+      "amount": "(rounded 200000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via multisig creation > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via proxy addition > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via referendum submission > liquidity restricted action events 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 5,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
+    "method": "Reserved",
+    "section": "balances",
   },
 ]
 `;

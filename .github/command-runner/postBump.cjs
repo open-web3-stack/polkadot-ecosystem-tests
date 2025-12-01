@@ -9,14 +9,14 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
   const diffResult = await exec.exec('git diff --exit-code', null, { ignoreReturnCode: true })
 
   if (!diffResult) {
-    core.info('KNOWN_GOOD_BLOCK_NUMBERS.env not updated')
-    return comment.createOrUpdateComment(`    KNOWN_GOOD_BLOCK_NUMBERS.env not updated`)
+    core.info('KNOWN_GOOD_BLOCK_NUMBERS files not updated')
+    return comment.createOrUpdateComment(`    KNOWN_GOOD_BLOCK_NUMBERS files not updated`)
   }
 
   await exec.exec(`git config --global user.name 'github-actions[bot]'`)
   await exec.exec(`git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'`)
-  await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS.env`)
-  await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS'])
+  await exec.exec(`git add KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env`)
+  await exec.exec(`git`, ['commit', '-am', '[ci skip] Update KNOWN_GOOD_BLOCK_NUMBERS files'])
   await exec.exec('git push')
 
   let commitId = ''
@@ -28,5 +28,7 @@ module.exports = async ({ github, context, exec, commentId, core, testResult }) 
     },
   })
 
-  return comment.createOrUpdateComment(`**KNOWN_GOOD_BLOCK_NUMBERS.env has been updated**<br/>**Commit**: ${commitId}`)
+  return comment.createOrUpdateComment(
+    `**KNOWN_GOOD_BLOCK_NUMBERS files have been updated**<br/>**Commit**: ${commitId}`,
+  )
 }

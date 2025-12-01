@@ -155,7 +155,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx eve
         "Complete": {
           "used": {
             "proofSize": "(rounded 400000)",
-            "refTime": "(rounded 30000000000)",
+            "refTime": "(rounded 50000000000)",
           },
         },
       },
@@ -222,8 +222,8 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
       "origin": "Parent",
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 9000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -271,7 +271,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx eve
         "Complete": {
           "used": {
             "proofSize": "(rounded 7000)",
-            "refTime": "(rounded 600000000)",
+            "refTime": "(rounded 700000000)",
           },
         },
       },

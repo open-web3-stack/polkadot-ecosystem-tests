@@ -49,17 +49,7 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
 ]
 `;
 
-exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > events after notePreimge 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Noted",
-    "section": "preimage",
-  },
-]
-`;
+exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > events after notePreimge 1`] = `[]`;
 
 exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > events when dispatching non-whitelisted call 1`] = `
 [
@@ -69,8 +59,8 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
       "result": {
         "Err": {
           "Module": {
-            "error": "0x03000000",
-            "index": 23,
+            "error": "0x05000000",
+            "index": 0,
           },
         },
       },
@@ -88,7 +78,12 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
     "data": {
       "id": null,
       "result": {
-        "Err": "BadOrigin",
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
       },
       "task": "(redacted)",
     },
@@ -98,36 +93,10 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
 ]
 `;
 
-exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `
-[
-  {
-    "data": {
-      "callHash": "0x89ba36353c2150427d20dc71ab18e6762c07f560a6e485f64c26a608abecb473",
-      "result": {
-        "Ok": {
-          "actualWeight": {
-            "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 300000000)",
-          },
-          "paysFee": "Yes",
-        },
-      },
-    },
-    "method": "WhitelistedCallDispatched",
-    "section": "whitelist",
-  },
-]
-`;
+exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > governing chain events about dispatching whitelisted call 1`] = `[]`;
 
 exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > governing chain events emitted on receiving xcm from collectives 1`] = `
 [
-  {
-    "data": {
-      "callHash": "0x89ba36353c2150427d20dc71ab18e6762c07f560a6e485f64c26a608abecb473",
-    },
-    "method": "CallWhitelisted",
-    "section": "whitelist",
-  },
   {
     "data": {
       "id": "(redacted)",
@@ -138,7 +107,7 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
+        "proofSize": "(rounded 6000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -148,28 +117,4 @@ exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade 
 ]
 `;
 
-exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `
-[
-  {
-    "data": {
-      "checkVersion": true,
-      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
-    },
-    "method": "UpgradeAuthorized",
-    "section": "system",
-  },
-  {
-    "data": {
-      "id": "(redacted)",
-      "origin": "Parent",
-      "success": true,
-      "weightUsed": {
-        "proofSize": 0,
-        "refTime": "(rounded 100000000)",
-      },
-    },
-    "method": "Processed",
-    "section": "messageQueue",
-  },
-]
-`;
+exports[`polkadot & asset hub & collectives > Relay authorizes AssetHub upgrade via Collectives > to-be-upgraded chain events to confirm authorized upgrade 1`] = `[]`;

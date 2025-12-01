@@ -21,9 +21,9 @@ export const runXtokensUp = (
     toAccount?: KeyringPair
     precision?: number
   }>,
-  options: { only?: boolean } = {},
+  options: { only?: boolean; skip?: boolean } = {},
 ) => {
-  const itfn = options.only ? it.only : it
+  const itfn = options.skip ? it.skip : options.only ? it.only : it
   itfn(
     name,
     async () => {
@@ -44,7 +44,9 @@ export const runXtokensUp = (
         .redact({ number: precision })
         .toMatchSnapshot('balance on from chain')
       await checkEvents(tx0, 'xTokens').redact({ number: precision }).toMatchSnapshot('tx events')
-      await checkUmp(fromChain).toMatchSnapshot('from chain ump messages')
+      await checkUmp(fromChain)
+        .redact({ redactKeys: /setTopic/ })
+        .toMatchSnapshot('from chain ump messages')
 
       await toChain.chain.newBlock()
 

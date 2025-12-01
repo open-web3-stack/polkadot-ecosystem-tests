@@ -9,6 +9,7 @@ const testCfg: TestConfig = {
 }
 
 const accountsCfg = createAccountsConfig({
+  expectation: 'success',
   relayChain: kusama,
 })
 

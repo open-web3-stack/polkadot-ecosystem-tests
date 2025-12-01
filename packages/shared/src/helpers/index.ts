@@ -1,17 +1,21 @@
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction, setupCheck } from '@acala-network/chopsticks-testing'
 
-import { defaultAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { ApiPromise } from '@polkadot/api'
-import { encodeAddress } from '@polkadot/keyring'
+import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
-import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { EventRecord } from '@polkadot/types/interfaces'
+import type { FrameSystemAccountInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
+import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
 import { match } from 'ts-pattern'
+import type { Client } from '../types.js'
 
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
   expectFn: (x: any) => ({
@@ -104,6 +108,79 @@ export type BlockProvider = 'Local' | 'NonLocal'
 export type AsyncBacking = 'Enabled' | 'Disabled'
 
 /**
+ * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the list of extrinsics
+ * in the next block.
+ *
+ * The calls can be either inline calls or lookup calls, which in the latter case *must* have been noted
+ * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
+ *
+ * @param blockProvider Whether the calls are being scheduled on a chain that uses a local or nonlocal block provider.
+ *        This chain's runtime *must* have the scheduler pallet available.
+ */
+export async function scheduleCallListWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  calls: {
+    call:
+      | { Inline: any }
+      | {
+          Lookup: {
+            hash: any
+            len: any
+          }
+        }
+    origin: any
+  }[],
+  blockProvider: BlockProvider = 'Local',
+) {
+  const scheduledBlock = await match(blockProvider)
+    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('NonLocal', async () =>
+      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
+    )
+    .exhaustive()
+
+  const agenda = [
+    [
+      [scheduledBlock],
+      calls.map(({ call, origin }) => ({
+        call,
+        origin,
+      })),
+    ],
+  ]
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: agenda,
+    },
+  })
+}
+
+/**
+ * Given a PJS client and a list of inline calls with the same origin, modify the `scheduler`
+ * pallet's `agenda` storage to execute the extrinsic in the next block.
+ */
+export async function scheduleInlineCallListWithSameOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  encodedCall: HexString[],
+  origin: any,
+  blockProvider: BlockProvider = 'Local',
+) {
+  const callList = encodedCall.map((call) => ({ call: { Inline: call }, origin }))
+  await scheduleCallListWithOrigin(client, callList, blockProvider)
+}
+
+/**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
  * block.
  *
@@ -131,28 +208,7 @@ export async function scheduleCallWithOrigin(
   origin: any,
   blockProvider: BlockProvider = 'Local',
 ) {
-  const scheduledBlock = await match(blockProvider)
-    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('NonLocal', async () =>
-      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
-    )
-    .exhaustive()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [scheduledBlock],
-          [
-            {
-              call,
-              origin: origin,
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  await scheduleCallListWithOrigin(client, [{ call, origin }], blockProvider)
 }
 
 /**
@@ -385,12 +441,11 @@ export async function updateCumulativeFees(
     if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
       assert(api.events.transactionPayment.TransactionFeePaid.is(event))
       const [who, actualFee, tip] = event.data
-      expect(tip.toNumber()).toBe(0)
       const address = encodeAddress(who.toString(), addressEncoding)
-      const fee = BigInt(actualFee.toString())
+      const totalFee = BigInt(actualFee.add(tip).toString())
 
       const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + fee)
+      feeMap.set(address, currentFee + totalFee)
     }
   }
   return feeMap
@@ -433,19 +488,25 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
 }
 
 /**
- * Get the offset at which the block numbers that key the scheduler's agenda are incremented.
+ * Get the offset at which the calling network's block provider moves, for every block created in that network.
  *
- * * If on a relay chain, the offset is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
+ * To exemplify, this is useful when injecting tasks into the runtime's scheduler agenda, as the key to the
+ * agenda may be a non-local block number.
+ *
+ * What it outputs:
+ *
+ * * If on a relay chain, the output is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
  *   every block number is available.
- * * If on a parachain without AB, with the same meaning as above.
+ * * If on a parachain without AB, 1, with the same meaning as above.
  * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
- *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number.
+ *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number. Also applies
+ *   to vesting and treasury spend periods.
  *
  * @param blockProvider Whether the call is being scheduled on a relay or parachain.
  * @param asyncBacking Whether async backing is enabled on the parachain.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function schedulerOffset(cfg: TestConfig): number {
+export function blockProviderOffset(cfg: TestConfig): number {
   if (cfg.blockProvider === 'Local') {
     return 1
   }
@@ -456,6 +517,42 @@ export function schedulerOffset(cfg: TestConfig): number {
 
   // On a parachain without async backing.
   return 1
+}
+
+/**
+ * Sort a list of addresses by their byte representation and the address encoding of the chain.
+ * The sorted list can then be safely used as a signatories list in multisig calls.
+ */
+export function sortAddressesByBytes(addresses: string[], addressEncoding: number): string[] {
+  return addresses
+    .map((addr) => decodeAddress(addr))
+    .sort((a, b) => {
+      for (let i = 0; ; i++) {
+        const overA = i >= a.length
+        const overB = i >= b.length
+        if (overA && overB) return 0
+        else if (overA) return -1
+        else if (overB) return 1
+        else if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1
+      }
+    })
+    .map((bytes) => encodeAddress(bytes, addressEncoding))
+}
+
+/**
+ * Get the free funds of an account.
+ */
+export async function getFreeFunds(client: Client<any, any>, address: any): Promise<number> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.free.toNumber()
+}
+
+/**
+ * Get the reserved funds of an account.
+ */
+export async function getReservedFunds(client: Client<any, any>, address: any): Promise<number> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.reserved.toNumber()
 }
 
 /**
@@ -487,3 +584,193 @@ export interface ParaTestConfig {
  * Union type for all test configurations, whether relay or parachain.
  */
 export type TestConfig = RelayTestConfig | ParaTestConfig
+
+/**
+ * Matcher for an event argument.
+ * Can be a literal (compared via `.toString()`) or a function `(actual) => boolean`.
+ */
+type ArgMatcher = unknown | ((actual: unknown) => boolean)
+
+/**
+ * Criteria to match a specific Substrate event.
+ * - `type`: event constructor (e.g. `api.events.system.ExtrinsicSuccess`)
+ * - `args` (optional): map of argument names to `ArgMatcher`s
+ *
+ * Examples:
+ * { type: api.events.balances.Transfer, args: { from: ALICE, to: BOB } }
+ * { type: api.events.scheduler.Dispatched, args: { result: (r) => r.isErr } }
+ */
+type EventMatchCriteria<T extends AnyTuple = AnyTuple, N = unknown> = {
+  type: IsEvent<T, N>
+  args?: { [K in keyof N]?: ArgMatcher }
+}
+
+/**
+ * Assert that specific Substrate events were emitted.
+ *
+ * Usage:
+ * - `type`: the event constructor (e.g. `api.events.system.CodeUpdated`)
+ * - `args` (optional): matchers for event fields
+ *   - literal: compared via `.toString()`
+ *   - function: `(value) => boolean`
+ *
+ * Examples:
+ *
+ * // Match by literal
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.preimage.Noted, args: { hash_: preimageHash } }
+ * ])
+ *
+ * // Match with function
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.scheduler.Dispatched, args: { result: (r) => r.isErr } }
+ * ])
+ *
+ * // Match by type only
+ * assertExpectedEvents(await api.query.system.events(), [
+ *   { type: api.events.system.CodeUpdated }
+ * ])
+ */
+export function assertExpectedEvents(actualEvents: EventRecord[], expectedEvents: EventMatchCriteria[]): void {
+  const missing: string[] = []
+
+  for (const expected of expectedEvents) {
+    const { type, args: expectedArgs } = expected
+
+    const match = actualEvents.find(({ event }) => {
+      if (!type.is(event)) return false
+
+      if (!expectedArgs) return true
+
+      const namedArgs = (event as IEvent<Codec[]>).data as unknown as Record<string, unknown>
+
+      for (const [key, matcher] of Object.entries(expectedArgs)) {
+        const actualValue = namedArgs[key]
+
+        if (typeof matcher === 'function') {
+          if (!matcher(actualValue)) {
+            return false
+          }
+        } else {
+          if (matcher?.toString?.() !== actualValue?.toString?.()) {
+            return false
+          }
+        }
+      }
+
+      return true
+    })
+
+    if (!match) {
+      const name = type.meta?.name.toString() ?? '[unknown event]'
+      const argDesc = expectedArgs
+        ? `${JSON.stringify(
+            Object.fromEntries(
+              Object.entries(expectedArgs).map(([k, v]) => [k, typeof v === 'function' ? '[Function]' : v?.toString()]),
+            ),
+          )}`
+        : ''
+      missing.push(`Event type "${name}" with expected args: ${argDesc}`)
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`Expected events not found:\n- ${missing.join('\n- ')}`)
+  }
+}
+
+/**
+ * Util to build the XCM `MultiLocation` describing the route from one chain to another.
+ *
+ * Determines how to reach `to` from `from` within a relay–parachain topology:
+ * - Relay → Parachain: `{ parents: 0, interior: { X1: [{ Parachain: id }] } }`
+ * - Parachain → Relay: `{ parents: 1, interior: "Here" }`
+ *
+ * @param from - The chain sending the XCM message.
+ * @param to - The target chain receiving the XCM message.
+ * @returns The computed `MultiLocation` route.
+ */
+export function getXcmRoute(from: Chain, to: Chain) {
+  let parents: number
+  let interior: any
+
+  if (from.isRelayChain) {
+    parents = 0
+  } else {
+    parents = 1
+  }
+
+  if (to.isRelayChain) {
+    interior = 'Here'
+  } else {
+    interior = { X1: [{ Parachain: to.paraId }] }
+  }
+
+  return { parents, interior }
+}
+
+/**
+ * Test that calls executed via `utility.forceBatch` are filtered or not filtered based on the expected behavior.
+ *
+ * This helper:
+ * 1. Verifies the pallet exists and has calls metadata
+ * 2. Executes the `utility.forceBatch` transaction with the provided calls
+ * 3. Checks events to verify filtering behavior matches expectations
+ *
+ * @param client - The API client instance
+ * @param palletName - Name of the pallet being tested (e.g., 'Staking', 'Beefy')
+ * @param batchCalls - Array of extrinsics to test
+ * @param signer - Keyring pair to sign the transaction
+ * @param expectedFiltered - 'Filtered' expects all calls to be filtered (CallFiltered error). 'NotFiltered' expects calls not to be filtered.
+ */
+export async function testCallsViaForceBatch(
+  client: Client<any, any>,
+  palletName: string,
+  batchCalls: any[],
+  signer: KeyringPair,
+  expectedFiltered: 'Filtered' | 'NotFiltered',
+): Promise<void> {
+  // Verify the pallet exists and has calls metadata
+  const palletMeta = client.api.registry.metadata.pallets.find((pallet) => pallet.name.toString() === palletName)
+  expect(palletMeta).toBeDefined()
+  expect(palletMeta?.calls).toBeDefined()
+  expect((client.api.tx as any)[palletName.charAt(0).toLowerCase() + palletName.slice(1)]).toBeDefined()
+
+  // Execute the `utility.forceBatch` transaction
+  const forceBatchTx = client.api.tx.utility.forceBatch(batchCalls)
+  await sendTransaction(forceBatchTx.signAsync(signer))
+  await client.dev.newBlock()
+
+  // Check events
+  const events = await client.api.query.system.events()
+
+  const itemFailedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'utility' && event.method === 'ItemFailed'
+  })
+
+  if (expectedFiltered === 'Filtered') {
+    // Should have one `ItemFailed` event per call
+    expect(itemFailedEvents.length).toBe(batchCalls.length)
+
+    // Verify each failure was due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
+
+      assert(dispatchError.isModule, 'Expected module error')
+      expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(true)
+    }
+  } else {
+    // Verify that none of the failures were due to `CallFiltered`
+    for (const record of itemFailedEvents) {
+      assert(client.api.events.utility.ItemFailed.is(record.event))
+      const dispatchError = record.event.data.error
+
+      if (dispatchError.isModule) {
+        // If it's a module error, check that it's NOT CallFiltered
+        expect(client.api.errors.system.CallFiltered.is(dispatchError.asModule)).toBe(false)
+      }
+    }
+  }
+}

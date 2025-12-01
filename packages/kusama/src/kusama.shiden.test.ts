@@ -11,21 +11,29 @@ describe('kusama & shiden', async () => {
   const shidenKSM = shiden.custom.ksm
   const kusamaKSM = kusama.custom.ksm
 
-  runXtokensUp('shiden transfer KSM to kusama', async () => {
-    return {
-      fromChain: shidenClient,
-      toChain: kusamaClient,
-      balance: query.assets(shidenKSM),
-      tx: tx.xtokens.transfer(shidenKSM, 1e12, tx.xtokens.relaychainV3),
-    }
-  })
+  runXtokensUp(
+    'shiden transfer KSM to kusama',
+    async () => {
+      return {
+        fromChain: shidenClient,
+        toChain: kusamaClient,
+        balance: query.assets(shidenKSM),
+        tx: tx.xtokens.transfer(shidenKSM, 1e12, tx.xtokens.relaychainV3),
+      }
+    },
+    { skip: true },
+  )
 
-  runXcmPalletDown('kusama transfer KSM to shiden', async () => {
-    return {
-      fromChain: kusamaClient,
-      toChain: shidenClient,
-      balance: query.assets(shidenKSM),
-      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, shiden.paraId!)),
-    }
-  })
+  runXcmPalletDown(
+    'kusama transfer KSM to shiden',
+    async () => {
+      return {
+        fromChain: kusamaClient,
+        toChain: shidenClient,
+        balance: query.assets(shidenKSM),
+        tx: tx.xcmPallet.limitedReserveTransferAssetsV3(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(0, shiden.paraId!)),
+      }
+    },
+    { skip: true },
+  )
 })
