@@ -2483,6 +2483,140 @@ export async function scheduleToFullAgenda<
   expect(dispatchError.isExhausted).toBe(true)
 }
 
+/**
+ * Test retry rescheduling to a full agenda block.
+ *
+ * This test verifies the behavior when a task with retry configuration attempts to reschedule
+ * to a block whose agenda is already at capacity. It checks that:
+ * 1. Pick a block far in the future and fill its agenda to capacity
+ * 2. Schedule a task with retry config that will fail and reschedule to the full block
+ * 3. Verify the rescheduling behavior when the target block is full
+ */
+export async function retryReschedulingToFullAgenda<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
+
+  // ---------------------------------------------------
+  // 1. Pick a block far in the future and fill agenda
+  // ---------------------------------------------------
+
+  const fullBlockNumber = initialBlockNumber + 1000 * offset
+
+  // Query the network's maximum schedulable tasks per block
+  const maxScheduledPerBlock = client.api.consts.scheduler.maxScheduledPerBlock.toNumber()
+
+  // Create an array of remark transactions to fill the agenda
+  const remarkTx = client.api.tx.system.remark('filler')
+  const agendaItems = Array.from({ length: maxScheduledPerBlock }, () => ({
+    call: { Inline: remarkTx.method.toHex() },
+    origin: { system: 'Root' },
+  }))
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[fullBlockNumber], agendaItems]],
+    },
+  })
+
+  // Verify the agenda is full
+  const scheduledAfterFilling = await client.api.query.scheduler.agenda(fullBlockNumber)
+  expect(scheduledAfterFilling.length).toBe(maxScheduledPerBlock)
+
+  // ------------------------------------------------------------------------------------
+  // 2. Schedule a task with retry config that will fail and reschedule to the full block
+  // ------------------------------------------------------------------------------------
+
+  // Create a task that will fail - remarkWithEvent requires signed origin
+  const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
+  const taskId = sha256AsU8a('retry_task')
+
+  // Calculate the block where the task will first execute (give us time to set retry config)
+  let firstExecutionBlock: number
+  match(testConfig.blockProvider)
+    .with('Local', () => {
+      firstExecutionBlock = initialBlockNumber + 3 * offset
+    })
+    .with('NonLocal', () => {
+      firstExecutionBlock = initialBlockNumber + 2 * offset
+    })
+    .exhaustive()
+
+  // Calculate retry period to reschedule to the full block
+  const retryPeriod = fullBlockNumber - firstExecutionBlock!
+
+  const retryConfig = {
+    totalRetries: 3,
+    remaining: 3,
+    period: retryPeriod,
+  }
+
+  const scheduleTx = client.api.tx.scheduler.scheduleNamed(taskId, firstExecutionBlock!, null, 1, failingTx)
+
+  await scheduleInlineCallWithOrigin(client, scheduleTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+
+  await client.dev.newBlock()
+
+  // Find the named task and set retry configuration
+  const initialTask = await findNamedScheduledTask(client, firstExecutionBlock!, failingTx.method.toHex(), 1, taskId)
+  expect(initialTask.task).toBeDefined()
+  expect(initialTask.taskIndex).toBeGreaterThanOrEqual(0)
+
+  const setRetryTx = client.api.tx.scheduler.setRetryNamed(taskId, retryConfig.totalRetries, retryConfig.period)
+  await scheduleInlineCallWithOrigin(client, setRetryTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+
+  await client.dev.newBlock()
+
+  // Move to execution block
+  await client.dev.newBlock()
+
+  // -------------------------------------------------------------------------------------
+  // 3. Verify the retry fails and the task is removed (not rescheduled to the full block)
+  // -------------------------------------------------------------------------------------
+
+  const events = await client.api.query.system.events()
+
+  // Should have a `RetryFailed` event
+  const retryFailedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'RetryFailed'
+  })
+  expect(retryFailedEvents.length).toBe(1)
+
+  const retryFailedEvent = retryFailedEvents[0]
+  assert(client.api.events.scheduler.RetryFailed.is(retryFailedEvent.event))
+
+  // Verify task is removed from lookup storage
+  const lookupAfterFailedRetry = await client.api.query.scheduler.lookup(taskId)
+  expect(lookupAfterFailedRetry.isNone).toBeTruthy()
+
+  // Verify task is removed from the agenda in the block it was originally scheduled to execute in
+  const taskAtOriginalBlock = await findNamedScheduledTask(
+    client,
+    firstExecutionBlock!,
+    failingTx.method.toHex(),
+    1,
+    taskId,
+  )
+  expect(taskAtOriginalBlock.task).toBeUndefined()
+
+  // Verify it is not rescheduled (check the full block agenda - should still be exactly `maxScheduledPerBlock` items)
+  const fullBlockAfterRetry = await client.api.query.scheduler.agenda(fullBlockNumber)
+  expect(fullBlockAfterRetry.length).toBe(maxScheduledPerBlock)
+
+  // Verify the filled block remains full (no additional tasks)
+  const remarksInFullBlock = fullBlockAfterRetry.filter((item) => {
+    if (!item.isSome) return false
+    const unwrapped = item.unwrap()
+    return unwrapped.call.isInline && unwrapped.call.asInline.toHex() === remarkTx.method.toHex()
+  })
+  expect(remarksInFullBlock.length).toBe(maxScheduledPerBlock)
+}
+
 export function baseSchedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -2595,6 +2729,11 @@ export function baseSchedulerE2ETests<
         kind: 'test',
         label: 'scheduling to a full agenda fails',
         testFn: async () => await scheduleToFullAgenda(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'retry rescheduling to a full agenda',
+        testFn: async () => await retryReschedulingToFullAgenda(chain, testConfig),
       },
     ],
   }
