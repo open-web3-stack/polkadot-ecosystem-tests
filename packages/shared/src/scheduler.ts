@@ -2071,7 +2071,8 @@ export async function scheduleWithRetryConfig<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
-  // Create a task that will fail - remarkWithEvent requires signed origin
+  // Create a task that will fail - remarkWithEvent requires signed origin, and it will be attempted with a `Root`
+  // origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
 
@@ -2399,6 +2400,89 @@ export async function scheduleNamedWithRetryConfig<
   })
 }
 
+/**
+ * Test scheduler agenda capacity limit.
+ *
+ * This test verifies that the scheduler enforces its maximum tasks per block limit. It checks that:
+ * 1. Pick a block far in the future
+ * 2. Query the network's `MaxScheduledPerBlock` constant
+ * 3. Fill the target block's agenda to capacity using `setStorage`
+ * 4. Attempt to schedule one additional task to the full block
+ */
+export async function scheduleToFullAgenda<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+
+  // ---------------------------------
+  // 1. Pick a block far in the future
+  // ---------------------------------
+
+  const initialBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const offset = blockProviderOffset(testConfig)
+  const targetBlockNumber = initialBlockNumber + 1000 * offset
+
+  // ----------------------------------------------------------
+  // 2. Query the network's maximum schedulable tasks per block
+  // ----------------------------------------------------------
+
+  const maxScheduledPerBlock = client.api.consts.scheduler.maxScheduledPerBlock.toNumber()
+
+  // -----------------------------------------------------
+  // 3. Fill the target block to capacity using setStorage
+  // -----------------------------------------------------
+
+  // Create an array of remark transactions to fill the agenda
+  const remarkTx = client.api.tx.system.remark('filler')
+  const agendaItems = Array.from({ length: maxScheduledPerBlock }, () => ({
+    call: { Inline: remarkTx.method.toHex() },
+    origin: { system: 'Root' },
+  }))
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[targetBlockNumber], agendaItems]],
+    },
+  })
+
+  // Verify the agenda is full
+  const scheduledAfterFilling = await client.api.query.scheduler.agenda(targetBlockNumber)
+  expect(scheduledAfterFilling.length).toBe(maxScheduledPerBlock)
+
+  // ------------------------------------------------------
+  // 4. Attempt to schedule one more task to the full block
+  // ------------------------------------------------------
+
+  const additionalRemarkTx = client.api.tx.system.remark('overflow')
+  const scheduleAdditionalTx = client.api.tx.scheduler.schedule(targetBlockNumber, null, 0, additionalRemarkTx)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleAdditionalTx.method.toHex(),
+    { system: 'Root' },
+    testConfig.blockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  // Verify that the additional task was not scheduled
+  const scheduledAfterAttempt = await client.api.query.scheduler.agenda(targetBlockNumber)
+  expect(scheduledAfterAttempt.length).toBe(maxScheduledPerBlock)
+
+  const events = await client.api.query.system.events()
+  const [ev] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'scheduler' && event.method === 'Dispatched'
+  })
+
+  assert(client.api.events.scheduler.Dispatched.is(ev.event))
+  const dispatchData = ev.event.data
+  assert(dispatchData.result.isErr)
+  const dispatchError = dispatchData.result.asErr
+  expect(dispatchError.isExhausted).toBe(true)
+}
+
 export function baseSchedulerE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -2506,6 +2590,11 @@ export function baseSchedulerE2ETests<
         kind: 'test',
         label: 'setting and canceling retry configuration for named scheduled tasks',
         testFn: async () => await scheduleNamedWithRetryConfig(chain, testConfig),
+      },
+      {
+        kind: 'test',
+        label: 'scheduling to a full agenda fails',
+        testFn: async () => await scheduleToFullAgenda(chain, testConfig),
       },
     ],
   }
