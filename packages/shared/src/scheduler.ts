@@ -970,6 +970,8 @@ export async function cancelNamedTask<
   // Verify the cancelled task is now None in the agenda
   scheduled = await client.api.query.scheduler.agenda(targetBlockNumber)
   expect(scheduled.length).toBe(3) // Length stays the same
+  // Recall that at the start of the test, the target block's agenda is cleared, so these accesses are semantically
+  // correct.
   expect(scheduled[1].isNone).toBeTruthy() // Task at index 1 (adjustment 5) is now None
   expect(scheduled[0].isSome).toBeTruthy() // Task at index 0 (adjustment 3) still present
   expect(scheduled[2].isSome).toBeTruthy() // Task at index 2 (adjustment 7) still present
