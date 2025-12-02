@@ -40,50 +40,6 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
 ]
 `;
 
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
 exports[`Collectives Polkadot Scheduler E2E tests > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
 [
   {
@@ -206,6 +162,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -247,6 +221,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is p
   {
     "data": {
       "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
       "result": "Ok",
       "task": "(redacted)",
     },
@@ -473,6 +465,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
   {
     "data": {

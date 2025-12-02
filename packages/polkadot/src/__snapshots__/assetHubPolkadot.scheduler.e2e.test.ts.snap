@@ -40,50 +40,6 @@ exports[`Polkadot Asset Hub Scheduler > cancel scheduled task with wrong origin 
 ]
 `;
 
-exports[`Polkadot Asset Hub Scheduler > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Scheduler > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
 exports[`Polkadot Asset Hub Scheduler > execution of scheduled preimage lookup call works > events for scheduled lookup-task execution 1`] = `
 [
   {
@@ -206,6 +162,24 @@ exports[`Polkadot Asset Hub Scheduler > scheduling a call is possible, and the c
     "method": "Dispatched",
     "section": "scheduler",
   },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
 ]
 `;
 
@@ -247,6 +221,24 @@ exports[`Polkadot Asset Hub Scheduler > scheduling a named call is possible, and
   {
     "data": {
       "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
       "result": "Ok",
       "task": "(redacted)",
     },
@@ -473,6 +465,24 @@ exports[`Polkadot Asset Hub Scheduler > scheduling a task after a delay is possi
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
   {
     "data": {
