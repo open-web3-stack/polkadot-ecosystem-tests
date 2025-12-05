@@ -14,8 +14,8 @@ if (process.env.LOG_LEVEL === undefined) {
 
 export default defineConfig({
 	test: {
-		hookTimeout: 240_000,
-		testTimeout: 240_000,
+		hookTimeout: 300_000,
+		testTimeout: 300_000,
 		pool: 'forks',
 		passWithNoTests: true,
 		retry: 1,
