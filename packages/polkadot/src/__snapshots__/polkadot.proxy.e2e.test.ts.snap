@@ -576,7 +576,7 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
       "result": {
         "Err": {
           "Module": {
-            "error": "0x07000000",
+            "error": "0x08000000",
             "index": 0,
           },
         },
