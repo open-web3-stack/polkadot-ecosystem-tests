@@ -42,7 +42,7 @@
 		"@swc/core": "^1.13.5",
 		"lodash": "^4.17.21",
 		"ts-pattern": "^5.8.0",
-		"typescript": "^5.9.2",
+		"typescript": "^5.9.3",
 		"vitest": "^4.0.13"
 	},
 	"devDependencies": {
