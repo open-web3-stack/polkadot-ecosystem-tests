@@ -54,7 +54,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.6",
 		"tsx": "^4.21.0",
-		"unplugin-swc": "^1.5.8",
+		"unplugin-swc": "^1.5.9",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"lint-staged": {
