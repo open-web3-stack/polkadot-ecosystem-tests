@@ -29,7 +29,7 @@ exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp m
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v4": [
+        "v5": [
           {
             "withdrawAsset": [
               {

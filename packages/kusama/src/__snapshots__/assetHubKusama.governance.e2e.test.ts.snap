@@ -9,8 +9,8 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 90000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -456,7 +456,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "amount": "(rounded 420000000)",
+      "amount": "(rounded 130000000)",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -483,14 +483,14 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
   },
   {
     "data": {
-      "amount": "(rounded 420000000)",
+      "amount": "(rounded 130000000)",
     },
     "method": "Deposit",
     "section": "balances",
   },
   {
     "data": {
-      "actualFee": "(rounded 420000000)",
+      "actualFee": "(rounded 130000000)",
       "tip": 0,
     },
     "method": "TransactionFeePaid",
@@ -502,8 +502,8 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 100000)",
-          "refTime": "(rounded 2000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -522,8 +522,8 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 90000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },

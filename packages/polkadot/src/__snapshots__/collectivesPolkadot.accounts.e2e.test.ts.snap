@@ -1,6 +1,19 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Collectives Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
+exports[`Polkadot Collectives Accounts > \`burn\` > burning below ED with keep_alive is no-op > events for burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1000000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Accounts > \`burn\` > burning below ED with keep_alive is no-op > events for burn 2`] = `
 [
   {
     "data": {
