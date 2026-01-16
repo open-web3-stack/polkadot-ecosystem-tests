@@ -112,12 +112,28 @@ Override specific chains: `<NETWORK>_BLOCK_NUMBER`, `<NETWORK>_WASM`, `<NETWORK>
 
 ## Test Writing Guidelines
 
+### Development Workflow
+
+When developing tests or exploring scenario ideas:
+- Run Chopsticks networks alongside Polkadot.js Apps for experimentation
+- Prefer snapshot testing: automatic redaction of time-sensitive data, efficient storage of detailed execution info, CI integration catches regressions
+- Be aware: `await client.dev.newBlock()` can take 1-10 seconds depending on CPU/network conditions
+
+### Best Practices
+
 - Write network-agnostic test logic in `packages/shared/src/`
 - Implement chain-specific test files in `packages/polkadot/` or `packages/kusama/`
 - Use `.redact()` for volatile values to prevent flaky tests
 - Use `{ only: true }` to isolate tests during debugging
 - Use `await chain.pause()` for state inspection (connect via Polkadot.js Apps)
 - Delete `__snapshots__` folders and run `yarn test -u` when renaming/removing tests
+
+### Debugging
+
+- Pause tests for inspection: `await chain.pause()` (port shown in STDOUT, connect via Polkadot.js Apps)
+- Modify `testTimeout` in `vitest.config.mts` for long-running tests (currently 300s)
+- Snapshot mismatches: verify uncommitted changes with `git status`, ensure snapshots are in git tree
+- RPC failures may indicate configuration issues (check endpoints, block numbers in env files)
 
 ## Chopsticks Limitations
 
