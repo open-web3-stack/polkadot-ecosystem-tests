@@ -1,0 +1,103 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Check treasury payouts which are already approved can be paid > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Claim a spend > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Claim a spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Propose and approve a spend of treasury funds > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Void previously approved spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Void previously approved spend > treasury spend voided events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "AssetSpendVoided",
+    "section": "treasury",
+  },
+]
+`;
