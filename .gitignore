@@ -115,3 +115,7 @@ dist
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Claude related
+/.claude/settings.local.json
+*.local.md
