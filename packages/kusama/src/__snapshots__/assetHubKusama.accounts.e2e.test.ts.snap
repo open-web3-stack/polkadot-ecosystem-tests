@@ -86,7 +86,7 @@ exports[`Kusama Asset Hub Accounts > \`transfer_all\` > account with reserves ca
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 240000000)",
+      "freeBalance": "(rounded 270000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -113,7 +113,7 @@ exports[`Kusama Asset Hub Accounts > \`transfer_all\` > transfer all with keepAl
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 240000000)",
+      "freeBalance": "(rounded 270000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -133,7 +133,7 @@ exports[`Kusama Asset Hub Accounts > \`transfer_all\` > transfer all with keepAl
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 230000000)",
+      "freeBalance": "(rounded 270000000)",
     },
     "method": "Endowed",
     "section": "balances",
