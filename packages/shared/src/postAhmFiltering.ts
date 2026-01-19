@@ -222,7 +222,7 @@ async function preimageCallsFilteredTest<
     client.api.tx.preimage.ensureUpdated(['0x0000000000000000000000000000000000000000000000000000000000000000']),
   ]
 
-  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
+  await testCallsViaForceBatch(client, 'Preimage', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -371,7 +371,7 @@ async function childBountiesCallsFilteredTest<
     client.api.tx.childBounties.closeChildBounty(0, 0),
   ]
 
-  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
+  await testCallsViaForceBatch(client, 'ChildBounties', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -401,7 +401,7 @@ async function babeCallsNotFilteredTest<
     client.api.tx.babe.planConfigChange({ V1: { c: [1, 1], allowedSlots: 'PrimarySlots' } }),
   ]
 
-  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Babe', batchCalls, alice, 'NotFiltered')
 }
 
 /**
@@ -458,7 +458,7 @@ async function beefyCallsNotFilteredTest<
     client.api.tx.beefy.reportFutureBlockVotingUnsigned({} as any, {} as any),
   ]
 
-  await testCallsViaForceBatch(client, 'Grandpa', batchCalls, alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Beefy', batchCalls, alice, 'NotFiltered')
 }
 
 /**
@@ -498,7 +498,7 @@ async function slotsCallsFilteredTest<
     client.api.tx.slots.triggerOnboard(1000),
   ]
 
-  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
+  await testCallsViaForceBatch(client, 'Slots', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -521,7 +521,7 @@ async function auctionsCallsFilteredTest<
     client.api.tx.auctions.cancelAuction(),
   ]
 
-  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
+  await testCallsViaForceBatch(client, 'Auctions', batchCalls, alice, 'Filtered')
 }
 
 /**
@@ -573,7 +573,7 @@ async function crowdloanCallsFilteredTest<
     client.api.tx.crowdloan.contributeAll(1000, null),
   ]
 
-  await testCallsViaForceBatch(client, 'Vesting', batchCalls, alice, 'Filtered')
+  await testCallsViaForceBatch(client, 'Crowdloan', batchCalls, alice, 'Filtered')
 }
 
 /**
