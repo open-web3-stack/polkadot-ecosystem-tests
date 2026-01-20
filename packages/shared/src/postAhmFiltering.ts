@@ -8,7 +8,7 @@ import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 /**
  * Test that all staking extrinsics are filtered on the calling chain.
  */
-async function stakingCallsFilteredTest<
+export async function stakingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -96,7 +96,7 @@ async function stakingCallsFilteredTest<
 /**
  * Test that all vesting extrinsics are filtered on the calling chain.
  */
-async function vestingCallsFilteredTest<
+export async function vestingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -130,7 +130,7 @@ async function vestingCallsFilteredTest<
 /**
  * Test that all referenda extrinsics are filtered on the calling chain.
  */
-async function referendaCallsFilteredTest<
+export async function referendaCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -169,7 +169,7 @@ async function referendaCallsFilteredTest<
 /**
  * Test that all conviction-voting extrinsics are filtered on the calling chain.
  */
-async function convictionVotingCallsFilteredTest<
+export async function convictionVotingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -201,7 +201,7 @@ async function convictionVotingCallsFilteredTest<
 /**
  * Test that all preimage extrinsics are filtered on the calling chain.
  */
-async function preimageCallsFilteredTest<
+export async function preimageCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -226,9 +226,36 @@ async function preimageCallsFilteredTest<
 }
 
 /**
+ * Test that preimage extrinsics are NOT filtered on the calling chain.
+ */
+export async function preimageCallsNotFilteredTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+
+  const batchCalls = [
+    // call index 0
+    client.api.tx.preimage.notePreimage('0x00'),
+    // 1
+    client.api.tx.preimage.unnotePreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
+    // 2
+    client.api.tx.preimage.requestPreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
+    // 3
+    client.api.tx.preimage.unrequestPreimage('0x0000000000000000000000000000000000000000000000000000000000000000'),
+    // 4
+    client.api.tx.preimage.ensureUpdated(['0x0000000000000000000000000000000000000000000000000000000000000000']),
+  ]
+
+  await testCallsViaForceBatch(client, 'Preimage', batchCalls, alice, 'NotFiltered')
+}
+
+/**
  * Test that all nomination-pools extrinsics are filtered on the calling chain.
  */
-async function nominationPoolsCallsFilteredTest<
+export async function nominationPoolsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -305,7 +332,7 @@ async function nominationPoolsCallsFilteredTest<
 /**
  * Test that all bounties extrinsics are filtered on the calling chain.
  */
-async function bountiesCallsFilteredTest<
+export async function bountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -345,7 +372,7 @@ async function bountiesCallsFilteredTest<
 /**
  * Test that all child-bounties extrinsics are filtered on the calling chain.
  */
-async function childBountiesCallsFilteredTest<
+export async function childBountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -377,7 +404,7 @@ async function childBountiesCallsFilteredTest<
 /**
  * Test that BABE extrinsics are NOT filtered on the calling chain.
  */
-async function babeCallsNotFilteredTest<
+export async function babeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -407,7 +434,7 @@ async function babeCallsNotFilteredTest<
 /**
  * Test that GRANDPA extrinsics are NOT filtered on the calling chain.
  */
-async function grandpaCallsNotFilteredTest<
+export async function grandpaCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -430,7 +457,7 @@ async function grandpaCallsNotFilteredTest<
 /**
  * Test that Beefy extrinsics are NOT filtered on the calling chain.
  */
-async function beefyCallsNotFilteredTest<
+export async function beefyCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -464,7 +491,7 @@ async function beefyCallsNotFilteredTest<
 /**
  * Test that `paraSlashing` extrinsics are NOT filtered on the calling chain.
  */
-async function parasSlashingCallsNotFilteredTest<
+export async function parasSlashingCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -481,7 +508,7 @@ async function parasSlashingCallsNotFilteredTest<
 /**
  * Test that Slots extrinsics are filtered on the calling chain.
  */
-async function slotsCallsFilteredTest<
+export async function slotsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -504,7 +531,7 @@ async function slotsCallsFilteredTest<
 /**
  * Test that Auctions extrinsics are filtered on the calling chain.
  */
-async function auctionsCallsFilteredTest<
+export async function auctionsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -527,7 +554,7 @@ async function auctionsCallsFilteredTest<
 /**
  * Test the crowdloan extrinsics which are NOT filtered (withdraw, refund, dissolve) on the calling chain.
  */
-async function crowdloanCallsNotFilteredTest<
+export async function crowdloanCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -550,7 +577,7 @@ async function crowdloanCallsNotFilteredTest<
 /**
  * Test that Crowdloan extrinsics that are filtered on the calling chain.
  */
-async function crowdloanCallsFilteredTest<
+export async function crowdloanCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -579,7 +606,7 @@ async function crowdloanCallsFilteredTest<
 /**
  * Test that all scheduler extrinsics are filtered on the calling chain.
  */
-async function schedulerCallsFilteredTest<
+export async function schedulerCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -628,7 +655,7 @@ async function schedulerCallsFilteredTest<
 /**
  * Test that all treasury extrinsics are filtered on the calling chain.
  */
-async function treasuryCallsFilteredTest<
+export async function treasuryCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -657,7 +684,7 @@ async function treasuryCallsFilteredTest<
 /**
  * Test that System extrinsics are NOT filtered on the calling chain.
  */
-async function systemCallsNotFilteredTest<
+export async function systemCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -690,7 +717,7 @@ async function systemCallsNotFilteredTest<
 /**
  * Test that StakingAhClient extrinsics are NOT filtered on the calling chain.
  */
-async function stakingAhClientCallsNotFilteredTest<
+export async function stakingAhClientCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -713,7 +740,7 @@ async function stakingAhClientCallsNotFilteredTest<
 /**
  * Test that Paras extrinsics are NOT filtered on the calling chain.
  */
-async function parasCallsNotFilteredTest<
+export async function parasCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -766,7 +793,7 @@ async function parasCallsNotFilteredTest<
 /**
  * Test that Coretime extrinsics are NOT filtered on the calling chain.
  */
-async function coretimeCallsNotFilteredTest<
+export async function coretimeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -788,10 +815,23 @@ async function coretimeCallsNotFilteredTest<
   await testCallsViaForceBatch(client, 'Coretime', batchCalls, alice, 'NotFiltered')
 }
 
+/**
+ * Test definition for a single pallet's call filtering behavior.
+ */
+export interface PostAhmTest {
+  label: string
+  testFn: (chain: Chain<any, any>) => Promise<void>
+}
+
 export function postAhmFilteringE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  filteredTests: PostAhmTest[],
+  unfilteredTests: PostAhmTest[],
+): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -799,124 +839,20 @@ export function postAhmFilteringE2ETests<
       {
         kind: 'describe',
         label: 'filtered calls',
-        children: [
-          {
-            kind: 'test',
-            label: 'staking calls are filtered',
-            testFn: async () => await stakingCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'vesting calls are filtered',
-            testFn: async () => await vestingCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'referenda calls are filtered',
-            testFn: async () => await referendaCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'conviction-voting calls are filtered',
-            testFn: async () => await convictionVotingCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'preimage calls are filtered',
-            testFn: async () => await preimageCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'nomination pools calls are filtered',
-            testFn: async () => await nominationPoolsCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'bounties calls are filtered',
-            testFn: async () => await bountiesCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'child-bounties calls are filtered',
-            testFn: async () => await childBountiesCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'slots calls are filtered',
-            testFn: async () => await slotsCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'auctions calls are filtered',
-            testFn: async () => await auctionsCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'crowdloan calls (create, contribute, edit, etc) are filtered',
-            testFn: async () => await crowdloanCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'scheduler calls are filtered',
-            testFn: async () => await schedulerCallsFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'treasury calls are filtered',
-            testFn: async () => await treasuryCallsFilteredTest(chain),
-          },
-        ],
+        children: filteredTests.map((test) => ({
+          kind: 'test' as const,
+          label: test.label,
+          testFn: async () => await test.testFn(chain),
+        })),
       },
       {
         kind: 'describe',
         label: 'unfiltered calls',
-        children: [
-          {
-            kind: 'test',
-            label: 'babe calls are not filtered',
-            testFn: async () => await babeCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'grandpa calls are not filtered',
-            testFn: async () => await grandpaCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'beefy calls are not filtered',
-            testFn: async () => await beefyCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'parasSlashing calls are not filtered',
-            testFn: async () => await parasSlashingCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'crowdloan calls (withdraw, refund, dissolve) are not filtered',
-            testFn: async () => await crowdloanCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'system calls are not filtered',
-            testFn: async () => await systemCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'stakingAhClient calls are not filtered',
-            testFn: async () => await stakingAhClientCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'paras calls are not filtered',
-            testFn: async () => await parasCallsNotFilteredTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'coretime calls are not filtered',
-            testFn: async () => await coretimeCallsNotFilteredTest(chain),
-          },
-        ],
+        children: unfilteredTests.map((test) => ({
+          kind: 'test' as const,
+          label: test.label,
+          testFn: async () => await test.testFn(chain),
+        })),
       },
     ],
   }
