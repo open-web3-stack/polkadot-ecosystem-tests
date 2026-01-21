@@ -34,7 +34,7 @@ export function defineChain<
     db: process.env.DB_PATH,
     runtimeLogLevel: process.env.RUNTIME_LOG_LEVEL ? Number(process.env.RUNTIME_LOG_LEVEL) : 0,
     blockNumber: toNumber(process.env[`${upperName}_BLOCK_NUMBER`]),
-    timeout: 60_000,
+    timeout: 120_000,
     port: 0,
     allowUnresolvedImports: true,
     saveBlock: false,
