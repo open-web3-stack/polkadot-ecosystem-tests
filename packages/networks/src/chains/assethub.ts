@@ -65,7 +65,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
-  endpoint: ['wss://sys.ibp.network/asset-hub-polkadot', 'wss://asset-hub-polkadot-rpc.n.dwellir.com'],
+  endpoint: ['wss://sys.ibp.network/asset-hub-polkadot', 'wss://statemint.public.curie.radiumblock.co/ws'],
   paraId: 1000,
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
