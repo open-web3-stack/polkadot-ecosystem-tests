@@ -9,8 +9,8 @@ exports[`Kusama Asset Hub Scheduler > cancel named scheduled task with wrong ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -29,8 +29,8 @@ exports[`Kusama Asset Hub Scheduler > cancel scheduled task with wrong origin > 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -112,8 +112,8 @@ exports[`Kusama Asset Hub Scheduler > schedule named task with wrong origin > ev
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 60000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -132,8 +132,8 @@ exports[`Kusama Asset Hub Scheduler > schedule task with wrong origin > events w
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 60000)",
-          "refTime": "(rounded 900000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },

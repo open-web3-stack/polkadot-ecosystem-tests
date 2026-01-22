@@ -14,7 +14,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool creation with insuf
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 3000000000)",
         },
       },
@@ -60,8 +60,8 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool double join test: a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 3000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -80,7 +80,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool global config test 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -166,7 +166,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool lifecycle test > ch
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -191,8 +191,8 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool lifecycle test > cl
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -305,7 +305,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool lifecycle test > no
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 50000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -354,8 +354,8 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool lifecycle test > un
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 40000)",
-          "refTime": "(rounded 3000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 2000000000)",
         },
       },
     },
@@ -508,8 +508,8 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pools update roles test 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
