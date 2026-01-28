@@ -129,19 +129,12 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
 
-    - name: Restore PAH Chopsticks DB if needed
-      if: contains(matrix.tests, 'assetHubPolkadot')
+    - name: Restore Chopsticks DBs
       uses: actions/cache/restore@v4
       with:
-        path: /tmp/pah.db
-        key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
-        fail-on-cache-miss: true
-
-    - name: Restore KAH Chopsticks DB if needed
-      if: contains(matrix.tests, 'assetHubKusama')
-      uses: actions/cache/restore@v4
-      with:
-        path: /tmp/kah.db
+        path: |
+          /tmp/pah.db
+          /tmp/kah.db
         key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
         fail-on-cache-miss: true
 

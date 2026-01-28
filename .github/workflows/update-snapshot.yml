@@ -107,19 +107,12 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
 
-    - name: Restore PAH Chopsticks DB
-      if: matrix.network == 'polkadot'
+    - name: Restore Chopsticks DBs
       uses: actions/cache/restore@v4
       with:
-        path: /tmp/pah.db
-        key: chopsticks-db-${{ github.run_id }}
-        fail-on-cache-miss: true
-
-    - name: Restore KAH Chopsticks DB
-      if: matrix.network == 'kusama'
-      uses: actions/cache/restore@v4
-      with:
-        path: /tmp/kah.db
+        path: |
+          /tmp/pah.db
+          /tmp/kah.db
         key: chopsticks-db-${{ github.run_id }}
         fail-on-cache-miss: true
 
