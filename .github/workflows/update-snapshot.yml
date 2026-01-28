@@ -11,7 +11,87 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  setup-chopsticks-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+      - run: yarn --immutable
+      - run: yarn update-known-good
+
+      - name: Initialize Chopsticks DBs
+        run: |
+          # Source block numbers
+          source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+          source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
+
+          # Start PAH chopsticks with DB
+          npx @acala-network/chopsticks@latest \
+            --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
+            --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
+            --db=/tmp/pah.db \
+            --port=8001 > /tmp/pah.log 2>&1 &
+          PAH_PID=$!
+
+          # Start KAH chopsticks with DB
+          npx @acala-network/chopsticks@latest \
+            --endpoint=wss://sys.ibp.network/asset-hub-kusama \
+            --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
+            --db=/tmp/kah.db \
+            --port=8002 > /tmp/kah.log 2>&1 &
+          KAH_PID=$!
+
+          # Wait for both servers to be ready
+          timeout=180
+          for port in 8001 8002; do
+            elapsed=0
+            while [ $elapsed -lt $timeout ]; do
+              if nc -z localhost $port 2>/dev/null; then
+                echo "Chopsticks on port $port ready"
+                break
+              fi
+              sleep 2
+              elapsed=$((elapsed + 2))
+            done
+            if [ $elapsed -ge $timeout ]; then
+              echo "Timeout waiting for chopsticks on port $port"
+              cat /tmp/*.log
+              exit 1
+            fi
+          done
+
+          # Kill servers after initialization
+          kill $PAH_PID $KAH_PID || true
+          sleep 2
+
+          # Verify DBs were created and are non-empty
+          for db in /tmp/pah.db /tmp/kah.db; do
+            if [ ! -f "$db" ]; then
+              echo "Error: $db not found"
+              exit 1
+            fi
+            size=$(stat -f%z "$db" 2>/dev/null || stat -c%s "$db" 2>/dev/null)
+            if [ "$size" -eq 0 ]; then
+              echo "Error: $db is empty"
+              exit 1
+            fi
+            echo "✓ $db created successfully (${size} bytes)"
+          done
+
+      - name: Cache Chopsticks DBs
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /tmp/pah.db
+            /tmp/kah.db
+          key: chopsticks-db-${{ github.run_id }}
+
   update:
+    needs: setup-chopsticks-cache
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
@@ -26,23 +106,35 @@ jobs:
         node-version: 22.x
         cache: 'yarn'
     - run: yarn --immutable
-    - run: yarn update-known-good
+
+    - name: Restore PAH Chopsticks DB
+      if: matrix.network == 'polkadot'
+      uses: actions/cache/restore@v4
+      with:
+        path: /tmp/pah.db
+        key: chopsticks-db-${{ github.run_id }}
+        fail-on-cache-miss: true
+
+    - name: Restore KAH Chopsticks DB
+      if: matrix.network == 'kusama'
+      uses: actions/cache/restore@v4
+      with:
+        path: /tmp/kah.db
+        key: chopsticks-db-${{ github.run_id }}
+        fail-on-cache-miss: true
+
     - name: Start Chopsticks
       run: |
         if [ "${{ matrix.network }}" = "polkadot" ]; then
-          source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
           npx @acala-network/chopsticks@latest \
-            --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
-            --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
+            --db=/tmp/pah.db \
             --port=8001 > /tmp/chopsticks.log 2>&1 &
           echo $! > /tmp/chopsticks.pid
           PORT=8001
           ENDPOINT_VAR="ASSETHUBPOLKADOT_ENDPOINT"
         else
-          source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
           npx @acala-network/chopsticks@latest \
-            --endpoint=wss://sys.ibp.network/asset-hub-kusama \
-            --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
+            --db=/tmp/kah.db \
             --port=8002 > /tmp/chopsticks.log 2>&1 &
           echo $! > /tmp/chopsticks.pid
           PORT=8002
