@@ -27,7 +27,56 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn update-known-good
-    - run: yarn test:${{ matrix.network }} -u
+    - name: Start Chopsticks
+      run: |
+        if [ "${{ matrix.network }}" = "polkadot" ]; then
+          source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+          npx @acala-network/chopsticks@latest \
+            --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
+            --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
+            --port=8001 > /tmp/chopsticks.log 2>&1 &
+          echo $! > /tmp/chopsticks.pid
+          PORT=8001
+          ENDPOINT_VAR="ASSETHUBPOLKADOT_ENDPOINT"
+        else
+          source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
+          npx @acala-network/chopsticks@latest \
+            --endpoint=wss://sys.ibp.network/asset-hub-kusama \
+            --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
+            --port=8002 > /tmp/chopsticks.log 2>&1 &
+          echo $! > /tmp/chopsticks.pid
+          PORT=8002
+          ENDPOINT_VAR="ASSETHUBKUSAMA_ENDPOINT"
+        fi
+
+        # Wait for server to be ready
+        timeout=120
+        elapsed=0
+        while [ $elapsed -lt $timeout ]; do
+          if nc -z localhost $PORT 2>/dev/null; then
+            echo "Chopsticks server ready on port $PORT"
+            break
+          fi
+          sleep 2
+          elapsed=$((elapsed + 2))
+        done
+
+        if [ $elapsed -ge $timeout ]; then
+          echo "Timeout waiting for chopsticks"
+          cat /tmp/chopsticks.log
+          exit 1
+        fi
+
+        # Export endpoint for tests
+        echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
+    - name: Run Tests
+      run: yarn test:${{ matrix.network }} -u
+    - name: Cleanup
+      if: always()
+      run: |
+        if [ -f /tmp/chopsticks.pid ]; then
+          kill $(cat /tmp/chopsticks.pid) || true
+        fi
     - name: Commit and Create PR
       uses: actions/github-script@v6
       with:
