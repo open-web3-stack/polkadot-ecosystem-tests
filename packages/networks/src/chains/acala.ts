@@ -66,7 +66,7 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
 
 export const acala = defineChain({
   name: 'acala',
-  endpoint: ['wss://acala-rpc.n.dwellir.com', 'wss://acala.ibp.network', 'wss://acala-rpc-0.aca-api.network'],
+  endpoint: ['wss://acala.ibp.network', 'wss://acala-rpc-1.aca-api.network', 'wss://acala-rpc.n.dwellir.com'],
   paraId: 2000,
   networkGroup: 'polkadot',
   custom: custom.acala,
