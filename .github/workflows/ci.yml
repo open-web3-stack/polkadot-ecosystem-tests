@@ -129,6 +129,9 @@ jobs:
         cache: 'yarn'
     - run: yarn --immutable
 
+    - name: Install Chopsticks
+      run: npm install -g @acala-network/chopsticks@latest
+
     - name: Restore Chopsticks DBs
       uses: actions/cache/restore@v4
       with:
@@ -142,7 +145,8 @@ jobs:
       run: |
         if echo "${{ matrix.tests }}" | grep -qi "assetHubPolkadot"; then
           echo "Starting PAH chopsticks"
-          npx @acala-network/chopsticks@latest \
+          chopsticks \
+            --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
             --db=/tmp/pah.db \
             --port=8001 > /tmp/chopsticks.log 2>&1 &
           echo $! > /tmp/chopsticks.pid
@@ -150,7 +154,8 @@ jobs:
           ENDPOINT_VAR="ASSETHUBPOLKADOT_ENDPOINT"
         elif echo "${{ matrix.tests }}" | grep -qi "assetHubKusama"; then
           echo "Starting KAH chopsticks"
-          npx @acala-network/chopsticks@latest \
+          chopsticks \
+            --endpoint=wss://sys.ibp.network/asset-hub-kusama \
             --db=/tmp/kah.db \
             --port=8002 > /tmp/chopsticks.log 2>&1 &
           echo $! > /tmp/chopsticks.pid
