@@ -184,7 +184,7 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 [
   {
     "data": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Reserved",
@@ -223,7 +223,7 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 [
   {
     "data": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Reserved",
@@ -262,7 +262,7 @@ exports[`Polkadot Asset Hub Accounts > currency tests > liquidity restriction er
 [
   {
     "data": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Reserved",

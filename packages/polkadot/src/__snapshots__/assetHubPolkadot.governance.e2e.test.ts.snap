@@ -9,8 +9,8 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 90000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -237,7 +237,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
       "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
@@ -271,7 +271,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
       "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
@@ -305,7 +305,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
       "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
@@ -334,7 +334,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
       "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
@@ -366,7 +366,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
       "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
     },
     "submissionDeposit": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "tally": {
@@ -414,7 +414,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     "inline": "0x3c030700e40b5402008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
   },
   "submissionDeposit": {
-    "amount": 10000000000,
+    "amount": 100000000000,
     "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
   },
   "tally": {
@@ -443,7 +443,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
 [
   {
     "data": {
-      "amount": 10000000000,
+      "amount": 100000000000,
       "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
     },
     "method": "SubmissionDepositRefunded",
@@ -456,7 +456,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
 [
   {
     "data": {
-      "amount": "(rounded 62000000)",
+      "amount": "(rounded 20000000)",
     },
     "method": "Withdraw",
     "section": "balances",
@@ -483,14 +483,14 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   },
   {
     "data": {
-      "amount": "(rounded 62000000)",
+      "amount": "(rounded 20000000)",
     },
     "method": "Deposit",
     "section": "balances",
   },
   {
     "data": {
-      "actualFee": "(rounded 62000000)",
+      "actualFee": "(rounded 20000000)",
       "tip": 0,
     },
     "method": "TransactionFeePaid",
@@ -502,8 +502,8 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 100000)",
-          "refTime": "(rounded 2000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -522,8 +522,8 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 90000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
         },
       },
     },
