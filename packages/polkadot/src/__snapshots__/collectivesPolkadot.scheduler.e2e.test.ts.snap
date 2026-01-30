@@ -9,7 +9,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -29,7 +29,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -112,7 +112,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wro
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 900000000)",
         },
       },
@@ -132,7 +132,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
