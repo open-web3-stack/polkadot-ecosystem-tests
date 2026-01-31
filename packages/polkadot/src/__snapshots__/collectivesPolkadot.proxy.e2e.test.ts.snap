@@ -1346,6 +1346,25 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
 ]
 `;
 
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Alliance > events for proxy type Alliance, pallet system, call set_heap_pages 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Ambassador > events for proxy type Ambassador, pallet alliance, call join_alliance 1`] = `
 [
   {
@@ -1517,6 +1536,25 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
 ]
 `;
 
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Ambassador > events for proxy type Ambassador, pallet system, call set_heap_pages 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet balances, call burn 1`] = `
 [
   {
@@ -1593,6 +1631,25 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
 ]
 `;
 
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call set_heap_pages 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
 [
   {
@@ -1651,6 +1708,25 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
 `;
 
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call set_heap_pages 1`] = `
 [
   {
     "data": {
@@ -1841,6 +1917,25 @@ exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filte
 `;
 
 exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet system, call remark_with_event 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Collectives Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Fellowship > events for proxy type Fellowship, pallet system, call set_heap_pages 1`] = `
 [
   {
     "data": {

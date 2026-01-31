@@ -713,6 +713,11 @@ class ProxyActionBuilderImpl<
         extrinsic: 'apply_authorized_upgrade',
         call: this.client.api.tx.system.applyAuthorizedUpgrade('code'),
       },
+      {
+        pallet: 'system',
+        extrinsic: 'set_heap_pages',
+        call: this.client.api.tx.system.setHeapPages(2048),
+      },
     ]
   }
 
