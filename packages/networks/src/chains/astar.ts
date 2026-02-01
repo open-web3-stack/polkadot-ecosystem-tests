@@ -34,9 +34,6 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
       [['aca' in config ? config.aca : config.kar, defaultAccounts.alice.address], { balance: 20 * 1e12 }],
     ],
   },
-  Sudo: {
-    key: defaultAccounts.alice.address,
-  },
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],

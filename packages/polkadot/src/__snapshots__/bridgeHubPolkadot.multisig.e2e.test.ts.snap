@@ -14,7 +14,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > approval with sender in si
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -39,7 +39,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > approval with signatories 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -64,7 +64,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > cancellation with sender i
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -89,7 +89,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > cancelling a non-existent 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -114,7 +114,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > cancelling a non-existent 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -139,7 +139,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > creating a multisig with t
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -164,7 +164,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > execution with sender in s
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -203,7 +203,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > multisig cancellation with
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -228,7 +228,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > multisig cancellation with
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -253,7 +253,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > multisig creation with too
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -292,7 +292,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > multisig execution with re
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
@@ -317,7 +317,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > non-depositor tries to can
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -342,7 +342,7 @@ exports[`BridgeHubPolkadot Multisig > failure tests > repeated approval with \`a
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 1000000)",
+          "proofSize": 0,
           "refTime": "(rounded 2000000000)",
         },
       },
