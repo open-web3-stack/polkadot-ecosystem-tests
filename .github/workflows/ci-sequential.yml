@@ -102,28 +102,11 @@ jobs:
             /tmp/kah.db
           key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
 
-  define-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      kusama_tests: ${{ steps.tests.outputs.kusama_tests }}
-      polkadot_tests: ${{ steps.tests.outputs.polkadot_tests }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Define Tests
-        id: tests
-        run: |
-          echo "kusama_tests=$(cd packages && ls kusama/src/*.test.ts | jq -R -s -c 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
-          echo "polkadot_tests=$(cd packages && ls polkadot/src/*.test.ts | jq -R -s -c 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
-
   # Kusama tests run sequentially
   test-kusama:
-    needs: [define-matrix, setup-chopsticks-cache]
+    needs: [setup-chopsticks-cache]
     timeout-minutes: 180
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test: ${{ fromJSON(needs.define-matrix.outputs.kusama_tests) }}
     steps:
     - uses: actions/checkout@v4
     - name: Setup Node.js
@@ -172,8 +155,10 @@ jobs:
           exit 1
         fi
 
-    - name: Run Kusama Test
-      run: yarn test packages/${{ matrix.test }}
+    - name: Run Kusama Tests Sequentially
+      run: SEQUENTIAL=true yarn test packages/kusama
+      env:
+        ASSETHUBKUSAMA_ENDPOINT: ws://localhost:8002
 
     - name: Cleanup
       if: always()
@@ -184,13 +169,9 @@ jobs:
 
   # Polkadot tests run sequentially
   test-polkadot:
-    needs: [define-matrix, setup-chopsticks-cache]
+    needs: [setup-chopsticks-cache]
     timeout-minutes: 180
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test: ${{ fromJSON(needs.define-matrix.outputs.polkadot_tests) }}
     steps:
     - uses: actions/checkout@v4
     - name: Setup Node.js
@@ -239,8 +220,10 @@ jobs:
           exit 1
         fi
 
-    - name: Run Polkadot Test
-      run: yarn test packages/${{ matrix.test }}
+    - name: Run Polkadot Tests Sequentially
+      run: SEQUENTIAL=true yarn test packages/polkadot
+      env:
+        ASSETHUBPOLKADOT_ENDPOINT: ws://localhost:8001
 
     - name: Cleanup
       if: always()
