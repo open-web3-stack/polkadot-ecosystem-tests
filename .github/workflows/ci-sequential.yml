@@ -27,109 +27,8 @@ jobs:
     - run: yarn --immutable
     - run: yarn lint
 
-  setup-chopsticks-cache:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: 'yarn'
-      - run: yarn --immutable
-
-      - name: Initialize Chopsticks DBs Sequentially
-        run: |
-          # Source block numbers
-          source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
-          source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
-
-          # Function to start and wait for chopsticks
-          start_chopsticks() {
-            local name=$1
-            local endpoint=$2
-            local block=$3
-            local db=$4
-            local port=$5
-            local log=$6
-
-            echo "Starting $name chopsticks..."
-            npx @acala-network/chopsticks@latest \
-              --endpoint=$endpoint \
-              --block=$block \
-              --db=$db \
-              --port=$port > $log 2>&1 &
-            local pid=$!
-
-            # Wait for server to be ready
-            timeout=180
-            elapsed=0
-            while [ $elapsed -lt $timeout ]; do
-              if nc -z localhost $port 2>/dev/null; then
-                echo "✓ $name ready on port $port"
-                echo $pid
-                return 0
-              fi
-              sleep 2
-              elapsed=$((elapsed + 2))
-            done
-
-            echo "✗ Timeout waiting for $name on port $port"
-            cat $log
-            return 1
-          }
-
-          # Start PAH chopsticks first (Polkadot)
-          PAH_PID=$(start_chopsticks \
-            "PAH" \
-            "wss://sys.ibp.network/asset-hub-polkadot" \
-            "$ASSETHUBPOLKADOT_BLOCK_NUMBER" \
-            "/tmp/pah.db" \
-            8001 \
-            "/tmp/pah.log") || exit 1
-
-          # Wait a bit before starting the second one to avoid rate limiting
-          echo "Waiting 10 seconds before starting KAH..."
-          sleep 10
-
-          # Start KAH chopsticks second (Kusama)
-          KAH_PID=$(start_chopsticks \
-            "KAH" \
-            "wss://sys.ibp.network/asset-hub-kusama" \
-            "$ASSETHUBKUSAMA_BLOCK_NUMBER" \
-            "/tmp/kah.db" \
-            8002 \
-            "/tmp/kah.log") || exit 1
-
-          # Kill servers after initialization
-          kill $PAH_PID $KAH_PID || true
-          sleep 2
-
-          # Verify DBs were created and are non-empty
-          for db in /tmp/pah.db /tmp/kah.db; do
-            if [ ! -f "$db" ]; then
-              echo "Error: $db not found"
-              exit 1
-            fi
-            size=$(stat -f%z "$db" 2>/dev/null || stat -c%s "$db" 2>/dev/null)
-            if [ "$size" -eq 0 ]; then
-              echo "Error: $db is empty"
-              exit 1
-            fi
-            echo "✓ $db created successfully (${size} bytes)"
-          done
-
-      - name: Cache Chopsticks DBs
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /tmp/pah.db
-            /tmp/kah.db
-          key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
-
   # Kusama tests run sequentially
   test-kusama:
-    needs: [setup-chopsticks-cache]
     timeout-minutes: 180
     runs-on: ubuntu-latest
     steps:
@@ -144,29 +43,23 @@ jobs:
     - name: Install Chopsticks
       run: npm install -g @acala-network/chopsticks@latest
 
-    - name: Restore Chopsticks DBs
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          /tmp/pah.db
-          /tmp/kah.db
-        key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
-        fail-on-cache-miss: true
-
     - name: Start KAH Chopsticks
       run: |
+        # Source block numbers
+        source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
+
         chopsticks \
           --endpoint=wss://sys.ibp.network/asset-hub-kusama \
-          --db=/tmp/kah.db \
+          --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
           --port=8002 > /tmp/chopsticks.log 2>&1 &
         echo $! > /tmp/chopsticks.pid
 
         # Wait for server
-        timeout=60
+        timeout=180
         elapsed=0
         while [ $elapsed -lt $timeout ]; do
           if nc -z localhost 8002 2>/dev/null; then
-            echo "Chopsticks ready on port 8002"
+            echo "✓ Chopsticks ready on port 8002"
             echo "ASSETHUBKUSAMA_ENDPOINT=ws://localhost:8002" >> $GITHUB_ENV
             break
           fi
@@ -175,7 +68,7 @@ jobs:
         done
 
         if [ $elapsed -ge $timeout ]; then
-          echo "Timeout waiting for chopsticks"
+          echo "✗ Timeout waiting for chopsticks"
           cat /tmp/chopsticks.log
           exit 1
         fi
@@ -194,7 +87,6 @@ jobs:
 
   # Polkadot tests run sequentially
   test-polkadot:
-    needs: [setup-chopsticks-cache]
     timeout-minutes: 180
     runs-on: ubuntu-latest
     steps:
@@ -209,29 +101,23 @@ jobs:
     - name: Install Chopsticks
       run: npm install -g @acala-network/chopsticks@latest
 
-    - name: Restore Chopsticks DBs
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          /tmp/pah.db
-          /tmp/kah.db
-        key: chopsticks-db-${{ hashFiles('KNOWN_GOOD_BLOCK_NUMBERS_*.env') }}
-        fail-on-cache-miss: true
-
     - name: Start PAH Chopsticks
       run: |
+        # Source block numbers
+        source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+
         chopsticks \
           --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
-          --db=/tmp/pah.db \
+          --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
           --port=8001 > /tmp/chopsticks.log 2>&1 &
         echo $! > /tmp/chopsticks.pid
 
         # Wait for server
-        timeout=60
+        timeout=180
         elapsed=0
         while [ $elapsed -lt $timeout ]; do
           if nc -z localhost 8001 2>/dev/null; then
-            echo "Chopsticks ready on port 8001"
+            echo "✓ Chopsticks ready on port 8001"
             echo "ASSETHUBPOLKADOT_ENDPOINT=ws://localhost:8001" >> $GITHUB_ENV
             break
           fi
@@ -240,7 +126,7 @@ jobs:
         done
 
         if [ $elapsed -ge $timeout ]; then
-          echo "Timeout waiting for chopsticks"
+          echo "✗ Timeout waiting for chopsticks"
           cat /tmp/chopsticks.log
           exit 1
         fi
