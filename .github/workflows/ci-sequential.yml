@@ -87,6 +87,7 @@ jobs:
 
   # Polkadot tests run sequentially
   test-polkadot:
+    needs: [test-kusama]
     timeout-minutes: 180
     runs-on: ubuntu-latest
     steps:
