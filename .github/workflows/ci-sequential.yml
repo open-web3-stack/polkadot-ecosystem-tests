@@ -1,0 +1,157 @@
+name: CI Sequential
+
+on:
+  workflow_dispatch:  # Allow manual trigger
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+        cache: 'yarn'
+    - run: yarn --immutable
+    - run: yarn lint
+
+  # Kusama tests run sequentially
+  test-kusama:
+    timeout-minutes: 180
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+        cache: 'yarn'
+    - run: yarn --immutable
+
+    - name: Install Chopsticks
+      run: npm install -g @acala-network/chopsticks@latest
+
+    - name: Start KAH Chopsticks
+      run: |
+        # Source block numbers
+        source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
+
+        chopsticks \
+          --endpoint=wss://sys.ibp.network/asset-hub-kusama \
+          --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
+          --port=8002 > /tmp/chopsticks.log 2>&1 &
+        echo $! > /tmp/chopsticks.pid
+
+        # Wait for server
+        timeout=180
+        elapsed=0
+        while [ $elapsed -lt $timeout ]; do
+          if nc -z localhost 8002 2>/dev/null; then
+            echo "✓ Chopsticks ready on port 8002"
+            echo "ASSETHUBKUSAMA_ENDPOINT=ws://localhost:8002" >> $GITHUB_ENV
+            break
+          fi
+          sleep 2
+          elapsed=$((elapsed + 2))
+        done
+
+        if [ $elapsed -ge $timeout ]; then
+          echo "✗ Timeout waiting for chopsticks"
+          cat /tmp/chopsticks.log
+          exit 1
+        fi
+
+    - name: Run Kusama Tests Sequentially
+      run: SEQUENTIAL=true yarn test packages/kusama
+      env:
+        ASSETHUBKUSAMA_ENDPOINT: ws://localhost:8002
+
+    - name: Cleanup
+      if: always()
+      run: |
+        if [ -f /tmp/chopsticks.pid ]; then
+          kill $(cat /tmp/chopsticks.pid) || true
+        fi
+
+  # Polkadot tests run sequentially
+  test-polkadot:
+    needs: [test-kusama]
+    timeout-minutes: 180
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+        cache: 'yarn'
+    - run: yarn --immutable
+
+    - name: Install Chopsticks
+      run: npm install -g @acala-network/chopsticks@latest
+
+    - name: Start PAH Chopsticks
+      run: |
+        # Source block numbers
+        source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
+
+        chopsticks \
+          --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
+          --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
+          --port=8001 > /tmp/chopsticks.log 2>&1 &
+        echo $! > /tmp/chopsticks.pid
+
+        # Wait for server
+        timeout=180
+        elapsed=0
+        while [ $elapsed -lt $timeout ]; do
+          if nc -z localhost 8001 2>/dev/null; then
+            echo "✓ Chopsticks ready on port 8001"
+            echo "ASSETHUBPOLKADOT_ENDPOINT=ws://localhost:8001" >> $GITHUB_ENV
+            break
+          fi
+          sleep 2
+          elapsed=$((elapsed + 2))
+        done
+
+        if [ $elapsed -ge $timeout ]; then
+          echo "✗ Timeout waiting for chopsticks"
+          cat /tmp/chopsticks.log
+          exit 1
+        fi
+
+    - name: Run Polkadot Tests Sequentially
+      run: SEQUENTIAL=true yarn test packages/polkadot
+      env:
+        ASSETHUBPOLKADOT_ENDPOINT: ws://localhost:8001
+
+    - name: Cleanup
+      if: always()
+      run: |
+        if [ -f /tmp/chopsticks.pid ]; then
+          kill $(cat /tmp/chopsticks.pid) || true
+        fi
+
+  all-passed:
+    runs-on: ubuntu-latest
+    needs: [test-kusama, test-polkadot]
+    if: always()
+    steps:
+      - name: All tests ok
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: Some tests failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

@@ -20,6 +20,8 @@ export default defineConfig({
 		passWithNoTests: true,
 		retry: 1,
 		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['default'],
+		// Run tests sequentially when SEQUENTIAL env var is set
+		fileParallelism: process.env.SEQUENTIAL === 'true' ? false : undefined,
 	},
 	build: {
 		outDir: '../../dist',
