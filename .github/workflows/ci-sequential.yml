@@ -38,46 +38,68 @@ jobs:
           cache: 'yarn'
       - run: yarn --immutable
 
-      - name: Initialize Chopsticks DBs
+      - name: Initialize Chopsticks DBs Sequentially
         run: |
           # Source block numbers
           source KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
           source KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
 
-          # Start PAH chopsticks with DB
-          npx @acala-network/chopsticks@latest \
-            --endpoint=wss://sys.ibp.network/asset-hub-polkadot \
-            --block=$ASSETHUBPOLKADOT_BLOCK_NUMBER \
-            --db=/tmp/pah.db \
-            --port=8001 > /tmp/pah.log 2>&1 &
-          PAH_PID=$!
+          # Function to start and wait for chopsticks
+          start_chopsticks() {
+            local name=$1
+            local endpoint=$2
+            local block=$3
+            local db=$4
+            local port=$5
+            local log=$6
 
-          # Start KAH chopsticks with DB
-          npx @acala-network/chopsticks@latest \
-            --endpoint=wss://sys.ibp.network/asset-hub-kusama \
-            --block=$ASSETHUBKUSAMA_BLOCK_NUMBER \
-            --db=/tmp/kah.db \
-            --port=8002 > /tmp/kah.log 2>&1 &
-          KAH_PID=$!
+            echo "Starting $name chopsticks..."
+            npx @acala-network/chopsticks@latest \
+              --endpoint=$endpoint \
+              --block=$block \
+              --db=$db \
+              --port=$port > $log 2>&1 &
+            local pid=$!
 
-          # Wait for both servers to be ready
-          timeout=180
-          for port in 8001 8002; do
+            # Wait for server to be ready
+            timeout=180
             elapsed=0
             while [ $elapsed -lt $timeout ]; do
               if nc -z localhost $port 2>/dev/null; then
-                echo "Chopsticks on port $port ready"
-                break
+                echo "✓ $name ready on port $port"
+                echo $pid
+                return 0
               fi
               sleep 2
               elapsed=$((elapsed + 2))
             done
-            if [ $elapsed -ge $timeout ]; then
-              echo "Timeout waiting for chopsticks on port $port"
-              cat /tmp/*.log
-              exit 1
-            fi
-          done
+
+            echo "✗ Timeout waiting for $name on port $port"
+            cat $log
+            return 1
+          }
+
+          # Start PAH chopsticks first (Polkadot)
+          PAH_PID=$(start_chopsticks \
+            "PAH" \
+            "wss://sys.ibp.network/asset-hub-polkadot" \
+            "$ASSETHUBPOLKADOT_BLOCK_NUMBER" \
+            "/tmp/pah.db" \
+            8001 \
+            "/tmp/pah.log") || exit 1
+
+          # Wait a bit before starting the second one to avoid rate limiting
+          echo "Waiting 10 seconds before starting KAH..."
+          sleep 10
+
+          # Start KAH chopsticks second (Kusama)
+          KAH_PID=$(start_chopsticks \
+            "KAH" \
+            "wss://sys.ibp.network/asset-hub-kusama" \
+            "$ASSETHUBKUSAMA_BLOCK_NUMBER" \
+            "/tmp/kah.db" \
+            8002 \
+            "/tmp/kah.log") || exit 1
 
           # Kill servers after initialization
           kill $PAH_PID $KAH_PID || true
