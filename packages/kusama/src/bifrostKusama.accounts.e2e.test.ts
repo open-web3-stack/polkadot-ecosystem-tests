@@ -1,4 +1,4 @@
-import { bifrostPolkadot } from '@e2e-test/networks/chains'
+import { bifrostKusama } from '@e2e-test/networks/chains'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -49,4 +49,4 @@ const accountsCfg = createAccountsConfig({
   },
 })
 
-registerTestTree(accountsE2ETests(bifrostPolkadot, testConfig, accountsCfg))
+registerTestTree(accountsE2ETests(bifrostKusama, testConfig, accountsCfg))
