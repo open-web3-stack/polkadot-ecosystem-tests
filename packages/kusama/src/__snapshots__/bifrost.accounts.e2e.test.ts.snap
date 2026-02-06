@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Bifrost Polkadot Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
+exports[`Bifrost Kusama Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
 [
   {
     "data": {
@@ -13,7 +13,7 @@ exports[`Bifrost Polkadot Accounts > \`burn\` > burning funds from account works
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
+exports[`Bifrost Kusama Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
 [
   {
     "data": {
@@ -26,7 +26,7 @@ exports[`Bifrost Polkadot Accounts > \`force_adjust_total_issuance\` > successfu
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
+exports[`Bifrost Kusama Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
 [
   {
     "data": {
@@ -39,7 +39,7 @@ exports[`Bifrost Polkadot Accounts > \`force_adjust_total_issuance\` > successfu
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
+exports[`Bifrost Kusama Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
 [
   {
     "data": {
@@ -74,7 +74,7 @@ exports[`Bifrost Polkadot Accounts > \`force_transfer\` > force transferring ori
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
+exports[`Bifrost Kusama Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
 [
   {
     "data": {
@@ -94,7 +94,7 @@ exports[`Bifrost Polkadot Accounts > \`transfer_all\` > account with reserves ca
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
+exports[`Bifrost Kusama Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
 [
   {
     "data": {
@@ -121,7 +121,7 @@ exports[`Bifrost Polkadot Accounts > \`transfer_all\` > transfer all with keepAl
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
+exports[`Bifrost Kusama Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
 [
   {
     "data": {
@@ -141,7 +141,7 @@ exports[`Bifrost Polkadot Accounts > \`transfer_all\` > transfer all with keepAl
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > liquidity restricted action events 1`] = `
 [
   {
     "data": {
@@ -166,7 +166,7 @@ exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction erro
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restricted action events 1`] = `
 [
   {
     "data": {
@@ -191,7 +191,7 @@ exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction erro
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restricted action events 1`] = `
 [
   {
     "data": {
@@ -216,19 +216,19 @@ exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction erro
 ]
 `;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
 
-exports[`Bifrost Polkadot Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
+exports[`Bifrost Kusama Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
 
-exports[`Bifrost Polkadot Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
+exports[`Bifrost Kusama Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
 [
   {
     "data": {
