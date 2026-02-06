@@ -11,7 +11,7 @@ import {
 } from '@e2e-test/shared'
 
 const testConfig: ParaTestConfig = {
-  testSuiteName: 'Bifrost Polkadot Accounts',
+  testSuiteName: 'Bifrost Kusama Accounts',
   addressEncoding: 0,
   chainEd: 'LowEd',
   blockProvider: 'Local',
