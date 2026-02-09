@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, defaultAccountsSr25519, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -406,7 +406,7 @@ export const referendumSubmissionDepositAction = <
   name: 'referendum submission',
   createTransaction: async (client: Client<TCustom, TInitStorages>) => {
     return client.api.tx.referenda.submit(
-      { Origins: 'SmallTipper' } as any,
+      { System: 'Root' } as any,
       { Inline: client.api.tx.system.remark('test referendum').method.toHex() },
       { After: 1 },
     )
@@ -600,7 +600,7 @@ async function transferAllowDeathTest<
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 3n
+  const eps = existentialDeposit / 2n
   // When transferring this amount, net of fees, the account should have less than 1 ED remaining.
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
@@ -938,7 +938,7 @@ async function transferAllowDeathWithReserveTest<
 
   // 1. Create fresh addresses, one with 10 ED (plus some extra for fees)
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 3n
+  const eps = existentialDeposit / 2n
   const totalBalance = existentialDeposit * 10n + eps // 10 ED + some extra
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
@@ -1144,7 +1144,7 @@ async function forceTransferKillTest<
 
   // Create fresh account
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 3n
+  const eps = existentialDeposit / 2n
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
@@ -1653,7 +1653,7 @@ async function forceTransferBadOriginTest(chain: Chain) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const transferAmount = existentialDeposit
-  const alice = testAccounts.alice
+  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
   const bob = testAccounts.bob
 
   const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
@@ -2559,7 +2559,7 @@ async function forceUnreserveBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = testAccounts.alice
+  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
   const unreserveAmount = existentialDeposit
 
   const forceUnreserveTx = client.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
@@ -2924,7 +2924,7 @@ async function forceSetBalanceBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = testAccounts.alice
+  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
   const newFree = existentialDeposit * 10n
 
   const forceSetBalanceTx = client.api.tx.balances.forceSetBalance(alice.address, newFree)
@@ -3201,7 +3201,7 @@ async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = testAccounts.alice
+  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
   const direction = 'Increase'
   const delta = existentialDeposit
 
@@ -3999,8 +3999,8 @@ async function burnDoubleAttemptTest<
  * Overall test structure:
  *
  * 1. Credit an account with 1_000_000 ED
- * 2. Execute the provided reserve action for 900_000 ED
- * 3. Execute the provided lock action for 900_000 ED
+ * 2. Execute the provided reserve action for 700_000 ED
+ * 3. Execute the provided lock action for 700_000 ED
  * 4. Try to execute the provided deposit action
  * Depending on whether the runtime has been upstreamed a fix:
  * 5. Check that the transaction failed with the appropriate liquidity restriction error
@@ -4035,11 +4035,11 @@ async function testLiquidityRestrictionForAction<
     return
   }
 
-  // Step 1: Create account with 1000000 ED
+  // Step 1: Create account with 100_000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 1_000_000n
-  const alice = testAccounts.alice
+  const alice = defaultAccountsSr25519.alice
 
   // Set initial balance
 
@@ -4055,16 +4055,18 @@ async function testLiquidityRestrictionForAction<
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
 
-  const reserveAmount = existentialDeposit * 900_000n
+  const reserveAmount = existentialDeposit * 700_000n
   const reservedAmount = await reserveAction.execute(client, alice, reserveAmount)
 
   await client.dev.newBlock()
+
+  //await client.pause()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
 
-  const lockAmount = existentialDeposit * 900_000n
+  const lockAmount = existentialDeposit * 700_000n
   await lockAction.execute(client, alice, lockAmount, testConfig)
 
   await client.dev.newBlock()
@@ -4072,11 +4074,12 @@ async function testLiquidityRestrictionForAction<
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 4: Try to execute the deposit action
-
   const actionTx = await depositAction.createTransaction(client)
   const actionEvents = await sendTransaction(actionTx.signAsync(alice))
 
   await client.dev.newBlock()
+
+  //await client.pause()
 
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
