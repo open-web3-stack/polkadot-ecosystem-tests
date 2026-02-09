@@ -38,7 +38,7 @@ export const hydration = defineChain({
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: 'wss://basilisk-rpc.n.dwellir.com',
+  endpoint: ['wss://basilisk-rpc.n.dwellir.com', 'wss://rpc.basilisk.cloud'],
   networkGroup: 'kusama',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
