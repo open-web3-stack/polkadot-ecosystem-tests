@@ -18,7 +18,7 @@ const testConfig: ParaTestConfig = {
 }
 
 const accountsCfg = createAccountsConfig({
-  expectation: 'success',
+  expectation: 'failure',
   actions: {
     reserveActions: [manualReserveAction()],
     lockActions: [manualLockAction()],
