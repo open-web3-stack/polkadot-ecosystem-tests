@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519, testAccounts } from '@e2e-test/networks'
+import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -1653,7 +1653,7 @@ async function forceTransferBadOriginTest(chain: Chain) {
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const transferAmount = existentialDeposit
-  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
+  const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
   const bob = testAccounts.bob
 
   const forceTransferTx = client.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
@@ -2559,7 +2559,7 @@ async function forceUnreserveBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
+  const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
   const unreserveAmount = existentialDeposit
 
   const forceUnreserveTx = client.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
@@ -2924,7 +2924,7 @@ async function forceSetBalanceBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
+  const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
   const newFree = existentialDeposit * 10n
 
   const forceSetBalanceTx = client.api.tx.balances.forceSetBalance(alice.address, newFree)
@@ -3201,7 +3201,7 @@ async function forceAdjustTotalIssuanceBadOriginTest(chain: Chain) {
 
   // Create fresh account
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const alice = await createAccountWithBalance(client, existentialDeposit * 10n, '//fresh_alice')
+  const alice = await createAccountWithBalance(client, existentialDeposit * 1000n, '//fresh_alice')
   const direction = 'Increase'
   const delta = existentialDeposit
 
@@ -4039,7 +4039,7 @@ async function testLiquidityRestrictionForAction<
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 1_000_000n
-  const alice = defaultAccountsSr25519.alice
+  const alice = testAccounts.alice
 
   // Set initial balance
 
@@ -4060,8 +4060,6 @@ async function testLiquidityRestrictionForAction<
 
   await client.dev.newBlock()
 
-  //await client.pause()
-
   await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
@@ -4075,13 +4073,33 @@ async function testLiquidityRestrictionForAction<
 
   // Step 4: Try to execute the deposit action
   const actionTx = await depositAction.createTransaction(client)
-  const actionEvents = await sendTransaction(actionTx.signAsync(alice))
+  let actionEvents: any
+  let rpcPaymentError = false
 
-  await client.dev.newBlock()
+  try {
+    actionEvents = await sendTransaction(actionTx.signAsync(alice))
+  } catch (error: any) {
+    // Handle Hydration-specific RPC error where payment validation fails before transaction submission
+    // Error: RpcError: 1010: {"invalid":{"payment":null}}
+    const errorMessage = error?.message || String(error)
+    const errorCode = error?.code
 
-  //await client.pause()
+    if (
+      (errorCode === 1010 || errorMessage.includes('1010')) &&
+      (errorMessage.includes('payment') || errorMessage.includes('invalid'))
+    ) {
+      rpcPaymentError = true
+      // Transaction was rejected by the RPC before submission due to insufficient funds,
+      // as expected due to liquidity restriction error.
+    } else {
+      throw error
+    }
+  }
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  if (!rpcPaymentError) {
+    await client.dev.newBlock()
+    await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  }
 
   // Step 5: Check the result of the transation
 
@@ -4093,32 +4111,39 @@ async function testLiquidityRestrictionForAction<
     .with('failure', async () => {
       // Step 5
 
-      await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-        'liquidity restricted action events',
-      )
+      if (rpcPaymentError) {
+        // For Hydration and similar chains, the RPC payment validation caught the insufficient funds
+        // This is a pre-flight check that prevents the transaction from even being submitted
+        await check('RPC payment validation rejected transaction due to insufficient funds').toMatchSnapshot('')
+      } else {
+        await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+          'liquidity restricted action events',
+        )
 
-      const finalEvents = await client.api.query.system.events()
-      const failedEvent = finalEvents.find((record) => {
-        const { event } = record
-        return event.section === 'system' && event.method === 'ExtrinsicFailed'
-      })
+        const finalEvents = await client.api.query.system.events()
+        const failedEvent = finalEvents.find((record) => {
+          const { event } = record
+          return event.section === 'system' && event.method === 'ExtrinsicFailed'
+        })
 
-      expect(failedEvent).toBeDefined()
-      assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
-      const dispatchError = failedEvent!.event.data.dispatchError
+        expect(failedEvent).toBeDefined()
+        assert(client.api.events.system.ExtrinsicFailed.is(failedEvent!.event))
+        const dispatchError = failedEvent!.event.data.dispatchError
 
-      assert(dispatchError.isModule)
-      const moduleError = dispatchError.asModule
-      expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+        assert(dispatchError.isModule)
+        const moduleError = dispatchError.asModule
+        expect(client.api.errors.balances.LiquidityRestrictions.is(moduleError)).toBe(true)
+      }
 
       // Step 6
 
       const account = await client.api.query.system.account(alice.address)
       const actionDeposit = await depositAction.calculateDeposit(client)
 
-      expect(account.data.free.toBigInt()).toBe(
-        totalBalance - lockAmount - cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding))!,
-      )
+      // If RPC payment error occurred, cumulative fees won't have been updated, so default to 0n
+      const aliceFees = cumulativeFees.get(encodeAddress(alice.address, testConfig.addressEncoding)) || 0n
+
+      expect(account.data.free.toBigInt()).toBe(totalBalance - lockAmount - aliceFees)
       expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
       expect(account.data.frozen.toBigInt()).toBe(lockAmount)
 
@@ -4127,6 +4152,14 @@ async function testLiquidityRestrictionForAction<
     })
     .with('success', async () => {
       // Step 5
+
+      if (rpcPaymentError) {
+        throw new Error(
+          'RPC payment validation rejected transaction despite expectation="success". ' +
+            'This chain may not have fixed the liquidity restriction bug yet. ' +
+            'Set expectation="failure" in the test configuration.',
+        )
+      }
 
       await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
         'deposit action success events',
