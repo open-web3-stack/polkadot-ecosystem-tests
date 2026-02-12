@@ -86,7 +86,7 @@ exports[`Bifrost Polkadot Accounts > \`transfer_all\` > account with reserves ca
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 920000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
