@@ -1204,7 +1204,9 @@ async function forceTransferKillTest<
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
     { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events of `force_transfer` from Alice to Bob')
+  )
+    .redact({ number: 0 })
+    .toMatchSnapshot('events of `force_transfer` from Alice to Bob')
 
   // Check events:
   // 1. `Transfer` event
