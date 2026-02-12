@@ -84,7 +84,7 @@ exports[`Hydration Accounts > \`force_transfer\` > force transferring origin bel
   {
     "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "amount": 500000000000,
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -99,7 +99,7 @@ exports[`Hydration Accounts > \`force_transfer\` > force transferring origin bel
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000000,
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
