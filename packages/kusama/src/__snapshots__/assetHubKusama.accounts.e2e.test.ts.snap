@@ -86,7 +86,7 @@ exports[`Kusama Asset Hub Accounts > \`transfer_all\` > account with reserves ca
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 270000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

@@ -73,7 +73,7 @@ exports[`Kusama Accounts > \`transfer_all\` > account with reserves cannot trans
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 33000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

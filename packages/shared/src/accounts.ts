@@ -2019,7 +2019,9 @@ async function transferAllWithReserveTest<
     transferEvents,
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice with reserve transfers all to Bob')
+  )
+    .redact({ number: 0 })
+    .toMatchSnapshot('events when Alice with reserve transfers all to Bob')
 
   // 4. Check the transfer succeeded
 

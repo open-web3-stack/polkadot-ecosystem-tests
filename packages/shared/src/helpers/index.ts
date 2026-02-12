@@ -147,6 +147,7 @@ export async function scheduleCallListWithOrigin(
   await client.dev.setStorage({
     Scheduler: {
       agenda: [[[scheduledBlock], calls]],
+      incompleteSince: scheduledBlock,
     },
   })
 }
