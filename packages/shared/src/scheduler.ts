@@ -1908,6 +1908,7 @@ export async function schedulePriorityWeightedTasks<
           ],
         ],
       ],
+      incompleteSince: targetBlock,
     },
   })
 
