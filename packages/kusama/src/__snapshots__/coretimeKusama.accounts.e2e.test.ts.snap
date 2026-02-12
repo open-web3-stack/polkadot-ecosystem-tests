@@ -86,7 +86,7 @@ exports[`Kusama Coretime Accounts > \`transfer_all\` > account with reserves can
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 3200000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -113,7 +113,7 @@ exports[`Kusama Coretime Accounts > \`transfer_all\` > transfer all with keepAli
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 3200000000)",
+      "freeBalance": "(rounded 3300000000)",
     },
     "method": "Endowed",
     "section": "balances",

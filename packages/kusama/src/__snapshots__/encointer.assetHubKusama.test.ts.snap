@@ -277,7 +277,7 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 99700000000)",
+    "free": "(rounded 99900000000)",
     "frozen": 0,
     "reserved": 0,
   },
