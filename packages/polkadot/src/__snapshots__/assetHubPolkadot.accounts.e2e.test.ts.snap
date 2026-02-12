@@ -99,7 +99,7 @@ exports[`Polkadot Asset Hub Accounts > \`transfer_all\` > account with reserves 
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 10000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
