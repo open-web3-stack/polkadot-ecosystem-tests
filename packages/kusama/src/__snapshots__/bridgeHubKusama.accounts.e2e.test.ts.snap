@@ -167,8 +167,6 @@ exports[`Kusama Bridge Hub Accounts > currency tests > liquidity restriction err
 ]
 `;
 
-exports[`Kusama Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=proxy addition"`;
-
 exports[`Kusama Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
 
 exports[`Kusama Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
