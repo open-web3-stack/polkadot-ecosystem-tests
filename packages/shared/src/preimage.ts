@@ -11,6 +11,7 @@ import { assert, expect } from 'vitest'
 import {
   check,
   checkEvents,
+  findFeeEvent,
   getReservedFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -916,20 +917,14 @@ async function preimageEnsureUpdatedTest<
 
   // Get the transaction fee from the payment event.
   const events = await client.api.query.system.events()
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  const txPaymentFee = txPaymentEventData.actualFee.toBigInt()
-  expect(txPaymentEventData.tip.toBigInt(), 'Unexpected extrinsic tip').toBe(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  expect(feeInfo.tip, 'Unexpected extrinsic tip').toBe(0n)
   // If the ratio of old to total preimages is more than 90%, fees are not paid.
   if (expectFees) {
-    expect(txPaymentFee).toBeGreaterThan(0n)
+    expect(feeInfo.actualFee).toBeGreaterThan(0n)
   } else {
-    expect(txPaymentFee).toBe(0n)
+    expect(feeInfo.actualFee).toBe(0n)
   }
 }
 

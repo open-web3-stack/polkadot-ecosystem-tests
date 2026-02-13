@@ -19,6 +19,7 @@ import {
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
+  findFeeEvent,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
   type TestConfig,
@@ -451,6 +452,7 @@ async function transferInsufficientFundsTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
   chain: Chain<TCustom, TInitStorages>,
+  testConfig: TestConfig,
   transferFn: (
     client: Client<TCustom, TInitStorages>,
     bob: string,
@@ -495,18 +497,14 @@ async function transferInsufficientFundsTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - feeInfo.actualFee)
 }
 
 /**
@@ -655,14 +653,9 @@ async function transferAllowDeathTest<
   const events = await client.api.query.system.events()
 
   // Transaction payment event that should appear before any other events; other events are regular
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  expect(txPaymentEvent).toBeDefined()
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
 
   // Check `Transfer` event
   const transferEvent = findTransferEvent(events, client, alice.address, bob.address, testConfig.addressEncoding)
@@ -682,7 +675,7 @@ async function transferAllowDeathTest<
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
   expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-  expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
+  expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
 
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
@@ -782,20 +775,14 @@ async function transferAllowDeathNoKillTest<
 
   // Get the extrinsic's fee
   const events = await client.api.query.system.events()
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   expect(bobAccount.data.free.toBigInt()).toBe(transferAmount)
   // Alice should have her original balance minus the transfer amount minus fees
-  expect(aliceAccount.data.free.toBigInt()).toBe(
-    totalBalance - transferAmount - txPaymentEventData.actualFee.toBigInt(),
-  )
+  expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - transferAmount - feeInfo.actualFee)
 
   // Check events - verify NO KilledAccount events are present
   const killedAccountEvent = events.find((record) => {
@@ -822,7 +809,7 @@ async function transferAllowDeathNoKillTest<
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
   expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, testConfig.addressEncoding))
-  expect(withdrawEventData.amount.toBigInt()).toBe(txPaymentEventData.actualFee.toBigInt())
+  expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
 
   // Verify endowment event
   const endowedEvent = events.find((record) => {
@@ -854,7 +841,7 @@ async function transferAllowDeathNoKillTest<
 async function transferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
@@ -894,18 +881,14 @@ async function transferBelowExistentialDepositTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 }
 
 /**
@@ -914,11 +897,11 @@ async function transferBelowExistentialDepositTest<
 async function transferAllowDeathInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amt: bigint) =>
     client.api.tx.balances.transferAllowDeath(bob, amt)
 
-  await transferInsufficientFundsTest(chain, lambda)
+  await transferInsufficientFundsTest(chain, testConfig, lambda)
 }
 
 /**
@@ -990,17 +973,13 @@ async function transferAllowDeathWithReserveTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Check final balances
-  expect(aliceAccountFinal.data.free.toBigInt()).toBe(aliceFreeBefore - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccountFinal.data.free.toBigInt()).toBe(aliceFreeBefore - feeInfo.actualFee)
   expect(bobAccount.data.free.toBigInt()).toBe(0n)
 
   // Alice should still have consumers and reserved balance
@@ -1043,7 +1022,7 @@ async function transferAllowDeathWithReserveTest<
 async function transferAllowDeathSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -1061,19 +1040,15 @@ async function transferAllowDeathSelfTest<
   // Get transaction fee
   const events = await client.api.query.system.events()
 
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Alice should still be alive and balance only reduced by fees
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Check no killing/creation related events occurred
   const killedAccountEvent = events.find((record) => {
@@ -1842,20 +1817,16 @@ async function transferAllKeepAliveTrueTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Alice should keep exactly 1 ED
   expect(aliceAccountFinal.data.free.toBigInt()).toBe(existentialDeposit)
 
   // Bob should get 99 ED minus the transaction fee
-  const expectedBobBalance = existentialDeposit * 99n - txPaymentEventData.actualFee.toBigInt()
+  const expectedBobBalance = existentialDeposit * 99n - feeInfo.actualFee
   expect(bobAccount.data.free.toBigInt()).toBe(expectedBobBalance)
 
   // 4. Check events
@@ -1928,17 +1899,13 @@ async function transferAllKeepAliveFalseTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Bob should get all 100 ED minus the transaction fee
-  const expectedBobBalance = aliceBalance - txPaymentEventData.actualFee.toBigInt()
+  const expectedBobBalance = aliceBalance - feeInfo.actualFee
   expect(bobAccount.data.free.toBigInt()).toBe(expectedBobBalance)
 
   // 4. Check events
@@ -1999,7 +1966,7 @@ async function transferAllWithReserveTest<
 
   // Initialize fee tracking map before any transactions
   const cumulativeFees = new Map<string, bigint>()
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Get Alice's account state after reserve
   const aliceAccountAfterReserve = await client.api.query.system.account(alice.address)
@@ -2014,7 +1981,7 @@ async function transferAllWithReserveTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Snapshot events
   await checkEvents(
@@ -2128,18 +2095,14 @@ async function transferAllSelfKeepAliveTrueTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by fees (self-transfer should be no-op)
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Verify no Transfer event occurred
   const transferEvent = findTransferEvent(events, client, alice.address, alice.address, testConfig.addressEncoding)
@@ -2204,18 +2167,14 @@ async function transferAllSelfKeepAliveFalseTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by fees (self-transfer should be no-op)
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Verify no Transfer event occurred
   const transferEvent = findTransferEvent(events, client, alice.address, alice.address, testConfig.addressEncoding)
@@ -2254,10 +2213,10 @@ async function transferAllSelfKeepAliveFalseTest<
 async function transferKeepAliveInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amount: bigint) =>
     client.api.tx.balances.transferKeepAlive(bob, amount)
-  await transferInsufficientFundsTest(chain, lambda)
+  await transferInsufficientFundsTest(chain, testConfig, lambda)
 }
 
 /**
@@ -2271,7 +2230,7 @@ async function transferKeepAliveInsufficientFundsTest<
 async function transferKeepAliveSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // 1. Create Alice's account
@@ -2307,19 +2266,15 @@ async function transferKeepAliveSelfTest<
   // 4. Verify Alice's balance
 
   // Get fee
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance
 
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 }
 
 /**
@@ -2364,18 +2319,14 @@ async function transferKeepAliveSelfSuccessTest<
   // 4. Verify Alice's balance only changed by fees (no actual transfer for self-transfer)
 
   // Get fee
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // Verify Alice's balance only decreased by fees (self-transfer should be no-op)
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Verify no Transfer event occurred
   const transferEvent = findTransferEvent(events, client, alice.address, alice.address, testConfig.addressEncoding)
@@ -2442,20 +2393,16 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // 4. Verify Alice and Bob's balances
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
@@ -2524,20 +2471,16 @@ async function transferKeepAliveBelowEdLowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const txPaymentEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
-  })
-  assert(client.api.events.transactionPayment.TransactionFeePaid.is(txPaymentEvent!.event))
-  const txPaymentEventData = txPaymentEvent!.event.data
-  assert(txPaymentEventData.tip.toBigInt() === 0n, 'unexpected extrinsic tip')
-  expect(txPaymentEventData.actualFee.toBigInt()).toBeGreaterThan(0n)
+  const feeInfo = findFeeEvent(events, client.api, testConfig)
+  assert(feeInfo, 'expected a TransactionFeePaid event')
+  assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
+  expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
   // 4. Verify Alice and Bob's balances
 
   // Verify Alice's balance only decreased by the transaction fee
   const aliceAccount = await client.api.query.system.account(alice.address)
-  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - txPaymentEventData.actualFee.toBigInt())
+  expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
@@ -3594,7 +3537,7 @@ async function burnTestBaseCase<
   await client.dev.newBlock()
 
   // Update cumulative fees
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
     'events when Alice self-burns funds',
@@ -3666,7 +3609,7 @@ async function burnTestWithReaping<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for burn')
 
@@ -3738,7 +3681,7 @@ async function burnKeepAliveTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // 3. Verify that the transaction fails
 
@@ -3848,7 +3791,7 @@ async function burnWithDepositTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // 4. Verify that the account is NOT reaped due to consumer count
 
@@ -3922,7 +3865,7 @@ async function burnDoubleAttemptTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Verify first transaction failed
   let systemEvents = await client.api.query.system.events()
@@ -3944,7 +3887,7 @@ async function burnDoubleAttemptTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Verify second transaction also failed
   systemEvents = await client.api.query.system.events()
@@ -4055,7 +3998,7 @@ async function testLiquidityRestrictionForAction<
 
   // Initialize fee tracking map before any transactions
   const cumulativeFees = new Map<string, bigint>()
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
 
@@ -4064,7 +4007,7 @@ async function testLiquidityRestrictionForAction<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
 
@@ -4073,7 +4016,7 @@ async function testLiquidityRestrictionForAction<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, cumulativeFees, testConfig)
 
   // Step 4: Try to execute the deposit action
   const actionTx = await depositAction.createTransaction(client)
@@ -4102,7 +4045,7 @@ async function testLiquidityRestrictionForAction<
 
   if (!rpcPaymentError) {
     await client.dev.newBlock()
-    await updateCumulativeFees(client.api, cumulativeFees, testConfig.addressEncoding)
+    await updateCumulativeFees(client.api, cumulativeFees, testConfig)
   }
 
   // Step 5: Check the result of the transation
@@ -4212,17 +4155,17 @@ const commonTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig) => 
   {
     kind: 'test' as const,
     label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain),
+    testFn: () => transferBelowExistentialDepositTest(chain, testConfig),
   },
   {
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
-    testFn: () => transferAllowDeathInsufficientFundsTest(chain),
+    testFn: () => transferAllowDeathInsufficientFundsTest(chain, testConfig),
   },
   {
     kind: 'test' as const,
     label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain),
+    testFn: () => transferAllowDeathSelfTest(chain, testConfig),
   },
 ]
 
@@ -4268,12 +4211,12 @@ const commonTransferKeepAliveTests = (chain: Chain, testConfig: TestConfig) => [
   {
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
-    testFn: () => transferKeepAliveInsufficientFundsTest(chain),
+    testFn: () => transferKeepAliveInsufficientFundsTest(chain, testConfig),
   },
   {
     kind: 'test' as const,
     label: 'self-transfer is a no-op',
-    testFn: () => transferKeepAliveSelfTest(chain),
+    testFn: () => transferKeepAliveSelfTest(chain, testConfig),
   },
   {
     kind: 'test' as const,
