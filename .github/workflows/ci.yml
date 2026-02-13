@@ -61,6 +61,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Clone Subway
+        run: git clone https://github.com/AcalaNetwork/subway.git /tmp/subway
+
       - name: Cache Subway build
         uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
         with:
@@ -69,12 +72,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Build Subway
-        run: |
-          if [ ! -d "/tmp/subway" ]; then
-            git clone https://github.com/AcalaNetwork/subway.git /tmp/subway
-          fi
-          cd /tmp/subway
-          cargo build --release
+        run: cargo build --release --manifest-path /tmp/subway/Cargo.toml
 
       - name: Source known good block numbers
         run: |
