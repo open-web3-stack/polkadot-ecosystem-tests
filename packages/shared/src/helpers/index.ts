@@ -431,34 +431,29 @@ export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
 
 /**
  * Default fee extractor for standard Substrate runtimes using `pallet-transaction-payment`.
- * Handles the standard `TransactionFeePaid { who, actual_fee, tip }` event via positional access.
+ * Handles the standard `TransactionFeePaid { who, actual_fee, tip }` event.
  *
  * This is the default used by `RelayTestConfig` and `ParaTestConfig` when no `feeExtractor` is provided.
  */
-export const standardFeeExtractor: FeeExtractor = (events, _api) => {
-  return events
-    .filter(({ event }) => event.section === 'transactionPayment' && event.method === 'TransactionFeePaid')
-    .map(({ event }) => ({
-      who: event.data[0].toString(),
-      actualFee: BigInt(event.data[1].toString()),
-      tip: BigInt(event.data[2].toString()),
-    }))
+export const standardFeeExtractor: FeeExtractor = (events, api) => {
+  const results: FeeInfo[] = []
+  for (const { event } of events) {
+    if (api.events.transactionPayment.TransactionFeePaid.is(event)) {
+      results.push({
+        who: event.data.who.toString(),
+        actualFee: event.data.actualFee.toBigInt(),
+        tip: event.data.tip.toBigInt(),
+      })
+    }
+  }
+  return results
 }
 
 /**
- * Find the first fee payment event in the given events.
+ * Extract fee payment events from the given events.
  * Uses the fee extractor from the test config, or falls back to `standardFeeExtractor`.
  */
-export function findFeeEvent(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo | undefined {
-  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
-  return extractor(events, api)[0]
-}
-
-/**
- * Find all fee payment events in the given list of events.
- * Uses the fee extractor from the test config, or falls back to `standardFeeExtractor`.
- */
-export function findAllFeeEvents(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo[] {
+export function findFeeEvents(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo[] {
   const extractor = testConfig.feeExtractor ?? standardFeeExtractor
   return extractor(events, api)
 }
@@ -480,7 +475,8 @@ export async function updateCumulativeFees(
   testConfig: TestConfig,
 ): Promise<Map<string, bigint>> {
   const events = await api.query.system.events()
-  const feeInfos = findAllFeeEvents(events as unknown as EventRecord[], api, testConfig)
+  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
+  const feeInfos = extractor(events as unknown as EventRecord[], api)
 
   for (const { who, actualFee, tip } of feeInfos) {
     const address = encodeAddress(who, testConfig.addressEncoding)

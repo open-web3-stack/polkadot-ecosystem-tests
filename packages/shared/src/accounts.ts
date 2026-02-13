@@ -19,7 +19,7 @@ import {
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
-  findFeeEvent,
+  findFeeEvents,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
   type TestConfig,
@@ -497,8 +497,9 @@ async function transferInsufficientFundsTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -653,8 +654,9 @@ async function transferAllowDeathTest<
   const events = await client.api.query.system.events()
 
   // Transaction payment event that should appear before any other events; other events are regular
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
 
   // Check `Transfer` event
@@ -775,8 +777,9 @@ async function transferAllowDeathNoKillTest<
 
   // Get the extrinsic's fee
   const events = await client.api.query.system.events()
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -881,8 +884,9 @@ async function transferBelowExistentialDepositTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -973,8 +977,9 @@ async function transferAllowDeathWithReserveTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -1040,8 +1045,9 @@ async function transferAllowDeathSelfTest<
   // Get transaction fee
   const events = await client.api.query.system.events()
 
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -1817,8 +1823,9 @@ async function transferAllKeepAliveTrueTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -1899,8 +1906,9 @@ async function transferAllKeepAliveFalseTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2095,8 +2103,9 @@ async function transferAllSelfKeepAliveTrueTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2167,8 +2176,9 @@ async function transferAllSelfKeepAliveFalseTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2266,8 +2276,9 @@ async function transferKeepAliveSelfTest<
   // 4. Verify Alice's balance
 
   // Get fee
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2319,8 +2330,9 @@ async function transferKeepAliveSelfSuccessTest<
   // 4. Verify Alice's balance only changed by fees (no actual transfer for self-transfer)
 
   // Get fee
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2393,8 +2405,9 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
@@ -2471,8 +2484,9 @@ async function transferKeepAliveBelowEdLowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeInfo = findFeeEvent(events, client.api, testConfig)
-  assert(feeInfo, 'expected a TransactionFeePaid event')
+  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
+  const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
   expect(feeInfo.actualFee).toBeGreaterThan(0n)
 
