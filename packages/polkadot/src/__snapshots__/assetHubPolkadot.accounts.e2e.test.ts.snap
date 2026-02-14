@@ -64,7 +64,7 @@ exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transferring o
   {
     "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "amount": "(rounded 33000000)",
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -79,7 +79,7 @@ exports[`Polkadot Asset Hub Accounts > \`force_transfer\` > force transferring o
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 100000000,
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

@@ -1,6 +1,32 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
+exports[`Hydration Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1000000000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Hydration Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
+[
+  {
+    "data": {
+      "amount": 500000000000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Hydration Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
 [
   {
     "data": {
@@ -13,7 +39,7 @@ exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjust
 ]
 `;
 
-exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
+exports[`Hydration Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
 [
   {
     "data": {
@@ -26,7 +52,7 @@ exports[`Polkadot Accounts > \`force_adjust_total_issuance\` > successful adjust
 ]
 `;
 
-exports[`Polkadot Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
+exports[`Hydration Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
 [
   {
     "data": {
@@ -61,7 +87,7 @@ exports[`Polkadot Accounts > \`force_transfer\` > force transferring origin belo
 ]
 `;
 
-exports[`Polkadot Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
+exports[`Hydration Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
 [
   {
     "data": {
@@ -81,7 +107,7 @@ exports[`Polkadot Accounts > \`transfer_all\` > account with reserves cannot tra
 ]
 `;
 
-exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
+exports[`Hydration Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
 [
   {
     "data": {
@@ -100,7 +126,7 @@ exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive fals
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 1000000000000)",
+      "freeBalance": "(rounded 100000000000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -108,7 +134,7 @@ exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive fals
 ]
 `;
 
-exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
+exports[`Hydration Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
 [
   {
     "data": {
@@ -120,7 +146,7 @@ exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive true
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 990000000000)",
+      "freeBalance": "(rounded 99000000000000)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -128,35 +154,15 @@ exports[`Polkadot Accounts > \`transfer_all\` > transfer all with keepAlive true
 ]
 `;
 
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation > deposit action success events 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 200000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Reserved",
-    "section": "balances",
-  },
-]
-`;
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
 
-exports[`Polkadot Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > deposit action success events 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 200000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Reserved",
-    "section": "balances",
-  },
-]
-`;
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
 
-exports[`Polkadot Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
 
-exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+exports[`Hydration Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+
+exports[`Hydration Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
     "data": {
@@ -175,7 +181,7 @@ exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED 
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 10000000000,
+      "freeBalance": 1000000000000,
     },
     "method": "Endowed",
     "section": "balances",
@@ -183,7 +189,7 @@ exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED 
 ]
 `;
 
-exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED kills it > unstable events when Alice \`transfer_allow_death\` to Bob 1`] = `
+exports[`Hydration Accounts > transfer_allow_death > leaving an account below ED kills it > unstable events when Alice \`transfer_allow_death\` to Bob 1`] = `
 [
   {
     "data": {
@@ -204,7 +210,7 @@ exports[`Polkadot Accounts > transfer_allow_death > leaving an account below ED 
 ]
 `;
 
-exports[`Polkadot Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
+exports[`Hydration Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
 [
   {
     "data": {
@@ -216,7 +222,7 @@ exports[`Polkadot Accounts > transfer_allow_death > transfer of some funds does 
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 10000000000,
+      "freeBalance": 1000000000000,
     },
     "method": "Endowed",
     "section": "balances",

@@ -409,6 +409,55 @@ export async function setValidatorsStorage(
   })
 }
 
+/// -------
+/// Fee extraction abstraction
+/// -------
+
+/**
+ * Normalized fee information extracted from a transaction fee payment event.
+ * Different runtimes emit different fee events, but tests only need these three fields.
+ */
+export interface FeeInfo {
+  who: string
+  actualFee: bigint
+  tip: bigint
+}
+
+/**
+ * Extracts fee payment information from a list of system events.
+ * Different runtimes may have different fee event structures; each can provide its own extractor.
+ */
+export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
+
+/**
+ * Default fee extractor for standard Substrate runtimes using `pallet-transaction-payment`.
+ * Handles the standard `TransactionFeePaid { who, actual_fee, tip }` event.
+ *
+ * This is the default used by `RelayTestConfig` and `ParaTestConfig` when no `feeExtractor` is provided.
+ */
+export const standardFeeExtractor: FeeExtractor = (events, api) => {
+  const results: FeeInfo[] = []
+  for (const { event } of events) {
+    if (api.events.transactionPayment.TransactionFeePaid.is(event)) {
+      results.push({
+        who: event.data.who.toString(),
+        actualFee: event.data.actualFee.toBigInt(),
+        tip: event.data.tip.toBigInt(),
+      })
+    }
+  }
+  return results
+}
+
+/**
+ * Extract fee payment events from the given events.
+ * Uses the fee extractor from the test config, or falls back to `standardFeeExtractor`.
+ */
+export function findFeeEvents(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo[] {
+  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
+  return extractor(events, api)
+}
+
 /**
  * Helper to track transaction fees paid by a set of accounts.
  *
@@ -417,27 +466,23 @@ export async function setValidatorsStorage(
  *
  * @param api - The API instance to query events
  * @param feeMap - Map from addresses to their cumulative paid fees
- * @param addressEncoding - The address encoding to use when setting/querying keys (addresses) in the map
+ * @param testConfig - Test configuration, used for address encoding and the fee extractor
  * @returns Updated fee map with new fees added
  */
 export async function updateCumulativeFees(
   api: ApiPromise,
   feeMap: Map<string, bigint>,
-  addressEncoding: number,
+  testConfig: TestConfig,
 ): Promise<Map<string, bigint>> {
   const events = await api.query.system.events()
+  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
+  const feeInfos = extractor(events as unknown as EventRecord[], api)
 
-  for (const record of events) {
-    const { event } = record
-    if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
-      assert(api.events.transactionPayment.TransactionFeePaid.is(event))
-      const [who, actualFee, tip] = event.data
-      const address = encodeAddress(who.toString(), addressEncoding)
-      const totalFee = BigInt(actualFee.add(tip).toString())
-
-      const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + totalFee)
-    }
+  for (const { who, actualFee, tip } of feeInfos) {
+    const address = encodeAddress(who, testConfig.addressEncoding)
+    const totalFee = actualFee + tip
+    const currentFee = feeMap.get(address) || 0n
+    feeMap.set(address, currentFee + totalFee)
   }
   return feeMap
 }
@@ -554,6 +599,8 @@ export interface RelayTestConfig {
   addressEncoding: number
   blockProvider: 'Local'
   chainEd?: ChainED
+  /** Fee extractor for this chain. Defaults to `standardFeeExtractor` when not set. */
+  feeExtractor?: FeeExtractor
 }
 
 /**
@@ -569,6 +616,8 @@ export interface ParaTestConfig {
   blockProvider: BlockProvider
   asyncBacking: AsyncBacking
   chainEd?: ChainED
+  /** Fee extractor for this chain. Defaults to `standardFeeExtractor` when not set. */
+  feeExtractor?: FeeExtractor
 }
 
 /**

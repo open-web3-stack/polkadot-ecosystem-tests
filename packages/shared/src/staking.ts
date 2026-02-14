@@ -1298,7 +1298,7 @@ async function unappliedSlashTest<
 
   // Track transaction fees for each staker.
   // Ths is needed to keep accurate track of each account's free balance, which should not be affected by this test.
-  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig)
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
   let slashKey: any
@@ -1846,7 +1846,7 @@ async function setInvulnerablesTest<
   // Initialize fee tracking map for the 3 stakers
   const stakerFees = new Map<string, bigint>()
 
-  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig)
 
   // Set them as validators
   const minCommission = await client.api.query.staking.minCommission()
@@ -1857,7 +1857,7 @@ async function setInvulnerablesTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, stakerFees, testConfig.addressEncoding)
+  await updateCumulativeFees(client.api, stakerFees, testConfig)
 
   // Sort the addresses to make the test simpler.
 

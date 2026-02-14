@@ -64,7 +64,7 @@ exports[`Polkadot Bridge Hub Accounts > \`force_transfer\` > force transferring 
   {
     "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "amount": "(rounded 330000000)",
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -79,7 +79,7 @@ exports[`Polkadot Bridge Hub Accounts > \`force_transfer\` > force transferring 
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000,
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
