@@ -88,3 +88,10 @@ export const PeopleProxyTypes: ProxyTypeMap = {
   IdentityJudgement: 4,
   Collator: 5,
 }
+
+export const BridgeHubProxyTypes: ProxyTypeMap = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Collator: 3,
+}
