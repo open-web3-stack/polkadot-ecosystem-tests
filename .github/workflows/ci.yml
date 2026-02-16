@@ -61,18 +61,14 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Clone Subway
-        run: git clone https://github.com/AcalaNetwork/subway.git /tmp/subway
-
-      - name: Cache Subway build
+      - name: Cache Subway binary
         uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
         with:
-          workspaces: /tmp/subway
-          shared-key: subway-build
+          shared-key: subway-binary
           save-if: ${{ github.ref == 'refs/heads/master' }}
 
-      - name: Build Subway
-        run: cargo build --release --manifest-path /tmp/subway/Cargo.toml
+      - name: Install Subway
+        run: cargo install --git https://github.com/AcalaNetwork/subway
 
       - name: Source known good block numbers
         run: |
@@ -91,7 +87,7 @@ jobs:
 
             echo "Starting Subway for $CONFIG on port $PORT..."
             sed "s/{{PORT}}/$PORT/g" .github/subway-configs/$CONFIG > /tmp/subway-$PORT.yml
-            /tmp/subway/target/release/subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+            subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
             echo $! >> /tmp/subway.pids
           done
 
@@ -101,7 +97,7 @@ jobs:
             timeout=60
             elapsed=0
             while [ $elapsed -lt $timeout ]; do
-              if grep -q "Server running at" /tmp/subway-$PORT.log 2>/dev/null; then
+              if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
                 echo "Subway on port $PORT started successfully!"
                 break
               fi
