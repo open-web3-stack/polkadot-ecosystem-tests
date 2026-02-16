@@ -22,7 +22,7 @@ export const KusamaProxyTypes: ProxyTypeMap = {
   Staking: 3,
   CancelProxy: 5,
   Auction: 6,
-  Society: 7,
+  Society: 7, // Disabled post-AHM; all calls blocked by BaseCallFilter
   NominationPools: 8,
   Spokesperson: 9,
   ParaRegistration: 10,
