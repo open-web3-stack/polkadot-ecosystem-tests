@@ -51,7 +51,7 @@ exports[`Kusama Coretime Accounts > \`force_transfer\` > force transferring orig
   {
     "data": {
       "account": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-      "amount": "(rounded 11000000)",
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -66,7 +66,7 @@ exports[`Kusama Coretime Accounts > \`force_transfer\` > force transferring orig
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 33000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

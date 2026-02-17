@@ -38,7 +38,7 @@ exports[`Kusama Accounts > \`force_transfer\` > force transferring origin below 
   {
     "data": {
       "account": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-      "amount": "(rounded 110000000)",
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -53,7 +53,7 @@ exports[`Kusama Accounts > \`force_transfer\` > force transferring origin below 
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 330000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

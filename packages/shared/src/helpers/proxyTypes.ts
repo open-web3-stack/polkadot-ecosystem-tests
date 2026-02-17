@@ -22,7 +22,7 @@ export const KusamaProxyTypes: ProxyTypeMap = {
   Staking: 3,
   CancelProxy: 5,
   Auction: 6,
-  Society: 7,
+  Society: 7, // Disabled post-AHM; all calls blocked by BaseCallFilter
   NominationPools: 8,
   Spokesperson: 9,
   ParaRegistration: 10,
@@ -87,4 +87,11 @@ export const PeopleProxyTypes: ProxyTypeMap = {
   Identity: 3,
   IdentityJudgement: 4,
   Collator: 5,
+}
+
+export const BridgeHubProxyTypes: ProxyTypeMap = {
+  Any: 0,
+  NonTransfer: 1,
+  CancelProxy: 2,
+  Collator: 3,
 }
