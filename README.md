@@ -215,6 +215,85 @@ Run it with `yarn check-proxy-coverage` to see which proxy types need test cover
     has revealed an issue with e.g. `polkadot-sdk`
 4. Create a PR with the new tests.
 
+### Subway Configuration for E2E Tests
+
+Chains with E2E tests should have their own Subway configuration file. Subway acts as a caching RPC proxy that improves test reliability and performance by:
+- Load balancing across multiple RPC endpoints
+- Caching responses to reduce upstream load
+- Providing health checks and timeouts
+- Rate limiting to prevent overwhelming upstream nodes
+
+#### Creating a Subway Config
+
+**Step 1: Create the configuration file**
+
+Location: `.github/subway-configs/<chain-name>.yml`
+
+**Finding RPC endpoints:** Check [Polkadot.js Apps](https://polkadot.js.org/apps) or the [PAPI console](https://papi.how) for public endpoints, or consult the chain's documentation. Use 2-3 reliable endpoints for redundancy.
+
+Required structure:
+```yaml
+extensions:
+  client:
+    endpoints:
+      - wss://<chain-name>-rpc-endpoint-1.example.com
+      - wss://<chain-name>-rpc-endpoint-2.example.com
+    shuffle_endpoints: true
+  substrate_api:
+    stale_timeout_seconds: 180
+  cache:
+    default_ttl_seconds: 3600
+    default_size: 1000
+  server:
+    port: {{PORT}}  # Template variable - DO NOT change
+    listen_address: '127.0.0.1'
+    http_methods:
+      - path: /health
+        method: system_health
+
+middlewares:
+  methods:
+    - response
+    - inject_params
+    - cache
+    - upstream
+  subscriptions:
+    - merge_subscription
+    - upstream
+
+rpcs: substrate
+```
+
+**Step 2: Register the chain in CI workflows**
+
+Add your chain to the appropriate network's `chains` list in both `.github/workflows/ci.yml` and `.github/workflows/update-snapshot.yml`.
+
+Find the matrix entry for your network and add your chain:
+
+```yaml
+matrix:
+  network:
+    - name: "polkadot"  # Choose "polkadot" or "kusama" based on your chain's ecosystem
+      chains:
+        # ... existing chains for this network ...
+        - { config: "<chain-name>.yml", port: 90XX, endpoint_var: "<CHAIN_NAME>_ENDPOINT" }
+```
+
+- Choose any unused port number (check existing matrix entries to avoid conflicts)
+- Follow the naming convention for `endpoint_var`: uppercase chain name + `_ENDPOINT`
+- Add to **both** workflow files with the same configuration
+- **Important:** Once added to the matrix, the Subway config file must exist or the workflow will fail
+
+**What this enables:**
+- Both the [CI workflow](.github/workflows/ci.yml) and [Update Snapshots workflow](.github/workflows/update-snapshot.yml) will automatically:
+  - Install and start Subway using your configuration
+  - Run tests through the caching proxy (via `ws://localhost:{port}`)
+  - Set `<CHAIN_NAME>_ENDPOINT` environment variable for test access
+- Increased test reliability and speed due to response caching
+- Multiple Subway instances run in parallel for different chains
+
+**Note**: The `{{PORT}}` placeholder is templated by the workflow - keep it as-is. See existing configs in [.github/subway-configs/](.github/subway-configs/) for examples.
+
 ### Writing Tests
 
 #### Test Structure
