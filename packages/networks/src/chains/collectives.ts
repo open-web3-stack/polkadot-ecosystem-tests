@@ -20,7 +20,11 @@ const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
 
 export const collectivesPolkadot = defineChain({
   name: 'collectivesPolkadot',
-  endpoint: ['wss://sys.ibp.network/collectives-polkadot', 'wss://collectives-polkadot-rpc.n.dwellir.com'],
+  endpoint: [
+    'wss://sys.ibp.network/collectives-polkadot',
+    'wss://collectives-polkadot.dotters.network',
+    'wss://collectives-polkadot-rpc.n.dwellir.com',
+  ],
   paraId: 1001,
   networkGroup: 'polkadot',
   custom: custom.collectivesPolkadot,

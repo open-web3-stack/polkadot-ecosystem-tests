@@ -31,7 +31,11 @@ export const coretimePolkadot = defineChain({
 
 export const coretimeKusama = defineChain({
   name: 'coretimeKusama',
-  endpoint: 'wss://kusama-coretime-rpc.polkadot.io',
+  endpoint: [
+    'wss://sys.ibp.network/coretime-kusama',
+    'wss://coretime-kusama.dotters.network',
+    'wss://kusama-coretime-rpc.polkadot.io',
+  ],
   paraId: 1005,
   networkGroup: 'kusama',
   custom: custom.coretimeKusama,
