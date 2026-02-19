@@ -7,6 +7,7 @@ import type { ApiPromise, WsProvider } from '@polkadot/api'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 
 import { match } from 'ts-pattern'
+import type { FeeExtractor } from './helpers/index.js'
 
 export type Prettify<T> = {
   [K in keyof T]: T[K]
@@ -20,6 +21,18 @@ export type Client<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 > = {
   config: Chain<TCustom, TInitStorages>
+
+  /**
+   * Chain properties derived from the chain definition.
+   * See {@link Chain} type in @e2e-test/networks for what these values represent.
+   */
+  properties: {
+    addressEncoding: number
+    blockProvider: 'Local' | 'NonLocal'
+    chainEd: 'LowEd' | 'Normal'
+    feeExtractor: FeeExtractor
+    asyncBacking?: 'Enabled' | 'Disabled'
+  }
   url: string
   chain: Blockchain
   ws: WsProvider
