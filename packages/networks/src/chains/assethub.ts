@@ -70,6 +70,12 @@ export const assetHubPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
+  properties: {
+    addressEncoding: 0,
+    blockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const assetHubKusama = defineChain({
@@ -84,4 +90,10 @@ export const assetHubKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
+  properties: {
+    addressEncoding: 2,
+    blockProvider: 'NonLocal',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

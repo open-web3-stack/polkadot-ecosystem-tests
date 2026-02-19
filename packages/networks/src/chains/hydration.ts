@@ -33,6 +33,12 @@ export const hydration = defineChain({
   networkGroup: 'polkadot',
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
+  properties: {
+    addressEncoding: 63,
+    blockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const basilisk = defineChain({
@@ -42,4 +48,10 @@ export const basilisk = defineChain({
   networkGroup: 'kusama',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
+  properties: {
+    addressEncoding: 10041,
+    blockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

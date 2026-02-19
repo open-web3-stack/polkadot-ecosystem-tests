@@ -33,6 +33,12 @@ export const bifrostPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.bifrostPolkadot,
   initStorages: getInitStorages(custom.bifrostPolkadot),
+  properties: {
+    addressEncoding: 6,
+    blockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const bifrostKusama = defineChain({
@@ -42,4 +48,10 @@ export const bifrostKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.bifrostKusama,
   initStorages: getInitStorages(custom.bifrostKusama),
+  properties: {
+    addressEncoding: 6,
+    blockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

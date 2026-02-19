@@ -45,6 +45,12 @@ export const peoplePolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.peoplePolkadot,
   initStorages: getInitStorages(custom.peoplePolkadot),
+  properties: {
+    addressEncoding: 0,
+    blockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const peopleKusama = defineChain({
@@ -54,4 +60,10 @@ export const peopleKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),
+  properties: {
+    addressEncoding: 2,
+    blockProvider: 'NonLocal',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

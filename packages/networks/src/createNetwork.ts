@@ -1,6 +1,8 @@
 import { connectParachains, connectVertical } from '@acala-network/chopsticks'
 import { setupContext } from '@acala-network/chopsticks-testing'
 
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import type { Chain } from './types.js'
 
 export async function createNetwork<T extends Chain>(chainConfig: T) {
@@ -13,6 +15,10 @@ export async function createNetwork<T extends Chain>(chainConfig: T) {
   return {
     ...network,
     config: chainConfig,
+    properties: {
+      ...chainConfig.properties,
+      feeExtractor: chainConfig.properties.feeExtractor ?? standardFeeExtractor,
+    },
   }
 }
 

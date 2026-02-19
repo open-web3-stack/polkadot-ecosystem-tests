@@ -47,6 +47,12 @@ export const astar = defineChain({
   networkGroup: 'polkadot',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
+  properties: {
+    addressEncoding: 5,
+    blockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const shiden = defineChain({
@@ -56,4 +62,10 @@ export const shiden = defineChain({
   networkGroup: 'kusama',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
+  properties: {
+    addressEncoding: 5,
+    blockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

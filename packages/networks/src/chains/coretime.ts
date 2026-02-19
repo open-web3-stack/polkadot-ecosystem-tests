@@ -27,6 +27,12 @@ export const coretimePolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.coretimePolkadot,
   initStorages: getInitStorages(custom.coretimePolkadot),
+  properties: {
+    addressEncoding: 0,
+    blockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })
 
 export const coretimeKusama = defineChain({
@@ -40,4 +46,10 @@ export const coretimeKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.coretimeKusama,
   initStorages: getInitStorages(custom.coretimeKusama),
+  properties: {
+    addressEncoding: 2,
+    blockProvider: 'NonLocal',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

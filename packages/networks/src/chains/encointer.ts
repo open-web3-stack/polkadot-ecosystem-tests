@@ -23,4 +23,10 @@ export const encointerKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.encointerKusama,
   initStorages: getInitStorages(custom.encointerKusama),
+  properties: {
+    addressEncoding: 2,
+    blockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+  },
 })

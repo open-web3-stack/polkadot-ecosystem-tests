@@ -29,4 +29,10 @@ export const collectivesPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.collectivesPolkadot,
   initStorages: getInitStorages(custom.collectivesPolkadot),
+  properties: {
+    addressEncoding: 0,
+    blockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+  },
 })

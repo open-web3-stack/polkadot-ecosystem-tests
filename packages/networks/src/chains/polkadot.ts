@@ -35,6 +35,11 @@ export const polkadot = defineChain({
   initStorages: getInitStorages(),
   isRelayChain: true,
   networkGroup: 'polkadot',
+  properties: {
+    addressEncoding: 0,
+    blockProvider: 'Local',
+    chainEd: 'Normal',
+  },
 })
 
 export const kusama = defineChain({
@@ -44,4 +49,9 @@ export const kusama = defineChain({
   initStorages: getInitStorages(),
   isRelayChain: true,
   networkGroup: 'kusama',
+  properties: {
+    addressEncoding: 2,
+    blockProvider: 'Local',
+    chainEd: 'LowEd',
+  },
 })
