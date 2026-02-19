@@ -109,7 +109,7 @@ export async function preimageSingleNoteUnnoteTest<
 export async function preimageSingleRequestUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
@@ -117,7 +117,12 @@ export async function preimageSingleRequestUnrequestTest<
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
@@ -128,7 +133,12 @@ export async function preimageSingleRequestUnrequestTest<
 
   // 3. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unrequestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   // 4. The request status is queried again to ensure the preimage hash was removed.
@@ -147,7 +157,7 @@ export async function preimageSingleRequestUnrequestTest<
 export async function preimageSingleRequestMultipleUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
@@ -155,7 +165,12 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
   expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
@@ -196,7 +211,12 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
   const encodedCall = unrequestTx.method.toHex()
   const encodedCallList = Array(numUnrequests).fill(encodedCall)
-  await scheduleInlineCallListWithSameOrigin(client, encodedCallList, { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    encodedCallList,
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
   expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
@@ -228,7 +248,12 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   assert(status.isNone)
 
   // Attempt to unrequest again.
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unrequestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
@@ -266,7 +291,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
 export async function preimageNoteThenRequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -298,7 +323,12 @@ export async function preimageNoteThenRequestTest<
 
   // 2. A root account requests the preimage.
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   // Alice's previously-reserved funds are still reserved after the preimage has been requested.
@@ -313,7 +343,12 @@ export async function preimageNoteThenRequestTest<
 
   // 3. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unrequestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   // Alice's previously-reserved funds are still reserved after the preimage has been unrequested.
@@ -356,7 +391,7 @@ export async function preimageNoteThenRequestTest<
 export async function preimageRequestAndUnnoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -382,7 +417,12 @@ export async function preimageRequestAndUnnoteTest<
 
   // 2. A root account requests the preimage.
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
@@ -412,7 +452,12 @@ export async function preimageRequestAndUnnoteTest<
 
   // 4. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unrequestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   // 5. The preimage is queried again to ensure it was removed.
@@ -435,7 +480,7 @@ export async function preimageRequestAndUnnoteTest<
 export async function preimageRequestThenNoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
@@ -443,7 +488,12 @@ export async function preimageRequestThenNoteTest<
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   let events = await getEventsWithType(client, 'preimage')
@@ -474,7 +524,12 @@ export async function preimageRequestThenNoteTest<
 
   // 3. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
-  await scheduleInlineCallWithOrigin(client, unrequestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unrequestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   // Following the unrequest, the preimage is cleared.
@@ -516,7 +571,7 @@ export async function preimageRequestThenNoteTest<
 export async function preimageSingleRequestUnrequestAsNonRootTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
@@ -533,7 +588,12 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   assert(status.isNone)
 
   // 3. A root account requests the preimage.
-  await scheduleInlineCallWithOrigin(client, requestTx.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    requestTx.method.toHex(),
+    { system: 'Root' },
+    client.properties.blockProvider,
+  )
   await client.dev.newBlock()
 
   status = await client.api.query.preimage.requestStatusFor(encodedProposal.hash.toHex())
@@ -762,11 +822,11 @@ async function preimageOversizedTest<
 async function preimageEnsureUpdatedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, oldPreimagesCount: number, newPreimagesCount: number) {
+>(chain: Chain<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  const addressEncoding = testConfig.addressEncoding
+  const addressEncoding = client.properties.addressEncoding
   setupBalances(client, [
     { address: alice.address, amount: 1000e10 },
     { address: testAccounts.bob.address, amount: 1000e10 },
@@ -948,27 +1008,27 @@ export function successPreimageE2ETests<
           {
             kind: 'test',
             label: 'preimage single request and unrequest test',
-            testFn: async () => await preimageSingleRequestUnrequestTest(chain, testConfig),
+            testFn: async () => await preimageSingleRequestUnrequestTest(chain),
           },
           {
             kind: 'test',
             label: 'preimage single request and multiple unrequest test',
-            testFn: async () => await preimageSingleRequestMultipleUnrequestTest(chain, testConfig),
+            testFn: async () => await preimageSingleRequestMultipleUnrequestTest(chain),
           },
           {
             kind: 'test',
             label: 'preimage note and then request test',
-            testFn: async () => await preimageNoteThenRequestTest(chain, testConfig),
+            testFn: async () => await preimageNoteThenRequestTest(chain),
           },
           {
             kind: 'test',
             label: 'preimage request and unnote test',
-            testFn: async () => await preimageRequestAndUnnoteTest(chain, testConfig),
+            testFn: async () => await preimageRequestAndUnnoteTest(chain),
           },
           {
             kind: 'test',
             label: 'preimage request and then note test',
-            testFn: async () => await preimageRequestThenNoteTest(chain, testConfig),
+            testFn: async () => await preimageRequestThenNoteTest(chain),
           },
           {
             kind: 'test',
@@ -978,12 +1038,12 @@ export function successPreimageE2ETests<
           {
             kind: 'test',
             label: 'preimage ensure updated test (no fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 10, 1),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, 10, 1),
           },
           {
             kind: 'test',
             label: 'preimage ensure updated test (fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, testConfig, 5, 5),
+            testFn: async () => await preimageEnsureUpdatedTest(chain, 5, 5),
           },
         ],
       },
@@ -994,7 +1054,7 @@ export function successPreimageE2ETests<
 export function failurePreimageE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -1002,7 +1062,7 @@ export function failurePreimageE2ETests<
       {
         kind: 'test',
         label: 'preimage single request and unrequest test as non-root',
-        testFn: async () => await preimageSingleRequestUnrequestAsNonRootTest(chain, testConfig),
+        testFn: async () => await preimageSingleRequestUnrequestAsNonRootTest(chain),
       },
       {
         kind: 'test',
@@ -1025,6 +1085,6 @@ export function basePreimageE2ETests<
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [successPreimageE2ETests(chain, testConfig), failurePreimageE2ETests(chain, testConfig)],
+    children: [successPreimageE2ETests(chain, testConfig), failurePreimageE2ETests(chain)],
   }
 }

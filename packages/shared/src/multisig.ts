@@ -7,7 +7,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { checkEvents, sortAddressesByBytes } from './helpers/index.js'
+import { checkEvents, sortAddressesByBytes, type TestConfig } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
 
 /// -------
@@ -34,7 +34,8 @@ import type { RootTestTree } from './types.js'
 async function basicMultisigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -175,7 +176,8 @@ async function basicMultisigTest<
 async function multisigCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -295,7 +297,8 @@ async function multisigCancellationTest<
 async function approveAsMulti2Of3DoesNotExecuteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -588,7 +591,8 @@ async function finalApprovalApproveAsMultiTest<
 async function approveAsMultiFirstTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1071,7 +1075,8 @@ async function tooManySignatoriesTest<
 async function signatoriesOutOfOrderInExecutionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1167,7 +1172,8 @@ async function signatoriesOutOfOrderInExecutionTest<
 async function cancelWithSignatoriesOutOfOrderTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1266,7 +1272,8 @@ async function cancelWithSignatoriesOutOfOrderTest<
 async function signatoriesOutOfOrderInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1361,7 +1368,8 @@ async function signatoriesOutOfOrderInApprovalTest<
 async function senderInSignatoriesInExecutionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1424,7 +1432,8 @@ async function senderInSignatoriesInExecutionTest<
 async function senderInSignatoriesInCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1517,7 +1526,8 @@ async function senderInSignatoriesInCancellationTest<
 async function senderInSignatoriesInApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(chain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = chain.properties.addressEncoding
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -2202,7 +2212,7 @@ async function maxWeightTooLowTest<
 export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
@@ -2210,18 +2220,18 @@ export function successMultisigE2ETests<
       {
         kind: 'test',
         label: 'basic 2-of-3 multisig creation and execution',
-        testFn: () => basicMultisigTest(chain, testConfig.addressEncoding),
+        testFn: () => basicMultisigTest(chain),
       },
       {
         kind: 'test',
         label: 'multisig cancellation works',
-        testFn: () => multisigCancellationTest(chain, testConfig.addressEncoding),
+        testFn: () => multisigCancellationTest(chain),
       },
       {
         kind: 'test',
         label:
           'second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution',
-        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain, testConfig.addressEncoding),
+        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(chain),
       },
       {
         kind: 'test',
@@ -2231,7 +2241,7 @@ export function successMultisigE2ETests<
       {
         kind: 'test',
         label: 'beginning multisig approval with `approveAsMulti` works',
-        testFn: () => approveAsMultiFirstTest(chain, testConfig.addressEncoding),
+        testFn: () => approveAsMultiFirstTest(chain),
       },
     ],
   }
@@ -2240,7 +2250,7 @@ export function successMultisigE2ETests<
 export function failureMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -2273,32 +2283,32 @@ export function failureMultisigE2ETests<
       {
         kind: 'test',
         label: 'multisig execution with remaining signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInExecutionTest(chain, testConfig.addressEncoding),
+        testFn: () => signatoriesOutOfOrderInExecutionTest(chain),
       },
       {
         kind: 'test',
         label: 'multisig cancellation with remaining signatories out of order fails',
-        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain, testConfig.addressEncoding),
+        testFn: () => cancelWithSignatoriesOutOfOrderTest(chain),
       },
       {
         kind: 'test',
         label: 'approval with signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInApprovalTest(chain, testConfig.addressEncoding),
+        testFn: () => signatoriesOutOfOrderInApprovalTest(chain),
       },
       {
         kind: 'test',
         label: 'execution with sender in signatories fails',
-        testFn: () => senderInSignatoriesInExecutionTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInExecutionTest(chain),
       },
       {
         kind: 'test',
         label: 'cancellation with sender in signatories fails',
-        testFn: () => senderInSignatoriesInCancellationTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInCancellationTest(chain),
       },
       {
         kind: 'test',
         label: 'approval with sender in signatories fails',
-        testFn: () => senderInSignatoriesInApprovalTest(chain, testConfig.addressEncoding),
+        testFn: () => senderInSignatoriesInApprovalTest(chain),
       },
       {
         kind: 'test',
@@ -2348,10 +2358,10 @@ export function failureMultisigE2ETests<
 export function baseMultisigE2Etests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: { testSuiteName: string; addressEncoding: number }): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [successMultisigE2ETests(chain, testConfig), failureMultisigE2ETests(chain, testConfig)],
+    children: [successMultisigE2ETests(chain), failureMultisigE2ETests(chain)],
   }
 }

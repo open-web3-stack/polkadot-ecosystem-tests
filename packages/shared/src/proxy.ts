@@ -1404,7 +1404,7 @@ export function createProxyConfig(proxyTypes: ProxyTypeMap, proxyTypeConfig?: Pr
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>, delay: number) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, delay: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1448,7 +1448,7 @@ export async function addRemoveProxyTest<
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
-      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
+      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, client.properties.addressEncoding),
       proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
       delay: 0,
     })
@@ -1508,7 +1508,7 @@ export async function addRemoveProxyTest<
     await check(proxy)
       .redact({ removeKeys: /proxyType/ })
       .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
+        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, client.properties.addressEncoding),
         delay: delay,
       })
   }
@@ -1572,7 +1572,7 @@ export async function verifyPureProxy(
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1636,7 +1636,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
+    await verifyPureProxy(client, eventData, alice.address, client.properties.addressEncoding)
   }
 
   // Kill pure proxies
@@ -1644,7 +1644,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1683,7 +1683,7 @@ export async function createKillPureProxyTest<
       expect(pureProxy[1].eq(0)).toBe(true)
     } else {
       expect(pureProxy[0].length).toBe(1)
-      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, client.properties.addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1764,7 +1764,7 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1797,9 +1797,9 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
   const announcementObject = {
-    real: encodeAddress(alice.address, testConfig.addressEncoding),
+    real: encodeAddress(alice.address, client.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
     height: currBlockNumber,
   }
@@ -1842,7 +1842,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = blockProviderOffset(testConfig)
+  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
@@ -1895,7 +1895,7 @@ export async function proxyAnnouncementLifecycleTest<
 export async function pureProxyOwnershipChangeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyType: number) {
+>(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1932,7 +1932,7 @@ export async function pureProxyOwnershipChangeTest<
   const pureProxyAddress = eventData.pure.toString()
 
   // Verify the pure proxy was created correctly.
-  await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
+  await verifyPureProxy(client, eventData, alice.address, client.properties.addressEncoding)
 
   // Add funds to the pure proxy account.
   await setupBalances(client, [{ address: pureProxyAddress, amount: 300e10 }])
@@ -2005,12 +2005,12 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'add proxies (with/without delay) to an account, and remove them',
-        testFn: async () => await addRemoveProxyTest(chain, testConfig, proxyTypes, PROXY_DELAY),
+        testFn: async () => await addRemoveProxyTest(chain, proxyTypes, PROXY_DELAY),
       },
       {
         kind: 'test',
         label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(chain, testConfig, proxyTypes),
+        testFn: async () => await createKillPureProxyTest(chain, proxyTypes),
       },
       {
         kind: 'test',
@@ -2020,12 +2020,12 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig),
+        testFn: async () => await proxyAnnouncementLifecycleTest(chain),
       },
       {
         kind: 'test',
         label: 'pure proxy ownership change test',
-        testFn: async () => await pureProxyOwnershipChangeTest(chain, testConfig, proxyTypes['Any']),
+        testFn: async () => await pureProxyOwnershipChangeTest(chain, proxyTypes['Any']),
       },
     ],
   }
