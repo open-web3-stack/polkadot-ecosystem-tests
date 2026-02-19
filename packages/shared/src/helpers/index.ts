@@ -424,8 +424,8 @@ export interface FeeInfo {
 }
 
 /**
- * Extracts fee payment information from a list of system events.
- * Different runtimes may have different fee event structures; each can provide its own extractor.
+ * Extracts fee payment information from the transaction fee event, itself from a list of system events.
+ * Different runtimes may have different fee event structures; thus, each chain can provide its own extractor.
  */
 export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
 
@@ -447,15 +447,6 @@ export const standardFeeExtractor: FeeExtractor = (events, api) => {
     }
   }
   return results
-}
-
-/**
- * Extract fee payment events from the given events.
- * Uses the fee extractor from the test config, or falls back to `standardFeeExtractor`.
- */
-export function findFeeEvents(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo[] {
-  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
-  return extractor(events, api)
 }
 
 /**

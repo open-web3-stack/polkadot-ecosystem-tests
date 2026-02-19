@@ -19,7 +19,6 @@ import {
   checkEvents,
   checkSystemEvents,
   createXcmTransactSend,
-  findFeeEvents,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
   type TestConfig,
@@ -452,7 +451,6 @@ async function transferInsufficientFundsTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
   chain: Chain<TCustom, TInitStorages>,
-  testConfig: TestConfig,
   transferFn: (
     client: Client<TCustom, TInitStorages>,
     bob: string,
@@ -497,7 +495,7 @@ async function transferInsufficientFundsTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -654,7 +652,7 @@ async function transferAllowDeathTest<
   const events = await client.api.query.system.events()
 
   // Transaction payment event that should appear before any other events; other events are regular
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -777,7 +775,7 @@ async function transferAllowDeathNoKillTest<
 
   // Get the extrinsic's fee
   const events = await client.api.query.system.events()
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -844,7 +842,7 @@ async function transferAllowDeathNoKillTest<
 async function transferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // Create fresh accounts
@@ -884,7 +882,7 @@ async function transferBelowExistentialDepositTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -901,11 +899,11 @@ async function transferBelowExistentialDepositTest<
 async function transferAllowDeathInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amt: bigint) =>
     client.api.tx.balances.transferAllowDeath(bob, amt)
 
-  await transferInsufficientFundsTest(chain, testConfig, lambda)
+  await transferInsufficientFundsTest(chain, lambda)
 }
 
 /**
@@ -977,7 +975,7 @@ async function transferAllowDeathWithReserveTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1027,7 +1025,7 @@ async function transferAllowDeathWithReserveTest<
 async function transferAllowDeathSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
@@ -1045,7 +1043,7 @@ async function transferAllowDeathSelfTest<
   // Get transaction fee
   const events = await client.api.query.system.events()
 
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1823,7 +1821,7 @@ async function transferAllKeepAliveTrueTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1906,7 +1904,7 @@ async function transferAllKeepAliveFalseTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2103,7 +2101,7 @@ async function transferAllSelfKeepAliveTrueTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2176,7 +2174,7 @@ async function transferAllSelfKeepAliveFalseTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2223,10 +2221,10 @@ async function transferAllSelfKeepAliveFalseTest<
 async function transferKeepAliveInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const lambda = (client: Client<TCustom, TInitStorages>, bob: string, amount: bigint) =>
     client.api.tx.balances.transferKeepAlive(bob, amount)
-  await transferInsufficientFundsTest(chain, testConfig, lambda)
+  await transferInsufficientFundsTest(chain, lambda)
 }
 
 /**
@@ -2240,7 +2238,7 @@ async function transferKeepAliveInsufficientFundsTest<
 async function transferKeepAliveSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // 1. Create Alice's account
@@ -2276,7 +2274,7 @@ async function transferKeepAliveSelfTest<
   // 4. Verify Alice's balance
 
   // Get fee
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2330,7 +2328,7 @@ async function transferKeepAliveSelfSuccessTest<
   // 4. Verify Alice's balance only changed by fees (no actual transfer for self-transfer)
 
   // Get fee
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2405,7 +2403,7 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2484,7 +2482,7 @@ async function transferKeepAliveBelowEdLowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -4169,17 +4167,17 @@ const commonTransferAllowDeathTests = (chain: Chain, testConfig: TestConfig) => 
   {
     kind: 'test' as const,
     label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain, testConfig),
+    testFn: () => transferBelowExistentialDepositTest(chain),
   },
   {
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
-    testFn: () => transferAllowDeathInsufficientFundsTest(chain, testConfig),
+    testFn: () => transferAllowDeathInsufficientFundsTest(chain),
   },
   {
     kind: 'test' as const,
     label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain, testConfig),
+    testFn: () => transferAllowDeathSelfTest(chain),
   },
 ]
 
@@ -4225,12 +4223,12 @@ const commonTransferKeepAliveTests = (chain: Chain, testConfig: TestConfig) => [
   {
     kind: 'test' as const,
     label: 'transfer with insufficient funds fails',
-    testFn: () => transferKeepAliveInsufficientFundsTest(chain, testConfig),
+    testFn: () => transferKeepAliveInsufficientFundsTest(chain),
   },
   {
     kind: 'test' as const,
     label: 'self-transfer is a no-op',
-    testFn: () => transferKeepAliveSelfTest(chain, testConfig),
+    testFn: () => transferKeepAliveSelfTest(chain),
   },
   {
     kind: 'test' as const,

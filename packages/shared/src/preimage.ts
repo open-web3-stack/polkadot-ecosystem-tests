@@ -11,7 +11,6 @@ import { assert, expect } from 'vitest'
 import {
   check,
   checkEvents,
-  findFeeEvents,
   getReservedFunds,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -917,7 +916,7 @@ async function preimageEnsureUpdatedTest<
 
   // Get the transaction fee from the payment event.
   const events = await client.api.query.system.events()
-  const feeEvents = findFeeEvents(events, client.api, testConfig)
+  const feeEvents = client.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   expect(feeInfo.tip, 'Unexpected extrinsic tip').toBe(0n)
