@@ -11,10 +11,6 @@ import {
 
 const testCfg: TestConfig = {
   testSuiteName: 'Polkadot Asset Hub Accounts',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
-  chainEd: 'Normal',
 }
 
 // When testing liquidity restrictions on Asset Hubs, to simulate frozen funds, vesting is skipped due to AHM.

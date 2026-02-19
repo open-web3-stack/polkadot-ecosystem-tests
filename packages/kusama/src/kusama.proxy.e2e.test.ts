@@ -6,14 +6,12 @@ import {
   KusamaProxyTypes,
   type ProxyTestConfig,
   type ProxyTypeConfig,
-  type RelayTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: RelayTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Kusama Proxy',
-  addressEncoding: 2,
-  blockProvider: 'Local',
 }
 
 /**

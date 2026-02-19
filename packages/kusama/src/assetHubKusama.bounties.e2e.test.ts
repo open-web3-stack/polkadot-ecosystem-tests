@@ -1,11 +1,8 @@
 import { assetHubKusama } from '@e2e-test/networks/chains'
-import { baseBountiesE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
+import { baseBountiesE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Kusama Asset Hub Bounties',
-  addressEncoding: 2,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(baseBountiesE2ETests(assetHubKusama, testConfig))

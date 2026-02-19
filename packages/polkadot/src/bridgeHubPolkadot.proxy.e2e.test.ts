@@ -3,16 +3,13 @@ import {
   BridgeHubProxyTypes,
   createProxyConfig,
   fullProxyE2ETests,
-  type ParaTestConfig,
   type ProxyTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Bridge Hub Polkadot Proxy',
-  addressEncoding: 0,
-  blockProvider: 'Local',
-  asyncBacking: 'Disabled',
 }
 
 const bridgeHubPolkadotProxyCfg: ProxyTestConfig = createProxyConfig(BridgeHubProxyTypes)

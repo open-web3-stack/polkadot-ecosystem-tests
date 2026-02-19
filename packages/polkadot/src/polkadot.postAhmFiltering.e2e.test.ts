@@ -4,14 +4,12 @@ import {
   commonUnfilteredTests,
   postAhmFilteringE2ETests,
   preimageFilteredTest,
-  type RelayTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const polkadotTestConfig: RelayTestConfig = {
+const polkadotTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Post-AHM Filtering Tests',
-  addressEncoding: 0,
-  blockProvider: 'Local',
 }
 
 // Polkadot: preimage calls ARE filtered post-AHM

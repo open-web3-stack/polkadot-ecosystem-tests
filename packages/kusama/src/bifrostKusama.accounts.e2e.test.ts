@@ -5,17 +5,13 @@ import {
   createDefaultReserveActions,
   manualLockAction,
   multisigCreationDepositAction,
-  type ParaTestConfig,
   proxyAdditionDepositAction,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Bifrost Kusama Accounts',
-  addressEncoding: 0,
-  chainEd: 'LowEd',
-  blockProvider: 'Local',
-  asyncBacking: 'Enabled',
 }
 
 const lockActions = [manualLockAction()]

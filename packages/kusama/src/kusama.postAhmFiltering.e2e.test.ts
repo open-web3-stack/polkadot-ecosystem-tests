@@ -4,14 +4,12 @@ import {
   commonUnfilteredTests,
   postAhmFilteringE2ETests,
   preimageNotFilteredTest,
-  type RelayTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const kusamaTestConfig: RelayTestConfig = {
+const kusamaTestConfig: TestConfig = {
   testSuiteName: 'Kusama Post-AHM Filtering Tests',
-  addressEncoding: 2,
-  blockProvider: 'Local',
 }
 
 // Kusama: preimage calls are NOT filtered post-AHM (different from Polkadot)

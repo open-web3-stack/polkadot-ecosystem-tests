@@ -4,17 +4,14 @@ import {
   createProxyConfig,
   defaultProxyTypeConfig,
   fullProxyE2ETests,
-  type ParaTestConfig,
   type ProxyTestConfig,
   type ProxyTypeConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Polkadot AssetHub Proxy',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 const assetHubPolkadotProxyTypeConfig: ProxyTypeConfig = {
