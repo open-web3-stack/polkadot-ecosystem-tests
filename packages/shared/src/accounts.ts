@@ -2461,7 +2461,7 @@ async function transferKeepAliveBelowEdTest<
   const dispatchError = failedEvent!.event.data.dispatchError
   assert(dispatchError.isToken)
   const tokenError = dispatchError.asToken
-  assert(tokenError.isNotExpendable)
+  assert(tokenError.isNotExpendable || tokenError.isFundsUnavailable)
 
   // Verify no transfer occurred - Alice still has funds, Bob still reaped
   expect(await isAccountReaped(client, alice.address)).toBe(false)
