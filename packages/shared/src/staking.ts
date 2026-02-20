@@ -732,6 +732,7 @@ async function setStakingConfigsTest<
   const preChillThreshold = (await client.api.query.staking.chillThreshold()).unwrapOr(tenPercent).toNumber()
   const preMinCommission = (await client.api.query.staking.minCommission()).toNumber()
   const preMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrapOr(tenPercent).toNumber()
+  const preAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
   const setStakingConfigsCall = (inc: number) =>
     client.api.tx.staking.setStakingConfigs(
@@ -742,6 +743,7 @@ async function setStakingConfigsTest<
       { Set: preChillThreshold + inc },
       { Set: preMinCommission + inc },
       { Set: preMaxStakedRewards + inc },
+      { Set: !preAreNominatorsSlashable },
     )
 
   ///
@@ -803,6 +805,7 @@ async function setStakingConfigsTest<
   const postChillThreshold = (await client.api.query.staking.chillThreshold()).unwrap().toNumber()
   const postMinCommission = (await client.api.query.staking.minCommission()).toNumber()
   const postMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrap().toNumber()
+  const postAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
   const [setStakingConfigsSuccess] = events.filter((record) => {
     const { event } = record
@@ -818,6 +821,7 @@ async function setStakingConfigsTest<
   expect(postChillThreshold).toBe(preChillThreshold + inc)
   expect(postMinCommission).toBe(preMinCommission + inc)
   expect(postMaxStakedRewards).toBe(preMaxStakedRewards + inc)
+  expect(postAreNominatorsSlashable).toBe(!preAreNominatorsSlashable)
 }
 
 /**
@@ -890,6 +894,7 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
     { Noop: null },
     { Set: newCommission },
+    { Noop: null },
     { Noop: null },
   )
 
@@ -1086,6 +1091,7 @@ async function chillOtherTest<
     { Remove: null },
     { Noop: null },
     { Noop: null },
+    { Noop: null },
   )
 
   await scheduleInlineCallWithOrigin(
@@ -1166,9 +1172,9 @@ async function chillOtherTest<
       [setNominatorCount, setValidatorCount],
     ]) {
       for (const chillThreshold of [remove, chillThresholdSet]) {
-        const [a, b, c, d, e, f, g] = [...bondLimits, ...countLimits, chillThreshold, ...Array(2).fill(noop)]
+        const [a, b, c, d, e, f, g, h] = [...bondLimits, ...countLimits, chillThreshold, ...Array(3).fill(noop)]
 
-        setStakingConfigsCalls.push(client.api.tx.staking.setStakingConfigs(a, b, c, d, e, f, g))
+        setStakingConfigsCalls.push(client.api.tx.staking.setStakingConfigs(a, b, c, d, e, f, g, h))
       }
     }
   }

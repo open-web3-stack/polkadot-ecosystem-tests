@@ -1516,17 +1516,13 @@ export async function addRemoveProxyTest<
   // Remove delay-having proxies
 
   const removeProxiesTx = client.api.tx.proxy.removeProxies()
-  await sendTransaction(removeProxiesTx.signAsync(alice))
+  const removeProxiesEvents = await sendTransaction(removeProxiesTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // TODO: `remove_proxies` emits no events; when/if it ever does, this'll fail.
-  const events = await client.api.query.system.events()
-  const removeProxiesEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'proxy'
-  })
-  expect(removeProxiesEvent).toBeUndefined()
+  await checkEvents(removeProxiesEvents, { section: 'proxy', method: 'ProxyRemoved' }).toMatchSnapshot(
+    'events when removing all proxies from Alice',
+  )
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]

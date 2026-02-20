@@ -69,6 +69,7 @@ export async function stakingCallsFilteredTest<
       { Noop: null },
       { Noop: null },
       { Noop: null },
+      { Noop: null },
     ),
     // 23
     client.api.tx.staking.chillOther(testAccounts.alice.address),
