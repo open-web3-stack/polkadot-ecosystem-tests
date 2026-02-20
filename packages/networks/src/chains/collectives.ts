@@ -34,7 +34,7 @@ export const collectivesPolkadot = defineChain({
   properties: {
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
-    schedulerBlockProvider: 'NonLocal',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
