@@ -12,11 +12,18 @@ export interface ChainProperties {
    * Useful when comparing addresses in tests.
    */
   addressEncoding: number
+
   /**
-   * Whether the chain uses its own `Local` block numbers to e.g. index its scheduler's agenda, or another block
+   * Which block number/provider to use when handling proxy announcements in tests. `NonLocal` => relay's is used.
+   *
+   * If the proxy pallet is not available in the given runtime, this will be undefined.
+   */
+  proxyBlockProvider?: 'Local' | 'NonLocal'
+  /**
+   * Whether the chain uses its own `Local` block numbers index its scheduler's agenda, or another block
    * provider e.g. `NonLocal` means the relay's block number is used.
    */
-  blockProvider: 'Local' | 'NonLocal'
+  schedulerBlockProvider: 'Local' | 'NonLocal'
   /**
    * Whether the chain's ED is low relative to the average transaction fee, or of a similar order of magnitude.
    */
@@ -24,7 +31,7 @@ export interface ChainProperties {
   /**
    * How to query and process a transaction fee payment event from this particular chain (see {@link FeeExtractor}).
    */
-  feeExtractor?: FeeExtractor
+  feeExtractor: FeeExtractor
 }
 
 interface ChainConfigRelaychain {

@@ -586,7 +586,7 @@ export async function getReservedFunds(client: Client<any, any>, address: any): 
 /**
  * Configuration for tests.
  * Chain properties (addressEncoding, blockProvider, asyncBacking, etc.) are now
- * provided by the chain definition and available via `client.properties`.
+ * provided by the chain definition and available via `chain.properties`.
  */
 export interface TestConfig {
   testSuiteName: string
