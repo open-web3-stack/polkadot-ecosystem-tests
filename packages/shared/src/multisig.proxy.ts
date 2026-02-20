@@ -796,7 +796,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   const announcementObject = {
     real: encodeAddress(dave.address, chain.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
-    height: await getBlockNumber(client.api, chain.properties.schedulerBlockProvider),
+    height: await getBlockNumber(client.api, chain.properties.proxyBlockProvider!),
   }
 
   // Sanity check - the announcement should be associated to the multisig and not its delegator, Dave.
@@ -1035,7 +1035,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
     await client.dev.newBlock()
 
     const blockOffset = blockProviderOffset(
-      chain.properties.schedulerBlockProvider,
+      chain.properties.proxyBlockProvider!,
       (chain.properties as any).asyncBacking,
     )
     proxyDelay -= blockOffset
