@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -37,8 +39,10 @@ export const polkadot = defineChain({
   networkGroup: 'polkadot',
   properties: {
     addressEncoding: 0,
-    blockProvider: 'Local',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
+    feeExtractor: standardFeeExtractor,
   },
 })
 
@@ -51,7 +55,9 @@ export const kusama = defineChain({
   networkGroup: 'kusama',
   properties: {
     addressEncoding: 2,
-    blockProvider: 'Local',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'LowEd',
+    feeExtractor: standardFeeExtractor,
   },
 })

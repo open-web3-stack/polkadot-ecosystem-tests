@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts } from '../testAccounts.js'
 
@@ -52,9 +54,10 @@ export const moonbeam = defineChain({
   initStorages: getInitStorages(),
   properties: {
     addressEncoding: 1284,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })
 
@@ -67,8 +70,9 @@ export const moonriver = defineChain({
   initStorages: getInitStorages(),
   properties: {
     addressEncoding: 1285,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })

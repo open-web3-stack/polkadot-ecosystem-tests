@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts } from '../testAccounts.js'
 
@@ -49,9 +51,10 @@ export const astar = defineChain({
   initStorages: getInitStorages(custom.astar),
   properties: {
     addressEncoding: 5,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })
 
@@ -64,8 +67,9 @@ export const shiden = defineChain({
   initStorages: getInitStorages(custom.shiden),
   properties: {
     addressEncoding: 5,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'LowEd',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })

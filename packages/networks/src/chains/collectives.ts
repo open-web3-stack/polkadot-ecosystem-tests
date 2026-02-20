@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -31,8 +33,10 @@ export const collectivesPolkadot = defineChain({
   initStorages: getInitStorages(custom.collectivesPolkadot),
   properties: {
     addressEncoding: 0,
-    blockProvider: 'NonLocal',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })

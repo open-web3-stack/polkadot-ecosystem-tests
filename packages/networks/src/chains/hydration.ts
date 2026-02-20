@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
@@ -35,9 +37,10 @@ export const hydration = defineChain({
   initStorages: getInitStorages(custom.hydration),
   properties: {
     addressEncoding: 63,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })
 
@@ -50,8 +53,9 @@ export const basilisk = defineChain({
   initStorages: getInitStorages(custom.basilisk),
   properties: {
     addressEncoding: 10041,
-    blockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'LowEd',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })

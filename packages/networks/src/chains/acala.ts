@@ -89,7 +89,8 @@ export const acala = defineChain({
   initStorages: getInitStorages(custom.acala),
   properties: {
     addressEncoding: 10,
-    blockProvider: 'Local',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: acalaFeeExtractor,
@@ -109,7 +110,8 @@ export const karura = defineChain({
   initStorages: getInitStorages(custom.karura),
   properties: {
     addressEncoding: 8,
-    blockProvider: 'Local',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: acalaFeeExtractor,

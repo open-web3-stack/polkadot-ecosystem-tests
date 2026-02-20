@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -29,9 +31,11 @@ export const bridgeHubPolkadot = defineChain({
   initStorages: getInitStorages(custom.bridgeHubPolkadot),
   properties: {
     addressEncoding: 0,
-    blockProvider: 'NonLocal',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })
 
@@ -44,8 +48,10 @@ export const bridgeHubKusama = defineChain({
   initStorages: getInitStorages(custom.bridgeHubKusama),
   properties: {
     addressEncoding: 2,
-    blockProvider: 'NonLocal',
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
     chainEd: 'LowEd',
     asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
   },
 })
