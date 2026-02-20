@@ -149,7 +149,7 @@ async function multisigWithPureProxyTest<
   await client.dev.newBlock()
 
   // Check that the pure proxy was created successfully.
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, bob, client.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, bob, chain.properties.addressEncoding)
 
   // Check that Bob has had funds reserved for the pure proxy.
   bobReservedFunds = await getReservedFunds(client, bob.address)
@@ -162,7 +162,7 @@ async function multisigWithPureProxyTest<
   // 2. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([pureProxyAddress, charlie.address], client.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([pureProxyAddress, charlie.address], chain.properties.addressEncoding)
 
   // The first and last approvals require an encoded call, while all intermediate approvals require a hash.
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -193,7 +193,7 @@ async function multisigWithPureProxyTest<
   const [multisigAddress, multisigExtrinsicIndex, multisigCallHash] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Funds the multisig account to execute the call.
@@ -201,7 +201,7 @@ async function multisigWithPureProxyTest<
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Prepare the second multisig approval call. As this is the final approval, `multisig.asMulti` is used.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -253,7 +253,7 @@ async function multisigWithPureProxyTest<
 
   const multisigExecutedEventData = multisigExecutedEvent.event.data
   expect(multisigExecutedEventData.approving.toString()).toBe(
-    encodeAddress(pureProxyAddress, client.properties.addressEncoding),
+    encodeAddress(pureProxyAddress, chain.properties.addressEncoding),
   )
   expect(multisigExecutedEventData.timepoint.height.toNumber()).toBe(currBlockNumber + 1)
   expect(multisigExecutedEventData.multisig.toString()).toBe(multisigAddress.toString())
@@ -295,7 +295,7 @@ async function multisigAsStandardProxyTest<
   // 1. Alice creates a 2-of-3 multisig for the transfer, with Bob and Charlie as the other signatories.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
   const asMultiTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -325,7 +325,7 @@ async function multisigAsStandardProxyTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Funds the multisig account to execute the call.
@@ -352,7 +352,7 @@ async function multisigAsStandardProxyTest<
   expect(charlieFreeFunds, 'Charlie should have no free funds').toBe(0)
 
   // 3. Bob approves the multisig operation, which triggers the sending of the funds if the proxy type allows it.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -440,12 +440,12 @@ async function multisigWithPureProxyMultisigTest<
   const charlieReservedFunds = await getReservedFunds(client, charlie.address)
   expect(charlieReservedFunds, 'Charlie should have reserved funds').toBe(await getProxyCosts(client, 1))
 
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, charlie, client.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, charlie, chain.properties.addressEncoding)
 
   // 2. Alice creates a 2-of-3 multisig operation with Bob and Charlie's pure proxy as other signatories.
   const threshold = 2
   const primarymaxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], client.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], chain.properties.addressEncoding)
 
   const transferAmount = 100e10
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
@@ -479,7 +479,7 @@ async function multisigWithPureProxyMultisigTest<
   const [primaryMultisigAddress, primaryMultisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Fund the multisig account.
@@ -487,7 +487,7 @@ async function multisigWithPureProxyMultisigTest<
   await setupBalances(client, [{ address: primaryMultisigAddress, amount: transferAmount + extraFunds }])
 
   // Define the second (and last) approval call for the primary multisig.
-  otherSignatories = sortAddressesByBytes([alice.address, bob.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, bob.address], chain.properties.addressEncoding)
   const primaryMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
@@ -504,7 +504,7 @@ async function multisigWithPureProxyMultisigTest<
   const secondaryMaxWeight = { refTime: 7000000000, proofSize: 3000000 } // Conservative weight limit
 
   // Charlie is the first approver of the secondary multisig.
-  otherSignatories = sortAddressesByBytes([dave.address, eve.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([dave.address, eve.address], chain.properties.addressEncoding)
   const secondaryMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
@@ -522,7 +522,7 @@ async function multisigWithPureProxyMultisigTest<
   const [secondaryMultisigAddress, secondaryMultisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     charlie.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   await setupBalances(client, [{ address: pureProxyAddress, amount: extraFunds }])
@@ -542,7 +542,7 @@ async function multisigWithPureProxyMultisigTest<
   await client.dev.newBlock()
 
   // 5. Eve approves the secondary multisig call, which makes the pure proxy sign the first multisig call, thus funding Dave
-  otherSignatories = sortAddressesByBytes([charlie.address, dave.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([charlie.address, dave.address], chain.properties.addressEncoding)
 
   const secondaryMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -606,7 +606,7 @@ async function cancelMultisigWithPureProxyTest<
   await client.dev.newBlock()
 
   // Check that the pure proxy was created successfully.
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, alice, client.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, alice, chain.properties.addressEncoding)
 
   // Check that Alice has had funds reserved for the pure proxy.
   const aliceReservedFunds = await getReservedFunds(client, alice.address)
@@ -622,7 +622,7 @@ async function cancelMultisigWithPureProxyTest<
   // 1. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
   // The first and last approvals require an encoded call, while intermediate calls require a hash.
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -658,7 +658,7 @@ async function cancelMultisigWithPureProxyTest<
   const [, multisigExtrinsicIndex, multisigCallHash] = await getAndVerifyMultisigEventData(
     client,
     pureProxyAddress,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Check that Charlie has no funds.
@@ -728,7 +728,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   // 1. Alice creates a 2-of-3 multisig with Bob and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
   const announceMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -753,7 +753,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Funds the multisig account in order to execute the call.
@@ -771,7 +771,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   expect(daveReservedFunds, 'Dave should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // 3. Bob co-signs the multisig, which allows it to announce the transfer as a proxy of Dave.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
   let announceMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -794,9 +794,9 @@ async function multisigAsStandardProxyAnnouncementTest<
     .toMatchSnapshot('events when Bob approves multisig call')
 
   const announcementObject = {
-    real: encodeAddress(dave.address, client.properties.addressEncoding),
+    real: encodeAddress(dave.address, chain.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
-    height: await getBlockNumber(client.api, client.properties.blockProvider),
+    height: await getBlockNumber(client.api, chain.properties.schedulerBlockProvider),
   }
 
   // Sanity check - the announcement should be associated to the multisig and not its delegator, Dave.
@@ -816,7 +816,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   await checkEvents(rejectEvents, 'proxy').toMatchSnapshot('events when Dave rejects the announced call')
 
   // The multisig still attempts to execute the announced call.
-  otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
   const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(multisigAddress, dave.address, null, transferCall)
   const proxyAnnouncedMultiFirstTx = client.api.tx.multisig.asMulti(
@@ -836,14 +836,14 @@ async function multisigAsStandardProxyAnnouncementTest<
   const [multisigAddress2, multisigExtrinsicIndex2] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Multisigs are uniquely defined by the set of signatories and the threshold only, so the address should be the same.
   expect(multisigAddress2.toString()).toBe(multisigAddress.toString())
 
   // Bob again co-signs the multisig.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
   let proxyAnnouncedMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -965,7 +965,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   // 1. Alice creates a 2-of-3 multisig with Bob and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
   const announceMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -984,7 +984,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    client.properties.addressEncoding,
+    chain.properties.addressEncoding,
   )
 
   // Funds the multisig account in order to execute the call.
@@ -998,7 +998,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   await client.dev.newBlock()
 
   // 3. Bob co-signs the multisig, which allows it to announce the transfer.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
   const announceMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -1019,7 +1019,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   // The multisig attempts to execute the announced call before and after the delay has passed.
   do {
     currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-    otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.properties.addressEncoding)
+    otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
 
     // Alice again signs the multisig first, in order to execute the announced call.
     const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(multisigAddress, dave.address, null, transferCall)
@@ -1034,17 +1034,20 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
     await sendTransaction(proxyAnnouncedMultiFirstTx.signAsync(alice))
     await client.dev.newBlock()
 
-    const blockOffset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+    const blockOffset = blockProviderOffset(
+      chain.properties.schedulerBlockProvider,
+      (chain.properties as any).asyncBacking,
+    )
     proxyDelay -= blockOffset
 
     const [, multisigExtrinsicIndex2] = await getAndVerifyMultisigEventData(
       client,
       alice.address,
-      client.properties.addressEncoding,
+      chain.properties.addressEncoding,
     )
 
     // Bob again co-signs the multisig.
-    otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.properties.addressEncoding)
+    otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
 
     const proxyAnnouncedMultiLastTx = client.api.tx.multisig.asMulti(
       threshold,

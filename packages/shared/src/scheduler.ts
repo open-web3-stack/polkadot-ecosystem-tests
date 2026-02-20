@@ -234,7 +234,7 @@ export async function scheduleBadOriginTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const targetBlockNumber = await nextSchedulableBlockNum(client.api, client.properties.blockProvider)
+  const targetBlockNumber = await nextSchedulableBlockNum(client.api, chain.properties.schedulerBlockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
   const scheduleTx = client.api.tx.scheduler.schedule(targetBlockNumber, null, 0, call)
 
@@ -253,7 +253,7 @@ export async function scheduleNamedBadOriginTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const targetBlockNumber = await nextSchedulableBlockNum(client.api, client.properties.blockProvider)
+  const targetBlockNumber = await nextSchedulableBlockNum(client.api, chain.properties.schedulerBlockProvider)
   const call = client.api.tx.system.remark('test').method.toHex()
 
   const taskId = sha256AsU8a('task_id')
@@ -277,10 +277,10 @@ export async function cancelScheduledTaskBadOriginTest<
   const [client] = await setupNetworks(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -295,7 +295,7 @@ export async function cancelScheduledTaskBadOriginTest<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -336,10 +336,10 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   const [client] = await setupNetworks(chain)
 
   const call = client.api.tx.system.remark('test').method.toHex()
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -356,7 +356,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -401,10 +401,10 @@ export async function scheduledCallExecutes<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -419,7 +419,7 @@ export async function scheduledCallExecutes<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
@@ -478,10 +478,10 @@ export async function scheduledNamedCallExecutes<
 
   const taskId = sha256AsU8a('task_id')
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -495,7 +495,7 @@ export async function scheduledNamedCallExecutes<
     client,
     scheduleNamedTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   const oldTotalIssuance = await client.api.query.balances.totalIssuance()
@@ -553,7 +553,7 @@ export async function cancelScheduledTask<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   // This won't represent the same timespan in relay and parachains, but for this test, that is irrelevant.
   const targetBlockNumber: number = initialBlockNumber + 1000
 
@@ -563,7 +563,7 @@ export async function cancelScheduledTask<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -586,7 +586,7 @@ export async function cancelScheduledTask<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -650,10 +650,10 @@ export async function cancelScheduledNamedTask<
 
   const taskId = sha256AsU8a('task_id')
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 3 * offset
     })
@@ -672,7 +672,7 @@ export async function cancelScheduledNamedTask<
     client,
     scheduleNamedTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -720,7 +720,7 @@ export async function cancelScheduledNamedTask<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -792,10 +792,10 @@ export async function cancelNamedTaskWithUnnamedCancellation<
 
   const taskId = sha256AsU8a('task_id')
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 3 * offset
     })
@@ -814,7 +814,7 @@ export async function cancelNamedTaskWithUnnamedCancellation<
     client,
     scheduleNamedTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -855,7 +855,7 @@ export async function cancelNamedTaskWithUnnamedCancellation<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -864,7 +864,7 @@ export async function cancelNamedTaskWithUnnamedCancellation<
   // 4. Check data and events: verify `Canceled` event, no execution, lookup removed
   // -------------------------------------------------------------------------------
 
-  const currentBlockNumber = await nextSchedulableBlockNum(client.api, client.properties.blockProvider)
+  const currentBlockNumber = await nextSchedulableBlockNum(client.api, chain.properties.schedulerBlockProvider)
   expect(currentBlockNumber).toBe(targetBlockNumber!)
 
   // Check events - there should be one `Canceled` event
@@ -916,8 +916,8 @@ export async function cancelNamedTask<
   // Helper function to create an adjust total issuance transaction with a given adjustment amount
   const adjustIssuanceTx = (amount: number) => client.api.tx.balances.forceAdjustTotalIssuance('Increase', amount)
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   // This is *not* the same timespan across relay/parachains, but it's irrelevant: what's necessary is a task far in
   // the future.
   const targetBlockNumber: number = initialBlockNumber + 1000 * offset
@@ -952,7 +952,7 @@ export async function cancelNamedTask<
     client,
     scheduleTxs(issuanceAdjustments).map((schdTx) => schdTx.method.toHex()),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1003,7 +1003,7 @@ export async function cancelNamedTask<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1030,7 +1030,7 @@ export async function cancelNamedTask<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1069,7 +1069,7 @@ export async function cancelNamedTask<
     client,
     cancelTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1099,7 +1099,7 @@ export async function scheduleTaskAfterDelay<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   // In case of non-local block providers, spans of blocks must be specified in terms of the nonlocal
   // provider.
   // This multiplication is because on parachains with AB, each para block spans 2 relay blocks.
@@ -1108,13 +1108,13 @@ export async function scheduleTaskAfterDelay<
 
   const scheduleTx = client.api.tx.scheduler.scheduleAfter(delay, null, 0, adjustIssuanceTx)
 
-  let currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  let currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   await scheduleInlineCallWithOrigin(
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1127,7 +1127,7 @@ export async function scheduleTaskAfterDelay<
     .toMatchSnapshot('events when scheduling task with delay')
 
   let targetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlock = currBlockNumber + delay + 1
     })
@@ -1197,9 +1197,9 @@ export async function scheduleNamedTaskAfterDelay<
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
 
-  let currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  let currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   // See above note in `scheduleTaskAfterDelay`
   const delay = 5 * offset
   const scheduleNamedTx = client.api.tx.scheduler.scheduleNamedAfter(taskId, delay, null, 0, adjustIssuanceTx)
@@ -1208,7 +1208,7 @@ export async function scheduleNamedTaskAfterDelay<
     client,
     scheduleNamedTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1221,7 +1221,7 @@ export async function scheduleNamedTaskAfterDelay<
     .toMatchSnapshot('events when scheduling task with delay')
 
   let targetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlock = currBlockNumber + delay + 1
     })
@@ -1297,11 +1297,11 @@ export async function scheduledOverweightCallFails<
 
   const withWeightTx = client.api.tx.utility.withWeight(adjustIssuanceTx, maxWeight)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   // Target block is two blocks in the future - see the notes about parachain scheduling differences.
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -1316,7 +1316,7 @@ export async function scheduledOverweightCallFails<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1447,10 +1447,10 @@ async function scheduleLookupCall<
     client,
     { hash: preimageHash, len: encodedProposal.encodedLength },
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
-  const targetBlock = await nextSchedulableBlockNum(client.api, client.properties.blockProvider)
+  const targetBlock = await nextSchedulableBlockNum(client.api, chain.properties.schedulerBlockProvider)
   let agenda = await client.api.query.scheduler.agenda(targetBlock)
 
   // Find the unnamed task with priority 0 and lookup call
@@ -1518,12 +1518,12 @@ export async function schedulePreimagedCall<
   await checkEvents(noteEvents, 'preimage').toMatchSnapshot('note preimage events')
 
   // Schedule using the preimage hash
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
   // at `n + 2`.
   let targetBlockNumber: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlockNumber = initialBlockNumber + 2 * offset
     })
@@ -1682,20 +1682,20 @@ async function testPeriodicTask<
 ) {
   const [client] = await setupNetworks(chain)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   // Manually schedule `scheduleTx` to run on the next block.
   await scheduleInlineCallWithOrigin(
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
 
-  let currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  let currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   // Move to just before the first execution block
   await client.dev.newBlock()
@@ -1703,7 +1703,7 @@ async function testPeriodicTask<
 
   // Agenda check for the first scheduled execution
   let targetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlock = currBlockNumber + offset
     })
@@ -1758,7 +1758,7 @@ async function testPeriodicTask<
 
     // Check agenda for next scheduled execution (if not the last iteration)
     if (i < REPETITIONS) {
-      if (client.properties.blockProvider === 'Local') {
+      if (chain.properties.schedulerBlockProvider === 'Local') {
         targetBlock = currBlockNumber + period
       } else {
         targetBlock = currBlockNumber + period - offset
@@ -1799,7 +1799,7 @@ async function testPeriodicTask<
   }
 
   // Verify task is removed after all executions
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       targetBlock = currBlockNumber + offset
     })
@@ -1833,10 +1833,10 @@ export async function schedulePeriodicTask<
   const [client] = await setupNetworks(chain)
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
-  const delay = match(client.properties.blockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
+  const delay = match(chain.properties.schedulerBlockProvider)
     .with('Local', () => 2 * offset)
     // Parachain scheduling differences - see notes above.
     // This is obviously 2, but leaving it like this clarifies what's happening.
@@ -1870,10 +1870,10 @@ export async function scheduleNamedPeriodicTask<
 
   const adjustIssuanceTx = client.api.tx.balances.forceAdjustTotalIssuance('Increase', 1)
   const taskId = sha256AsU8a('task_id')
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
-  const delay = match(client.properties.blockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
+  const delay = match(chain.properties.schedulerBlockProvider)
     .with('Local', () => 2 * offset)
     // Recall: to schedule a task on the next block of a parachain, the offset is 0. On the block after that one,
     // it is 1 if async backing is disabled, 2 if enabled.
@@ -1924,11 +1924,11 @@ export async function schedulePriorityWeightedTasks<
   const highPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceHighTx, taskWeight)
   const lowPriorityTx = client.api.tx.utility.withWeight(adjustIssuanceLowTx, taskWeight)
 
-  const initBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const initBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   let currBlockNumber = initBlockNumber
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   let priorityTargetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       priorityTargetBlock = initBlockNumber + 2 * offset
     })
@@ -1952,7 +1952,7 @@ export async function schedulePriorityWeightedTasks<
     lowPriorityTx,
   )
 
-  const targetBlock = await nextSchedulableBlockNum(client.api, client.properties.blockProvider)
+  const targetBlock = await nextSchedulableBlockNum(client.api, chain.properties.schedulerBlockProvider)
 
   // Schedule both tasks
   await client.dev.setStorage({
@@ -2013,7 +2013,7 @@ export async function schedulePriorityWeightedTasks<
   // Verify `incompleteSince` is set to current block
   const incompleteSince = await client.api.query.scheduler.incompleteSince()
   assert(incompleteSince.isSome)
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(incompleteSince.unwrap().toNumber()).toBe(currBlockNumber)
     })
@@ -2024,7 +2024,7 @@ export async function schedulePriorityWeightedTasks<
 
   // Check the agenda for the most recently built block - only the low priority task should still be scheduled.
   let mostRecentBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       mostRecentBlock = currBlockNumber
     })
@@ -2071,7 +2071,7 @@ export async function schedulePriorityWeightedTasks<
   // where `n` is the block in which the agenda was last serviced.
   // `currBlockNumber` advanced by `offset` in the meantime, so `- 1` is the correct value.
   expect(finalIncompleteSince.isSome).toBeTruthy()
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(finalIncompleteSince.unwrap().toNumber()).toBe(currBlockNumber + 1)
     })
@@ -2100,7 +2100,7 @@ export async function schedulePriorityWeightedTasks<
 
   // Check the previous block (where high priority task was rescheduled after first incomplete execution)
   let previousBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       previousBlock = currBlockNumber - 1
     })
@@ -2115,7 +2115,7 @@ export async function schedulePriorityWeightedTasks<
   expect(previousHighPriority.task).toBeUndefined()
 
   // Check the current block's agenda.
-  const currentBlock = await getBlockNumber(client.api, client.properties.blockProvider)
+  const currentBlock = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   const currentLowPriority = await findUnnamedScheduledTask(client, currentBlock, lowPriorityTx.method.toHex(), 1)
   const currentHighPriority = await findUnnamedScheduledTask(client, currentBlock, highPriorityTx.method.toHex(), 0)
@@ -2141,7 +2141,7 @@ export async function scheduleWithRetryConfig<
   // Create a task that will fail - remarkWithEvent requires signed origin, and it will be attempted with a `Root`
   // origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   // Define base task object once
   const baseTask = {
@@ -2156,7 +2156,7 @@ export async function scheduleWithRetryConfig<
     },
   }
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   const period = 3 * offset
 
@@ -2167,7 +2167,7 @@ export async function scheduleWithRetryConfig<
   }
 
   let targetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       targetBlock = initialBlockNumber + 3 * offset
     })
@@ -2184,7 +2184,7 @@ export async function scheduleWithRetryConfig<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   // Move to scheduling block
@@ -2206,7 +2206,7 @@ export async function scheduleWithRetryConfig<
     client,
     setRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2252,7 +2252,7 @@ export async function scheduleWithRetryConfig<
     client,
     cancelRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2300,7 +2300,7 @@ export async function scheduleNamedWithRetryConfig<
   // Create a task that will fail - remarkWithEvent requires signed origin
   const failingTx = client.api.tx.system.remarkWithEvent('will_fail')
   const taskId = sha256AsU8a('retry_task')
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   // Define base task object once
   const baseTask = {
@@ -2315,7 +2315,7 @@ export async function scheduleNamedWithRetryConfig<
     },
   }
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   const period = 3 * offset
 
@@ -2326,7 +2326,7 @@ export async function scheduleNamedWithRetryConfig<
   }
 
   let targetBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       targetBlock = initialBlockNumber + 3 * offset
     })
@@ -2343,7 +2343,7 @@ export async function scheduleNamedWithRetryConfig<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   // Move to scheduling block
@@ -2361,7 +2361,7 @@ export async function scheduleNamedWithRetryConfig<
     client,
     setRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2408,7 +2408,7 @@ export async function scheduleNamedWithRetryConfig<
     client,
     cancelRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2479,7 +2479,7 @@ export async function scheduleNamedWithRetryConfig<
     client,
     cancelRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2521,8 +2521,8 @@ export async function scheduleToFullAgenda<
   // 1. Pick a block far in the future
   // ---------------------------------
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   const targetBlockNumber = initialBlockNumber + 1000 * offset
 
   // ----------------------------------------------------------
@@ -2563,7 +2563,7 @@ export async function scheduleToFullAgenda<
     client,
     scheduleAdditionalTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2600,8 +2600,8 @@ export async function retryReschedulingNamedTaskToFullAgenda<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   // ---------------------------------------------------
   // 1. Pick a block far in the future and fill agenda
@@ -2639,7 +2639,7 @@ export async function retryReschedulingNamedTaskToFullAgenda<
 
   // Calculate the block where the task will first execute (give us time to set retry config)
   let firstExecutionBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       firstExecutionBlock = initialBlockNumber + 3 * offset
     })
@@ -2663,7 +2663,7 @@ export async function retryReschedulingNamedTaskToFullAgenda<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2678,7 +2678,7 @@ export async function retryReschedulingNamedTaskToFullAgenda<
     client,
     setRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2744,8 +2744,8 @@ export async function retryReschedulingAnonymousTaskToFullAgenda<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const initialBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const initialBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   // ---------------------------------------------------
   // 1. Pick a block far in the future and fill agenda
@@ -2782,7 +2782,7 @@ export async function retryReschedulingAnonymousTaskToFullAgenda<
 
   // Calculate the block where the task will first execute (give us time to set retry config)
   let firstExecutionBlock: number
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       firstExecutionBlock = initialBlockNumber + 3 * offset
     })
@@ -2806,7 +2806,7 @@ export async function retryReschedulingAnonymousTaskToFullAgenda<
     client,
     scheduleTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2825,7 +2825,7 @@ export async function retryReschedulingAnonymousTaskToFullAgenda<
     client,
     setRetryTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()

@@ -97,7 +97,7 @@ async function ensureMaxPoolsCapacity(client: Client): Promise<void> {
       client,
       setConfigsCall.method.toHex(),
       { system: 'Root' },
-      client.properties.blockProvider,
+      client.config.properties.schedulerBlockProvider,
     )
 
     // Execute the scheduled call
@@ -304,10 +304,10 @@ async function nominationPoolLifecycleTest<
     depositorMinBond,
   )
   await check(nominationPoolPostCreation.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    root: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    nominator: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    root: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
   })
   expect(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation').toBe(true)
 
@@ -334,10 +334,10 @@ async function nominationPoolLifecycleTest<
   nominationPoolCmp(nominationPoolPostCreation, nominationPoolWithRoles, ['roles'])
 
   await check(nominationPoolWithRoles.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    root: encodeAddress(testAccounts.bob.address, client.properties.addressEncoding),
-    nominator: encodeAddress(testAccounts.charlie.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.dave.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    root: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.charlie.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
   })
 
   /**
@@ -380,7 +380,7 @@ async function nominationPoolLifecycleTest<
   poolData = await client.api.query.nominationPools.bondedPools(nomPoolId)
   expect(poolData.isSome, 'Pool should still exist after commission is changed').toBe(true)
 
-  const blockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 
   const nominationPoolWithCommission = poolData.unwrap()
 
@@ -388,7 +388,7 @@ async function nominationPoolLifecycleTest<
 
   const newCommissionData = {
     max: commission * 10,
-    current: [commission, encodeAddress(testAccounts.eve.address, client.properties.addressEncoding)],
+    current: [commission, encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding)],
     changeRate: {
       maxIncrease: 1e9,
       minDelay: 10,
@@ -739,7 +739,7 @@ async function nominationPoolSetMetadataTest<
   const metadataUpdatedData = metadataUpdatedEvent.event.data
   expect(metadataUpdatedData.poolId.toNumber()).toBe(nomPoolId)
   expect(metadataUpdatedData.caller.toString()).toBe(
-    encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
+    encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
   )
 
   /// Check the set metadata
@@ -929,7 +929,7 @@ async function nominationPoolGlobalConfigTest<
       client,
       setConfigsCall(inc).method.toHex(),
       origin,
-      client.properties.blockProvider,
+      chain.properties.schedulerBlockProvider,
     )
 
     await client.dev.newBlock()
@@ -1007,10 +1007,10 @@ async function nominationPoolsUpdateRolesTest<
   const nominationPool = poolData.unwrap()
 
   await check(nominationPool.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    root: encodeAddress(testAccounts.bob.address, client.properties.addressEncoding),
-    nominator: encodeAddress(testAccounts.charlie.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.dave.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    root: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.charlie.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
   })
 
   /**
@@ -1044,10 +1044,10 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPool, nominationPoolWithRoles, ['roles'])
 
   await check(nominationPoolWithRoles.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    root: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    nominator: encodeAddress(testAccounts.dave.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.bob.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    root: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
   })
 
   /**
@@ -1105,10 +1105,10 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPoolWithRoles, nominationPoolWithoutRoot, ['roles'])
 
   await check(nominationPoolWithoutRoot.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
     root: null,
-    nominator: encodeAddress(testAccounts.dave.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.bob.address, client.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
   })
 
   /**
@@ -1126,7 +1126,7 @@ async function nominationPoolsUpdateRolesTest<
     client,
     updateRolesCall.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1148,10 +1148,10 @@ async function nominationPoolsUpdateRolesTest<
   nominationPoolCmp(nominationPoolWithoutRoot, nominationPoolUpdatedRoles, ['roles'])
 
   await check(nominationPoolUpdatedRoles.roles).toMatchObject({
-    depositor: encodeAddress(testAccounts.alice.address, client.properties.addressEncoding),
-    root: encodeAddress(testAccounts.charlie.address, client.properties.addressEncoding),
-    nominator: encodeAddress(testAccounts.dave.address, client.properties.addressEncoding),
-    bouncer: encodeAddress(testAccounts.eve.address, client.properties.addressEncoding),
+    depositor: encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+    root: encodeAddress(testAccounts.charlie.address, chain.properties.addressEncoding),
+    nominator: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
+    bouncer: encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
   })
 }
 

@@ -287,8 +287,11 @@ export const vestedTransferLockAction = <
 >(): LockAction<TCustom, TInitStorages> => ({
   name: 'vested transfer',
   execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<void> => {
-    const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
-    const number = await getBlockNumber(client.api, client.properties.blockProvider)
+    const offset = blockProviderOffset(
+      client.config.properties.schedulerBlockProvider,
+      (client.config.properties as any).asyncBacking,
+    )
+    const number = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
     const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()
     const startingBlock = BigInt(number) + 3n * BigInt(offset)
 
@@ -485,7 +488,7 @@ async function transferInsufficientFundsTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -642,18 +645,24 @@ async function transferAllowDeathTest<
   const events = await client.api.query.system.events()
 
   // Transaction payment event that should appear before any other events; other events are regular
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
 
   // Check `Transfer` event
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `Withdraw` event
@@ -664,7 +673,7 @@ async function transferAllowDeathTest<
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
 
   // Check `DustLost` event
@@ -675,7 +684,9 @@ async function transferAllowDeathTest<
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
   expect(dustLostEventData.amount.toBigInt()).toBeGreaterThan(0n)
   expect(dustLostEventData.amount.toBigInt()).toBeLessThan(eps)
 
@@ -693,7 +704,7 @@ async function transferAllowDeathTest<
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 
   // Check `KilledAccount` event
@@ -705,7 +716,7 @@ async function transferAllowDeathTest<
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, client.properties.addressEncoding),
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
   )
 
   // Check `NewAccount` event
@@ -716,7 +727,9 @@ async function transferAllowDeathTest<
   expect(newAccountEvent).toBeDefined()
   assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(newAccountEventData.account.toString()).toBe(
+    encodeAddress(bob.address, client.config.properties.addressEncoding),
+  )
 }
 
 /**
@@ -767,7 +780,7 @@ async function transferAllowDeathNoKillTest<
 
   // Get the extrinsic's fee
   const events = await client.api.query.system.events()
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -785,12 +798,18 @@ async function transferAllowDeathNoKillTest<
   expect(killedAccountEvent).toBeUndefined()
 
   // Verify transfer event -- fee transfers also count, so a filter for the proper sender is needed.
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
   // Verify withdraw event
@@ -801,7 +820,7 @@ async function transferAllowDeathNoKillTest<
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
   const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
 
   // Verify endowment event
@@ -812,7 +831,7 @@ async function transferAllowDeathNoKillTest<
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(transferAmount)
 
   // Verify `NewAccount` event
@@ -874,7 +893,7 @@ async function transferBelowExistentialDepositTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -967,7 +986,7 @@ async function transferAllowDeathWithReserveTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -992,7 +1011,13 @@ async function transferAllowDeathWithReserveTest<
   expect(killedAccountEvent).toBeUndefined()
 
   // Check that no transfer event from Alice to Bob occurred
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeUndefined()
 
   const errorEvent = events.find((record) => {
@@ -1035,7 +1060,7 @@ async function transferAllowDeathSelfTest<
   // Get transaction fee
   const events = await client.api.query.system.events()
 
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1128,7 +1153,7 @@ async function forceTransferKillTest<
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1189,13 +1214,13 @@ async function forceTransferKillTest<
     baseClient,
     alice.address,
     bob.address,
-    baseClient.properties.addressEncoding,
+    baseChain.properties.addressEncoding,
   )
   expect(transferEvent).toBeDefined()
   assert(baseClient.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, baseClient.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, baseClient.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
 
   // Check `DustLost` event
@@ -1206,7 +1231,7 @@ async function forceTransferKillTest<
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, baseClient.properties.addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
   expect(dustLostEventData.amount.toBigInt()).toBe(eps)
 
   // Check `Endowed` event
@@ -1217,7 +1242,7 @@ async function forceTransferKillTest<
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, baseClient.properties.addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
   expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
 
   // Check `KilledAccount` event
@@ -1229,7 +1254,7 @@ async function forceTransferKillTest<
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, baseClient.properties.addressEncoding),
+    encodeAddress(alice.address, baseChain.properties.addressEncoding),
   )
 
   // Check `NewAccount` event
@@ -1240,7 +1265,7 @@ async function forceTransferKillTest<
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
   const newAccountEventData = newAccountEvent!.event.data
-  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, baseClient.properties.addressEncoding))
+  expect(newAccountEventData.account.toString()).toBe(encodeAddress(bob.address, baseChain.properties.addressEncoding))
 }
 
 /**
@@ -1293,7 +1318,7 @@ async function forceTransferBelowExistentialDepositTest<
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1404,7 +1429,7 @@ async function forceTransferInsufficientFundsTest<
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1530,7 +1555,7 @@ async function forceTransferWithReserveTest<
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
 
     await baseClient.dev.newBlock()
@@ -1594,7 +1619,7 @@ async function forceTransferWithReserveTest<
     baseClient,
     alice.address,
     bob.address,
-    baseClient.properties.addressEncoding,
+    baseChain.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -1691,7 +1716,7 @@ async function forceTransferSelfTest<
       baseClient,
       forceTransferTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -1736,7 +1761,7 @@ async function forceTransferSelfTest<
     baseClient,
     alice.address,
     alice.address,
-    baseClient.properties.addressEncoding,
+    baseChain.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -1813,7 +1838,7 @@ async function transferAllKeepAliveTrueTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1836,12 +1861,18 @@ async function transferAllKeepAliveTrueTest<
   expect(killedAccountEvent).toBeUndefined()
 
   // Check transfer event
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(expectedBobBalance)
 }
 
@@ -1896,7 +1927,7 @@ async function transferAllKeepAliveFalseTest<
 
   // Get the transaction fee
   const events = await client.api.query.system.events()
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -1917,16 +1948,22 @@ async function transferAllKeepAliveFalseTest<
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, client.properties.addressEncoding),
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
   )
 
   // Check transfer event
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(expectedBobBalance)
 }
 
@@ -1969,8 +2006,8 @@ async function transferAllWithReserveTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Get Alice's account state after reserve
@@ -1989,8 +2026,8 @@ async function transferAllWithReserveTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Snapshot events
@@ -2019,7 +2056,7 @@ async function transferAllWithReserveTest<
     totalBalance -
       reservedAmount -
       existentialDeposit -
-      cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+      cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!,
   )
 
   // Alice should still have consumers and reserved balance
@@ -2040,7 +2077,7 @@ async function transferAllWithReserveTest<
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
   expect(endowedEventData.freeBalance.toBigInt()).toBe(bobAccount.data.free.toBigInt())
-  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
 
   // Verify no `KilledAccount˝ events are present
   const killedAccountEvent = events.find((record) => {
@@ -2050,17 +2087,23 @@ async function transferAllWithReserveTest<
   expect(killedAccountEvent).toBeUndefined()
 
   // Check that a transfer event from Alice to Bob occurred
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeDefined()
   assert(client.api.events.balances.Transfer.is(transferEvent!.event))
   const transferEventData = transferEvent!.event.data
-  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
-  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(
     totalBalance -
       reservedAmount -
       existentialDeposit -
-      cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+      cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!,
   )
 }
 
@@ -2105,7 +2148,7 @@ async function transferAllSelfKeepAliveTrueTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2121,7 +2164,7 @@ async function transferAllSelfKeepAliveTrueTest<
     client,
     alice.address,
     alice.address,
-    client.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -2184,7 +2227,7 @@ async function transferAllSelfKeepAliveFalseTest<
   // 4. Verify Alice's balance only changed by fees (self-transfer should be no-op)
 
   // Get fee
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2200,7 +2243,7 @@ async function transferAllSelfKeepAliveFalseTest<
     client,
     alice.address,
     alice.address,
-    client.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -2290,7 +2333,7 @@ async function transferKeepAliveSelfTest<
   // 4. Verify Alice's balance
 
   // Get fee
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2344,7 +2387,7 @@ async function transferKeepAliveSelfSuccessTest<
   // 4. Verify Alice's balance only changed by fees (no actual transfer for self-transfer)
 
   // Get fee
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2360,7 +2403,7 @@ async function transferKeepAliveSelfSuccessTest<
     client,
     alice.address,
     alice.address,
-    client.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
   expect(transferEvent).toBeUndefined()
 
@@ -2425,7 +2468,7 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2445,7 +2488,13 @@ async function transferKeepAliveBelowEdTest<
   expect(endowedEvent).toBeUndefined()
 
   // Verify no transfer event occurred
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeUndefined()
 }
 
@@ -2504,7 +2553,7 @@ async function transferKeepAliveBelowEdLowEdTest<
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
   // Get the transaction fee from the payment event
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   assert(feeInfo.tip === 0n, 'unexpected extrinsic tip')
@@ -2524,7 +2573,13 @@ async function transferKeepAliveBelowEdLowEdTest<
   expect(endowedEvent).toBeUndefined()
 
   // Verify no transfer (Alice -> Bob) event occurred
-  const transferEvent = findTransferEvent(events, client, alice.address, bob.address, client.properties.addressEncoding)
+  const transferEvent = findTransferEvent(
+    events,
+    client,
+    alice.address,
+    bob.address,
+    client.config.properties.addressEncoding,
+  )
   expect(transferEvent).toBeUndefined()
 }
 
@@ -2617,7 +2672,7 @@ async function forceUnreserveNoReservesTest<
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -2707,7 +2762,7 @@ async function forceUnreserveNonExistentAccountTest<
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -2828,7 +2883,7 @@ async function forceUnreserveWithReservesTest<
       baseClient,
       forceUnreserveTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -2863,7 +2918,7 @@ async function forceUnreserveWithReservesTest<
   expect(unreservedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Unreserved.is(unreservedEvent!.event))
   const unreservedEventData = unreservedEvent!.event.data
-  expect(unreservedEventData.who.toString()).toBe(encodeAddress(alice.address, baseClient.properties.addressEncoding))
+  expect(unreservedEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
   expect(unreservedEventData.amount.toBigInt()).toBe(unreserveAmount)
 
   // 5. Verify Alice's reserved balance decreased, free balance increased, and consumer count decreased
@@ -2970,7 +3025,7 @@ async function forceSetBalanceSuccessTest<
       baseClient,
       forceSetBalanceTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3020,7 +3075,7 @@ async function forceSetBalanceSuccessTest<
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
 
   const balanceSetEventData = balanceSetEvent!.event.data
-  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseClient.properties.addressEncoding))
+  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
   expect(balanceSetEventData.free.toBigInt()).toBe(newBalance)
 
   // Check new total issuance
@@ -3088,7 +3143,7 @@ async function forceSetBalanceBelowEdTest<
       baseClient,
       forceSetBalanceTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3131,7 +3186,7 @@ async function forceSetBalanceBelowEdTest<
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
 
   const balanceSetEventData = balanceSetEvent!.event.data
-  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseClient.properties.addressEncoding))
+  expect(balanceSetEventData.who.toString()).toBe(encodeAddress(alice.address, baseChain.properties.addressEncoding))
   expect(balanceSetEventData.free.toBigInt()).toBe(0n)
 
   // Check that a KilledAccount event was emitted
@@ -3144,7 +3199,7 @@ async function forceSetBalanceBelowEdTest<
 
   const killedAccountEventData = killedAccountEvent!.event.data
   expect(killedAccountEventData.account.toString()).toBe(
-    encodeAddress(alice.address, baseClient.properties.addressEncoding),
+    encodeAddress(alice.address, baseChain.properties.addressEncoding),
   )
 
   // Check new total issuance
@@ -3233,7 +3288,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       baseClient,
       forceAdjustIncreaseZeroTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3296,7 +3351,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       baseClient,
       forceAdjustDecreaseZeroTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3401,7 +3456,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
       baseClient,
       forceAdjustIncreaseTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3457,7 +3512,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
       baseClient,
       forceAdjustDecreaseTx.method.toHex(),
       { system: 'Root' },
-      baseClient.properties.blockProvider,
+      baseChain.properties.schedulerBlockProvider,
     )
     await baseClient.dev.newBlock()
   } else {
@@ -3548,8 +3603,8 @@ async function burnTestBaseCase<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
@@ -3561,7 +3616,7 @@ async function burnTestBaseCase<
   // Verify Alice is still alive
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
-  const burnFee = cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!
+  const burnFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
 
   // Verify Alice's balance after burn
   const aliceAccountAfterBurn = await client.api.query.system.account(alice.address)
@@ -3581,7 +3636,7 @@ async function burnTestBaseCase<
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
   const burnEventData = burnEvent!.event.data
-  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
 }
 
@@ -3625,8 +3680,8 @@ async function burnTestWithReaping<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for burn')
@@ -3643,7 +3698,7 @@ async function burnTestWithReaping<
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
   const burnEventData = burnEvent!.event.data
-  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
   const dustLostEvent = events.find((record) => {
     const { event } = record
@@ -3652,7 +3707,9 @@ async function burnTestWithReaping<
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
   const dustLostEventData = dustLostEvent!.event.data
-  expect(dustLostEventData.account.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+  expect(dustLostEventData.account.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
   const dustLostAmount = dustLostEventData.amount.toBigInt()
 
   // 4. Verify that the total issuance is decreased by the amount burned
@@ -3702,8 +3759,8 @@ async function burnKeepAliveTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // 3. Verify that the transaction fails
@@ -3724,7 +3781,7 @@ async function burnKeepAliveTest<
 
   const aliceAccountAfter = await client.api.query.system.account(alice.address)
   const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
-  const transactionFee = cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!
+  const transactionFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
 
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFee)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -3817,8 +3874,8 @@ async function burnWithDepositTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // 4. Verify that the account is NOT reaped due to consumer count
@@ -3830,7 +3887,7 @@ async function burnWithDepositTest<
   expect(aliceAccountAfterBurn.data.frozen.toBigInt()).toBe(0n)
 
   // Verify the account has expected free balance (initial - fees)
-  const totalFees = cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!
+  const totalFees = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const expectedFreeBalance = initialBalance - totalFees
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedFreeBalance)
 
@@ -3896,8 +3953,8 @@ async function burnDoubleAttemptTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Verify first transaction failed
@@ -3923,8 +3980,8 @@ async function burnDoubleAttemptTest<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Verify second transaction also failed
@@ -3944,7 +4001,7 @@ async function burnDoubleAttemptTest<
 
   const aliceAccountAfter = await client.api.query.system.account(alice.address)
   const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
-  const transactionFees = cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!
+  const transactionFees = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
 
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFees)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -4038,8 +4095,8 @@ async function testLiquidityRestrictionForAction<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Step 2: Execute reserve action (e.g., create nomination pool, staking bond, or manual reserve)
@@ -4052,8 +4109,8 @@ async function testLiquidityRestrictionForAction<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Step 3: Execute lock action (e.g., vested transfer or manual lock)
@@ -4066,8 +4123,8 @@ async function testLiquidityRestrictionForAction<
   await updateCumulativeFees(
     client.api,
     cumulativeFees,
-    client.properties.addressEncoding,
-    client.properties.feeExtractor,
+    client.config.properties.addressEncoding,
+    client.config.properties.feeExtractor,
   )
 
   // Step 4: Try to execute the deposit action
@@ -4100,8 +4157,8 @@ async function testLiquidityRestrictionForAction<
     await updateCumulativeFees(
       client.api,
       cumulativeFees,
-      client.properties.addressEncoding,
-      client.properties.feeExtractor,
+      client.config.properties.addressEncoding,
+      client.config.properties.feeExtractor,
     )
   }
 
@@ -4145,7 +4202,7 @@ async function testLiquidityRestrictionForAction<
       const actionDeposit = await depositAction.calculateDeposit(client)
 
       // If RPC payment error occurred, cumulative fees won't have been updated, so default to 0n
-      const aliceFees = cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding)) || 0n
+      const aliceFees = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding)) || 0n
 
       expect(account.data.free.toBigInt()).toBe(totalBalance - lockAmount - aliceFees)
       expect(account.data.reserved.toBigInt()).toBe(reservedAmount)
@@ -4177,7 +4234,9 @@ async function testLiquidityRestrictionForAction<
       expect(reservedEvent).toBeDefined()
       assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
       const reservedEventData = reservedEvent!.event.data
-      expect(reservedEventData.who.toString()).toBe(encodeAddress(alice.address, client.properties.addressEncoding))
+      expect(reservedEventData.who.toString()).toBe(
+        encodeAddress(alice.address, client.config.properties.addressEncoding),
+      )
       const actionDeposit = await depositAction.calculateDeposit(client)
       expect(reservedEventData.amount.toBigInt()).toBe(actionDeposit)
 
@@ -4188,7 +4247,7 @@ async function testLiquidityRestrictionForAction<
         totalBalance -
           lockAmount -
           actionDeposit -
-          cumulativeFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+          cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!,
       )
       expect(account.data.reserved.toBigInt()).toBe(reservedAmount + actionDeposit)
       expect(account.data.frozen.toBigInt()).toBe(lockAmount)

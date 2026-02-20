@@ -45,8 +45,8 @@ async function testVestedTransfer<
     },
   })
 
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   // On KAH, the minimum vested amount is not divisible by 8 (it isn't even even :) ), so this multiplication is needed.
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber() * 8
@@ -74,7 +74,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev1.event))
   let vestingUpdatedEvent = ev1.event.data
-  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, chain.properties.addressEncoding))
   // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
   // the unvested amount in the event emitted in this block.
   expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 2 * offset)
@@ -118,7 +118,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingUpdated.is(ev2.event))
   vestingUpdatedEvent = ev2.event.data
-  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(vestingUpdatedEvent.account.toString()).toBe(encodeAddress(bob.address, chain.properties.addressEncoding))
   expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 3 * offset)
 
   // Check Bob's free and frozen balances after Alice's vesting
@@ -156,7 +156,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.vesting.VestingCompleted.is(ev3.event))
   const vestingCompletedEvent = ev3.event.data
-  expect(vestingCompletedEvent.account.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(vestingCompletedEvent.account.toString()).toBe(encodeAddress(bob.address, chain.properties.addressEncoding))
 
   const vestingBalance3 = await client.api.query.vesting.vesting(bob.address)
   expect(vestingBalance3.isNone).toBe(true)
@@ -165,7 +165,7 @@ async function testVestedTransfer<
 
   assert(client.api.events.balances.Withdraw.is(balEv.event))
   const balanceWithdrawalEvent = balEv.event.data
-  expect(balanceWithdrawalEvent.who.toString()).toBe(encodeAddress(bob.address, client.properties.addressEncoding))
+  expect(balanceWithdrawalEvent.who.toString()).toBe(encodeAddress(bob.address, chain.properties.addressEncoding))
 
   // Net of the fees from having called `vest` once, Bob's balance should the the vested amount, plus his initial
   // balance.
@@ -267,8 +267,8 @@ async function testForceVestedTransferAndRemoval<
   const alice = defaultAccountsSr25519.alice
   const dave = defaultAccountsSr25519.dave
 
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
   const perRelayBlock = Math.floor(locked / (4 * offset))
@@ -283,7 +283,7 @@ async function testForceVestedTransferAndRemoval<
     client,
     forceVestingTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -323,7 +323,7 @@ async function testForceVestedTransferAndRemoval<
     client,
     forceRemoveVestingTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -377,8 +377,8 @@ async function testMergeVestingSchedules<
     },
   })
 
-  let currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  let currBlockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(chain.properties.schedulerBlockProvider, (chain.properties as any).asyncBacking)
   const initialBlockNumber = currBlockNumber
 
   const locked1 = client.api.consts.vesting.minVestedTransfer.toNumber() * 3

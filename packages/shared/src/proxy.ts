@@ -1448,7 +1448,7 @@ export async function addRemoveProxyTest<
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
-      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, client.properties.addressEncoding),
+      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
       proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
       delay: 0,
     })
@@ -1508,7 +1508,7 @@ export async function addRemoveProxyTest<
     await check(proxy)
       .redact({ removeKeys: /proxyType/ })
       .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, client.properties.addressEncoding),
+        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
         delay: delay,
       })
   }
@@ -1537,7 +1537,6 @@ export async function addRemoveProxyTest<
 }
 
 /**
- *
  * Helper function to check that a pure proxy was correctly created.
  */
 export async function verifyPureProxy(
@@ -1636,7 +1635,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    await verifyPureProxy(client, eventData, alice.address, client.properties.addressEncoding)
+    await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
   }
 
   // Kill pure proxies
@@ -1644,7 +1643,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1683,7 +1682,7 @@ export async function createKillPureProxyTest<
       expect(pureProxy[1].eq(0)).toBe(true)
     } else {
       expect(pureProxy[0].length).toBe(1)
-      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, client.properties.addressEncoding))).toBe(true)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1797,9 +1796,9 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = await getBlockNumber(client.api, client.properties.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
   const announcementObject = {
-    real: encodeAddress(alice.address, client.properties.addressEncoding),
+    real: encodeAddress(alice.address, chain.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
     height: currBlockNumber,
   }
@@ -1842,7 +1841,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const offset = blockProviderOffset(chain.properties.proxyBlockProvider!, (chain.properties as any).asyncBacking)
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
@@ -1932,7 +1931,7 @@ export async function pureProxyOwnershipChangeTest<
   const pureProxyAddress = eventData.pure.toString()
 
   // Verify the pure proxy was created correctly.
-  await verifyPureProxy(client, eventData, alice.address, client.properties.addressEncoding)
+  await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
 
   // Add funds to the pure proxy account.
   await setupBalances(client, [{ address: pureProxyAddress, amount: 300e10 }])

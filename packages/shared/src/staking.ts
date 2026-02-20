@@ -323,8 +323,8 @@ async function stakingLifecycleTest<
   expect(nominations.suppressed.isFalse).toBeTruthy()
   expect(nominations.targets.length).toBe(validators.length)
 
-  const targets = nominations.targets.map((t) => encodeAddress(t.toString(), client.properties.addressEncoding))
-  expect(validators.every((v) => targets.includes(encodeAddress(v.address, client.properties.addressEncoding)))).toBe(
+  const targets = nominations.targets.map((t) => encodeAddress(t.toString(), chain.properties.addressEncoding))
+  expect(validators.every((v) => targets.includes(encodeAddress(v.address, chain.properties.addressEncoding)))).toBe(
     true,
   )
 
@@ -352,12 +352,8 @@ async function stakingLifecycleTest<
   // Check that the chilled validator is *still* in the nominations.
   // Its previous call to `validate` would only have taken effect in the next era, as will the
   // posterior call to `chill`.
-  const targetsPostChill = nominations.targets.map((t) =>
-    encodeAddress(t.toString(), client.properties.addressEncoding),
-  )
-  expect(targetsPostChill.every((v) => targets.includes(encodeAddress(v, client.properties.addressEncoding)))).toBe(
-    true,
-  )
+  const targetsPostChill = nominations.targets.map((t) => encodeAddress(t.toString(), chain.properties.addressEncoding))
+  expect(targetsPostChill.every((v) => targets.includes(encodeAddress(v, chain.properties.addressEncoding)))).toBe(true)
 
   ///
   /// Chilled validator wishes to remove all its nominations
@@ -384,9 +380,9 @@ async function stakingLifecycleTest<
 
   // Check that the kicked nominator's nominations *no longer* include the validator who kicked them.
   const targetsPostKick = nominationsPostKick.targets.map((t) =>
-    encodeAddress(t.toString(), client.properties.addressEncoding),
+    encodeAddress(t.toString(), chain.properties.addressEncoding),
   )
-  expect(targetsPostKick.includes(encodeAddress(validators[0].address, client.properties.addressEncoding))).toBe(false)
+  expect(targetsPostKick.includes(encodeAddress(validators[0].address, chain.properties.addressEncoding))).toBe(false)
 
   ///
   /// Chilled validator wishes to validate again, but this time it blocks itself
@@ -526,7 +522,7 @@ async function forceUnstakeTest<
     client,
     forceUnstakeTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -683,7 +679,7 @@ async function setMinCommission<
       client,
       setMinCommissionCall(inc).method.toHex(),
       origin,
-      client.properties.blockProvider,
+      chain.properties.schedulerBlockProvider,
     )
 
     await client.dev.newBlock()
@@ -785,7 +781,7 @@ async function setStakingConfigsTest<
     client,
     setStakingConfigsCall(inc).method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -903,7 +899,7 @@ async function forceApplyValidatorCommissionTest<
     client,
     setStakingConfigsTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -965,7 +961,7 @@ async function modifyValidatorCountTest<
     client,
     setValidatorCountCall(100).method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1004,7 +1000,7 @@ async function modifyValidatorCountTest<
     client,
     increaseValidatorCountCall(100).method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1038,7 +1034,7 @@ async function modifyValidatorCountTest<
     client,
     scaleValidatorCountCall(10).method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1098,7 +1094,7 @@ async function chillOtherTest<
     client,
     setStakingConfigsCall.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1185,7 +1181,12 @@ async function chillOtherTest<
   const successfulCall = setStakingConfigsCalls.pop()
 
   for (const call of setStakingConfigsCalls) {
-    await scheduleInlineCallWithOrigin(client, call.method.toHex(), { system: 'Root' }, client.properties.blockProvider)
+    await scheduleInlineCallWithOrigin(
+      client,
+      call.method.toHex(),
+      { system: 'Root' },
+      chain.properties.schedulerBlockProvider,
+    )
 
     await client.dev.newBlock()
 
@@ -1219,7 +1220,7 @@ async function chillOtherTest<
     client,
     successfulCall!.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1263,7 +1264,7 @@ async function unappliedSlashTest<
   let eraChangeBlock: number | undefined
   // Only move to era change if running on a relay chain. If not, this is running on a post-migration Asset Hub,
   // in which this is unnecessary.
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1304,12 +1305,12 @@ async function unappliedSlashTest<
 
   // Track transaction fees for each staker.
   // Ths is needed to keep accurate track of each account's free balance, which should not be affected by this test.
-  await updateCumulativeFees(client.api, stakerFees, client.properties.addressEncoding, client.properties.feeExtractor)
+  await updateCumulativeFees(client.api, stakerFees, chain.properties.addressEncoding, chain.properties.feeExtractor)
 
   const activeEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
   let slashKey: any
   let slashValue: any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       slashKey = [activeEra + 1]
 
@@ -1382,7 +1383,7 @@ async function unappliedSlashTest<
       client,
       applySlashTx.method.toHex(),
       { system: 'Root' },
-      client.properties.blockProvider,
+      chain.properties.schedulerBlockProvider,
     )
   } else {
     // If `applySlash` is not available, the era change method is being used (pre-AHM relay chains).
@@ -1411,13 +1412,13 @@ async function unappliedSlashTest<
 
   // Check free balances specifically
   expect(aliceFundsPreSlash.data.free.toBigInt()).toBe(
-    initialBalances - bondAmount - stakerFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+    initialBalances - bondAmount - stakerFees.get(encodeAddress(alice.address, chain.properties.addressEncoding))!,
   )
   expect(bobFundsPreSlash.data.free.toBigInt()).toBe(
-    initialBalances - bondAmount - stakerFees.get(encodeAddress(bob.address, client.properties.addressEncoding))!,
+    initialBalances - bondAmount - stakerFees.get(encodeAddress(bob.address, chain.properties.addressEncoding))!,
   )
   expect(charlieFundsPreSlash.data.free.toBigInt()).toBe(
-    initialBalances - bondAmount - stakerFees.get(encodeAddress(charlie.address, client.properties.addressEncoding))!,
+    initialBalances - bondAmount - stakerFees.get(encodeAddress(charlie.address, chain.properties.addressEncoding))!,
   )
 
   const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
@@ -1466,7 +1467,7 @@ async function cancelDeferredSlashTest<
   const dave = testAccounts.dave
 
   let eraChangeBlock: number | undefined
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1488,7 +1489,7 @@ async function cancelDeferredSlashTest<
   let slashKey: any
   let slashKeyNewComponent: any | undefined
   let slashValue: any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       slashKey = [activeEra + 1]
       slashValue = [
@@ -1549,7 +1550,7 @@ async function cancelDeferredSlashTest<
   // Two blocks away from the era change.
 
   let slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       expect(slash.length).toBe(1)
     })
@@ -1559,7 +1560,7 @@ async function cancelDeferredSlashTest<
     .exhaustive()
 
   let cancelDeferredSlashTx: any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       cancelDeferredSlashTx = client.api.tx.staking.cancelDeferredSlash(activeEra + 1, [0])
     })
@@ -1571,7 +1572,7 @@ async function cancelDeferredSlashTest<
     client,
     cancelDeferredSlashTx.method.toHex(),
     origin,
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   // Check stakers' bonded funds before the slash would be applied.
@@ -1589,7 +1590,7 @@ async function cancelDeferredSlashTest<
   // And the slash should have been cancelled.
 
   slash = (await client.api.query.staking.unappliedSlashes(...slashKey)) as any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       expect(slash.length).toBe(0)
     })
@@ -1599,7 +1600,7 @@ async function cancelDeferredSlashTest<
     .exhaustive()
 
   // Era-boundary block creation tends to be slow.
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     await client.dev.setStorage({
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
@@ -1619,14 +1620,14 @@ async function cancelDeferredSlashTest<
   // This new block marks the start of the new era.
 
   // If on an post-migration Asset Hub, `applySlash` can be called, instead of having to move to era change.
-  if (client.properties.blockProvider === 'NonLocal') {
+  if (chain.properties.schedulerBlockProvider === 'NonLocal') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
     await scheduleInlineCallWithOrigin(
       client,
       applySlashTx.method.toHex(),
       { system: 'Root' },
-      client.properties.blockProvider,
+      chain.properties.schedulerBlockProvider,
     )
   }
 
@@ -1634,7 +1635,7 @@ async function cancelDeferredSlashTest<
 
   // The era should have changed.
 
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     const newActiveEra = (await client.api.query.staking.activeEra()).unwrap().index.toNumber()
     expect(newActiveEra).toBe(activeEra + 1)
   }
@@ -1736,7 +1737,7 @@ async function setInvulnerablesTestBadOrigin<
 
   const invulnerables = (await client.api.query.staking.invulnerables())
     .toArray()
-    .map((addr) => encodeAddress(addr.toString(), client.properties.addressEncoding))
+    .map((addr) => encodeAddress(addr.toString(), chain.properties.addressEncoding))
 
   assert(!invulnerables.includes(alice.address))
 
@@ -1767,7 +1768,7 @@ async function setInvulnerablesTestBadOrigin<
     client,
     setInvulnerablesTx.method.toHex(),
     { Origins: 'StakingAdmin' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1778,7 +1779,7 @@ async function setInvulnerablesTestBadOrigin<
 
   const invulnerables2 = (await client.api.query.staking.invulnerables())
     .toArray()
-    .map((addr) => encodeAddress(addr.toString(), client.properties.addressEncoding))
+    .map((addr) => encodeAddress(addr.toString(), chain.properties.addressEncoding))
 
   expect(invulnerables2).toEqual(invulnerables)
 }
@@ -1807,7 +1808,7 @@ async function setInvulnerablesTest<
   //
 
   let eraChangeBlock: number | undefined
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     eraChangeBlock = await locateEraChange(client)
     if (eraChangeBlock === undefined) {
       // This test only makes sense to run if there's an active era.
@@ -1857,7 +1858,7 @@ async function setInvulnerablesTest<
   // Initialize fee tracking map for the 3 stakers
   const stakerFees = new Map<string, bigint>()
 
-  await updateCumulativeFees(client.api, stakerFees, client.properties.addressEncoding, client.properties.feeExtractor)
+  await updateCumulativeFees(client.api, stakerFees, chain.properties.addressEncoding, chain.properties.feeExtractor)
 
   // Set them as validators
   const minCommission = await client.api.query.staking.minCommission()
@@ -1868,12 +1869,12 @@ async function setInvulnerablesTest<
 
   await client.dev.newBlock()
 
-  await updateCumulativeFees(client.api, stakerFees, client.properties.addressEncoding, client.properties.feeExtractor)
+  await updateCumulativeFees(client.api, stakerFees, chain.properties.addressEncoding, chain.properties.feeExtractor)
 
   // Sort the addresses to make the test simpler.
 
   const invulnerables = [alice.address, bob.address, charlie.address].map((addr) =>
-    encodeAddress(addr.toString(), client.properties.addressEncoding),
+    encodeAddress(addr.toString(), chain.properties.addressEncoding),
   )
   invulnerables.sort()
 
@@ -1883,14 +1884,14 @@ async function setInvulnerablesTest<
     client,
     setInvulnerablesTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
 
   // Verify the invulnerables were set correctly
   const queriedInvulnerables = (await client.api.query.staking.invulnerables()).map((addr) =>
-    encodeAddress(addr.toString(), client.properties.addressEncoding),
+    encodeAddress(addr.toString(), chain.properties.addressEncoding),
   )
 
   expect(queriedInvulnerables).toEqual(invulnerables)
@@ -1907,7 +1908,7 @@ async function setInvulnerablesTest<
 
   let slashKey: any
   let slashValue: any
-  match(client.properties.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', () => {
       slashKey = [activeEra + 1]
       slashValue = [
@@ -1939,7 +1940,7 @@ async function setInvulnerablesTest<
     })
     .exhaustive()
 
-  if (client.properties.blockProvider === 'Local') {
+  if (chain.properties.schedulerBlockProvider === 'Local') {
     await client.dev.setStorage({
       ParasDisputes: {
         $removePrefix: ['disputes', 'included'],
@@ -1976,14 +1977,14 @@ async function setInvulnerablesTest<
     .redact({ redactKeys: /free/ })
     .toMatchSnapshot('charlie funds pre slash')
 
-  if (client.properties.blockProvider === 'NonLocal') {
+  if (chain.properties.schedulerBlockProvider === 'NonLocal') {
     // Manually apply the slash.
     const applySlashTx = client.api.tx.staking.applySlash(...slashKey)
     await scheduleInlineCallWithOrigin(
       client,
       applySlashTx.method.toHex(),
       { system: 'Root' },
-      client.properties.blockProvider,
+      chain.properties.schedulerBlockProvider,
     )
   }
 
@@ -1994,17 +1995,15 @@ async function setInvulnerablesTest<
   await checkSystemEvents(client, { section: 'balances', method: 'Slashed' }).toMatchSnapshot('balances slash events')
 
   expect(aliceFundsPreSlash.data.free.toBigInt()).toBe(
-    initialBalance -
-      minValidatorBond -
-      stakerFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(alice.address, chain.properties.addressEncoding))!,
   )
   expect(bobFundsPreSlash.data.free.toBigInt()).toBe(
-    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(bob.address, client.properties.addressEncoding))!,
+    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(bob.address, chain.properties.addressEncoding))!,
   )
   expect(charlieFundsPreSlash.data.free.toBigInt()).toBe(
     initialBalance -
       minValidatorBond -
-      stakerFees.get(encodeAddress(charlie.address, client.properties.addressEncoding))!,
+      stakerFees.get(encodeAddress(charlie.address, chain.properties.addressEncoding))!,
   )
 
   const aliceFundsPostSlash = await client.api.query.system.account(alice.address)
@@ -2021,17 +2020,15 @@ async function setInvulnerablesTest<
 
   // Free funds are unaffected by the slash - should be the same, net of fees from bonding and validating.
   expect(aliceFundsPostSlash.data.free.toBigInt()).toBe(
-    initialBalance -
-      minValidatorBond -
-      stakerFees.get(encodeAddress(alice.address, client.properties.addressEncoding))!,
+    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(alice.address, chain.properties.addressEncoding))!,
   )
   expect(bobFundsPostSlash.data.free.toBigInt()).toBe(
-    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(bob.address, client.properties.addressEncoding))!,
+    initialBalance - minValidatorBond - stakerFees.get(encodeAddress(bob.address, chain.properties.addressEncoding))!,
   )
   expect(charlieFundsPostSlash.data.free.toBigInt()).toBe(
     initialBalance -
       minValidatorBond -
-      stakerFees.get(encodeAddress(charlie.address, client.properties.addressEncoding))!,
+      stakerFees.get(encodeAddress(charlie.address, chain.properties.addressEncoding))!,
   )
 
   expect(aliceFundsPostSlash.data.reserved.toBigInt()).toBe(aliceFundsPreSlash.data.reserved.toBigInt() - slashAmount)

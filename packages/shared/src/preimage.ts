@@ -121,7 +121,7 @@ export async function preimageSingleRequestUnrequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -137,7 +137,7 @@ export async function preimageSingleRequestUnrequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -169,7 +169,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
@@ -215,7 +215,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     encodedCallList,
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
@@ -252,7 +252,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -327,7 +327,7 @@ export async function preimageNoteThenRequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -347,7 +347,7 @@ export async function preimageNoteThenRequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -421,7 +421,7 @@ export async function preimageRequestAndUnnoteTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -456,7 +456,7 @@ export async function preimageRequestAndUnnoteTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -492,7 +492,7 @@ export async function preimageRequestThenNoteTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -528,7 +528,7 @@ export async function preimageRequestThenNoteTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -592,7 +592,7 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -826,7 +826,7 @@ async function preimageEnsureUpdatedTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  const addressEncoding = client.properties.addressEncoding
+  const addressEncoding = chain.properties.addressEncoding
   setupBalances(client, [
     { address: alice.address, amount: 1000e10 },
     { address: testAccounts.bob.address, amount: 1000e10 },
@@ -976,7 +976,7 @@ async function preimageEnsureUpdatedTest<
 
   // Get the transaction fee from the payment event.
   const events = await client.api.query.system.events()
-  const feeEvents = client.properties.feeExtractor(events, client.api)
+  const feeEvents = chain.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   expect(feeInfo.tip, 'Unexpected extrinsic tip').toBe(0n)

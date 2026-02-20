@@ -54,7 +54,12 @@ async function runAuthorizeUpgradeScenario(
   const currentWasmHash = client.api.registry.hash(currentWasm)
 
   const call = params.call(currentWasmHash).method
-  await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' }, client.properties.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    call.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
 
   await client.dev.newBlock({ count: 1 })
 
@@ -123,7 +128,7 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
     governanceClient,
     xcmTx.toHex(),
     { system: 'Root' },
-    governanceClient.properties.blockProvider,
+    governanceClient.config.properties.schedulerBlockProvider,
   )
   await governanceClient.dev.newBlock({ count: 1 })
   await toBeUpgradedClient.dev.newBlock({ count: 1 })
@@ -161,7 +166,12 @@ async function runAuthorizeUpgradeAllowToOverrideScenario(
 ) {
   const authorizeHash = async (someHash) => {
     const call = params.call(someHash).method
-    await scheduleInlineCallWithOrigin(client, call.toHex(), { system: 'Root' }, client.properties.blockProvider)
+    await scheduleInlineCallWithOrigin(
+      client,
+      call.toHex(),
+      { system: 'Root' },
+      client.config.properties.schedulerBlockProvider,
+    )
 
     await client.dev.newBlock({ count: 1 })
     assertExpectedEvents(await client.api.query.system.events(), [
@@ -210,7 +220,7 @@ async function runAuthorizeUpgradeAllowToOverrideScenarioViaRemoteScheduler(
       governanceClient,
       xcmTx.toHex(),
       { system: 'Root' },
-      governanceClient.properties.blockProvider,
+      governanceClient.config.properties.schedulerBlockProvider,
     )
 
     await governanceClient.dev.newBlock({ count: 1 })
@@ -281,7 +291,7 @@ async function runSetCodeScenario(
     client,
     { hash: preimageHash, len: call.encodedLength },
     { system: 'Root' },
-    client.properties.blockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock({ count: 1 })
 
@@ -351,7 +361,7 @@ async function runSetCodeScenarioViaRemoteScheduler(
     governanceClient,
     { hash: preimageHash, len: xcmTx.encodedLength },
     { system: 'Root' },
-    governanceClient.properties.blockProvider,
+    governanceClient.config.properties.schedulerBlockProvider,
   )
   await governanceClient.dev.newBlock({ count: 1 })
 

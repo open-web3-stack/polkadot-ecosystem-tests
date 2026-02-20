@@ -110,10 +110,13 @@ async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number
  */
 async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
-  const currentBlock = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(
+    client.config.properties.schedulerBlockProvider,
+    (client.config.properties as any).asyncBacking,
+  )
 
-  const newLastSpendPeriodBlockNumber = match(client.properties.blockProvider)
+  const newLastSpendPeriodBlockNumber = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
     .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
     .exhaustive()
@@ -249,7 +252,7 @@ export async function bountyApprovalTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -321,7 +324,7 @@ export async function bountyApprovalWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -401,7 +404,7 @@ export async function bountyFundingTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -493,7 +496,7 @@ export async function bountyFundingForApprovedWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -588,7 +591,7 @@ export async function curatorAssignmentAndAcceptanceTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -625,7 +628,7 @@ export async function curatorAssignmentAndAcceptanceTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -713,7 +716,7 @@ export async function bountyExtensionTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -751,7 +754,7 @@ export async function bountyExtensionTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -871,7 +874,7 @@ export async function bountyAwardingAndClaimingTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -909,7 +912,7 @@ export async function bountyAwardingAndClaimingTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1033,7 +1036,7 @@ export async function bountyClosureProposedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1111,7 +1114,7 @@ export async function bountyClosureFundedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1150,7 +1153,7 @@ export async function bountyClosureFundedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1168,7 +1171,7 @@ export async function bountyClosureFundedTest<
       assert(client.api.events.balances.Transfer.is(event))
       return (
         event.data.to.toString() ===
-        encodeAddress(client.api.consts.treasury.potAccount.toHex(), client.properties.addressEncoding)
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), chain.properties.addressEncoding)
       )
     }
     return false
@@ -1243,7 +1246,7 @@ export async function bountyClosureActiveTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1269,7 +1272,7 @@ export async function bountyClosureActiveTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1306,7 +1309,7 @@ export async function bountyClosureActiveTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1324,7 +1327,7 @@ export async function bountyClosureActiveTest<
       assert(client.api.events.balances.Transfer.is(event))
       return (
         event.data.to.toString() ===
-        encodeAddress(client.api.consts.treasury.potAccount.toHex(), client.properties.addressEncoding)
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), chain.properties.addressEncoding)
       )
     }
     return false
@@ -1391,7 +1394,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
     client,
     approveBountyWithCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1408,7 +1411,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1475,7 +1478,7 @@ export async function unassignCuratorCuratorProposedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1508,7 +1511,7 @@ export async function unassignCuratorCuratorProposedTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1525,7 +1528,7 @@ export async function unassignCuratorCuratorProposedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1598,7 +1601,7 @@ export async function unassignCuratorActiveByCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1632,7 +1635,7 @@ export async function unassignCuratorActiveByCuratorTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1743,7 +1746,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1777,7 +1780,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1818,7 +1821,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1906,7 +1909,7 @@ export async function unassignCuratorPendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1940,7 +1943,7 @@ export async function unassignCuratorPendingPayoutTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1996,7 +1999,7 @@ export async function unassignCuratorPendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2246,7 +2249,7 @@ export async function bountyClosureApprovedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2263,7 +2266,7 @@ export async function bountyClosureApprovedTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2348,7 +2351,7 @@ export async function bountyClosurePendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2363,7 +2366,7 @@ export async function bountyClosurePendingPayoutTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2392,7 +2395,7 @@ export async function bountyClosurePendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2473,7 +2476,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2490,7 +2493,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2648,7 +2651,7 @@ async function invalidIndexApprovalTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2712,7 +2715,7 @@ async function unexpectedStatusProposeCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2778,7 +2781,7 @@ async function requireCuratorAcceptTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2797,7 +2800,7 @@ async function requireCuratorAcceptTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2865,7 +2868,7 @@ async function hasActiveChildBountyTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2884,7 +2887,7 @@ async function hasActiveChildBountyTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2993,7 +2996,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -3031,7 +3034,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
     {
       Origins: 'Treasurer',
     },
-    client.properties.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()

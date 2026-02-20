@@ -155,10 +155,13 @@ async function getParentTotalChildBountiesCount(client: Client<any, any>, parent
  */
 async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
-  const currentBlock = await getBlockNumber(client.api, client.properties.blockProvider)
-  const offset = blockProviderOffset(client.properties.blockProvider, (client.properties as any).asyncBacking)
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(
+    client.config.properties.schedulerBlockProvider,
+    (client.config.properties as any).asyncBacking,
+  )
 
-  const newLastSpendPeriodBlockNumber = match(client.properties.blockProvider)
+  const newLastSpendPeriodBlockNumber = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
     .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
     .exhaustive()
@@ -183,7 +186,12 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
 }
 
 async function scheduleInlineCallWithOriginTreasurer(client: Client<any, any>, encodedCall: HexString) {
-  await scheduleInlineCallWithOrigin(client, encodedCall, { Origins: 'Treasurer' }, client.properties.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    encodedCall,
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
 }
 
 /// -------
