@@ -36,7 +36,7 @@ export const hydration = defineChain({
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
   properties: {
-    addressEncoding: 63,
+    addressEncoding: 0,
     schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
