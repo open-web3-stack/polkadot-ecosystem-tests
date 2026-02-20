@@ -36,7 +36,7 @@ export const bifrostPolkadot = defineChain({
   custom: custom.bifrostPolkadot,
   initStorages: getInitStorages(custom.bifrostPolkadot),
   properties: {
-    addressEncoding: 6,
+    addressEncoding: 0,
     schedulerBlockProvider: 'Local',
     chainEd: 'Normal',
     asyncBacking: 'Enabled',
@@ -52,7 +52,7 @@ export const bifrostKusama = defineChain({
   custom: custom.bifrostKusama,
   initStorages: getInitStorages(custom.bifrostKusama),
   properties: {
-    addressEncoding: 6,
+    addressEncoding: 0,
     schedulerBlockProvider: 'Local',
     chainEd: 'LowEd',
     asyncBacking: 'Enabled',
