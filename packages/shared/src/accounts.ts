@@ -590,9 +590,7 @@ async function transferAllowDeathTest<
 
   // Create fresh accounts
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 2n
-  // When transferring this amount, net of fees, the account should have less than 1 ED remaining.
-  const totalBalance = existentialDeposit + eps
+  const totalBalance = 100n * existentialDeposit
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
@@ -600,7 +598,17 @@ async function transferAllowDeathTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit)
+  // First, estimate the fee by creating a dummy transaction
+  const dummyTransferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit * 99n)
+  const paymentInfo = await dummyTransferTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate transfer amount that leaves Alice with exactly ED - 1n after transfer and fee
+  // finalBalance = totalBalance - transferAmount - fee = ED - 1n
+  // Therefore: transferAmount = totalBalance - fee - (ED - 1n)
+  const transferAmount = totalBalance - estimatedFee - (existentialDeposit - 1n)
+
+  const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
 
   const transferEvents = await sendTransaction(transferTx.signAsync(alice))
 
@@ -632,7 +640,7 @@ async function transferAllowDeathTest<
   expect(await isAccountReaped(client, bob.address)).toBe(false)
 
   const bobAccount = await client.api.query.system.account(bob.address)
-  expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
+  expect(bobAccount.data.free.toBigInt()).toBe(transferAmount)
 
   // Check the events snapshot above:
   // 1. `Transfer` event
@@ -663,7 +671,7 @@ async function transferAllowDeathTest<
   const transferEventData = transferEvent!.event.data
   expect(transferEventData.from.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
-  expect(transferEventData.amount.toBigInt()).toBe(existentialDeposit)
+  expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
   // Check `Withdraw` event
   const withdrawEvent = events.find((record) => {
@@ -687,14 +695,11 @@ async function transferAllowDeathTest<
   expect(dustLostEventData.account.toString()).toBe(
     encodeAddress(alice.address, client.config.properties.addressEncoding),
   )
-  expect(dustLostEventData.amount.toBigInt()).toBeGreaterThan(0n)
-  expect(dustLostEventData.amount.toBigInt()).toBeLessThan(eps)
+  expect(dustLostEventData.amount.toBigInt()).toBe(existentialDeposit - 1n)
 
   // The fee paid by Alice and the dust lost, along with the amount transferred to Bob,
   // should sum to Alice's initial balance.
-  expect(existentialDeposit + withdrawEventData.amount.toBigInt() + dustLostEventData.amount.toBigInt()).toBe(
-    totalBalance,
-  )
+  expect(transferAmount + withdrawEventData.amount.toBigInt() + dustLostEventData.amount.toBigInt()).toBe(totalBalance)
 
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
@@ -705,7 +710,7 @@ async function transferAllowDeathTest<
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
   const endowedEventData = endowedEvent!.event.data
   expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
-  expect(endowedEventData.freeBalance.toBigInt()).toBe(existentialDeposit)
+  expect(endowedEventData.freeBalance.toBigInt()).toBe(transferAmount)
 
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
@@ -920,7 +925,7 @@ async function transferAllowDeathInsufficientFundsTest<
 /**
  * Test that `transfer_allow_death` with reserve does not kill the sender account.
  *
- * 1. Create a fresh account with 10+eps ED of balance
+ * 1. Create a fresh account with 100 ED of balance
  * 2. Create a reserve on the account for 2 ED, increasing consumer count
  * 3. Transfer 8 ED to another account
  * 4. Verify that the transfer didn't occur, and thus the first account was NOT reaped due to the consumer ref
@@ -932,10 +937,9 @@ async function transferAllowDeathWithReserveTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Create fresh addresses, one with 10 ED (plus some extra for fees)
+  // 1. Create fresh addresses, one with 100 ED
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const eps = existentialDeposit / 2n
-  const totalBalance = existentialDeposit * 10n + eps // 10 ED + some extra
+  const totalBalance = existentialDeposit * 100n
   const alice = await createAccountWithBalance(client, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
@@ -956,11 +960,20 @@ async function transferAllowDeathWithReserveTest<
   expect(aliceAccountAfterReserve.consumers.toNumber()).toBeGreaterThanOrEqual(1)
   expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
 
-  // 3. Transfer 8 ED to Bob
+  // 3. Transfer amount that would leave Alice with ED - 1 after transfer and fee
 
-  // Calculate how much free balance Alice has left after reserve and prepare transfer
+  // Calculate how much free balance Alice has left after reserve
   const aliceFreeBefore = aliceAccountAfterReserve.data.free.toBigInt()
-  const transferAmount = existentialDeposit * 8n // Transfer 8 ED to Bob
+
+  // First, estimate the fee
+  const dummyTransferTx = client.api.tx.balances.transferAllowDeath(bob.address, existentialDeposit * 8n)
+  const paymentInfo = await dummyTransferTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate transfer amount that would leave Alice with exactly ED - 1n after transfer and fee
+  // finalBalance = aliceFreeBefore - transferAmount - fee = ED - 1n
+  // Therefore: transferAmount = aliceFreeBefore - fee - (ED - 1n)
+  const transferAmount = aliceFreeBefore - estimatedFee - (existentialDeposit - 1n)
 
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
   const transferEvents = await sendTransaction(transferTx.signAsync(alice))
