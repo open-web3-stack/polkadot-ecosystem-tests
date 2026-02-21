@@ -2440,9 +2440,18 @@ async function transferKeepAliveBelowEdTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // 2. Try to transfer 99 ED from Alice to Bob
+  // 2. Try to transfer an amount that leaves Alice with less than ED after fees
 
-  const transferAmount = existentialDeposit * 99n
+  // First, estimate the fee
+  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, existentialDeposit * 99n)
+  const paymentInfo = await dummyTransferTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate transfer amount that would leave Alice with ED - 1n after fees
+  // finalBalance = aliceBalance - transferAmount - fee = ED - 1n
+  // Therefore: transferAmount = aliceBalance - fee - (ED - 1n)
+  const transferAmount = aliceBalance - estimatedFee - (existentialDeposit - 1n)
+
   const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
   await sendTransaction(transferKeepAliveTx.signAsync(alice))
 
@@ -2461,7 +2470,7 @@ async function transferKeepAliveBelowEdTest<
   const dispatchError = failedEvent!.event.data.dispatchError
   assert(dispatchError.isToken)
   const tokenError = dispatchError.asToken
-  assert(tokenError.isNotExpendable || tokenError.isFundsUnavailable)
+  assert(tokenError.isNotExpendable)
 
   // Verify no transfer occurred - Alice still has funds, Bob still reaped
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -3644,7 +3653,7 @@ async function burnTestBaseCase<
  * Test that the burning of an account's funds below ED leads to it being reaped.
  *
  * 1. Create Alice with 1000 ED
- * 2. Burn 999 ED (with `keep_alive` set to `false`)
+ * 2. Burn enough funds so that Alice is left with ED - 1 unit, with `keep_alive` set to `false`
  *     - fee deduction will bring the amount below ED, on chains whose ED is above a typical transaction fee
  *     - on other chains, this test cannot be run
  * 3. Verify that the account is reaped
@@ -3669,9 +3678,18 @@ async function burnTestWithReaping<
 
   const cumulativeFees = new Map<string, bigint>()
 
-  // 2. Burn 999 ED
+  // 2. Burn amount that leaves Alice with exactly ED - 1n after fees
 
-  const burnAmount = initialBalance - existentialDeposit
+  // First, estimate the fee by creating a dummy transaction
+  const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 999n, false)
+  const paymentInfo = await dummyBurnTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // `finalBalance = ED - 1n`
+  // `finalBalance = initialBalance - burnAmount - fee`
+  // Therefore: `burnAmount = initialBalance - fee - (ED - 1n)`
+  const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
+
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
   const burnEvents = await sendTransaction(burnTx.signAsync(alice))
 
@@ -3700,6 +3718,7 @@ async function burnTestWithReaping<
   const burnEventData = burnEvent!.event.data
   expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
+
   const dustLostEvent = events.find((record) => {
     const { event } = record
     return event.section === 'balances' && event.method === 'DustLost'
@@ -3710,12 +3729,11 @@ async function burnTestWithReaping<
   expect(dustLostEventData.account.toString()).toBe(
     encodeAddress(alice.address, client.config.properties.addressEncoding),
   )
-  const dustLostAmount = dustLostEventData.amount.toBigInt()
+  expect(dustLostEventData.amount.toBigInt()).toBe(existentialDeposit - 1n)
 
-  // 4. Verify that the total issuance is decreased by the amount burned
-
+  // 4. Verify that the total issuance is decreased by the amount burned and dust
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - (burnAmount + dustLostAmount))
+  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - burnAmount)
 }
 
 /**
@@ -3818,7 +3836,7 @@ async function burnWithDepositTest<
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
 
-  const initialBalance = existentialDeposit * 2n
+  const initialBalance = existentialDeposit * 10n
   const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
