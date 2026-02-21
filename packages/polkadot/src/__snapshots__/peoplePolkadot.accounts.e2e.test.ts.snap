@@ -233,7 +233,7 @@ exports[`Polkadot People Chain Accounts > transfer_allow_death > leaving an acco
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000,
+      "freeBalance": "(rounded 99000000000)",
     },
     "method": "Endowed",
     "section": "balances",

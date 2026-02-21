@@ -181,7 +181,7 @@ exports[`Hydration Accounts > transfer_allow_death > leaving an account below ED
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000000,
+      "freeBalance": "(rounded 99000000000000)",
     },
     "method": "Endowed",
     "section": "balances",

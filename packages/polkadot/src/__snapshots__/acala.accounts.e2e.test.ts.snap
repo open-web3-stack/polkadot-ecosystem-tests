@@ -181,7 +181,7 @@ exports[`Acala Accounts > transfer_allow_death > leaving an account below ED kil
   {
     "data": {
       "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
-      "freeBalance": 100000000000,
+      "freeBalance": "(rounded 9900000000000)",
     },
     "method": "Endowed",
     "section": "balances",
