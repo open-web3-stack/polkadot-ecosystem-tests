@@ -426,8 +426,6 @@ async function nominationPoolLifecycleTest<
 
   await client.dev.newBlock()
 
-  // TODO: `nominate` does not emit any events from `staking` or `nominationPools` as of
-  // Jan. 2025. [#7377](https://github.com/paritytech/polkadot-sdk/pull/7377) will fix this.
   await checkEvents(nominateEvents, 'staking', 'nominationPools', 'system')
     .redact({ removeKeys: /poolId|stash/ })
     .toMatchSnapshot('nomination pool validator selection events')
