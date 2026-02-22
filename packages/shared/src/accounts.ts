@@ -3746,7 +3746,11 @@ async function burnTestWithReaping<
 
   // 4. Verify that the total issuance is decreased by the amount burned and dust
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - burnAmount)
+  // TODO: Bifrost Polkadot doesn't remove dust from total issuance when accounts are reaped
+  // For bifrostPolkadot, total issuance only decreases by burn amount (not burn + dust)
+  const isBifrostPolkadot = chain.name === 'bifrostPolkadot'
+  const expectedDecrease = isBifrostPolkadot ? burnAmount : burnAmount + (existentialDeposit - 1n)
+  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
 
 /**
@@ -3831,13 +3835,14 @@ async function burnKeepAliveTest<
 }
 
 /**
- * Test that burning funds from an account with a reserve cannot reap it due to nonzero consumer count.
+ * Test that burning funds from an account with a consumer reference cannot reap it due to nonzero consumer count.
  *
- * 1. Create Alice with 1000 ED + multisig deposit amount
- * 2. Create a multisig deposit to add a consumer reference
- * 3. Burn 999 ED with `keep_alive` set to `false`
- * 4. Verify that the account is NOT reaped due to consumer count
- * 5. Verify that total issuance is unchanged
+ * 1. Create Alice with 1000 ED
+ * 2. Add a consumer reference
+ * 3. Burn amount that would leave Alice with ED - 1 after burn and fee (with `keep_alive = false`)
+ * 4. Verify that the burn fails and the account is NOT reaped due to consumer count
+ * 5. Verify that Alice's balance only decreased by fees (no burn occurred)
+ * 6. Verify that total issuance is unchanged
  */
 async function burnWithDepositTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -3845,11 +3850,11 @@ async function burnWithDepositTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Create Alice with 1000 ED + multisig deposit amount
+  // 1. Create Alice with 1000 ED
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
 
-  const initialBalance = existentialDeposit * 10n
+  const initialBalance = existentialDeposit * 1000n
   const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -3894,9 +3899,22 @@ async function burnWithDepositTest<
 
   await client.dev.newBlock()
 
-  // 3. Burn 1 ED with `keep_alive` set to `false`
+  // 3. Burn amount that would leave Alice with ED - 1 after burn and fee
 
-  const burnAmount = existentialDeposit
+  // Get Alice's current free balance after adding consumer reference
+  const aliceAccountAfterConsumer = await client.api.query.system.account(alice.address)
+  const aliceFreeBefore = aliceAccountAfterConsumer.data.free.toBigInt()
+
+  // Estimate the fee
+  const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 999n, false)
+  const paymentInfo = await dummyBurnTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate burn amount that would leave Alice with exactly ED - 1n after burn and fee
+  // finalBalance = aliceFreeBefore - burnAmount - fee = ED - 1n
+  // Therefore: burnAmount = aliceFreeBefore - fee - (ED - 1n)
+  const burnAmount = aliceFreeBefore - estimatedFee - (existentialDeposit - 1n)
+
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
   await sendTransaction(burnTx.signAsync(alice))
 
@@ -3917,9 +3935,9 @@ async function burnWithDepositTest<
   expect(aliceAccountAfterBurn.consumers.toNumber()).toBe(1) // Still has consumer
   expect(aliceAccountAfterBurn.data.frozen.toBigInt()).toBe(0n)
 
-  // Verify the account has expected free balance (initial - fees)
+  // Verify the account has expected free balance (burn failed, so only fees deducted)
   const totalFees = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
-  const expectedFreeBalance = initialBalance - totalFees
+  const expectedFreeBalance = aliceFreeBefore - totalFees
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedFreeBalance)
 
   // 5. Verify that total issuance is unchanged
