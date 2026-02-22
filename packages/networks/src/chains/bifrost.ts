@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -33,6 +35,13 @@ export const bifrostPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.bifrostPolkadot,
   initStorages: getInitStorages(custom.bifrostPolkadot),
+  properties: {
+    addressEncoding: 0,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const bifrostKusama = defineChain({
@@ -42,4 +51,11 @@ export const bifrostKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.bifrostKusama,
   initStorages: getInitStorages(custom.bifrostKusama),
+  properties: {
+    addressEncoding: 0,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

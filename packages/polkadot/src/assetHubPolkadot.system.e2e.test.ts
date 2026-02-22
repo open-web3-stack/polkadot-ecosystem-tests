@@ -1,11 +1,8 @@
 import { assetHubPolkadot } from '@e2e-test/networks/chains'
-import { type ParaTestConfig, registerTestTree, systemE2ETestsForParaWithScheduler } from '@e2e-test/shared'
+import { registerTestTree, systemE2ETestsForParaWithScheduler, type TestConfig } from '@e2e-test/shared'
 
-const testConfigForLocalScheduler: ParaTestConfig = {
+const testConfigForLocalScheduler: TestConfig = {
   testSuiteName: 'Polkadot AssetHub System',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(systemE2ETestsForParaWithScheduler(assetHubPolkadot, testConfigForLocalScheduler))

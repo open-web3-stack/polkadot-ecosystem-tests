@@ -20,6 +20,11 @@ export type Client<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 > = {
   config: Chain<TCustom, TInitStorages>
+
+  /**
+   * Chain properties derived from the chain definition.
+   * See {@link Chain} type in @e2e-test/networks for what these values represent.
+   */
   url: string
   chain: Blockchain
   ws: WsProvider

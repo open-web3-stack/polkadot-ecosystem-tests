@@ -1,5 +1,21 @@
+import type { FeeExtractor, FeeInfo } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts } from '../testAccounts.js'
+
+const acalaFeeExtractor: FeeExtractor = (events, api) => {
+  const results: FeeInfo[] = []
+  for (const { event } of events) {
+    if (api.events.transactionPayment.TransactionFeePaid.is(event)) {
+      results.push({
+        who: event.data[0].toString(),
+        actualFee: BigInt(event.data[1].toString()),
+        tip: BigInt(event.data[2].toString()),
+      })
+    }
+  }
+  return results
+}
 
 const custom = {
   acala: {
@@ -71,6 +87,14 @@ export const acala = defineChain({
   networkGroup: 'polkadot',
   custom: custom.acala,
   initStorages: getInitStorages(custom.acala),
+  properties: {
+    addressEncoding: 10,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: acalaFeeExtractor,
+  },
 })
 
 export const karura = defineChain({
@@ -84,4 +108,12 @@ export const karura = defineChain({
   networkGroup: 'kusama',
   custom: custom.karura,
   initStorages: getInitStorages(custom.karura),
+  properties: {
+    addressEncoding: 8,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: acalaFeeExtractor,
+  },
 })

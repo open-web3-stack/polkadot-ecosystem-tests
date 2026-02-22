@@ -181,7 +181,7 @@ exports[`Karura Accounts > transfer_allow_death > leaving an account below ED ki
   {
     "data": {
       "account": "qesz1XedySNjJv5Jvpd8oXXhXtWrkgEFp1hfpJAtt3xWDQN",
-      "freeBalance": 100000000000,
+      "freeBalance": "(rounded 9900000000000)",
     },
     "method": "Endowed",
     "section": "balances",

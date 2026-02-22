@@ -424,8 +424,8 @@ export interface FeeInfo {
 }
 
 /**
- * Extracts fee payment information from a list of system events.
- * Different runtimes may have different fee event structures; each can provide its own extractor.
+ * Extracts fee payment information from the transaction fee event, itself from a list of system events.
+ * Different runtimes may have different fee event structures; thus, each chain can provide its own extractor.
  */
 export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
 
@@ -450,15 +450,6 @@ export const standardFeeExtractor: FeeExtractor = (events, api) => {
 }
 
 /**
- * Extract fee payment events from the given events.
- * Uses the fee extractor from the test config, or falls back to `standardFeeExtractor`.
- */
-export function findFeeEvents(events: EventRecord[], api: ApiPromise, testConfig: TestConfig): FeeInfo[] {
-  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
-  return extractor(events, api)
-}
-
-/**
  * Helper to track transaction fees paid by a set of accounts.
  *
  * Traverses the most recent events, using the given `ApiPromise`, to find transaction fee payment events.
@@ -466,20 +457,21 @@ export function findFeeEvents(events: EventRecord[], api: ApiPromise, testConfig
  *
  * @param api - The API instance to query events
  * @param feeMap - Map from addresses to their cumulative paid fees
- * @param testConfig - Test configuration, used for address encoding and the fee extractor
+ * @param addressEncoding - SS58 address encoding for the chain
+ * @param feeExtractor - Fee extractor function for the chain
  * @returns Updated fee map with new fees added
  */
 export async function updateCumulativeFees(
   api: ApiPromise,
   feeMap: Map<string, bigint>,
-  testConfig: TestConfig,
+  addressEncoding: number,
+  feeExtractor: FeeExtractor,
 ): Promise<Map<string, bigint>> {
   const events = await api.query.system.events()
-  const extractor = testConfig.feeExtractor ?? standardFeeExtractor
-  const feeInfos = extractor(events as unknown as EventRecord[], api)
+  const feeInfos = feeExtractor(events as unknown as EventRecord[], api)
 
   for (const { who, actualFee, tip } of feeInfos) {
-    const address = encodeAddress(who, testConfig.addressEncoding)
+    const address = encodeAddress(who, addressEncoding)
     const totalFee = actualFee + tip
     const currentFee = feeMap.get(address) || 0n
     feeMap.set(address, currentFee + totalFee)
@@ -542,12 +534,12 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
  * @param asyncBacking Whether async backing is enabled on the parachain.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function blockProviderOffset(cfg: TestConfig): number {
-  if (cfg.blockProvider === 'Local') {
+export function blockProviderOffset(blockProvider: BlockProvider, asyncBacking?: AsyncBacking): number {
+  if (blockProvider === 'Local') {
     return 1
   }
 
-  if (cfg.asyncBacking === 'Enabled') {
+  if (asyncBacking === 'Enabled') {
     return 2
   }
 
@@ -592,38 +584,13 @@ export async function getReservedFunds(client: Client<any, any>, address: any): 
 }
 
 /**
- * Configuration for relay chain tests.
+ * Configuration for tests.
+ * Chain properties (addressEncoding, blockProvider, asyncBacking, etc.) are now
+ * provided by the chain definition and available via `chain.properties`.
  */
-export interface RelayTestConfig {
+export interface TestConfig {
   testSuiteName: string
-  addressEncoding: number
-  blockProvider: 'Local'
-  chainEd?: ChainED
-  /** Fee extractor for this chain. Defaults to `standardFeeExtractor` when not set. */
-  feeExtractor?: FeeExtractor
 }
-
-/**
- * Configuration for parachain tests.
- * Async backing is relevant due to the step size of `parachainSystem.lastRelayChainBlockNumber`.
- *
- * Recall that with the AHM, the scheduler pallet's agenda will be keyed by this block number.
- * It is, then, relevant for tests to know whether AB is enabled.
- */
-export interface ParaTestConfig {
-  testSuiteName: string
-  addressEncoding: number
-  blockProvider: BlockProvider
-  asyncBacking: AsyncBacking
-  chainEd?: ChainED
-  /** Fee extractor for this chain. Defaults to `standardFeeExtractor` when not set. */
-  feeExtractor?: FeeExtractor
-}
-
-/**
- * Union type for all test configurations, whether relay or parachain.
- */
-export type TestConfig = RelayTestConfig | ParaTestConfig
 
 /**
  * Matcher for an event argument.

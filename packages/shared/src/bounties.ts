@@ -108,12 +108,15 @@ async function getBountyIndexFromEvent(client: Client<any, any>): Promise<number
  * Sets the treasury's last spend period block number to enable bounty funding
  * @param client - The chain client
  */
-async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfig: TestConfig) {
+async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
-  const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = blockProviderOffset(testConfig)
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(
+    client.config.properties.schedulerBlockProvider,
+    (client.config.properties as any).asyncBacking,
+  )
 
-  const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
+  const newLastSpendPeriodBlockNumber = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
     .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
     .exhaustive()
@@ -221,7 +224,7 @@ export async function bountyCreationTest<
 export async function bountyApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
@@ -249,7 +252,7 @@ export async function bountyApprovalTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -288,7 +291,7 @@ export async function bountyApprovalTest<
 export async function bountyApprovalWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
@@ -321,7 +324,7 @@ export async function bountyApprovalWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -364,12 +367,12 @@ export async function bountyApprovalWithCuratorTest<
 export async function bountyFundingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -401,7 +404,7 @@ export async function bountyFundingTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -451,12 +454,12 @@ export async function bountyFundingTest<
 export async function bountyFundingForApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -493,7 +496,7 @@ export async function bountyFundingForApprovedWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -551,12 +554,12 @@ export async function bountyFundingForApprovedWithCuratorTest<
 export async function curatorAssignmentAndAcceptanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -588,7 +591,7 @@ export async function curatorAssignmentAndAcceptanceTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -625,7 +628,7 @@ export async function curatorAssignmentAndAcceptanceTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -676,12 +679,12 @@ export async function curatorAssignmentAndAcceptanceTest<
 export async function bountyExtensionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -713,7 +716,7 @@ export async function bountyExtensionTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -751,7 +754,7 @@ export async function bountyExtensionTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -834,12 +837,12 @@ export async function bountyExtensionTest<
 export async function bountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -871,7 +874,7 @@ export async function bountyAwardingAndClaimingTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -909,7 +912,7 @@ export async function bountyAwardingAndClaimingTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1005,7 +1008,7 @@ export async function bountyAwardingAndClaimingTest<
 export async function bountyClosureProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
@@ -1033,7 +1036,7 @@ export async function bountyClosureProposedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1083,12 +1086,12 @@ export async function bountyClosureProposedTest<
 export async function bountyClosureFundedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1111,7 +1114,7 @@ export async function bountyClosureFundedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1150,7 +1153,7 @@ export async function bountyClosureFundedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1168,7 +1171,7 @@ export async function bountyClosureFundedTest<
       assert(client.api.events.balances.Transfer.is(event))
       return (
         event.data.to.toString() ===
-        encodeAddress(client.api.consts.treasury.potAccount.toHex(), testConfig.addressEncoding)
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), chain.properties.addressEncoding)
       )
     }
     return false
@@ -1214,12 +1217,12 @@ export async function bountyClosureFundedTest<
 export async function bountyClosureActiveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1243,7 +1246,7 @@ export async function bountyClosureActiveTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1269,7 +1272,7 @@ export async function bountyClosureActiveTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1306,7 +1309,7 @@ export async function bountyClosureActiveTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1324,7 +1327,7 @@ export async function bountyClosureActiveTest<
       assert(client.api.events.balances.Transfer.is(event))
       return (
         event.data.to.toString() ===
-        encodeAddress(client.api.consts.treasury.potAccount.toHex(), testConfig.addressEncoding)
+        encodeAddress(client.api.consts.treasury.potAccount.toHex(), chain.properties.addressEncoding)
       )
     }
     return false
@@ -1364,7 +1367,7 @@ export async function bountyClosureActiveTest<
 export async function unassignCuratorApprovedWithCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob'])
@@ -1391,7 +1394,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
     client,
     approveBountyWithCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1408,7 +1411,7 @@ export async function unassignCuratorApprovedWithCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1442,12 +1445,12 @@ export async function unassignCuratorApprovedWithCuratorTest<
 export async function unassignCuratorCuratorProposedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1475,7 +1478,7 @@ export async function unassignCuratorCuratorProposedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1508,7 +1511,7 @@ export async function unassignCuratorCuratorProposedTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1525,7 +1528,7 @@ export async function unassignCuratorCuratorProposedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1560,12 +1563,12 @@ export async function unassignCuratorCuratorProposedTest<
 export async function unassignCuratorActiveByCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1598,7 +1601,7 @@ export async function unassignCuratorActiveByCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1632,7 +1635,7 @@ export async function unassignCuratorActiveByCuratorTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1705,12 +1708,12 @@ export async function unassignCuratorActiveByCuratorTest<
 export async function unassignCuratorActiveByTreasurerTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1743,7 +1746,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1777,7 +1780,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1818,7 +1821,7 @@ export async function unassignCuratorActiveByTreasurerTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1867,12 +1870,12 @@ export async function unassignCuratorActiveByTreasurerTest<
 export async function unassignCuratorPendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1906,7 +1909,7 @@ export async function unassignCuratorPendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1940,7 +1943,7 @@ export async function unassignCuratorPendingPayoutTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1996,7 +1999,7 @@ export async function unassignCuratorPendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2040,7 +2043,7 @@ export async function unassignCuratorPendingPayoutTest<
 export function bountyClosureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty Closure Tests',
@@ -2048,17 +2051,17 @@ export function bountyClosureTests<
       {
         kind: 'test',
         label: 'Bounty closure in proposed state',
-        testFn: async () => await bountyClosureProposedTest(chain, testConfig),
+        testFn: async () => await bountyClosureProposedTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty closure in funded state',
-        testFn: async () => await bountyClosureFundedTest(chain, testConfig),
+        testFn: async () => await bountyClosureFundedTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty closure in active state',
-        testFn: async () => await bountyClosureActiveTest(chain, testConfig),
+        testFn: async () => await bountyClosureActiveTest(chain),
       },
     ],
   } as RootTestTree
@@ -2072,7 +2075,7 @@ export function bountyClosureTests<
 export function allCuratorUnassignTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All curator unassign tests',
@@ -2080,27 +2083,27 @@ export function allCuratorUnassignTests<
       {
         kind: 'test',
         label: 'Unassign curator in ApprovedWithCurator state',
-        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain, testConfig),
+        testFn: async () => await unassignCuratorApprovedWithCuratorTest(chain),
       },
       {
         kind: 'test',
         label: 'Unassign curator in CuratorProposed state',
-        testFn: async () => await unassignCuratorCuratorProposedTest(chain, testConfig),
+        testFn: async () => await unassignCuratorCuratorProposedTest(chain),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by curator themselves',
-        testFn: async () => await unassignCuratorActiveByCuratorTest(chain, testConfig),
+        testFn: async () => await unassignCuratorActiveByCuratorTest(chain),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by Treasurer',
-        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain, testConfig),
+        testFn: async () => await unassignCuratorActiveByTreasurerTest(chain),
       },
       {
         kind: 'test',
         label: 'Unassign curator in PendingPayout state',
-        testFn: async () => await unassignCuratorPendingPayoutTest(chain, testConfig),
+        testFn: async () => await unassignCuratorPendingPayoutTest(chain),
       },
     ],
   } as RootTestTree
@@ -2115,7 +2118,7 @@ export function allCuratorUnassignTests<
 export function bountyApprovalTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty approval tests',
@@ -2123,12 +2126,12 @@ export function bountyApprovalTests<
       {
         kind: 'test',
         label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(chain, testConfig),
+        testFn: async () => await bountyApprovalTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(chain, testConfig),
+        testFn: async () => await bountyApprovalWithCuratorTest(chain),
       },
     ],
   } as RootTestTree
@@ -2144,7 +2147,7 @@ export function bountyApprovalTests<
 export function bountyFundingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty funding tests',
@@ -2152,12 +2155,12 @@ export function bountyFundingTests<
       {
         kind: 'test',
         label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(chain, testConfig),
+        testFn: async () => await bountyFundingTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain, testConfig),
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(chain),
       },
     ],
   } as RootTestTree
@@ -2173,7 +2176,7 @@ export function bountyFundingTests<
 export function allBountySuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty success tests',
@@ -2186,22 +2189,22 @@ export function allBountySuccessTests<
       {
         kind: 'test',
         label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain, testConfig),
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty extension',
-        testFn: async () => await bountyExtensionTest(chain, testConfig),
+        testFn: async () => await bountyExtensionTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty awarding and claiming',
-        testFn: async () => await bountyAwardingAndClaimingTest(chain, testConfig),
+        testFn: async () => await bountyAwardingAndClaimingTest(chain),
       },
-      bountyFundingTests(chain, testConfig),
-      bountyApprovalTests(chain, testConfig),
-      bountyClosureTests(chain, testConfig),
-      allCuratorUnassignTests(chain, testConfig),
+      bountyFundingTests(chain),
+      bountyApprovalTests(chain),
+      bountyClosureTests(chain),
+      allCuratorUnassignTests(chain),
     ],
   } as RootTestTree
 }
@@ -2222,7 +2225,7 @@ export function allBountySuccessTests<
 export async function bountyClosureApprovedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
@@ -2246,7 +2249,7 @@ export async function bountyClosureApprovedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2263,7 +2266,7 @@ export async function bountyClosureApprovedTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2319,12 +2322,12 @@ export async function bountyClosureApprovedTest<
 export async function bountyClosurePendingPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2348,7 +2351,7 @@ export async function bountyClosurePendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2363,7 +2366,7 @@ export async function bountyClosurePendingPayoutTest<
     client,
     proposeCuratorTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2392,7 +2395,7 @@ export async function bountyClosurePendingPayoutTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2444,12 +2447,12 @@ export async function bountyClosurePendingPayoutTest<
 async function unassignCuratorActiveStateByPublicPrematureTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2473,7 +2476,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2490,7 +2493,7 @@ async function unassignCuratorActiveStateByPublicPrematureTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2633,7 +2636,7 @@ async function invalidValueTest<
 async function invalidIndexApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const nonExistentBountyIndex = NON_EXISTENT_BOUNTY_INDEX // random index that doesn't exist
@@ -2648,7 +2651,7 @@ async function invalidIndexApprovalTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2686,7 +2689,7 @@ async function invalidIndexApprovalTest<
 async function unexpectedStatusProposeCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice'])
@@ -2712,7 +2715,7 @@ async function unexpectedStatusProposeCuratorTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2750,12 +2753,12 @@ async function unexpectedStatusProposeCuratorTest<
 async function requireCuratorAcceptTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2778,7 +2781,7 @@ async function requireCuratorAcceptTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2797,7 +2800,7 @@ async function requireCuratorAcceptTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2837,12 +2840,12 @@ async function requireCuratorAcceptTest<
 async function hasActiveChildBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2865,7 +2868,7 @@ async function hasActiveChildBountyTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2884,7 +2887,7 @@ async function hasActiveChildBountyTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -2956,12 +2959,12 @@ async function hasActiveChildBountyTest<
 export async function bountyAwardingAndClaimingInActiveStateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2993,7 +2996,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -3031,7 +3034,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
     {
       Origins: 'Treasurer',
     },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -3090,7 +3093,7 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
 export function allBountyFailureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty failure tests',
@@ -3098,17 +3101,17 @@ export function allBountyFailureTests<
       {
         kind: 'test',
         label: 'Bounty closure in approved state',
-        testFn: async () => await bountyClosureApprovedTest(chain, testConfig),
+        testFn: async () => await bountyClosureApprovedTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty closure in pending payout state',
-        testFn: async () => await bountyClosurePendingPayoutTest(chain, testConfig),
+        testFn: async () => await bountyClosurePendingPayoutTest(chain),
       },
       {
         kind: 'test',
         label: 'Unassign curator in active state by public premature',
-        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain, testConfig),
+        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(chain),
       },
       {
         kind: 'test',
@@ -3123,27 +3126,27 @@ export function allBountyFailureTests<
       {
         kind: 'test',
         label: 'Invalid bounty index approval',
-        testFn: async () => await invalidIndexApprovalTest(chain, testConfig),
+        testFn: async () => await invalidIndexApprovalTest(chain),
       },
       {
         kind: 'test',
         label: 'Unexpected status when proposing curator before bounty is funded',
-        testFn: async () => await unexpectedStatusProposeCuratorTest(chain, testConfig),
+        testFn: async () => await unexpectedStatusProposeCuratorTest(chain),
       },
       {
         kind: 'test',
         label: 'Non-curator trying to accept curator role',
-        testFn: async () => await requireCuratorAcceptTest(chain, testConfig),
+        testFn: async () => await requireCuratorAcceptTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be awarded if it has an active child bounty',
-        testFn: async () => await hasActiveChildBountyTest(chain, testConfig),
+        testFn: async () => await hasActiveChildBountyTest(chain),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be claimed in active state',
-        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(chain, testConfig),
+        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(chain),
       },
     ],
   } as RootTestTree
@@ -3164,6 +3167,6 @@ export function baseBountiesE2ETests<
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allBountySuccessTests(chain, testConfig), allBountyFailureTests(chain, testConfig)],
+    children: [allBountySuccessTests(chain), allBountyFailureTests(chain)],
   }
 }
