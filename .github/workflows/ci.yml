@@ -94,8 +94,8 @@ jobs:
             CHAIN=$(echo $chain | jq -r '.chain')
             PORT=$(echo $chain | jq -r '.port')
 
-            # Get endpoints from external-endpoints.json
-            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/external-endpoints.json)
+            # Get endpoints from pet-chain-endpoints.json
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
 
             if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
               echo "Error: No endpoints found for chain $CHAIN"
