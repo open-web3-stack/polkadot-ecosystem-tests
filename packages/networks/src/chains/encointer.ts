@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
 const custom = {
@@ -20,7 +21,7 @@ const getInitStorages = (_config: typeof custom.encointerKusama) => ({
 
 export const encointerKusama = defineChain({
   name: 'encointerKusama',
-  endpoint: 'wss://kusama.api.encointer.org',
+  endpoint: endpoints.encointerKusama,
   paraId: 1001,
   networkGroup: 'kusama',
   custom: custom.encointerKusama,

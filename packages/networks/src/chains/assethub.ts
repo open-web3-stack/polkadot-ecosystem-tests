@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -67,7 +68,7 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
-  endpoint: ['wss://sys.ibp.network/asset-hub-polkadot', 'wss://statemint.public.curie.radiumblock.co/ws'],
+  endpoint: endpoints.assetHubPolkadot,
   paraId: 1000,
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
@@ -84,12 +85,7 @@ export const assetHubPolkadot = defineChain({
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: [
-    'wss://sys.ibp.network/asset-hub-kusama',
-    'wss://asset-hub-kusama.dotters.network',
-    'wss://bridge-hub-kusama-rpc.n.dwellir.com',
-    'wss://kusama-bridge-hub-rpc.polkadot.io',
-  ],
+  endpoint: endpoints.assetHubKusama,
   paraId: 1000,
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,

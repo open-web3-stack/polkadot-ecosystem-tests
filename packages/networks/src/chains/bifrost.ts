@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -30,7 +31,7 @@ const getInitStorages = (_config: typeof custom.bifrostPolkadot | typeof custom.
 
 export const bifrostPolkadot = defineChain({
   name: 'bifrostPolkadot',
-  endpoint: 'wss://bifrost-polkadot.ibp.network',
+  endpoint: endpoints.bifrostPolkadot,
   paraId: 2030,
   networkGroup: 'polkadot',
   custom: custom.bifrostPolkadot,
@@ -46,7 +47,7 @@ export const bifrostPolkadot = defineChain({
 
 export const bifrostKusama = defineChain({
   name: 'bifrostKusama',
-  endpoint: 'wss://us.bifrost-rpc.liebi.com/ws',
+  endpoint: endpoints.bifrostKusama,
   paraId: 2001,
   networkGroup: 'kusama',
   custom: custom.bifrostKusama,
