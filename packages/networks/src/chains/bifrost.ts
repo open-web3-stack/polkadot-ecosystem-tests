@@ -38,7 +38,6 @@ export const bifrostPolkadot = defineChain({
   properties: {
     addressEncoding: 0,
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
@@ -54,7 +53,6 @@ export const bifrostKusama = defineChain({
   properties: {
     addressEncoding: 0,
     schedulerBlockProvider: 'Local',
-    chainEd: 'LowEd',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
