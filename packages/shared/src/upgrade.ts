@@ -347,9 +347,8 @@ async function createAndFastTrackReferendum(
  * 5. Verifies expected events
  */
 async function runAuthorizeUpgradeViaRootReferendum(
-  governingChain: Client,
-  chainToUpgrade: Client,
-  testConfig: TestConfig,
+  clientOfGoverningChain: Client,
+  clientOfChainToUpgrade: Client,
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
@@ -357,18 +356,18 @@ async function runAuthorizeUpgradeViaRootReferendum(
 ) {
   const alice = devAccounts.alice
 
-  const currentWasm = bufferToU8a(Buffer.from((await chainToUpgrade.chain.head.wasm).slice(2), 'hex'))
-  const currentWasmHash = chainToUpgrade.api.registry.hash(currentWasm)
+  const currentWasm = bufferToU8a(Buffer.from((await clientOfChainToUpgrade.chain.head.wasm).slice(2), 'hex'))
+  const currentWasmHash = clientOfChainToUpgrade.api.registry.hash(currentWasm)
 
   // Create the authorize upgrade call (could be local or XCM-based)
   const authorizeUpgradeCall =
-    governingChain.url === chainToUpgrade.url
+    clientOfGoverningChain.url === clientOfChainToUpgrade.url
       ? params.call(currentWasmHash)
-      : governingChain.api.tx.utility.forceBatch([
+      : clientOfGoverningChain.api.tx.utility.forceBatch([
           (() => {
-            const call = chainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
-            const dest = getXcmRoute(governingChain.config, chainToUpgrade.config)
-            return createXcmTransactSend(governingChain, dest, call.method.toHex(), 'Superuser', {
+            const call = clientOfChainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
+            const dest = getXcmRoute(clientOfGoverningChain.config, clientOfChainToUpgrade.config)
+            return createXcmTransactSend(clientOfGoverningChain, dest, call.method.toHex(), 'Superuser', {
               refTime: '5000000000',
               proofSize: '500000',
             })
@@ -376,20 +375,28 @@ async function runAuthorizeUpgradeViaRootReferendum(
         ])
 
   // Create and fast-track a Root referendum with the authorize upgrade call
-  await createAndFastTrackReferendum(governingChain, authorizeUpgradeCall, { system: 'Root' }, testConfig.blockProvider)
+  await createAndFastTrackReferendum(
+    clientOfGoverningChain,
+    authorizeUpgradeCall,
+    { system: 'Root' },
+    clientOfGoverningChain.config.properties.schedulerBlockProvider,
+  )
 
   // Apply the authorized upgrade
-  const applyCall = chainToUpgrade.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+  const applyCall = clientOfChainToUpgrade.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
   await sendTransaction(applyCall.signAsync(alice))
 
-  await chainToUpgrade.dev.newBlock({ count: 1 })
+  await clientOfChainToUpgrade.dev.newBlock({ count: 1 })
 
-  if (chainToUpgrade.config.isRelayChain) {
-    assertExpectedEvents(await chainToUpgrade.api.query.system.events(), params.expectedAfterApply(currentWasmHash))
+  if (clientOfChainToUpgrade.config.isRelayChain) {
+    assertExpectedEvents(
+      await clientOfChainToUpgrade.api.query.system.events(),
+      params.expectedAfterApply(currentWasmHash),
+    )
   } else {
-    const eventsAfterFirstBlock = await chainToUpgrade.api.query.system.events()
-    await chainToUpgrade.dev.newBlock({ count: 1 })
-    const eventsAfterSecondBlock = await chainToUpgrade.api.query.system.events()
+    const eventsAfterFirstBlock = await clientOfChainToUpgrade.api.query.system.events()
+    await clientOfChainToUpgrade.dev.newBlock({ count: 1 })
+    const eventsAfterSecondBlock = await clientOfChainToUpgrade.api.query.system.events()
     assertExpectedEvents(
       eventsAfterFirstBlock.concat(eventsAfterSecondBlock),
       params.expectedAfterApply(currentWasmHash),
@@ -409,17 +416,16 @@ async function runAuthorizeUpgradeViaRootReferendum(
  * 6. Applies the upgrade with applyAuthorizedUpgrade
  * 7. Verifies expected events
  *
- * @param governingChain - The chain where the governance is running
- * @param chainToUpgrade - The chain whose runtime is being upgraded
- * @param fellowshipChain - The chain that hosts the collective body
+ * @param clientOfGoverningChain - The chain where the governance is running
+ * @param clientOfChainToUpgrade - The chain whose runtime is being upgraded
+ * @param fellowshipClient - The chain that hosts the collective body
  * @param testConfig - Test configuration
  * @param params - Contains the authorizeUpgrade call variant and expected events
  */
 async function runAuthorizeUpgradeViaWhitelistedCallerReferendum(
-  governingChain: Client,
-  chainToUpgrade: Client,
-  fellowshipChain: Client,
-  testConfig: TestConfig,
+  clientOfGoverningChain: Client,
+  clientOfChainToUpgrade: Client,
+  fellowshipClient: Client,
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
@@ -427,18 +433,18 @@ async function runAuthorizeUpgradeViaWhitelistedCallerReferendum(
 ) {
   const alice = devAccounts.alice
 
-  const currentWasm = bufferToU8a(Buffer.from((await chainToUpgrade.chain.head.wasm).slice(2), 'hex'))
-  const currentWasmHash = chainToUpgrade.api.registry.hash(currentWasm)
+  const currentWasm = bufferToU8a(Buffer.from((await clientOfChainToUpgrade.chain.head.wasm).slice(2), 'hex'))
+  const currentWasmHash = clientOfChainToUpgrade.api.registry.hash(currentWasm)
 
   // Create the authorize upgrade call (could be local or XCM-based)
   const authorizeUpgradeCall =
-    governingChain.url === chainToUpgrade.url
+    clientOfGoverningChain.url === clientOfChainToUpgrade.url
       ? params.call(currentWasmHash)
-      : governingChain.api.tx.utility.forceBatch([
+      : clientOfGoverningChain.api.tx.utility.forceBatch([
           (() => {
-            const call = chainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
-            const dest = getXcmRoute(governingChain.config, chainToUpgrade.config)
-            return createXcmTransactSend(governingChain, dest, call.method.toHex(), 'Superuser', {
+            const call = clientOfChainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
+            const dest = getXcmRoute(clientOfGoverningChain.config, clientOfChainToUpgrade.config)
+            return createXcmTransactSend(clientOfGoverningChain, dest, call.method.toHex(), 'Superuser', {
               refTime: '5000000000',
               proofSize: '500000',
             })
@@ -446,38 +452,46 @@ async function runAuthorizeUpgradeViaWhitelistedCallerReferendum(
         ])
 
   // First, whitelist the authorize upgrade call via collectives (before creating the referendum)
-  await sendWhitelistCallViaXcmTransact(governingChain, fellowshipChain, authorizeUpgradeCall.method.hash.toHex(), {
-    proofSize: '10000',
-    refTime: '500000000',
-  })
-  await fellowshipChain.dev.newBlock()
-  await governingChain.dev.newBlock()
+  await sendWhitelistCallViaXcmTransact(
+    clientOfGoverningChain,
+    fellowshipClient,
+    authorizeUpgradeCall.method.hash.toHex(),
+    {
+      proofSize: '10000',
+      refTime: '500000000',
+    },
+  )
+  await fellowshipClient.dev.newBlock()
+  await clientOfGoverningChain.dev.newBlock()
 
   // Now create the whitelisted dispatch call
-  const whitelistedDispatchCall = governingChain.api.tx.whitelist.dispatchWhitelistedCallWithPreimage(
+  const whitelistedDispatchCall = clientOfGoverningChain.api.tx.whitelist.dispatchWhitelistedCallWithPreimage(
     authorizeUpgradeCall.method.toHex(),
   )
 
   // Create and fast-track a WhitelistedCaller referendum
   await createAndFastTrackReferendum(
-    governingChain,
+    clientOfGoverningChain,
     whitelistedDispatchCall,
     { Origins: 'WhitelistedCaller' },
-    testConfig.blockProvider,
+    clientOfGoverningChain.config.properties.schedulerBlockProvider,
   )
 
   // Apply the authorized upgrade
-  const applyCall = chainToUpgrade.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+  const applyCall = clientOfChainToUpgrade.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
   await sendTransaction(applyCall.signAsync(alice))
 
-  await chainToUpgrade.dev.newBlock({ count: 1 })
+  await clientOfChainToUpgrade.dev.newBlock({ count: 1 })
 
-  if (chainToUpgrade.config.isRelayChain) {
-    assertExpectedEvents(await chainToUpgrade.api.query.system.events(), params.expectedAfterApply(currentWasmHash))
+  if (clientOfChainToUpgrade.config.isRelayChain) {
+    assertExpectedEvents(
+      await clientOfChainToUpgrade.api.query.system.events(),
+      params.expectedAfterApply(currentWasmHash),
+    )
   } else {
-    const eventsAfterFirstBlock = await chainToUpgrade.api.query.system.events()
-    await chainToUpgrade.dev.newBlock({ count: 1 })
-    const eventsAfterSecondBlock = await chainToUpgrade.api.query.system.events()
+    const eventsAfterFirstBlock = await clientOfChainToUpgrade.api.query.system.events()
+    await clientOfChainToUpgrade.dev.newBlock({ count: 1 })
+    const eventsAfterSecondBlock = await clientOfChainToUpgrade.api.query.system.events()
     assertExpectedEvents(
       eventsAfterFirstBlock.concat(eventsAfterSecondBlock),
       params.expectedAfterApply(currentWasmHash),
@@ -493,11 +507,7 @@ export async function authorizeUpgradeViaRootReferendumTests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  governanceChain: Chain<TCustom, TInitStoragesRelay>,
-  toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
-  testConfig: TestConfig,
-) {
+>(governanceChain: Chain<TCustom, TInitStoragesRelay>, toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
 
@@ -507,7 +517,7 @@ export async function authorizeUpgradeViaRootReferendumTests<
   } else {
     ;[governanceClient, toBeUpgradedClient] = await setupNetworks(governanceChain, toBeUpgradedChain)
   }
-  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, testConfig, {
+  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
     call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
     expectedAfterApply: (hash) => [
       {
@@ -529,11 +539,7 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  governanceChain: Chain<TCustom, TInitStoragesRelay>,
-  toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
-  testConfig: TestConfig,
-) {
+>(governanceChain: Chain<TCustom, TInitStoragesRelay>, toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
 
@@ -555,7 +561,7 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
     ]
   }
 
-  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, testConfig, {
+  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
     call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
     expectedAfterApply: () => expectedEvents,
   })
@@ -575,7 +581,6 @@ export async function authorizeUpgradeViaWhitelistedCallerReferendumTests<
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
   toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
   fellowshipChain: Chain<TCustomCollectives, TInitStoragesCollectives>,
-  testConfig: TestConfig,
 ) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
@@ -591,24 +596,18 @@ export async function authorizeUpgradeViaWhitelistedCallerReferendumTests<
       fellowshipChain,
     )
   }
-  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(
-    governanceClient,
-    toBeUpgradedClient,
-    fellowshipClient,
-    testConfig,
-    {
-      call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
-      expectedAfterApply: (hash) => [
-        {
-          type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
-          args: {
-            codeHash: hash,
-            error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
-          },
+  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(governanceClient, toBeUpgradedClient, fellowshipClient, {
+    call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
+    expectedAfterApply: (hash) => [
+      {
+        type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
+        args: {
+          codeHash: hash,
+          error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
         },
-      ],
-    },
-  )
+      },
+    ],
+  })
 }
 
 /**
@@ -625,7 +624,6 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
   toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
   fellowshipChain: Chain<TCustomCollectives, TInitStoragesCollectives>,
-  testConfig: TestConfig,
 ) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
@@ -653,16 +651,10 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
     ]
   }
 
-  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(
-    governanceClient,
-    toBeUpgradedClient,
-    fellowshipClient,
-    testConfig,
-    {
-      call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
-      expectedAfterApply: () => expectedEvents,
-    },
-  )
+  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(governanceClient, toBeUpgradedClient, fellowshipClient, {
+    call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
+    expectedAfterApply: () => expectedEvents,
+  })
 }
 
 /**
@@ -693,13 +685,12 @@ export function governanceChainSelfUpgradeViaRootReferendumSuite<
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
-        testFn: async () =>
-          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, governanceChain, testConfig),
+        testFn: async () => await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, governanceChain),
       },
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
-        testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, governanceChain, testConfig),
+        testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, governanceChain),
       },
     ],
   }
@@ -744,13 +735,12 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
         testFn: async () =>
-          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain, testConfig),
+          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain),
       },
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
-        testFn: async () =>
-          await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain, testConfig),
+        testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain),
       },
     ],
   }
@@ -801,19 +791,13 @@ export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
             governanceChain,
             governanceChain,
             fellowshipChain,
-            testConfig,
           ),
       },
       {
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
         testFn: async () =>
-          await authorizeUpgradeViaWhitelistedCallerReferendumTests(
-            governanceChain,
-            governanceChain,
-            fellowshipChain,
-            testConfig,
-          ),
+          await authorizeUpgradeViaWhitelistedCallerReferendumTests(governanceChain, governanceChain, fellowshipChain),
       },
     ],
   }
@@ -870,7 +854,6 @@ export function governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumS
             governanceChain,
             toBeUpgradedChain,
             fellowshipChain,
-            testConfig,
           ),
       },
       {
@@ -881,7 +864,6 @@ export function governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumS
             governanceChain,
             toBeUpgradedChain,
             fellowshipChain,
-            testConfig,
           ),
       },
     ],
