@@ -140,7 +140,7 @@ jobs:
           done
 
       - name: Run ${{ matrix.network.name }} tests
-        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=2 --retry=3
+        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3
 
       - name: Cleanup Subway instances
         if: always()
