@@ -64,7 +64,7 @@ exports[`Polkadot Bridge Hub Accounts > \`force_transfer\` > force transferring 
   {
     "data": {
       "account": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-      "amount": "(rounded 330000000)",
+      "amount": "(number)",
     },
     "method": "DustLost",
     "section": "balances",
@@ -79,7 +79,7 @@ exports[`Polkadot Bridge Hub Accounts > \`force_transfer\` > force transferring 
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000,
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -99,7 +99,7 @@ exports[`Polkadot Bridge Hub Accounts > \`transfer_all\` > account with reserves
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 100000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -167,37 +167,48 @@ exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction e
 ]
 `;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition > deposit action success events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 2000000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Reserved",
+    "section": "balances",
+  },
+]
+`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer, deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: lock=vested transfer, deposit=referendum submission"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, deposit=referendum submission"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer"`;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer, deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via nomination pool and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=nomination pool, lock=vested transfer, deposit=referendum submission"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, deposit=referendum submission"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via multisig creation > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer"`;
 
-exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer, deposit=proxy addition"`;
+exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via proxy addition > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer"`;
 
 exports[`Polkadot Bridge Hub Accounts > currency tests > liquidity restriction error: funds locked via staking bond and vested transfer, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: reserve=staking bond, lock=vested transfer, deposit=referendum submission"`;
 
@@ -222,7 +233,7 @@ exports[`Polkadot Bridge Hub Accounts > transfer_allow_death > leaving an accoun
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": 1000000000,
+      "freeBalance": "(rounded 99000000000)",
     },
     "method": "Endowed",
     "section": "balances",

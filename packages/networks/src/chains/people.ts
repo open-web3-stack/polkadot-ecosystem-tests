@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -45,6 +47,14 @@ export const peoplePolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.peoplePolkadot,
   initStorages: getInitStorages(custom.peoplePolkadot),
+  properties: {
+    addressEncoding: 0,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const peopleKusama = defineChain({
@@ -54,4 +64,12 @@ export const peopleKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),
+  properties: {
+    addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

@@ -1,5 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
-import { defaultAccounts } from '../testAccounts.js'
+import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
 const custom = {
   hydration: {
@@ -16,11 +18,11 @@ const custom = {
 
 const getInitStorages = (config: typeof custom.hydration | typeof custom.basilisk) => ({
   System: {
-    Account: [[[defaultAccounts.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
+    Account: [[[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
   },
   Tokens: {
     Accounts: [
-      [[defaultAccounts.alice.address, config.relayToken], { free: 1000 * 1e12 }],
+      [[defaultAccountsSr25519.alice.address, config.relayToken], { free: 1000 * 1e12 }],
       [[defaultAccounts.alice.address, config.dai], { free: 100n * 10n ** 18n }],
     ],
   },
@@ -29,17 +31,31 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
 export const hydration = defineChain({
   name: 'hydration',
   paraId: 2034,
-  endpoint: 'wss://rpc.hydradx.cloud',
+  endpoint: ['wss://hydration.ibp.network', 'wss://rpc.hydradx.cloud'],
   networkGroup: 'polkadot',
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
+  properties: {
+    addressEncoding: 0,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: 'wss://basilisk-rpc.n.dwellir.com',
+  endpoint: ['wss://basilisk-rpc.n.dwellir.com', 'wss://rpc.basilisk.cloud'],
   networkGroup: 'kusama',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),
+  properties: {
+    addressEncoding: 10041,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

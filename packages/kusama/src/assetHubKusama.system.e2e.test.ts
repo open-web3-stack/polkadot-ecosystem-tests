@@ -1,27 +1,18 @@
-import { assetHubKusama } from '@e2e-test/networks/chains'
+import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
 import {
   governanceChainSelfUpgradeViaRootReferendumSuite,
-  type ParaTestConfig,
   registerTestTree,
   systemE2ETestsForParaWithScheduler,
+  systemE2ETestsViaRemoteScheduler,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-// TODO: Uncomment after Kusama 2.0+ release due to polkadot-fellows/runtimes#957
-// const testConfig: ParaTestConfig = {
-//   testSuiteName: 'Kusama AssetHub System',
-//   addressEncoding: 2,
-//   blockProvider: 'Local',
-//   asyncBacking: 'Enabled',
-// }
-// registerTestTree(systemE2ETestsViaRemoteScheduler(kusama, assetHubKusama, testConfig))
-
-const testConfigForLocalScheduler: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Kusama AssetHub System',
-  addressEncoding: 2,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
-registerTestTree(systemE2ETestsForParaWithScheduler(assetHubKusama, testConfigForLocalScheduler))
+registerTestTree(governanceChainSelfUpgradeViaRootReferendumSuite(assetHubKusama, testConfig))
 
-registerTestTree(governanceChainSelfUpgradeViaRootReferendumSuite(assetHubKusama, testConfigForLocalScheduler))
+registerTestTree(systemE2ETestsViaRemoteScheduler(kusama, assetHubKusama, testConfig))
+
+registerTestTree(systemE2ETestsForParaWithScheduler(assetHubKusama, testConfig))

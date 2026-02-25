@@ -115,7 +115,7 @@ function referendumCmp(
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   // Fund test accounts not already provisioned in the test chain spec.
@@ -209,7 +209,7 @@ export async function referendumLifecycleTest<
   expect(ongoingRefPreDecDep.decisionDeposit.isNone).toBeTruthy()
 
   expect(ongoingRefPreDecDep.submissionDeposit.who.toString()).toBe(
-    encodeAddress(devAccounts.alice.address, testConfig.addressEncoding),
+    encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
   expect(ongoingRefPreDecDep.submissionDeposit.amount.toString()).toBe(
     client.api.consts.referenda.submissionDeposit.toString(),
@@ -259,7 +259,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPostDecDep.decisionDeposit.isSome)
 
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().who.toString()).toBe(
-    encodeAddress(devAccounts.bob.address, testConfig.addressEncoding),
+    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
   )
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.toString()).toBe(
     smallTipper[1].decisionDeposit.toString(),
@@ -286,7 +286,7 @@ export async function referendumLifecycleTest<
   let refPost: PalletReferendaReferendumStatusConvictionVotingTally
 
   let iters: number
-  match(testConfig.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
@@ -401,7 +401,7 @@ export async function referendumLifecycleTest<
   expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
   expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  let blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  let blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -471,7 +471,7 @@ export async function referendumLifecycleTest<
   expect(daveVote.aye.toNumber()).toBe(ayeVote)
   expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -540,7 +540,7 @@ export async function referendumLifecycleTest<
   expect(eveVote.nay.toNumber()).toBe(nayVote)
   expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -563,7 +563,12 @@ export async function referendumLifecycleTest<
 
   // Cancel the referendum using the scheduler pallet to simulate a root origin
 
-  await scheduleInlineCallWithOrigin(client, cancelRefCall.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    cancelRefCall.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -599,8 +604,8 @@ export async function referendumLifecycleTest<
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
-  match(testConfig.blockProvider)
+  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(cancelledRef[0].toNumber()).toBe(blockNumber)
     })
@@ -609,12 +614,12 @@ export async function referendumLifecycleTest<
     })
   // Check that the referendum's submission deposit was refunded to Alice
   expect(cancelledRef[1].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.alice.address, testConfig.addressEncoding),
+    who: encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
     amount: client.api.consts.referenda.submissionDeposit.toNumber(),
   })
   // Check that the referendum's submission deposit was refunded to Bob
   expect(cancelledRef[2].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.bob.address, testConfig.addressEncoding),
+    who: encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
     amount: smallTipper[1].decisionDeposit.toNumber(),
   })
 
@@ -751,7 +756,7 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
@@ -818,7 +823,12 @@ export async function referendumLifecycleKillTest<
    * Kill the referendum using the scheduler pallet to simulate a root origin for the call.
    */
 
-  await scheduleInlineCallWithOrigin(client, killRefCall.method.toHex(), { system: 'Root' }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    client,
+    killRefCall.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
 
   await client.dev.newBlock()
 
@@ -847,9 +857,9 @@ export async function referendumLifecycleKillTest<
     } else if (client.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
-      if (who.toString() === encodeAddress(devAccounts.alice.address, testConfig.addressEncoding)) {
+      if (who.toString() === encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding)) {
         expect(amount.toNumber()).toBe(client.api.consts.referenda.submissionDeposit.toNumber())
-      } else if (who.toString() === encodeAddress(devAccounts.bob.address, testConfig.addressEncoding)) {
+      } else if (who.toString() === encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding)) {
         expect(amount.toNumber()).toBe(smallTipper[1].decisionDeposit.toNumber())
       } else {
         expect.fail('malformed decision slashed events')
@@ -863,9 +873,9 @@ export async function referendumLifecycleKillTest<
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  match(testConfig.blockProvider)
+  match(chain.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(killedRef.toNumber()).toBe(blockNumber)
     })
@@ -889,12 +899,12 @@ export function baseGovernanceE2ETests<
           {
             kind: 'test',
             label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-            testFn: async () => await referendumLifecycleTest(chain, testConfig),
+            testFn: async () => await referendumLifecycleTest(chain),
           },
           {
             kind: 'test',
             label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-            testFn: async () => await referendumLifecycleKillTest(chain, testConfig),
+            testFn: async () => await referendumLifecycleKillTest(chain),
           },
         ],
       },

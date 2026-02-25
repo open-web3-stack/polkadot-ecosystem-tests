@@ -4,9 +4,9 @@ import {
   governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite,
   governanceChainUpgradesOtherChainViaRootReferendumSuite,
   governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite,
-  type ParaTestConfig,
   registerTestTree,
   setupNetworks,
+  type TestConfig,
 } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
@@ -54,19 +54,12 @@ describe('assetHubPolkadot & collectivesPolkadot', async () => {
   )
 })
 
-const testConfigForLocalScheduler: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'assetHubPolkadot & collectivesPolkadot',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(
-  governanceChainUpgradesOtherChainViaRootReferendumSuite(
-    assetHubPolkadot,
-    collectivesPolkadot,
-    testConfigForLocalScheduler,
-  ),
+  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
 )
 
 registerTestTree(
@@ -74,14 +67,10 @@ registerTestTree(
     assetHubPolkadot,
     collectivesPolkadot,
     collectivesPolkadot,
-    testConfigForLocalScheduler,
+    testConfig,
   ),
 )
 
 registerTestTree(
-  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(
-    assetHubPolkadot,
-    collectivesPolkadot,
-    testConfigForLocalScheduler,
-  ),
+  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
 )

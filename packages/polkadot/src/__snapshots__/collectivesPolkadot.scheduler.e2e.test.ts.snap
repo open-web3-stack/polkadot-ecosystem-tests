@@ -9,7 +9,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel named scheduled task 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
@@ -29,57 +29,13 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 1000000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a named scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Collectives Polkadot Scheduler E2E tests > cancelling a scheduled task is possible > events for scheduled task cancellation 1`] = `
-[
-  {
-    "data": {
-      "index": 0,
-      "when": "(redacted)",
-    },
-    "method": "Canceled",
-    "section": "scheduler",
-  },
-  {
-    "data": {
-      "id": null,
-      "result": "Ok",
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
   },
 ]
 `;
@@ -156,7 +112,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule named task with wro
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 900000000)",
         },
       },
@@ -176,7 +132,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 200000)",
+          "proofSize": 0,
           "refTime": "(rounded 800000000)",
         },
       },
@@ -196,6 +152,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a call is possibl
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
   {
     "data": {
@@ -247,6 +221,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a named call is p
   {
     "data": {
       "id": "(hash)",
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
       "result": "Ok",
       "task": "(redacted)",
     },
@@ -473,6 +465,24 @@ exports[`Collectives Polkadot Scheduler E2E tests > scheduling a task after a de
     },
     "method": "TotalIssuanceForced",
     "section": "balances",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
   },
   {
     "data": {

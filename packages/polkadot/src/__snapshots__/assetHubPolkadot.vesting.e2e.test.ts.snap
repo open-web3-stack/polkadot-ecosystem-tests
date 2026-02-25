@@ -27,8 +27,8 @@ exports[`Polkadot Asset Hub Vesting > merging vesting schedules when none exist 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -47,8 +47,8 @@ exports[`Polkadot Asset Hub Vesting > signed-origin force-vested transfer fails 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 700000000)",
         },
       },
     },

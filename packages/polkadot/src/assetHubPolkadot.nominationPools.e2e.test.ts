@@ -3,9 +3,6 @@ import { baseNominationPoolsE2ETests, registerTestTree, type TestConfig } from '
 
 const assetHubPolkadotTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Asset Hub Nomination Pools',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(baseNominationPoolsE2ETests(assetHubPolkadot, assetHubPolkadotTestConfig))

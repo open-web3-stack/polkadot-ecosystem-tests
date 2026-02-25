@@ -144,19 +144,10 @@ export async function scheduleCallListWithOrigin(
     )
     .exhaustive()
 
-  const agenda = [
-    [
-      [scheduledBlock],
-      calls.map(({ call, origin }) => ({
-        call,
-        origin,
-      })),
-    ],
-  ]
-
   await client.dev.setStorage({
     Scheduler: {
-      agenda: agenda,
+      agenda: [[[scheduledBlock], calls]],
+      incompleteSince: scheduledBlock,
     },
   })
 }
@@ -418,6 +409,46 @@ export async function setValidatorsStorage(
   })
 }
 
+/// -------
+/// Fee extraction abstraction
+/// -------
+
+/**
+ * Normalized fee information extracted from a transaction fee payment event.
+ * Different runtimes emit different fee events, but tests only need these three fields.
+ */
+export interface FeeInfo {
+  who: string
+  actualFee: bigint
+  tip: bigint
+}
+
+/**
+ * Extracts fee payment information from the transaction fee event, itself from a list of system events.
+ * Different runtimes may have different fee event structures; thus, each chain can provide its own extractor.
+ */
+export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
+
+/**
+ * Default fee extractor for standard Substrate runtimes using `pallet-transaction-payment`.
+ * Handles the standard `TransactionFeePaid { who, actual_fee, tip }` event.
+ *
+ * This is the default used by `RelayTestConfig` and `ParaTestConfig` when no `feeExtractor` is provided.
+ */
+export const standardFeeExtractor: FeeExtractor = (events, api) => {
+  const results: FeeInfo[] = []
+  for (const { event } of events) {
+    if (api.events.transactionPayment.TransactionFeePaid.is(event)) {
+      results.push({
+        who: event.data.who.toString(),
+        actualFee: event.data.actualFee.toBigInt(),
+        tip: event.data.tip.toBigInt(),
+      })
+    }
+  }
+  return results
+}
+
 /**
  * Helper to track transaction fees paid by a set of accounts.
  *
@@ -426,27 +457,24 @@ export async function setValidatorsStorage(
  *
  * @param api - The API instance to query events
  * @param feeMap - Map from addresses to their cumulative paid fees
- * @param addressEncoding - The address encoding to use when setting/querying keys (addresses) in the map
+ * @param addressEncoding - SS58 address encoding for the chain
+ * @param feeExtractor - Fee extractor function for the chain
  * @returns Updated fee map with new fees added
  */
 export async function updateCumulativeFees(
   api: ApiPromise,
   feeMap: Map<string, bigint>,
   addressEncoding: number,
+  feeExtractor: FeeExtractor,
 ): Promise<Map<string, bigint>> {
   const events = await api.query.system.events()
+  const feeInfos = feeExtractor(events as unknown as EventRecord[], api)
 
-  for (const record of events) {
-    const { event } = record
-    if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
-      assert(api.events.transactionPayment.TransactionFeePaid.is(event))
-      const [who, actualFee, tip] = event.data
-      const address = encodeAddress(who.toString(), addressEncoding)
-      const totalFee = BigInt(actualFee.add(tip).toString())
-
-      const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + totalFee)
-    }
+  for (const { who, actualFee, tip } of feeInfos) {
+    const address = encodeAddress(who, addressEncoding)
+    const totalFee = actualFee + tip
+    const currentFee = feeMap.get(address) || 0n
+    feeMap.set(address, currentFee + totalFee)
   }
   return feeMap
 }
@@ -506,12 +534,12 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
  * @param asyncBacking Whether async backing is enabled on the parachain.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function blockProviderOffset(cfg: TestConfig): number {
-  if (cfg.blockProvider === 'Local') {
+export function blockProviderOffset(blockProvider: BlockProvider, asyncBacking?: AsyncBacking): number {
+  if (blockProvider === 'Local') {
     return 1
   }
 
-  if (cfg.asyncBacking === 'Enabled') {
+  if (asyncBacking === 'Enabled') {
     return 2
   }
 
@@ -556,34 +584,13 @@ export async function getReservedFunds(client: Client<any, any>, address: any): 
 }
 
 /**
- * Configuration for relay chain tests.
+ * Configuration for tests.
+ * Chain properties (addressEncoding, blockProvider, asyncBacking, etc.) are now
+ * provided by the chain definition and available via `chain.properties`.
  */
-export interface RelayTestConfig {
+export interface TestConfig {
   testSuiteName: string
-  addressEncoding: number
-  blockProvider: 'Local'
-  chainEd?: ChainED
 }
-
-/**
- * Configuration for parachain tests.
- * Async backing is relevant due to the step size of `parachainSystem.lastRelayChainBlockNumber`.
- *
- * Recall that with the AHM, the scheduler pallet's agenda will be keyed by this block number.
- * It is, then, relevant for tests to know whether AB is enabled.
- */
-export interface ParaTestConfig {
-  testSuiteName: string
-  addressEncoding: number
-  blockProvider: BlockProvider
-  asyncBacking: AsyncBacking
-  chainEd?: ChainED
-}
-
-/**
- * Union type for all test configurations, whether relay or parachain.
- */
-export type TestConfig = RelayTestConfig | ParaTestConfig
 
 /**
  * Matcher for an event argument.

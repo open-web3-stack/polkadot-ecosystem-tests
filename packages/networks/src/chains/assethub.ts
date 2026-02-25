@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
@@ -65,18 +67,39 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
-  endpoint: 'wss://asset-hub-polkadot-rpc.n.dwellir.com',
+  endpoint: ['wss://sys.ibp.network/asset-hub-polkadot', 'wss://statemint.public.curie.radiumblock.co/ws'],
   paraId: 1000,
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
+  properties: {
+    addressEncoding: 0,
+    proxyBlockProvider: 'NonLocal',
+    schedulerBlockProvider: 'NonLocal',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
-  endpoint: 'wss://asset-hub-kusama-rpc.n.dwellir.com',
+  endpoint: [
+    'wss://sys.ibp.network/asset-hub-kusama',
+    'wss://asset-hub-kusama.dotters.network',
+    'wss://bridge-hub-kusama-rpc.n.dwellir.com',
+    'wss://kusama-bridge-hub-rpc.polkadot.io',
+  ],
   paraId: 1000,
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
+  properties: {
+    addressEncoding: 2,
+    proxyBlockProvider: 'NonLocal',
+    schedulerBlockProvider: 'NonLocal',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

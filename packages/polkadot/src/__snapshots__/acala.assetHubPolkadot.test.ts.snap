@@ -119,7 +119,7 @@ exports[`acala & assetHubPolkadot > acala transfer ETH to assetHubPolkadot > to 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 1000000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -389,7 +389,7 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > to
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 1000000000)",
+        "refTime": "(rounded 500000000)",
       },
     },
     "method": "Processed",
@@ -609,7 +609,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > tx 
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 600000000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -895,7 +895,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > tx
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 600000000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },

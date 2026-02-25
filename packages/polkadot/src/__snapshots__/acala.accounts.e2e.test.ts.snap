@@ -1,0 +1,231 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Acala Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 100000000000000)",
+      "who": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`burn\` > burning funds from account works > events when Alice self-burns funds 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "who": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
+[
+  {
+    "data": {
+      "new_": "(number)",
+      "old": "(number)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for second issuance change 1`] = `
+[
+  {
+    "data": {
+      "new_": "(number)",
+      "old": "(number)",
+    },
+    "method": "TotalIssuanceForced",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+      "amount": "(number)",
+    },
+    "method": "DustLost",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": "(number)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": "(number)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`transfer_all\` > transfer all with keepAlive false kills sender > events when Alice transfers all to Bob with \`keepAlive = false\` 1`] = `
+[
+  {
+    "data": {
+      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": "(rounded 10000000000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > \`transfer_all\` > transfer all with keepAlive true leaves 1 ED > events when Alice transfers all to Bob with \`keepAlive = true\` 1`] = `
+[
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": "(rounded 9900000000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
+
+exports[`Acala Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
+
+exports[`Acala Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission > liquidity restriction test skipped 1`] = `"Skipping test - required pallets not available: deposit=referendum submission"`;
+
+exports[`Acala Accounts > transfer_allow_death > account with reserves is not reaped when transferring funds > events when Alice with reserve transfers to Bob 1`] = `[]`;
+
+exports[`Acala Accounts > transfer_allow_death > leaving an account below ED kills it > events when Alice \`transfer_allow_death\` to Bob 1`] = `
+[
+  {
+    "data": {
+      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "KilledAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": "(rounded 9900000000000)",
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > transfer_allow_death > leaving an account below ED kills it > unstable events when Alice \`transfer_allow_death\` to Bob 1`] = `
+[
+  {
+    "data": {
+      "amount": "(number)",
+      "who": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
+      "amount": "(number)",
+    },
+    "method": "DustLost",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Acala Accounts > transfer_allow_death > transfer of some funds does not kill sender account > events when Alice transfers 1 ED to Bob with sufficient balance 1`] = `
+[
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
+      "freeBalance": 100000000000,
+    },
+    "method": "Endowed",
+    "section": "balances",
+  },
+]
+`;

@@ -1,5 +1,5 @@
 import { kusama } from '@e2e-test/networks/chains'
-import type { RelayTestConfig, RootTestTree } from '@e2e-test/shared'
+import type { RootTestTree, TestConfig } from '@e2e-test/shared'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -10,11 +10,8 @@ import {
   registerTestTree,
 } from '@e2e-test/shared'
 
-const generalTestConfig: RelayTestConfig = {
+const generalTestConfig: TestConfig = {
   testSuiteName: 'Kusama Accounts',
-  addressEncoding: 2,
-  blockProvider: 'Local',
-  chainEd: 'LowEd',
 }
 
 // Staking and nomination pools are disabled on Kusama relay, so the only reserve action available is manual.

@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts } from '../testAccounts.js'
 
@@ -34,9 +36,6 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
       [['aca' in config ? config.aca : config.kar, defaultAccounts.alice.address], { balance: 20 * 1e12 }],
     ],
   },
-  Sudo: {
-    key: defaultAccounts.alice.address,
-  },
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],
@@ -50,6 +49,13 @@ export const astar = defineChain({
   networkGroup: 'polkadot',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'Normal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const shiden = defineChain({
@@ -59,4 +65,11 @@ export const shiden = defineChain({
   networkGroup: 'kusama',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

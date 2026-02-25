@@ -5,9 +5,9 @@
 		"@acala-network/chopsticks": "^1.2.5",
 		"@acala-network/chopsticks-testing": "^1.2.5",
 		"@e2e-test/networks": "workspace:*",
-		"@polkadot/api": "^16.5.1",
-		"@polkadot/types": "^16.5.1",
-		"@polkadot/types-augment": "^16.5.1"
+		"@polkadot/api": "^16.5.4",
+		"@polkadot/types": "^16.5.4",
+		"@polkadot/types-augment": "^16.5.4"
 	},
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",

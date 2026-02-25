@@ -155,7 +155,7 @@ exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot >
         "Complete": {
           "used": {
             "proofSize": "(rounded 400000)",
-            "refTime": "(rounded 50000000000)",
+            "refTime": "(rounded 30000000000)",
           },
         },
       },
@@ -210,7 +210,7 @@ exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub >
       "dmqHead": "(hash)",
       "weightUsed": {
         "proofSize": "(rounded 4000)",
-        "refTime": "(rounded 800000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "DownwardMessagesProcessed",
@@ -223,7 +223,7 @@ exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub >
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 9000)",
-        "refTime": "(rounded 600000000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

@@ -134,7 +134,7 @@ exports[`assetHubKusama & coretimeKusama > assetHubKusama transfer KSM to coreti
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 500000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -374,7 +374,7 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 9000)",
-        "refTime": "(rounded 600000000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",

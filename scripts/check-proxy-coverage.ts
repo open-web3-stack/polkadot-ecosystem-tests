@@ -29,6 +29,7 @@ import { fileURLToPath } from 'node:url'
 import {
   AssetHubKusamaProxyTypes,
   AssetHubPolkadotProxyTypes,
+  BridgeHubProxyTypes,
   CollectivesProxyTypes,
   CoretimeProxyTypes,
   KusamaProxyTypes,
@@ -82,6 +83,8 @@ const networks: ChainAndProxyTypes[] = [
   { name: 'kusama', proxyTypes: KusamaProxyTypes },
   { name: 'assetHubPolkadot', proxyTypes: AssetHubPolkadotProxyTypes },
   { name: 'assetHubKusama', proxyTypes: AssetHubKusamaProxyTypes },
+  { name: 'bridgeHubKusama', proxyTypes: BridgeHubProxyTypes },
+  { name: 'bridgeHubPolkadot', proxyTypes: BridgeHubProxyTypes },
   { name: 'collectivesPolkadot', proxyTypes: CollectivesProxyTypes },
   { name: 'coretimePolkadot', proxyTypes: CoretimeProxyTypes },
   { name: 'coretimeKusama', proxyTypes: CoretimeProxyTypes },
@@ -213,7 +216,11 @@ async function main() {
   console.log('===============================')
 
   for (const network of networks) {
-    const networkSnapshotFilename = snapshotFiles.find((file) => file.split('/').pop()?.startsWith(network.name))
+    // Find the proxy filtering test snapshot (not multisig.proxy)
+    const networkSnapshotFilename = snapshotFiles.find((file) => {
+      const filename = file.split('/').pop()
+      return filename?.startsWith(network.name) && !filename.includes('multisig.')
+    })
     if (!networkSnapshotFilename) {
       console.log(`No snapshots found for ${network.name}`)
       continue

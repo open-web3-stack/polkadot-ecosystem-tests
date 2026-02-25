@@ -2,9 +2,9 @@ import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubKusama, coretimeKusama } from '@e2e-test/networks/chains'
 import {
   governanceChainUpgradesOtherChainViaRootReferendumSuite,
-  type ParaTestConfig,
   registerTestTree,
   setupNetworks,
+  type TestConfig,
 } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
@@ -44,13 +44,8 @@ describe('assetHubKusama & coretimeKusama', async () => {
   })
 })
 
-const testConfigForLocalScheduler: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'assetHubKusama & coretimeKusama',
-  addressEncoding: 2,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
-registerTestTree(
-  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubKusama, coretimeKusama, testConfigForLocalScheduler),
-)
+registerTestTree(governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubKusama, coretimeKusama, testConfig))

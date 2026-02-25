@@ -1,5 +1,5 @@
 import { assetHubPolkadot, collectivesPolkadot, peoplePolkadot } from '@e2e-test/networks/chains'
-import { type ParaTestConfig, registerTestTree, setupNetworks } from '@e2e-test/shared'
+import { registerTestTree, setupNetworks, type TestConfig } from '@e2e-test/shared'
 import {
   authorizeUpgradeViaCollectives,
   governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite,
@@ -19,11 +19,8 @@ describe('asset hub & people & collectives', async () => {
   })
 })
 
-const testConfigForLocalScheduler: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'asset hub & people & collectives',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(
@@ -31,6 +28,6 @@ registerTestTree(
     assetHubPolkadot,
     peoplePolkadot,
     collectivesPolkadot,
-    testConfigForLocalScheduler,
+    testConfig,
   ),
 )

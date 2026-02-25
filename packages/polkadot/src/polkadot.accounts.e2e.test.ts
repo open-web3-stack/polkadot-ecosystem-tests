@@ -7,19 +7,16 @@ import {
   manualReserveAction,
   multisigCreationDepositAction,
   proxyAdditionDepositAction,
-  type RelayTestConfig,
   type RootTestTree,
   registerTestTree,
+  type TestConfig,
   type TestNode,
 } from '@e2e-test/shared'
 
 import { match } from 'ts-pattern'
 
-const generalTestConfig: RelayTestConfig = {
+const generalTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Accounts',
-  addressEncoding: 0,
-  chainEd: 'Normal',
-  blockProvider: 'Local',
 }
 
 // Staking and nomination pools are disabled on Polkadot relay, so the only reserve action available is manual.

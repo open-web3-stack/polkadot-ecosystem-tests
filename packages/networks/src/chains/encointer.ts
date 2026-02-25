@@ -1,3 +1,5 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
 import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
@@ -23,4 +25,11 @@ export const encointerKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.encointerKusama,
   initStorages: getInitStorages(custom.encointerKusama),
+  properties: {
+    addressEncoding: 2,
+    schedulerBlockProvider: 'Local',
+    chainEd: 'LowEd',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

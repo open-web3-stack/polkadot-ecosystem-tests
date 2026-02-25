@@ -113,7 +113,7 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 400000000)",
+            "refTime": "(rounded 200000000)",
           },
           "paysFee": "Yes",
         },
@@ -143,7 +143,7 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 200000000)",
       },
     },
     "method": "Processed",
