@@ -70,6 +70,8 @@ export async function preimageSingleNoteUnnoteTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -298,7 +300,7 @@ export async function preimageNoteThenRequestTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -398,7 +400,7 @@ export async function preimageRequestAndUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -504,7 +506,7 @@ export async function preimageRequestThenNoteTest<
   assert(client.api.events.preimage.Requested.is(events[0].event))
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 2. Alice registers (notes) the previously-requested preimage
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -577,6 +579,8 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const requestTx = client.api.tx.preimage.requestPreimage(encodedProposal.hash.toHex())
@@ -634,7 +638,7 @@ export async function preimageRepeatedNoteUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -720,7 +724,7 @@ async function preimageEmptyTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers an empty preimage.
   const emptyBytes = new Uint8Array(0)
@@ -774,7 +778,7 @@ async function preimageSizeLimitTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 100_000e10 }])
+  setupBalances(client, [{ address: alice.address, amount: 150_000n * 10n ** 12n }])
 
   const blockLength = client.api.consts.system.blockLength as any
   const normalBlockLimit: number = blockLength.max.normal.toNumber()
@@ -876,8 +880,8 @@ async function preimageEnsureUpdatedTest<
   const alice = testAccounts.alice
   const addressEncoding = chain.properties.addressEncoding
   setupBalances(client, [
-    { address: alice.address, amount: 100_000e10 },
-    { address: testAccounts.bob.address, amount: 100_000e10 },
+    { address: alice.address, amount: 10_000_000n * 10n ** 10n },
+    { address: testAccounts.bob.address, amount: 10_000_000n * 10n ** 10n },
   ])
 
   const expectFees = oldPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
