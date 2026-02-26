@@ -828,8 +828,8 @@ async function preimageEnsureUpdatedTest<
   const alice = testAccounts.alice
   const addressEncoding = chain.properties.addressEncoding
   setupBalances(client, [
-    { address: alice.address, amount: 1000e10 },
-    { address: testAccounts.bob.address, amount: 1000e10 },
+    { address: alice.address, amount: 100_000e10 },
+    { address: testAccounts.bob.address, amount: 100_000e10 },
   ])
 
   const expectFees = oldPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
