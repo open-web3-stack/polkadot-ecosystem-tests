@@ -1,12 +1,18 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import {
+  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite,
+  governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  registerTestTree,
+  setupNetworks,
+  type TestConfig,
+} from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('kusama & assetHubKusama', async () => {
+describe('assetHubKusama & kusama', async () => {
   const [kusamaClient, assetHubClient] = await setupNetworks(kusama, assetHubKusama)
 
   const assetHubKSM = assetHubKusama.custom.ksm
@@ -42,3 +48,11 @@ describe('kusama & assetHubKusama', async () => {
     { skip: true },
   )
 })
+
+const testConfig: TestConfig = {
+  testSuiteName: 'assetHubKusama & kusama',
+}
+
+registerTestTree(governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(assetHubKusama, kusama, testConfig))
+
+registerTestTree(governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubKusama, kusama, testConfig))

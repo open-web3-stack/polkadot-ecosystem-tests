@@ -1,6 +1,9 @@
 import { assetHubPolkadot, bridgeHubPolkadot, collectivesPolkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
-import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
+import { registerTestTree, setupNetworks, type TestConfig } from '@e2e-test/shared'
+import {
+  authorizeUpgradeViaCollectives,
+  governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite,
+} from '@e2e-test/shared/upgrade.js'
 
 import { describe, test } from 'vitest'
 
@@ -15,3 +18,16 @@ describe('asset hub & bridgeHub & collectives', async () => {
     await authorizeUpgradeViaCollectives(assetHubPolkadotClient, bridgeHubClient, collectivesClient)
   })
 })
+
+const testConfig: TestConfig = {
+  testSuiteName: 'asset hub & bridgeHub & collectives',
+}
+
+registerTestTree(
+  governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite(
+    assetHubPolkadot,
+    bridgeHubPolkadot,
+    collectivesPolkadot,
+    testConfig,
+  ),
+)

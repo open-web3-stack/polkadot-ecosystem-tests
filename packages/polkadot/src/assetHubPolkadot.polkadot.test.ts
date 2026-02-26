@@ -1,12 +1,17 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, polkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import {
+  governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  registerTestTree,
+  setupNetworks,
+  type TestConfig,
+} from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletDown, runXcmPalletUp } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('asset hub & polkadot', async () => {
+describe('assetHubPolkadot & polkadot', async () => {
   const [polkadotClient, ahClient] = await setupNetworks(polkadot, assetHubPolkadot)
 
   runXcmPalletUp('Teleport DOT from Asset Hub to Polkadot', async () => {
@@ -175,3 +180,9 @@ describe('asset hub & polkadot', async () => {
     }
   })
 })
+
+const testConfig: TestConfig = {
+  testSuiteName: 'assetHubPolkadot & polkadot',
+}
+
+registerTestTree(governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, polkadot, testConfig))

@@ -1,6 +1,11 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, coretimePolkadot } from '@e2e-test/networks/chains'
-import { setupNetworks } from '@e2e-test/shared'
+import {
+  governanceChainUpgradesOtherChainViaRootReferendumSuite,
+  registerTestTree,
+  setupNetworks,
+  type TestConfig,
+} from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
@@ -42,3 +47,11 @@ describe('assetHubPolkadot & coretimePolkadot', async () => {
     { skip: true },
   )
 })
+
+const testConfig: TestConfig = {
+  testSuiteName: 'assetHubPolkadot & coretimePolkadot',
+}
+
+registerTestTree(
+  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, coretimePolkadot, testConfig),
+)

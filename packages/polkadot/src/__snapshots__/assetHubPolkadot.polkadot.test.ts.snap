@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on from chain 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -15,7 +15,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balanc
 }
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on to chain 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -30,7 +30,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > balanc
 }
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > from chain ump messages 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot > from chain ump messages 1`] = `
 [
   {
     "v5": [
@@ -100,7 +100,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > from c
 ]
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to chain ump events 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot > to chain ump events 1`] = `
 [
   {
     "data": {
@@ -122,7 +122,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > to cha
 ]
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx events 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Asset Hub to Polkadot > tx events 1`] = `
 [
   {
     "data": {
@@ -166,7 +166,7 @@ exports[`asset hub & polkadot > Teleport DOT from Asset Hub to Polkadot > tx eve
 ]
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on from chain 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on from chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -181,7 +181,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balanc
 }
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on to chain 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub > balance on to chain 1`] = `
 {
   "consumers": 0,
   "data": {
@@ -196,7 +196,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > balanc
 }
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to chain dmp events 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub > to chain dmp events 1`] = `
 [
   {
     "data": {
@@ -232,7 +232,7 @@ exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > to cha
 ]
 `;
 
-exports[`asset hub & polkadot > Teleport DOT from Polkadot to Asset Hub > tx events 1`] = `
+exports[`assetHubPolkadot & polkadot > Teleport DOT from Polkadot to Asset Hub > tx events 1`] = `
 [
   {
     "data": {
