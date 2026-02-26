@@ -53,7 +53,6 @@ export const astar = defineChain({
   properties: {
     addressEncoding: 5,
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
@@ -69,7 +68,6 @@ export const shiden = defineChain({
   properties: {
     addressEncoding: 5,
     schedulerBlockProvider: 'Local',
-    chainEd: 'LowEd',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },

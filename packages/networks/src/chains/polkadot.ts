@@ -42,7 +42,6 @@ export const polkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     feeExtractor: standardFeeExtractor,
   },
 })
@@ -58,7 +57,6 @@ export const kusama = defineChain({
     addressEncoding: 2,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'LowEd',
     feeExtractor: standardFeeExtractor,
   },
 })

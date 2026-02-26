@@ -2431,10 +2431,9 @@ async function transferKeepAliveSelfSuccessTest<
 /**
  * Test that `transfer_keep_alive` fails when trying to transfer below ED.
  *
- * 1. Create account, Alice, with 100 ED
- * 2. Attempt to transfer 99 ED to Bob
- *    - this would leave Alice with 1 ED minus fees, which would be below ED
- * 3. Verify that the transaction fails
+ * 1. Create account, Alice, with 10000 ED (large enough for both low and normal ED chains)
+ * 2. Calculate transfer amount that would leave Alice with ED - 1 after fees
+ * 3. Verify that the transaction fails with NotExpendable error
  * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
  */
 async function transferKeepAliveBelowEdTest<
@@ -2446,17 +2445,17 @@ async function transferKeepAliveBelowEdTest<
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const aliceBalance = existentialDeposit * 10000n // 10000 ED for chain agnosticism
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // 2. Try to transfer an amount that leaves Alice with less than ED after fees
+  // 2. Calculate transfer amount that would leave Alice with ED - 1 after fees
 
-  // First, estimate the fee
-  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, existentialDeposit * 99n)
+  // First, estimate the fee with a dummy transaction
+  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, existentialDeposit * 9999n)
   const paymentInfo = await dummyTransferTx.paymentInfo(alice)
   const estimatedFee = paymentInfo.partialFee.toBigInt()
 
@@ -2521,17 +2520,15 @@ async function transferKeepAliveBelowEdTest<
 }
 
 /**
- * Test that `transfer_keep_alive` fails, on low ED chains, when trying to transfer below ED.
+ * This test calculates the exact fee and attempts to transfer, using `transfer_keep_alive`, slightly more than what's
+ * available after accounting for fees, ensuring `FundsUnavailable` error on all chains.
  *
- * Low ED here means that the ED is below a typical transfer fee.
- *
- * 1. Create account, Alice, with 100 ED
- * 2. Attempt to transfer 99 ED to Bob
- *    - this would leave Alice with roughly 1 ED minus fees
- * 3. Verify that the transaction fails
- * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
+ * 1. Create account, Alice, with 10000 ED
+ * 2. Calculate fee and attempt to transfer (free balance - fee + small amount)
+ * 3. Verify that the transaction fails with `FundsUnavailable`
+ * 4. Check that Bob's account was not endowed, and that Alice's only lost fees
  */
-async function transferKeepAliveBelowEdLowEdTest<
+async function transferKeepAliveExceedBalanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -2540,22 +2537,28 @@ async function transferKeepAliveBelowEdLowEdTest<
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const aliceBalance = existentialDeposit * 10000n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // 2. Try to transfer 99 ED from Alice to Bob (would leave Alice with insufficient funds after fees)
+  // 2. Calculate fee and try to transfer slightly more than available (balance - fee + ED)
 
-  const transferAmount = existentialDeposit * 99n
+  // First, estimate the fee with a dummy transaction
+  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, aliceBalance / 2n)
+  const paymentInfo = await dummyTransferTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Try to transfer: balance - fee + ED (which exceeds available funds)
+  const transferAmount = aliceBalance - estimatedFee + existentialDeposit
   const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
   await sendTransaction(transferKeepAliveTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // 3. Verify that the transaction failed
+  // 3. Verify that the transaction failed with FundsUnavailable
 
   const events = await client.api.query.system.events()
   const failedEvent = events.find((record) => {
@@ -3746,21 +3749,22 @@ async function burnTestWithReaping<
 
   // 4. Verify that the total issuance is decreased by the amount burned and dust
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  // TODO: Bifrost Polkadot doesn't remove dust from total issuance when accounts are reaped
-  // For bifrostPolkadot, total issuance only decreases by burn amount (not burn + dust)
-  const isBifrostPolkadot = chain.name === 'bifrostPolkadot'
-  const expectedDecrease = isBifrostPolkadot ? burnAmount : burnAmount + (existentialDeposit - 1n)
+  // TODO: Bifrost Polkadot/Kusama doesn't remove dust from total issuance when accounts are reaped
+  // For Bifrost, total issuance only decreases by burn amount (not burn + dust)
+  const isBifrost = chain.name.includes('bifrost')
+  const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
 
 /**
  * Test that burning with `keep_alive` set to `true` prevents burning below ED.
  *
- * 1. Create Alice with 1000 ED
- * 2. Attempt to burn 999 ED with `keep_alive` set to `true`
- * 3. Verify that the transaction fails
- * 4. Verify that Alice's balance only decreases by transaction fees
- * 5. Verify that total issuance is unchanged
+ * 1. Create Alice with 10000 ED
+ * 2. Calculate burn amount that would leave Alice below ED after fees
+ * 3. Attempt to burn with `keep_alive` set to `true`
+ * 4. Verify that the transaction fails
+ * 5. Verify that Alice's balance only decreases by transaction fees
+ * 6. Verify that total issuance is unchanged
  */
 async function burnKeepAliveTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -3768,10 +3772,10 @@ async function burnKeepAliveTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Create Alice with 1000 ED
+  // 1. Create Alice with 10000 ED (large enough for both low and normal ED chains)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const initialBalance = existentialDeposit * 1000n
+  const initialBalance = existentialDeposit * 10000n
   const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -3783,9 +3787,19 @@ async function burnKeepAliveTest<
 
   const cumulativeFees = new Map<string, bigint>()
 
-  // 2. Attempt to burn 999 ED with `keep_alive` set to `true`
+  // 2. Calculate burn amount that would leave Alice with ED - 1 after fees
 
-  const burnAmount = existentialDeposit * 999n
+  // First, estimate the fee with a dummy transaction
+  const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 9999n, true)
+  const paymentInfo = await dummyBurnTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate burn amount: finalBalance = initialBalance - burnAmount - fee = ED - 1n
+  // Therefore: burnAmount = initialBalance - fee - (ED - 1n)
+  const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
+
+  // 3. Attempt to burn with `keep_alive` set to `true`
+
   const burnTx = client.api.tx.balances.burn(burnAmount, true)
   await sendTransaction(burnTx.signAsync(alice))
 
@@ -3798,7 +3812,7 @@ async function burnKeepAliveTest<
     client.config.properties.feeExtractor,
   )
 
-  // 3. Verify that the transaction fails
+  // 4. Verify that the transaction fails
 
   const systemEvents = await client.api.query.system.events()
   const extrinsicFailedEvent = systemEvents.find((record) => {
@@ -3812,7 +3826,7 @@ async function burnKeepAliveTest<
   expect(dispatchError.isModule).toBe(false)
   expect(dispatchError.asToken.isFundsUnavailable).toBeTruthy()
 
-  // 4. Verify that Alice's balance only decreases by transaction fees
+  // 5. Verify that Alice's balance only decreases by transaction fees
 
   const aliceAccountAfter = await client.api.query.system.account(alice.address)
   const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
@@ -3821,7 +3835,7 @@ async function burnKeepAliveTest<
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFee)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
-  // 5. Verify that total issuance is unchanged
+  // 6. Verify that total issuance is unchanged
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
@@ -4308,169 +4322,6 @@ async function testLiquidityRestrictionForAction<
 /// Test Trees
 /// ----------
 
-/**
- * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
- */
-const commonTransferAllowDeathTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'transfer of some funds does not kill sender account',
-    testFn: () => transferAllowDeathNoKillTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer with insufficient funds fails',
-    testFn: () => transferAllowDeathInsufficientFundsTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain),
-  },
-]
-
-/**
- * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
- * fee.
- */
-const transferAllowDeathNormalEDTests = <
-  TCustom extends Record<string, unknown>,
-  TInitStoragesBase extends Record<string, Record<string, any>>,
->(
-  chain: Chain<TCustom, TInitStoragesBase>,
-): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: [
-    ...commonTransferAllowDeathTests(chain),
-
-    {
-      kind: 'test',
-      label: 'leaving an account below ED kills it',
-      testFn: () => transferAllowDeathTest(chain),
-    },
-    {
-      kind: 'test',
-      label: 'account with reserves is not reaped when transferring funds',
-      testFn: () => transferAllowDeathWithReserveTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
- */
-const transferAllowDeathLowEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: commonTransferAllowDeathTests(chain),
-})
-
-const commonTransferKeepAliveTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'transfer with insufficient funds fails',
-    testFn: () => transferKeepAliveInsufficientFundsTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer is a no-op',
-    testFn: () => transferKeepAliveSelfTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer with reasonable amount succeeds as no-op',
-    testFn: () => transferKeepAliveSelfSuccessTest(chain),
-  },
-]
-
-const lowEdTransferKeepAliveTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_keep_alive',
-  children: [
-    ...commonTransferKeepAliveTests(chain),
-    {
-      kind: 'test' as const,
-      label: 'transfer (keep alive) below existential deposit fails on low ED chains',
-      testFn: () => transferKeepAliveBelowEdLowEdTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests for `transfer_keep_alive` that require the chain's ED to be at least as large as the usual transaction fee.
- */
-const transferKeepAliveNormalEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_keep_alive',
-  children: [
-    ...commonTransferKeepAliveTests(chain),
-
-    {
-      kind: 'test',
-      label: 'transfer (keep alive) below existential deposit fails',
-      testFn: () => transferKeepAliveBelowEdTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests for `burn` that can run on any chain.
- */
-const commonBurnTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'burning funds from account works',
-    testFn: () => burnTestBaseCase(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'burning entire balance, or more than it, fails',
-    testFn: () => burnDoubleAttemptTest(chain),
-  },
-]
-
-/**
- * Tests for `burn` on low ED chains.
- */
-const burnLowEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: '`burn`',
-  children: commonBurnTests(chain),
-})
-
-/**
- * Tests for `burn` that require the chain's ED to be at least as large as the usual transaction fee.
- */
-const burnNormalEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: '`burn`',
-  children: [
-    ...commonBurnTests(chain),
-
-    {
-      kind: 'test',
-      label: 'burning funds below ED leads to account reaping',
-      testFn: () => burnTestWithReaping(chain),
-    },
-    {
-      kind: 'test' as const,
-      label: 'burning below ED with keep_alive is no-op',
-      testFn: () => burnKeepAliveTest(chain),
-    },
-    {
-      kind: 'test' as const,
-      label: 'burning from account with multisig deposit cannot reap it',
-      testFn: () => burnWithDepositTest(chain),
-    },
-  ],
-})
-
 export const accountsE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
@@ -4484,10 +4335,42 @@ export const accountsE2ETests = <
   label: testConfig.testSuiteName,
   children: [
     // `transfer_allow_death` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => transferAllowDeathLowEDTests(chain))
-      .with('Normal', () => transferAllowDeathNormalEDTests(chain))
-      .otherwise(() => transferAllowDeathNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: 'transfer_allow_death',
+      children: [
+        {
+          kind: 'test',
+          label: 'transfer of some funds does not kill sender account',
+          testFn: () => transferAllowDeathNoKillTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer below existential deposit fails',
+          testFn: () => transferBelowExistentialDepositTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer with insufficient funds fails',
+          testFn: () => transferAllowDeathInsufficientFundsTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'self-transfer of entire balance',
+          testFn: () => transferAllowDeathSelfTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'leaving an account below ED kills it',
+          testFn: () => transferAllowDeathTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'account with reserves is not reaped when transferring funds',
+          testFn: () => transferAllowDeathWithReserveTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: '`force_transfer`',
@@ -4525,10 +4408,37 @@ export const accountsE2ETests = <
       ],
     },
     // `transfer_keep_alive` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => lowEdTransferKeepAliveTests(chain))
-      .with('Normal', () => transferKeepAliveNormalEDTests(chain))
-      .otherwise(() => transferKeepAliveNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: 'transfer_keep_alive',
+      children: [
+        {
+          kind: 'test' as const,
+          label: 'transfer with insufficient funds fails',
+          testFn: () => transferKeepAliveInsufficientFundsTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'self-transfer is a no-op',
+          testFn: () => transferKeepAliveSelfTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'self-transfer with reasonable amount succeeds as no-op',
+          testFn: () => transferKeepAliveSelfSuccessTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer (keep alive) below existential deposit fails',
+          testFn: () => transferKeepAliveBelowEdTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer exceeding available balance after fees fails',
+          testFn: () => transferKeepAliveExceedBalanceTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: '`transfer_all`',
@@ -4629,10 +4539,37 @@ export const accountsE2ETests = <
       ],
     },
     // `burn` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => burnLowEDTests(chain))
-      .with('Normal', () => burnNormalEDTests(chain))
-      .otherwise(() => burnNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: '`burn`',
+      children: [
+        {
+          kind: 'test' as const,
+          label: 'burning funds from account works',
+          testFn: () => burnTestBaseCase(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning entire balance, or more than it, fails',
+          testFn: () => burnDoubleAttemptTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'burning funds below ED leads to account reaping',
+          testFn: () => burnTestWithReaping(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning below ED with keep_alive is no-op',
+          testFn: () => burnKeepAliveTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning from account with multisig deposit cannot reap it',
+          testFn: () => burnWithDepositTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: 'currency tests',

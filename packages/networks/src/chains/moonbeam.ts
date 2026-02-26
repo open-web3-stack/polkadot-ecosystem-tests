@@ -56,7 +56,6 @@ export const moonbeam = defineChain({
   properties: {
     addressEncoding: 1284,
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
@@ -72,7 +71,6 @@ export const moonriver = defineChain({
   properties: {
     addressEncoding: 1285,
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
