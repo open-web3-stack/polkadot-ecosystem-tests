@@ -45,14 +45,14 @@ async function basicMultisigTest<
 
   // Fund test accounts
   await setupBalances(client, [
-    { address: alice.address, amount: 1000e10 },
-    { address: bob.address, amount: 1000e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 0 },
+    { address: alice.address, amount: 1000n * 10n ** 10n },
+    { address: bob.address, amount: 1000n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 0n },
   ])
 
   // Create a simple call to transfer funds to Dave from the 2-of-3 multisig
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
   // Alice creates a multisig with Bob and Charlie (threshold: 2)
@@ -103,7 +103,7 @@ async function basicMultisigTest<
   const multisigCallHash = newMultisigEventData.callHash
 
   // Funds the multisig account to execute the call
-  const multisigFunds = 101e10
+  const multisigFunds = 101n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // Approve the multisig call. This is the final approval, so `multisig.asMulti` is used.
@@ -146,7 +146,7 @@ async function basicMultisigTest<
 
   // Check that the multisig account has no funds
   const multisigAccount = await client.api.query.system.account(multisigAddress)
-  expect(multisigAccount.data.free.toNumber(), 'Multisig account should have no funds after multisig executes').toBe(
+  expect(multisigAccount.data.free.toBigInt(), 'Multisig account should have no funds after multisig executes').toBe(
     multisigFunds - transferAmount,
   )
 

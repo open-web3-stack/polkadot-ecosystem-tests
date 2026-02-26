@@ -132,10 +132,10 @@ async function multisigWithPureProxyTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 300e10 },
-    { address: charlie.address, amount: 300e10 },
-    { address: dave.address, amount: 0 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 300n * 10n ** 10n },
+    { address: charlie.address, amount: 300n * 10n ** 10n },
+    { address: dave.address, amount: 0n },
   ])
 
   // Check that Bob has no reserved funds.
@@ -156,7 +156,7 @@ async function multisigWithPureProxyTest<
   expect(bobReservedFunds, 'Bob should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // Create a simple call to transfer funds to Dave from the 2-of-3 multisig.
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
   // 2. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
@@ -197,7 +197,7 @@ async function multisigWithPureProxyTest<
   )
 
   // Funds the multisig account to execute the call.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Prepare the second multisig approval call. As this is the final approval, `multisig.asMulti` is used.
@@ -281,14 +281,14 @@ async function multisigAsStandardProxyTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 200e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 200n * 10n ** 10n },
   ])
 
   // The proxy call to transfer funds to Charlie.
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
   const proxyTx = client.api.tx.proxy.proxy(dave.address, null, transferCall)
 
@@ -329,7 +329,7 @@ async function multisigAsStandardProxyTest<
   )
 
   // Funds the multisig account to execute the call.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Dave should have no reserved funds yet.
@@ -423,11 +423,11 @@ async function multisigWithPureProxyMultisigTest<
   const eve = testAccounts.eve
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 300e10 },
-    { address: dave.address, amount: 0 },
-    { address: eve.address, amount: 100e10 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 300n * 10n ** 10n },
+    { address: dave.address, amount: 0n },
+    { address: eve.address, amount: 100n * 10n ** 10n },
   ])
 
   // 1. Charlie creates a pure proxy on his behalf.
@@ -447,7 +447,7 @@ async function multisigWithPureProxyMultisigTest<
   const primarymaxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
   let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], chain.properties.addressEncoding)
 
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
   // The first and last approvals require an encoded call, while any intermediate approvals require a hash.
@@ -483,7 +483,7 @@ async function multisigWithPureProxyMultisigTest<
   )
 
   // Fund the multisig account.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: primaryMultisigAddress, amount: transferAmount + extraFunds }])
 
   // Define the second (and last) approval call for the primary multisig.
@@ -594,9 +594,9 @@ async function cancelMultisigWithPureProxyTest<
   const charlie = testAccounts.charlie
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 0 },
-    { address: charlie.address, amount: 0 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 0n },
+    { address: charlie.address, amount: 0n },
   ])
 
   // 1. Alice creates a pure proxy.
@@ -613,11 +613,11 @@ async function cancelMultisigWithPureProxyTest<
   expect(aliceReservedFunds, 'Alice should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // Create a simple call to transfer funds to Charlie from the 2-of-3 multisig.
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
   // Fund the pure proxy account to cover multisig deposit.
-  await setupBalances(client, [{ address: pureProxyAddress, amount: 100e10 }])
+  await setupBalances(client, [{ address: pureProxyAddress, amount: 100n * 10n ** 10n }])
 
   // 1. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
@@ -713,14 +713,14 @@ async function multisigAsStandardProxyAnnouncementTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 100e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 100n * 10n ** 10n },
   ])
 
   // The call to transfer funds to Alice.
-  const transferAmount: number = 10e10
+  const transferAmount = 10e10
   const transferCall = client.api.tx.balances.transferKeepAlive(alice.address, transferAmount)
 
   const announceTx = client.api.tx.proxy.announce(dave.address, transferCall.method.hash)
@@ -757,7 +757,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   )
 
   // Funds the multisig account in order to execute the call.
-  const multisigFunds = 100e10
+  const multisigFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // 2. Dave nominates the multisig as his standard proxy.
@@ -950,14 +950,14 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 200e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 200n * 10n ** 10n },
   ])
 
   // The call to transfer funds to Alice.
-  const transferAmount: number = 50e10
+  const transferAmount = 50e10
   const transferCall = client.api.tx.balances.transferKeepAlive(alice.address, transferAmount)
 
   const announceTx = client.api.tx.proxy.announce(dave.address, transferCall.method.hash)
@@ -988,7 +988,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   )
 
   // Funds the multisig account in order to execute the call.
-  const multisigFunds = 100e10
+  const multisigFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // 2. Dave nominates the multisig as his standard proxy with a delay.
