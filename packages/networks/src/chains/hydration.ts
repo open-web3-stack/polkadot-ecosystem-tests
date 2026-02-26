@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519 } from '../testAccounts.js'
 
 const custom = {
@@ -31,7 +32,7 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
 export const hydration = defineChain({
   name: 'hydration',
   paraId: 2034,
-  endpoint: ['wss://hydration.ibp.network', 'wss://rpc.hydradx.cloud'],
+  endpoint: endpoints.hydration,
   networkGroup: 'polkadot',
   custom: custom.hydration,
   initStorages: getInitStorages(custom.hydration),
@@ -47,7 +48,7 @@ export const hydration = defineChain({
 export const basilisk = defineChain({
   name: 'basilisk',
   paraId: 2090,
-  endpoint: ['wss://basilisk-rpc.n.dwellir.com', 'wss://rpc.basilisk.cloud'],
+  endpoint: endpoints.basilisk,
   networkGroup: 'kusama',
   custom: custom.basilisk,
   initStorages: getInitStorages(custom.basilisk),

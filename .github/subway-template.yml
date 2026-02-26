@@ -1,9 +1,6 @@
 extensions:
   client:
-    endpoints:
-      - wss://acala.ibp.network
-      - wss://acala-rpc-1.aca-api.network
-      - wss://acala-rpc.n.dwellir.com
+    endpoints: {{ENDPOINTS}}
     shuffle_endpoints: true
   event_bus:
   substrate_api:

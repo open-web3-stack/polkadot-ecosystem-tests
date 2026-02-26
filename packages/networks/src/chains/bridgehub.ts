@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -24,7 +25,7 @@ const getInitStorages = (_config: typeof custom.bridgeHubPolkadot | typeof custo
 
 export const bridgeHubPolkadot = defineChain({
   name: 'bridgeHubPolkadot',
-  endpoint: 'wss://sys.ibp.network/bridgehub-polkadot',
+  endpoint: endpoints.bridgeHubPolkadot,
   paraId: 1002,
   networkGroup: 'polkadot',
   custom: custom.bridgeHubPolkadot,
@@ -41,7 +42,7 @@ export const bridgeHubPolkadot = defineChain({
 
 export const bridgeHubKusama = defineChain({
   name: 'bridgeHubKusama',
-  endpoint: 'wss://kusama-bridge-hub-rpc.polkadot.io',
+  endpoint: endpoints.bridgeHubKusama,
   paraId: 1002,
   networkGroup: 'kusama',
   custom: custom.bridgeHubKusama,
