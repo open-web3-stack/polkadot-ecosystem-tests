@@ -97,3 +97,17 @@ exports[`Polkadot Asset Hub Preimage > failure tests > preimage repeated note an
 exports[`Polkadot Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > request preimage events 1`] = `[]`;
 
 exports[`Polkadot Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > unrequest preimage events 1`] = `[]`;
+
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage size limit test > note max size preimage events (pallet limit binds) 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Preimage > failure tests > preimage size limit test > note oversized preimage events (pallet limit binds) 1`] = `[]`;
