@@ -51,7 +51,7 @@ async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType
   expect(errorType.is(dispatchError.asModule)).toBeTruthy()
 }
 
-const SPEND_AMOUNT = 10e10
+const REMARK_DATA = '0xdeadbeef'
 
 /**
  * Test the registering, querying and unregistering a preimage.
@@ -68,7 +68,7 @@ export async function preimageSingleNoteUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(testAccounts.alice))
 
@@ -113,7 +113,7 @@ export async function preimageSingleRequestUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -161,7 +161,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -298,7 +298,7 @@ export async function preimageNoteThenRequestTest<
   setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
 
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -398,7 +398,7 @@ export async function preimageRequestAndUnnoteTest<
   setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
 
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -484,7 +484,7 @@ export async function preimageRequestThenNoteTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -575,7 +575,7 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const requestTx = client.api.tx.preimage.requestPreimage(encodedProposal.hash.toHex())
 
   const requestPreimageEvents = await sendTransaction(requestTx.signAsync(testAccounts.alice))
@@ -634,7 +634,7 @@ export async function preimageRepeatedNoteUnnoteTest<
   setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
 
@@ -880,7 +880,9 @@ async function preimageEnsureUpdatedTest<
 
   // 2. Bob registers a number of unrequested preimages
   for (let i = 1; i <= newPreimagesCount; i++) {
-    const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT + i, testAccounts.bob.address).method
+    const encodedProposal = client.api.tx.system.remarkWithEvent(
+      `${REMARK_DATA}${i.toString(16).padStart(2, '0')}`,
+    ).method
     const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
     await sendTransaction(notePreimageTx.signAsync(testAccounts.bob, { nonce: bobNonce++ }))
 
