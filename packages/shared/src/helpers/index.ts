@@ -10,7 +10,7 @@ import type { EventRecord } from '@polkadot/types/interfaces'
 import type { FrameSystemAccountInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
 import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
-import type { HexString } from '@polkadot/util/types'
+import type { HexString, ToBigInt } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
@@ -570,17 +570,17 @@ export function sortAddressesByBytes(addresses: string[], addressEncoding: numbe
 /**
  * Get the free funds of an account.
  */
-export async function getFreeFunds(client: Client<any, any>, address: any): Promise<number> {
+export async function getFreeFunds(client: Client<any, any>, address: any): Promise<bigint> {
   const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.free.toNumber()
+  return account.data.free.toBigInt()
 }
 
 /**
  * Get the reserved funds of an account.
  */
-export async function getReservedFunds(client: Client<any, any>, address: any): Promise<number> {
+export async function getReservedFunds(client: Client<any, any>, address: any): Promise<bigint> {
   const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.reserved.toNumber()
+  return account.data.reserved.toBigInt()
 }
 
 /**
