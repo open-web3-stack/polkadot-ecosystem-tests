@@ -135,7 +135,7 @@ async function basicMultisigTest<
 
   // Dave should now have some funds
   daveAccount = await client.api.query.system.account(dave.address)
-  expect(daveAccount.data.free.toNumber(), 'Dave should have some funds after multisig executes').toBe(transferAmount)
+  expect(daveAccount.data.free.toBigInt(), 'Dave should have some funds after multisig executes').toBe(transferAmount)
 
   // Check that Bob was not required to deposit anything, as he was not the first signatory.
   const bobAccount = await client.api.query.system.account(bob.address)
