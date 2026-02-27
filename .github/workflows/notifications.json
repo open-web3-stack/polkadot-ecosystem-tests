@@ -5,7 +5,8 @@
 	"coretimeKusama": 132,
 	"kusama": 133,
 	"shiden": 134,
-	"people": 135,
+	"peopleKusama": 135,
+	"peoplePolkadot": 540,
 	"acala": 136,
 	"assetHubPolkadot": 137,
 	"astar": 138,
@@ -16,6 +17,8 @@
 	"collectivesPolkadot": 192,
 	"bridgeHubPolkadot": 207,
 	"bridgeHubKusama": 208,
-	"encointer": 367,
+	"bifrostKusama": 541,
+	"bifrostPolkadot": 539,
+	"encointerKusama": 367,
 	"unknown": 143
 }
