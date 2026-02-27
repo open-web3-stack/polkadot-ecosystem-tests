@@ -10,7 +10,7 @@ import type { EventRecord } from '@polkadot/types/interfaces'
 import type { FrameSystemAccountInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
 import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
-import type { HexString, ToBigInt } from '@polkadot/util/types'
+import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
