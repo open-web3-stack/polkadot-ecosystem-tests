@@ -795,10 +795,14 @@ async function transferAllowDeathNoKillTest<
   // Alice should have her original balance minus the transfer amount minus fees
   expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - transferAmount - feeInfo.actualFee)
 
-  // Check events - verify NO KilledAccount events are present
+  // Check events - verify NO KilledAccount event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1016,10 +1020,14 @@ async function transferAllowDeathWithReserveTest<
 
   // 5. Check events
 
-  // Verify NO KilledAccount events are present
+  // Verify NO KilledAccount event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1084,22 +1092,34 @@ async function transferAllowDeathSelfTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
-  // Check no killing/creation related events occurred
+  // Check no killing/creation related events occurred for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeUndefined()
 
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeUndefined()
 }
@@ -1619,10 +1639,14 @@ async function forceTransferWithReserveTest<
 
   const events = await baseClient.api.query.system.events()
 
-  // Verify no `KilledAccount` events are present
+  // Verify no `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1778,17 +1802,25 @@ async function forceTransferSelfTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(baseClient.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -1866,10 +1898,14 @@ async function transferAllKeepAliveTrueTest<
 
   // 4. Check events
 
-  // No `KilledAccount` events
+  // No `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -2092,10 +2128,14 @@ async function transferAllWithReserveTest<
   expect(endowedEventData.freeBalance.toBigInt()).toBe(bobAccount.data.free.toBigInt())
   expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
 
-  // Verify no `KilledAccount˝ events are present
+  // Verify no `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -2181,17 +2221,25 @@ async function transferAllSelfKeepAliveTrueTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -2260,17 +2308,25 @@ async function transferAllSelfKeepAliveFalseTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -2420,10 +2476,14 @@ async function transferKeepAliveSelfSuccessTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 }
@@ -2504,7 +2564,11 @@ async function transferKeepAliveBelowEdTest<
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
@@ -2593,7 +2657,11 @@ async function transferKeepAliveExceedBalanceTest<
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
@@ -2721,12 +2789,16 @@ async function forceUnreserveNoReservesTest<
     await baseClient.dev.newBlock()
   }
 
-  // 3. Verify no `balances.Unreserved` event is emitted
+  // 3. Verify no `balances.Unreserved` event for Alice
 
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(unreservedEvent).toBeUndefined()
 
@@ -2811,11 +2883,15 @@ async function forceUnreserveNonExistentAccountTest<
     await baseClient.dev.newBlock()
   }
 
-  // 3. Verify no `balances.Unreserved` event is emitted
+  // 3. Verify no `balances.Unreserved` event for Bob
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(unreservedEvent).toBeUndefined()
 
@@ -3751,7 +3827,7 @@ async function burnTestWithReaping<
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   // TODO: Bifrost Polkadot/Kusama doesn't remove dust from total issuance when accounts are reaped
   // For Bifrost, total issuance only decreases by burn amount (not burn + dust)
-  const isBifrost = chain.name.includes('bifrost')
+  const isBifrost = chain.name.includes('bifrost') || chain.name.startsWith('kusama')
   const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
@@ -3840,10 +3916,14 @@ async function burnKeepAliveTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned event was emitted
+  // Verify no Burned event for Alice
   const burnEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeUndefined()
 }
@@ -3959,18 +4039,26 @@ async function burnWithDepositTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify Burned event was not emitted
+  // Verify Burned event was not emitted for Alice
   const systemEvents = await client.api.query.system.events()
   const burnEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeUndefined()
 
-  // Verify no KilledAccount event was emitted
+  // Verify no KilledAccount event for Alice
   const killedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 }
@@ -4074,10 +4162,14 @@ async function burnDoubleAttemptTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned events were emitted
+  // Verify no Burned event for Alice
   const burnEvents = systemEvents.filter((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvents).toHaveLength(0)
 }
