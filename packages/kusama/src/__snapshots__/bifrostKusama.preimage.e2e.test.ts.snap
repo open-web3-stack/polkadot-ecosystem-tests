@@ -84,4 +84,14 @@ exports[`Bifrost Kusama Preimage > failure tests > preimage single request and u
 
 exports[`Bifrost Kusama Preimage > failure tests > preimage single request and unrequest test as non-root > unrequest preimage events 1`] = `[]`;
 
-exports[`Bifrost Kusama Preimage > failure tests > preimage size limit test > note fitting preimage events (block limit binds) 1`] = `[]`;
+exports[`Bifrost Kusama Preimage > failure tests > preimage size limit test > note fitting preimage events (block limit binds) 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;

@@ -379,7 +379,7 @@ export async function preimageNoteThenRequestTest<
 
   // All of Alice's reserved funds have been released after the preimage was unnoted.
   const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterUnnote).toBe(0)
+  expect(aliceReservedFundsAfterUnnote).toBe(0n)
 }
 
 /**
@@ -453,7 +453,7 @@ export async function preimageRequestAndUnnoteTest<
   expect(status.unwrap().type).toBe('Requested')
 
   const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterUnnote).toBe(0)
+  expect(aliceReservedFundsAfterUnnote).toBe(0n)
 
   // 4. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
@@ -519,7 +519,7 @@ export async function preimageRequestThenNoteTest<
 
   // No funds should be reserved from Alice's acount since the preimage has already been requested.
   const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterNote).toBe(0)
+  expect(aliceReservedFundsAfterNote).toBe(0n)
 
   let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isSome)
@@ -778,7 +778,7 @@ async function preimageSizeLimitTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 150_000n * 10n ** 12n }])
+  setupBalances(client, [{ address: alice.address, amount: 500_000n * 10n ** 12n }])
 
   const blockLength = client.api.consts.system.blockLength as any
   const normalBlockLimit: number = blockLength.max.normal.toNumber()
