@@ -3825,9 +3825,9 @@ async function burnTestWithReaping<
 
   // 4. Verify that the total issuance is decreased by the amount burned and dust
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  // TODO: Bifrost Polkadot/Kusama doesn't remove dust from total issuance when accounts are reaped
-  // For Bifrost, total issuance only decreases by burn amount (not burn + dust)
-  const isBifrost = chain.name.includes('bifrost') || chain.name.startsWith('kusama')
+  // TODO: Bifrost (Polkadot/Kusama) doesn't remove dust from total issuance when accounts are reaped
+  // In them, total issuance only decreases by burn amount (not burn + dust).
+  const isBifrost = chain.name.includes('bifrost')
   const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
