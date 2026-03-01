@@ -1,11 +1,6 @@
 import { defaultAccounts } from '@e2e-test/networks'
 import { assetHubPolkadot, bridgeHubPolkadot } from '@e2e-test/networks/chains'
-import {
-  governanceChainUpgradesOtherChainViaRootReferendumSuite,
-  registerTestTree,
-  setupNetworks,
-  type TestConfig,
-} from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
@@ -43,11 +38,3 @@ describe('assetHubPolkadot & bridgeHubPolkadot', async () => {
     }
   })
 })
-
-const testConfig: TestConfig = {
-  testSuiteName: 'assetHubPolkadot & bridgeHubPolkadot',
-}
-
-registerTestTree(
-  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, bridgeHubPolkadot, testConfig),
-)

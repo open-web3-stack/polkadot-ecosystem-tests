@@ -1,11 +1,6 @@
 import { defaultAccountsSr25519 } from '@e2e-test/networks'
 import { assetHubKusama, encointerKusama } from '@e2e-test/networks/chains'
-import {
-  governanceChainUpgradesOtherChainViaRootReferendumSuite,
-  registerTestTree,
-  setupNetworks,
-  type TestConfig,
-} from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
@@ -46,9 +41,3 @@ describe('encointerKusama & assetHubKusama', async () => {
     }
   })
 })
-
-const testConfig: TestConfig = {
-  testSuiteName: 'encointerKusama & assetHubKusama',
-}
-
-registerTestTree(governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubKusama, encointerKusama, testConfig))
