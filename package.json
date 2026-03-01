@@ -52,7 +52,7 @@
 		"@vitest/ui": "^4.0.14",
 		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.2.7",
+		"lint-staged": "^16.3.1",
 		"tsx": "^4.21.0",
 		"unplugin-swc": "^1.5.9",
 		"vite-tsconfig-paths": "^5.1.4"
