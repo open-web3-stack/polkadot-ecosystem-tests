@@ -175,20 +175,6 @@ jobs:
               })
               .filter(Boolean);
 
-            const impactedNetworks = new Set()
-            const regex = /(\w+)\.(\w+)?(\.\w+)?\.test/
-            for (const test of failedTests) {
-              const match = test.match(regex)
-              if (match) {
-                impactedNetworks.add(match[1])
-                if (match[2] && match[2] !== "e2e" && match[3] !== ".e2e") {
-                  impactedNetworks.add(match[2])
-                }
-              } else {
-                impactedNetworks.add("unknown")
-              }
-            }
-
             const { data: config } = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -197,6 +183,20 @@ jobs:
             })
 
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
+
+            const impactedNetworks = new Set()
+            for (const test of failedTests) {
+              const filename = test.split('/').pop()
+              const segments = filename.replace(/\.test\.ts$/, '').split('.')
+              const chains = segments.filter(s => notifications[s] !== undefined)
+              if (chains.length === 0) {
+                impactedNetworks.add("unknown")
+              } else {
+                for (const chain of chains) {
+                  impactedNetworks.add(chain)
+                }
+              }
+            }
 
             const issuesToNotify = new Set()
             for (const network of impactedNetworks) {
