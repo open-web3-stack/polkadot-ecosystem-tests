@@ -17,39 +17,31 @@ describe('assetHubKusama & peopleKusama', async () => {
   const peopleKSM = peopleKusama.custom.ksm
   const kusamaKSM = assetHubKusama.custom.ksm
 
-  runXcmPalletHorizontal(
-    'assetHubKusama transfer KSM to peopleKusama',
-    async () => {
-      return {
-        fromChain: assetHubKusamaClient,
-        toChain: peopleClient,
-        fromBalance: query.balances,
-        toBalance: query.balances,
-        toAccount: defaultAccounts.dave,
-        tx: tx.xcmPallet.limitedTeleportAssets(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(1, peopleKusama.paraId!)),
-      }
-    },
-    { skip: true },
-  )
+  runXcmPalletHorizontal('assetHubKusama transfer KSM to peopleKusama', async () => {
+    return {
+      fromChain: assetHubKusamaClient,
+      toChain: peopleClient,
+      fromBalance: query.balances,
+      toBalance: query.balances,
+      toAccount: defaultAccounts.dave,
+      tx: tx.xcmPallet.limitedTeleportAssets(kusamaKSM, 1e12, tx.xcmPallet.parachainV3(1, peopleKusama.paraId!)),
+    }
+  })
 
-  runXcmPalletHorizontal(
-    'peopleKusama transfer KSM to assetHubKusama',
-    async () => {
-      return {
-        fromChain: peopleClient,
-        toChain: assetHubKusamaClient,
-        fromBalance: query.balances,
-        toBalance: query.balances,
-        toAccount: defaultAccounts.dave,
-        tx: tx.xcmPallet.limitedTeleportAssets(
-          peopleKSM,
-          1e12,
-          tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
-        ),
-      }
-    },
-    { skip: true },
-  )
+  runXcmPalletHorizontal('peopleKusama transfer KSM to assetHubKusama', async () => {
+    return {
+      fromChain: peopleClient,
+      toChain: assetHubKusamaClient,
+      fromBalance: query.balances,
+      toBalance: query.balances,
+      toAccount: defaultAccounts.dave,
+      tx: tx.xcmPallet.limitedTeleportAssets(
+        peopleKSM,
+        1e12,
+        tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
+      ),
+    }
+  })
 })
 
 const testConfig: TestConfig = {

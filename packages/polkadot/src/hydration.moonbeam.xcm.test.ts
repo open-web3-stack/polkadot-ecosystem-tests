@@ -1,5 +1,5 @@
 import { defaultAccounts } from '@e2e-test/networks'
-import { hydration, moonbeam, polkadot } from '@e2e-test/networks/chains'
+import { assetHubPolkadot, hydration, moonbeam } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
@@ -10,7 +10,11 @@ describe(
   'hydration & moonbeam',
   { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
   async () => {
-    const [hydrationClient, moonbeamClient, polkadotClient] = await setupNetworks(hydration, moonbeam, polkadot)
+    const [hydrationClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(
+      hydration,
+      moonbeam,
+      assetHubPolkadot,
+    )
 
     const hydrationDot = hydration.custom.relayToken
     const moonbeamDot = moonbeam.custom.dot
@@ -26,8 +30,7 @@ describe(
         toBalance: query.assets(moonbeamDot),
         toAccount: defaultAccounts.alith,
 
-        routeChain: polkadotClient,
-        isCheckUmp: true,
+        routeChain: assetHubPolkadotClient,
 
         tx: tx.xtokens.transfer(hydrationDot, 2e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
       }
@@ -49,8 +52,7 @@ describe(
         toBalance: query.tokens(hydrationDot),
         toAccount: defaultAccounts.bob,
 
-        routeChain: polkadotClient,
-        isCheckUmp: true,
+        routeChain: assetHubPolkadotClient,
 
         tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmDot, 2e10, tx.xcmPallet.parachainV3(1, hydration.paraId!)),
       }
@@ -67,7 +69,6 @@ describe(
         fromChain: hydrationClient,
         fromBalance: query.tokens(glmr),
         fromAccount: defaultAccounts.alice,
-        routeChain: polkadotClient,
         toChain: moonbeamClient,
         toBalance: query.balances,
         toAccount: defaultAccounts.baltathar,

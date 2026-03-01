@@ -1,5 +1,342 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
+{
+  "free": 9000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 1000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 500000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": 1000,
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > balance on from chain 1`] = `
+{
+  "free": 9000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": 0,
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 0,
+  "sufficients": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "limited": {
+                  "proofSize": 10000,
+                  "refTime": 5000000000,
+                },
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": false,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 500000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": 1000,
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
 exports[`acala & assetHubPolkadot > acala transfer ETH to assetHubPolkadot > balance on from chain 1`] = `
 {
   "free": 900000000000000000,
@@ -469,6 +806,35 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > tx
   },
 ]
 `;
+
+exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 10000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > balance on to chain 1`] = `
+{
+  "free": 0,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > from chain hrmp messages 1`] = `[]`;
+
+exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > to chain xcm events 1`] = `[]`;
+
+exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > tx events 1`] = `[]`;
 
 exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > balance on from chain 1`] = `
 {

@@ -1,5 +1,5 @@
 import { defaultAccounts } from '@e2e-test/networks'
-import { acala, moonbeam, polkadot } from '@e2e-test/networks/chains'
+import { acala, assetHubPolkadot, moonbeam } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
@@ -10,7 +10,7 @@ describe(
   'acala & moonbeam',
   { skip: true }, // TODO: until we figured out how to query balances on Moonbeam again
   async () => {
-    const [acalaClient, moonbeamClient, polkadotClient] = await setupNetworks(acala, moonbeam, polkadot)
+    const [acalaClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(acala, moonbeam, assetHubPolkadot)
 
     const acalaDot = acala.custom.dot
     const moonbeamDot = moonbeam.custom.dot
@@ -25,8 +25,7 @@ describe(
         toBalance: query.assets(moonbeamDot),
         toAccount: defaultAccounts.alith,
 
-        routeChain: polkadotClient,
-        isCheckUmp: true,
+        routeChain: assetHubPolkadotClient,
 
         tx: tx.xtokens.transfer(acalaDot, 1e12, tx.xtokens.parachainAccountId20V3(moonbeam.paraId!)),
       }
@@ -48,8 +47,7 @@ describe(
         toBalance: query.tokens(acalaDot),
         toAccount: defaultAccounts.alice,
 
-        routeChain: polkadotClient,
-        isCheckUmp: true,
+        routeChain: assetHubPolkadotClient,
 
         tx: tx.xcmPallet.transferAssetsV3(moonbeam.custom.xcmDot, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
       }

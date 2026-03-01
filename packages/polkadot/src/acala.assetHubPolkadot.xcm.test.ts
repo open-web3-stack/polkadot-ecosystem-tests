@@ -9,6 +9,41 @@ import { describe } from 'vitest'
 describe('acala & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, acalaClient] = await setupNetworks(assetHubPolkadot, acala)
 
+  const acalaDOT = acala.custom.dot
+  const assetHubDOT = assetHubPolkadot.custom.dot
+
+  runXcmPalletHorizontal('assetHubPolkadot transfer DOT to acala', async () => {
+    return {
+      fromChain: assetHubPolkadotClient,
+      toChain: acalaClient,
+      fromBalance: query.balances,
+      toBalance: query.tokens(acalaDOT),
+      tx: tx.xcmPallet.limitedReserveTransferAssetsV3(assetHubDOT, 1e12, tx.xcmPallet.parachainV3(1, acala.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('acala transfer DOT to assetHubPolkadot', async () => {
+    return {
+      fromChain: acalaClient,
+      toChain: assetHubPolkadotClient,
+      fromBalance: query.tokens(acalaDOT),
+      toBalance: query.balances,
+      tx: tx.xtokens.transfer(acalaDOT, 1e12, tx.xtokens.parachainV3(assetHubPolkadot.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('acala transfer DOT to assetHubPolkadot with limited weight', async () => {
+    return {
+      fromChain: acalaClient,
+      toChain: assetHubPolkadotClient,
+      fromBalance: query.tokens(acalaDOT),
+      toBalance: query.balances,
+      tx: tx.xtokens.transfer(acalaDOT, 1e12, tx.xtokens.parachainV3(assetHubPolkadot.paraId!), {
+        Limited: { refTime: 5000000000, proofSize: 10000 },
+      }),
+    }
+  })
+
   runXcmPalletHorizontal('assetHubPolkadot transfer USDT to acala', async () => {
     return {
       fromChain: assetHubPolkadotClient,

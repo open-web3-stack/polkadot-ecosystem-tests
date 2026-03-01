@@ -11,6 +11,45 @@ describe('assetHubKusama & karura', async () => {
 
   const assetHubKusamaUsdt = assetHubKusama.custom.usdtIndex
   const karuraUsdt = karura.custom.usdt
+  const karuraKSM = karura.custom.ksm
+
+  runXcmPalletHorizontal('assetHubKusama transfer KSM to karura', async () => {
+    return {
+      fromChain: assetHubKusamaClient,
+      toChain: karuraClient,
+      fromBalance: query.balances,
+      toBalance: query.tokens(karuraKSM),
+      tx: tx.xcmPallet.transferAssetsUsingType(
+        tx.xcmPallet.parachainV4(1, karura.paraId!),
+        [{ id: { parents: 1, interior: 'Here' }, fun: { Fungible: 1e12 } }],
+        'LocalReserve',
+        { parents: 1, interior: 'Here' },
+        'LocalReserve',
+      ),
+    }
+  })
+
+  runXtokenstHorizontal('karura transfer KSM to assetHubKusama', async () => {
+    return {
+      fromChain: karuraClient,
+      toChain: assetHubKusamaClient,
+      fromBalance: query.tokens(karuraKSM),
+      toBalance: query.balances,
+      tx: tx.xtokens.transfer(karuraKSM, 1e12, tx.xtokens.parachainV4(assetHubKusama.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('karura transfer KSM to assetHubKusama with limited weight', async () => {
+    return {
+      fromChain: karuraClient,
+      toChain: assetHubKusamaClient,
+      fromBalance: query.tokens(karuraKSM),
+      toBalance: query.balances,
+      tx: tx.xtokens.transfer(karuraKSM, 1e12, tx.xtokens.parachainV4(assetHubKusama.paraId!), {
+        Limited: { refTime: 500000000, proofSize: 10000 },
+      }),
+    }
+  })
 
   runXcmPalletHorizontal('assetHubKusama transfer USDT to karura', async () => {
     return {

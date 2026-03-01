@@ -373,8 +373,8 @@ exports[`assetHubPolkadot & bridgeHubPolkadot > bridgeHubPolkadot transfer DOT t
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 7000)",
-        "refTime": "(rounded 600000000)",
+        "proofSize": "(rounded 9000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
