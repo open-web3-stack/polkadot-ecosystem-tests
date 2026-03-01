@@ -43,7 +43,7 @@
 		"lodash": "^4.17.23",
 		"ts-pattern": "^5.9.0",
 		"typescript": "^5.9.3",
-		"vitest": "^4.0.13"
+		"vitest": "^4.0.18"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.2",
