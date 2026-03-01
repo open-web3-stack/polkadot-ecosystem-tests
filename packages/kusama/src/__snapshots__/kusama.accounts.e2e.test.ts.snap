@@ -1,18 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Accounts > \`burn\` > burning funds below ED leads to account reaping > events for burn 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 330000000000)",
-      "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Burned",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Kusama Accounts > \`force_adjust_total_issuance\` > successful adjustments increase and decrease total issuance > events for first issuance change 1`] = `
 [
   {
