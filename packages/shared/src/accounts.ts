@@ -676,7 +676,11 @@ async function transferAllowDeathTest<
   // Check `Withdraw` event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -687,7 +691,11 @@ async function transferAllowDeathTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -704,7 +712,11 @@ async function transferAllowDeathTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -715,7 +727,11 @@ async function transferAllowDeathTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -727,7 +743,11 @@ async function transferAllowDeathTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -824,7 +844,11 @@ async function transferAllowDeathNoKillTest<
   // Verify withdraw event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -835,7 +859,11 @@ async function transferAllowDeathNoKillTest<
   // Verify endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -846,7 +874,11 @@ async function transferAllowDeathNoKillTest<
   // Verify `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
 }
@@ -912,7 +944,6 @@ async function transferBelowExistentialDepositTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 }
-
 /**
  * Insufficient funds checks for `transfer_allow_death`
  */
@@ -1259,7 +1290,11 @@ async function forceTransferKillTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(baseClient.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -1270,7 +1305,11 @@ async function forceTransferKillTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(baseClient.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -1281,7 +1320,11 @@ async function forceTransferKillTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -1293,7 +1336,11 @@ async function forceTransferKillTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(baseClient.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -1991,7 +2038,11 @@ async function transferAllKeepAliveFalseTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -2120,7 +2171,11 @@ async function transferAllWithReserveTest<
   // Check endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -3013,7 +3068,11 @@ async function forceUnreserveWithReservesTest<
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
 
   expect(unreservedEvent).toBeDefined()
@@ -3170,7 +3229,11 @@ async function forceSetBalanceSuccessTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3281,7 +3344,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3293,7 +3360,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a KilledAccount event was emitted
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -3732,7 +3803,11 @@ async function burnTestBaseCase<
   const eventsAfterBurn = await client.api.query.system.events()
   const burnEvent = eventsAfterBurn.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3803,7 +3878,11 @@ async function burnTestWithReaping<
   const events = await client.api.query.system.events()
   const burnEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3813,7 +3892,11 @@ async function burnTestWithReaping<
 
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -4384,7 +4467,11 @@ async function testLiquidityRestrictionForAction<
       const finalEvents = await client.api.query.system.events()
       const reservedEvent = finalEvents.find((record) => {
         const { event } = record
-        return event.section === 'balances' && event.method === 'Reserved'
+        if (event.section === 'balances' && event.method === 'Reserved') {
+          assert(client.api.events.balances.Reserved.is(event))
+          return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+        }
+        return false
       })
       expect(reservedEvent).toBeDefined()
       assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
