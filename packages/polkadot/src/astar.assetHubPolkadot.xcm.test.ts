@@ -5,7 +5,8 @@ import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/
 
 import { describe } from 'vitest'
 
-describe('astar & assetHubPolkadot', async () => {
+// TODO: Chopsticks WASM executor OOMs with Frontier EVM runtimes paired with post-AHM AssetHub
+describe.skip('astar & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, astarClient] = await setupNetworks(assetHubPolkadot, astar)
 
   const astarDOT = astar.custom.dot

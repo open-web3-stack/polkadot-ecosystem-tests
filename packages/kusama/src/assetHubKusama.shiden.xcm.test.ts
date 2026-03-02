@@ -5,7 +5,8 @@ import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/
 
 import { describe } from 'vitest'
 
-describe('assetHubKusama & shiden', async () => {
+// TODO: Chopsticks WASM executor OOMs with Frontier EVM runtimes paired with post-AHM AssetHub
+describe.skip('assetHubKusama & shiden', async () => {
   const [assetHubKusamaClient, shidenClient] = await setupNetworks(assetHubKusama, shiden)
 
   const shidenKSM = shiden.custom.ksm
