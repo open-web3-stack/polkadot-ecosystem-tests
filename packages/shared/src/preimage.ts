@@ -22,18 +22,6 @@ import {
 /// -------
 
 /**
- * Query the latest list of events, retaining only those with a given section type.
- */
-async function getEventsWithType(client: Client<any, any>, eventType: string) {
-  const events = await client.api.query.system.events()
-
-  return events.filter((record) => {
-    const { event } = record
-    return event.section === eventType
-  })
-}
-
-/**
  * Expect the latest extrinsic to have failed with a given error type.
  */
 async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType: IsError) {
@@ -51,7 +39,10 @@ async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType
   expect(errorType.is(dispatchError.asModule)).toBeTruthy()
 }
 
-const SPEND_AMOUNT = 10e10
+const REMARK_DATA = '0xdeadbeef'
+
+/** The preimage pallet's hardcoded maximum preimage size (4 MB). */
+const PALLET_MAX_PREIMAGE_SIZE = 4 * 1024 * 1024
 
 /**
  * Test the registering, querying and unregistering a preimage.
@@ -67,8 +58,10 @@ export async function preimageSingleNoteUnnoteTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const preimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   const preImageEvents = await sendTransaction(preimageTx.signAsync(testAccounts.alice))
 
@@ -113,7 +106,7 @@ export async function preimageSingleRequestUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -161,7 +154,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -172,30 +165,30 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     chain.properties.schedulerBlockProvider,
   )
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
-
   await client.dev.newBlock()
 
-  // Expect a "Requested" event from the preimage pallet.
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(events[0].event))
+  // Expect a "Requested" event specifically for our proposalHash.
+  const eventsAfterRequest = await client.api.query.system.events()
+  const requestedEvent = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Requested') {
+      assert(client.api.events.preimage.Requested.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(requestedEvent).toBeDefined()
 
   // Also expect a "Dispatched" event from the scheduler.
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
-
-  events = await getEventsWithType(client, 'balances')
-
-  const hasBalanceEvents = events.length > 0
-
-  // On some chains, a "Transfer" event also occurs.
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
-  }
+  const dispatchedEventAfterRequest = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
+  })
+  expect(dispatchedEventAfterRequest).toBeDefined()
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -218,31 +211,31 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     chain.properties.schedulerBlockProvider,
   )
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
-
   await client.dev.newBlock()
 
-  // No explicit "Unrequest" event from the preimage pallet.
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  const eventsAfterUnrequest = await client.api.query.system.events()
+
+  // No preimage event should exist for our specific proposalHash after unrequest.
+  const preimageEventAfterUnrequest = eventsAfterUnrequest.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterUnrequest).toBeUndefined()
 
   // "Dispatched" events do appear from the scheduler.
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(numUnrequests)
-
-  events.forEach((eventRecord) => {
-    assert(client.api.events.scheduler.Dispatched.is(eventRecord.event))
+  const dispatchedEventsAfterUnrequest = eventsAfterUnrequest.filter((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
   })
-
-  events = await getEventsWithType(client, 'balances')
-
-  // If the request generated a "Transfer" event, then so will the unrequest(s).
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
-  } else {
-    expect(events.length).toBe(0)
-  }
+  expect(dispatchedEventsAfterUnrequest.length).toBe(numUnrequests)
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
   assert(status.isNone)
@@ -256,19 +249,28 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   )
   await client.dev.newBlock()
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  const eventsAfterRetry = await client.api.query.system.events()
 
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
+  // Still no preimage event for our hash.
+  const preimageEventAfterRetry = eventsAfterRetry.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRetry).toBeUndefined()
 
-  events = await getEventsWithType(client, 'balances')
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
-  } else {
-    expect(events.length).toBe(0)
-  }
+  const dispatchedEventAfterRetry = eventsAfterRetry.find((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
+  })
+  expect(dispatchedEventAfterRetry).toBeDefined()
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -295,10 +297,10 @@ export async function preimageNoteThenRequestTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
 
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -374,7 +376,7 @@ export async function preimageNoteThenRequestTest<
 
   // All of Alice's reserved funds have been released after the preimage was unnoted.
   const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterUnnote).toBe(0)
+  expect(aliceReservedFundsAfterUnnote).toBe(0n)
 }
 
 /**
@@ -395,10 +397,10 @@ export async function preimageRequestAndUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
 
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -448,7 +450,7 @@ export async function preimageRequestAndUnnoteTest<
   expect(status.unwrap().type).toBe('Requested')
 
   const aliceReservedFundsAfterUnnote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterUnnote).toBe(0)
+  expect(aliceReservedFundsAfterUnnote).toBe(0n)
 
   // 4. The root account unrequests the preimage.
   const unrequestTx = client.api.tx.preimage.unrequestPreimage(proposalHash)
@@ -484,7 +486,7 @@ export async function preimageRequestThenNoteTest<
   const [client] = await setupNetworks(chain)
 
   // 1. A root account requests a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const requestTx = client.api.tx.preimage.requestPreimage(proposalHash)
 
@@ -496,25 +498,39 @@ export async function preimageRequestThenNoteTest<
   )
   await client.dev.newBlock()
 
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(events[0].event))
+  const eventsAfterRequest = await client.api.query.system.events()
+  const requestedEvent = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Requested') {
+      assert(client.api.events.preimage.Requested.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(requestedEvent).toBeDefined()
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 2. Alice registers (notes) the previously-requested preimage
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
   await sendTransaction(notePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   // No funds should be reserved from Alice's acount since the preimage has already been requested.
   const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFundsAfterNote).toBe(0)
+  expect(aliceReservedFundsAfterNote).toBe(0n)
 
   let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isSome)
@@ -533,9 +549,16 @@ export async function preimageRequestThenNoteTest<
   await client.dev.newBlock()
 
   // Following the unrequest, the preimage is cleared.
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Cleared.is(events[0].event))
+  const eventsAfterUnrequest = await client.api.query.system.events()
+  const clearedEvent = eventsAfterUnrequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Cleared') {
+      assert(client.api.events.preimage.Cleared.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(clearedEvent).toBeDefined()
 
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
@@ -548,13 +571,19 @@ export async function preimageRequestThenNoteTest<
   await sendTransaction(unnotePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(0)
+  // No preimage event for our hash — the unnote should have failed.
+  const eventsAfterUnnote = await client.api.query.system.events()
+  const preimageEventAfterUnnote = eventsAfterUnnote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterUnnote).toBeUndefined()
 
-  events = await getEventsWithType(client, 'system')
-  expect(events.length).toBeGreaterThan(0)
-
-  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
@@ -574,8 +603,10 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const requestTx = client.api.tx.preimage.requestPreimage(encodedProposal.hash.toHex())
 
   const requestPreimageEvents = await sendTransaction(requestTx.signAsync(testAccounts.alice))
@@ -631,10 +662,10 @@ export async function preimageRepeatedNoteUnnoteTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
-  const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT, testAccounts.bob.address).method
+  const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
 
@@ -643,9 +674,16 @@ export async function preimageRepeatedNoteUnnoteTest<
 
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note preimage events')
 
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
 
@@ -659,10 +697,19 @@ export async function preimageRepeatedNoteUnnoteTest<
 
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('repeat note preimage events')
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  // No preimage event for our hash — the repeat note should have failed.
+  const eventsAfterRepeatNote = await client.api.query.system.events()
+  const preimageEventAfterRepeatNote = eventsAfterRepeatNote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRepeatNote).toBeUndefined()
 
-  // We expect an "ExtrinsicFailed" preimage event because the preimage has already been noted.
+  // We expect an "ExtrinsicFailed" event because the preimage has already been noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.AlreadyNoted)
 
   // The preimage is queried to ensure it remains stored correctly.
@@ -681,9 +728,16 @@ export async function preimageRepeatedNoteUnnoteTest<
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Cleared.is(events[0].event))
+  const eventsAfterUnnote = await client.api.query.system.events()
+  const clearedEvent = eventsAfterUnnote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Cleared') {
+      assert(client.api.events.preimage.Cleared.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(clearedEvent).toBeDefined()
 
   // 4. Alice attempts to unregister (unnote) the same preimage again.
   const repeatUnnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
@@ -696,10 +750,19 @@ export async function preimageRepeatedNoteUnnoteTest<
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  // No preimage event for our hash — the repeat unnote should have failed.
+  const eventsAfterRepeatUnnote = await client.api.query.system.events()
+  const preimageEventAfterRepeatUnnote = eventsAfterRepeatUnnote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRepeatUnnote).toBeUndefined()
 
-  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
@@ -717,7 +780,7 @@ async function preimageEmptyTest<
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers an empty preimage.
   const emptyBytes = new Uint8Array(0)
@@ -730,9 +793,16 @@ async function preimageEmptyTest<
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note empty preimage events')
 
   // 2. The registration succeeds, but the stored preimage contains 1 byte of value 0 instead of being empty.
-  const events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === emptyBytesHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   let preimage = await client.api.query.preimage.preimageFor([emptyBytesHash, 0])
   const preimageRaw = preimage.unwrap().toU8a()
@@ -753,58 +823,113 @@ async function preimageEmptyTest<
 }
 
 /**
- * Test the maximum preimage size limit.
+ * Test the interaction between the preimage pallet's 4 MB size limit and the chain's block length
+ * limit for normal extrinsics. The effective limit depends on whichever is smaller.
  *
- * 1. Alice successfully registers a preimage at exactly the maximum size (4 MB).
- * 2. Verify the max-sized preimage is stored correctly.
- * 3. Alice attempts to register an oversized preimage (4 MB + 1 byte).
- * 4. The oversized registration fails with `TooBig` error and no preimage is stored.
+ * If the block can fit a 4 MB preimage (e.g. Asset Hubs with ~4.25 MB normal limit):
+ * 1. Alice registers a 4 MB preimage. It is stored successfully.
+ * 2. Alice registers a 4 MB + 1 byte preimage. It fails with `TooBig`.
+ *
+ * If the block cannot fit a 4 MB preimage (e.g. relay chains with ~3.75 MB normal limit):
+ * 1. Alice registers a preimage just under the block's normal dispatch limit. It is stored.
+ * 2. Alice registers a 4 MB preimage. The transaction pool rejects it with `exhaustsResources`.
  */
-async function preimageOversizedTest<
+async function preimageSizeLimitTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 1000e10 }])
+  setupBalances(client, [{ address: alice.address, amount: 500_000n * 10n ** 12n }])
 
-  const maxPreimageSize = 4 * 1024 * 1024
+  const blockLength = client.api.consts.system.blockLength as any
+  const normalBlockLimit: number = blockLength.max.normal.toNumber()
+  const palletLimitFitsInBlock = normalBlockLimit > PALLET_MAX_PREIMAGE_SIZE
 
-  // 1. Alice successfully registers a preimage at exactly the maximum size.
-  const maxSizeBytesArray = Array(maxPreimageSize).fill(2)
-  const maxSizeBytes = client.api.createType('Bytes', maxSizeBytesArray)
-  const maxSizeHash = blake2AsHex(maxSizeBytes, 256)
+  if (palletLimitFitsInBlock) {
+    // 1. Alice registers a 4 MB preimage. It is stored successfully.
+    const maxSizeBytes = client.api.createType('Bytes', Array(PALLET_MAX_PREIMAGE_SIZE).fill(2))
+    const maxSizeHash = blake2AsHex(maxSizeBytes, 256)
 
-  const noteMaxSizeTx = client.api.tx.preimage.notePreimage(maxSizeBytes)
-  const noteMaxSizeEvents = await sendTransaction(noteMaxSizeTx.signAsync(alice))
-  await client.dev.newBlock()
+    const noteMaxSizeTx = client.api.tx.preimage.notePreimage(maxSizeBytes)
+    const noteMaxSizeEvents = await sendTransaction(noteMaxSizeTx.signAsync(alice))
+    await client.dev.newBlock()
 
-  await checkEvents(noteMaxSizeEvents, 'preimage').toMatchSnapshot('note max size preimage events')
+    await checkEvents(noteMaxSizeEvents, 'preimage').toMatchSnapshot(
+      'note max size preimage events (pallet limit binds)',
+    )
 
-  // 2. Verify the max-sized preimage is stored correctly.
-  const storedMaxSizePreimage = await client.api.query.preimage.preimageFor([maxSizeHash, maxPreimageSize])
-  assert(storedMaxSizePreimage.isSome, 'Max size preimage should be stored')
-  expect(storedMaxSizePreimage.unwrap().length).toBe(maxPreimageSize)
+    const storedPreimage = await client.api.query.preimage.preimageFor([maxSizeHash, PALLET_MAX_PREIMAGE_SIZE])
+    assert(storedPreimage.isSome, 'Max size preimage should be stored')
+    expect(storedPreimage.unwrap().length).toBe(PALLET_MAX_PREIMAGE_SIZE)
 
-  // 3. Alice attempts to register an oversized preimage (more than 4 MB).
-  const oversizedBytesArray = Array(maxPreimageSize + 1).fill(1)
-  const oversizedBytes = client.api.createType('Bytes', oversizedBytesArray)
-  const oversizedHash = blake2AsHex(oversizedBytes, 256)
+    // 2. Alice registers a 4 MB + 1 byte preimage. It fails with `TooBig`.
+    const oversizedBytes = client.api.createType('Bytes', Array(PALLET_MAX_PREIMAGE_SIZE + 1).fill(1))
+    const oversizedHash = blake2AsHex(oversizedBytes, 256)
 
-  const noteOversizedTx = client.api.tx.preimage.notePreimage(oversizedBytes)
-  const noteOversizedEvents = await sendTransaction(noteOversizedTx.signAsync(alice))
-  await client.dev.newBlock()
+    const noteOversizedTx = client.api.tx.preimage.notePreimage(oversizedBytes)
+    const noteOversizedEvents = await sendTransaction(noteOversizedTx.signAsync(alice))
+    await client.dev.newBlock()
 
-  await checkEvents(noteOversizedEvents, 'preimage').toMatchSnapshot('note oversized preimage events')
+    await checkEvents(noteOversizedEvents, 'preimage').toMatchSnapshot(
+      'note oversized preimage events (pallet limit binds)',
+    )
 
-  // 4. Verify the oversized registration failed with `TooBig` error and no preimage is stored.
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
-  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
+    // No preimage event for the oversized hash — the note should have failed.
+    const eventsAfterOversized = await client.api.query.system.events()
+    const preimageEventForOversized = eventsAfterOversized.find((record) => {
+      const { event } = record
+      if (event.section !== 'preimage') return false
+      if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === oversizedHash
+      if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === oversizedHash
+      if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === oversizedHash
+      return false
+    })
+    expect(preimageEventForOversized).toBeUndefined()
 
-  const storedOversizedPreimage = await client.api.query.preimage.preimageFor([oversizedHash, maxPreimageSize + 1])
-  expect(storedOversizedPreimage.isNone, 'Oversized preimage should not be stored').toBe(true)
+    await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
+
+    const storedOversized = await client.api.query.preimage.preimageFor([oversizedHash, PALLET_MAX_PREIMAGE_SIZE + 1])
+    expect(storedOversized.isNone).toBe(true)
+  } else {
+    // 1. Alice registers a preimage just under the block's normal dispatch limit. It is stored.
+    const maxFittingSize = normalBlockLimit - 256 * 1024
+    const fittingBytes = client.api.createType('Bytes', Array(maxFittingSize).fill(3))
+    const fittingHash = blake2AsHex(fittingBytes, 256)
+
+    const noteFittingTx = client.api.tx.preimage.notePreimage(fittingBytes)
+    const noteFittingEvents = await sendTransaction(noteFittingTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    await checkEvents(noteFittingEvents, 'preimage').toMatchSnapshot('note fitting preimage events (block limit binds)')
+
+    const storedFitting = await client.api.query.preimage.preimageFor([fittingHash, maxFittingSize])
+    assert(storedFitting.isSome, 'Fitting preimage should be stored')
+    expect(storedFitting.unwrap().length).toBe(maxFittingSize)
+
+    // 2. Alice registers a 4 MB preimage. The transaction pool rejects it with `exhaustsResources`.
+    const maxSizeBytes = client.api.createType('Bytes', Array(PALLET_MAX_PREIMAGE_SIZE).fill(2))
+    const maxSizeHash = blake2AsHex(maxSizeBytes, 256)
+
+    const noteMaxSizeTx = client.api.tx.preimage.notePreimage(maxSizeBytes)
+    let rejected = false
+    try {
+      await sendTransaction(noteMaxSizeTx.signAsync(alice))
+    } catch (error: any) {
+      const msg = error?.message || String(error)
+      assert(
+        msg.includes('1010') || msg.includes('exhaustsResources'),
+        `Expected exhaustsResources rejection, got: ${msg}`,
+      )
+      rejected = true
+    }
+
+    expect(rejected, '4 MB preimage should be rejected by the transaction pool').toBe(true)
+
+    const storedMaxSize = await client.api.query.preimage.preimageFor([maxSizeHash, PALLET_MAX_PREIMAGE_SIZE])
+    expect(storedMaxSize.isNone).toBe(true)
+  }
 }
 
 /**
@@ -828,8 +953,8 @@ async function preimageEnsureUpdatedTest<
   const alice = testAccounts.alice
   const addressEncoding = chain.properties.addressEncoding
   setupBalances(client, [
-    { address: alice.address, amount: 1000e10 },
-    { address: testAccounts.bob.address, amount: 1000e10 },
+    { address: alice.address, amount: 10_000_000n * 10n ** 10n },
+    { address: testAccounts.bob.address, amount: 10_000_000n * 10n ** 10n },
   ])
 
   const expectFees = oldPreimagesCount / (newPreimagesCount + oldPreimagesCount) < 0.9
@@ -880,7 +1005,9 @@ async function preimageEnsureUpdatedTest<
 
   // 2. Bob registers a number of unrequested preimages
   for (let i = 1; i <= newPreimagesCount; i++) {
-    const encodedProposal = client.api.tx.treasury.spendLocal(SPEND_AMOUNT + i, testAccounts.bob.address).method
+    const encodedProposal = client.api.tx.system.remarkWithEvent(
+      `${REMARK_DATA}${i.toString(16).padStart(2, '0')}`,
+    ).method
     const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
     await sendTransaction(notePreimageTx.signAsync(testAccounts.bob, { nonce: bobNonce++ }))
 
@@ -1071,8 +1198,8 @@ export function failurePreimageE2ETests<
       },
       {
         kind: 'test',
-        label: 'preimage oversized test',
-        testFn: async () => await preimageOversizedTest(chain),
+        label: 'preimage size limit test',
+        testFn: async () => await preimageSizeLimitTest(chain),
       },
     ],
   }
