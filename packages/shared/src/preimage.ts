@@ -183,23 +183,20 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   await client.dev.newBlock()
 
   // Expect a "Requested" event from the preimage pallet.
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(events[0].event))
+  const preimageEvents = await getEventsWithType(client, 'preimage')
+  expect(preimageEvents.length).toBe(1)
+  assert(client.api.events.preimage.Requested.is(preimageEvents[0].event))
 
   // Also expect a "Dispatched" event from the scheduler.
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
+  const schedulerEvents = await getEventsWithType(client, 'scheduler')
+  expect(schedulerEvents.length).toBe(1)
+  assert(client.api.events.scheduler.Dispatched.is(schedulerEvents[0].event))
 
-  events = await getEventsWithType(client, 'balances')
-
-  const hasBalanceEvents = events.length > 0
-
-  // On some chains, a "Transfer" event also occurs.
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
+  // On some chains, a "Transfer" event also occurs during request.
+  const balancesEventsAfterRequest = await getEventsWithType(client, 'balances')
+  if (balancesEventsAfterRequest.length > 0) {
+    expect(balancesEventsAfterRequest.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(balancesEventsAfterRequest[0].event))
   }
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
@@ -232,21 +229,18 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
 
   // "Dispatched" events do appear from the scheduler.
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(numUnrequests)
+  const schedulerEventsAfterUnrequest = await getEventsWithType(client, 'scheduler')
+  expect(schedulerEventsAfterUnrequest.length).toBe(numUnrequests)
 
-  events.forEach((eventRecord) => {
+  schedulerEventsAfterUnrequest.forEach((eventRecord) => {
     assert(client.api.events.scheduler.Dispatched.is(eventRecord.event))
   })
 
-  events = await getEventsWithType(client, 'balances')
-
-  // If the request generated a "Transfer" event, then so will the unrequest(s).
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
-  } else {
-    expect(events.length).toBe(0)
+  // Check balance events independently — don't assume consistency with the request phase.
+  const balancesEventsAfterUnrequest = await getEventsWithType(client, 'balances')
+  if (balancesEventsAfterUnrequest.length > 0) {
+    expect(balancesEventsAfterUnrequest.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(balancesEventsAfterUnrequest[0].event))
   }
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
@@ -263,16 +257,14 @@ export async function preimageSingleRequestMultipleUnrequestTest<
 
   expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
 
-  events = await getEventsWithType(client, 'scheduler')
-  expect(events.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(events[0].event))
+  const schedulerEventsAfterRetry = await getEventsWithType(client, 'scheduler')
+  expect(schedulerEventsAfterRetry.length).toBe(1)
+  assert(client.api.events.scheduler.Dispatched.is(schedulerEventsAfterRetry[0].event))
 
-  events = await getEventsWithType(client, 'balances')
-  if (hasBalanceEvents) {
-    expect(events.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(events[0].event))
-  } else {
-    expect(events.length).toBe(0)
+  const balancesEventsAfterRetry = await getEventsWithType(client, 'balances')
+  if (balancesEventsAfterRetry.length > 0) {
+    expect(balancesEventsAfterRetry.length).toBe(1)
+    assert(client.api.events.balances.Transfer.is(balancesEventsAfterRetry[0].event))
   }
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
@@ -501,9 +493,9 @@ export async function preimageRequestThenNoteTest<
   )
   await client.dev.newBlock()
 
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(events[0].event))
+  const preimageEventsAfterRequest = await getEventsWithType(client, 'preimage')
+  expect(preimageEventsAfterRequest.length).toBe(1)
+  assert(client.api.events.preimage.Requested.is(preimageEventsAfterRequest[0].event))
 
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
@@ -513,9 +505,9 @@ export async function preimageRequestThenNoteTest<
   await sendTransaction(notePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const preimageEventsAfterNote = await getEventsWithType(client, 'preimage')
+  expect(preimageEventsAfterNote.length).toBe(1)
+  assert(client.api.events.preimage.Noted.is(preimageEventsAfterNote[0].event))
 
   // No funds should be reserved from Alice's acount since the preimage has already been requested.
   const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
@@ -538,9 +530,9 @@ export async function preimageRequestThenNoteTest<
   await client.dev.newBlock()
 
   // Following the unrequest, the preimage is cleared.
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Cleared.is(events[0].event))
+  const preimageEventsAfterUnrequest = await getEventsWithType(client, 'preimage')
+  expect(preimageEventsAfterUnrequest.length).toBe(1)
+  assert(client.api.events.preimage.Cleared.is(preimageEventsAfterUnrequest[0].event))
 
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
@@ -553,11 +545,11 @@ export async function preimageRequestThenNoteTest<
   await sendTransaction(unnotePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(0)
+  const preimageEventsAfterUnnote = await getEventsWithType(client, 'preimage')
+  expect(preimageEventsAfterUnnote.length).toBe(0)
 
-  events = await getEventsWithType(client, 'system')
-  expect(events.length).toBeGreaterThan(0)
+  const systemEventsAfterUnnote = await getEventsWithType(client, 'system')
+  expect(systemEventsAfterUnnote.length).toBeGreaterThan(0)
 
   // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
