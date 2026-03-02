@@ -20,7 +20,6 @@
     "wss://statemint-rpc-tn.dwellir.com",
     "wss://rpc-asset-hub-polkadot.luckyfriday.io",
     "wss://polkadot-asset-hub-rpc.polkadot.io:443",
-    "wss://statemint.api.onfinality.io/public-ws",
     "wss://statemint.public.curie.radiumblock.co/ws",
     "wss://dot-rpc.stakeworld.io/assethub"
   ],
@@ -31,7 +30,6 @@
     "wss://polkadot-bridge-hub-rpc-tn.dwellir.com",
     "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
     "wss://polkadot-bridge-hub-rpc.polkadot.io:443",
-    "wss://bridgehub-polkadot.api.onfinality.io/public-ws",
     "wss://bridgehub-polkadot.public.curie.radiumblock.co/ws",
     "wss://dot-rpc.stakeworld.io/bridgehub"
   ],
@@ -74,7 +72,8 @@
   ],
   "hydration": [
     "wss://hydration.ibp.network",
-    "wss://rpc.hydradx.cloud"
+    "wss://rpc.hydradx.cloud",
+    "wss://hydration.dotters.network"
   ],
   "moonbeam": [
     "wss://wss.api.moonbeam.network"
@@ -103,7 +102,6 @@
     "wss://statemine-rpc-tn.dwellir.com",
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
     "wss://kusama-asset-hub-rpc.polkadot.io:443",
-    "wss://assethub-kusama.api.onfinality.io/public-ws",
     "wss://statemine.public.curie.radiumblock.co/ws",
     "wss://ksm-rpc.stakeworld.io/assethub"
   ],
@@ -114,7 +112,6 @@
     "wss://kusama-bridge-hub-rpc-tn.dwellir.com",
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",
     "wss://kusama-bridge-hub-rpc.polkadot.io:443",
-    "wss://bridgehub-kusama.api.onfinality.io/public-ws",
     "wss://bridgehub-kusama.public.curie.radiumblock.co/ws",
     "wss://ksm-rpc.stakeworld.io/bridgehub"
   ],

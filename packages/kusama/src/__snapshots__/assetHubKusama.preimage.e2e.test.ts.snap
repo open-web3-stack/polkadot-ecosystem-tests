@@ -52,20 +52,6 @@ exports[`Kusama Asset Hub Preimage > Kusama Asset Hub Preimage > preimage tests 
 ]
 `;
 
-exports[`Kusama Asset Hub Preimage > failure tests > preimage oversized test > note max size preimage events 1`] = `
-[
-  {
-    "data": {
-      "hash_": "(hash)",
-    },
-    "method": "Noted",
-    "section": "preimage",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Preimage > failure tests > preimage oversized test > note oversized preimage events 1`] = `[]`;
-
 exports[`Kusama Asset Hub Preimage > failure tests > preimage repeated note and unnote test > note preimage events 1`] = `
 [
   {
@@ -97,3 +83,17 @@ exports[`Kusama Asset Hub Preimage > failure tests > preimage repeated note and 
 exports[`Kusama Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > request preimage events 1`] = `[]`;
 
 exports[`Kusama Asset Hub Preimage > failure tests > preimage single request and unrequest test as non-root > unrequest preimage events 1`] = `[]`;
+
+exports[`Kusama Asset Hub Preimage > failure tests > preimage size limit test > note max size preimage events (pallet limit binds) 1`] = `
+[
+  {
+    "data": {
+      "hash_": "(hash)",
+    },
+    "method": "Noted",
+    "section": "preimage",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Preimage > failure tests > preimage size limit test > note oversized preimage events (pallet limit binds) 1`] = `[]`;
