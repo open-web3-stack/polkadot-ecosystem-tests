@@ -1,14 +1,19 @@
 import { kusama } from '@e2e-test/networks/chains'
-import type { RootTestTree, TestConfig } from '@e2e-test/shared'
 import {
   accountsE2ETests,
   createAccountsConfig,
+  type DescribeNode,
   manualLockAction,
   manualReserveAction,
   multisigCreationDepositAction,
   proxyAdditionDepositAction,
+  type RootTestTree,
   registerTestTree,
+  type TestConfig,
+  type TestNode,
 } from '@e2e-test/shared'
+
+import { match } from 'ts-pattern'
 
 const generalTestConfig: TestConfig = {
   testSuiteName: 'Kusama Accounts',
@@ -33,27 +38,28 @@ const accountsTestCfg = createAccountsConfig({
 })
 
 /**
- * Some `burn` tests are temporarily disabled on Kusama relay, see
+ * `burn` tests are temporarily disabled on Kusama relay, see
  * https://github.com/paritytech/polkadot-sdk/issues/9986.
  *
  * TODO: reenable after fix
  */
 const filterOutBurnTests = (tree: RootTestTree): RootTestTree => {
+  const filterChildren = (children: (TestNode | DescribeNode)[]): (TestNode | DescribeNode)[] => {
+    return children
+      .filter((child) => !child.label.includes('burn'))
+      .map((child) => {
+        return match(child)
+          .with({ kind: 'test' }, () => child)
+          .with({ kind: 'describe' }, (desc) => {
+            return { ...desc, children: filterChildren(desc.children) }
+          })
+          .exhaustive()
+      })
+  }
+
   return {
     ...tree,
-    children: tree.children.map((child) => {
-      if (child.kind === 'describe' && child.label === '`burn`') {
-        return {
-          ...child,
-          children: child.children.filter(
-            (test) =>
-              test.label !== 'burning funds from account works' &&
-              test.label !== 'burning entire balance, or more than it, fails',
-          ),
-        }
-      }
-      return child
-    }),
+    children: filterChildren(tree.children),
   }
 }
 
