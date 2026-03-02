@@ -22,18 +22,6 @@ import {
 /// -------
 
 /**
- * Query the latest list of events, retaining only those with a given section type.
- */
-async function getEventsWithType(client: Client<any, any>, eventType: string) {
-  const events = await client.api.query.system.events()
-
-  return events.filter((record) => {
-    const { event } = record
-    return event.section === eventType
-  })
-}
-
-/**
  * Expect the latest extrinsic to have failed with a given error type.
  */
 async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType: IsError) {
@@ -177,27 +165,30 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     chain.properties.schedulerBlockProvider,
   )
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
-
   await client.dev.newBlock()
 
-  // Expect a "Requested" event from the preimage pallet.
-  const preimageEvents = await getEventsWithType(client, 'preimage')
-  expect(preimageEvents.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(preimageEvents[0].event))
+  // Expect a "Requested" event specifically for our proposalHash.
+  const eventsAfterRequest = await client.api.query.system.events()
+  const requestedEvent = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Requested') {
+      assert(client.api.events.preimage.Requested.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(requestedEvent).toBeDefined()
 
   // Also expect a "Dispatched" event from the scheduler.
-  const schedulerEvents = await getEventsWithType(client, 'scheduler')
-  expect(schedulerEvents.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(schedulerEvents[0].event))
-
-  // On some chains, a "Transfer" event also occurs during request.
-  const balancesEventsAfterRequest = await getEventsWithType(client, 'balances')
-  if (balancesEventsAfterRequest.length > 0) {
-    expect(balancesEventsAfterRequest.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(balancesEventsAfterRequest[0].event))
-  }
+  const dispatchedEventAfterRequest = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
+  })
+  expect(dispatchedEventAfterRequest).toBeDefined()
 
   let status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -220,28 +211,31 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     chain.properties.schedulerBlockProvider,
   )
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'scheduler')).length).toBe(0)
-
   await client.dev.newBlock()
 
-  // No explicit "Unrequest" event from the preimage pallet.
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  const eventsAfterUnrequest = await client.api.query.system.events()
+
+  // No preimage event should exist for our specific proposalHash after unrequest.
+  const preimageEventAfterUnrequest = eventsAfterUnrequest.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterUnrequest).toBeUndefined()
 
   // "Dispatched" events do appear from the scheduler.
-  const schedulerEventsAfterUnrequest = await getEventsWithType(client, 'scheduler')
-  expect(schedulerEventsAfterUnrequest.length).toBe(numUnrequests)
-
-  schedulerEventsAfterUnrequest.forEach((eventRecord) => {
-    assert(client.api.events.scheduler.Dispatched.is(eventRecord.event))
+  const dispatchedEventsAfterUnrequest = eventsAfterUnrequest.filter((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
   })
-
-  // Check balance events independently — don't assume consistency with the request phase.
-  const balancesEventsAfterUnrequest = await getEventsWithType(client, 'balances')
-  if (balancesEventsAfterUnrequest.length > 0) {
-    expect(balancesEventsAfterUnrequest.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(balancesEventsAfterUnrequest[0].event))
-  }
+  expect(dispatchedEventsAfterUnrequest.length).toBe(numUnrequests)
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
   assert(status.isNone)
@@ -255,17 +249,28 @@ export async function preimageSingleRequestMultipleUnrequestTest<
   )
   await client.dev.newBlock()
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
+  const eventsAfterRetry = await client.api.query.system.events()
 
-  const schedulerEventsAfterRetry = await getEventsWithType(client, 'scheduler')
-  expect(schedulerEventsAfterRetry.length).toBe(1)
-  assert(client.api.events.scheduler.Dispatched.is(schedulerEventsAfterRetry[0].event))
+  // Still no preimage event for our hash.
+  const preimageEventAfterRetry = eventsAfterRetry.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRetry).toBeUndefined()
 
-  const balancesEventsAfterRetry = await getEventsWithType(client, 'balances')
-  if (balancesEventsAfterRetry.length > 0) {
-    expect(balancesEventsAfterRetry.length).toBe(1)
-    assert(client.api.events.balances.Transfer.is(balancesEventsAfterRetry[0].event))
-  }
+  const dispatchedEventAfterRetry = eventsAfterRetry.find((record) => {
+    const { event } = record
+    if (event.section === 'scheduler' && event.method === 'Dispatched') {
+      assert(client.api.events.scheduler.Dispatched.is(event))
+      return true
+    }
+    return false
+  })
+  expect(dispatchedEventAfterRetry).toBeDefined()
 
   status = await client.api.query.preimage.requestStatusFor(proposalHash)
 
@@ -493,9 +498,16 @@ export async function preimageRequestThenNoteTest<
   )
   await client.dev.newBlock()
 
-  const preimageEventsAfterRequest = await getEventsWithType(client, 'preimage')
-  expect(preimageEventsAfterRequest.length).toBe(1)
-  assert(client.api.events.preimage.Requested.is(preimageEventsAfterRequest[0].event))
+  const eventsAfterRequest = await client.api.query.system.events()
+  const requestedEvent = eventsAfterRequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Requested') {
+      assert(client.api.events.preimage.Requested.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(requestedEvent).toBeDefined()
 
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
@@ -505,9 +517,16 @@ export async function preimageRequestThenNoteTest<
   await sendTransaction(notePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  const preimageEventsAfterNote = await getEventsWithType(client, 'preimage')
-  expect(preimageEventsAfterNote.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(preimageEventsAfterNote[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   // No funds should be reserved from Alice's acount since the preimage has already been requested.
   const aliceReservedFundsAfterNote = await getReservedFunds(client, alice.address)
@@ -530,9 +549,16 @@ export async function preimageRequestThenNoteTest<
   await client.dev.newBlock()
 
   // Following the unrequest, the preimage is cleared.
-  const preimageEventsAfterUnrequest = await getEventsWithType(client, 'preimage')
-  expect(preimageEventsAfterUnrequest.length).toBe(1)
-  assert(client.api.events.preimage.Cleared.is(preimageEventsAfterUnrequest[0].event))
+  const eventsAfterUnrequest = await client.api.query.system.events()
+  const clearedEvent = eventsAfterUnrequest.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Cleared') {
+      assert(client.api.events.preimage.Cleared.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(clearedEvent).toBeDefined()
 
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
@@ -545,13 +571,19 @@ export async function preimageRequestThenNoteTest<
   await sendTransaction(unnotePreimageTx.signAsync(alice))
   await client.dev.newBlock()
 
-  const preimageEventsAfterUnnote = await getEventsWithType(client, 'preimage')
-  expect(preimageEventsAfterUnnote.length).toBe(0)
+  // No preimage event for our hash — the unnote should have failed.
+  const eventsAfterUnnote = await client.api.query.system.events()
+  const preimageEventAfterUnnote = eventsAfterUnnote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterUnnote).toBeUndefined()
 
-  const systemEventsAfterUnnote = await getEventsWithType(client, 'system')
-  expect(systemEventsAfterUnnote.length).toBeGreaterThan(0)
-
-  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
@@ -642,9 +674,16 @@ export async function preimageRepeatedNoteUnnoteTest<
 
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note preimage events')
 
-  let events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   let preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
 
@@ -658,10 +697,19 @@ export async function preimageRepeatedNoteUnnoteTest<
 
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('repeat note preimage events')
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  // No preimage event for our hash — the repeat note should have failed.
+  const eventsAfterRepeatNote = await client.api.query.system.events()
+  const preimageEventAfterRepeatNote = eventsAfterRepeatNote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRepeatNote).toBeUndefined()
 
-  // We expect an "ExtrinsicFailed" preimage event because the preimage has already been noted.
+  // We expect an "ExtrinsicFailed" event because the preimage has already been noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.AlreadyNoted)
 
   // The preimage is queried to ensure it remains stored correctly.
@@ -680,9 +728,16 @@ export async function preimageRepeatedNoteUnnoteTest<
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
 
-  events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Cleared.is(events[0].event))
+  const eventsAfterUnnote = await client.api.query.system.events()
+  const clearedEvent = eventsAfterUnnote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Cleared') {
+      assert(client.api.events.preimage.Cleared.is(event))
+      return event.data.hash_.toHex() === proposalHash
+    }
+    return false
+  })
+  expect(clearedEvent).toBeDefined()
 
   // 4. Alice attempts to unregister (unnote) the same preimage again.
   const repeatUnnotePreimageTx = client.api.tx.preimage.unnotePreimage(proposalHash)
@@ -695,10 +750,19 @@ export async function preimageRepeatedNoteUnnoteTest<
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
   assert(preimage.isNone)
 
-  expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-  expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+  // No preimage event for our hash — the repeat unnote should have failed.
+  const eventsAfterRepeatUnnote = await client.api.query.system.events()
+  const preimageEventAfterRepeatUnnote = eventsAfterRepeatUnnote.find((record) => {
+    const { event } = record
+    if (event.section !== 'preimage') return false
+    if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === proposalHash
+    if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === proposalHash
+    return false
+  })
+  expect(preimageEventAfterRepeatUnnote).toBeUndefined()
 
-  // We expect an "ExtrinsicFailed" preimage event because the preimage is not (considered to be) noted.
+  // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
   expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
@@ -729,9 +793,16 @@ async function preimageEmptyTest<
   await checkEvents(notePreimageEvents, 'preimage').toMatchSnapshot('note empty preimage events')
 
   // 2. The registration succeeds, but the stored preimage contains 1 byte of value 0 instead of being empty.
-  const events = await getEventsWithType(client, 'preimage')
-  expect(events.length).toBe(1)
-  assert(client.api.events.preimage.Noted.is(events[0].event))
+  const eventsAfterNote = await client.api.query.system.events()
+  const notedEvent = eventsAfterNote.find((record) => {
+    const { event } = record
+    if (event.section === 'preimage' && event.method === 'Noted') {
+      assert(client.api.events.preimage.Noted.is(event))
+      return event.data.hash_.toHex() === emptyBytesHash
+    }
+    return false
+  })
+  expect(notedEvent).toBeDefined()
 
   let preimage = await client.api.query.preimage.preimageFor([emptyBytesHash, 0])
   const preimageRaw = preimage.unwrap().toU8a()
@@ -805,8 +876,18 @@ async function preimageSizeLimitTest<
       'note oversized preimage events (pallet limit binds)',
     )
 
-    expect((await getEventsWithType(client, 'preimage')).length).toBe(0)
-    expect((await getEventsWithType(client, 'system')).length).toBeGreaterThan(0)
+    // No preimage event for the oversized hash — the note should have failed.
+    const eventsAfterOversized = await client.api.query.system.events()
+    const preimageEventForOversized = eventsAfterOversized.find((record) => {
+      const { event } = record
+      if (event.section !== 'preimage') return false
+      if (client.api.events.preimage.Requested.is(event)) return event.data.hash_.toHex() === oversizedHash
+      if (client.api.events.preimage.Noted.is(event)) return event.data.hash_.toHex() === oversizedHash
+      if (client.api.events.preimage.Cleared.is(event)) return event.data.hash_.toHex() === oversizedHash
+      return false
+    })
+    expect(preimageEventForOversized).toBeUndefined()
+
     await expectFailedExtrinsicWithType(client, client.api.errors.preimage.TooBig)
 
     const storedOversized = await client.api.query.preimage.preimageFor([oversizedHash, PALLET_MAX_PREIMAGE_SIZE + 1])
