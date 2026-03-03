@@ -1,4 +1,5 @@
-import { acala, astar } from '@e2e-test/networks/chains'
+import { defaultAccounts } from '@e2e-test/networks'
+import { acala, assetHubPolkadot, astar } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
@@ -6,7 +7,7 @@ import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 import { describe } from 'vitest'
 
 describe('acala & astar', async () => {
-  const [astarClient, acalaClient] = await setupNetworks(astar, acala)
+  const [astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
 
   runXtokenstHorizontal('astar transfer ACA to acala', async () => {
     return {
@@ -25,6 +26,30 @@ describe('acala & astar', async () => {
       fromBalance: query.balances,
       toBalance: query.assets(astar.custom.aca),
       tx: tx.xtokens.transfer(acala.custom.aca, 1e12, tx.xtokens.parachainV3(astar.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('astar transfer DOT to acala', async () => {
+    return {
+      fromChain: astarClient,
+      toChain: acalaClient,
+      routeChain: assetHubPolkadotClient,
+      toAccount: defaultAccounts.bob,
+      fromBalance: query.assets(astar.custom.dot),
+      toBalance: query.tokens(acala.custom.dot),
+      tx: tx.xtokens.transfer(astar.custom.dot, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+    }
+  })
+
+  runXtokenstHorizontal('acala transfer DOT to astar', async () => {
+    return {
+      fromChain: acalaClient,
+      toChain: astarClient,
+      routeChain: assetHubPolkadotClient,
+      toAccount: defaultAccounts.bob,
+      fromBalance: query.tokens(acala.custom.dot),
+      toBalance: query.assets(astar.custom.dot),
+      tx: tx.xtokens.transfer(acala.custom.dot, 1e12, tx.xtokens.parachainV3(astar.paraId!)),
     }
   })
 })
