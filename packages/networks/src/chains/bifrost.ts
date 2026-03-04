@@ -6,21 +6,27 @@ import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAc
 
 const custom = {
   bifrostPolkadot: {
-    relayToken: 'DOT',
+    relayToken: { Token2: 0 },
     bnc: { Native: 'BNC' },
   },
   bifrostKusama: {
-    relayToken: 'KSM',
+    relayToken: { Token: 'KSM' },
     bnc: { Token: 'BNC' },
   },
 }
 
-const getInitStorages = (_config: typeof custom.bifrostPolkadot | typeof custom.bifrostKusama) => ({
+const getInitStorages = (config: typeof custom.bifrostPolkadot | typeof custom.bifrostKusama) => ({
   System: {
     account: [
       [[defaultAccounts.alice.address], { providers: 1, data: { free: 666e12 } }],
       [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 666e12 } }],
       [[testAccounts.alice.address], { providers: 1, data: { free: 666e12 } }],
+    ],
+  },
+  Tokens: {
+    Accounts: [
+      [[defaultAccounts.alice.address, config.relayToken], { free: 1000e12 }],
+      [[defaultAccountsSr25519.alice.address, config.relayToken], { free: 1000e12 }],
     ],
   },
   PolkadotXcm: {

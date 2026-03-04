@@ -90,21 +90,21 @@ async function getAndVerifyMultisigEventData(
 /**
  * Get the costs for creating a number of proxies.
  */
-async function getProxyCosts(client: Client<any, any>, numProxies: number): Promise<number> {
-  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
-  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
+async function getProxyCosts(client: Client<any, any>, numProxies: number): Promise<bigint> {
+  const proxyDepositBase = client.api.consts.proxy.proxyDepositBase.toBigInt()
+  const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor.toBigInt()
 
-  return proxyDepositBase.add(proxyDepositFactor.muln(numProxies)).toNumber()
+  return proxyDepositBase + proxyDepositFactor * BigInt(numProxies)
 }
 
 /**
  * Get the costs for creating a multisig with a given threshold.
  */
-async function getMultisigCosts(client: Client<any, any>, threshold: number): Promise<number> {
-  const multisigBaseDeposit = client.api.consts.multisig.depositBase
-  const multisigDepositFactor = client.api.consts.multisig.depositFactor
+async function getMultisigCosts(client: Client<any, any>, threshold: number): Promise<bigint> {
+  const multisigBaseDeposit = client.api.consts.multisig.depositBase.toBigInt()
+  const multisigDepositFactor = client.api.consts.multisig.depositFactor.toBigInt()
 
-  return multisigBaseDeposit.add(multisigDepositFactor.muln(threshold)).toNumber()
+  return multisigBaseDeposit + multisigDepositFactor * BigInt(threshold)
 }
 
 /// -----
@@ -132,15 +132,15 @@ async function multisigWithPureProxyTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 300e10 },
-    { address: charlie.address, amount: 300e10 },
-    { address: dave.address, amount: 0 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 300n * 10n ** 10n },
+    { address: charlie.address, amount: 300n * 10n ** 10n },
+    { address: dave.address, amount: 0n },
   ])
 
   // Check that Bob has no reserved funds.
   let bobReservedFunds = await getReservedFunds(client, bob.address)
-  expect(bobReservedFunds, 'Bob should have no reserved funds').toBe(0)
+  expect(bobReservedFunds, 'Bob should have no reserved funds').toBe(0n)
 
   // 1. Bob creates a pure proxy.
   const addProxyTx = client.api.tx.proxy.createPure(proxyType, 0, 0)
@@ -156,7 +156,7 @@ async function multisigWithPureProxyTest<
   expect(bobReservedFunds, 'Bob should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // Create a simple call to transfer funds to Dave from the 2-of-3 multisig.
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
   // 2. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
@@ -197,7 +197,7 @@ async function multisigWithPureProxyTest<
   )
 
   // Funds the multisig account to execute the call.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Prepare the second multisig approval call. As this is the final approval, `multisig.asMulti` is used.
@@ -216,7 +216,7 @@ async function multisigWithPureProxyTest<
 
   // Check that Dave has no funds before the multisig executes.
   let daveFreeFunds = await getFreeFunds(client, dave.address)
-  expect(daveFreeFunds, 'Dave should have no funds before multisig executes').toBe(0)
+  expect(daveFreeFunds, 'Dave should have no funds before multisig executes').toBe(0n)
 
   // 3. Bob approves the multisig operation via his pure proxy
   const proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, finalApprovalTx)
@@ -237,7 +237,7 @@ async function multisigWithPureProxyTest<
 
   // Check that Alice's deposit is gone.
   aliceReservedFunds = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 
   // Check that the multisig account has no funds.
   const multisigFreeFunds = await getFreeFunds(client, multisigAddress)
@@ -281,14 +281,14 @@ async function multisigAsStandardProxyTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 200e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 200n * 10n ** 10n },
   ])
 
   // The proxy call to transfer funds to Charlie.
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
   const proxyTx = client.api.tx.proxy.proxy(dave.address, null, transferCall)
 
@@ -329,12 +329,12 @@ async function multisigAsStandardProxyTest<
   )
 
   // Funds the multisig account to execute the call.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Dave should have no reserved funds yet.
   let daveReservedFunds = await getReservedFunds(client, dave.address)
-  expect(daveReservedFunds, 'Dave should have no reserved funds').toBe(0)
+  expect(daveReservedFunds, 'Dave should have no reserved funds').toBe(0n)
 
   // 2. Dave adds the multisig as his proxy.
   const addProxyTx = client.api.tx.proxy.addProxy(multisigAddress, proxyType, 0)
@@ -349,7 +349,7 @@ async function multisigAsStandardProxyTest<
   // Check that Charlie has no free funds.
   let charlieFreeFunds = await getFreeFunds(client, charlie.address)
   const daveOldFreeFunds = await getFreeFunds(client, dave.address)
-  expect(charlieFreeFunds, 'Charlie should have no free funds').toBe(0)
+  expect(charlieFreeFunds, 'Charlie should have no free funds').toBe(0n)
 
   // 3. Bob approves the multisig operation, which triggers the sending of the funds if the proxy type allows it.
   otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
@@ -377,7 +377,7 @@ async function multisigAsStandardProxyTest<
 
   // 4. Check that Alice's deposit is gone.
   aliceReservedFunds = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 
   // Check that Dave has lost funds and Charlie has gained funds.
   const daveNewFreeFunds = await getFreeFunds(client, dave.address)
@@ -393,9 +393,9 @@ async function multisigAsStandardProxyTest<
     ).toBe(transferAmount)
   } else {
     // The proxy type did not allow the transfer, so it should not have gone through.
-    expect(charlieFreeFunds, 'Charlie should have no free funds after the multisig executes').toBe(0)
+    expect(charlieFreeFunds, 'Charlie should have no free funds after the multisig executes').toBe(0n)
     expect(daveOldFreeFunds - daveNewFreeFunds, 'Dave should have lost no free funds after the multisig executes').toBe(
-      0,
+      0n,
     )
   }
 }
@@ -423,11 +423,11 @@ async function multisigWithPureProxyMultisigTest<
   const eve = testAccounts.eve
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 300e10 },
-    { address: dave.address, amount: 0 },
-    { address: eve.address, amount: 100e10 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 300n * 10n ** 10n },
+    { address: dave.address, amount: 0n },
+    { address: eve.address, amount: 100n * 10n ** 10n },
   ])
 
   // 1. Charlie creates a pure proxy on his behalf.
@@ -447,7 +447,7 @@ async function multisigWithPureProxyMultisigTest<
   const primarymaxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
   let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], chain.properties.addressEncoding)
 
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
 
   // The first and last approvals require an encoded call, while any intermediate approvals require a hash.
@@ -483,7 +483,7 @@ async function multisigWithPureProxyMultisigTest<
   )
 
   // Fund the multisig account.
-  const extraFunds = 100e10
+  const extraFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: primaryMultisigAddress, amount: transferAmount + extraFunds }])
 
   // Define the second (and last) approval call for the primary multisig.
@@ -557,7 +557,7 @@ async function multisigWithPureProxyMultisigTest<
 
   // Check that Dave has no funds before the multisig executes.
   let daveFreeFunds = await getFreeFunds(client, dave.address)
-  expect(daveFreeFunds, 'Dave should have no funds before multisig executes').toBe(0)
+  expect(daveFreeFunds, 'Dave should have no funds before multisig executes').toBe(0n)
 
   await sendTransaction(secondaryMultiLastTx.signAsync(eve))
   await client.dev.newBlock()
@@ -572,7 +572,7 @@ async function multisigWithPureProxyMultisigTest<
 
   // Check that Alice's deposit is gone.
   aliceReservedFunds = await getReservedFunds(client, alice.address)
-  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+  expect(aliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 }
 
 /**
@@ -594,9 +594,9 @@ async function cancelMultisigWithPureProxyTest<
   const charlie = testAccounts.charlie
 
   await setupBalances(client, [
-    { address: alice.address, amount: 300e10 },
-    { address: bob.address, amount: 0 },
-    { address: charlie.address, amount: 0 },
+    { address: alice.address, amount: 300n * 10n ** 10n },
+    { address: bob.address, amount: 0n },
+    { address: charlie.address, amount: 0n },
   ])
 
   // 1. Alice creates a pure proxy.
@@ -613,11 +613,11 @@ async function cancelMultisigWithPureProxyTest<
   expect(aliceReservedFunds, 'Alice should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // Create a simple call to transfer funds to Charlie from the 2-of-3 multisig.
-  const transferAmount = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
   // Fund the pure proxy account to cover multisig deposit.
-  await setupBalances(client, [{ address: pureProxyAddress, amount: 100e10 }])
+  await setupBalances(client, [{ address: pureProxyAddress, amount: 100n * 10n ** 10n }])
 
   // 1. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
@@ -663,7 +663,7 @@ async function cancelMultisigWithPureProxyTest<
 
   // Check that Charlie has no funds.
   let charlieFreeFunds = await getFreeFunds(client, charlie.address)
-  expect(charlieFreeFunds, 'Charlie should have no funds before multisig cancellation').toBe(0)
+  expect(charlieFreeFunds, 'Charlie should have no funds before multisig cancellation').toBe(0n)
 
   // 2. Alice cancels the multisig operation before any other approvals arrive.
   const cancelAsMultiTx = client.api.tx.multisig.cancelAsMulti(
@@ -683,11 +683,11 @@ async function cancelMultisigWithPureProxyTest<
 
   // 3. Check that the proxy's deposit is gone.
   proxyReservedFunds = await getReservedFunds(client, pureProxyAddress)
-  expect(proxyReservedFunds, "The proxy's deposit should have been refunded").toBe(0)
+  expect(proxyReservedFunds, "The proxy's deposit should have been refunded").toBe(0n)
 
   // Check that Charlie has no funds.
   charlieFreeFunds = await getFreeFunds(client, charlie.address)
-  expect(charlieFreeFunds, 'Charlie should have no funds after multisig cancellation').toBe(0)
+  expect(charlieFreeFunds, 'Charlie should have no funds after multisig cancellation').toBe(0n)
 }
 
 /**
@@ -713,14 +713,14 @@ async function multisigAsStandardProxyAnnouncementTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 100e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 100n * 10n ** 10n },
   ])
 
   // The call to transfer funds to Alice.
-  const transferAmount: number = 10e10
+  const transferAmount = 10n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(alice.address, transferAmount)
 
   const announceTx = client.api.tx.proxy.announce(dave.address, transferCall.method.hash)
@@ -757,7 +757,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   )
 
   // Funds the multisig account in order to execute the call.
-  const multisigFunds = 100e10
+  const multisigFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // 2. Dave nominates the multisig as his standard proxy.
@@ -863,7 +863,7 @@ async function multisigAsStandardProxyAnnouncementTest<
 
   // Check that Alice's deposit is gone.
   let newAliceReservedFunds = await getReservedFunds(client, alice.address)
-  expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+  expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 
   // Check that Alice has not received the funds, because Dave has rejected the announcement earlier.
   let newAliceFreeFunds = await getFreeFunds(client, alice.address)
@@ -918,7 +918,7 @@ async function multisigAsStandardProxyAnnouncementTest<
 
   // 6. Check that Alice's deposit is gone.
   newAliceReservedFunds = await getReservedFunds(client, alice.address)
-  expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+  expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 
   // Check that Alice has finally received the funds.
   newAliceFreeFunds = await getFreeFunds(client, alice.address)
@@ -950,14 +950,14 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   const dave = testAccounts.dave
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0 },
-    { address: dave.address, amount: 200e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
+    { address: dave.address, amount: 200n * 10n ** 10n },
   ])
 
   // The call to transfer funds to Alice.
-  const transferAmount: number = 50e10
+  const transferAmount = 50n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(alice.address, transferAmount)
 
   const announceTx = client.api.tx.proxy.announce(dave.address, transferCall.method.hash)
@@ -988,7 +988,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   )
 
   // Funds the multisig account in order to execute the call.
-  const multisigFunds = 100e10
+  const multisigFunds = 100n * 10n ** 10n
   await setupBalances(client, [{ address: multisigAddress, amount: multisigFunds }])
 
   // 2. Dave nominates the multisig as his standard proxy with a delay.
@@ -1070,7 +1070,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
     // Check that Alice's deposit is gone.
     const newAliceReservedFunds = await getReservedFunds(client, alice.address)
     const newAliceFreeFunds = await getFreeFunds(client, alice.address)
-    expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0)
+    expect(newAliceReservedFunds, "Alice's deposit should have been refunded").toBe(0n)
 
     if (proxyDelay <= 0) {
       // 5. The multisig succeeds in executing the announced call after the delay has passed.
