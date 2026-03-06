@@ -532,3 +532,18 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   },
 ]
 `;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "(hash)",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;

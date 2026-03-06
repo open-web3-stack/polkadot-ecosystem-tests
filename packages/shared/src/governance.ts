@@ -890,6 +890,42 @@ export async function referendumLifecycleKillTest<
     })
 }
 
+export async function referendumLifecycleDelegationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  // Fund test accounts not already provisioned in the test chain spec.
+  await client.dev.setStorage({
+    System: {
+      account: [[[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }]],
+    },
+  })
+
+  // Submit a new referendum
+  const submissionTx = client.api.tx.referenda.submit(
+    {
+      Origins: 'SmallTipper',
+    } as any,
+    {
+      Inline: client.api.tx.treasury.spendLocal(1e10, devAccounts.bob.address).method.toHex(),
+    },
+    {
+      After: 1,
+    },
+  )
+  const submissionEvents = await sendTransaction(submissionTx.signAsync(devAccounts.alice))
+
+  await client.dev.newBlock()
+
+  // Fields to be removed
+  const unwantedFields = /index/
+  await checkEvents(submissionEvents, 'referenda')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('referendum submission events')
+}
+
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -911,6 +947,12 @@ export function baseGovernanceE2ETests<
             kind: 'test',
             label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
             testFn: async () => await referendumLifecycleKillTest(chain),
+          },
+          {
+            kind: 'test',
+            label:
+              'referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work',
+            testFn: async () => await referendumLifecycleDelegationTest(chain),
           },
         ],
       },
