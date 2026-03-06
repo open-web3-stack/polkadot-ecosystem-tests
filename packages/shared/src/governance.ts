@@ -378,6 +378,8 @@ export async function referendumLifecycleTest<
   const charlieClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.charlie.address)
   const localCharlieClassLocks = [[smallTipper[0].toNumber(), ayeVote]]
   expect(charlieClassLocks.toJSON()).toEqual(localCharlieClassLocks)
+  const charlieAccount = await client.api.query.system.account(devAccounts.charlie.address)
+  expect(charlieAccount.data.frozen.toNumber()).toBe(ayeVote)
 
   // , and overall account's votes
   const votingByCharlie: PalletConvictionVotingVoteVoting = await client.api.query.convictionVoting.votingFor(
@@ -450,6 +452,8 @@ export async function referendumLifecycleTest<
   const localDaveClassLocks = [[smallTipper[0].toNumber(), ayeVote + nayVote]]
   // Dave voted with `split`, which does not allow expression of conviction in votes.
   expect(daveLockedFunds.toJSON()).toEqual(localDaveClassLocks)
+  const daveAccount = await client.api.query.system.account(devAccounts.dave.address)
+  expect(daveAccount.data.frozen.toNumber()).toBe(ayeVote + nayVote)
 
   // Check Dave's overall votes
 
@@ -519,6 +523,8 @@ export async function referendumLifecycleTest<
   const localEveClassLocks = [[smallTipper[0].toNumber(), ayeVote + nayVote + abstainVote]]
   // Eve voted with `splitAbstain`, which does not allow expression of conviction in votes.
   expect(eveLockedFunds.toJSON()).toEqual(localEveClassLocks)
+  const eveAccount = await client.api.query.system.account(devAccounts.eve.address)
+  expect(eveAccount.data.frozen.toNumber()).toBe(ayeVote + nayVote + abstainVote)
 
   // Check Eve's overall votes
 
