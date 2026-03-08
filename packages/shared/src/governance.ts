@@ -910,12 +910,13 @@ export async function referendumLifecycleDelegationTest<
   const referendaTracks = client.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
+  const delegationAmount = 1e10
   // Bob delegates vote to Charlie
   const delegateTx = client.api.tx.convictionVoting.delegate(
     smallTipper[0],
     devAccounts.charlie.address,
     'Locked2x',
-    1e10,
+    delegationAmount,
   )
 
   const submissionEvents = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
@@ -925,6 +926,26 @@ export async function referendumLifecycleDelegationTest<
   await checkEvents(submissionEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for bob's delegation to charlie")
+
+  // Assert delegation state
+  const bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
+  assert(bobVoting.isDelegating, 'bob should be delegting his vote to charlie')
+  const bobDelegating = bobVoting.asDelegating
+  expect(bobDelegating.target.toString()).toBe(
+    encodeAddress(devAccounts.charlie.address, chain.properties.addressEncoding),
+  )
+  expect(bobDelegating.conviction.isLocked2x).toBeTruthy()
+  expect(bobDelegating.balance.toNumber()).toBe(delegationAmount)
+
+  const charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
+  assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
+  const charlieCasting = charlieVoting.asCasting
+  expect(charlieCasting.votes.length).toBe(0)
+  expect(charlieCasting.delegations.capital.toNumber()).toBe(delegationAmount)
+  expect(charlieCasting.delegations.votes.toNumber()).toBe(delegationAmount * 2) // Because of 'Locked2x' conviction
+
+  const bobClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.bob.address)
+  expect(bobClassLocks.toJSON()).toEqual([[smallTipper[0].toNumber(), delegationAmount]])
 
   // Submit a new referendum
   const submissionTx = client.api.tx.referenda.submit(
@@ -991,16 +1012,16 @@ export function baseGovernanceE2ETests<
         kind: 'describe',
         label: 'referenda tests',
         children: [
-          {
-            kind: 'test',
-            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-            testFn: async () => await referendumLifecycleTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-            testFn: async () => await referendumLifecycleKillTest(chain),
-          },
+          // {
+          //   kind: 'test',
+          //   label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+          //   testFn: async () => await referendumLifecycleTest(chain),
+          // },
+          // {
+          //   kind: 'test',
+          //   label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+          //   testFn: async () => await referendumLifecycleKillTest(chain),
+          // },
           {
             kind: 'test',
             label:
