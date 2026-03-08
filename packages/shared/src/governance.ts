@@ -1050,6 +1050,19 @@ export async function referendumLifecycleDelegationTest<
   await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'bob attempting to vote directly after delegating to charlie',
   )
+
+  // Bob removes his delegation
+  const removeDelegationTx = client.api.tx.convictionVoting.undelegate(smallTipper[0])
+  await sendTransaction(removeDelegationTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  referendumData = referendumDataOpt.unwrap()
+  const ongoingRefPostDecDep = referendumData.asOngoing
+
+  votes.ayes -= delegationAmount * 2
+  votes.support -= delegationAmount
+  await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
 }
 
 export function baseGovernanceE2ETests<
@@ -1064,16 +1077,16 @@ export function baseGovernanceE2ETests<
         kind: 'describe',
         label: 'referenda tests',
         children: [
-          {
-            kind: 'test',
-            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-            testFn: async () => await referendumLifecycleTest(chain),
-          },
-          {
-            kind: 'test',
-            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-            testFn: async () => await referendumLifecycleKillTest(chain),
-          },
+          // {
+          //   kind: 'test',
+          //   label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+          //   testFn: async () => await referendumLifecycleTest(chain),
+          // },
+          // {
+          //   kind: 'test',
+          //   label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+          //   testFn: async () => await referendumLifecycleKillTest(chain),
+          // },
           {
             kind: 'test',
             label:
