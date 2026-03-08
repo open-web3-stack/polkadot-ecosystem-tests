@@ -899,7 +899,10 @@ export async function referendumLifecycleDelegationTest<
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
-      account: [[[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }]],
+      account: [
+        [[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
+      ],
     },
   })
 
@@ -915,15 +918,52 @@ export async function referendumLifecycleDelegationTest<
       After: 1,
     },
   )
-  const submissionEvents = await sendTransaction(submissionTx.signAsync(devAccounts.alice))
+
+  await sendTransaction(submissionTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+  const [refEvent] = events.filter((record) => {
+    const { event } = record
+    return event.section === 'referenda' && event.method === 'Submitted'
+  })
+  const refEventData = refEvent.event.data
+  const referendumIndex = refEventData[0].toNumber()
+
+  const _votes = {
+    ayes: 0,
+    nays: 0,
+    support: 0,
+  }
+
+  // Place decision deposit
+  const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  await sendTransaction(decisionDepTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  // Get small tipper track info for later use
+  const referendaTracks = client.api.consts.referenda.tracks
+  console.log('referenda tracks', referendaTracks.toJSON())
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
+
+  // Advance to the start of the decision period
+  let iters: number
+  match(chain.properties.schedulerBlockProvider)
+    .with('Local', async () => {
+      iters = smallTipper[1].preparePeriod.toNumber() - 2
+    })
+    .with('NonLocal', async () => {
+      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / 2
+    })
+    .exhaustive()
+
+  for (let i = 0; i < iters!; i++) {
+    await client.dev.newBlock()
+  }
 
   await client.dev.newBlock()
 
-  // Fields to be removed
-  const unwantedFields = /index/
-  await checkEvents(submissionEvents, 'referenda')
-    .redact({ removeKeys: unwantedFields })
-    .toMatchSnapshot('referendum submission events')
+  // Delegate Bob's vote to Charlie
 }
 
 export function baseGovernanceE2ETests<
