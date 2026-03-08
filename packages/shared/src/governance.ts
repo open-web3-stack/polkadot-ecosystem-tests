@@ -890,6 +890,36 @@ export async function referendumLifecycleKillTest<
     })
 }
 
+/**
+ * Test the process of
+ * 1. submitting a referendum for a treasury spend
+ * 2. placing its decision deposit
+ * 3. awaiting the end of the preparation period
+ * 4. delegating Bob's vote to Charlie on the SmallTipper track
+ *
+ *     4.1 asserting Bob's `votingFor` is in `Delegating` state with the correct target, conviction, and balance
+ *
+ *     4.2 asserting Bob's class locks and frozen balance reflect the delegated amount
+ *
+ *     4.3 asserting Charlie's `votingFor` reflects the received delegation capital and votes
+ *
+ * 5. verifying Bob cannot cast a direct vote while delegating (expects `AlreadyDelegating` error)
+ *
+ * 6. casting Charlie's vote on the referendum
+ *
+ *     6.1 asserting the tally includes both Charlie's direct conviction-weighted vote and Bob's
+ *         delegated conviction-weighted vote independently
+ *
+ * 7. removing Bob's delegation while the referendum is active
+ *
+ *     7.1 asserting the tally is immediately reduced by Bob's delegated weight
+ *
+ *     7.2 asserting Bob's `votingFor` reverts to `Casting` state
+ *
+ *     7.3 asserting Bob's conviction lock is preserved in `prior` for the delegation lock period
+ *
+ *     7.4 asserting Charlie's `delegations` are reduced accordingly
+ */
 export async function referendumLifecycleDelegationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1098,16 +1128,16 @@ export function baseGovernanceE2ETests<
         kind: 'describe',
         label: 'referenda tests',
         children: [
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-          //   testFn: async () => await referendumLifecycleTest(chain),
-          // },
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-          //   testFn: async () => await referendumLifecycleKillTest(chain),
-          // },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+            testFn: async () => await referendumLifecycleTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+            testFn: async () => await referendumLifecycleKillTest(chain),
+          },
           {
             kind: 'test',
             label:
