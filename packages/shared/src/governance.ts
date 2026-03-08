@@ -928,7 +928,7 @@ export async function referendumLifecycleDelegationTest<
     .toMatchSnapshot("events for bob's delegation to charlie")
 
   // Assert delegation state
-  const bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
+  let bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
   assert(bobVoting.isDelegating, 'bob should be delegting his vote to charlie')
   const bobDelegating = bobVoting.asDelegating
   expect(bobDelegating.target.toString()).toBe(
@@ -937,9 +937,9 @@ export async function referendumLifecycleDelegationTest<
   expect(bobDelegating.conviction.isLocked2x).toBeTruthy()
   expect(bobDelegating.balance.toNumber()).toBe(delegationAmount)
 
-  const charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
+  let charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
   assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
-  const charlieCasting = charlieVoting.asCasting
+  let charlieCasting = charlieVoting.asCasting
   expect(charlieCasting.votes.length).toBe(0)
   expect(charlieCasting.delegations.capital.toNumber()).toBe(delegationAmount)
   expect(charlieCasting.delegations.votes.toNumber()).toBe(delegationAmount * 2) // Because of 'Locked2x' conviction
@@ -1063,6 +1063,26 @@ export async function referendumLifecycleDelegationTest<
   votes.ayes -= delegationAmount * 2
   votes.support -= delegationAmount
   await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
+
+  bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
+  assert(bobVoting.isCasting, 'bob should be casting his own vote now')
+  const bobCasting = bobVoting.asCasting
+  expect(bobCasting.votes.length).toBe(0)
+  expect(bobCasting.delegations.capital.toNumber()).toBe(0)
+  expect(bobCasting.delegations.votes.toNumber()).toBe(0)
+
+  charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
+  assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
+  charlieCasting = charlieVoting.asCasting
+  console.log('charlieCasting', charlieCasting.toHuman())
+  console.log('votes', charlieCasting.votes.toJSON())
+  console.log('votes[1]', charlieCasting.votes[0][1].toHuman())
+  expect(charlieCasting.votes.length).toBe(1)
+  expect(charlieCasting.votes[0][0].toNumber()).toBe(referendumIndex)
+  const charlieVote = charlieCasting.votes[0][1].asStandard
+  expect(charlieVote.vote.conviction.isLocked1x).toBeTruthy()
+  expect(charlieVote.vote.isAye).toBeTruthy()
+  expect(charlieVote.balance.toNumber()).toBe(ayeVote)
 }
 
 export function baseGovernanceE2ETests<
