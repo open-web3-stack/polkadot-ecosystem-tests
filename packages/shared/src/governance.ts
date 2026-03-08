@@ -910,8 +910,8 @@ export async function referendumLifecycleDelegationTest<
   const referendaTracks = client.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
-  const delegationAmount = 1e10
   // Bob delegates vote to Charlie
+  const delegationAmount = 1e10
   const delegateTx = client.api.tx.convictionVoting.delegate(
     smallTipper[0],
     devAccounts.charlie.address,
@@ -947,6 +947,9 @@ export async function referendumLifecycleDelegationTest<
   const bobClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.bob.address)
   expect(bobClassLocks.toJSON()).toEqual([[smallTipper[0].toNumber(), delegationAmount]])
 
+  const bobAccount = await client.api.query.system.account(devAccounts.bob.address)
+  expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
+
   // Submit a new referendum
   const submissionTx = client.api.tx.referenda.submit(
     {
@@ -978,9 +981,9 @@ export async function referendumLifecycleDelegationTest<
     support: 0,
   }
 
-  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+  let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     await client.api.query.referenda.referendumInfoFor(referendumIndex)
-  const referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
+  let referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
   const ongoingRefPreDecDep: PalletReferendaReferendumStatusConvictionVotingTally = referendumData.asOngoing
   await check(ongoingRefPreDecDep.tally).toMatchObject(votes)
 
@@ -1007,7 +1010,28 @@ export async function referendumLifecycleDelegationTest<
   await client.dev.newBlock()
 
   // Charlie votes on referendum
-  // const ayeVote = 5e10
+  const ayeVote = 5e10
+  const voteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: {
+        aye: true,
+        conviction: 'Locked1x',
+      },
+      balance: ayeVote,
+    },
+  })
+
+  await sendTransaction(voteTx.signAsync(devAccounts.charlie))
+  await client.dev.newBlock()
+
+  referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  referendumData = referendumDataOpt.unwrap()
+  const ongoingRefFirstVote = referendumData.asOngoing
+
+  votes.ayes += ayeVote + delegationAmount * 2 // Charlie's own vote + delegated vote from Bob with 'Locked2x' conviction
+  votes.support += ayeVote + delegationAmount
+
+  await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 }
 
 export function baseGovernanceE2ETests<
