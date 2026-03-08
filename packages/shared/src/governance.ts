@@ -1032,6 +1032,24 @@ export async function referendumLifecycleDelegationTest<
   votes.support += ayeVote + delegationAmount
 
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
+
+  // Bob should not be able to vote directly on SmallTipper track referenda, as he has delegated his vote to Charlie.
+  const bobVoteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: {
+        aye: true,
+        conviction: 'Locked1x',
+      },
+      balance: ayeVote,
+    },
+  })
+
+  await sendTransaction(bobVoteTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'bob attempting to vote directly after delegating to charlie',
+  )
 }
 
 export function baseGovernanceE2ETests<
@@ -1046,16 +1064,16 @@ export function baseGovernanceE2ETests<
         kind: 'describe',
         label: 'referenda tests',
         children: [
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-          //   testFn: async () => await referendumLifecycleTest(chain),
-          // },
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-          //   testFn: async () => await referendumLifecycleKillTest(chain),
-          // },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+            testFn: async () => await referendumLifecycleTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+            testFn: async () => await referendumLifecycleKillTest(chain),
+          },
           {
             kind: 'test',
             label:
