@@ -968,14 +968,21 @@ export async function referendumLifecycleDelegationTest<
     const { event } = record
     return event.section === 'referenda' && event.method === 'Submitted'
   })
+  assert(client.api.events.referenda.Submitted.is(refEvent.event))
   const refEventData = refEvent.event.data
   const referendumIndex = refEventData[0].toNumber()
 
-  const _votes = {
+  const votes = {
     ayes: 0,
     nays: 0,
     support: 0,
   }
+
+  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  const referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
+  const ongoingRefPreDecDep: PalletReferendaReferendumStatusConvictionVotingTally = referendumData.asOngoing
+  await check(ongoingRefPreDecDep.tally).toMatchObject(votes)
 
   // Place decision deposit
   const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
@@ -998,6 +1005,9 @@ export async function referendumLifecycleDelegationTest<
   }
 
   await client.dev.newBlock()
+
+  // Charlie votes on referendum
+  // const ayeVote = 5e10
 }
 
 export function baseGovernanceE2ETests<
