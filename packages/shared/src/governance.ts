@@ -906,6 +906,26 @@ export async function referendumLifecycleDelegationTest<
     },
   })
 
+  // Get small tipper track info
+  const referendaTracks = client.api.consts.referenda.tracks
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
+
+  // Bob delegates vote to Charlie
+  const delegateTx = client.api.tx.convictionVoting.delegate(
+    smallTipper[0],
+    devAccounts.charlie.address,
+    'Locked2x',
+    1e10,
+  )
+
+  const submissionEvents = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  const unwantedFields = /index/
+  await checkEvents(submissionEvents, 'convictionVoting')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for bob's delegation to charlie")
+
   // Submit a new referendum
   const submissionTx = client.api.tx.referenda.submit(
     {
@@ -941,11 +961,6 @@ export async function referendumLifecycleDelegationTest<
   await sendTransaction(decisionDepTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
 
-  // Get small tipper track info for later use
-  const referendaTracks = client.api.consts.referenda.tracks
-  console.log('referenda tracks', referendaTracks.toJSON())
-  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
-
   // Advance to the start of the decision period
   let iters: number
   match(chain.properties.schedulerBlockProvider)
@@ -962,8 +977,6 @@ export async function referendumLifecycleDelegationTest<
   }
 
   await client.dev.newBlock()
-
-  // Delegate Bob's vote to Charlie
 }
 
 export function baseGovernanceE2ETests<
