@@ -947,7 +947,7 @@ export async function referendumLifecycleDelegationTest<
   const bobClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.bob.address)
   expect(bobClassLocks.toJSON()).toEqual([[smallTipper[0].toNumber(), delegationAmount]])
 
-  const bobAccount = await client.api.query.system.account(devAccounts.bob.address)
+  let bobAccount = await client.api.query.system.account(devAccounts.bob.address)
   expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
 
   // Submit a new referendum
@@ -1074,15 +1074,16 @@ export async function referendumLifecycleDelegationTest<
   charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
   assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
   charlieCasting = charlieVoting.asCasting
-  console.log('charlieCasting', charlieCasting.toHuman())
-  console.log('votes', charlieCasting.votes.toJSON())
-  console.log('votes[1]', charlieCasting.votes[0][1].toHuman())
   expect(charlieCasting.votes.length).toBe(1)
   expect(charlieCasting.votes[0][0].toNumber()).toBe(referendumIndex)
   const charlieVote = charlieCasting.votes[0][1].asStandard
   expect(charlieVote.vote.conviction.isLocked1x).toBeTruthy()
   expect(charlieVote.vote.isAye).toBeTruthy()
   expect(charlieVote.balance.toNumber()).toBe(ayeVote)
+
+  bobAccount = await client.api.query.system.account(devAccounts.bob.address)
+  // Amount still frozen because of conviction lock 'Locked2x' on the delegation.
+  expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
 }
 
 export function baseGovernanceE2ETests<
