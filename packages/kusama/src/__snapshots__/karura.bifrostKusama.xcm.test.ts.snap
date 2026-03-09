@@ -1,0 +1,410 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > balance on from chain 1`] = `
+{
+  "free": 999000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > balance on to chain 1`] = `
+{
+  "free": "(rounded 999000000000)",
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 500000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositReserveAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "dest": {
+                "interior": {
+                  "x1": [
+                    {
+                      "parachain": 2000,
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+              "xcm": [
+                {
+                  "buyExecution": {
+                    "fees": {
+                      "fun": {
+                        "fungible": 500000000000,
+                      },
+                      "id": {
+                        "interior": {
+                          "here": null,
+                        },
+                        "parents": 1,
+                      },
+                    },
+                    "weightLimit": {
+                      "unlimited": null,
+                    },
+                  },
+                },
+                {
+                  "depositAsset": {
+                    "assets": {
+                      "wild": {
+                        "allCounted": 2,
+                      },
+                    },
+                    "beneficiary": {
+                      "interior": {
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                              "network": null,
+                            },
+                          },
+                        ],
+                      },
+                      "parents": 0,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 700000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 1000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 1000000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > tx events 1`] = `
+[
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": 0,
+            "refTime": "(rounded 500000000)",
+          },
+        },
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > balance on from chain 1`] = `
+{
+  "free": 9000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > balance on to chain 1`] = `
+{
+  "free": "(rounded 998000000000)",
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 500000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositReserveAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "dest": {
+                "interior": {
+                  "x1": [
+                    {
+                      "parachain": 2001,
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+              "xcm": [
+                {
+                  "buyExecution": {
+                    "fees": {
+                      "fun": {
+                        "fungible": 500000000000,
+                      },
+                      "id": {
+                        "interior": {
+                          "here": null,
+                        },
+                        "parents": 1,
+                      },
+                    },
+                    "weightLimit": {
+                      "unlimited": null,
+                    },
+                  },
+                },
+                {
+                  "depositAsset": {
+                    "assets": {
+                      "wild": {
+                        "allCounted": 1,
+                      },
+                    },
+                    "beneficiary": {
+                      "interior": {
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                              "network": null,
+                            },
+                          },
+                        ],
+                      },
+                      "parents": 0,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 700000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 1000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": "(rounded 200000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": "(rounded 2000)",
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
