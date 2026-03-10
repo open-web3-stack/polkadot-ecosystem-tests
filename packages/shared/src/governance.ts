@@ -1095,8 +1095,6 @@ export async function referendumLifecycleDelegationTest<
     "events for bob's removal of delegation to charlie",
   )
 
-  await client.dev.newBlock()
-
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   referendumData = referendumDataOpt.unwrap()
   const ongoingRefPostDecDep = referendumData.asOngoing
