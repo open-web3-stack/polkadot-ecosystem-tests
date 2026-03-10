@@ -898,7 +898,7 @@ export async function referendumLifecycleKillTest<
  *
  *     1.2 asserting Charlie's `votingFor` is `Casting` state with the correct target capital and votes
  *
- *     1.3 asserting Bob's class locks and frozen balance reflect the delegated amount on the SmallTipper track
+ *     1.3 asserting Bob's class locks reflect the delegated amount on the SmallTipper track
  *
  *     1.4 asserting Bob's frozen funds is equal to delegation amount
  *
@@ -913,11 +913,11 @@ export async function referendumLifecycleKillTest<
  *
  *     4.1 asserting the tally is immediately reduced by Bob's delegated weight
  *
- *     4.2 asserting Bob's `votingFor` reverts to `Casting` state
+ *     4.2 asserting Bob's `votingFor` reverts to `Casting` state and `prior` is delegation amount
  *
  *     4.3 asserting Charlie's `delegations` are reduced accordingly
  *
- *     4.4 asserting Bob's conviction lock is preserved in `prior` for the delegation lock period
+ *     4.4 asserting Bob's delegation amount is still frozen because of conviction lock
  *
  */
 export async function referendumLifecycleDelegationTest<
@@ -1104,13 +1104,14 @@ export async function referendumLifecycleDelegationTest<
   // 4.1 Assert tally reduction
   await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
 
-  // 4.2 Assert Bob's `votingFor` is now `Casting`
+  // 4.2 Assert Bob's `votingFor` is now `Casting` and `prior` is delegation amount
   bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
   assert(bobVoting.isCasting, 'bob should be casting his own vote now')
   const bobCasting = bobVoting.asCasting
   expect(bobCasting.votes.length).toBe(0)
   expect(bobCasting.delegations.capital.toNumber()).toBe(0)
   expect(bobCasting.delegations.votes.toNumber()).toBe(0)
+  expect(bobCasting.prior[1].toNumber()).toBe(delegationAmount)
 
   // 4.3 Assert Charlie's delegations are reduced
   charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
