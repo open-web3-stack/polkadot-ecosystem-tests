@@ -3599,7 +3599,7 @@ __metadata:
 
 "lint-staged@npm:^16.3.2":
   version: 16.3.2
-  resolution: "lint-staged@npm:16.3.2
+  resolution: "lint-staged@npm:16.3.2"
   dependencies:
     commander: "npm:^14.0.3"
     listr2: "npm:^9.0.5"
