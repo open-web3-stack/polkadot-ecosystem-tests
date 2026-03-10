@@ -892,7 +892,7 @@ export async function referendumLifecycleKillTest<
 
 /**
  * Test the process of
- * 1. Bob delegates to Charlie on the SmallTipper track
+ * 1. delegating (Bob delegates to Charlie) on the SmallTipper track
  *
  *     1.1 asserting Bob's `votingFor` is `Delegating` state with the correct target, conviction, and balance
  *
@@ -907,7 +907,7 @@ export async function referendumLifecycleKillTest<
  *     2.1 asserting the tally includes both Charlie's direct conviction-weighted vote and Bob's
  *         delegated conviction-weighted vote independently
  *
- * 3. Verifying Bob cannot cast a direct vote while delegating (expects `AlreadyDelegating` error)
+ * 3. verifying Bob cannot cast a direct vote while delegating (expects `AlreadyDelegating` error)
  *
  * 4. removing Bob's delegation while the referendum is active
  *
