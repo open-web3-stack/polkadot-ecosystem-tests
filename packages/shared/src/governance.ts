@@ -963,6 +963,13 @@ export async function referendumLifecycleDelegationTest<
     return event.section === 'convictionVoting' && event.method === 'Delegated'
   })
   assert(client.api.events.convictionVoting.Delegated.is(delEvent.event))
+  const delegatedEventData = delEvent.event.data
+  expect(delegatedEventData[0].toString()).toBe(
+    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+  )
+  expect(delegatedEventData[1].toString()).toBe(
+    encodeAddress(devAccounts.charlie.address, chain.properties.addressEncoding),
+  )
 
   // Assert delegation state
   // 1.1 Assert Bob's `votingFor` is `Delegating` with correct target, conviction, and balance
