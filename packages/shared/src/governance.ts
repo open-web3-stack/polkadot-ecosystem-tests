@@ -949,13 +949,20 @@ export async function referendumLifecycleDelegationTest<
     delegationAmount,
   )
 
-  const submissionEvents = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
+  const delegationEvents = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
   await client.dev.newBlock()
 
   const unwantedFields = /index/
-  await checkEvents(submissionEvents, 'convictionVoting')
+  await checkEvents(delegationEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for bob's delegation to charlie")
+
+  let subEvents = await client.api.query.system.events()
+  const [delEvent] = subEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'convictionVoting' && event.method === 'Delegated'
+  })
+  assert(client.api.events.convictionVoting.Delegated.is(delEvent.event))
 
   // Assert delegation state
   // 1.1 Assert Bob's `votingFor` is `Delegating` with correct target, conviction, and balance
@@ -1085,6 +1092,13 @@ export async function referendumLifecycleDelegationTest<
   await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'bob attempting to vote directly after delegating to charlie',
   )
+
+  subEvents = await client.api.query.system.events()
+  const [failEvent] = subEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  assert(client.api.events.system.ExtrinsicFailed.is(failEvent.event))
 
   // 4. Bob removes his delegation
   const removeDelegationTx = client.api.tx.convictionVoting.undelegate(smallTipper[0])
