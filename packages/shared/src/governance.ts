@@ -892,33 +892,33 @@ export async function referendumLifecycleKillTest<
 
 /**
  * Test the process of
- * 1. submitting a referendum for a treasury spend
- * 2. placing its decision deposit
- * 3. awaiting the end of the preparation period
- * 4. delegating Bob's vote to Charlie on the SmallTipper track
+ * 1. Bob delegates to Charlie on the SmallTipper track
  *
- *     4.1 asserting Bob's `votingFor` is in `Delegating` state with the correct target, conviction, and balance
+ *     1.1 asserting Bob's `votingFor` is `Delegating` state with the correct target, conviction, and balance
  *
- *     4.2 asserting Bob's class locks and frozen balance reflect the delegated amount
+ *     1.2 asserting Charlie's `votingFor` is `Casting` state with the correct target capital and votes
  *
- *     4.3 asserting Charlie's `votingFor` reflects the received delegation capital and votes
+ *     1.3 asserting Bob's class locks and frozen balance reflect the delegated amount on the SmallTipper track
  *
- * 5. verifying Bob cannot cast a direct vote while delegating (expects `AlreadyDelegating` error)
+ *     1.4 asserting Bob's frozen funds is equal to delegation amount
  *
- * 6. casting Charlie's vote on the referendum
+ * 2. casting Charlie's vote on the referendum
  *
- *     6.1 asserting the tally includes both Charlie's direct conviction-weighted vote and Bob's
+ *     2.1 asserting the tally includes both Charlie's direct conviction-weighted vote and Bob's
  *         delegated conviction-weighted vote independently
  *
- * 7. removing Bob's delegation while the referendum is active
+ * 3. Verifying Bob cannot cast a direct vote while delegating (expects `AlreadyDelegating` error)
  *
- *     7.1 asserting the tally is immediately reduced by Bob's delegated weight
+ * 4. removing Bob's delegation while the referendum is active
  *
- *     7.2 asserting Bob's `votingFor` reverts to `Casting` state
+ *     4.1 asserting the tally is immediately reduced by Bob's delegated weight
  *
- *     7.3 asserting Bob's conviction lock is preserved in `prior` for the delegation lock period
+ *     4.2 asserting Bob's `votingFor` reverts to `Casting` state
  *
- *     7.4 asserting Charlie's `delegations` are reduced accordingly
+ *     4.3 asserting Charlie's `delegations` are reduced accordingly
+ *
+ *     4.4 asserting Bob's conviction lock is preserved in `prior` for the delegation lock period
+ *
  */
 export async function referendumLifecycleDelegationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -940,7 +940,7 @@ export async function referendumLifecycleDelegationTest<
   const referendaTracks = client.api.consts.referenda.tracks
   const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
-  // Bob delegates vote to Charlie
+  // 1. Bob delegates vote to Charlie
   const delegationAmount = 1e10
   const delegateTx = client.api.tx.convictionVoting.delegate(
     smallTipper[0],
@@ -958,6 +958,7 @@ export async function referendumLifecycleDelegationTest<
     .toMatchSnapshot("events for bob's delegation to charlie")
 
   // Assert delegation state
+  // 1.1 Assert Bob's `votingFor` is `Delegating` with correct target, conviction, and balance
   let bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
   assert(bobVoting.isDelegating, 'bob should be delegting his vote to charlie')
   const bobDelegating = bobVoting.asDelegating
@@ -967,6 +968,7 @@ export async function referendumLifecycleDelegationTest<
   expect(bobDelegating.conviction.isLocked2x).toBeTruthy()
   expect(bobDelegating.balance.toNumber()).toBe(delegationAmount)
 
+  // 1.2 Assert Charlie's `votingFor` is `Casting` with correct target capital and votes
   let charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
   assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
   let charlieCasting = charlieVoting.asCasting
@@ -974,9 +976,11 @@ export async function referendumLifecycleDelegationTest<
   expect(charlieCasting.delegations.capital.toNumber()).toBe(delegationAmount)
   expect(charlieCasting.delegations.votes.toNumber()).toBe(delegationAmount * 2) // Because of 'Locked2x' conviction
 
+  // 1.3 Assert Bob's class locks reflect the delegated amount on the SmallTipper track
   const bobClassLocks = await client.api.query.convictionVoting.classLocksFor(devAccounts.bob.address)
   expect(bobClassLocks.toJSON()).toEqual([[smallTipper[0].toNumber(), delegationAmount]])
 
+  // 1.4 Assert Bob's account frozen balance reflects the delegated amount
   let bobAccount = await client.api.query.system.account(devAccounts.bob.address)
   expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
 
@@ -1039,7 +1043,7 @@ export async function referendumLifecycleDelegationTest<
 
   await client.dev.newBlock()
 
-  // Charlie votes on referendum
+  // 2. Charlie votes
   const ayeVote = 5e10
   const voteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
     Standard: {
@@ -1061,9 +1065,10 @@ export async function referendumLifecycleDelegationTest<
   votes.ayes += ayeVote + delegationAmount * 2 // Charlie's own vote + delegated vote from Bob with 'Locked2x' conviction
   votes.support += ayeVote + delegationAmount
 
+  // 2.1 Assert referendum tally
   await check(ongoingRefFirstVote.tally).toMatchObject(votes)
 
-  // Bob should not be able to vote directly on SmallTipper track referenda, as he has delegated his vote to Charlie.
+  // 3. Bob tries to cast a direct vote, should fail because he's currently delegating to Charlie
   const bobVoteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
     Standard: {
       vote: {
@@ -1081,7 +1086,7 @@ export async function referendumLifecycleDelegationTest<
     'bob attempting to vote directly after delegating to charlie',
   )
 
-  // Bob removes his delegation
+  // 4. Bob removes his delegation
   const removeDelegationTx = client.api.tx.convictionVoting.undelegate(smallTipper[0])
   await sendTransaction(removeDelegationTx.signAsync(devAccounts.bob))
   await client.dev.newBlock()
@@ -1092,8 +1097,10 @@ export async function referendumLifecycleDelegationTest<
 
   votes.ayes -= delegationAmount * 2
   votes.support -= delegationAmount
+  // 4.1 Assert tally reduction
   await check(ongoingRefPostDecDep.tally).toMatchObject(votes)
 
+  // 4.2 Assert Bob's `votingFor` is now `Casting`
   bobVoting = await client.api.query.convictionVoting.votingFor(devAccounts.bob.address, smallTipper[0])
   assert(bobVoting.isCasting, 'bob should be casting his own vote now')
   const bobCasting = bobVoting.asCasting
@@ -1101,6 +1108,7 @@ export async function referendumLifecycleDelegationTest<
   expect(bobCasting.delegations.capital.toNumber()).toBe(0)
   expect(bobCasting.delegations.votes.toNumber()).toBe(0)
 
+  // 4.3 Assert Charlie's delegations are reduced
   charlieVoting = await client.api.query.convictionVoting.votingFor(devAccounts.charlie.address, smallTipper[0])
   assert(charlieVoting.isCasting, 'charlie should be casting a vote on behalf of bob')
   charlieCasting = charlieVoting.asCasting
@@ -1112,7 +1120,7 @@ export async function referendumLifecycleDelegationTest<
   expect(charlieVote.balance.toNumber()).toBe(ayeVote)
 
   bobAccount = await client.api.query.system.account(devAccounts.bob.address)
-  // Amount still frozen because of conviction lock 'Locked2x' on the delegation.
+  // 4.4 Amount still frozen because of conviction lock 'Locked2x' on the delegation.
   expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
 }
 
