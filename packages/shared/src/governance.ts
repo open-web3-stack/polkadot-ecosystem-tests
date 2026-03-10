@@ -1091,8 +1091,9 @@ export async function referendumLifecycleDelegationTest<
   const undelegateEvent = await sendTransaction(removeDelegationTx.signAsync(devAccounts.bob))
 
   // unwantedFields = /index/
-  // await checkEvents(undelegateEvent, 'convictionVoting')
-  //   .toMatchSnapshot("events for bob's removal of delegation to charlie")
+  await checkEvents(undelegateEvent, 'convictionVoting').toMatchSnapshot(
+    "events for bob's removal of delegation to charlie",
+  )
 
   await client.dev.newBlock()
 
