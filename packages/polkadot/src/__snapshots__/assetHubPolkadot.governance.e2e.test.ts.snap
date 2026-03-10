@@ -570,3 +570,15 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   },
 ]
 `;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's removal of delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
+  },
+]
+`;

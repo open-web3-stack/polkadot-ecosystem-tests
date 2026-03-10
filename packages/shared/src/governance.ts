@@ -1089,8 +1089,8 @@ export async function referendumLifecycleDelegationTest<
   // 4. Bob removes his delegation
   const removeDelegationTx = client.api.tx.convictionVoting.undelegate(smallTipper[0])
   const undelegateEvent = await sendTransaction(removeDelegationTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
 
-  // unwantedFields = /index/
   await checkEvents(undelegateEvent, 'convictionVoting').toMatchSnapshot(
     "events for bob's removal of delegation to charlie",
   )
@@ -1142,16 +1142,16 @@ export function baseGovernanceE2ETests<
         kind: 'describe',
         label: 'referenda tests',
         children: [
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-          //   testFn: async () => await referendumLifecycleTest(chain),
-          // },
-          // {
-          //   kind: 'test',
-          //   label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-          //   testFn: async () => await referendumLifecycleKillTest(chain),
-          // },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
+            testFn: async () => await referendumLifecycleTest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
+            testFn: async () => await referendumLifecycleKillTest(chain),
+          },
           {
             kind: 'test',
             label:
