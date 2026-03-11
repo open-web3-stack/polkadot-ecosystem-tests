@@ -5,11 +5,12 @@ import { type Chain, testAccounts } from '@e2e-test/networks'
 
 import { compactToU8a, hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
-import { decodeAddress, xxhashAsHex } from '@polkadot/util-crypto'
+import { decodeAddress, xxhashAsU8a } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import { checkEvents, type TestConfig } from './helpers/index.js'
+import type { ProxyTypeMap } from './helpers/proxyTypes.js'
 import { setupNetworks } from './setup.js'
 import type { RootTestTree } from './types.js'
 
@@ -24,43 +25,31 @@ import type { RootTestTree } from './types.js'
  * This is the standard Substrate `StorageMap<Blake2_128Concat>` key format for the proxy pallet.
  */
 function proxyStorageKey(accountId: Uint8Array): HexString {
-  const palletPrefix = xxhashAsHex('Proxy', 128).slice(2)
-  const storagePrefix = xxhashAsHex('Proxies', 128).slice(2)
-  const twox64Hash = xxhashAsHex(accountId, 64).slice(2)
-  return `0x${palletPrefix}${storagePrefix}${twox64Hash}${u8aToHex(accountId).slice(2)}` as HexString
-}
-
-/**
- * SCALE-encode a `Proxies` storage value containing a single proxy definition.
- *
- * The storage type is `(BoundedVec<ProxyDefinition>, Balance)`, so the encoded layout is:
- * `compact_len(1) ++ [delegate ++ proxy_type(u8) ++ delay(u32le)] ++ deposit(u128le = 0)`.
- * The deposit is a separate field of the outer tuple, not part of the proxy definition itself.
- * It is set to zero because a synthetic trie is being built, not read from on-chain state.
- */
-function encodeProxyStorageValue(delegate: Uint8Array, proxyType: number, delay: number): HexString {
-  const proxyDef = u8aConcat(delegate, new Uint8Array([proxyType]), new Uint8Array(new Uint32Array([delay]).buffer))
-  return u8aToHex(u8aConcat(new Uint8Array([4]), proxyDef, new Uint8Array(16))) as HexString
+  const palletPrefix = xxhashAsU8a('Proxy', 128)
+  const storagePrefix = xxhashAsU8a('Proxies', 128)
+  const twox64Hash = xxhashAsU8a(accountId, 64)
+  return u8aToHex(u8aConcat(palletPrefix, storagePrefix, twox64Hash, accountId))
 }
 
 /**
  * Build a synthetic Merkle proof attesting that `delegate` is a proxy for `real`.
  *
- * Uses Chopsticks' `createProof([], inserts)` to construct a fresh trie containing a single
- * `Proxy.Proxies` entry, then returns the trie root and the proof nodes. The root can later be
+ * Uses `api.createType` to SCALE-encode a `Proxy.Proxies` storage value with a single proxy
+ * definition, then feeds the key-value pair into Chopsticks' `createProof([], inserts)` to
+ * construct a fresh trie. Returns the trie root and the proof nodes. The root can later be
  * injected into the pallet's `BlockToRoot` storage so that the runtime accepts the proof.
  */
 async function buildSyntheticProxyProof(
+  api: any,
   real: { address: string },
   delegate: { address: string },
   proxyType: number,
   delay = 0,
 ): Promise<{ trieRootHash: HexString; proofNodes: HexString[] }> {
-  const realBytes = decodeAddress(real.address)
-  const delegateBytes = decodeAddress(delegate.address)
-
-  const storageKey = proxyStorageKey(realBytes)
-  const storageValue = encodeProxyStorageValue(delegateBytes, proxyType, delay)
+  const storageKey = proxyStorageKey(decodeAddress(real.address))
+  const storageValue = api
+    .createType('(Vec<(AccountId32, u8, u32)>, u128)', [[[delegate.address, proxyType, delay]], 0])
+    .toHex() as HexString
 
   const { trieRootHash, nodes: proofNodes } = await createProof([], [[storageKey, storageValue]])
 
@@ -138,14 +127,14 @@ async function fundAccounts(client: { dev: any }, accounts: { address: string }[
 async function remoteProxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
 
-  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(alice, bob, 0)
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.Any)
   const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
 
   const innerCall = client.api.tx.system.remarkWithEvent('remote proxy test')
@@ -194,14 +183,14 @@ async function remoteProxyCallTest<
 async function remoteProxyUnknownAnchorBlockTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
 
-  const { proofNodes } = await buildSyntheticProxyProof(alice, bob, 0)
+  const { proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.Any)
 
   const innerCall = client.api.tx.system.remarkWithEvent('should fail')
   const tx = client.api.tx[palletName].remoteProxy(alice.address, null, innerCall, {
@@ -240,14 +229,14 @@ async function remoteProxyUnknownAnchorBlockTest<
 async function remoteProxyInvalidProofTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
 
-  const { trieRootHash } = await buildSyntheticProxyProof(alice, bob, 0)
+  const { trieRootHash } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.Any)
   const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
 
   const innerCall = client.api.tx.system.remarkWithEvent('should fail')
@@ -290,14 +279,14 @@ async function remoteProxyInvalidProofTest<
 async function remoteProxyNonZeroDelayTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
 
-  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(alice, bob, 0, 5)
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.Any, 5)
   const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
 
   const innerCall = client.api.tx.system.remarkWithEvent('should fail')
@@ -342,14 +331,14 @@ async function remoteProxyNonZeroDelayTest<
 async function registeredProofCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   await fundAccounts(client, [alice, bob])
 
-  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(alice, bob, 0)
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.Any)
   const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
 
   const registerTx = client.api.tx[palletName].registerRemoteProxyProof({
@@ -399,7 +388,7 @@ async function registeredProofCallTest<
 async function unregisteredProofCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, palletName: string) {
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -449,7 +438,12 @@ async function unregisteredProofCallTest<
 export function remoteProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, palletName: string): RootTestTree {
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  palletName: string,
+  proxyTypes: ProxyTypeMap,
+): RootTestTree {
   return {
     kind: 'describe',
     label: `${testConfig.testSuiteName} remote proxy tests`,
@@ -461,22 +455,22 @@ export function remoteProxyE2ETests<
           {
             kind: 'test',
             label: 'dispatch inner call with valid proof',
-            testFn: async () => await remoteProxyCallTest(chain, palletName),
+            testFn: async () => await remoteProxyCallTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject unknown anchor block',
-            testFn: async () => await remoteProxyUnknownAnchorBlockTest(chain, palletName),
+            testFn: async () => await remoteProxyUnknownAnchorBlockTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject invalid proof',
-            testFn: async () => await remoteProxyInvalidProofTest(chain, palletName),
+            testFn: async () => await remoteProxyInvalidProofTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject proxy with non-zero delay',
-            testFn: async () => await remoteProxyNonZeroDelayTest(chain, palletName),
+            testFn: async () => await remoteProxyNonZeroDelayTest(chain, palletName, proxyTypes),
           },
         ],
       },
@@ -487,12 +481,12 @@ export function remoteProxyE2ETests<
           {
             kind: 'test',
             label: 'dispatch inner call via batch(register, proxy_with_registered_proof)',
-            testFn: async () => await registeredProofCallTest(chain, palletName),
+            testFn: async () => await registeredProofCallTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
             label: 'reject call without prior proof registration',
-            testFn: async () => await unregisteredProofCallTest(chain, palletName),
+            testFn: async () => await unregisteredProofCallTest(chain, palletName, proxyTypes),
           },
         ],
       },
