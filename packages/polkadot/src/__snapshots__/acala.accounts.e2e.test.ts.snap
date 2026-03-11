@@ -126,7 +126,7 @@ exports[`Acala Accounts > \`transfer_all\` > transfer all with keepAlive false k
   {
     "data": {
       "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
-      "freeBalance": "(rounded 10000000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",

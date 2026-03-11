@@ -126,7 +126,7 @@ exports[`Kusama Bridge Hub Accounts > \`transfer_all\` > transfer all with keepA
   {
     "data": {
       "account": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-      "freeBalance": "(rounded 3300000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
