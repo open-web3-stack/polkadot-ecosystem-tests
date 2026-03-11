@@ -1,29 +1,18 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import type { Chain } from '@e2e-test/networks'
+import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
-import type { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { KeyringPair } from '@polkadot/keyring/types'
-import type { Vec } from '@polkadot/types'
-import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
-import type { ISubmittableResult } from '@polkadot/types/types'
-import { encodeAddress } from '@polkadot/util-crypto'
+import type { TestConfig } from './helpers/index.js'
 
-import { assert, expect } from 'vitest'
+export async function configurationTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
 
-import { match } from 'ts-pattern'
-import {
-  blockProviderOffset,
-  check,
-  checkEvents,
-  checkSystemEvents,
-  createXcmTransactSend,
-  getBlockNumber,
-  scheduleInlineCallWithOrigin,
-  type TestConfig,
-  updateCumulativeFees,
-} from './helpers/index.js'
+  // Core Configuration
+}
 
 /// ----------
 /// Test Trees
@@ -32,12 +21,23 @@ import {
 export const configurationsE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
 ): RootTestTree => ({
   kind: 'describe',
   label: testConfig.testSuiteName,
-  children: [],
+  children: [
+    {
+      kind: 'describe',
+      label: 'configurations tests',
+      children: [
+        {
+          kind: 'test',
+          label: 'configurations test - can read and update configurations',
+          testFn: async () => await configurationTest(chain),
+        },
+      ],
+    },
+  ],
 })
