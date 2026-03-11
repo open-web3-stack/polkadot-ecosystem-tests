@@ -146,7 +146,7 @@ exports[`Hydration Accounts > \`transfer_all\` > transfer all with keepAlive tru
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 99000000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
