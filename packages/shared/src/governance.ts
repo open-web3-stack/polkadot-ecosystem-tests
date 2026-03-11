@@ -1123,7 +1123,9 @@ export async function referendumLifecycleDelegationTest<
   })
   assert(client.api.events.convictionVoting.Undelegated.is(undelegatedEvent.event))
   const undelegatedEventData = undelegatedEvent.event.data
-  expect(undelegatedEventData[0].toString()).toBe(devAccounts.bob.address)
+  expect(undelegatedEventData[0].toString()).toBe(
+    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+  )
 
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   referendumData = referendumDataOpt.unwrap()
