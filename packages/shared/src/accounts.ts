@@ -633,7 +633,9 @@ async function transferAllowDeathTest<
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
     { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
+  )
+    .redact({ number: 0 })
+    .toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
 
   // Verify only Alice's account was reaped
   expect(await isAccountReaped(client, alice.address)).toBe(true)
