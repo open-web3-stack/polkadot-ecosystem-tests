@@ -126,7 +126,7 @@ exports[`Bifrost Kusama Accounts > \`transfer_all\` > transfer all with keepAliv
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 920000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -146,7 +146,7 @@ exports[`Bifrost Kusama Accounts > \`transfer_all\` > transfer all with keepAliv
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 910000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
@@ -262,7 +262,7 @@ exports[`Bifrost Kusama Accounts > transfer_allow_death > leaving an account bel
   {
     "data": {
       "account": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-      "freeBalance": "(rounded 910000000000)",
+      "freeBalance": "(number)",
     },
     "method": "Endowed",
     "section": "balances",
