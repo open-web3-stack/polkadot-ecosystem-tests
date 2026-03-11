@@ -2011,7 +2011,9 @@ async function transferAllKeepAliveFalseTest<
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'KilledAccount' },
     { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = false`')
+  )
+    .redact({ number: true })
+    .toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = false`')
 
   // 3. Verify that transfer succeeds, and Alice is killed
 
