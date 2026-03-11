@@ -949,11 +949,11 @@ export async function referendumLifecycleDelegationTest<
     delegationAmount,
   )
 
-  const delegationEvents = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
+  const delegationEvent = await sendTransaction(delegateTx.signAsync(devAccounts.bob))
   await client.dev.newBlock()
 
   const unwantedFields = /index/
-  await checkEvents(delegationEvents, 'convictionVoting')
+  await checkEvents(delegationEvent, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot("events for bob's delegation to charlie")
 
@@ -1112,9 +1112,18 @@ export async function referendumLifecycleDelegationTest<
   const undelegateEvent = await sendTransaction(removeDelegationTx.signAsync(devAccounts.bob))
   await client.dev.newBlock()
 
-  await checkEvents(undelegateEvent, 'convictionVoting').toMatchSnapshot(
-    "events for bob's removal of delegation to charlie",
-  )
+  await checkEvents(undelegateEvent, 'convictionVoting')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot("events for bob's removal of delegation to charlie")
+
+  subEvents = await client.api.query.system.events()
+  const [undelegatedEvent] = subEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'convictionVoting' && event.method === 'Undelegated'
+  })
+  assert(client.api.events.convictionVoting.Undelegated.is(undelegatedEvent.event))
+  const undelegatedEventData = undelegatedEvent.event.data
+  expect(undelegatedEventData[0].toString()).toBe(devAccounts.bob.address)
 
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   referendumData = referendumDataOpt.unwrap()
