@@ -1917,7 +1917,9 @@ async function transferAllKeepAliveTrueTest<
     transferEvents,
     { section: 'balances', method: 'Endowed' },
     { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = true`')
+  )
+    .redact({ number: true })
+    .toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = true`')
 
   // 3. Verify that transfer succeeds
 
