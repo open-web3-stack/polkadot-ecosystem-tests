@@ -30,7 +30,7 @@ export const configurationsE2ETests = <
   children: [
     {
       kind: 'describe',
-      label: 'configurations tests',
+      label: 'configuration tests',
       children: [
         {
           kind: 'test',
