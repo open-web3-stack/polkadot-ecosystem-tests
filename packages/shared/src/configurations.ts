@@ -3,6 +3,8 @@ import { check, type RootTestTree, scheduleInlineCallListWithSameOrigin, setupNe
 
 import type { u32, Vec } from '@polkadot/types'
 import type {
+  PolkadotPrimitivesV8ApprovalVotingParams,
+  PolkadotPrimitivesV8AsyncBackingAsyncBackingParams,
   PolkadotPrimitivesV8SchedulerParams,
   PolkadotRuntimeParachainsConfigurationHostConfiguration,
 } from '@polkadot/types/lookup'
@@ -207,6 +209,149 @@ export async function configurationTest<
   expect(hrmpPending.hrmpChannelMaxMessageSize.toNumber()).toBe(hrmpChannelMaxMessageSize)
   expect(hrmpPending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(hrmpMaxParachainOutboundChannels)
   expect(hrmpPending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(hrmpMaxMessageNumPerCandidate)
+
+  // Advanced Configuration
+  const pvfVotingTtl = 3
+  const minimumValidationUpgradeDelay = 25
+  const minimumBackingVotes = 3
+  const maxCandidateDepth = 4
+  const allowedAncestryLen = 3
+  const asyncBackingParamsArg = client.api.createType('PolkadotPrimitivesV8AsyncBackingAsyncBackingParams', {
+    maxCandidateDepth,
+    allowedAncestryLen,
+  })
+  const executorParamsArg = client.api.createType('PolkadotPrimitivesV8ExecutorParams', [
+    { MaxMemoryPages: 8192 },
+    { PvfExecTimeout: ['Backing', 3000] },
+    { PvfExecTimeout: ['Approval', 20000] },
+  ])
+  const maxApprovalCoalesceCount = 8
+  const approvalVotingParamsArg = client.api.createType('PolkadotPrimitivesV8ApprovalVotingParams', {
+    maxApprovalCoalesceCount,
+  })
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setPvfVotingTtl(pvfVotingTtl).method.toHex(),
+      client.api.tx.configuration.setMinimumValidationUpgradeDelay(minimumValidationUpgradeDelay).method.toHex(),
+      client.api.tx.configuration.setMinimumBackingVotes(minimumBackingVotes).method.toHex(),
+      client.api.tx.configuration.setAsyncBackingParams(asyncBackingParamsArg).method.toHex(),
+      client.api.tx.configuration.setExecutorParams(executorParamsArg).method.toHex(),
+      client.api.tx.configuration.setApprovalVotingParams(approvalVotingParamsArg).method.toHex(),
+      client.api.tx.configuration.setBypassConsistencyCheck(true).method.toHex(),
+      client.api.tx.configuration.setNodeFeature(4, true).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const advancedPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  expect(advancedPending.pvfVotingTtl.toNumber()).toBe(pvfVotingTtl)
+  expect(advancedPending.minimumValidationUpgradeDelay.toNumber()).toBe(minimumValidationUpgradeDelay)
+  expect(advancedPending.minimumBackingVotes.toNumber()).toBe(minimumBackingVotes)
+
+  const asyncParams = advancedPending.asyncBackingParams as PolkadotPrimitivesV8AsyncBackingAsyncBackingParams
+  expect(asyncParams.maxCandidateDepth.toNumber()).toBe(maxCandidateDepth)
+  expect(asyncParams.allowedAncestryLen.toNumber()).toBe(allowedAncestryLen)
+
+  expect(advancedPending.executorParams.toJSON()).toEqual([
+    { maxMemoryPages: 8192 },
+    { pvfExecTimeout: ['Backing', 3000] },
+    { pvfExecTimeout: ['Approval', 20000] },
+  ])
+
+  const approvalParams = advancedPending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
+  expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
+
+  const bypassConsistencyCheck = await client.api.query.configuration.bypassConsistencyCheck()
+  expect(bypassConsistencyCheck.toJSON()).toBe(true)
+
+  // setNodeFeature(4, true): "0x0b" (0b00001011) → "0x1b" (0b00011011)
+  expect(advancedPending.nodeFeatures.toJSON()).toBe('0x1b')
+
+  // on-demand individual setters (each modifies a field within schedulerParams)
+  const onDemandBaseFee = 6000000000n
+  const onDemandFeeVariability = 40000000
+  const onDemandQueueMaxSize = 600
+  const onDemandTargetQueueUtilization = 350000000
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setOnDemandBaseFee(onDemandBaseFee).method.toHex(),
+      client.api.tx.configuration.setOnDemandFeeVariability(onDemandFeeVariability).method.toHex(),
+      client.api.tx.configuration.setOnDemandQueueMaxSize(onDemandQueueMaxSize).method.toHex(),
+      client.api.tx.configuration.setOnDemandTargetQueueUtilization(onDemandTargetQueueUtilization).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const onDemandPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  const onDemandSchedulerParams = onDemandPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+  expect(onDemandSchedulerParams.onDemandBaseFee.toBigInt()).toBe(onDemandBaseFee)
+  expect(onDemandSchedulerParams.onDemandFeeVariability.toNumber()).toBe(onDemandFeeVariability)
+  expect(onDemandSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(onDemandQueueMaxSize)
+  expect(onDemandSchedulerParams.onDemandTargetQueueUtilization.toNumber()).toBe(onDemandTargetQueueUtilization)
+
+  // setSchedulerParams replaces the entire schedulerParams struct at once
+  const schedulerGroupRotationFrequency = 15
+  const schedulerParasAvailabilityPeriod = 12
+  const schedulerMaxValidatorsPerCore = null
+  const schedulerLookahead = 3
+  const schedulerNumCores = 80
+  const schedulerMaxAvailabilityTimeouts = 0
+  const schedulerOnDemandQueueMaxSize = 600
+  const schedulerOnDemandTargetQueueUtilization = 250000000
+  const schedulerOnDemandFeeVariability = 30000000
+  const schedulerOnDemandBaseFee = 5000000000
+  const schedulerTtl = 5
+
+  const newSchedulerParamsArg = client.api.createType('PolkadotPrimitivesV8SchedulerParams', {
+    groupRotationFrequency: schedulerGroupRotationFrequency,
+    parasAvailabilityPeriod: schedulerParasAvailabilityPeriod,
+    maxValidatorsPerCore: schedulerMaxValidatorsPerCore,
+    lookahead: schedulerLookahead,
+    numCores: schedulerNumCores,
+    maxAvailabilityTimeouts: schedulerMaxAvailabilityTimeouts,
+    onDemandQueueMaxSize: schedulerOnDemandQueueMaxSize,
+    onDemandTargetQueueUtilization: schedulerOnDemandTargetQueueUtilization,
+    onDemandFeeVariability: schedulerOnDemandFeeVariability,
+    onDemandBaseFee: schedulerOnDemandBaseFee,
+    ttl: schedulerTtl,
+  })
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg).method.toHex()],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const schedulerParamsPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  const updatedSchedulerParams = schedulerParamsPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+  expect(updatedSchedulerParams.groupRotationFrequency.toNumber()).toBe(schedulerGroupRotationFrequency)
+  expect(updatedSchedulerParams.parasAvailabilityPeriod.toNumber()).toBe(schedulerParasAvailabilityPeriod)
+  expect(updatedSchedulerParams.numCores.toNumber()).toBe(schedulerNumCores)
+  expect(updatedSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
+  expect(updatedSchedulerParams.onDemandBaseFee.toJSON()).toBe(schedulerOnDemandBaseFee)
+  expect(updatedSchedulerParams.ttl.toNumber()).toBe(schedulerTtl)
 }
 
 /// ----------
