@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import type { Chain } from '@e2e-test/networks'
-import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { check, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
 import type { TestConfig } from './helpers/index.js'
 
@@ -10,6 +10,11 @@ export async function configurationTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
+
+  const activeConfig = await client.api.query.configuration.activeConfig()
+
+  await check(activeConfig).redact({ number: 1 }).toMatchSnapshot('initial active configuration')
+  console.log('activeConfig', activeConfig.toJSON())
 
   // Core Configuration
 }
