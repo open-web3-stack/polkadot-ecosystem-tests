@@ -1,5 +1,5 @@
 import type { Chain } from '@e2e-test/networks'
-import { check, type RootTestTree, scheduleInlineCallWithOrigin, setupNetworks } from '@e2e-test/shared'
+import { check, type RootTestTree, scheduleInlineCallListWithSameOrigin, setupNetworks } from '@e2e-test/shared'
 
 import type { u32, Vec } from '@polkadot/types'
 import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
@@ -22,21 +22,26 @@ export async function configurationTest<
   expect(pendingConfigs.toJSON()).toEqual([])
 
   const validationUpgradeCooldown = 13300
+  const validationUpgradeDelay = 700
+
   const setValidationUpgradeCooldown =
     client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown)
+  const setValidationUpgradeDelay = client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay)
 
-  await scheduleInlineCallWithOrigin(
+  await scheduleInlineCallListWithSameOrigin(
     client,
-    setValidationUpgradeCooldown.method.toHex(),
+    [setValidationUpgradeCooldown.method.toHex(), setValidationUpgradeDelay.method.toHex()],
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
+
   await client.dev.newBlock()
 
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
   expect(pendingConfigs[0][1].validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
+  expect(pendingConfigs[0][1].validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
 
   // Core Configuration
 }
