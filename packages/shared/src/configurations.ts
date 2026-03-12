@@ -1,7 +1,11 @@
-import { sendTransaction } from '@acala-network/chopsticks-testing'
-
 import type { Chain } from '@e2e-test/networks'
-import { check, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { check, type RootTestTree, scheduleInlineCallWithOrigin, setupNetworks } from '@e2e-test/shared'
+
+import type { u32, Vec } from '@polkadot/types'
+import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
+import type { ITuple } from '@polkadot/types/types'
+
+import { expect } from 'vitest'
 
 import type { TestConfig } from './helpers/index.js'
 
@@ -13,6 +17,26 @@ export async function configurationTest<
 
   const activeConfig = await client.api.query.configuration.activeConfig()
   await check(activeConfig).redact({ number: 1 }).toMatchSnapshot('initial active configuration')
+
+  let pendingConfigs = await client.api.query.configuration.pendingConfigs()
+  expect(pendingConfigs.toJSON()).toEqual([])
+
+  const validationUpgradeCooldown = 13300
+  const setValidationUpgradeCooldown =
+    client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    setValidationUpgradeCooldown.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  expect(pendingConfigs[0][1].validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
 
   // Core Configuration
 }
