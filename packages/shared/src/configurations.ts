@@ -137,7 +137,7 @@ export async function configurationTest<
 
   // Message Queue Configuration
   const maxUpwardQueueCount = 800000
-  const maxUpwardQueueSize = 5000000
+  const maxUpwardQueueSize = 4194304
   const maxDownwardMessageSize = 60000
   const maxUpwardMessageSize = 80000
   const maxUpwardMessageNumPerCandidate = 25
@@ -162,7 +162,7 @@ export async function configurationTest<
   >
   const mqPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(mqPending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
-  // expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
+  expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
   expect(mqPending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
   expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
   expect(mqPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
