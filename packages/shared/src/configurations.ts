@@ -166,6 +166,47 @@ export async function configurationTest<
   expect(mqPending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
   expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
   expect(mqPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
+
+  // HRMP Configuration
+  const hrmpSenderDeposit = 6000000000000n
+  const hrmpRecipientDeposit = 6000000000000n
+  const hrmpChannelMaxCapacity = 40
+  const hrmpChannelMaxTotalSize = 120000
+  const hrmpMaxParachainInboundChannels = 40
+  const hrmpChannelMaxMessageSize = 120000
+  const hrmpMaxParachainOutboundChannels = 40
+  const hrmpMaxMessageNumPerCandidate = 15
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setHrmpSenderDeposit(hrmpSenderDeposit).method.toHex(),
+      client.api.tx.configuration.setHrmpRecipientDeposit(hrmpRecipientDeposit).method.toHex(),
+      client.api.tx.configuration.setHrmpChannelMaxCapacity(hrmpChannelMaxCapacity).method.toHex(),
+      client.api.tx.configuration.setHrmpChannelMaxTotalSize(hrmpChannelMaxTotalSize).method.toHex(),
+      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(hrmpMaxParachainInboundChannels).method.toHex(),
+      client.api.tx.configuration.setHrmpChannelMaxMessageSize(hrmpChannelMaxMessageSize).method.toHex(),
+      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(hrmpMaxParachainOutboundChannels).method.toHex(),
+      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(hrmpMaxMessageNumPerCandidate).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const hrmpPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  expect(hrmpPending.hrmpSenderDeposit.toBigInt()).toBe(hrmpSenderDeposit)
+  expect(hrmpPending.hrmpRecipientDeposit.toBigInt()).toBe(hrmpRecipientDeposit)
+  expect(hrmpPending.hrmpChannelMaxCapacity.toNumber()).toBe(hrmpChannelMaxCapacity)
+  expect(hrmpPending.hrmpChannelMaxTotalSize.toNumber()).toBe(hrmpChannelMaxTotalSize)
+  expect(hrmpPending.hrmpMaxParachainInboundChannels.toNumber()).toBe(hrmpMaxParachainInboundChannels)
+  expect(hrmpPending.hrmpChannelMaxMessageSize.toNumber()).toBe(hrmpChannelMaxMessageSize)
+  expect(hrmpPending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(hrmpMaxParachainOutboundChannels)
+  expect(hrmpPending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(hrmpMaxMessageNumPerCandidate)
 }
 
 /// ----------
