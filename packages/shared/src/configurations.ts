@@ -12,9 +12,7 @@ export async function configurationTest<
   const [client] = await setupNetworks(chain)
 
   const activeConfig = await client.api.query.configuration.activeConfig()
-
   await check(activeConfig).redact({ number: 1 }).toMatchSnapshot('initial active configuration')
-  console.log('activeConfig', activeConfig.toJSON())
 
   // Core Configuration
 }
