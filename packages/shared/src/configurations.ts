@@ -61,6 +61,39 @@ export async function configurationTest<
   expect(pending.maxPovSize.toNumber()).toBe(maxPovSize)
   expect(pending.maxHeadDataSize.toNumber()).toBe(maxHeadDataSize)
   expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(numCores)
+
+  // Scheduler Configuration
+  const groupRotationFrequency = 20
+  const parasAvailabilityPeriod = 15
+  const schedulingLookahead = 4
+  const maxValidatorsPerCore = 10
+  const maxValidators = 500
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setGroupRotationFrequency(groupRotationFrequency).method.toHex(),
+      client.api.tx.configuration.setParasAvailabilityPeriod(parasAvailabilityPeriod).method.toHex(),
+      client.api.tx.configuration.setSchedulingLookahead(schedulingLookahead).method.toHex(),
+      client.api.tx.configuration.setMaxValidatorsPerCore(maxValidatorsPerCore).method.toHex(),
+      client.api.tx.configuration.setMaxValidators(maxValidators).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const schedulerPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  const schedulerParams = schedulerPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+  expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(groupRotationFrequency)
+  expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(parasAvailabilityPeriod)
+  expect(schedulerParams.lookahead.toNumber()).toBe(schedulingLookahead)
+  expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(maxValidatorsPerCore)
+  expect(schedulerPending.maxValidators.toJSON()).toBe(maxValidators)
 }
 
 /// ----------
