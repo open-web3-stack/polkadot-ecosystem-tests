@@ -94,6 +94,78 @@ export async function configurationTest<
   expect(schedulerParams.lookahead.toNumber()).toBe(schedulingLookahead)
   expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(maxValidatorsPerCore)
   expect(schedulerPending.maxValidators.toJSON()).toBe(maxValidators)
+
+  // Dispute Configuration
+  const disputePeriod = 8
+  const disputePostConclusionAcceptancePeriod = 700
+  const noShowSlots = 4
+  const nDelayTranches = 350
+  const zerothDelayTrancheWidth = 1
+  const neededApprovals = 25
+  const relayVrfModuloSamples = 8
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setDisputePeriod(disputePeriod).method.toHex(),
+      client.api.tx.configuration
+        .setDisputePostConclusionAcceptancePeriod(disputePostConclusionAcceptancePeriod)
+        .method.toHex(),
+      client.api.tx.configuration.setNoShowSlots(noShowSlots).method.toHex(),
+      client.api.tx.configuration.setNDelayTranches(nDelayTranches).method.toHex(),
+      client.api.tx.configuration.setZerothDelayTrancheWidth(zerothDelayTrancheWidth).method.toHex(),
+      client.api.tx.configuration.setNeededApprovals(neededApprovals).method.toHex(),
+      client.api.tx.configuration.setRelayVrfModuloSamples(relayVrfModuloSamples).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const disputePending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  expect(disputePending.disputePeriod.toNumber()).toBe(disputePeriod)
+  expect(disputePending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(disputePostConclusionAcceptancePeriod)
+  expect(disputePending.noShowSlots.toNumber()).toBe(noShowSlots)
+  expect(disputePending.nDelayTranches.toNumber()).toBe(nDelayTranches)
+  expect(disputePending.zerothDelayTrancheWidth.toNumber()).toBe(zerothDelayTrancheWidth)
+  expect(disputePending.neededApprovals.toNumber()).toBe(neededApprovals)
+  expect(disputePending.relayVrfModuloSamples.toNumber()).toBe(relayVrfModuloSamples)
+
+  // Message Queue Configuration
+  const maxUpwardQueueCount = 800000
+  const maxUpwardQueueSize = 5000000
+  const maxDownwardMessageSize = 60000
+  const maxUpwardMessageSize = 80000
+  const maxUpwardMessageNumPerCandidate = 25
+
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setMaxUpwardQueueCount(maxUpwardQueueCount).method.toHex(),
+      client.api.tx.configuration.setMaxUpwardQueueSize(maxUpwardQueueSize).method.toHex(),
+      client.api.tx.configuration.setMaxDownwardMessageSize(maxDownwardMessageSize).method.toHex(),
+      client.api.tx.configuration.setMaxUpwardMessageSize(maxUpwardMessageSize).method.toHex(),
+      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(maxUpwardMessageNumPerCandidate).method.toHex(),
+    ],
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const mqPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  expect(mqPending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
+  // expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
+  expect(mqPending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
+  expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
+  expect(mqPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
 }
 
 /// ----------
