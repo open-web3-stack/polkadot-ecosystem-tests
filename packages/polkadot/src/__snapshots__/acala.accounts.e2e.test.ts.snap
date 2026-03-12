@@ -52,41 +52,6 @@ exports[`Acala Accounts > \`force_adjust_total_issuance\` > successful adjustmen
 ]
 `;
 
-exports[`Acala Accounts > \`force_transfer\` > force transferring origin below ED can kill it > events of \`force_transfer\` from Alice to Bob 1`] = `
-[
-  {
-    "data": {
-      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
-    },
-    "method": "KilledAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "21Rw11TJFf56FdaR2KnxL266rim2kgbVu8Y1qFSncuXg6pWm",
-      "amount": "(number)",
-    },
-    "method": "DustLost",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
-      "account": "23ECVzcTQZBq3Rj17zaftc4NzWB6y7wGdh7xuBampbEw4rc7",
-      "freeBalance": "(number)",
-    },
-    "method": "Endowed",
-    "section": "balances",
-  },
-]
-`;
-
 exports[`Acala Accounts > \`transfer_all\` > account with reserves cannot transfer all funds > events when Alice with reserve transfers all to Bob 1`] = `
 [
   {
