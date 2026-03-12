@@ -2,7 +2,10 @@ import type { Chain } from '@e2e-test/networks'
 import { check, type RootTestTree, scheduleInlineCallListWithSameOrigin, setupNetworks } from '@e2e-test/shared'
 
 import type { u32, Vec } from '@polkadot/types'
-import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
+import type {
+  PolkadotPrimitivesV8SchedulerParams,
+  PolkadotRuntimeParachainsConfigurationHostConfiguration,
+} from '@polkadot/types/lookup'
 import type { ITuple } from '@polkadot/types/types'
 
 import { expect } from 'vitest'
@@ -21,16 +24,26 @@ export async function configurationTest<
   let pendingConfigs = await client.api.query.configuration.pendingConfigs()
   expect(pendingConfigs.toJSON()).toEqual([])
 
+  // Core configuration
   const validationUpgradeCooldown = 13300
   const validationUpgradeDelay = 700
-
-  const setValidationUpgradeCooldown =
-    client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown)
-  const setValidationUpgradeDelay = client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay)
+  const codeRetentionPeriod = 14300
+  const maxCodeSize = 3000000
+  const maxPovSize = 10000000
+  const maxHeadDataSize = 20000
+  const numCores = 50
 
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [setValidationUpgradeCooldown.method.toHex(), setValidationUpgradeDelay.method.toHex()],
+    [
+      client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown).method.toHex(),
+      client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay).method.toHex(),
+      client.api.tx.configuration.setCodeRetentionPeriod(codeRetentionPeriod).method.toHex(),
+      client.api.tx.configuration.setMaxCodeSize(maxCodeSize).method.toHex(),
+      client.api.tx.configuration.setMaxPovSize(maxPovSize).method.toHex(),
+      client.api.tx.configuration.setMaxHeadDataSize(maxHeadDataSize).method.toHex(),
+      client.api.tx.configuration.setCoretimeCores(numCores).method.toHex(),
+    ],
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -40,10 +53,14 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
-  expect(pendingConfigs[0][1].validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
-  expect(pendingConfigs[0][1].validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
-
-  // Core Configuration
+  const pending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  expect(pending.validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
+  expect(pending.validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
+  expect(pending.codeRetentionPeriod.toNumber()).toBe(codeRetentionPeriod)
+  expect(pending.maxCodeSize.toNumber()).toBe(maxCodeSize)
+  expect(pending.maxPovSize.toNumber()).toBe(maxPovSize)
+  expect(pending.maxHeadDataSize.toNumber()).toBe(maxHeadDataSize)
+  expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(numCores)
 }
 
 /// ----------
