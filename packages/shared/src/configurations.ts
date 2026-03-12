@@ -1,5 +1,11 @@
 import type { Chain } from '@e2e-test/networks'
-import { check, type RootTestTree, scheduleInlineCallListWithSameOrigin, setupNetworks } from '@e2e-test/shared'
+import {
+  check,
+  type RootTestTree,
+  scheduleInlineCallListWithSameOrigin,
+  scheduleInlineCallWithOrigin,
+  setupNetworks,
+} from '@e2e-test/shared'
 
 import type { u32, Vec } from '@polkadot/types'
 import type {
@@ -332,9 +338,9 @@ export async function configurationTest<
     ttl: schedulerTtl,
   })
 
-  await scheduleInlineCallListWithSameOrigin(
+  await scheduleInlineCallWithOrigin(
     client,
-    [client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg).method.toHex()],
+    client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg).method.toHex(),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
