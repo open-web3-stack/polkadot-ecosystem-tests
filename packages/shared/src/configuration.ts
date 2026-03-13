@@ -366,7 +366,7 @@ export async function configurationTest<
 /// Test Trees
 /// ----------
 
-export const configurationsE2ETests = <
+export const configurationE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
 >(
@@ -382,7 +382,7 @@ export const configurationsE2ETests = <
       children: [
         {
           kind: 'test',
-          label: 'configurations test - can read and update configurations',
+          label: 'configuration test - can read and update configuration',
           testFn: async () => await configurationTest(chain),
         },
       ],
