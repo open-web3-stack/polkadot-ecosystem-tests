@@ -250,6 +250,8 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot
 ]
 `;
 
+exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `[]`;
+
 exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot AssetHub Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
