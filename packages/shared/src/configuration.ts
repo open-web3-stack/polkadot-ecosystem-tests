@@ -362,6 +362,32 @@ export async function configurationTest<
   expect(updatedSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
   expect(updatedSchedulerParams.onDemandBaseFee.toJSON()).toBe(schedulerOnDemandBaseFee)
   expect(updatedSchedulerParams.ttl.toNumber()).toBe(schedulerTtl)
+
+  // Assert that consistency checks disallows improper config values
+  const hrmpImproperMaxParachainInboundChannels = 400000
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.configuration
+      .setHrmpMaxParachainInboundChannels(hrmpImproperMaxParachainInboundChannels)
+      .method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+
+  const improperPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+
+  await check(improperPending.hrmpMaxParachainInboundChannels)
+    .redact({ number: 1 })
+    .toMatchSnapshot('hrmpMaxParachainInboundChannels unchanged after improper value')
+
+  // Assert that tx should fail with signed origin
 }
 
 /// ----------

@@ -1,5 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Configuration > configuration tests > configuration test - can read and update configuration > hrmpMaxParachainInboundChannels unchanged after improper value 1`] = `40`;
+
 exports[`Kusama Configuration > configuration tests > configuration test - can read and update configuration > initial active configuration 1`] = `
 {
   "approvalVotingParams": {
