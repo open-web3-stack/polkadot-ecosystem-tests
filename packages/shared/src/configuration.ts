@@ -251,19 +251,7 @@ export async function configurationTest<
   const minimumBackingVotes = 3
   const maxCandidateDepth = 4
   const allowedAncestryLen = 3
-  const asyncBackingParamsArg = client.api.createType('PolkadotPrimitivesV8AsyncBackingAsyncBackingParams', {
-    maxCandidateDepth,
-    allowedAncestryLen,
-  })
-  const executorParamsArg = client.api.createType('PolkadotPrimitivesV8ExecutorParams', [
-    { MaxMemoryPages: 8192 },
-    { PvfExecTimeout: ['Backing', 3000] },
-    { PvfExecTimeout: ['Approval', 20000] },
-  ])
   const maxApprovalCoalesceCount = 8
-  const approvalVotingParamsArg = client.api.createType('PolkadotPrimitivesV8ApprovalVotingParams', {
-    maxApprovalCoalesceCount,
-  })
 
   await scheduleInlineCallListWithSameOrigin(
     client,
@@ -271,9 +259,15 @@ export async function configurationTest<
       client.api.tx.configuration.setPvfVotingTtl(pvfVotingTtl).method.toHex(),
       client.api.tx.configuration.setMinimumValidationUpgradeDelay(minimumValidationUpgradeDelay).method.toHex(),
       client.api.tx.configuration.setMinimumBackingVotes(minimumBackingVotes).method.toHex(),
-      client.api.tx.configuration.setAsyncBackingParams(asyncBackingParamsArg).method.toHex(),
-      client.api.tx.configuration.setExecutorParams(executorParamsArg).method.toHex(),
-      client.api.tx.configuration.setApprovalVotingParams(approvalVotingParamsArg).method.toHex(),
+      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth, allowedAncestryLen }).method.toHex(),
+      client.api.tx.configuration
+        .setExecutorParams([
+          { MaxMemoryPages: 8192 },
+          { PvfExecTimeout: ['Backing', 3000] },
+          { PvfExecTimeout: ['Approval', 20000] },
+        ])
+        .method.toHex(),
+      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount }).method.toHex(),
       client.api.tx.configuration.setBypassConsistencyCheck(false).method.toHex(),
       client.api.tx.configuration.setNodeFeature(4, true).method.toHex(),
     ],
@@ -354,7 +348,7 @@ export async function configurationTest<
   const schedulerOnDemandBaseFee = 5000000000
   const schedulerTtl = 5
 
-  const newSchedulerParamsArg = client.api.createType('PolkadotPrimitivesV8SchedulerParams', {
+  const newSchedulerParamsArg = {
     groupRotationFrequency: schedulerGroupRotationFrequency,
     parasAvailabilityPeriod: schedulerParasAvailabilityPeriod,
     maxValidatorsPerCore: schedulerMaxValidatorsPerCore,
@@ -366,7 +360,7 @@ export async function configurationTest<
     onDemandFeeVariability: schedulerOnDemandFeeVariability,
     onDemandBaseFee: schedulerOnDemandBaseFee,
     ttl: schedulerTtl,
-  })
+  }
 
   await scheduleInlineCallWithOrigin(
     client,
