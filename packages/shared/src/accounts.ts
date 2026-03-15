@@ -16,8 +16,6 @@ import { match } from 'ts-pattern'
 import {
   blockProviderOffset,
   check,
-  checkEvents,
-  checkSystemEvents,
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
@@ -610,30 +608,9 @@ async function transferAllowDeathTest<
 
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
 
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  await checkEvents(
-    transferEvents,
-    // Event of fee withdrawal from Alice
-    { section: 'balances', method: 'Withdraw' },
-    // Alice account is reaped, so dust is lost
-    { section: 'balances', method: 'DustLost' },
-  )
-    // Withdrawal and dust lost events may change due to fees
-    .redact({ number: 0 })
-    .toMatchSnapshot('unstable events when Alice `transfer_allow_death` to Bob')
-
-  // `Deposit` events are irrelevant, as they contain data that may change as `chopsticks` selects different block
-  // producers each test run, causing the snapshot to fail.
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
 
   // Verify only Alice's account was reaped
   expect(await isAccountReaped(client, alice.address)).toBe(true)
@@ -676,7 +653,11 @@ async function transferAllowDeathTest<
   // Check `Withdraw` event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -687,7 +668,11 @@ async function transferAllowDeathTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -704,7 +689,11 @@ async function transferAllowDeathTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -715,7 +704,11 @@ async function transferAllowDeathTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -727,7 +720,11 @@ async function transferAllowDeathTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -763,17 +760,9 @@ async function transferAllowDeathNoKillTest<
 
   const transferAmount = existentialDeposit // 1 ED
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot some events
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers 1 ED to Bob with sufficient balance')
 
   // Verify Alice's account was NOT reaped
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -824,7 +813,11 @@ async function transferAllowDeathNoKillTest<
   // Verify withdraw event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -835,7 +828,11 @@ async function transferAllowDeathNoKillTest<
   // Verify endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -846,7 +843,11 @@ async function transferAllowDeathNoKillTest<
   // Verify `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
 }
@@ -912,7 +913,6 @@ async function transferBelowExistentialDepositTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 }
-
 /**
  * Insufficient funds checks for `transfer_allow_death`
  */
@@ -980,17 +980,9 @@ async function transferAllowDeathWithReserveTest<
   const transferAmount = aliceFreeBefore - estimatedFee - (existentialDeposit - 1n)
 
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice with reserve transfers to Bob')
 
   // 4. Check the transfer failed
 
@@ -1173,7 +1165,6 @@ async function forceTransferKillTest<
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
-
   // Verify both accounts have expected initial state
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
@@ -1221,18 +1212,6 @@ async function forceTransferKillTest<
   const bobAccount = await baseClient.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
-  // Snapshot events
-  await checkSystemEvents(
-    baseClient,
-    // Do not snapshot `Transfer` event, as it is unstable, and the event checker does not allow filtering.
-    { section: 'balances', method: 'DustLost' },
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  )
-    .redact({ number: 0 })
-    .toMatchSnapshot('events of `force_transfer` from Alice to Bob')
-
   // Check events:
   // 1. `Transfer` event
   // 2. `DustLost` event
@@ -1259,7 +1238,11 @@ async function forceTransferKillTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(baseClient.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -1270,7 +1253,11 @@ async function forceTransferKillTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(baseClient.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -1281,7 +1268,11 @@ async function forceTransferKillTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -1293,7 +1284,11 @@ async function forceTransferKillTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(baseClient.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -1861,16 +1856,9 @@ async function transferAllKeepAliveTrueTest<
   // 2. Transfer all funds to Bob with `keepAlive = true`
 
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, true)
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = true`')
 
   // 3. Verify that transfer succeeds
 
@@ -1954,17 +1942,9 @@ async function transferAllKeepAliveFalseTest<
   // 2. Transfer all funds to Bob with `keepAlive = false`
 
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, false)
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = false`')
 
   // 3. Verify that transfer succeeds, and Alice is killed
 
@@ -1991,7 +1971,11 @@ async function transferAllKeepAliveFalseTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -2068,7 +2052,7 @@ async function transferAllWithReserveTest<
 
   // Calculate how much free balance Alice has left after reserve and prepare transfer
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, false) // keepAlive = false
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -2078,15 +2062,6 @@ async function transferAllWithReserveTest<
     client.config.properties.addressEncoding,
     client.config.properties.feeExtractor,
   )
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  )
-    .redact({ number: 0 })
-    .toMatchSnapshot('events when Alice with reserve transfers all to Bob')
 
   // 4. Check the transfer succeeded
 
@@ -2120,7 +2095,11 @@ async function transferAllWithReserveTest<
   // Check endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -3013,7 +2992,11 @@ async function forceUnreserveWithReservesTest<
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
 
   expect(unreservedEvent).toBeDefined()
@@ -3170,7 +3153,11 @@ async function forceSetBalanceSuccessTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3281,7 +3268,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3293,7 +3284,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a KilledAccount event was emitted
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -3581,10 +3576,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
-    .redact({ number: true })
-    .toMatchSnapshot('events for first issuance change')
-
   // 3. Verify the increase worked
 
   const afterIncreaseIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
@@ -3636,10 +3627,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await relayClient!.dev.newBlock()
     await baseClient.dev.newBlock()
   }
-
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
-    .redact({ number: true })
-    .toMatchSnapshot('events for second issuance change')
 
   // 5. Verify the decrease worked
 
@@ -3696,7 +3683,7 @@ async function burnTestBaseCase<
 
   const burnAmount = existentialDeposit * 500n
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
-  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
+  await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -3706,10 +3693,6 @@ async function burnTestBaseCase<
     cumulativeFees,
     client.config.properties.addressEncoding,
     client.config.properties.feeExtractor,
-  )
-
-  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
-    'events when Alice self-burns funds',
   )
 
   // 3. Verify that funds were burned, and total issuance updated
@@ -3732,7 +3715,11 @@ async function burnTestBaseCase<
   const eventsAfterBurn = await client.api.query.system.events()
   const burnEvent = eventsAfterBurn.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3783,7 +3770,7 @@ async function burnTestWithReaping<
   const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
 
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
-  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
+  await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -3794,8 +3781,6 @@ async function burnTestWithReaping<
     client.config.properties.feeExtractor,
   )
 
-  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for burn')
-
   // 3. Verify that the account is reaped
 
   expect(await isAccountReaped(client, alice.address)).toBe(true)
@@ -3803,7 +3788,11 @@ async function burnTestWithReaping<
   const events = await client.api.query.system.events()
   const burnEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3813,7 +3802,11 @@ async function burnTestWithReaping<
 
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -4284,11 +4277,10 @@ async function testLiquidityRestrictionForAction<
 
   // Step 4: Try to execute the deposit action
   const actionTx = await depositAction.createTransaction(client)
-  let actionEvents: any
   let rpcPaymentError = false
 
   try {
-    actionEvents = await sendTransaction(actionTx.signAsync(alice))
+    await sendTransaction(actionTx.signAsync(alice))
   } catch (error: any) {
     // Handle Hydration-specific RPC error where payment validation fails before transaction submission
     // Error: RpcError: 1010: {"invalid":{"payment":null}}
@@ -4332,10 +4324,6 @@ async function testLiquidityRestrictionForAction<
         // This is a pre-flight check that prevents the transaction from even being submitted
         await check('RPC payment validation rejected transaction due to insufficient funds').toMatchSnapshot('')
       } else {
-        await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-          'liquidity restricted action events',
-        )
-
         const finalEvents = await client.api.query.system.events()
         const failedEvent = finalEvents.find((record) => {
           const { event } = record
@@ -4377,14 +4365,14 @@ async function testLiquidityRestrictionForAction<
         )
       }
 
-      await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
-        'deposit action success events',
-      )
-
       const finalEvents = await client.api.query.system.events()
       const reservedEvent = finalEvents.find((record) => {
         const { event } = record
-        return event.section === 'balances' && event.method === 'Reserved'
+        if (event.section === 'balances' && event.method === 'Reserved') {
+          assert(client.api.events.balances.Reserved.is(event))
+          return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+        }
+        return false
       })
       expect(reservedEvent).toBeDefined()
       assert(client.api.events.balances.Reserved.is(reservedEvent!.event))

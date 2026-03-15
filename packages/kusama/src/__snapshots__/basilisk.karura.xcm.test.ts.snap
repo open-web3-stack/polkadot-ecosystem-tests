@@ -1,0 +1,682 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`basilisk & karura > basilisk transfer BSX to karura > balance on from chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 999000000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 1,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`basilisk & karura > basilisk transfer BSX to karura > balance on to chain 1`] = `
+{
+  "free": "(rounded 1000000000000000)",
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > basilisk transfer BSX to karura > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "reserveAssetDeposited": [
+              {
+                "fun": {
+                  "fungible": 1000000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2090,
+                      },
+                      {
+                        "generalIndex": 0,
+                      },
+                    ],
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "x2": [
+                      {
+                        "parachain": 2090,
+                      },
+                      {
+                        "generalIndex": 0,
+                      },
+                    ],
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 2000,
+  },
+]
+`;
+
+exports[`basilisk & karura > basilisk transfer BSX to karura > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2100)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 1000000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`basilisk & karura > basilisk transfer BSX to karura > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000000,
+          },
+          "id": {
+            "interior": {
+              "X2": [
+                {
+                  "Parachain": "(rounded 2100)",
+                },
+                {
+                  "GeneralIndex": 0,
+                },
+              ],
+            },
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": 2000,
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000000,
+        },
+        "id": {
+          "interior": {
+            "X2": [
+              {
+                "Parachain": "(rounded 2100)",
+              },
+              {
+                "GeneralIndex": 0,
+              },
+            ],
+          },
+          "parents": 1,
+        },
+      },
+      "sender": "bXmPf7DcVmFuHEmzH3UX8t6AUkfNQW8pnTeXGhFhqbfngjAak",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > balance on from chain 1`] = `
+{
+  "free": 999000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > balance on to chain 1`] = `
+{
+  "free": 0,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > from chain hrmp messages 1`] = `[]`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > route chain xcm events 1`] = `[]`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > to chain xcm events 1`] = `[]`;
+
+exports[`basilisk & karura > basilisk transfer KSM to karura > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": 2000,
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "bXmPf7DcVmFuHEmzH3UX8t6AUkfNQW8pnTeXGhFhqbfngjAak",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer BSX to basilisk > balance on from chain 1`] = `
+{
+  "free": 9000000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > karura transfer BSX to basilisk > balance on to chain 1`] = `
+{
+  "consumers": 0,
+  "data": {
+    "flags": "0x80000000000000000000000000000000",
+    "free": "(rounded 973000000000000)",
+    "frozen": 0,
+    "reserved": 0,
+  },
+  "nonce": 0,
+  "providers": 1,
+  "sufficients": 0,
+}
+`;
+
+exports[`basilisk & karura > karura transfer BSX to basilisk > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "generalIndex": 0,
+                      },
+                    ],
+                  },
+                  "parents": 0,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 1000000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "generalIndex": 0,
+                      },
+                    ],
+                  },
+                  "parents": 0,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "beneficiary": {
+                "interior": {
+                  "x1": [
+                    {
+                      "accountId32": {
+                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                        "network": null,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 2090,
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer BSX to basilisk > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 500000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer BSX to basilisk > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000000,
+          },
+          "id": {
+            "interior": {
+              "X2": [
+                {
+                  "Parachain": "(rounded 2100)",
+                },
+                {
+                  "GeneralIndex": 0,
+                },
+              ],
+            },
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": "(rounded 2100)",
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000000,
+        },
+        "id": {
+          "interior": {
+            "X2": [
+              {
+                "Parachain": "(rounded 2100)",
+              },
+              {
+                "GeneralIndex": 0,
+              },
+            ],
+          },
+          "parents": 1,
+        },
+      },
+      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > balance on from chain 1`] = `
+{
+  "free": 9000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > balance on to chain 1`] = `
+{
+  "free": "(rounded 999000000000)",
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 500000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositReserveAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "dest": {
+                "interior": {
+                  "x1": [
+                    {
+                      "parachain": 2090,
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+              "xcm": [
+                {
+                  "buyExecution": {
+                    "fees": {
+                      "fun": {
+                        "fungible": 500000000000,
+                      },
+                      "id": {
+                        "interior": {
+                          "here": null,
+                        },
+                        "parents": 1,
+                      },
+                    },
+                    "weightLimit": {
+                      "unlimited": null,
+                    },
+                  },
+                },
+                {
+                  "depositAsset": {
+                    "assets": {
+                      "wild": {
+                        "allCounted": 1,
+                      },
+                    },
+                    "beneficiary": {
+                      "interior": {
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                              "network": null,
+                            },
+                          },
+                        ],
+                      },
+                      "parents": 0,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 700000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 1000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 500000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`basilisk & karura > karura transfer KSM to basilisk > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": "(rounded 2100)",
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "rPizfonc8MPuEsMxufAytHjpRW7a2YrXWHKibaJXe9ZtjKx",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;

@@ -1,0 +1,290 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`acala & hydration > acala transfer DOT to hydration > balance on from chain 1`] = `
+{
+  "free": 9000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & hydration > acala transfer DOT to hydration > balance on to chain 1`] = `
+{
+  "free": "(rounded 1000000000000)",
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & hydration > acala transfer DOT to hydration > from chain hrmp messages 1`] = `
+[
+  {
+    "data": [
+      "ConcatenatedVersionedXcm",
+      {
+        "v5": [
+          {
+            "withdrawAsset": [
+              {
+                "fun": {
+                  "fungible": 1000000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+            ],
+          },
+          {
+            "clearOrigin": null,
+          },
+          {
+            "buyExecution": {
+              "fees": {
+                "fun": {
+                  "fungible": 500000000000,
+                },
+                "id": {
+                  "interior": {
+                    "here": null,
+                  },
+                  "parents": 1,
+                },
+              },
+              "weightLimit": {
+                "unlimited": null,
+              },
+            },
+          },
+          {
+            "depositReserveAsset": {
+              "assets": {
+                "wild": {
+                  "allCounted": 1,
+                },
+              },
+              "dest": {
+                "interior": {
+                  "x1": [
+                    {
+                      "parachain": 2034,
+                    },
+                  ],
+                },
+                "parents": 1,
+              },
+              "xcm": [
+                {
+                  "buyExecution": {
+                    "fees": {
+                      "fun": {
+                        "fungible": 500000000000,
+                      },
+                      "id": {
+                        "interior": {
+                          "here": null,
+                        },
+                        "parents": 1,
+                      },
+                    },
+                    "weightLimit": {
+                      "unlimited": null,
+                    },
+                  },
+                },
+                {
+                  "depositAsset": {
+                    "assets": {
+                      "wild": {
+                        "allCounted": 1,
+                      },
+                    },
+                    "beneficiary": {
+                      "interior": {
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                              "network": null,
+                            },
+                          },
+                        ],
+                      },
+                      "parents": 0,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            "setTopic": "(redacted)",
+          },
+        ],
+      },
+    ],
+    "recipient": 1000,
+  },
+]
+`;
+
+exports[`acala & hydration > acala transfer DOT to hydration > route chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 10000)",
+        "refTime": "(rounded 700000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`acala & hydration > acala transfer DOT to hydration > to chain xcm events 1`] = `
+[
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 1000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 500000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
+
+exports[`acala & hydration > acala transfer DOT to hydration > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": "(rounded 2000)",
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "23y3WetbNi6rDMgHmyRDjgpb7PnhgPotuPPawxruTMLYTLzG",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > balance on from chain 1`] = `
+{
+  "free": 999000000000000,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > balance on to chain 1`] = `
+{
+  "free": 0,
+  "frozen": 0,
+  "reserved": 0,
+}
+`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > from chain hrmp messages 1`] = `[]`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > route chain xcm events 1`] = `[]`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > to chain xcm events 1`] = `[]`;
+
+exports[`acala & hydration > hydration transfer DOT to acala > tx events 1`] = `
+[
+  {
+    "data": {
+      "assets": [
+        {
+          "fun": {
+            "Fungible": 1000000000000,
+          },
+          "id": {
+            "interior": "Here",
+            "parents": 1,
+          },
+        },
+      ],
+      "dest": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": 2000,
+            },
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": null,
+              },
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "fee": {
+        "fun": {
+          "Fungible": 1000000000000,
+        },
+        "id": {
+          "interior": "Here",
+          "parents": 1,
+        },
+      },
+      "sender": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "TransferredAssets",
+    "section": "xTokens",
+  },
+]
+`;

@@ -570,17 +570,17 @@ export function sortAddressesByBytes(addresses: string[], addressEncoding: numbe
 /**
  * Get the free funds of an account.
  */
-export async function getFreeFunds(client: Client<any, any>, address: any): Promise<number> {
+export async function getFreeFunds(client: Client<any, any>, address: any): Promise<bigint> {
   const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.free.toNumber()
+  return account.data.free.toBigInt()
 }
 
 /**
  * Get the reserved funds of an account.
  */
-export async function getReservedFunds(client: Client<any, any>, address: any): Promise<number> {
+export async function getReservedFunds(client: Client<any, any>, address: any): Promise<bigint> {
   const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
-  return account.data.reserved.toNumber()
+  return account.data.reserved.toBigInt()
 }
 
 /**

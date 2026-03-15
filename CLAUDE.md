@@ -74,7 +74,7 @@ yarn check-proxy-coverage
 
 ### Test File Naming Convention
 
-- XCM tests: `<chain-a>.<chain-b>.test.ts`
+- XCM tests: `<chain-a>.<chain-b>.xcm.test.ts`
 - E2E tests: `<chain-name>.<test-suite>.e2e.test.ts`
 
 This naming is required for automated test failure reporting to work correctly.

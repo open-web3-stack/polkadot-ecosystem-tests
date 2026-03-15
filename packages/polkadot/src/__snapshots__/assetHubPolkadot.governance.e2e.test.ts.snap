@@ -532,3 +532,53 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   },
 ]
 `;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > bob attempting to vote directly after delegating to charlie 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's removal of delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
+  },
+]
+`;
