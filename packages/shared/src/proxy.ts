@@ -1520,9 +1520,36 @@ export async function addRemoveProxyTest<
 
   await client.dev.newBlock()
 
-  await checkEvents(removeProxiesEvents, { section: 'proxy', method: 'ProxyRemoved' }).toMatchSnapshot(
-    'events when removing all proxies from Alice',
+  await checkEvents(removeProxiesEvents, 'proxy').toMatchSnapshot(
+    `events when removing proxies from Alice (removeProxies)`,
   )
+
+  // Verify that each proxy removal emitted a ProxyRemoved event with correct data.
+  // Note: `remove_all_proxy_delegates` emits `ProxyRemoved` events in the pallet source, but
+  // Polkadot's runtime does not yet include this change. Only assert on Kusama chains for now.
+  if (chain.networkGroup === 'kusama') {
+    const events = await client.api.query.system.events()
+    const proxyRemovedEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'proxy' && event.method === 'ProxyRemoved'
+    })
+
+    expect(proxyRemovedEvents.length).toBe(Object.keys(proxyTypes).length)
+
+    for (const record of proxyRemovedEvents) {
+      assert(client.api.events.proxy.ProxyRemoved.is(record.event))
+      const eventData = record.event.data
+      expect(eventData.delegator.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
+      expect(eventData.delay.eq(delay)).toBe(true)
+
+      const proxyType = eventData.proxyType.toString()
+      const expectedDelegate = proxyAccounts[proxyType]
+      expect(expectedDelegate, `Unexpected proxy type ${proxyType} in ProxyRemoved event`).toBeDefined()
+      expect(eventData.delegatee.eq(encodeAddress(expectedDelegate.address, chain.properties.addressEncoding))).toBe(
+        true,
+      )
+    }
+  }
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
@@ -1719,7 +1746,7 @@ export async function proxyCallTest<
   await client.dev.newBlock()
 
   // Bob performs a proxy call to transfer funds to Charlie
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
   const proxyTx = client.api.tx.proxy.proxy(alice.address, null, transferCall)
 
@@ -1738,11 +1765,12 @@ export async function proxyCallTest<
 
   // Check Alice's and Charlie's balances
   const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free
-  expect(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds').toBe(
-    true,
-  )
+  expect(
+    newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount.toString()))),
+    'Alice should have transferred funds',
+  ).toBe(true)
   charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  expect(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds').toBe(true)
+  expect(charlieBalance.eq(new BN(transferAmount.toString())), 'Charlie should have the transferred funds').toBe(true)
 }
 
 /**
@@ -1898,9 +1926,9 @@ export async function pureProxyOwnershipChangeTest<
   const charlie = testAccounts.charlie
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
   ])
 
   // Create a pure proxy for Alice of type `Any`
@@ -1930,9 +1958,9 @@ export async function pureProxyOwnershipChangeTest<
   await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
 
   // Add funds to the pure proxy account.
-  await setupBalances(client, [{ address: pureProxyAddress, amount: 300e10 }])
+  await setupBalances(client, [{ address: pureProxyAddress, amount: 300n * 10n ** 10n }])
 
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
   // Alice uses her pure proxy to transfer some funds to Charlie.
@@ -1942,7 +1970,7 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Confirm that Charlie received the funds.
-  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
 
   expect(charlieBalance, 'Charlie should have received the funds').toBe(transferAmount)
 
@@ -1968,9 +1996,9 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Confirm that Charlie received the funds again.
-  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
 
-  expect(charlieBalance, 'Charlie should have received the funds again').toBe(2 * transferAmount)
+  expect(charlieBalance, 'Charlie should have received the funds again').toBe(2n * transferAmount)
 
   // Check that Alice can no longer use the pure proxy.
   proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, transferCall)
@@ -1979,8 +2007,8 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Also confirm that Charlie did not receive any additional funds.
-  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
-  expect(charlieBalance, 'Charlie should not have received any additional funds').toBe(2 * transferAmount)
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
+  expect(charlieBalance, 'Charlie should not have received any additional funds').toBe(2n * transferAmount)
 }
 
 /**

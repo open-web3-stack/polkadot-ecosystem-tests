@@ -1,5 +1,6 @@
 import { assetHubKusama, kusama } from '@e2e-test/networks/chains'
 import {
+  governanceChainSelfUpgradeViaRootReferendumSuite,
   registerTestTree,
   systemE2ETestsForParaWithScheduler,
   systemE2ETestsViaRemoteScheduler,
@@ -9,6 +10,8 @@ import {
 const testConfig: TestConfig = {
   testSuiteName: 'Kusama AssetHub System',
 }
+
+registerTestTree(governanceChainSelfUpgradeViaRootReferendumSuite(assetHubKusama, testConfig))
 
 registerTestTree(systemE2ETestsViaRemoteScheduler(kusama, assetHubKusama, testConfig))
 

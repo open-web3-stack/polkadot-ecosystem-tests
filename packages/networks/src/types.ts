@@ -25,10 +25,6 @@ export interface ChainProperties {
    */
   schedulerBlockProvider: 'Local' | 'NonLocal'
   /**
-   * Whether the chain's ED is low relative to the average transaction fee, or of a similar order of magnitude.
-   */
-  chainEd: 'LowEd' | 'Normal'
-  /**
    * How to query and process a transaction fee payment event from this particular chain (see {@link FeeExtractor}).
    */
   feeExtractor: FeeExtractor

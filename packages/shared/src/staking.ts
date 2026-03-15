@@ -736,8 +736,8 @@ async function setStakingConfigsTest<
   const preMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrapOr(tenPercent).toNumber()
   const preAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
-  const setStakingConfigsCall = (inc: number) =>
-    client.api.tx.staking.setStakingConfigs(
+  const setStakingConfigsCall = (inc: number) => {
+    const args: any[] = [
       { Set: preMinNominatorBond + inc },
       { Set: preMinValidatorBond + inc },
       { Set: preMaxNominatorsCount + inc },
@@ -746,7 +746,9 @@ async function setStakingConfigsTest<
       { Set: preMinCommission + inc },
       { Set: preMaxStakedRewards + inc },
       { Set: !preAreNominatorsSlashable },
-    )
+    ]
+    return (client.api.tx.staking.setStakingConfigs as any)(...args)
+  }
 
   ///
   /// Try the extrinsic with a `Signed` origin
@@ -889,7 +891,7 @@ async function forceApplyValidatorCommissionTest<
 
   const newCommission = minCommission.add(new BN(10e6))
 
-  const setStakingConfigsTx = client.api.tx.staking.setStakingConfigs(
+  const setStakingConfigsArgs: any[] = [
     { Noop: null },
     { Noop: null },
     { Noop: null },
@@ -898,7 +900,8 @@ async function forceApplyValidatorCommissionTest<
     { Set: newCommission },
     { Noop: null },
     { Noop: null },
-  )
+  ]
+  const setStakingConfigsTx = (client.api.tx.staking.setStakingConfigs as any)(...setStakingConfigsArgs)
 
   await scheduleInlineCallWithOrigin(
     client,
@@ -1085,7 +1088,7 @@ async function chillOtherTest<
   /// Disregard staking configs pre-test-execution, excluding minumum validator/nominator bonds, which are not
   /// optional, and whose pre-test values can be used in the test.
 
-  const setStakingConfigsCall = client.api.tx.staking.setStakingConfigs(
+  const chillConfigArgs: any[] = [
     { Noop: null },
     { Noop: null },
     { Remove: null },
@@ -1094,7 +1097,8 @@ async function chillOtherTest<
     { Noop: null },
     { Noop: null },
     { Noop: null },
-  )
+  ]
+  const setStakingConfigsCall = (client.api.tx.staking.setStakingConfigs as any)(...chillConfigArgs)
 
   await scheduleInlineCallWithOrigin(
     client,

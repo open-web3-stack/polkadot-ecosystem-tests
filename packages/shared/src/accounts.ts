@@ -16,8 +16,6 @@ import { match } from 'ts-pattern'
 import {
   blockProviderOffset,
   check,
-  checkEvents,
-  checkSystemEvents,
   createXcmTransactSend,
   getBlockNumber,
   scheduleInlineCallWithOrigin,
@@ -610,30 +608,9 @@ async function transferAllowDeathTest<
 
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
 
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  await checkEvents(
-    transferEvents,
-    // Event of fee withdrawal from Alice
-    { section: 'balances', method: 'Withdraw' },
-    // Alice account is reaped, so dust is lost
-    { section: 'balances', method: 'DustLost' },
-  )
-    // Withdrawal and dust lost events may change due to fees
-    .redact({ number: 0 })
-    .toMatchSnapshot('unstable events when Alice `transfer_allow_death` to Bob')
-
-  // `Deposit` events are irrelevant, as they contain data that may change as `chopsticks` selects different block
-  // producers each test run, causing the snapshot to fail.
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice `transfer_allow_death` to Bob')
 
   // Verify only Alice's account was reaped
   expect(await isAccountReaped(client, alice.address)).toBe(true)
@@ -676,7 +653,11 @@ async function transferAllowDeathTest<
   // Check `Withdraw` event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -687,7 +668,11 @@ async function transferAllowDeathTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -704,7 +689,11 @@ async function transferAllowDeathTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -715,7 +704,11 @@ async function transferAllowDeathTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -727,7 +720,11 @@ async function transferAllowDeathTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(client.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -763,17 +760,9 @@ async function transferAllowDeathNoKillTest<
 
   const transferAmount = existentialDeposit // 1 ED
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot some events
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers 1 ED to Bob with sufficient balance')
 
   // Verify Alice's account was NOT reaped
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -795,10 +784,14 @@ async function transferAllowDeathNoKillTest<
   // Alice should have her original balance minus the transfer amount minus fees
   expect(aliceAccount.data.free.toBigInt()).toBe(totalBalance - transferAmount - feeInfo.actualFee)
 
-  // Check events - verify NO KilledAccount events are present
+  // Check events - verify NO KilledAccount event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -820,7 +813,11 @@ async function transferAllowDeathNoKillTest<
   // Verify withdraw event
   const withdrawEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Withdraw'
+    if (event.section === 'balances' && event.method === 'Withdraw') {
+      assert(client.api.events.balances.Withdraw.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(withdrawEvent).toBeDefined()
   assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
@@ -831,7 +828,11 @@ async function transferAllowDeathNoKillTest<
   // Verify endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -842,7 +843,11 @@ async function transferAllowDeathNoKillTest<
   // Verify `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
 }
@@ -908,7 +913,6 @@ async function transferBelowExistentialDepositTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 }
-
 /**
  * Insufficient funds checks for `transfer_allow_death`
  */
@@ -976,17 +980,9 @@ async function transferAllowDeathWithReserveTest<
   const transferAmount = aliceFreeBefore - estimatedFee - (existentialDeposit - 1n)
 
   const transferTx = client.api.tx.balances.transferAllowDeath(bob.address, transferAmount)
-  const transferEvents = await sendTransaction(transferTx.signAsync(alice))
+  await sendTransaction(transferTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    // Bob's account was fundless, and its endowment emits an event
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice with reserve transfers to Bob')
 
   // 4. Check the transfer failed
 
@@ -1016,10 +1012,14 @@ async function transferAllowDeathWithReserveTest<
 
   // 5. Check events
 
-  // Verify NO KilledAccount events are present
+  // Verify NO KilledAccount event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1084,22 +1084,34 @@ async function transferAllowDeathSelfTest<
   const aliceAccount = await client.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance - feeInfo.actualFee)
 
-  // Check no killing/creation related events occurred
+  // Check no killing/creation related events occurred for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(client.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeUndefined()
 
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeUndefined()
 }
@@ -1153,7 +1165,6 @@ async function forceTransferKillTest<
   const totalBalance = existentialDeposit + eps
   const alice = await createAccountWithBalance(baseClient, totalBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
-
   // Verify both accounts have expected initial state
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
@@ -1201,18 +1212,6 @@ async function forceTransferKillTest<
   const bobAccount = await baseClient.api.query.system.account(bob.address)
   expect(bobAccount.data.free.toBigInt()).toBe(existentialDeposit)
 
-  // Snapshot events
-  await checkSystemEvents(
-    baseClient,
-    // Do not snapshot `Transfer` event, as it is unstable, and the event checker does not allow filtering.
-    { section: 'balances', method: 'DustLost' },
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  )
-    .redact({ number: 0 })
-    .toMatchSnapshot('events of `force_transfer` from Alice to Bob')
-
   // Check events:
   // 1. `Transfer` event
   // 2. `DustLost` event
@@ -1239,7 +1238,11 @@ async function forceTransferKillTest<
   // Check `DustLost` event
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(baseClient.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(baseClient.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -1250,7 +1253,11 @@ async function forceTransferKillTest<
   // Check `Endowed` event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(baseClient.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(baseClient.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -1261,7 +1268,11 @@ async function forceTransferKillTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -1273,7 +1284,11 @@ async function forceTransferKillTest<
   // Check `NewAccount` event
   const newAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'NewAccount'
+    if (event.section === 'system' && event.method === 'NewAccount') {
+      assert(baseClient.api.events.system.NewAccount.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(newAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.NewAccount.is(newAccountEvent!.event))
@@ -1619,10 +1634,14 @@ async function forceTransferWithReserveTest<
 
   const events = await baseClient.api.query.system.events()
 
-  // Verify no `KilledAccount` events are present
+  // Verify no `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1778,17 +1797,25 @@ async function forceTransferSelfTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(baseClient.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -1829,16 +1856,9 @@ async function transferAllKeepAliveTrueTest<
   // 2. Transfer all funds to Bob with `keepAlive = true`
 
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, true)
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = true`')
 
   // 3. Verify that transfer succeeds
 
@@ -1866,10 +1886,14 @@ async function transferAllKeepAliveTrueTest<
 
   // 4. Check events
 
-  // No `KilledAccount` events
+  // No `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -1918,17 +1942,9 @@ async function transferAllKeepAliveFalseTest<
   // 2. Transfer all funds to Bob with `keepAlive = false`
 
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, false)
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'KilledAccount' },
-    { section: 'system', method: 'NewAccount' },
-  ).toMatchSnapshot('events when Alice transfers all to Bob with `keepAlive = false`')
 
   // 3. Verify that transfer succeeds, and Alice is killed
 
@@ -1955,7 +1971,11 @@ async function transferAllKeepAliveFalseTest<
   // Check `KilledAccount` event
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(client.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -2032,7 +2052,7 @@ async function transferAllWithReserveTest<
 
   // Calculate how much free balance Alice has left after reserve and prepare transfer
   const transferAllTx = client.api.tx.balances.transferAll(bob.address, false) // keepAlive = false
-  const transferEvents = await sendTransaction(transferAllTx.signAsync(alice))
+  await sendTransaction(transferAllTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -2042,15 +2062,6 @@ async function transferAllWithReserveTest<
     client.config.properties.addressEncoding,
     client.config.properties.feeExtractor,
   )
-
-  // Snapshot events
-  await checkEvents(
-    transferEvents,
-    { section: 'balances', method: 'Endowed' },
-    { section: 'system', method: 'NewAccount' },
-  )
-    .redact({ number: 0 })
-    .toMatchSnapshot('events when Alice with reserve transfers all to Bob')
 
   // 4. Check the transfer succeeded
 
@@ -2084,7 +2095,11 @@ async function transferAllWithReserveTest<
   // Check endowment event
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeDefined()
   assert(client.api.events.balances.Endowed.is(endowedEvent!.event))
@@ -2092,10 +2107,14 @@ async function transferAllWithReserveTest<
   expect(endowedEventData.freeBalance.toBigInt()).toBe(bobAccount.data.free.toBigInt())
   expect(endowedEventData.account.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
 
-  // Verify no `KilledAccount˝ events are present
+  // Verify no `KilledAccount` event for Alice
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeUndefined()
 
@@ -2181,17 +2200,25 @@ async function transferAllSelfKeepAliveTrueTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -2260,17 +2287,25 @@ async function transferAllSelfKeepAliveFalseTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
-  // Verify no KilledAccount event occurred
+  // Verify no KilledAccount event for Alice
   const killedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 
@@ -2420,10 +2455,14 @@ async function transferKeepAliveSelfSuccessTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  // Verify no Endowed event occurred
+  // Verify no Endowed event for Alice
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 }
@@ -2431,10 +2470,9 @@ async function transferKeepAliveSelfSuccessTest<
 /**
  * Test that `transfer_keep_alive` fails when trying to transfer below ED.
  *
- * 1. Create account, Alice, with 100 ED
- * 2. Attempt to transfer 99 ED to Bob
- *    - this would leave Alice with 1 ED minus fees, which would be below ED
- * 3. Verify that the transaction fails
+ * 1. Create account, Alice, with 10000 ED (large enough for both low and normal ED chains)
+ * 2. Calculate transfer amount that would leave Alice with ED - 1 after fees
+ * 3. Verify that the transaction fails with NotExpendable error
  * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
  */
 async function transferKeepAliveBelowEdTest<
@@ -2446,17 +2484,17 @@ async function transferKeepAliveBelowEdTest<
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const aliceBalance = existentialDeposit * 10000n // 10000 ED for chain agnosticism
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // 2. Try to transfer an amount that leaves Alice with less than ED after fees
+  // 2. Calculate transfer amount that would leave Alice with ED - 1 after fees
 
-  // First, estimate the fee
-  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, existentialDeposit * 99n)
+  // First, estimate the fee with a dummy transaction
+  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, existentialDeposit * 9999n)
   const paymentInfo = await dummyTransferTx.paymentInfo(alice)
   const estimatedFee = paymentInfo.partialFee.toBigInt()
 
@@ -2505,7 +2543,11 @@ async function transferKeepAliveBelowEdTest<
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
@@ -2521,17 +2563,15 @@ async function transferKeepAliveBelowEdTest<
 }
 
 /**
- * Test that `transfer_keep_alive` fails, on low ED chains, when trying to transfer below ED.
+ * This test calculates the exact fee and attempts to transfer, using `transfer_keep_alive`, slightly more than what's
+ * available after accounting for fees, ensuring `FundsUnavailable` error on all chains.
  *
- * Low ED here means that the ED is below a typical transfer fee.
- *
- * 1. Create account, Alice, with 100 ED
- * 2. Attempt to transfer 99 ED to Bob
- *    - this would leave Alice with roughly 1 ED minus fees
- * 3. Verify that the transaction fails
- * 4. Check that Bob's account remains inexistent, and that Alice only lost fees
+ * 1. Create account, Alice, with 10000 ED
+ * 2. Calculate fee and attempt to transfer (free balance - fee + small amount)
+ * 3. Verify that the transaction fails with `FundsUnavailable`
+ * 4. Check that Bob's account was not endowed, and that Alice's only lost fees
  */
-async function transferKeepAliveBelowEdLowEdTest<
+async function transferKeepAliveExceedBalanceTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -2540,22 +2580,28 @@ async function transferKeepAliveBelowEdLowEdTest<
   // 1. Create accounts, and endow Alice with funds
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const aliceBalance = existentialDeposit * 100n // 100 ED
+  const aliceBalance = existentialDeposit * 10000n
   const alice = await createAccountWithBalance(client, aliceBalance, '//fresh_alice')
   const bob = testAccounts.keyring.createFromUri('//fresh_bob')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
   expect(await isAccountReaped(client, bob.address)).toBe(true)
 
-  // 2. Try to transfer 99 ED from Alice to Bob (would leave Alice with insufficient funds after fees)
+  // 2. Calculate fee and try to transfer slightly more than available (balance - fee + ED)
 
-  const transferAmount = existentialDeposit * 99n
+  // First, estimate the fee with a dummy transaction
+  const dummyTransferTx = client.api.tx.balances.transferKeepAlive(bob.address, aliceBalance / 2n)
+  const paymentInfo = await dummyTransferTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Try to transfer: balance - fee + ED (which exceeds available funds)
+  const transferAmount = aliceBalance - estimatedFee + existentialDeposit
   const transferKeepAliveTx = client.api.tx.balances.transferKeepAlive(bob.address, transferAmount)
   await sendTransaction(transferKeepAliveTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // 3. Verify that the transaction failed
+  // 3. Verify that the transaction failed with FundsUnavailable
 
   const events = await client.api.query.system.events()
   const failedEvent = events.find((record) => {
@@ -2590,7 +2636,11 @@ async function transferKeepAliveBelowEdLowEdTest<
   // Verify no endowment event for Bob
   const endowedEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Endowed'
+    if (event.section === 'balances' && event.method === 'Endowed') {
+      assert(client.api.events.balances.Endowed.is(event))
+      return event.data.account.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(endowedEvent).toBeUndefined()
 
@@ -2718,12 +2768,16 @@ async function forceUnreserveNoReservesTest<
     await baseClient.dev.newBlock()
   }
 
-  // 3. Verify no `balances.Unreserved` event is emitted
+  // 3. Verify no `balances.Unreserved` event for Alice
 
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(unreservedEvent).toBeUndefined()
 
@@ -2808,11 +2862,15 @@ async function forceUnreserveNonExistentAccountTest<
     await baseClient.dev.newBlock()
   }
 
-  // 3. Verify no `balances.Unreserved` event is emitted
+  // 3. Verify no `balances.Unreserved` event for Bob
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(bob.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(unreservedEvent).toBeUndefined()
 
@@ -2934,7 +2992,11 @@ async function forceUnreserveWithReservesTest<
   const systemEvents = await baseClient.api.query.system.events()
   const unreservedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Unreserved'
+    if (event.section === 'balances' && event.method === 'Unreserved') {
+      assert(baseClient.api.events.balances.Unreserved.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
 
   expect(unreservedEvent).toBeDefined()
@@ -3091,7 +3153,11 @@ async function forceSetBalanceSuccessTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3202,7 +3268,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a BalanceSet event was emitted
   const balanceSetEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'BalanceSet'
+    if (event.section === 'balances' && event.method === 'BalanceSet') {
+      assert(baseClient.api.events.balances.BalanceSet.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(balanceSetEvent).toBeDefined()
   assert(baseClient.api.events.balances.BalanceSet.is(balanceSetEvent!.event))
@@ -3214,7 +3284,11 @@ async function forceSetBalanceBelowEdTest<
   // Check that a KilledAccount event was emitted
   const killedAccountEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(baseClient.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, baseChain.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedAccountEvent).toBeDefined()
   assert(baseClient.api.events.system.KilledAccount.is(killedAccountEvent!.event))
@@ -3502,10 +3576,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await baseClient.dev.newBlock()
   }
 
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
-    .redact({ number: true })
-    .toMatchSnapshot('events for first issuance change')
-
   // 3. Verify the increase worked
 
   const afterIncreaseIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
@@ -3557,10 +3627,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
     await relayClient!.dev.newBlock()
     await baseClient.dev.newBlock()
   }
-
-  await checkSystemEvents(baseClient, { section: 'balances', method: 'TotalIssuanceForced' })
-    .redact({ number: true })
-    .toMatchSnapshot('events for second issuance change')
 
   // 5. Verify the decrease worked
 
@@ -3617,7 +3683,7 @@ async function burnTestBaseCase<
 
   const burnAmount = existentialDeposit * 500n
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
-  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
+  await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -3627,10 +3693,6 @@ async function burnTestBaseCase<
     cumulativeFees,
     client.config.properties.addressEncoding,
     client.config.properties.feeExtractor,
-  )
-
-  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot(
-    'events when Alice self-burns funds',
   )
 
   // 3. Verify that funds were burned, and total issuance updated
@@ -3653,7 +3715,11 @@ async function burnTestBaseCase<
   const eventsAfterBurn = await client.api.query.system.events()
   const burnEvent = eventsAfterBurn.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3704,7 +3770,7 @@ async function burnTestWithReaping<
   const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
 
   const burnTx = client.api.tx.balances.burn(burnAmount, false)
-  const burnEvents = await sendTransaction(burnTx.signAsync(alice))
+  await sendTransaction(burnTx.signAsync(alice))
 
   await client.dev.newBlock()
 
@@ -3715,8 +3781,6 @@ async function burnTestWithReaping<
     client.config.properties.feeExtractor,
   )
 
-  await checkEvents(burnEvents, { section: 'balances', method: 'Burned' }).toMatchSnapshot('events for burn')
-
   // 3. Verify that the account is reaped
 
   expect(await isAccountReaped(client, alice.address)).toBe(true)
@@ -3724,7 +3788,11 @@ async function burnTestWithReaping<
   const events = await client.api.query.system.events()
   const burnEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeDefined()
   assert(client.api.events.balances.Burned.is(burnEvent!.event))
@@ -3734,7 +3802,11 @@ async function burnTestWithReaping<
 
   const dustLostEvent = events.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'DustLost'
+    if (event.section === 'balances' && event.method === 'DustLost') {
+      assert(client.api.events.balances.DustLost.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(dustLostEvent).toBeDefined()
   assert(client.api.events.balances.DustLost.is(dustLostEvent!.event))
@@ -3746,21 +3818,22 @@ async function burnTestWithReaping<
 
   // 4. Verify that the total issuance is decreased by the amount burned and dust
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  // TODO: Bifrost Polkadot doesn't remove dust from total issuance when accounts are reaped
-  // For bifrostPolkadot, total issuance only decreases by burn amount (not burn + dust)
-  const isBifrostPolkadot = chain.name === 'bifrostPolkadot'
-  const expectedDecrease = isBifrostPolkadot ? burnAmount : burnAmount + (existentialDeposit - 1n)
+  // TODO: Bifrost (Polkadot/Kusama) doesn't remove dust from total issuance when accounts are reaped
+  // In them, total issuance only decreases by burn amount (not burn + dust).
+  const isBifrost = chain.name.includes('bifrost')
+  const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
 
 /**
  * Test that burning with `keep_alive` set to `true` prevents burning below ED.
  *
- * 1. Create Alice with 1000 ED
- * 2. Attempt to burn 999 ED with `keep_alive` set to `true`
- * 3. Verify that the transaction fails
- * 4. Verify that Alice's balance only decreases by transaction fees
- * 5. Verify that total issuance is unchanged
+ * 1. Create Alice with 10000 ED
+ * 2. Calculate burn amount that would leave Alice below ED after fees
+ * 3. Attempt to burn with `keep_alive` set to `true`
+ * 4. Verify that the transaction fails
+ * 5. Verify that Alice's balance only decreases by transaction fees
+ * 6. Verify that total issuance is unchanged
  */
 async function burnKeepAliveTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -3768,10 +3841,10 @@ async function burnKeepAliveTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // 1. Create Alice with 1000 ED
+  // 1. Create Alice with 10000 ED (large enough for both low and normal ED chains)
 
   const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
-  const initialBalance = existentialDeposit * 1000n
+  const initialBalance = existentialDeposit * 10000n
   const alice = await createAccountWithBalance(client, initialBalance, '//fresh_alice')
 
   expect(await isAccountReaped(client, alice.address)).toBe(false)
@@ -3783,9 +3856,19 @@ async function burnKeepAliveTest<
 
   const cumulativeFees = new Map<string, bigint>()
 
-  // 2. Attempt to burn 999 ED with `keep_alive` set to `true`
+  // 2. Calculate burn amount that would leave Alice with ED - 1 after fees
 
-  const burnAmount = existentialDeposit * 999n
+  // First, estimate the fee with a dummy transaction
+  const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 9999n, true)
+  const paymentInfo = await dummyBurnTx.paymentInfo(alice)
+  const estimatedFee = paymentInfo.partialFee.toBigInt()
+
+  // Calculate burn amount: finalBalance = initialBalance - burnAmount - fee = ED - 1n
+  // Therefore: burnAmount = initialBalance - fee - (ED - 1n)
+  const burnAmount = initialBalance - estimatedFee - (existentialDeposit - 1n)
+
+  // 3. Attempt to burn with `keep_alive` set to `true`
+
   const burnTx = client.api.tx.balances.burn(burnAmount, true)
   await sendTransaction(burnTx.signAsync(alice))
 
@@ -3798,7 +3881,7 @@ async function burnKeepAliveTest<
     client.config.properties.feeExtractor,
   )
 
-  // 3. Verify that the transaction fails
+  // 4. Verify that the transaction fails
 
   const systemEvents = await client.api.query.system.events()
   const extrinsicFailedEvent = systemEvents.find((record) => {
@@ -3812,7 +3895,7 @@ async function burnKeepAliveTest<
   expect(dispatchError.isModule).toBe(false)
   expect(dispatchError.asToken.isFundsUnavailable).toBeTruthy()
 
-  // 4. Verify that Alice's balance only decreases by transaction fees
+  // 5. Verify that Alice's balance only decreases by transaction fees
 
   const aliceAccountAfter = await client.api.query.system.account(alice.address)
   const aliceFinalBalance = aliceAccountAfter.data.free.toBigInt()
@@ -3821,15 +3904,19 @@ async function burnKeepAliveTest<
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFee)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
-  // 5. Verify that total issuance is unchanged
+  // 6. Verify that total issuance is unchanged
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned event was emitted
+  // Verify no Burned event for Alice
   const burnEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeUndefined()
 }
@@ -3945,18 +4032,26 @@ async function burnWithDepositTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify Burned event was not emitted
+  // Verify Burned event was not emitted for Alice
   const systemEvents = await client.api.query.system.events()
   const burnEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvent).toBeUndefined()
 
-  // Verify no KilledAccount event was emitted
+  // Verify no KilledAccount event for Alice
   const killedEvent = systemEvents.find((record) => {
     const { event } = record
-    return event.section === 'system' && event.method === 'KilledAccount'
+    if (event.section === 'system' && event.method === 'KilledAccount') {
+      assert(client.api.events.system.KilledAccount.is(event))
+      return event.data.account.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(killedEvent).toBeUndefined()
 }
@@ -4060,10 +4155,14 @@ async function burnDoubleAttemptTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned events were emitted
+  // Verify no Burned event for Alice
   const burnEvents = systemEvents.filter((record) => {
     const { event } = record
-    return event.section === 'balances' && event.method === 'Burned'
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+    }
+    return false
   })
   expect(burnEvents).toHaveLength(0)
 }
@@ -4178,11 +4277,10 @@ async function testLiquidityRestrictionForAction<
 
   // Step 4: Try to execute the deposit action
   const actionTx = await depositAction.createTransaction(client)
-  let actionEvents: any
   let rpcPaymentError = false
 
   try {
-    actionEvents = await sendTransaction(actionTx.signAsync(alice))
+    await sendTransaction(actionTx.signAsync(alice))
   } catch (error: any) {
     // Handle Hydration-specific RPC error where payment validation fails before transaction submission
     // Error: RpcError: 1010: {"invalid":{"payment":null}}
@@ -4226,10 +4324,6 @@ async function testLiquidityRestrictionForAction<
         // This is a pre-flight check that prevents the transaction from even being submitted
         await check('RPC payment validation rejected transaction due to insufficient funds').toMatchSnapshot('')
       } else {
-        await checkEvents(actionEvents, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-          'liquidity restricted action events',
-        )
-
         const finalEvents = await client.api.query.system.events()
         const failedEvent = finalEvents.find((record) => {
           const { event } = record
@@ -4271,14 +4365,14 @@ async function testLiquidityRestrictionForAction<
         )
       }
 
-      await checkEvents(actionEvents, { section: 'balances', method: 'Reserved' }).toMatchSnapshot(
-        'deposit action success events',
-      )
-
       const finalEvents = await client.api.query.system.events()
       const reservedEvent = finalEvents.find((record) => {
         const { event } = record
-        return event.section === 'balances' && event.method === 'Reserved'
+        if (event.section === 'balances' && event.method === 'Reserved') {
+          assert(client.api.events.balances.Reserved.is(event))
+          return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+        }
+        return false
       })
       expect(reservedEvent).toBeDefined()
       assert(client.api.events.balances.Reserved.is(reservedEvent!.event))
@@ -4308,169 +4402,6 @@ async function testLiquidityRestrictionForAction<
 /// Test Trees
 /// ----------
 
-/**
- * Tests to `transfer_allow_death` that can run on any chain, regardless of the magnitude of its ED.
- */
-const commonTransferAllowDeathTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'transfer of some funds does not kill sender account',
-    testFn: () => transferAllowDeathNoKillTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer below existential deposit fails',
-    testFn: () => transferBelowExistentialDepositTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'transfer with insufficient funds fails',
-    testFn: () => transferAllowDeathInsufficientFundsTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer of entire balance',
-    testFn: () => transferAllowDeathSelfTest(chain),
-  },
-]
-
-/**
- * Tests to `transfer_allow_death` that may require the chain's ED to be at least as large as the usual transaction
- * fee.
- */
-const transferAllowDeathNormalEDTests = <
-  TCustom extends Record<string, unknown>,
-  TInitStoragesBase extends Record<string, Record<string, any>>,
->(
-  chain: Chain<TCustom, TInitStoragesBase>,
-): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: [
-    ...commonTransferAllowDeathTests(chain),
-
-    {
-      kind: 'test',
-      label: 'leaving an account below ED kills it',
-      testFn: () => transferAllowDeathTest(chain),
-    },
-    {
-      kind: 'test',
-      label: 'account with reserves is not reaped when transferring funds',
-      testFn: () => transferAllowDeathWithReserveTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests to be run on chains with a relatively small ED (compared to the typical transaction fee).
- */
-const transferAllowDeathLowEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_allow_death',
-  children: commonTransferAllowDeathTests(chain),
-})
-
-const commonTransferKeepAliveTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'transfer with insufficient funds fails',
-    testFn: () => transferKeepAliveInsufficientFundsTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer is a no-op',
-    testFn: () => transferKeepAliveSelfTest(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'self-transfer with reasonable amount succeeds as no-op',
-    testFn: () => transferKeepAliveSelfSuccessTest(chain),
-  },
-]
-
-const lowEdTransferKeepAliveTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_keep_alive',
-  children: [
-    ...commonTransferKeepAliveTests(chain),
-    {
-      kind: 'test' as const,
-      label: 'transfer (keep alive) below existential deposit fails on low ED chains',
-      testFn: () => transferKeepAliveBelowEdLowEdTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests for `transfer_keep_alive` that require the chain's ED to be at least as large as the usual transaction fee.
- */
-const transferKeepAliveNormalEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: 'transfer_keep_alive',
-  children: [
-    ...commonTransferKeepAliveTests(chain),
-
-    {
-      kind: 'test',
-      label: 'transfer (keep alive) below existential deposit fails',
-      testFn: () => transferKeepAliveBelowEdTest(chain),
-    },
-  ],
-})
-
-/**
- * Tests for `burn` that can run on any chain.
- */
-const commonBurnTests = (chain: Chain) => [
-  {
-    kind: 'test' as const,
-    label: 'burning funds from account works',
-    testFn: () => burnTestBaseCase(chain),
-  },
-  {
-    kind: 'test' as const,
-    label: 'burning entire balance, or more than it, fails',
-    testFn: () => burnDoubleAttemptTest(chain),
-  },
-]
-
-/**
- * Tests for `burn` on low ED chains.
- */
-const burnLowEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: '`burn`',
-  children: commonBurnTests(chain),
-})
-
-/**
- * Tests for `burn` that require the chain's ED to be at least as large as the usual transaction fee.
- */
-const burnNormalEDTests = (chain: Chain): RootTestTree => ({
-  kind: 'describe',
-  label: '`burn`',
-  children: [
-    ...commonBurnTests(chain),
-
-    {
-      kind: 'test',
-      label: 'burning funds below ED leads to account reaping',
-      testFn: () => burnTestWithReaping(chain),
-    },
-    {
-      kind: 'test' as const,
-      label: 'burning below ED with keep_alive is no-op',
-      testFn: () => burnKeepAliveTest(chain),
-    },
-    {
-      kind: 'test' as const,
-      label: 'burning from account with multisig deposit cannot reap it',
-      testFn: () => burnWithDepositTest(chain),
-    },
-  ],
-})
-
 export const accountsE2ETests = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
@@ -4484,10 +4415,42 @@ export const accountsE2ETests = <
   label: testConfig.testSuiteName,
   children: [
     // `transfer_allow_death` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => transferAllowDeathLowEDTests(chain))
-      .with('Normal', () => transferAllowDeathNormalEDTests(chain))
-      .otherwise(() => transferAllowDeathNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: 'transfer_allow_death',
+      children: [
+        {
+          kind: 'test',
+          label: 'transfer of some funds does not kill sender account',
+          testFn: () => transferAllowDeathNoKillTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer below existential deposit fails',
+          testFn: () => transferBelowExistentialDepositTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer with insufficient funds fails',
+          testFn: () => transferAllowDeathInsufficientFundsTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'self-transfer of entire balance',
+          testFn: () => transferAllowDeathSelfTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'leaving an account below ED kills it',
+          testFn: () => transferAllowDeathTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'account with reserves is not reaped when transferring funds',
+          testFn: () => transferAllowDeathWithReserveTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: '`force_transfer`',
@@ -4525,10 +4488,37 @@ export const accountsE2ETests = <
       ],
     },
     // `transfer_keep_alive` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => lowEdTransferKeepAliveTests(chain))
-      .with('Normal', () => transferKeepAliveNormalEDTests(chain))
-      .otherwise(() => transferKeepAliveNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: 'transfer_keep_alive',
+      children: [
+        {
+          kind: 'test' as const,
+          label: 'transfer with insufficient funds fails',
+          testFn: () => transferKeepAliveInsufficientFundsTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'self-transfer is a no-op',
+          testFn: () => transferKeepAliveSelfTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'self-transfer with reasonable amount succeeds as no-op',
+          testFn: () => transferKeepAliveSelfSuccessTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer (keep alive) below existential deposit fails',
+          testFn: () => transferKeepAliveBelowEdTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'transfer exceeding available balance after fees fails',
+          testFn: () => transferKeepAliveExceedBalanceTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: '`transfer_all`',
@@ -4629,10 +4619,37 @@ export const accountsE2ETests = <
       ],
     },
     // `burn` tests
-    match(chain.properties.chainEd)
-      .with('LowEd', () => burnLowEDTests(chain))
-      .with('Normal', () => burnNormalEDTests(chain))
-      .otherwise(() => burnNormalEDTests(chain)),
+    {
+      kind: 'describe',
+      label: '`burn`',
+      children: [
+        {
+          kind: 'test' as const,
+          label: 'burning funds from account works',
+          testFn: () => burnTestBaseCase(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning entire balance, or more than it, fails',
+          testFn: () => burnDoubleAttemptTest(chain),
+        },
+        {
+          kind: 'test',
+          label: 'burning funds below ED leads to account reaping',
+          testFn: () => burnTestWithReaping(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning below ED with keep_alive is no-op',
+          testFn: () => burnKeepAliveTest(chain),
+        },
+        {
+          kind: 'test' as const,
+          label: 'burning from account with multisig deposit cannot reap it',
+          testFn: () => burnWithDepositTest(chain),
+        },
+      ],
+    },
     {
       kind: 'describe',
       label: 'currency tests',

@@ -1,6 +1,7 @@
 import type { FeeExtractor, FeeInfo } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts } from '../testAccounts.js'
 
 const acalaFeeExtractor: FeeExtractor = (events, api) => {
@@ -82,7 +83,7 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
 
 export const acala = defineChain({
   name: 'acala',
-  endpoint: ['wss://acala.ibp.network', 'wss://acala-rpc-1.aca-api.network', 'wss://acala-rpc.n.dwellir.com'],
+  endpoint: endpoints.acala,
   paraId: 2000,
   networkGroup: 'polkadot',
   custom: custom.acala,
@@ -91,7 +92,6 @@ export const acala = defineChain({
     addressEncoding: 10,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: acalaFeeExtractor,
   },
@@ -99,11 +99,7 @@ export const acala = defineChain({
 
 export const karura = defineChain({
   name: 'karura',
-  endpoint: [
-    'wss://karura-rpc-1.aca-api.network',
-    'wss://karura-rpc-2.aca-api.network/ws',
-    'wss://karura-rpc-3.aca-api.network/ws',
-  ],
+  endpoint: endpoints.karura,
   paraId: 2000,
   networkGroup: 'kusama',
   custom: custom.karura,
@@ -112,7 +108,6 @@ export const karura = defineChain({
     addressEncoding: 8,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     asyncBacking: 'Enabled',
     feeExtractor: acalaFeeExtractor,
   },

@@ -1,6 +1,7 @@
 import { standardFeeExtractor } from '@e2e-test/shared'
 
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -32,7 +33,7 @@ const getInitStorages = () => ({
 
 export const polkadot = defineChain({
   name: 'polkadot',
-  endpoint: 'wss://rpc.ibp.network/polkadot',
+  endpoint: endpoints.polkadot,
   custom: custom.polkadot,
   initStorages: getInitStorages(),
   isRelayChain: true,
@@ -41,14 +42,13 @@ export const polkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'Normal',
     feeExtractor: standardFeeExtractor,
   },
 })
 
 export const kusama = defineChain({
   name: 'kusama',
-  endpoint: 'wss://rpc.ibp.network/kusama',
+  endpoint: endpoints.kusama,
   custom: custom.kusama,
   initStorages: getInitStorages(),
   isRelayChain: true,
@@ -57,7 +57,6 @@ export const kusama = defineChain({
     addressEncoding: 2,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    chainEd: 'LowEd',
     feeExtractor: standardFeeExtractor,
   },
 })
