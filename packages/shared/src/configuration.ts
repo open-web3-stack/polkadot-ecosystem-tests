@@ -172,6 +172,7 @@ export async function configurationTest<
   >
   const mqPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(mqPending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
+  // Value doesn't update. It stays the same as the original constant and is different for polkadot and kusama.
   // expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
   expect(mqPending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
   expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
