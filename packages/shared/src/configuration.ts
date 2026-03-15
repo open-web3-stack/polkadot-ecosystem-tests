@@ -39,8 +39,12 @@ const devAccounts = defaultAccountsSr25519
  *     6.2. checks that individual on-demand scheduler params can be set
  *
  *     6.3 checks that the entire scheduler params struct can be replaced at once
- *
+
  * 7. Checks that improper config values are rejected by consistency checks
+ * 
+ *     7.1. disabling consistency checks allows improper config values
+ * 
+ * 8. Checks that scheduling configuration updates with a signed origin fails
  */
 export async function configurationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -409,7 +413,37 @@ export async function configurationTest<
     .redact({ number: 1 })
     .toMatchSnapshot('hrmpMaxParachainInboundChannels unchanged after improper value')
 
-  // Assert that tx should fail with signed origin
+  // 7.1. Assert that disabling consistency checks allows improper config values
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.configuration.setBypassConsistencyCheck(true).method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.configuration
+      .setHrmpMaxParachainInboundChannels(hrmpImproperMaxParachainInboundChannels)
+      .method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+
+  const consistencyBypassedPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+
+  expect(consistencyBypassedPending.hrmpMaxParachainInboundChannels.toNumber()).toBe(
+    hrmpImproperMaxParachainInboundChannels,
+  )
+
+  // 8. Assert that tx should fail with signed origin
   const extrinsic = client.api.tx.configuration.setHrmpMaxParachainInboundChannels(
     hrmpImproperMaxParachainInboundChannels,
   )
