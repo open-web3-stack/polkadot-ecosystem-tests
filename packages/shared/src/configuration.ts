@@ -247,7 +247,7 @@ export async function configurationTest<
       client.api.tx.configuration.setAsyncBackingParams(asyncBackingParamsArg).method.toHex(),
       client.api.tx.configuration.setExecutorParams(executorParamsArg).method.toHex(),
       client.api.tx.configuration.setApprovalVotingParams(approvalVotingParamsArg).method.toHex(),
-      client.api.tx.configuration.setBypassConsistencyCheck(true).method.toHex(),
+      client.api.tx.configuration.setBypassConsistencyCheck(false).method.toHex(),
       client.api.tx.configuration.setNodeFeature(4, true).method.toHex(),
     ],
     { system: 'Root' },
@@ -277,8 +277,9 @@ export async function configurationTest<
   const approvalParams = advancedPending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
   expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
 
+  // Consistency check can be disabled
   const bypassConsistencyCheck = await client.api.query.configuration.bypassConsistencyCheck()
-  expect(bypassConsistencyCheck.toJSON()).toBe(true)
+  expect(bypassConsistencyCheck.toJSON()).toBe(false)
 
   // setNodeFeature(4, true): "0x0b" (0b00001011) → "0x1b" (0b00011011)
   expect(advancedPending.nodeFeatures.toJSON()).toBe('0x1b')
