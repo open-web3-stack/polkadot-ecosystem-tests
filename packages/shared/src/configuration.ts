@@ -25,6 +25,23 @@ import type { TestConfig } from './helpers/index.js'
 
 const devAccounts = defaultAccountsSr25519
 
+/**
+ * Test the process of scheduling configuration updates. Schedules
+ * 1. Core configuration
+ * 2. Scheduler Configuration
+ * 3. Dispute Configuration
+ * 4. Message Queue Configuration
+ * 5. HRMP Configuration
+ * 6. Advanced Configuration
+ *
+ *     6.1. checks that consistency checks can be disabled
+ *
+ *     6.2. checks that individual on-demand scheduler params can be set
+ *
+ *     6.3 checks that the entire scheduler params struct can be replaced at once
+ *
+ * 7. Checks that improper config values are rejected by consistency checks
+ */
 export async function configurationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -37,7 +54,7 @@ export async function configurationTest<
   let pendingConfigs = await client.api.query.configuration.pendingConfigs()
   expect(pendingConfigs.toJSON()).toEqual([])
 
-  // Core configuration
+  // 1. Core configuration
   const validationUpgradeCooldown = 13300
   const validationUpgradeDelay = 700
   const codeRetentionPeriod = 14300
@@ -75,7 +92,7 @@ export async function configurationTest<
   expect(pending.maxHeadDataSize.toNumber()).toBe(maxHeadDataSize)
   expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(numCores)
 
-  // Scheduler Configuration
+  // 2. Scheduler Configuration
   const groupRotationFrequency = 20
   const parasAvailabilityPeriod = 15
   const schedulingLookahead = 4
@@ -108,7 +125,7 @@ export async function configurationTest<
   expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(maxValidatorsPerCore)
   expect(schedulerPending.maxValidators.toJSON()).toBe(maxValidators)
 
-  // Dispute Configuration
+  // 3. Dispute Configuration
   const disputePeriod = 8
   const disputePostConclusionAcceptancePeriod = 700
   const noShowSlots = 4
@@ -148,7 +165,7 @@ export async function configurationTest<
   expect(disputePending.neededApprovals.toNumber()).toBe(neededApprovals)
   expect(disputePending.relayVrfModuloSamples.toNumber()).toBe(relayVrfModuloSamples)
 
-  // Message Queue Configuration
+  // 4. Message Queue Configuration
   const maxUpwardQueueCount = 800000
   // const maxUpwardQueueSize = 1000000
   const maxDownwardMessageSize = 60000
@@ -183,7 +200,7 @@ export async function configurationTest<
   expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
   expect(mqPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
 
-  // HRMP Configuration
+  // 5. HRMP Configuration
   const hrmpSenderDeposit = 6000000000000n
   const hrmpRecipientDeposit = 6000000000000n
   const hrmpChannelMaxCapacity = 40
@@ -224,7 +241,7 @@ export async function configurationTest<
   expect(hrmpPending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(hrmpMaxParachainOutboundChannels)
   expect(hrmpPending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(hrmpMaxMessageNumPerCandidate)
 
-  // Advanced Configuration
+  // 6. Advanced Configuration
   const pvfVotingTtl = 3
   const minimumValidationUpgradeDelay = 25
   const minimumBackingVotes = 3
@@ -283,14 +300,14 @@ export async function configurationTest<
   const approvalParams = advancedPending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
   expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
 
-  // Consistency check can be disabled
+  // 6.1 Consistency check can be disabled
   const bypassConsistencyCheck = await client.api.query.configuration.bypassConsistencyCheck()
   expect(bypassConsistencyCheck.toJSON()).toBe(false)
 
   // setNodeFeature(4, true): "0x0b" (0b00001011) → "0x1b" (0b00011011)
   expect(advancedPending.nodeFeatures.toJSON()).toBe('0x1b')
 
-  // on-demand individual setters (each modifies a field within schedulerParams)
+  // 6.2 on-demand individual setters (each modifies a field within schedulerParams)
   const onDemandBaseFee = 6000000000n
   const onDemandFeeVariability = 40000000
   const onDemandQueueMaxSize = 600
@@ -320,7 +337,7 @@ export async function configurationTest<
   expect(onDemandSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(onDemandQueueMaxSize)
   expect(onDemandSchedulerParams.onDemandTargetQueueUtilization.toNumber()).toBe(onDemandTargetQueueUtilization)
 
-  // setSchedulerParams replaces the entire schedulerParams struct at once
+  // 6.3 setSchedulerParams replaces the entire schedulerParams struct at once
   const schedulerGroupRotationFrequency = 15
   const schedulerParasAvailabilityPeriod = 12
   const schedulerMaxValidatorsPerCore = null
@@ -368,7 +385,7 @@ export async function configurationTest<
   expect(updatedSchedulerParams.onDemandBaseFee.toJSON()).toBe(schedulerOnDemandBaseFee)
   expect(updatedSchedulerParams.ttl.toNumber()).toBe(schedulerTtl)
 
-  // Assert that consistency checks disallows improper config values
+  // 7. Assert that consistency checks disallows improper config values
   const hrmpImproperMaxParachainInboundChannels = 400000
 
   await scheduleInlineCallWithOrigin(
