@@ -145,7 +145,7 @@ export async function configurationTest<
 
   // Message Queue Configuration
   const maxUpwardQueueCount = 800000
-  // const maxUpwardQueueSize = 1048576
+  // const maxUpwardQueueSize = 1000000
   const maxDownwardMessageSize = 60000
   const maxUpwardMessageSize = 80000
   const maxUpwardMessageNumPerCandidate = 25
