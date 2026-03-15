@@ -1,6 +1,9 @@
-import type { Chain } from '@e2e-test/networks'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
+
+import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import {
   check,
+  checkSystemEvents,
   type RootTestTree,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -19,6 +22,8 @@ import type { ITuple } from '@polkadot/types/types'
 import { expect } from 'vitest'
 
 import type { TestConfig } from './helpers/index.js'
+
+const devAccounts = defaultAccountsSr25519
 
 export async function configurationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -388,6 +393,15 @@ export async function configurationTest<
     .toMatchSnapshot('hrmpMaxParachainInboundChannels unchanged after improper value')
 
   // Assert that tx should fail with signed origin
+  const extrinsic = client.api.tx.configuration.setHrmpMaxParachainInboundChannels(
+    hrmpImproperMaxParachainInboundChannels,
+  )
+  await sendTransaction(extrinsic.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'attempting request with signed origin fails',
+  )
 }
 
 /// ----------
