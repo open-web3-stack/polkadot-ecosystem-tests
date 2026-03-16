@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Paras Registrar > Kusama Paras Registrar > paras registrar - registration functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;

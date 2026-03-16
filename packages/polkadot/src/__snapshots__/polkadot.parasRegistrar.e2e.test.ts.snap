@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Paras Registrar > Polkadot Paras Registrar > paras registrar - registration functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;
