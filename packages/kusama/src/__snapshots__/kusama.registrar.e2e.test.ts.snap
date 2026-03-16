@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Paras Registrar > Kusama Paras Registrar > paras registrar - registration functions > registrar reserve events 1`] = `
+exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
 [
   {
     "data": {

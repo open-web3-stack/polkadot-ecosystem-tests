@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Paras Registrar > Polkadot Paras Registrar > paras registrar - registration functions > registrar reserve events 1`] = `
+exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
 [
   {
     "data": {
