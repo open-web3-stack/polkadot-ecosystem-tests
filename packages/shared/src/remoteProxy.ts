@@ -421,6 +421,109 @@ async function unregisteredProofCallTest<
   await checkEvents(result, 'system').toMatchSnapshot('remote_proxy_with_registered_proof without registration')
 }
 
+/**
+ * Test that `remote_proxy` respects proxy type call filtering for allowed calls.
+ *
+ * A `NonTransfer` proxy should be able to dispatch `system.remarkWithEvent` because that call
+ * is not a transfer operation.
+ *
+ * 1. Fund Alice (real) and Bob (delegate)
+ * 2. Build a proof where Bob is a `NonTransfer` proxy for Alice
+ * 3. Inject the synthetic root and dispatch `system.remarkWithEvent` via `remote_proxy`
+ * 4. Verify that `proxy.ProxyExecuted { result: Ok }` is emitted
+ */
+async function remoteProxyFilteringAllowedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  await fundAccounts(client, [alice, bob])
+
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.NonTransfer)
+  const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('filtering allowed test')
+  const tx = client.api.tx[palletName].remoteProxy(alice.address, null, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const proxyExecutedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'ProxyExecuted'
+  })
+  expect(proxyExecutedEvents.length).toBe(1)
+
+  const proxyExecutedEvent = proxyExecutedEvents[0]
+  assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
+  expect(proxyExecutedEvent.event.data.result.isOk).toBeTruthy()
+
+  await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+    'NonTransfer proxy allows remark via remote_proxy',
+  )
+}
+
+/**
+ * Test that `remote_proxy` respects proxy type call filtering for blocked calls.
+ *
+ * A `NonTransfer` proxy must NOT be able to dispatch `balances.transferKeepAlive` because that
+ * is a transfer operation.
+ *
+ * 1. Fund Alice (real) and Bob (delegate)
+ * 2. Build a proof where Bob is a `NonTransfer` proxy for Alice
+ * 3. Inject the synthetic root and dispatch `balances.transferKeepAlive` via `remote_proxy`
+ * 4. Verify that `proxy.ProxyExecuted { result: Err(CallFiltered) }` is emitted
+ */
+async function remoteProxyFilteringBlockedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  await fundAccounts(client, [alice, bob])
+
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(client.api, alice, bob, proxyTypes.NonTransfer)
+  const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
+
+  const innerCall = client.api.tx.balances.transferKeepAlive(bob.address, 1_000_000_000n)
+  const tx = client.api.tx[palletName].remoteProxy(alice.address, null, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  // The remote_proxy extrinsic itself succeeds, but the inner call is filtered
+  const proxyExecutedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'ProxyExecuted'
+  })
+  expect(proxyExecutedEvents.length).toBe(1)
+
+  const proxyExecutedEvent = proxyExecutedEvents[0]
+  assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
+  expect(proxyExecutedEvent.event.data.result.isErr).toBeTruthy()
+
+  const error = proxyExecutedEvent.event.data.result.asErr
+  expect(error.isModule).toBeTruthy()
+  expect(client.api.errors.system.CallFiltered.is(error.asModule)).toBe(true)
+
+  await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+    'NonTransfer proxy blocks transfer via remote_proxy',
+  )
+}
+
 /// -------
 /// Test tree
 /// -------
@@ -487,6 +590,22 @@ export function remoteProxyE2ETests<
             kind: 'test',
             label: 'reject call without prior proof registration',
             testFn: async () => await unregisteredProofCallTest(chain, palletName, proxyTypes),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'remote_proxy call filtering',
+        children: [
+          {
+            kind: 'test',
+            label: 'NonTransfer proxy allows remark',
+            testFn: async () => await remoteProxyFilteringAllowedTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'NonTransfer proxy blocks transfer',
+            testFn: async () => await remoteProxyFilteringBlockedTest(chain, palletName, proxyTypes),
           },
         ],
       },

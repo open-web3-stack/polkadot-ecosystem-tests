@@ -123,3 +123,34 @@ exports[`Kusama AssetHub remote proxy tests > remote_proxy (direct proof) > reje
   },
 ]
 `;
+
+exports[`Kusama AssetHub remote proxy tests > remote_proxy call filtering > NonTransfer proxy allows remark > NonTransfer proxy allows remark via remote_proxy 1`] = `
+[
+  {
+    "data": {
+      "result": "Ok",
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub remote proxy tests > remote_proxy call filtering > NonTransfer proxy blocks transfer > NonTransfer proxy blocks transfer via remote_proxy 1`] = `
+[
+  {
+    "data": {
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x05000000",
+            "index": 0,
+          },
+        },
+      },
+    },
+    "method": "ProxyExecuted",
+    "section": "proxy",
+  },
+]
+`;
