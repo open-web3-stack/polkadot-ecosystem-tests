@@ -68,7 +68,7 @@ export async function parasRegistrationE2ETest<
 //   const paras = await client.api.query.registrar.paras(1000)
 // }
 
-export function parasRegistrarE2ETest<
+export function registrarE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
@@ -82,12 +82,12 @@ export function parasRegistrarE2ETest<
         children: [
           {
             kind: 'test',
-            label: 'paras registrar - registration functions',
+            label: 'pallet registrar - registration functions',
             testFn: async () => await parasRegistrationE2ETest(chain),
           },
           // {
           //   kind: 'test',
-          //   label: 'paras registrar - lifecycle functions',
+          //   label: 'pallet registrar - lifecycle functions',
           //   testFn: async () => await parasRegistrarLifecycleE2ETest(chain),
           // },
         ],
