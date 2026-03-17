@@ -78,22 +78,17 @@
   ],
 
   "kusama": [
-    "wss://rpc.ibp.network/kusama",
-    "wss://kusama.dotters.network",
     "wss://kusama-rpc.n.dwellir.com",
     "wss://kusama-rpc-tn.dwellir.com",
+    "wss://rpc.ibp.network/kusama",
+    "wss://kusama.dotters.network",
     "wss://rpc-kusama.luckyfriday.io",
-    "wss://kusama-rpc.publicnode.com",
-    "wss://kusama-public-rpc.blockops.network/ws",
-    "wss://rpc-kusama.helixstreet.io",
-    "wss://kusama.api.onfinality.io/public-ws",
-    "wss://kusama.public.curie.radiumblock.co/ws",
-    "wss://ksm-rpc.stakeworld.io"
+    "wss://kusama.api.onfinality.io/public-ws"
   ],
   "assetHubKusama": [
-    "wss://sys.ibp.network/asset-hub-kusama",
-    "wss://asset-hub-kusama.dotters.network",
     "wss://asset-hub-kusama-rpc.n.dwellir.com",
+    "wss://asset-hub-kusama.dotters.network",
+    "wss://sys.ibp.network/asset-hub-kusama",
     "wss://statemine-rpc-tn.dwellir.com",
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
     "wss://statemine.public.curie.radiumblock.co/ws",

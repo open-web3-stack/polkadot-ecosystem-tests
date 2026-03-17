@@ -110,6 +110,38 @@ async function fundAccounts(client: { dev: any }, accounts: { address: string }[
   })
 }
 
+/**
+ * Common test preamble: set up a network, fund Alice and Bob, build a synthetic
+ * proof, and inject its root into `BlockToRoot`.
+ *
+ * Most remote proxy tests share this setup. Tests that need custom behavior (no root
+ * injection, garbage proof nodes, no proof at all) should call the lower-level helpers directly.
+ */
+async function setupWithProof<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(
+  chain: Chain<TCustom, TInitStorages>,
+  palletName: string,
+  proxyType: number,
+  opts?: { delay?: number; extraAccounts?: { address: string }[] },
+) {
+  const [client] = await setupNetworks(chain)
+  const accountsToFund = [testAccounts.alice, testAccounts.bob, ...(opts?.extraAccounts ?? [])]
+  await fundAccounts(client, accountsToFund)
+
+  const { trieRootHash, proofNodes } = await buildSyntheticProxyProof(
+    client.api,
+    testAccounts.alice,
+    testAccounts.bob,
+    proxyType,
+    opts?.delay ?? 0,
+  )
+  const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash)
+
+  return { client, proofNodes, lastRelayBlock }
+}
+
 /// -------
 /// Individual tests
 /// -------
@@ -168,6 +200,50 @@ async function remoteProxyCallTest<
 
   await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
     'remote_proxy dispatches inner call',
+  )
+}
+
+/**
+ * Test that `remote_proxy` succeeds when `force_proxy_type` is explicitly set and the proof's
+ * proxy type satisfies it.
+ *
+ * An `Any` proxy is a superset of all types, so specifying `force_proxy_type: NonTransfer`
+ * should succeed because `Any` covers `NonTransfer`.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a proof where Bob is an `Any` proxy for Alice
+ * 3. Inject the synthetic root and dispatch `system.remarkWithEvent` via `remote_proxy`
+ *    with `force_proxy_type` set to `NonTransfer`
+ * 4. Verify that `proxy.ProxyExecuted { result: Ok }` is emitted
+ */
+async function remoteProxyForceTypeMatchTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('force type match test')
+  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.NonTransfer, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const proxyExecutedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'ProxyExecuted'
+  })
+  expect(proxyExecutedEvents.length).toBe(1)
+
+  const proxyExecutedEvent = proxyExecutedEvents[0]
+  assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
+  expect(proxyExecutedEvent.event.data.result.isOk).toBeTruthy()
+
+  await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+    'remote_proxy with force_proxy_type matching proof',
   )
 }
 
@@ -315,6 +391,96 @@ async function remoteProxyNonZeroDelayTest<
 }
 
 /**
+ * Test that `remote_proxy` fails when `force_proxy_type` does not match the proxy type in the proof.
+ *
+ * The proof attests that Bob is a `Staking` proxy for Alice, but the call specifies
+ * `force_proxy_type: Governance`. Since `Staking` is not a superset of `Governance`,
+ * the pallet should reject the call.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a proof where Bob is a `Staking` proxy for Alice
+ * 3. Inject the synthetic root and dispatch `system.remarkWithEvent` via `remote_proxy`
+ *    with `force_proxy_type` set to `Governance`
+ * 4. Verify that the extrinsic fails with `ExtrinsicFailed`
+ */
+async function remoteProxyForceTypeMismatchTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Staking)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('should fail')
+  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.Governance, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+
+  await checkEvents(result, 'system').toMatchSnapshot('remote_proxy with mismatched force_proxy_type')
+}
+
+/**
+ * Test that `remote_proxy` fails when the transaction signer does not match the delegate
+ * in the proof.
+ *
+ * The proof attests that Bob is a proxy for Alice, but Charlie signs the `remote_proxy`
+ * extrinsic. The pallet should reject the call because Charlie is not a proxy for Alice
+ * according to the proof.
+ *
+ * 1. Fund Alice, Bob, and Charlie
+ * 2. Build a proof where Bob is an `Any` proxy for Alice
+ * 3. Inject the synthetic root
+ * 4. As Charlie, call `remote_proxy` with the proof meant for Bob
+ * 5. Verify that the extrinsic fails with `ExtrinsicFailed`
+ */
+async function remoteProxyWrongSignerTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const charlie = testAccounts.charlie
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any, {
+    extraAccounts: [charlie],
+  })
+
+  const innerCall = client.api.tx.system.remarkWithEvent('should fail')
+  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, null, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(charlie))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+
+  await checkEvents(result, 'system').toMatchSnapshot('remote_proxy with wrong signer')
+}
+
+/**
  * Test the two-step flow: `register_remote_proxy_proof` followed by `remote_proxy_with_registered_proof`.
  *
  * This flow allows the (expensive) proof verification to happen once, and subsequent proxy calls
@@ -419,6 +585,57 @@ async function unregisteredProofCallTest<
   expect((client.api.errors as any)[palletName].ProxyProofNotRegistered.is(dispatchError.asModule)).toBe(true)
 
   await checkEvents(result, 'system').toMatchSnapshot('remote_proxy_with_registered_proof without registration')
+}
+
+/**
+ * Test that a registered proof does not persist across blocks.
+ *
+ * Registered proofs are transient: they are valid only within the block in which they were
+ * registered. This test verifies that a proof registered in block N cannot be used in block N+1.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a valid proof and inject its root into `BlockToRoot`
+ * 3. As Bob, send `register_remote_proxy_proof` (processed in block N)
+ * 4. In block N+1, send `remote_proxy_with_registered_proof`
+ * 5. Verify that the extrinsic fails with `ProxyProofNotRegistered`
+ */
+async function registeredProofExpiresAcrossBlocksTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+
+  const registerTx = client.api.tx[palletName].registerRemoteProxyProof({
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  await sendTransaction(registerTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const proxyTx = client.api.tx[palletName].remoteProxyWithRegisteredProof(
+    testAccounts.alice.address,
+    null,
+    client.api.tx.system.remarkWithEvent('should fail'),
+  )
+
+  const result = await sendTransaction(proxyTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+  expect((client.api.errors as any)[palletName].ProxyProofNotRegistered.is(dispatchError.asModule)).toBe(true)
+
+  await checkEvents(result, 'system').toMatchSnapshot('registered proof does not persist across blocks')
 }
 
 /**
@@ -531,12 +748,12 @@ async function remoteProxyFilteringBlockedTest<
 /**
  * Build the full remote proxy E2E test tree.
  *
- * The tree covers two groups of tests:
- * - tests for the `remote_proxy` extrinsic, which accepts an inline storage proof.
- *   Includes the successful path, and three rejection cases (unknown anchor block,
- *   invalid proof, non-zero delay).
- * - tests for the two-step flow where the proof is registered first and then reused.
- *   Includes the successful path and the rejection case when no proof was registered.
+ * The tree covers three groups of tests:
+ * - `remote_proxy` (direct proof): successful dispatch, force_proxy_type, and rejection cases
+ *   (unknown anchor block, invalid proof, non-zero delay, type mismatch, wrong signer).
+ * - `register + remote_proxy_with_registered_proof`: successful batch, rejection without
+ *   registration, and proof expiry across blocks.
+ * - Call filtering: verifies that proxy type restrictions apply through the remote dispatch path.
  */
 export function remoteProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
@@ -553,12 +770,17 @@ export function remoteProxyE2ETests<
     children: [
       {
         kind: 'describe',
-        label: 'remote_proxy (direct proof)',
+        label: 'remote proxy (direct proof)',
         children: [
           {
             kind: 'test',
             label: 'dispatch inner call with valid proof',
             testFn: async () => await remoteProxyCallTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'dispatch with explicit force_proxy_type',
+            testFn: async () => await remoteProxyForceTypeMatchTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
@@ -574,6 +796,16 @@ export function remoteProxyE2ETests<
             kind: 'test',
             label: 'reject proxy with non-zero delay',
             testFn: async () => await remoteProxyNonZeroDelayTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'reject mismatched force_proxy_type',
+            testFn: async () => await remoteProxyForceTypeMismatchTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'reject wrong signer',
+            testFn: async () => await remoteProxyWrongSignerTest(chain, palletName, proxyTypes),
           },
         ],
       },
@@ -591,11 +823,16 @@ export function remoteProxyE2ETests<
             label: 'reject call without prior proof registration',
             testFn: async () => await unregisteredProofCallTest(chain, palletName, proxyTypes),
           },
+          {
+            kind: 'test',
+            label: 'reject registered proof used in subsequent block',
+            testFn: async () => await registeredProofExpiresAcrossBlocksTest(chain, palletName, proxyTypes),
+          },
         ],
       },
       {
         kind: 'describe',
-        label: 'remote_proxy call filtering',
+        label: 'remote proxy call filtering',
         children: [
           {
             kind: 'test',
