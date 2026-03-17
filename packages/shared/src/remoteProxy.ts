@@ -204,16 +204,14 @@ async function remoteProxyCallTest<
 }
 
 /**
- * Test that `remote_proxy` succeeds when `force_proxy_type` is explicitly set and the proof's
- * proxy type satisfies it.
- *
- * An `Any` proxy is a superset of all types, so specifying `force_proxy_type: NonTransfer`
- * should succeed because `Any` covers `NonTransfer`.
+ * Test that `remote_proxy` succeeds when `force_proxy_type` exactly matches the proof's proxy
+ * type. The pallet uses exact equality (not superset checking) to select the proxy definition,
+ * so both the proof and the forced type must be the same variant.
  *
  * 1. Fund Alice and Bob
  * 2. Build a proof where Bob is an `Any` proxy for Alice
  * 3. Inject the synthetic root and dispatch `system.remarkWithEvent` via `remote_proxy`
- *    with `force_proxy_type` set to `NonTransfer`
+ *    with `force_proxy_type` set to `Any` (exact match)
  * 4. Verify that `proxy.ProxyExecuted { result: Ok }` is emitted
  */
 async function remoteProxyForceTypeMatchTest<
@@ -223,7 +221,7 @@ async function remoteProxyForceTypeMatchTest<
   const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
 
   const innerCall = client.api.tx.system.remarkWithEvent('force type match test')
-  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.NonTransfer, innerCall, {
+  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.Any, innerCall, {
     RelayChain: { proof: proofNodes, block: lastRelayBlock },
   })
 
@@ -431,6 +429,46 @@ async function remoteProxyForceTypeMismatchTest<
   expect(dispatchError.isModule).toBeTruthy()
 
   await checkEvents(result, 'system').toMatchSnapshot('remote_proxy with mismatched force_proxy_type')
+}
+
+/**
+ * Test that `force_proxy_type` uses exact equality, not superset matching. Even though `Any`
+ * is a superset of `NonTransfer`, forcing `NonTransfer` when the proof contains `Any` must fail
+ * because the pallet selects proxy definitions by exact type.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a proof where Bob is an `Any` proxy for Alice
+ * 3. Dispatch `system.remarkWithEvent` via `remote_proxy` with `force_proxy_type: NonTransfer`
+ * 4. Verify that the extrinsic fails with `ExtrinsicFailed`
+ */
+async function remoteProxyForceTypeExactMatchOnlyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('should fail')
+  const tx = client.api.tx[palletName].remoteProxy(testAccounts.alice.address, proxyTypes.NonTransfer, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+
+  await checkEvents(result, 'system').toMatchSnapshot('remote_proxy force_proxy_type requires exact match')
 }
 
 /**
@@ -801,6 +839,11 @@ export function remoteProxyE2ETests<
             kind: 'test',
             label: 'reject mismatched force_proxy_type',
             testFn: async () => await remoteProxyForceTypeMismatchTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'reject force_proxy_type superset (exact match required)',
+            testFn: async () => await remoteProxyForceTypeExactMatchOnlyTest(chain, palletName, proxyTypes),
           },
           {
             kind: 'test',
