@@ -90,6 +90,8 @@ exports[`Bridge Hub Polkadot Proxy full tests (includes call filtering) > Bridge
 ]
 `;
 
+exports[`Bridge Hub Polkadot Proxy full tests (includes call filtering) > Bridge Hub Polkadot Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `[]`;
+
 exports[`Bridge Hub Polkadot Proxy full tests (includes call filtering) > Bridge Hub Polkadot Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {

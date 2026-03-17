@@ -162,6 +162,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
+      "pollIndex": 640,
       "vote": {
         "Standard": {
           "balance": 50000000000,
@@ -183,6 +184,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
+      "pollIndex": 640,
       "vote": {
         "Split": {
           "aye": 50000000000,
@@ -201,6 +203,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
+      "pollIndex": 640,
       "vote": {
         "SplitAbstain": {
           "abstain": 20000000000,
@@ -529,6 +532,58 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > bob attempting to vote directly after delegating to charlie 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 91,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's removal of delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      30,
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
   },
 ]
 `;
