@@ -35,10 +35,10 @@ jobs:
               - { chain: "peopleKusama", port: 9014, endpoint_var: "PEOPLEKUSAMA_ENDPOINT" }
               - { chain: "encointerKusama", port: 9015, endpoint_var: "ENCOINTERKUSAMA_ENDPOINT" }
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'yarn'
@@ -53,7 +53,7 @@ jobs:
       run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
 
     - name: Cache Subway binary
-      uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      uses: Swatinem/rust-cache@v2
       with:
         shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
         save-if: ${{ github.ref == 'refs/heads/master' }}
@@ -135,7 +135,7 @@ jobs:
         fi
 
     - name: Commit and Create PR
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
           const { network } = context.payload.inputs || { network: '${{ matrix.network.name }}' };

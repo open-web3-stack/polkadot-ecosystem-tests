@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Check Permission
         id: check_permission
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const payload = context.payload
@@ -78,7 +78,7 @@ jobs:
     if: ${{ needs.check.outputs.command == 'merge' || needs.check.outputs.command == 'cancel-merge' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/github-script@v7
         with:
           script: |
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: ref
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             return !context.payload.issue.pull_request ?
@@ -101,11 +101,11 @@ jobs:
                 pull_number: context.payload.issue.number
               })).data.head.ref
           result-encoding: string
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ steps.ref.outputs.result }}
       - name: setup node env
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
           cache: 'yarn'
