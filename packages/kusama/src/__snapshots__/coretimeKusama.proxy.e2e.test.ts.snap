@@ -229,7 +229,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
 [
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -240,7 +239,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
@@ -251,7 +249,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
@@ -262,7 +259,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Broker",
@@ -273,7 +269,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CoretimeRenewer",
@@ -284,7 +279,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "OnDemandPurchaser",
@@ -295,7 +289,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
   },
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Collator",
@@ -493,7 +486,6 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
 [
   {
     "data": {
-      "at": "(rounded 4700000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",

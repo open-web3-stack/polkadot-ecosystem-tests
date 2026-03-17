@@ -1625,7 +1625,7 @@ export async function createKillPureProxyTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxiesEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(pure|at)$/ })
     .toMatchSnapshot(`events when creating pure proxies for Alice`)
 
   // Check created proxies
@@ -1938,7 +1938,7 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxyEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(at|pure)$/ })
     .toMatchSnapshot(`events when creating a pure proxy for Alice`)
 
   const events = await client.api.query.system.events()

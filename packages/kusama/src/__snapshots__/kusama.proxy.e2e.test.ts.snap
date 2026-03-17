@@ -319,7 +319,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
 [
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -330,7 +329,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
@@ -341,7 +339,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Governance",
@@ -352,7 +349,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Staking",
@@ -363,7 +359,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
@@ -374,7 +369,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Auction",
@@ -385,7 +379,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Society",
@@ -396,7 +389,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NominationPools",
@@ -407,7 +399,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Spokesperson",
@@ -418,7 +409,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "ParaRegistration",
@@ -673,7 +663,6 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
 [
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",

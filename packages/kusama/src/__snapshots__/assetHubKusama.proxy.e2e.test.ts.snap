@@ -439,7 +439,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
 [
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -450,7 +449,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
@@ -461,7 +459,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
@@ -472,7 +469,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Assets",
@@ -483,7 +479,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "AssetOwner",
@@ -494,7 +489,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "AssetManager",
@@ -505,7 +499,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Collator",
@@ -516,7 +509,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Governance",
@@ -527,7 +519,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Staking",
@@ -538,7 +529,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NominationPools",
@@ -549,7 +539,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Auction",
@@ -560,7 +549,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "ParaRegistration",
@@ -571,7 +559,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Society",
@@ -582,7 +569,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   },
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Spokesperson",
@@ -913,7 +899,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
 [
   {
     "data": {
-      "at": "(rounded 33000000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",

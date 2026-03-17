@@ -139,7 +139,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > Bridge H
 [
   {
     "data": {
-      "at": "(rounded 7800000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -150,7 +149,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > Bridge H
   },
   {
     "data": {
-      "at": "(rounded 7800000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
@@ -161,7 +159,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > Bridge H
   },
   {
     "data": {
-      "at": "(rounded 7800000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
@@ -172,7 +169,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > Bridge H
   },
   {
     "data": {
-      "at": "(rounded 7800000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Collator",
@@ -313,7 +309,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > Bridge H
 [
   {
     "data": {
-      "at": "(rounded 7800000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
