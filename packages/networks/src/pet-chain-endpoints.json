@@ -95,13 +95,12 @@
     "wss://ksm-rpc.stakeworld.io/assethub"
   ],
   "bridgeHubKusama": [
-    "wss://sys.ibp.network/bridgehub-kusama",
     "wss://bridge-hub-kusama.dotters.network",
-    "wss://bridge-hub-kusama-rpc.n.dwellir.com",
-    "wss://kusama-bridge-hub-rpc-tn.dwellir.com",
-    "wss://rpc-bridge-hub-kusama.luckyfriday.io",
+    "wss://sys.ibp.network/bridgehub-kusama",
     "wss://bridgehub-kusama.public.curie.radiumblock.co/ws",
-    "wss://ksm-rpc.stakeworld.io/bridgehub"
+    "wss://ksm-rpc.stakeworld.io/bridgehub",
+    "wss://bridge-hub-kusama-rpc.n.dwellir.com",
+    "wss://rpc-bridge-hub-kusama.luckyfriday.io"
   ],
   "coretimeKusama": [
     "wss://sys.ibp.network/coretime-kusama",
