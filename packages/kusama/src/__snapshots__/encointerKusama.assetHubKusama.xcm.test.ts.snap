@@ -20,7 +20,7 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 99800000000)",
+    "free": "(rounded 100000000000)",
     "frozen": 0,
     "reserved": 0,
   },
