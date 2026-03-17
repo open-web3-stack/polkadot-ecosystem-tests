@@ -910,6 +910,31 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
 ]
 `;
 
+exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama AssetHub Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet balances, call burn 1`] = `
 [
   {
