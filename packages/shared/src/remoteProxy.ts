@@ -519,6 +519,160 @@ async function remoteProxyWrongSignerTest<
 }
 
 /**
+ * Test that `remote_proxy` fails when the proof contains valid trie data but the storage value
+ * is not a valid SCALE-encoded proxy definition list.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a trie with garbage bytes at Alice's `Proxy.Proxies` storage key
+ * 3. Inject the trie root into `BlockToRoot`
+ * 4. As Bob, call `remote_proxy` with the garbage-value proof
+ * 5. Verify that the extrinsic fails with `ProxyDefinitionDecodingFailed`
+ */
+async function remoteProxyGarbageStorageValueTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, _proxyTypes: ProxyTypeMap) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  await fundAccounts(client, [alice, bob])
+
+  const storageKey = proxyStorageKey(decodeAddress(alice.address))
+  const garbageValue = '0xdeadbeefcafebabe00112233' as HexString
+  const { trieRootHash, nodes: proofNodes } = await createProof([], [[storageKey, garbageValue]])
+  const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash as HexString)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('should fail')
+  const tx = client.api.tx[palletName].remoteProxy(alice.address, null, innerCall, {
+    RelayChain: { proof: proofNodes as HexString[], block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+  expect((client.api.errors as any)[palletName].ProxyDefinitionDecodingFailed.is(dispatchError.asModule)).toBe(true)
+
+  await checkEvents(result, 'system').toMatchSnapshot('remote_proxy with garbage storage value')
+}
+
+/**
+ * Test that `remote_proxy` fails when the proof attests Bob as a proxy for Alice, but the call
+ * specifies Charlie as `real`. The proof only covers Alice's storage key, so the pallet cannot
+ * verify Charlie's proxy definitions from it.
+ *
+ * 1. Fund Alice, Bob, and Charlie
+ * 2. Build a proof where Bob is an `Any` proxy for Alice
+ * 3. Inject the synthetic root
+ * 4. As Bob, call `remote_proxy` with `real` set to Charlie (not Alice)
+ * 5. Verify that the extrinsic fails with `ExtrinsicFailed`
+ */
+async function remoteProxyWrongRealAccountTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const charlie = testAccounts.charlie
+  const { client, proofNodes, lastRelayBlock } = await setupWithProof(chain, palletName, proxyTypes.Any, {
+    extraAccounts: [charlie],
+  })
+
+  const innerCall = client.api.tx.system.remarkWithEvent('should fail')
+  const tx = client.api.tx[palletName].remoteProxy(charlie.address, null, innerCall, {
+    RelayChain: { proof: proofNodes, block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+
+  await checkEvents(result, 'system').toMatchSnapshot('remote_proxy with wrong real account')
+}
+
+/**
+ * Test that when a delegate has multiple proxy types, `force_proxy_type` selects the correct
+ * definition. The proof contains Bob as both `Any` and `NonTransfer` proxy for Alice.
+ * Forcing `NonTransfer` should select the `NonTransfer` definition specifically.
+ *
+ * 1. Fund Alice and Bob
+ * 2. Build a proof with two proxy entries: Bob is `Any` and `NonTransfer` for Alice
+ * 3. Inject the synthetic root
+ * 4. As Bob, dispatch `system.remarkWithEvent` with `force_proxy_type: NonTransfer`
+ * 5. Verify that `proxy.ProxyExecuted { result: Ok }` is emitted
+ */
+async function remoteProxyMultipleTypesSelectTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, palletName: string, proxyTypes: ProxyTypeMap) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+  await fundAccounts(client, [alice, bob])
+
+  const storageKey = proxyStorageKey(decodeAddress(alice.address))
+  const storageValue = client.api
+    .createType('(Vec<(AccountId32, u8, u32)>, u128)', [
+      [
+        [bob.address, proxyTypes.Any, 0],
+        [bob.address, proxyTypes.NonTransfer, 0],
+      ],
+      0,
+    ])
+    .toHex() as HexString
+
+  const { trieRootHash, nodes: proofNodes } = await createProof([], [[storageKey, storageValue]])
+  const lastRelayBlock = await injectSyntheticRoot(client, palletName, trieRootHash as HexString)
+
+  const innerCall = client.api.tx.system.remarkWithEvent('multi-type select test')
+  const tx = client.api.tx[palletName].remoteProxy(alice.address, proxyTypes.NonTransfer, innerCall, {
+    RelayChain: { proof: proofNodes as HexString[], block: lastRelayBlock },
+  })
+
+  const result = await sendTransaction(tx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const proxyExecutedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'proxy' && event.method === 'ProxyExecuted'
+  })
+  expect(proxyExecutedEvents.length).toBe(1)
+
+  const proxyExecutedEvent = proxyExecutedEvents[0]
+  assert(client.api.events.proxy.ProxyExecuted.is(proxyExecutedEvent.event))
+  expect(proxyExecutedEvent.event.data.result.isOk).toBeTruthy()
+
+  await checkEvents(result, { section: 'proxy', method: 'ProxyExecuted' }).toMatchSnapshot(
+    'remote_proxy with multiple types selects correct definition',
+  )
+}
+
+/**
  * Test the two-step flow: `register_remote_proxy_proof` followed by `remote_proxy_with_registered_proof`.
  *
  * This flow allows the (expensive) proof verification to happen once, and subsequent proxy calls
@@ -849,6 +1003,21 @@ export function remoteProxyE2ETests<
             kind: 'test',
             label: 'reject wrong signer',
             testFn: async () => await remoteProxyWrongSignerTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'reject garbage storage value in proof',
+            testFn: async () => await remoteProxyGarbageStorageValueTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'reject wrong real account',
+            testFn: async () => await remoteProxyWrongRealAccountTest(chain, palletName, proxyTypes),
+          },
+          {
+            kind: 'test',
+            label: 'dispatch with multiple proxy types via force_proxy_type',
+            testFn: async () => await remoteProxyMultipleTypesSelectTest(chain, palletName, proxyTypes),
           },
         ],
       },
