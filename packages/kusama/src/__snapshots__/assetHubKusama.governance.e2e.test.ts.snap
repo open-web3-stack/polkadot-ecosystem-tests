@@ -162,7 +162,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "Standard": {
           "balance": 50000000000,
@@ -184,7 +183,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "Split": {
           "aye": 50000000000,
@@ -203,7 +201,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "SplitAbstain": {
           "abstain": 20000000000,
