@@ -199,7 +199,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
 [
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -210,7 +209,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   },
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
@@ -221,7 +219,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   },
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
@@ -232,7 +229,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   },
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Identity",
@@ -243,7 +239,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   },
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "IdentityJudgement",
@@ -254,7 +249,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   },
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Collator",
@@ -433,7 +427,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
 [
   {
     "data": {
-      "at": "(rounded 8200000)",
       "disambiguationIndex": 0,
       "extrinsicIndex": 2,
       "proxyType": "Any",
@@ -441,6 +434,31 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
     },
     "method": "PureCreated",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`People Kusama Proxy full tests (includes call filtering) > People Kusama Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
