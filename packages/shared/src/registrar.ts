@@ -53,6 +53,7 @@ export async function parasRegistrationE2ETest<
 
   expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding))
   expect(paras.deposit.toString()).toBe(parasDeposit.toString())
+  expect(paras.locked.isFalse).toBeFalsy()
 
   // Assert that the reserve balance is correct
   const aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
