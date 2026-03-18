@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > registrar register events 1`] = `
+[
+  {
+    "data": {
+      "manager": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "method": "Registered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
 [
   {
