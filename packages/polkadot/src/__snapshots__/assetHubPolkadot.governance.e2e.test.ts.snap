@@ -1,5 +1,69 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Asset Hub Governance > insufficient approval rejection tests > insufficient approval rejection for small_tipper > decision deposit refund after rejection (insufficient approval) - small_tipper 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > insufficient approval rejection tests > insufficient approval rejection for small_tipper > rejected referendum event (insufficient approval) - small_tipper 1`] = `
+{
+  "event": {
+    "data": [
+      1850,
+      {
+        "ayes": "0x000000000000000017304fe24dda2a9c",
+        "nays": "0x00000000000000004590efa6e98e7fd4",
+        "support": "0x000000000000000017304fe24dda2a9c",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Polkadot Asset Hub Governance > insufficient support rejection tests > insufficient support rejection for small_tipper > decision deposit refund after rejection (insufficient support) - small_tipper 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > insufficient support rejection tests > insufficient support rejection for small_tipper > rejected referendum event (insufficient support) - small_tipper 1`] = `
+{
+  "event": {
+    "data": [
+      1850,
+      {
+        "ayes": 0,
+        "nays": 1000000000,
+        "support": 0,
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
 exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
 [
   {
@@ -531,4 +595,68 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     "section": "system",
   },
 ]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum submission and timeout > referendum info after submission 1`] = `
+{
+  "ongoing": {
+    "deciding": null,
+    "decisionDeposit": null,
+    "enactment": {
+      "after": 1,
+    },
+    "inQueue": false,
+    "origin": {
+      "origins": "SmallTipper",
+    },
+    "proposal": {
+      "inline": "0x00001468656c6c6f",
+    },
+    "submissionDeposit": {
+      "amount": 100000000000,
+      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+    },
+    "tally": {
+      "ayes": 0,
+      "nays": 0,
+      "support": 0,
+    },
+    "track": 30,
+  },
+}
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum submission and timeout > referendum submission events 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "track": 30,
+    },
+    "method": "Submitted",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum submission and timeout > timed-out referendum event 1`] = `
+{
+  "event": {
+    "data": [
+      1850,
+      {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    ],
+    "index": "0x3e0a",
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
 `;
