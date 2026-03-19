@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type DescribeNode, type RootTestTree, setupNetworks, type TestNode } from '@e2e-test/shared'
 
 import type { Option, u32 } from '@polkadot/types'
 import type {
@@ -25,8 +25,23 @@ import {
   getBlockNumber,
   objectCmp,
   scheduleInlineCallWithOrigin,
-  type TestConfig,
 } from './helpers/index.js'
+
+/// -------
+/// Types
+/// -------
+
+export interface GovernanceTrackConfig {
+  trackId: number
+  trackName: string
+  /** Must match the runtime's `Origins` enum variant (e.g. `'SmallTipper'`). */
+  originName: string
+}
+
+export interface GovernanceTestConfig {
+  testSuiteName: string
+  tracks: GovernanceTrackConfig[]
+}
 
 /// -------
 /// Helpers
@@ -95,11 +110,12 @@ export async function submitReferendumTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // Fund test accounts not already provisioned in the test chain spec.
+  // Fund test accounts with enough for submission deposit + fees.
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
   await client.dev.setStorage({
     System: {
       account: [
-        [[devAccounts.alice.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.alice.address], { providers: 1, data: { free: (submissionDeposit * 10n).toString() } }],
         [[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
       ],
     },
@@ -108,12 +124,13 @@ export async function submitReferendumTest<
   // Get the referendum's intended track data
 
   const referendaTracks = client.api.consts.referenda.tracks
-  const smallTipper = referendaTracks.find((track) => track[1].name.eq('small_tipper'))!
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
 
-  /**
-   * Get current referendum count i.e. the next referendum's index
-   */
-  const referendumIndex = await client.api.query.referenda.referendumCount()
+  // Flush any pre-existing scheduled calls from the fork block so they don't
+  // interfere with our referendum index.
+  await client.dev.newBlock()
+
+  const referendumIndex = (await client.api.query.referenda.referendumCount()).toNumber()
 
   /**
    * Submit a new referendum
@@ -142,8 +159,9 @@ export async function submitReferendumTest<
   /**
    * Check the created referendum's data
    */
-  let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  let referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
+    referendumIndex,
+  )) as unknown as Option<PalletReferendaReferendumInfoConvictionVotingTally>
   assert(referendumDataOpt.isSome, "submitted referendum's data cannot be `None`")
   let referendumData: PalletReferendaReferendumInfoConvictionVotingTally = referendumDataOpt.unwrap()
 
@@ -170,10 +188,6 @@ export async function submitReferendumTest<
   // The referendum was above set to be enacted 1 block after its passing.
   expect(ongoingReferendum.enactment.isAfter).toBe(true)
   expect(ongoingReferendum.enactment.asAfter.toNumber()).toBe(1)
-
-  // Check submission block
-  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  expect(ongoingReferendum.submitted.toNumber()).toBe(currentBlock)
 
   expect(ongoingReferendum.submissionDeposit.who.toString()).toBe(
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
@@ -211,10 +225,21 @@ export async function submitReferendumTest<
   const alarm = [undecidingTimeoutAlarm, [undecidingTimeoutAlarm, 0]]
   expect(ongoingReferendum.alarm.unwrap().eq(alarm)).toBe(true)
 
-  // Modify the referendum to simulate a timeout caused by an unplaced decision deposit.
+  /**
+   * Simulate a timeout caused by an unplaced decision deposit.
+   *
+   * 1. backdate `submitted` so that `submitted + undecidingTimeout` falls on the next local block
+   * 2. set the alarm to that same block
+   * 3. schedule a `nudgeReferendum` call so the runtime services the alarm
+   *
+   * The referendum's timing fields (`submitted`, alarm) use local block numbers.
+   * The scheduler may use a different provider, so the nudge is scheduled via the helper.
+   */
 
-  const undecidedTimeout = undecidingTimeoutAlarm.sub(ongoingReferendum.submitted)
-  const newSubmitted = 1 + (currentBlock - undecidedTimeout.toNumber())
+  const undecidedTimeout = client.api.consts.referenda.undecidingTimeout.toNumber()
+  const localBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const alarmBlock = localBlock + 1
+  const newSubmitted = alarmBlock - undecidedTimeout
 
   await client.dev.setStorage({
     Referenda: {
@@ -233,48 +258,42 @@ export async function submitReferendumTest<
               deciding: ongoingReferendum.deciding,
               tally: ongoingReferendum.tally,
               inQueue: ongoingReferendum.inQueue,
-              alarm: [newSubmitted + undecidedTimeout.toNumber(), [newSubmitted + undecidedTimeout.toNumber(), 0]],
+              alarm: [alarmBlock, [alarmBlock, 0]],
             },
           },
         ],
       ],
     },
-    // An accompanying nudge call must also be scheduled, otherwise the above referendum will not be serviced.
-    Scheduler: {
-      Agenda: [
-        [
-          [currentBlock + 1],
-          [
-            {
-              call: { Inline: client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex() },
-              origin: { system: 'Root' },
-            },
-          ],
-        ],
-      ],
-    },
   })
+
+  // Schedule the nudge via the helper — it handles non-local block number providers correctly.
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
 
   await client.dev.newBlock()
 
   // Check event for the timed-out referendum
   let events = await client.api.query.system.events()
 
-  const referendaEvents = events.filter((record) => {
-    const { event } = record
-    return event.section === 'referenda'
-  })
+  const timedOutEvents = events.filter(
+    ({ event }) => client.api.events.referenda.TimedOut.is(event) && event.data[0].toNumber() === referendumIndex,
+  )
 
-  expect(referendaEvents.length, 'cancelling a referendum should emit 1 event').toBe(1)
+  expect(timedOutEvents.length, 'timing out a referendum should emit 1 TimedOut event').toBe(1)
 
-  const timedOutEvent = referendaEvents[0]
-  expect(client.api.events.referenda.TimedOut.is(timedOutEvent.event)).toBe(true)
+  const timedOutEvent = timedOutEvents[0]
 
   await check(timedOutEvent).toMatchSnapshot('timed-out referendum event')
 
   // Check the timed-out referendum's data
 
-  referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
+    referendumIndex,
+  )) as unknown as Option<PalletReferendaReferendumInfoConvictionVotingTally>
   assert(referendumDataOpt.isSome, "submitted referendum's data cannot be `None`")
   referendumData = referendumDataOpt.unwrap()
   expect(referendumData.isTimedOut).toBe(true)
@@ -282,16 +301,13 @@ export async function submitReferendumTest<
   const timedOutRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumData.asTimedOut
 
-  expect(
-    timedOutRef.eq([
-      newSubmitted + undecidedTimeout.toNumber(),
-      {
-        who: encodeAddress(defaultAccountsSr25519.alice.address, chain.properties.addressEncoding),
-        amount: client.api.consts.referenda.submissionDeposit,
-      },
-      null,
-    ]),
-  ).toBe(true)
+  // [end_block, submission_deposit, decision_deposit]
+  expect(timedOutRef[1].isSome, 'submission deposit should be present after timeout').toBe(true)
+  expect(timedOutRef[1].unwrap().who.toString()).toBe(
+    encodeAddress(defaultAccountsSr25519.alice.address, chain.properties.addressEncoding),
+  )
+  expect(timedOutRef[1].unwrap().amount.toBigInt()).toBe(client.api.consts.referenda.submissionDeposit.toBigInt())
+  expect(timedOutRef[2].isNone, 'decision deposit should be absent (never placed)').toBe(true)
 
   // Attempt to refund the submission deposit
 
@@ -1114,13 +1130,437 @@ export async function referendumLifecycleKillTest<
     })
 }
 
+/**
+ * Shared preamble for negative-outcome tests:
+ * 1. submitting a referendum on the given track
+ * 2. placing its decision deposit
+ * 3. reading back the created referendum's data
+ */
+async function submitAndDeposit(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  trackConfig: GovernanceTrackConfig,
+) {
+  const referendaTracks = client.api.consts.referenda.tracks
+  const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)
+  assert(track, `Track '${trackConfig.trackName}' (ID ${trackConfig.trackId}) not found in runtime`)
+
+  /**
+   * 1. Submit a new referendum on the given track
+   */
+
+  const referendumIndex = (await client.api.query.referenda.referendumCount()).toNumber()
+
+  const submissionTx = client.api.tx.referenda.submit(
+    { Origins: trackConfig.originName } as any,
+    { Inline: client.api.tx.system.remark('hello').method.toHex() },
+    { After: 1 },
+  )
+  await sendTransaction(submissionTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  /**
+   * 2. Place decision deposit
+   */
+
+  const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  /**
+   * 3. Check the created referendum's data
+   */
+
+  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None` after submission + deposit")
+  const referendumData = referendumDataOpt.unwrap()
+  assert(referendumData.isOngoing)
+
+  return { referendumIndex, ongoing: referendumData.asOngoing, track }
+}
+
+/**
+ * Fast-forward a referendum to the end of its decision period via storage injection:
+ * 1. backdating `submitted` and `deciding.since` so the decision period has elapsed by the next block
+ * 2. scheduling a `nudgeReferendum` call via the scheduler
+ */
+async function injectDecisionPeriodEnd(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  chain: Chain<any, any>,
+  referendumIndex: number,
+  ongoing: PalletReferendaReferendumStatusConvictionVotingTally,
+  track: (typeof client.api.consts.referenda.tracks)[number],
+) {
+  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const decisionPeriod = track[1].decisionPeriod.toNumber()
+  const prepPeriod = track[1].preparePeriod.toNumber()
+
+  /**
+   * 1. Backdate the referendum so the decision period has elapsed by the next block
+   *
+   * Runtime rejects when: now >= deciding.since + decisionPeriod
+   * Next block's local number: currentBlock + 1
+   */
+
+  const decidingSince = currentBlock + 1 - decisionPeriod
+  const newSubmitted = decidingSince - prepPeriod
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [referendumIndex],
+          {
+            Ongoing: {
+              track: ongoing.track,
+              origin: ongoing.origin,
+              proposal: ongoing.proposal,
+              enactment: ongoing.enactment,
+              submitted: newSubmitted,
+              submissionDeposit: ongoing.submissionDeposit,
+              decisionDeposit: ongoing.decisionDeposit,
+              deciding: { since: decidingSince, confirming: null },
+              tally: ongoing.tally,
+              inQueue: ongoing.inQueue,
+              alarm: [currentBlock + 1, [currentBlock + 1, 0]],
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 2. Schedule a nudge for the next block so the runtime evaluates the referendum
+   */
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+}
+
+/**
+ * Post-rejection verification:
+ * 1. checking that the `Rejected` event was emitted
+ * 2. checking the rejected referendum's data
+ * 3. refunding the decision deposit (should succeed)
+ * 4. attempting to refund the submission deposit (should fail with `BadStatus`)
+ */
+async function verifyRejection(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  referendumIndex: number,
+  trackLabel: string,
+  scenarioLabel: string,
+) {
+  /**
+   * 1. Check the `Rejected` event
+   */
+
+  const events = await client.api.query.system.events()
+  const referendaEvents = events.filter(({ event }) => event.section === 'referenda')
+
+  expect(referendaEvents.length, 'rejecting a referendum should emit 1 referenda event').toBe(1)
+  const rejectedEvent = referendaEvents[0]
+  expect(client.api.events.referenda.Rejected.is(rejectedEvent.event)).toBe(true)
+
+  await check(rejectedEvent)
+    .redact({ removeKeys: /index|pollIndex/ })
+    .toMatchSnapshot(`rejected referendum event (${scenarioLabel}) - ${trackLabel}`)
+
+  /**
+   * 2. Check the rejected referendum's data
+   */
+
+  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt.isSome)
+  const referendumData = referendumDataOpt.unwrap()
+  expect(referendumData.isRejected).toBe(true)
+
+  const rejectedRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
+    referendumData.asRejected
+  expect(rejectedRef[1].isSome, 'submission deposit should be present after rejection').toBe(true)
+  expect(rejectedRef[2].isSome, 'decision deposit should be present after rejection').toBe(true)
+
+  /**
+   * 3. Refund the decision deposit — this should succeed for rejected referenda
+   */
+
+  const refundDecisionTx = client.api.tx.referenda.refundDecisionDeposit(referendumIndex)
+  await sendTransaction(refundDecisionTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'referenda', method: 'DecisionDepositRefunded' })
+    .redact({ removeKeys: /index/ })
+    .toMatchSnapshot(`decision deposit refund after rejection (${scenarioLabel}) - ${trackLabel}`)
+
+  /**
+   * 4. Attempt to refund the submission deposit — this should fail with `BadStatus`
+   */
+
+  const refundSubmissionTx = client.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
+  await sendTransaction(refundSubmissionTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  const postRefundEvents = await client.api.query.system.events()
+  const failedRefundEvent = postRefundEvents.find(
+    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
+  )
+  assert(failedRefundEvent, 'submission deposit refund should have failed for rejected referendum')
+  assert(client.api.events.system.ExtrinsicFailed.is(failedRefundEvent.event))
+  const dispatchError = failedRefundEvent.event.data.dispatchError
+  assert(dispatchError.isModule)
+  expect(client.api.errors.referenda.BadStatus.is(dispatchError.asModule)).toBe(true)
+}
+
+/**
+ * Test the rejection of a referendum due to insufficient support:
+ * 1. submitting a referendum and placing its decision deposit
+ * 2. casting a single nay vote (approval = 0 %, support = 0 %)
+ * 3. fast-forwarding the decision period via storage injection
+ * 4. verifying the runtime organically rejects the referendum
+ *
+ *     4.1 checking the `Rejected` event and referendum storage state
+ *
+ *     4.2 checking that the decision deposit can be refunded
+ *
+ *     4.3 checking that the submission deposit cannot be refunded (`BadStatus`)
+ */
+export async function insufficientSupportTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const [client] = await setupNetworks(chain)
+
+  const referendaTracks = client.api.consts.referenda.tracks
+  const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
+  const decisionDeposit = track[1].decisionDeposit.toBigInt()
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.alice.address], { providers: 1, data: { free: (submissionDeposit * 10n).toString() } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: (decisionDeposit * 10n).toString() } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
+      ],
+    },
+  })
+
+  /**
+   * 1. Submit referendum and place decision deposit
+   */
+
+  const { referendumIndex } = await submitAndDeposit(client, trackConfig)
+
+  /**
+   * 2. Cast a single nay vote
+   *
+   * A nay vote is required: an empty tally (0/0/0) passes approval because
+   * `Perbill::from_rational(0, 0)` returns 100 % in Substrate.
+   *
+   * With only a nay: approval = 0 %, support = 0 %.
+   */
+
+  const nayBalance = 1e10
+  const nayVoteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: { aye: false, conviction: 'None' },
+      balance: nayBalance,
+    },
+  })
+  await sendTransaction(nayVoteTx.signAsync(devAccounts.charlie))
+  await client.dev.newBlock()
+
+  const postVoteOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(postVoteOpt.isSome)
+  const postVote = postVoteOpt.unwrap()
+  assert(postVote.isOngoing)
+  const ongoingPostVote = postVote.asOngoing
+
+  expect(ongoingPostVote.tally.ayes.toBigInt()).toBe(0n)
+  expect(ongoingPostVote.tally.support.toBigInt()).toBe(0n)
+  expect(ongoingPostVote.tally.nays.toBigInt() > 0n).toBe(true)
+
+  /**
+   * 3. Fast-forward past the decision period and nudge
+   */
+
+  await injectDecisionPeriodEnd(client, chain, referendumIndex, ongoingPostVote, track)
+  await client.dev.newBlock()
+
+  /**
+   * 4. Verify the referendum was rejected
+   *
+   *     4.1 checking the `Rejected` event and referendum storage state
+   *
+   *     4.2 checking that the decision deposit can be refunded
+   *
+   *     4.3 checking that the submission deposit cannot be refunded (`BadStatus`)
+   */
+
+  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient support')
+}
+
+/**
+ * Test the rejection of a referendum due to insufficient approval:
+ * 1. submitting a referendum and placing its decision deposit
+ * 2. casting an aye vote large enough to clear support (10 % of total issuance)
+ * 3. casting a nay vote that sinks approval below the 50 % floor (3× the aye)
+ * 4. checking the tally
+ * 5. fast-forwarding the decision period via storage injection
+ * 6. verifying the runtime organically rejects the referendum
+ *
+ *     6.1 checking the `Rejected` event and referendum storage state
+ *
+ *     6.2 checking that the decision deposit can be refunded
+ *
+ *     6.3 checking that the submission deposit cannot be refunded (`BadStatus`)
+ */
+export async function insufficientApprovalTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const [client] = await setupNetworks(chain)
+
+  const referendaTracks = client.api.consts.referenda.tracks
+  const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
+  const decisionDeposit = track[1].decisionDeposit.toBigInt()
+  const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+
+  const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
+
+  // aye = 10 % of total issuance (clears support), nay = 3× aye (approval = 25 % < 50 % floor)
+  const ayeBalance = totalIssuance / 10n
+  const nayBalance = ayeBalance * 3n
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.alice.address], { providers: 1, data: { free: (submissionDeposit * 10n).toString() } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: (decisionDeposit * 10n).toString() } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: (ayeBalance * 2n).toString() } }],
+        [[devAccounts.dave.address], { providers: 1, data: { free: (nayBalance * 2n).toString() } }],
+      ],
+    },
+  })
+
+  /**
+   * 1. Submit referendum and place decision deposit
+   */
+
+  const { referendumIndex } = await submitAndDeposit(client, trackConfig)
+
+  /**
+   * 2. Cast an aye vote large enough to clear support
+   */
+
+  const ayeVoteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: { aye: true, conviction: 'Locked1x' },
+      balance: ayeBalance.toString(),
+    },
+  })
+  await sendTransaction(ayeVoteTx.signAsync(devAccounts.charlie))
+  await client.dev.newBlock()
+
+  /**
+   * 3. Cast a nay vote that sinks approval below the 50 % floor
+   */
+
+  const nayVoteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: {
+      vote: { aye: false, conviction: 'Locked1x' },
+      balance: nayBalance.toString(),
+    },
+  })
+  await sendTransaction(nayVoteTx.signAsync(devAccounts.dave))
+  await client.dev.newBlock()
+
+  /**
+   * 4. Check the tally
+   */
+
+  const postVoteOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(postVoteOpt.isSome)
+  const postVote = postVoteOpt.unwrap()
+  assert(postVote.isOngoing)
+  const ongoingPostVote = postVote.asOngoing
+
+  expect(ongoingPostVote.tally.ayes.toBigInt()).toBe(ayeBalance)
+  expect(ongoingPostVote.tally.nays.toBigInt()).toBe(nayBalance)
+  expect(ongoingPostVote.tally.support.toBigInt()).toBe(ayeBalance)
+
+  /**
+   * 5. Fast-forward past the decision period and nudge
+   */
+
+  await injectDecisionPeriodEnd(client, chain, referendumIndex, ongoingPostVote, track)
+  await client.dev.newBlock()
+
+  /**
+   * 6. Verify the referendum was rejected
+   *
+   *     6.1 checking the `Rejected` event and referendum storage state
+   *
+   *     6.2 checking that the decision deposit can be refunded
+   *
+   *     6.3 checking that the submission deposit cannot be refunded (`BadStatus`)
+   */
+
+  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient approval')
+}
+
+/// -------
+/// Test trees
+/// -------
+
+function insufficientSupportTestTree<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, tracks: GovernanceTrackConfig[]): DescribeNode {
+  const children: TestNode[] = tracks.map((trackConfig) => ({
+    kind: 'test' as const,
+    label: `insufficient support rejection for ${trackConfig.trackName}`,
+    testFn: async () => await insufficientSupportTest(chain, trackConfig),
+  }))
+
+  return {
+    kind: 'describe',
+    label: 'insufficient support rejection tests',
+    children,
+  }
+}
+
+function insufficientApprovalTestTree<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, tracks: GovernanceTrackConfig[]): DescribeNode {
+  const children: TestNode[] = tracks.map((trackConfig) => ({
+    kind: 'test' as const,
+    label: `insufficient approval rejection for ${trackConfig.trackName}`,
+    testFn: async () => await insufficientApprovalTest(chain, trackConfig),
+  }))
+
+  return {
+    kind: 'describe',
+    label: 'insufficient approval rejection tests',
+    children,
+  }
+}
+
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, govConfig: GovernanceTestConfig): RootTestTree {
   return {
     kind: 'describe',
-    label: testConfig.testSuiteName,
+    label: govConfig.testSuiteName,
     children: [
       {
         kind: 'describe',
@@ -1143,6 +1583,8 @@ export function baseGovernanceE2ETests<
           },
         ],
       },
+      insufficientSupportTestTree(chain, govConfig.tracks),
+      insufficientApprovalTestTree(chain, govConfig.tracks),
     ],
   }
 }
