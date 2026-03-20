@@ -461,6 +461,225 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool metadata test > set
 ]
 `;
 
+exports[`Kusama Asset Hub Nomination Pools > nomination pool slash and withdraw test > slash test: member withdrawUnbonded after slash events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 75000000)",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 500000000000,
+      "points": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "releasedBalance": 500000000000,
+    },
+    "method": "MemberRemoved",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": "(rounded 75000000)",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: depositor unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 1000000000000,
+      "member": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "points": 1000000000000,
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: depositor withdrawUnbonded (pool dissolution) events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 75000000)",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {},
+    "method": "StakerRemoved",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 1000000000000,
+      "points": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "releasedBalance": 0,
+    },
+    "method": "MemberRemoved",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": "(rounded 3300000)",
+    },
+    "method": "Thawed",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 3300000)",
+      "from": "F3opxRbN5ZavB4LTn2m25YteFgKi8ckBihRPv8bgALbPfHo",
+      "to": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {},
+    "method": "Destroyed",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": "(rounded 14000000)",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": "(rounded 60000000)",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: join pool events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": 1000000000000,
+      "joined": true,
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: member withdrawUnbonded events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 75000000)",
+    },
+    "method": "Withdraw",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 1000000000000,
+      "points": 1000000000000,
+    },
+    "method": "Withdrawn",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "releasedBalance": 0,
+    },
+    "method": "MemberRemoved",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": "(rounded 75000000)",
+    },
+    "method": "Deposit",
+    "section": "balances",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: unbond events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "balance": 1000000000000,
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "points": 1000000000000,
+    },
+    "method": "Unbonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Nomination Pools > nomination pools update roles test > update pool roles via scheduler pallet 1`] = `
 [
   {
