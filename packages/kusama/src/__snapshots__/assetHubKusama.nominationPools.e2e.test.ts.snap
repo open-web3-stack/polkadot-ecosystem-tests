@@ -1,5 +1,33 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id events 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 1000000000000,
+      "joined": true,
+      "member": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
 [
   {
@@ -479,11 +507,31 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool slash and withdraw 
   },
   {
     "data": {
+      "amount": 500000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+  {
+    "data": {
       "balance": 500000000000,
       "points": 1000000000000,
     },
     "method": "Withdrawn",
     "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": 500000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {
@@ -543,6 +591,16 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
     },
     "method": "Withdrawn",
     "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {
@@ -633,6 +691,16 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
     },
     "method": "Withdrawn",
     "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 1000000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {

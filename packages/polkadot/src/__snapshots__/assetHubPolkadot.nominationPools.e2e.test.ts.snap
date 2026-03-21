@@ -1,5 +1,83 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id InvalidPoolId failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1d000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id PoolIdInUse failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1c000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id events 1`] = `
+[
+  {
+    "data": {
+      "amount": 5000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "depositor": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Created",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "bonded": 5000000000000,
+      "joined": true,
+      "member": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Nomination Pools > nomination pool creation with insufficient funds > create nomination pool with insufficient funds events 1`] = `
 [
   {
