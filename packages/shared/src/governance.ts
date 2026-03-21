@@ -1491,11 +1491,14 @@ export async function insufficientApprovalTest<
 }
 
 /**
- * Test that a referendum is queued when the track's deciding capacity is saturated:
- * 1. submitting a referendum and placing its decision deposit
- * 2. saturating the track's deciding capacity via storage injection
- * 3. fast-forwarding past the preparation period via storage injection
- * 4. verifying the referendum is queued (not deciding) because the track is full
+ * Test that a referendum is queued when the track's deciding capacity is saturated,
+ * then promoted to deciding once a slot opens:
+ * 1. submitting a blocker referendum and placing its decision deposit
+ * 2. submitting the overflow referendum and placing its decision deposit
+ * 3. backdating the overflow past its preparation period and nudging it into the queue
+ * 4. verifying the overflow is queued
+ * 5. advancing the blocker to the last block of its confirmation period
+ * 6. verifying the blocker passes and the overflow is promoted to deciding
  */
 export async function trackCapacityOverflowTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1505,9 +1508,11 @@ export async function trackCapacityOverflowTest<
 
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
-  const maxDeciding = track[1].maxDeciding.toNumber()
   const decisionDeposit = track[1].decisionDeposit.toBigInt()
   const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
+  const maxDeciding = track[1].maxDeciding.toNumber()
+  const prepPeriod = track[1].preparePeriod.toNumber()
+  const confirmPeriod = track[1].confirmPeriod.toNumber()
 
   await client.dev.setStorage({
     System: {
@@ -1519,44 +1524,57 @@ export async function trackCapacityOverflowTest<
   })
 
   /**
-   * 1. Submit referendum and place decision deposit
+   * 1. Submit a blocker referendum on the root track and place its decision deposit
    */
 
-  const { referendumIndex, ongoing } = await submitAndDeposit(client, trackConfig)
-  expect(ongoing.deciding.isNone, 'referendum should not yet be deciding (prep period not elapsed)').toBe(true)
+  const { referendumIndex: blockerIndex, ongoing: blockerOngoing } = await submitAndDeposit(client, trackConfig)
 
   /**
-   * 2. Saturate the track and fast-forward past the preparation period
-   *
-   * Setting `DecidingCount` to `maxDeciding` makes the runtime believe the track is full.
-   * Backdating `submitted` so that `submitted + preparePeriod ≤ nextBlock` ensures the
-   * preparation period has elapsed. The nudge call triggers the runtime to evaluate the
-   * referendum: because the track is full, it queues the referendum instead of deciding.
+   * 2. Submit the overflow referendum and place its decision deposit
    */
 
-  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
-  const prepPeriod = track[1].preparePeriod.toNumber()
-  const newSubmitted = currentBlock + 1 - prepPeriod
+  const { referendumIndex: overflowIndex, ongoing: overflowOngoing } = await submitAndDeposit(client, trackConfig)
+
+  const depositEvents = await client.api.query.system.events()
+  const depositPlaced = depositEvents.find(
+    ({ event }) =>
+      client.api.events.referenda.DecisionDepositPlaced.is(event) && event.data[0].toNumber() === overflowIndex,
+  )
+  assert(depositPlaced, 'DecisionDepositPlaced event should be emitted for the overflow referendum')
+  assert(client.api.events.referenda.DecisionDepositPlaced.is(depositPlaced.event))
+  expect(depositPlaced.event.data[0].toNumber()).toBe(overflowIndex)
+  expect(depositPlaced.event.data[2].toBigInt()).toBe(decisionDeposit)
+
+  /**
+   * 3. Backdate the overflow past its preparation period and nudge it into the queue
+   *
+   * Setting `DecidingCount` to 1 makes the runtime believe the track is full (the blocker
+   * occupies the only slot). Backdating `submitted` past the preparation period and nudging
+   * causes the runtime to evaluate the overflow: because the track is full, it queues it.
+   */
+
+  const block1 = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const overflowSubmitted = block1 + 1 - prepPeriod
 
   await client.dev.setStorage({
     Referenda: {
       DecidingCount: [[[trackConfig.trackId], maxDeciding]],
       ReferendumInfoFor: [
         [
-          [referendumIndex],
+          [overflowIndex],
           {
             Ongoing: {
-              track: ongoing.track,
-              origin: ongoing.origin,
-              proposal: ongoing.proposal,
-              enactment: ongoing.enactment,
-              submitted: newSubmitted,
-              submissionDeposit: ongoing.submissionDeposit,
-              decisionDeposit: ongoing.decisionDeposit,
+              track: overflowOngoing.track,
+              origin: overflowOngoing.origin,
+              proposal: overflowOngoing.proposal,
+              enactment: overflowOngoing.enactment,
+              submitted: overflowSubmitted,
+              submissionDeposit: overflowOngoing.submissionDeposit,
+              decisionDeposit: overflowOngoing.decisionDeposit,
               deciding: null,
-              tally: ongoing.tally,
+              tally: overflowOngoing.tally,
               inQueue: false,
-              alarm: [currentBlock + 1, [currentBlock + 1, 0]],
+              alarm: [block1 + 1, [block1 + 1, 0]],
             },
           },
         ],
@@ -1564,13 +1582,9 @@ export async function trackCapacityOverflowTest<
     },
   })
 
-  /**
-   * 3. Schedule a nudge so the runtime evaluates the referendum
-   */
-
   await scheduleInlineCallWithOrigin(
     client,
-    client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
+    client.api.tx.referenda.nudgeReferendum(overflowIndex).method.toHex(),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -1578,25 +1592,115 @@ export async function trackCapacityOverflowTest<
   await client.dev.newBlock()
 
   /**
-   * 4. Verify the referendum is queued, not deciding
+   * 4. Verify the overflow is queued, not deciding
    */
 
-  const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
-  assert(referendumDataOpt.isSome)
-  const referendumData = referendumDataOpt.unwrap()
-  assert(referendumData.isOngoing, 'referendum should still be ongoing (queued, not terminal)')
-  const queuedRef = referendumData.asOngoing
+  const queuedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(queuedOpt.isSome)
+  const queued = queuedOpt.unwrap()
+  assert(queued.isOngoing, 'overflow referendum should still be ongoing (queued, not terminal)')
+  const queuedRef = queued.asOngoing
 
-  expect(queuedRef.deciding.isNone, 'queued referendum should not be in decision phase').toBe(true)
-  expect(
-    queuedRef.inQueue.isTrue,
-    `referendum should be queued when track is at capacity (maxDeciding=${maxDeciding})`,
-  ).toBe(true)
+  expect(queuedRef.inQueue.isTrue, 'overflow should be queued when track is at capacity').toBe(true)
+  expect(queuedRef.deciding.isNone, 'queued overflow should not be in decision phase').toBe(true)
 
-  await check(queuedRef)
-    .redact({ removeKeys: /alarm|submitted/ })
-    .toMatchSnapshot(`queued referendum (track at capacity) - ${trackConfig.trackName}`)
+  /**
+   * 5. Advance the blocker to the last block of its confirmation period
+   *
+   * Setting `confirming` to `block2 + 1` places the blocker at the exact block where
+   * confirmation ends. The injected tally has full approval and support so `is_passing`
+   * holds. The blocker's nudge is written directly into the scheduler agenda alongside
+   * the referendum state to avoid a second `scheduleInlineCallWithOrigin` call.
+   */
+
+  const block2 = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
+
+  const confirmDeadline = block2 + 1
+  const decidingSince = confirmDeadline - confirmPeriod
+  const blockerSubmitted = decidingSince - prepPeriod
+
+  const schedulerBlock =
+    chain.properties.schedulerBlockProvider === 'NonLocal'
+      ? ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber()
+      : block2 + 1
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [blockerIndex],
+          {
+            Ongoing: {
+              track: blockerOngoing.track,
+              origin: blockerOngoing.origin,
+              proposal: blockerOngoing.proposal,
+              enactment: blockerOngoing.enactment,
+              submitted: blockerSubmitted,
+              submissionDeposit: blockerOngoing.submissionDeposit,
+              decisionDeposit: blockerOngoing.decisionDeposit,
+              deciding: { since: decidingSince, confirming: confirmDeadline },
+              tally: { ayes: totalIssuance.toString(), nays: 0, support: totalIssuance.toString() },
+              inQueue: false,
+              alarm: [block2 + 1, [block2 + 1, 0]],
+            },
+          },
+        ],
+      ],
+    },
+    Scheduler: {
+      agenda: [
+        [
+          [schedulerBlock],
+          [
+            {
+              call: { Inline: client.api.tx.referenda.nudgeReferendum(blockerIndex).method.toHex() },
+              origin: { system: 'Root' },
+            },
+          ],
+        ],
+      ],
+      incompleteSince: schedulerBlock,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  /**
+   * 6. Verify the blocker passed and the overflow was promoted
+   *
+   * The blocker's approval triggers `note_one_fewer_deciding`, which schedules
+   * `one_fewer_deciding` for the next block. That call pops the overflow from
+   * the `TrackQueue` and begins its decision phase.
+   */
+
+  const blockerResultOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(blockerIndex)) as any
+  assert(blockerResultOpt.isSome)
+  expect(blockerResultOpt.unwrap().isApproved, 'blocker should have been approved').toBe(true)
+
+  await client.dev.newBlock()
+
+  const promotedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(promotedOpt.isSome)
+  const promoted = promotedOpt.unwrap()
+  assert(promoted.isOngoing, 'overflow should still be ongoing after promotion')
+  expect(promoted.asOngoing.deciding.isSome, 'overflow should now be in decision phase').toBe(true)
+  expect(promoted.asOngoing.inQueue.isFalse, 'overflow should no longer be queued').toBe(true)
+
+  const decidingCount = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
+  expect(decidingCount, 'DecidingCount should reflect the promoted overflow').toBe(maxDeciding)
+
+  const promotionEvents = await client.api.query.system.events()
+  const decisionStarted = promotionEvents.find(
+    ({ event }) => client.api.events.referenda.DecisionStarted.is(event) && event.data[0].toNumber() === overflowIndex,
+  )
+  assert(decisionStarted, 'DecisionStarted event should be emitted when the overflow is promoted')
+  assert(client.api.events.referenda.DecisionStarted.is(decisionStarted.event))
+  expect(decisionStarted.event.data[0].toNumber()).toBe(overflowIndex)
+  expect(decisionStarted.event.data[1].toNumber()).toBe(trackConfig.trackId)
 }
 
 /// -------
