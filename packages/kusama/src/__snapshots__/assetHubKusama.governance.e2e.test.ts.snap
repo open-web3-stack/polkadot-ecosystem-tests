@@ -83,6 +83,39 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 }
 `;
 
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > overflow decision deposit placed - big_spender 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 13000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > overflow promoted to deciding - big_spender 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+      "track": 34,
+    },
+    "method": "DecisionStarted",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > queued referendum (track at capacity) - big_spender 1`] = `
 {
   "deciding": null,
@@ -196,6 +229,39 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 }
 `;
 
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > overflow decision deposit placed - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1700000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > overflow promoted to deciding - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+      "track": 21,
+    },
+    "method": "DecisionStarted",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > queued referendum (track at capacity) - referendum_killer 1`] = `
 {
   "deciding": null,
@@ -307,6 +373,39 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
   },
   "topics": [],
 }
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > overflow decision deposit placed - root 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 3300000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > overflow promoted to deciding - root 1`] = `
+[
+  {
+    "data": {
+      "proposal": {
+        "Inline": "0x00001468656c6c6f",
+      },
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+      "track": 0,
+    },
+    "method": "DecisionStarted",
+    "section": "referenda",
+  },
+]
 `;
 
 exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > queued referendum (track at capacity) - root 1`] = `
