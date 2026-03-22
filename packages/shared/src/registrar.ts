@@ -221,39 +221,49 @@ export async function parasRegistrationE2ETest<
     .toMatchSnapshot('bob para deregister failed event')
 
   // 3.2 Alice deregisters the para
+  // deregister() requires the para to be in Parathread state.
+  // After register(), the para is in OnboardingAsParathread — it only moves to Parathread
+  // after a session change. Force the lifecycle state directly to avoid producing
+  // hundreds of blocks.
+  console.log('[registrar] 3.2 Forcing para lifecycle to Parathread via setStorage (paraId:', paraId, ')...')
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [[[parseInt(paraId)], 'Parathread']],
+    },
+  })
   console.log('[registrar] 3.2 Submitting deregister() from Alice (paraId:', paraId, ')...')
   const deregisterTx = client.api.tx.registrar.deregister(paraId)
-  const deregisterEvents = await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
+  await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
   console.log('[registrar] Alice deregister() block produced.')
 
-  // Assert deregister events
-  // await checkEvents(deregisterEvents, 'registrar')
-  //   .redact({ removeKeys: unwantedFields })
-  //   .toMatchSnapshot('registrar deregister events')
+  // Verify deregistered event data
+  const systemEventsAfterDeregister = await client.api.query.system.events()
+  console.log(
+    '[registrar] 3.2 All events after deregister():',
+    systemEventsAfterDeregister.map((r) => `${r.event.section}.${r.event.method}`).join(', '),
+  )
 
-  // // Verify deregistered event data
-  // const systemEventsAfterDeregister = await client.api.query.system.events()
-  // const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
-  //   const { event } = record
-  //   return event.section === 'registrar' && event.method === 'Deregistered'
-  // })
-  // assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
-  // console.log('[registrar] 3.2 Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
-  // expect(deregEvent.event.data[0].toString()).toBe(paraId)
+  const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
+    const { event } = record
+    return event.section === 'registrar' && event.method === 'Deregistered'
+  })
+  assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
+  console.log('[registrar] 3.2 Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
+  expect(deregEvent.event.data[0].toString()).toBe(paraId)
 
-  // // 3.3 Assert that all reserved balance is returned after deregistration
-  // aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
-  // console.log('[registrar] 3.3 Alice balance after deregister():', aliceBalance.data.toHuman())
-  // console.log('[registrar] Expected reserved: 0')
-  // expect(aliceBalance.data.reserved.toString()).toBe('0')
+  // 3.3 Assert that all reserved balance is returned after deregistration
+  aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
+  console.log('[registrar] 3.3 Alice balance after deregister():', aliceBalance.data.toHuman())
+  console.log('[registrar] Expected reserved: 0')
+  expect(aliceBalance.data.reserved.toString()).toBe('0')
 
-  // // 3.4 Assert paras entry is gone
-  // const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
-  // console.log('[registrar] 3.4 paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
-  // expect(parasOptionAfter.isSome).toBe(false)
+  // 3.4 Assert paras entry is gone
+  const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  console.log('[registrar] 3.4 paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
+  expect(parasOptionAfter.isSome).toBe(false)
 
-  // console.log('[registrar] parasRegistrationE2ETest complete.')
+  console.log('[registrar] parasRegistrationE2ETest complete.')
 }
 
 /**
