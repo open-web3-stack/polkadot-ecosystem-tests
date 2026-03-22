@@ -11,7 +11,7 @@ import { encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import type { TestConfig } from './helpers/index.js'
-import { checkEvents, setupNetworks } from './index.js'
+import { checkEvents, scheduleInlineCallWithOrigin, setupNetworks } from './index.js'
 import type { RootTestTree } from './types.js'
 
 const devAccounts = defaultAccountsSr25519
@@ -193,6 +193,91 @@ export async function parasRegistrationE2ETest<
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   console.log('aliceBalance after deregister', aliceBalance.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe('0')
+}
+
+export async function parasRootRegistrationE2eTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  console.log('[registrar:root] Setting up network for chain:', chain.name)
+  const [client] = await setupNetworks(chain)
+  console.log('[registrar:root] Network ready.')
+
+  // Pay 0 DOT for registration
+  const paraDepositBigInt = BigInt(0)
+  console.log('[registrar:root] paraDeposit:', paraDepositBigInt.toString())
+
+  const bobBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
+  console.log('[registrar:root] Bob balance before force_register:', bobBalanceBefore.data.toHuman())
+
+  // Pick a paraId that isn't yet registered — force_register bypasses the reserve() step
+  const paraId = 2000
+  console.log('[registrar:root] Using paraId:', paraId)
+
+  // Genesis head and minimal WASM validation code
+  const genesisHead = new Uint8Array([0x00])
+  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
+
+  // Call force_register via Root origin — sets Bob as manager
+  console.log('[registrar:root] Scheduling force_register() with Root origin (manager: Bob, paraId:', paraId, ')...')
+  const forceRegisterTx = client.api.tx.registrar.forceRegister(
+    devAccounts.bob.address,
+    paraDepositBigInt,
+    paraId,
+    genesisHead,
+    validationCode,
+  )
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceRegisterTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  console.log('[registrar:root] force_register() block produced.')
+
+  // Assert Registered event
+  const systemEvents = await client.api.query.system.events()
+  const [regEvent] = systemEvents.filter((record) => {
+    const { event } = record
+    return event.section === 'registrar' && event.method === 'Registered'
+  })
+  assert(client.api.events.registrar.Registered.is(regEvent.event))
+  console.log(
+    '[registrar:root] Registered event — paraId:',
+    regEvent.event.data[0].toHuman(),
+    '| manager:',
+    regEvent.event.data[1].toHuman(),
+  )
+  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+  expect(regEvent.event.data[1].toString()).toBe(
+    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+  )
+
+  // Assert ParaInfo has Bob as manager and correct deposit
+  const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  console.log('[registrar:root] paras(paraId) isSome:', parasOption.isSome)
+  expect(parasOption.isSome).toBe(true)
+  const paras = parasOption.unwrap()
+  console.log(
+    '[registrar:root] ParaInfo — manager:',
+    paras.manager.toHuman(),
+    '| deposit:',
+    paras.deposit.toHuman(),
+    '| locked:',
+    paras.locked.toHuman(),
+  )
+  expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding))
+  expect(paras.deposit.toString()).toBe(paraDepositBigInt.toString())
+  expect(paras.locked.isFalse).toBeFalsy()
+
+  // Assert the deposit was reserved from Bob's account
+  const bobBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
+  console.log('[registrar:root] Bob balance after force_register:', bobBalanceAfter.data.toHuman())
+  console.log('[registrar:root] Expected reserved:', paraDepositBigInt.toString())
+  expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
+
+  console.log('[registrar:root] parasRootRegistrationE2eTest complete.')
 }
 
 // export async function parasRegistrarLifecycleE2ETest<
