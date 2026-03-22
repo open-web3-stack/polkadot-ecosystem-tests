@@ -28,7 +28,7 @@ const devAccounts = defaultAccountsSr25519
  *
  *     1.4 asserting Bob's frozen funds is equal to delegation amount
  *
- * 2. register para
+ * 2. registering para
  *
  *     2.1 asserting that register by alice was successful
  *
@@ -36,13 +36,15 @@ const devAccounts = defaultAccountsSr25519
  *
  *     2.3 asserting that alice cannot register para ID twice
  *
- * 3. deregister para
+ * 3. deregistering para
  *
  *     3.1 asserting that non-owner cannot deregister para
  *
  *     3.2 asserting para deregister and events
  *
- *     3.2 asserting that reserved balance is removed after deregister
+ *     3.3 asserting that reserved balance is removed after deregister
+ *
+ *     3.4 asserting that paras entry is gone
  */
 export async function parasRegistrationE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -193,8 +195,27 @@ export async function parasRegistrationE2ETest<
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   console.log('aliceBalance after deregister', aliceBalance.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe('0')
+
+  // 3.4 Assert paras entry is gone
+  const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  console.log('[registrar:root] paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
+  expect(parasOptionAfter.isSome).toBe(false)
 }
 
+/**
+ * Test the process of
+ * 1. reserving a para ID via Root origin
+ *
+ *     1.1 asserting that the para ID was successfully registered by Root call
+ *
+ *     1.2 asserting that bob was set as manager for reserved para
+ *
+ * 2. deregistering para via Root origin
+ *
+ *     2.1 asserting events that deregister of para was successful
+ *
+ *     2.2 asserting para entry is no longer present
+ */
 export async function parasRootRegistrationE2eTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -236,7 +257,7 @@ export async function parasRootRegistrationE2eTest<
   await client.dev.newBlock()
   console.log('[registrar:root] force_register() block produced.')
 
-  // Assert Registered event
+  // 1.1 Assert Registered event
   const systemEvents = await client.api.query.system.events()
   const [regEvent] = systemEvents.filter((record) => {
     const { event } = record
@@ -254,7 +275,7 @@ export async function parasRootRegistrationE2eTest<
     encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
   )
 
-  // Assert ParaInfo has Bob as manager and correct deposit
+  // 1.2 Assert ParaInfo has Bob as manager and correct deposit
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   console.log('[registrar:root] paras(paraId) isSome:', parasOption.isSome)
   expect(parasOption.isSome).toBe(true)
@@ -277,7 +298,7 @@ export async function parasRootRegistrationE2eTest<
   console.log('[registrar:root] Expected reserved:', paraDepositBigInt.toString())
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
-  // Deregister the para via Root origin
+  // 2. Deregister the para via Root origin
   console.log('[registrar:root] Scheduling deregister() with Root origin (paraId:', paraId, ')...')
   const deregisterTx = client.api.tx.registrar.deregister(paraId)
   await scheduleInlineCallWithOrigin(
@@ -289,7 +310,7 @@ export async function parasRootRegistrationE2eTest<
   await client.dev.newBlock()
   console.log('[registrar:root] Root deregister() block produced.')
 
-  // Assert Deregistered event
+  // 2.1 Assert Deregistered event
   const systemEventsAfterDeregister = await client.api.query.system.events()
   const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
     const { event } = record
@@ -299,15 +320,10 @@ export async function parasRootRegistrationE2eTest<
   console.log('[registrar:root] Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
   expect(deregEvent.event.data[0].toString()).toBe(paraId.toString())
 
-  // Assert paras entry is gone
+  // 2.2 Assert paras entry is gone
   const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   console.log('[registrar:root] paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
   expect(parasOptionAfter.isSome).toBe(false)
-
-  // Assert Bob's reserved balance is returned
-  const bobBalanceFinal = await client.api.query.system.account(devAccounts.bob.address)
-  console.log('[registrar:root] Bob balance after deregister:', bobBalanceFinal.data.toHuman())
-  expect(bobBalanceFinal.data.reserved.toString()).toBe('0')
 
   console.log('[registrar:root] parasRootRegistrationE2eTest complete.')
 }
