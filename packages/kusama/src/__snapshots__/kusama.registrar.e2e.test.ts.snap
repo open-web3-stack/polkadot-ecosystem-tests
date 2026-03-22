@@ -1,5 +1,23 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > alice duplicate para register failed event 1`] = `[]`;
+
+exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > bob para deregister failed event 1`] = `[]`;
+
+exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > bob para register failed event 1`] = `[]`;
+
+exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > registrar register events 1`] = `
+[
+  {
+    "data": {
+      "manager": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+    },
+    "method": "Registered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Kusama Registrar > Kusama Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
 [
   {
