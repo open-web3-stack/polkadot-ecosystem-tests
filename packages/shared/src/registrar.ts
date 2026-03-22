@@ -50,8 +50,15 @@ export async function parasRegistrationE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
+  console.log('[registrar] Setting up network for chain:', chain.name)
   const [client] = await setupNetworks(chain)
+  console.log('[registrar] Network ready.')
 
+  console.log(
+    '[registrar] Funding Alice (address:',
+    devAccounts.alice.address,
+    ') with 100000e10 planck (100,000 DOT)...',
+  )
   await client.dev.setStorage({
     System: {
       account: [[[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }]],
@@ -59,11 +66,35 @@ export async function parasRegistrationE2ETest<
   })
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
+  const paraDepositBigInt = BigInt(paraDeposit.toString())
+  const dataDepositPerByte = BigInt(client.api.consts.registrar.dataDepositPerByte.toString())
+  const config =
+    (await client.api.query.configuration.activeConfig()) as PolkadotRuntimeParachainsConfigurationHostConfiguration
+  const maxCodeSize = BigInt(config.maxCodeSize.toString())
+  const totalDeposit = paraDepositBigInt + dataDepositPerByte * maxCodeSize
+  const additionalNeeded = totalDeposit - paraDepositBigInt
+
+  console.log(
+    '[registrar] consts — paraDeposit:',
+    paraDeposit.toHuman(),
+    '| dataDepositPerByte:',
+    dataDepositPerByte.toString(),
+    '| maxCodeSize:',
+    maxCodeSize.toString(),
+  )
+  console.log(
+    '[registrar] deposit math — totalDeposit:',
+    totalDeposit.toString(),
+    '| additionalNeeded for register():',
+    additionalNeeded.toString(),
+  )
 
   // 1. Reserve a para ID
+  console.log('[registrar] 1. Submitting reserve() from Alice...')
   const reserveTx = client.api.tx.registrar.reserve()
   const reserveEvent = await sendTransaction(reserveTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
+  console.log('[registrar] reserve() block produced.')
 
   // Assert reserve events
   const unwantedFields = /Id/
@@ -81,14 +112,24 @@ export async function parasRegistrationE2ETest<
   // 1.1 Assert para events
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
+  console.log('[registrar] 1.1 Reserved paraId:', paraId, '| reserving account:', reserveEventData[1].toHuman())
   expect(reserveEventData[1].toString()).toBe(
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
 
   // Assert that para info is correct
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  console.log('[registrar] paras(paraId) isSome:', parasOption.isSome)
   expect(parasOption.isSome).toBe(true)
   const paras = parasOption.unwrap()
+  console.log(
+    '[registrar] ParaInfo — manager:',
+    paras.manager.toHuman(),
+    '| deposit:',
+    paras.deposit.toHuman(),
+    '| locked:',
+    paras.locked.toHuman(),
+  )
 
   expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding))
   expect(paras.deposit.toString()).toBe(paraDeposit.toString())
@@ -96,20 +137,9 @@ export async function parasRegistrationE2ETest<
 
   // 1.2 Assert that the reserved balance is correct
   let aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
-  console.log('aliceBalance', aliceBalance.toHuman())
+  console.log('[registrar] 1.2 Alice balance after reserve():', aliceBalance.data.toHuman())
+  console.log('[registrar] Expected reserved:', paraDeposit.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
-
-  const paraDepositBigInt = BigInt(client.api.consts.registrar.paraDeposit.toString())
-  const dataDepositPerByte = BigInt(client.api.consts.registrar.dataDepositPerByte.toString())
-  const config =
-    (await client.api.query.configuration.activeConfig()) as PolkadotRuntimeParachainsConfigurationHostConfiguration
-  const maxCodeSize = BigInt(config.maxCodeSize.toString())
-
-  const totalDeposit = paraDepositBigInt + dataDepositPerByte * maxCodeSize
-
-  // reserve() already locked paraDeposit, so register() only needs the delta
-  const alreadyReserved = paraDepositBigInt // if reserve() was already called
-  const additionalNeeded = totalDeposit - alreadyReserved
 
   // Genesis head
   const genesisHead = new Uint8Array([0x00])
@@ -117,18 +147,22 @@ export async function parasRegistrationE2ETest<
   const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
 
   // 1.3 Assert that bob (not owner) cannot register the para
+  console.log('[registrar] 1.3 Submitting register() from Bob (expected to fail — not owner, paraId:', paraId, ')...')
   const registerTxBob = client.api.tx.registrar.register(paraId, new Uint8Array([0x00]), '0x00')
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
+  console.log('[registrar] Bob register() block produced.')
 
   await checkEvents(registerEventsBob, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para register failed event')
 
   // 2. Test that alice can register the para
+  console.log('[registrar] 2. Submitting register() from Alice (paraId:', paraId, ')...')
   const registerTx = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
   const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
+  console.log('[registrar] Alice register() block produced.')
 
   // 2.1 Assert register events
   await checkEvents(registerEvents, 'registrar')
@@ -142,6 +176,12 @@ export async function parasRegistrationE2ETest<
     return event.section === 'registrar' && event.method === 'Registered'
   })
   assert(client.api.events.registrar.Registered.is(regEvent.event))
+  console.log(
+    '[registrar] 2.1 Registered event — paraId:',
+    regEvent.event.data[0].toHuman(),
+    '| manager:',
+    regEvent.event.data[1].toHuman(),
+  )
   expect(regEvent.event.data[0].toString()).toBe(paraId)
   expect(regEvent.event.data[1].toString()).toBe(
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
@@ -149,13 +189,16 @@ export async function parasRegistrationE2ETest<
 
   // 2.2 Assert that the new reserved balance includes additional deposit from registration
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
-  console.log('aliceBalance after register', aliceBalance.toHuman())
+  console.log('[registrar] 2.2 Alice balance after register():', aliceBalance.data.toHuman())
+  console.log('[registrar] Expected reserved:', (paraDepositBigInt + additionalNeeded).toString())
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
   // 2.3 alice trying to register again with the same paraId should fail
+  console.log('[registrar] 2.3 Submitting duplicate register() from Alice (expected to fail, paraId:', paraId, ')...')
   const registerTxDuplicate = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
   const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
   await client.dev.newBlock()
+  console.log('[registrar] Duplicate register() block produced.')
 
   await checkEvents(registerEventsDuplicate, 'registrar')
     .redact({ removeKeys: unwantedFields })
@@ -164,18 +207,22 @@ export async function parasRegistrationE2ETest<
   // 3. deregister para
 
   // 3.1 Assert that bob (not owner) cannot deregister the para
+  console.log('[registrar] 3.1 Submitting deregister() from Bob (expected to fail — not owner, paraId:', paraId, ')...')
   const deregisterTxBob = client.api.tx.registrar.deregister(paraId)
   const deregisterEventsBob = await sendTransaction(deregisterTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
+  console.log('[registrar] Bob deregister() block produced.')
 
   await checkEvents(deregisterEventsBob, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para deregister failed event')
 
   // 3.2 Alice deregisters the para
+  console.log('[registrar] 3.2 Submitting deregister() from Alice (paraId:', paraId, ')...')
   const deregisterTx = client.api.tx.registrar.deregister(paraId)
   const deregisterEvents = await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
+  console.log('[registrar] Alice deregister() block produced.')
 
   // Assert deregister events
   await checkEvents(deregisterEvents, 'registrar')
@@ -189,17 +236,21 @@ export async function parasRegistrationE2ETest<
     return event.section === 'registrar' && event.method === 'Deregistered'
   })
   assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
+  console.log('[registrar] 3.2 Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
   expect(deregEvent.event.data[0].toString()).toBe(paraId)
 
   // 3.3 Assert that all reserved balance is returned after deregistration
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
-  console.log('aliceBalance after deregister', aliceBalance.toHuman())
+  console.log('[registrar] 3.3 Alice balance after deregister():', aliceBalance.data.toHuman())
+  console.log('[registrar] Expected reserved: 0')
   expect(aliceBalance.data.reserved.toString()).toBe('0')
 
   // 3.4 Assert paras entry is gone
   const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
-  console.log('[registrar:root] paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
+  console.log('[registrar] 3.4 paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
   expect(parasOptionAfter.isSome).toBe(false)
+
+  console.log('[registrar] parasRegistrationE2ETest complete.')
 }
 
 /**
