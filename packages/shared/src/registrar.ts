@@ -80,28 +80,24 @@ export async function parasRegistrationE2ETest<
   const alreadyReserved = paraDepositBigInt // if reserve() was already called
   const additionalNeeded = totalDeposit - alreadyReserved
 
-  console.log('totalDeposit:      ', totalDeposit.toString())
-  console.log('additionalNeeded:  ', additionalNeeded.toString())
-
-  // Register the para with genesis head and validation code
+  // Genesis head
   const genesisHead = new Uint8Array([0x00])
-  // Minimal valid WASM module (11 bytes)
+  // Minimal valid WASM module (11 bytes) - validation code
   const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
+
+  // Assert that bob (not owner) cannot register the para
+  const registerTxBob = client.api.tx.registrar.register(paraId, new Uint8Array([0x00]), '0x00')
+  const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkEvents(registerEventsBob, 'registrar')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('bob para register failed event')
+
+  // Test that alice can register the para
   const registerTx = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
   const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
-
-  const registerSystemEvents = await client.api.query.system.events()
-  const failedEvent = registerSystemEvents.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  if (failedEvent && client.api.events.system.ExtrinsicFailed.is(failedEvent.event)) {
-    const { dispatchError } = failedEvent.event.data
-    if (dispatchError.isModule) {
-      const decoded = client.api.registry.findMetaError(dispatchError.asModule)
-      console.log('ExtrinsicFailed:', decoded.section, decoded.method, decoded.docs)
-    } else {
-      console.log('ExtrinsicFailed:', dispatchError.toHuman())
-    }
-  }
 
   // Assert register events
   await checkEvents(registerEvents, 'registrar')
@@ -124,6 +120,17 @@ export async function parasRegistrationE2ETest<
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   console.log('aliceBalance after register', aliceBalance.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
+
+  // alice trying to register again with the same paraId should fail
+  const registerTxDuplicate = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
+  const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(registerEventsDuplicate, 'registrar')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('alice duplicate para register failed event')
+
+  // alice deregisters the para
 }
 
 // export async function parasRegistrarLifecycleE2ETest<
