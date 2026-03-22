@@ -292,9 +292,10 @@ export async function parasRootRegistrationE2eTest<
   const bobBalanceBefore = await client.api.query.system.account(devAccounts.bob.address)
   console.log('[registrar:root] Bob balance before force_register:', bobBalanceBefore.data.toHuman())
 
-  // Pick a paraId that isn't yet registered — force_register bypasses the reserve() step
-  const paraId = 2000
-  console.log('[registrar:root] Using paraId:', paraId)
+  // Query the next free para ID so we don't collide with an already-registered para (e.g. Acala=2000)
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString())
+  console.log('[registrar:root] nextFreeParaId from chain:', paraId)
 
   // Genesis head and minimal WASM validation code
   const genesisHead = new Uint8Array([0x00])
@@ -360,6 +361,13 @@ export async function parasRootRegistrationE2eTest<
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
   // 2. Deregister the para via Root origin
+  // set para lifecycle state directly
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [[[paraId], 'Parathread']],
+    },
+  })
+
   console.log('[registrar:root] Scheduling deregister() with Root origin (paraId:', paraId, ')...')
   const deregisterTx = client.api.tx.registrar.deregister(paraId)
   await scheduleInlineCallWithOrigin(
@@ -406,27 +414,21 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - registration functions',
+      //   testFn: async () => await parasRegistrationE2ETest(chain),
+      // },
       {
-        kind: 'describe',
-        label: testConfig.testSuiteName,
-        children: [
-          {
-            kind: 'test',
-            label: 'pallet registrar - registration functions',
-            testFn: async () => await parasRegistrationE2ETest(chain),
-          },
-          // {
-          //   kind: 'test',
-          //   label: 'pallet registrar - root registration functions',
-          //   testFn: async () => await parasRootRegistrationE2eTest(chain),
-          // },
-          // {
-          //   kind: 'test',
-          //   label: 'pallet registrar - lifecycle functions',
-          //   testFn: async () => await parasRegistrarLifecycleE2ETest(chain),
-          // },
-        ],
+        kind: 'test',
+        label: 'pallet registrar - root registration functions',
+        testFn: async () => await parasRootRegistrationE2eTest(chain),
       },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - lifecycle functions',
+      //   testFn: async () => await parasRegistrarLifecycleE2ETest(chain),
+      // },
     ],
   }
 }
