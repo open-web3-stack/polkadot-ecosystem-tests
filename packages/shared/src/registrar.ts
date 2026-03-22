@@ -16,6 +16,29 @@ import type { RootTestTree } from './types.js'
 
 const devAccounts = defaultAccountsSr25519
 
+/**
+ * Test the process of
+ * 1. reserving a para ID
+ *
+ *     1.1 asserting that the para ID was successfully reserved by alice and para info is correct
+ *
+ *     1.2 asserting that para deposit is reserved
+ *
+ *     1.3 asserting that non-owner cannot register para
+ *
+ *     1.4 asserting Bob's frozen funds is equal to delegation amount
+ *
+ * 2. register para
+ *
+ *     2.1 asserting that register by alice was successful
+ *
+ *     2.2 asserting that new reserved balance includes additional deposit from registration
+ *
+ *     2.3 asserting that alice cannot register para ID twice
+ *
+ * 3. deregister para
+ *
+ */
 export async function parasRegistrationE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -30,7 +53,7 @@ export async function parasRegistrationE2ETest<
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
 
-  // Reserve a para ID
+  // 1. Reserve a para ID
   const reserveTx = client.api.tx.registrar.reserve()
   const reserveEvent = await sendTransaction(reserveTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
@@ -48,6 +71,7 @@ export async function parasRegistrationE2ETest<
   })
   assert(client.api.events.registrar.Reserved.is(resEvent.event))
 
+  // 1.1 Assert para events
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
   expect(reserveEventData[1].toString()).toBe(
@@ -63,7 +87,7 @@ export async function parasRegistrationE2ETest<
   expect(paras.deposit.toString()).toBe(paraDeposit.toString())
   expect(paras.locked.isFalse).toBeFalsy()
 
-  // Assert that the reserved balance is correct
+  // 1.2 Assert that the reserved balance is correct
   let aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   console.log('aliceBalance', aliceBalance.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
@@ -85,7 +109,7 @@ export async function parasRegistrationE2ETest<
   // Minimal valid WASM module (11 bytes) - validation code
   const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
 
-  // Assert that bob (not owner) cannot register the para
+  // 1.3 Assert that bob (not owner) cannot register the para
   const registerTxBob = client.api.tx.registrar.register(paraId, new Uint8Array([0x00]), '0x00')
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
@@ -94,12 +118,12 @@ export async function parasRegistrationE2ETest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para register failed event')
 
-  // Test that alice can register the para
+  // 2. Test that alice can register the para
   const registerTx = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
   const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
 
-  // Assert register events
+  // 2.1 Assert register events
   await checkEvents(registerEvents, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar register events')
@@ -116,12 +140,12 @@ export async function parasRegistrationE2ETest<
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
 
-  // Assert that the new reserved balance includes additional deposit from registration
+  // 2.2 Assert that the new reserved balance includes additional deposit from registration
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   console.log('aliceBalance after register', aliceBalance.toHuman())
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
-  // alice trying to register again with the same paraId should fail
+  // 2.3 alice trying to register again with the same paraId should fail
   const registerTxDuplicate = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
   const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
   await client.dev.newBlock()
