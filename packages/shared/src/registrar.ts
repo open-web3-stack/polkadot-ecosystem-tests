@@ -38,6 +38,11 @@ const devAccounts = defaultAccountsSr25519
  *
  * 3. deregister para
  *
+ *     3.1 asserting that non-owner cannot deregister para
+ *
+ *     3.2 asserting para deregister and events
+ *
+ *     3.2 asserting that reserved balance is removed after deregister
  */
 export async function parasRegistrationE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -154,7 +159,40 @@ export async function parasRegistrationE2ETest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('alice duplicate para register failed event')
 
-  // alice deregisters the para
+  // 3. deregister para
+
+  // 3.1 Assert that bob (not owner) cannot deregister the para
+  const deregisterTxBob = client.api.tx.registrar.deregister(paraId)
+  const deregisterEventsBob = await sendTransaction(deregisterTxBob.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkEvents(deregisterEventsBob, 'registrar')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('bob para deregister failed event')
+
+  // 3.2 Alice deregisters the para
+  const deregisterTx = client.api.tx.registrar.deregister(paraId)
+  const deregisterEvents = await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  // Assert deregister events
+  await checkEvents(deregisterEvents, 'registrar')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('registrar deregister events')
+
+  // Verify deregistered event data
+  const systemEventsAfterDeregister = await client.api.query.system.events()
+  const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
+    const { event } = record
+    return event.section === 'registrar' && event.method === 'Deregistered'
+  })
+  assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
+  expect(deregEvent.event.data[0].toString()).toBe(paraId)
+
+  // 3.3 Assert that all reserved balance is returned after deregistration
+  aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
+  console.log('aliceBalance after deregister', aliceBalance.toHuman())
+  expect(aliceBalance.data.reserved.toString()).toBe('0')
 }
 
 // export async function parasRegistrarLifecycleE2ETest<
