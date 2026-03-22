@@ -277,6 +277,38 @@ export async function parasRootRegistrationE2eTest<
   console.log('[registrar:root] Expected reserved:', paraDepositBigInt.toString())
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
+  // Deregister the para via Root origin
+  console.log('[registrar:root] Scheduling deregister() with Root origin (paraId:', paraId, ')...')
+  const deregisterTx = client.api.tx.registrar.deregister(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    deregisterTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  console.log('[registrar:root] Root deregister() block produced.')
+
+  // Assert Deregistered event
+  const systemEventsAfterDeregister = await client.api.query.system.events()
+  const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
+    const { event } = record
+    return event.section === 'registrar' && event.method === 'Deregistered'
+  })
+  assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
+  console.log('[registrar:root] Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
+  expect(deregEvent.event.data[0].toString()).toBe(paraId.toString())
+
+  // Assert paras entry is gone
+  const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  console.log('[registrar:root] paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
+  expect(parasOptionAfter.isSome).toBe(false)
+
+  // Assert Bob's reserved balance is returned
+  const bobBalanceFinal = await client.api.query.system.account(devAccounts.bob.address)
+  console.log('[registrar:root] Bob balance after deregister:', bobBalanceFinal.data.toHuman())
+  expect(bobBalanceFinal.data.reserved.toString()).toBe('0')
+
   console.log('[registrar:root] parasRootRegistrationE2eTest complete.')
 }
 
@@ -305,6 +337,11 @@ export function registrarE2ETest<
             kind: 'test',
             label: 'pallet registrar - registration functions',
             testFn: async () => await parasRegistrationE2ETest(chain),
+          },
+          {
+            kind: 'test',
+            label: 'pallet registrar - root registration functions',
+            testFn: async () => await parasRootRegistrationE2eTest(chain),
           },
           // {
           //   kind: 'test',
