@@ -156,7 +156,7 @@ export async function parasRegistrationE2ETest<
   await client.dev.newBlock()
   console.log('[registrar] Bob register() block produced.')
 
-  await checkEvents(registerEventsBob, 'registrar')
+  await checkEvents(registerEventsBob, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para register failed event')
 
@@ -203,7 +203,7 @@ export async function parasRegistrationE2ETest<
   await client.dev.newBlock()
   console.log('[registrar] Duplicate register() block produced.')
 
-  await checkEvents(registerEventsDuplicate, 'registrar')
+  await checkEvents(registerEventsDuplicate, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('alice duplicate para register failed event')
 
@@ -216,7 +216,7 @@ export async function parasRegistrationE2ETest<
   await client.dev.newBlock()
   console.log('[registrar] Bob deregister() block produced.')
 
-  await checkEvents(deregisterEventsBob, 'registrar')
+  await checkEvents(deregisterEventsBob, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para deregister failed event')
 
