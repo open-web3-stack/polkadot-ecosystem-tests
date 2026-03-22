@@ -212,7 +212,7 @@ export async function parasRegistrationE2ETest<
   console.log('[registrar] 3.2 Forcing para lifecycle to Parathread via setStorage (paraId:', paraId, ')...')
   await client.dev.setStorage({
     Paras: {
-      paraLifecycles: [[[parseInt(paraId)], 'Parathread']],
+      paraLifecycles: [[[parseInt(paraId, 10)], 'Parathread']],
     },
   })
 
@@ -271,11 +271,21 @@ export async function parasRegistrationE2ETest<
  *
  *     1.2 asserting that bob was set as manager for reserved para
  *
- * 2. deregistering para via Root origin
+ * 2. adding and removing lock
  *
- *     2.1 asserting events that deregister of para was successful
+ *     2.1 applying lock via root
  *
- *     2.2 asserting para entry is no longer present
+ *     2.2 asserting that locked is true
+ *
+ *     2.3 removing lock via root
+ *
+ *     2.4 asserting that locked is false
+ *
+ * 3. deregistering para via Root origin
+ *
+ *     3.1 asserting events that deregister of para was successful
+ *
+ *     3.2 asserting para entry is no longer present
  */
 export async function parasRootRegistrationE2eTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -294,7 +304,7 @@ export async function parasRootRegistrationE2eTest<
 
   // Query the next free para ID so we don't collide with an already-registered para (e.g. Acala=2000)
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
-  const paraId = parseInt(nextFreeParaId.toString())
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
   console.log('[registrar:root] nextFreeParaId from chain:', paraId)
 
   // Genesis head and minimal WASM validation code
@@ -338,10 +348,10 @@ export async function parasRootRegistrationE2eTest<
   )
 
   // 1.2 Assert ParaInfo has Bob as manager and correct deposit
-  const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  let parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   console.log('[registrar:root] paras(paraId) isSome:', parasOption.isSome)
   expect(parasOption.isSome).toBe(true)
-  const paras = parasOption.unwrap()
+  let paras = parasOption.unwrap()
   console.log(
     '[registrar:root] ParaInfo — manager:',
     paras.manager.toHuman(),
@@ -360,7 +370,57 @@ export async function parasRootRegistrationE2eTest<
   console.log('[registrar:root] Expected reserved:', paraDepositBigInt.toString())
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
-  // 2. Deregister the para via Root origin
+  // 2. Apply lock via Root
+  console.log('[registrar:lock] 2. Scheduling add_lock() with Root origin (paraId:', paraId, ')...')
+  const addLockTx = client.api.tx.registrar.addLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    addLockTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  console.log('[registrar:lock] add_lock() block produced.')
+
+  const eventsAfterLock = await client.api.query.system.events()
+  console.log(
+    '[registrar:lock] Events after add_lock:',
+    eventsAfterLock.map((r) => `${r.event.section}.${r.event.method}`).join(', '),
+  )
+
+  // 2.2 Assert locked is true
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  paras = parasOption.unwrap()
+  console.log('[registrar:lock] 2.1 Locked state after add_lock:', paras.locked.toHuman())
+  expect(paras.locked.toHuman()).toBe(true)
+
+  // 2.3 Remove lock via Root
+  console.log('[registrar:lock] 3. Scheduling remove_lock() with Root origin (paraId:', paraId, ')...')
+  const removeLockTx = client.api.tx.registrar.removeLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    removeLockTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  console.log('[registrar:lock] remove_lock() block produced.')
+
+  const eventsAfterUnlock = await client.api.query.system.events()
+  console.log(
+    '[registrar:lock] Events after remove_lock:',
+    eventsAfterUnlock.map((r) => `${r.event.section}.${r.event.method}`).join(', '),
+  )
+
+  // 2.4 Assert locked is false
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  paras = parasOption.unwrap()
+  console.log('[registrar:lock] 3.1 Locked state after remove_lock:', paras.locked.toHuman())
+  expect(paras.locked.toHuman()).toBe(false)
+
+  // 3. Deregister the para via Root origin
   // set para lifecycle state directly
   await client.dev.setStorage({
     Paras: {
@@ -379,7 +439,7 @@ export async function parasRootRegistrationE2eTest<
   await client.dev.newBlock()
   console.log('[registrar:root] Root deregister() block produced.')
 
-  // 2.1 Assert Deregistered event
+  // 3.1 Assert Deregistered event
   const systemEventsAfterDeregister = await client.api.query.system.events()
   const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
     const { event } = record
@@ -389,7 +449,7 @@ export async function parasRootRegistrationE2eTest<
   console.log('[registrar:root] Deregistered event — paraId:', deregEvent.event.data[0].toHuman())
   expect(deregEvent.event.data[0].toString()).toBe(paraId.toString())
 
-  // 2.2 Assert paras entry is gone
+  // 3.2 Assert paras entry is gone
   const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   console.log('[registrar:root] paras(paraId) isSome after deregister:', parasOptionAfter.isSome)
   expect(parasOptionAfter.isSome).toBe(false)
