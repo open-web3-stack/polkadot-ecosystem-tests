@@ -118,3 +118,129 @@ exports[`Kusama Registrar > pallet registrar - registration functions > registra
   },
 ]
 `;
+
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > alice locked schedule code upgrade failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > alice schedule code upgrade success 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(rounded 3400)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > bob schedule code upgrade failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `[]`;
+
+exports[`Kusama Registrar > pallet registrar - set current head > alice locked set current head failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - set current head > bob set current head failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

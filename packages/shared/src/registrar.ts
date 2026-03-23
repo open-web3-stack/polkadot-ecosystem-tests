@@ -5,7 +5,7 @@ import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 import type { Option } from '@polkadot/types'
 import type { ParaInfo } from '@polkadot/types/interfaces'
 import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
-import { u8aToHex } from '@polkadot/util'
+import { compactAddLength, u8aToHex } from '@polkadot/util'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
@@ -586,6 +586,249 @@ export async function parasRegistrarSwapE2ETest<
   expect(chainChainSwapEvent.event.data[1].toString()).toBe(paraIdA.toString())
 }
 
+/**
+ * Test the process of
+ *
+ * 1. asserting that non-owner (Bob) cannot schedule code upgrade
+ *
+ * 2. asserting that manager (Alice) can schedule code upgrade
+ *
+ * 3. asserting that Root call can lock para
+ *
+ * 4. asserting that Manager cannot schedule code upgrade for locked para
+ *
+ * 5. asserting that Root can schedule a code upgrade even when locked
+ *
+ */
+export async function parasScheduleCodeUpgradeE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  const genesisHead = new Uint8Array([0x00])
+  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
+  const newValidationCode = u8aToHex(
+    new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00]),
+  )
+
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  // Register para via Root with Alice as manager
+  const forceRegisterTx = client.api.tx.registrar.forceRegister(
+    devAccounts.alice.address,
+    BigInt(0),
+    paraId,
+    genesisHead,
+    validationCode,
+  )
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceRegisterTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const eventsAfterReg = await client.api.query.system.events()
+  const [regEvent] = eventsAfterReg.filter(
+    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
+  )
+  assert(client.api.events.registrar.Registered.is(regEvent.event))
+  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+
+  // 1. Non-owner (Bob) cannot schedule a code upgrade
+  const scheduleUpgradeBobTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
+  const scheduleUpgradeBobEvents = await sendTransaction(scheduleUpgradeBobTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  const unwantedFields = /Id/
+  await checkEvents(scheduleUpgradeBobEvents, 'system')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('bob schedule code upgrade failed')
+
+  // 2. Manager (Alice) can schedule a code upgrade
+  const scheduleUpgradeAliceTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
+  const scheduleUpgradeAliceEvents = await sendTransaction(scheduleUpgradeAliceTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(scheduleUpgradeAliceEvents, 'paras', 'system')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('alice schedule code upgrade success')
+
+  // 3. Lock the para via Root
+  const addLockTx = client.api.tx.registrar.addLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    addLockTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+
+  // 4. Manager (Alice) cannot schedule a code upgrade when para is locked
+  const scheduleUpgradeAliceLockedTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
+  const scheduleUpgradeAliceLockedEvents = await sendTransaction(
+    scheduleUpgradeAliceLockedTx.signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  await checkEvents(scheduleUpgradeAliceLockedEvents, 'system')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('alice locked schedule code upgrade failed')
+
+  // 5. Root can schedule a code upgrade even when locked
+  const scheduleUpgradeRootTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleUpgradeRootTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'paras')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('root schedule code upgrade success')
+}
+
+/**
+ * Test the process of
+ *
+ * 1. asserting that non-owner (Bob) cannot set the current head
+ *
+ * 2. asserting that manager (Alice) can set the current head
+ *
+ * 3. asserting that Root call can lock para
+ *
+ * 4. asserting that Manager cannot set the current head for locked para
+ *
+ *     4.1 asserting that head should be unchanged
+ *
+ * 5. asserting that Root can set the current head even when locked
+ *
+ */
+export async function parasSetCurrentHeadE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+
+  const genesisHead = new Uint8Array([0x00])
+  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
+  const newHeadRaw = new Uint8Array([0x01, 0x02, 0x03])
+  const newHead = u8aToHex(newHeadRaw)
+  const newHeadHex = u8aToHex(compactAddLength(newHeadRaw))
+
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  // Register para (Alice as manager) via Root
+  const forceRegisterTx = client.api.tx.registrar.forceRegister(
+    devAccounts.alice.address,
+    BigInt(0),
+    paraId,
+    genesisHead,
+    validationCode,
+  )
+  await scheduleInlineCallWithOrigin(
+    client,
+    forceRegisterTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const eventsAfterReg = await client.api.query.system.events()
+  const [regEvent] = eventsAfterReg.filter(
+    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
+  )
+  assert(client.api.events.registrar.Registered.is(regEvent.event))
+  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+
+  // 1. Non-owner (Bob) cannot set the current head
+  const setHeadBobTx = client.api.tx.registrar.setCurrentHead(paraId, newHead)
+  const setHeadBobEvents = await sendTransaction(setHeadBobTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkEvents(setHeadBobEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('bob set current head failed')
+
+  // 2. Manager (Alice, unlocked) can set the current head
+  const setHeadAliceTx = client.api.tx.registrar.setCurrentHead(paraId, newHead)
+  await sendTransaction(setHeadAliceTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  const headAfterAlice = await client.api.query.paras.heads(paraId)
+  expect(headAfterAlice.toHex()).toBe(newHeadHex)
+
+  // 3. Lock the para via Root
+  const addLockTx = client.api.tx.registrar.addLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    addLockTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+
+  // 4. Manager (Alice, locked) cannot set the current head
+  const updatedHeadRaw = new Uint8Array([0x04, 0x05, 0x06])
+  const updatedHead = u8aToHex(updatedHeadRaw)
+  const setHeadAliceLockedTx = client.api.tx.registrar.setCurrentHead(paraId, updatedHead)
+  const setHeadAliceLockedEvents = await sendTransaction(setHeadAliceLockedTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(setHeadAliceLockedEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('alice locked set current head failed')
+
+  // 4.1 Head should be unchanged
+  const headAfterAliceLocked = await client.api.query.paras.heads(paraId)
+  expect(headAfterAliceLocked.toHex()).toBe(newHeadHex)
+
+  // 5. Root can set the current head even when locked
+  const setHeadRootTx = client.api.tx.registrar.setCurrentHead(paraId, updatedHead)
+  await scheduleInlineCallWithOrigin(
+    client,
+    setHeadRootTx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const headAfterRoot = await client.api.query.paras.heads(paraId)
+  expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
+}
+
 export function registrarE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -608,6 +851,16 @@ export function registrarE2ETest<
         kind: 'test',
         label: 'pallet registrar - lifecycle functions',
         testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - schedule code upgrade',
+        testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - set current head',
+        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
       },
     ],
   }
