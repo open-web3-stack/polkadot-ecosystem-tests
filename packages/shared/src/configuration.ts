@@ -196,7 +196,6 @@ export async function configurationTest<
   >
   const mqPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(mqPending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
-  // This assertion always fails because `max_upward_queue_size` doesn't update. And the value is different in polkadot and kusama.
   expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
   expect(mqPending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
   expect(mqPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
