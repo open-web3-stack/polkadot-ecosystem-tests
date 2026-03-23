@@ -1,6 +1,31 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > alice duplicate para register failed event 1`] = `
+exports[`Polkadot Registrar > pallet registrar - lifecycle functions > cannot swap two parathreads 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - registration functions > alice duplicate para register failed event 1`] = `
 [
   {
     "data": {
@@ -25,7 +50,7 @@ exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registrati
 ]
 `;
 
-exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > bob para deregister failed event 1`] = `
+exports[`Polkadot Registrar > pallet registrar - registration functions > bob para deregister failed event 1`] = `
 [
   {
     "data": {
@@ -45,7 +70,7 @@ exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registrati
 ]
 `;
 
-exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > bob para register failed event 1`] = `
+exports[`Polkadot Registrar > pallet registrar - registration functions > bob para register failed event 1`] = `
 [
   {
     "data": {
@@ -70,7 +95,7 @@ exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registrati
 ]
 `;
 
-exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > registrar register events 1`] = `
+exports[`Polkadot Registrar > pallet registrar - registration functions > registrar register events 1`] = `
 [
   {
     "data": {
@@ -82,7 +107,7 @@ exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registrati
 ]
 `;
 
-exports[`Polkadot Registrar > Polkadot Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
+exports[`Polkadot Registrar > pallet registrar - registration functions > registrar reserve events 1`] = `
 [
   {
     "data": {
