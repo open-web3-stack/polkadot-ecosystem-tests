@@ -839,7 +839,7 @@ export function registrarE2ETest<
     children: [
       {
         kind: 'test',
-        label: 'pallet registrar - registration functions',
+        label: 'pallet registrar - reserve and registration functions',
         testFn: async () => await parasRegistrationE2ETest(chain),
       },
       {
@@ -849,7 +849,7 @@ export function registrarE2ETest<
       },
       {
         kind: 'test',
-        label: 'pallet registrar - lifecycle functions',
+        label: 'pallet registrar - swap functions',
         testFn: async () => await parasRegistrarSwapE2ETest(chain),
       },
       {
