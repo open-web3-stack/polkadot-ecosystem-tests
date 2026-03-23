@@ -1,6 +1,5 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { registerTestTree } from '@e2e-test/shared'
-import { registrarE2ETest } from '@e2e-test/shared/registrar'
+import { registerTestTree, registrarE2ETest } from '@e2e-test/shared'
 
 registerTestTree(
   registrarE2ETest(polkadot, {
