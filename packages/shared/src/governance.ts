@@ -352,7 +352,7 @@ export async function referendumLifecycleTest<
 
   await client.dev.newBlock()
 
-  unwantedFields = /alarm|when|since|submitted/
+  unwantedFields = /alarm|when|since|submitted|pollIndex/
 
   await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields, redactKeys: unwantedFields })

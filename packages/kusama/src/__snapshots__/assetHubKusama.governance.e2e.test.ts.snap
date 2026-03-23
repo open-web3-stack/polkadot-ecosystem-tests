@@ -564,6 +564,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
     "data": [
       "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
       "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      30,
     ],
     "method": "Delegated",
     "section": "convictionVoting",
@@ -576,6 +577,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
   {
     "data": [
       "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      30,
     ],
     "method": "Undelegated",
     "section": "convictionVoting",
