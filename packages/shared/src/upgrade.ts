@@ -23,6 +23,34 @@ import {
   type TestConfig,
 } from './helpers/index.js'
 
+/**
+ * Skips the current test if the chain-to-upgrade already has a real runtime upgrade pending.
+ *
+ * When `parachainSystem.pendingValidationCode` is non-empty at the fork block, the parachain
+ * system will reject `applyAuthorizedUpgrade` (it won't store a second pending validation
+ * function), so `ValidationFunctionStored` / `ValidationFunctionApplied` / `CodeUpdated` events
+ * never fire and the test would fail. Skip instead of failing.
+ *
+ * Only relevant for parachains — relay chains don't have `parachainSystem`.
+ */
+async function skipIfRealUpgradePending(client: Client, ctx?: { skip: (reason?: string) => void }) {
+  const authorizedUpgrade = await client.api.query.system.authorizedUpgrade()
+  if (authorizedUpgrade.isSome) {
+    ctx?.skip?.(
+      `Skipping: real runtime upgrade already authorized on ${client.config.name} (system.authorizedUpgrade is set)`,
+    )
+    return
+  }
+
+  if (client.config.isRelayChain) return
+  const pendingCode = await client.api.query.parachainSystem.pendingValidationCode()
+  if (!pendingCode.isEmpty) {
+    ctx?.skip?.(
+      `Skipping: real runtime upgrade already pending on ${client.config.name} (parachainSystem.pendingValidationCode is non-empty)`,
+    )
+  }
+}
+
 type AuthorizeUpgradeFn = (codeHash: string | Uint8Array<ArrayBufferLike>) => SubmittableExtrinsic<'promise'>
 type ExpectedEvents = Parameters<typeof assertExpectedEvents>[1]
 
@@ -365,7 +393,7 @@ async function runAuthorizeUpgradeViaRootReferendum(
       ? params.call(currentWasmHash)
       : clientOfGoverningChain.api.tx.utility.forceBatch([
           (() => {
-            const call = clientOfChainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
+            const call = params.call(currentWasmHash)
             const dest = getXcmRoute(clientOfGoverningChain.config, clientOfChainToUpgrade.config)
             return createXcmTransactSend(clientOfGoverningChain, dest, call.method.toHex(), 'Superuser', {
               refTime: '5000000000',
@@ -442,7 +470,7 @@ async function runAuthorizeUpgradeViaWhitelistedCallerReferendum(
       ? params.call(currentWasmHash)
       : clientOfGoverningChain.api.tx.utility.forceBatch([
           (() => {
-            const call = clientOfChainToUpgrade.api.tx.system.authorizeUpgrade(currentWasmHash)
+            const call = params.call(currentWasmHash)
             const dest = getXcmRoute(clientOfGoverningChain.config, clientOfChainToUpgrade.config)
             return createXcmTransactSend(clientOfGoverningChain, dest, call.method.toHex(), 'Superuser', {
               refTime: '5000000000',
@@ -539,7 +567,11 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TCustomPara extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(governanceChain: Chain<TCustom, TInitStoragesRelay>, toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>) {
+>(
+  governanceChain: Chain<TCustom, TInitStoragesRelay>,
+  toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
+  ctx?: { skip: (reason?: string) => void },
+) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
 
@@ -549,6 +581,9 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   } else {
     ;[governanceClient, toBeUpgradedClient] = await setupNetworks(governanceChain, toBeUpgradedChain)
   }
+
+  await skipIfRealUpgradePending(governanceClient, ctx)
+  await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
 
   let expectedEvents: ExpectedEvents = []
   if (toBeUpgradedChain.isRelayChain) {
@@ -624,6 +659,7 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   governanceChain: Chain<TCustomRelay, TInitStoragesRelay>,
   toBeUpgradedChain: Chain<TCustomPara, TInitStoragesPara>,
   fellowshipChain: Chain<TCustomCollectives, TInitStoragesCollectives>,
+  ctx?: { skip: (reason?: string) => void },
 ) {
   let governanceClient: Client
   let toBeUpgradedClient: Client
@@ -639,6 +675,9 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
       fellowshipChain,
     )
   }
+
+  await skipIfRealUpgradePending(governanceClient, ctx)
+  await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
 
   let expectedEvents: ExpectedEvents = []
   if (toBeUpgradedChain.isRelayChain) {
@@ -685,7 +724,8 @@ export function governanceChainSelfUpgradeViaRootReferendumSuite<
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
-        testFn: async () => await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, governanceChain),
+        testFn: async (ctx) =>
+          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, governanceChain, ctx),
       },
       {
         kind: 'test',
@@ -734,8 +774,8 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via Root referendum)`,
-        testFn: async () =>
-          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain),
+        testFn: async (ctx) =>
+          await authorizeUpgradeWithoutChecksViaRootReferendumTests(governanceChain, toBeUpgradedChain, ctx),
       },
       {
         kind: 'test',
@@ -786,11 +826,12 @@ export function governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite<
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
-        testFn: async () =>
+        testFn: async (ctx) =>
           await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
             governanceChain,
             governanceChain,
             fellowshipChain,
+            ctx,
           ),
       },
       {
@@ -849,11 +890,12 @@ export function governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumS
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via WhitelistedCaller referendum, approved by Fellowship)`,
-        testFn: async () =>
+        testFn: async (ctx) =>
           await authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendumTests(
             governanceChain,
             toBeUpgradedChain,
             fellowshipChain,
+            ctx,
           ),
       },
       {
