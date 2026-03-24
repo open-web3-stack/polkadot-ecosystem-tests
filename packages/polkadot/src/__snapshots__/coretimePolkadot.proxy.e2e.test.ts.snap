@@ -1114,25 +1114,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 ]
 `;
 
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark 1`] = `
 [
   {
@@ -1209,25 +1190,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 ]
 `;
 
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
@@ -1286,25 +1248,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1419,25 +1362,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1571,25 +1495,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {

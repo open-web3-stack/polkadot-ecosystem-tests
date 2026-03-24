@@ -596,25 +596,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 ]
 `;
 
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x07000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for allowed proxy calls > allowed proxy calls for Any > events for proxy type Any, pallet system, call remark 1`] = `
 [
   {
@@ -1271,25 +1252,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 ]
 `;
 
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet system, call remark 1`] = `
 [
   {
@@ -1386,25 +1348,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 `;
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1613,25 +1556,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 ]
 `;
 
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet system, call remark 1`] = `
 [
   {
@@ -1766,25 +1690,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 `;
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -2069,25 +1974,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 ]
 `;
 
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet system, call remark 1`] = `
 [
   {
@@ -2222,25 +2108,6 @@ exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests f
 `;
 
 exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
