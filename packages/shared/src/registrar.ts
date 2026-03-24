@@ -12,9 +12,56 @@ import { assert, expect } from 'vitest'
 
 import type { TestConfig } from './helpers/index.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, setupNetworks } from './index.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
 
 const devAccounts = defaultAccountsSr25519
+
+const GENESIS_HEAD = new Uint8Array([0x00])
+const MINIMAL_VALIDATION_CODE = u8aToHex(
+  new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]),
+)
+
+async function fundAccounts(client: Client<any, any>): Promise<void> {
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
+        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+      ],
+    },
+  })
+}
+
+async function forceRegisterParaViaRoot(
+  client: Client<any, any>,
+  chain: Chain<any, any>,
+  manager: string,
+  paraId: number,
+): Promise<void> {
+  const tx = client.api.tx.registrar.forceRegister(manager, BigInt(0), paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+  await scheduleInlineCallWithOrigin(
+    client,
+    tx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  const events = await client.api.query.system.events()
+  const [regEvent] = events.filter(({ event }) => event.section === 'registrar' && event.method === 'Registered')
+  assert(client.api.events.registrar.Registered.is(regEvent.event))
+  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+}
+
+async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, paraId: number): Promise<void> {
+  const tx = client.api.tx.registrar.addLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    tx.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+}
 
 /**
  * Test the process of
@@ -52,14 +99,7 @@ export async function parasRegistrationE2ETest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await client.dev.setStorage({
-    System: {
-      account: [
-        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
-        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
-      ],
-    },
-  })
+  await fundAccounts(client)
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
   const paraDepositBigInt = BigInt(paraDeposit.toString())
@@ -102,19 +142,14 @@ export async function parasRegistrationE2ETest<
 
   expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding))
   expect(paras.deposit.toString()).toBe(paraDeposit.toString())
-  expect(paras.locked.isFalse).toBeFalsy()
+  expect(paras.locked.isEmpty).toBe(true)
 
   // 1.2 Assert that the reserved balance is correct
   let aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
 
-  // Genesis head
-  const genesisHead = new Uint8Array([0x00])
-  // Minimal valid WASM module (11 bytes) - validation code
-  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
-
   // 1.3 Assert that bob (not owner) cannot register the para
-  const registerTxBob = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
+  const registerTxBob = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
 
@@ -123,7 +158,7 @@ export async function parasRegistrationE2ETest<
     .toMatchSnapshot('bob para register failed event')
 
   // 2. Test that alice can register the para
-  const registerTx = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
+  const registerTx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
 
@@ -149,7 +184,7 @@ export async function parasRegistrationE2ETest<
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
   // 2.3 alice trying to register again with the same paraId should fail
-  const registerTxDuplicate = client.api.tx.registrar.register(paraId, genesisHead, validationCode)
+  const registerTxDuplicate = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
   await client.dev.newBlock()
 
@@ -235,37 +270,8 @@ export async function parasRootRegistrationE2eTest<
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
-  // Genesis head and minimal WASM validation code
-  const genesisHead = new Uint8Array([0x00])
-  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
-
-  // Call force_register via Root origin — sets Bob as manager
-  const forceRegisterTx = client.api.tx.registrar.forceRegister(
-    devAccounts.bob.address,
-    paraDepositBigInt,
-    paraId,
-    genesisHead,
-    validationCode,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    forceRegisterTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  // 1.1 Assert Registered event
-  const systemEvents = await client.api.query.system.events()
-  const [regEvent] = systemEvents.filter((record) => {
-    const { event } = record
-    return event.section === 'registrar' && event.method === 'Registered'
-  })
-  assert(client.api.events.registrar.Registered.is(regEvent.event))
-  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
-  expect(regEvent.event.data[1].toString()).toBe(
-    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
-  )
+  // 1.1 force_register via Root — sets Bob as manager, asserts Registered event
+  await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraId)
 
   // 1.2 Assert ParaInfo has Bob as manager and correct deposit
   let parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
@@ -273,21 +279,14 @@ export async function parasRootRegistrationE2eTest<
   let paras = parasOption.unwrap()
   expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding))
   expect(paras.deposit.toString()).toBe(paraDepositBigInt.toString())
-  expect(paras.locked.isFalse).toBeFalsy()
+  expect(paras.locked.isEmpty).toBe(true)
 
   // Assert the deposit was reserved from Bob's account
   const bobBalanceAfter = await client.api.query.system.account(devAccounts.bob.address)
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
   // 2. Apply lock via Root
-  const addLockTx = client.api.tx.registrar.addLock(paraId)
-  await scheduleInlineCallWithOrigin(
-    client,
-    addLockTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
+  await addLockViaRoot(client, chain, paraId)
 
   // 2.2 Assert locked is true
   parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
@@ -390,73 +389,15 @@ export async function parasRegistrarSwapE2ETest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  // Fund Alice and Bob for tx fees
-  await client.dev.setStorage({
-    System: {
-      account: [
-        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
-        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
-      ],
-    },
-  })
-
-  const genesisHead = new Uint8Array([0x00])
-  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
+  await fundAccounts(client)
 
   // Register para A (Alice manager) and para B (Bob manager) via Root
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraIdA = parseInt(nextFreeParaId.toString(), 10)
   const paraIdB = paraIdA + 1
 
-  const forceRegisterA = client.api.tx.registrar.forceRegister(
-    devAccounts.alice.address,
-    BigInt(0),
-    paraIdA,
-    genesisHead,
-    validationCode,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    forceRegisterA.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const eventsAfterRegA = await client.api.query.system.events()
-  const [regEventA] = eventsAfterRegA.filter(
-    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
-  )
-  assert(client.api.events.registrar.Registered.is(regEventA.event))
-  expect(regEventA.event.data[0].toString()).toBe(paraIdA.toString())
-  expect(regEventA.event.data[1].toString()).toBe(
-    encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
-  )
-
-  const forceRegisterB = client.api.tx.registrar.forceRegister(
-    devAccounts.bob.address,
-    BigInt(0),
-    paraIdB,
-    genesisHead,
-    validationCode,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    forceRegisterB.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const eventsAfterRegB = await client.api.query.system.events()
-  const [regEventB] = eventsAfterRegB.filter(
-    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
-  )
-  assert(client.api.events.registrar.Registered.is(regEventB.event))
-  expect(regEventB.event.data[0].toString()).toBe(paraIdB.toString())
-  expect(regEventB.event.data[1].toString()).toBe(
-    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
-  )
+  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraIdA)
+  await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraIdB)
 
   // 1. Swapping with same ID - no-op
   const swapSameIdTx = client.api.tx.registrar.swap(paraIdA, paraIdA)
@@ -606,17 +547,8 @@ export async function parasScheduleCodeUpgradeE2ETest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await client.dev.setStorage({
-    System: {
-      account: [
-        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
-        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
-      ],
-    },
-  })
+  await fundAccounts(client)
 
-  const genesisHead = new Uint8Array([0x00])
-  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
   const newValidationCode = u8aToHex(
     new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00]),
   )
@@ -624,28 +556,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
-  // Register para via Root with Alice as manager
-  const forceRegisterTx = client.api.tx.registrar.forceRegister(
-    devAccounts.alice.address,
-    BigInt(0),
-    paraId,
-    genesisHead,
-    validationCode,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    forceRegisterTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const eventsAfterReg = await client.api.query.system.events()
-  const [regEvent] = eventsAfterReg.filter(
-    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
-  )
-  assert(client.api.events.registrar.Registered.is(regEvent.event))
-  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot schedule a code upgrade
   const scheduleUpgradeBobTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
@@ -667,14 +578,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
     .toMatchSnapshot('alice schedule code upgrade success')
 
   // 3. Lock the para via Root
-  const addLockTx = client.api.tx.registrar.addLock(paraId)
-  await scheduleInlineCallWithOrigin(
-    client,
-    addLockTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
+  await addLockViaRoot(client, chain, paraId)
 
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
@@ -728,17 +632,8 @@ export async function parasSetCurrentHeadE2ETest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  await client.dev.setStorage({
-    System: {
-      account: [
-        [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
-        [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
-      ],
-    },
-  })
+  await fundAccounts(client)
 
-  const genesisHead = new Uint8Array([0x00])
-  const validationCode = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]))
   const newHeadRaw = new Uint8Array([0x01, 0x02, 0x03])
   const newHead = u8aToHex(newHeadRaw)
   const newHeadHex = u8aToHex(compactAddLength(newHeadRaw))
@@ -746,28 +641,7 @@ export async function parasSetCurrentHeadE2ETest<
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
-  // Register para (Alice as manager) via Root
-  const forceRegisterTx = client.api.tx.registrar.forceRegister(
-    devAccounts.alice.address,
-    BigInt(0),
-    paraId,
-    genesisHead,
-    validationCode,
-  )
-  await scheduleInlineCallWithOrigin(
-    client,
-    forceRegisterTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
-
-  const eventsAfterReg = await client.api.query.system.events()
-  const [regEvent] = eventsAfterReg.filter(
-    ({ event }) => event.section === 'registrar' && event.method === 'Registered',
-  )
-  assert(client.api.events.registrar.Registered.is(regEvent.event))
-  expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot set the current head
   const setHeadBobTx = client.api.tx.registrar.setCurrentHead(paraId, newHead)
@@ -787,14 +661,7 @@ export async function parasSetCurrentHeadE2ETest<
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
 
   // 3. Lock the para via Root
-  const addLockTx = client.api.tx.registrar.addLock(paraId)
-  await scheduleInlineCallWithOrigin(
-    client,
-    addLockTx.method.toHex(),
-    { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
-  )
-  await client.dev.newBlock()
+  await addLockViaRoot(client, chain, paraId)
 
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
