@@ -37,12 +37,15 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -113,7 +116,7 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
