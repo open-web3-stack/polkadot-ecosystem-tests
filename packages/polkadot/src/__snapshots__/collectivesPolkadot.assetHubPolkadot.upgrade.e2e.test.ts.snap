@@ -24,7 +24,7 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
         {
           "Transact": {
             "call": {
-              "encoded": "0x4000028e48daf8513f12313096542e64ce29b14747b85f9dbf6d8433c04a1912b8dd",
+              "encoded": "0x4000d235f68c6b89e7903f3341cd3d9eb2676f8f25e13361e043fa6d3a20ab2a0d81",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -37,12 +37,15 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -108,12 +111,12 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
 [
   {
     "data": {
-      "callHash": "0x028e48daf8513f12313096542e64ce29b14747b85f9dbf6d8433c04a1912b8dd",
+      "callHash": "0xd235f68c6b89e7903f3341cd3d9eb2676f8f25e13361e043fa6d3a20ab2a0d81",
       "result": {
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -129,7 +132,7 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
 [
   {
     "data": {
-      "callHash": "0x028e48daf8513f12313096542e64ce29b14747b85f9dbf6d8433c04a1912b8dd",
+      "callHash": "0xd235f68c6b89e7903f3341cd3d9eb2676f8f25e13361e043fa6d3a20ab2a0d81",
     },
     "method": "CallWhitelisted",
     "section": "whitelist",
@@ -217,12 +220,15 @@ exports[`collectives & asset hub > Asset Hub authorizes upgrade for itself > col
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -406,12 +412,15 @@ exports[`collectives & asset hub > whitelisting a call by fellowship > source ch
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },

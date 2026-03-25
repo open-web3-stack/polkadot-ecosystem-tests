@@ -564,6 +564,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     "data": [
       "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
       "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      30,
     ],
     "method": "Delegated",
     "section": "convictionVoting",
@@ -576,6 +577,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   {
     "data": [
       "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      30,
     ],
     "method": "Undelegated",
     "section": "convictionVoting",
