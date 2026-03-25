@@ -37,12 +37,15 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -113,7 +116,7 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -217,12 +220,15 @@ exports[`collectives & asset hub > Asset Hub authorizes upgrade for itself > col
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -406,12 +412,15 @@ exports[`collectives & asset hub > whitelisting a call by fellowship > source ch
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
