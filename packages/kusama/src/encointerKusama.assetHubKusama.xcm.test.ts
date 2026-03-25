@@ -1,4 +1,4 @@
-import { defaultAccountsSr25519 } from '@e2e-test/networks'
+import { defaultAccountsSr25519, testAccounts } from '@e2e-test/networks'
 import { assetHubKusama, encointerKusama } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
@@ -14,7 +14,7 @@ describe('encointerKusama & assetHubKusama', async () => {
       fromChain: assetHubKusamaClient,
       toChain: encointerKusamaClient,
       fromAccount: defaultAccountsSr25519.alice,
-      toAccount: defaultAccountsSr25519.bob,
+      toAccount: testAccounts.bob,
       fromBalance: query.balances,
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedTeleportAssets(
@@ -30,7 +30,7 @@ describe('encointerKusama & assetHubKusama', async () => {
       fromChain: encointerKusamaClient,
       toChain: assetHubKusamaClient,
       fromAccount: defaultAccountsSr25519.alice,
-      toAccount: defaultAccountsSr25519.bob,
+      toAccount: testAccounts.bob,
       fromBalance: query.balances,
       toBalance: query.balances,
       tx: tx.xcmPallet.limitedTeleportAssets(

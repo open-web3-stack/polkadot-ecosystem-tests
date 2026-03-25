@@ -245,7 +245,7 @@ export async function scheduleLookupCallWithOrigin(
  * @param dest MultiLocation destination to which the XCM message is to be sent
  * @param call Hex-encoded identity pallet extrinsic
  * @param origin Origin with which the extrinsic is to be executed at the location parachain
- * @param requireWeightAtMost Reftime/proof size parameters that `send::Transact` may require (only in XCM v4);
+ * @param fallbackMaxWeight Reftime/proof size parameters for `Transact` weight estimation (XCM v5);
  *        sensible defaults are given.
  */
 export function createXcmTransactSend(
@@ -258,11 +258,10 @@ export function createXcmTransactSend(
   dest: any,
   call: HexString,
   originKind: string,
-  requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
+  fallbackMaxWeight: { proofSize: string; refTime: string } | null = { proofSize: '10000', refTime: '100000000' },
 ) {
-  // The message being sent to the parachain, containing a call to be executed in the parachain:
   const message = {
-    V4: [
+    V5: [
       {
         UnpaidExecution: {
           weightLimit: 'Unlimited',
@@ -275,13 +274,13 @@ export function createXcmTransactSend(
             encoded: call,
           },
           originKind,
-          requireWeightAtMost,
+          fallbackMaxWeight,
         },
       },
     ],
   }
 
-  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
+  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V5: dest }, message)
 }
 
 /**
