@@ -78,7 +78,7 @@ exports[`Polkadot Configuration > configuration tests > configuration test - can
   "relayVrfModuloSamples": 6,
   "schedulerParams": {
     "groupRotationFrequency": 10,
-    "lookahead": 3,
+    "lookahead": 5,
     "maxAvailabilityTimeouts": 0,
     "maxValidatorsPerCore": 5,
     "numCores": 100,
