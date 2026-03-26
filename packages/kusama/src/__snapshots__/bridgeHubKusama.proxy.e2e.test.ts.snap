@@ -758,25 +758,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filterin
 ]
 `;
 
-exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
@@ -835,25 +816,6 @@ exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Bridge Hub Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
