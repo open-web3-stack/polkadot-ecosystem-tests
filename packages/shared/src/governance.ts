@@ -999,6 +999,7 @@ export async function referendumLifecycleKillTest<
     submittedOnTrack.length === 1,
     `expected 1 Submitted event on small_tipper track, got ${submittedOnTrack.length}`,
   )
+  assert(client.api.events.referenda.Submitted.is(submittedOnTrack[0].event))
   const referendumIndex = submittedOnTrack[0].event.data[0].toNumber()
 
   /**
@@ -1069,7 +1070,7 @@ export async function referendumLifecycleKillTest<
     }
   })
 
-  const referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  const referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
   // killing a referendum does not remove it from storage, though it does prune most of its data.
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
@@ -1136,6 +1137,7 @@ async function submitAndDeposit(
     submittedOnTrack.length === 1,
     `expected exactly 1 Submitted event on track ${trackConfig.trackName} (ID ${trackConfig.trackId}), got ${submittedOnTrack.length}`,
   )
+  assert(client.api.events.referenda.Submitted.is(submittedOnTrack[0].event))
   const referendumIndex = submittedOnTrack[0].event.data[0].toNumber()
 
   /**
@@ -1151,7 +1153,7 @@ async function submitAndDeposit(
    */
 
   const referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
   assert(referendumDataOpt.isSome, "referendum's data cannot be `None` after submission + deposit")
   const referendumData = referendumDataOpt.unwrap()
   assert(referendumData.isOngoing)
@@ -1356,7 +1358,7 @@ export async function insufficientSupportTest<
   await client.dev.newBlock()
 
   const postVoteOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
   assert(postVoteOpt.isSome)
   const postVote = postVoteOpt.unwrap()
   assert(postVote.isOngoing)
@@ -1466,7 +1468,7 @@ export async function insufficientApprovalTest<
    */
 
   const postVoteOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
   assert(postVoteOpt.isSome)
   const postVote = postVoteOpt.unwrap()
   assert(postVote.isOngoing)
