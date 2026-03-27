@@ -42,6 +42,26 @@ exports[`Polkadot Asset Hub Asset Rate > assetRate.create > rejects signed origi
 ]
 `;
 
+exports[`Polkadot Asset Hub Asset Rate > assetRate.create > rejects signed origin and creates a rate with root, rejecting duplicates > cannot create rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > AssetRateRemoved event 1`] = `
 [
   {
@@ -79,6 +99,26 @@ exports[`Polkadot Asset Hub Asset Rate > assetRate.remove > rejects signed origi
     },
     "method": "AssetRateRemoved",
     "section": "assetRate",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > cannot remove rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -122,6 +162,26 @@ exports[`Polkadot Asset Hub Asset Rate > assetRate.update > rejects signed origi
     },
     "method": "AssetRateUpdated",
     "section": "assetRate",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Asset Rate > assetRate.update > rejects signed origin and updates an existing rate with root, rejecting unknown assets > cannot update rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;

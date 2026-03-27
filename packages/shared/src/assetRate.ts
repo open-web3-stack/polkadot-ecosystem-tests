@@ -59,9 +59,12 @@ const UPDATED_RATE = '2000000000000000000'
 async function assertSignedOriginRejected(
   client: Client<any, any>,
   call: SubmittableExtrinsic<'promise'>,
+  snapshot: string,
 ): Promise<void> {
   await sendTransaction(call.signAsync(defaultAccounts.alice))
   await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(snapshot)
 
   const events = await client.api.query.system.events()
   const [failedEvent] = (events as any).filter((record: any) =>
@@ -138,7 +141,11 @@ export async function assetRateCreateTest<
 
   // 1. Signed origin cannot create asset rate
   // 1.1 asserting the extrinsic fails with BadOrigin
-  await assertSignedOriginRejected(client, api.tx.assetRate.create(ASSET_KIND as any, RATE))
+  await assertSignedOriginRejected(
+    client,
+    api.tx.assetRate.create(ASSET_KIND as any, RATE),
+    'cannot create rate with signed origin',
+  )
 
   // 2. Root origin can create a rate
   await scheduleRootCall(client, api.tx.assetRate.create(ASSET_KIND as any, RATE))
@@ -208,7 +215,11 @@ export async function assetRateUpdateTest<
 
   // 1. Signed origin cannot update asset rate
   // 1.1 asserting the extrinsic fails with BadOrigin
-  await assertSignedOriginRejected(client, api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE))
+  await assertSignedOriginRejected(
+    client,
+    api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE),
+    'cannot update rate with signed origin',
+  )
 
   // 2. Attempting to update the rate for an asset that has no existing entry
   // 2.1 asserting the call fails with UnknownAssetKind
@@ -262,7 +273,11 @@ export async function assetRateRemoveTest<
 
   // 1. Signed origin cannot remove asset rate
   // 1.1 asserting the extrinsic fails with BadOrigin
-  await assertSignedOriginRejected(client, api.tx.assetRate.remove(ASSET_KIND as any))
+  await assertSignedOriginRejected(
+    client,
+    api.tx.assetRate.remove(ASSET_KIND as any),
+    'cannot remove rate with signed origin',
+  )
 
   // 2. Attempting to remove the rate for an asset that has no existing entry
   // 2.1 asserting the call fails with UnknownAssetKind
