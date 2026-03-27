@@ -26,12 +26,31 @@ const ASSET_KIND = {
     },
   },
 }
+
+// An asset kind that is never seeded into storage, used to test UnknownAssetKind errors.
+const UNKNOWN_ASSET_KIND = {
+  v4: {
+    location: {
+      parents: 0,
+      interior: {
+        x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
+      },
+    },
+    assetId: {
+      parents: 0,
+      interior: {
+        x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
+      },
+    },
+  },
+}
+
 // FixedU128 representation of 1.0 (1 * 10^18)
 const RATE = '1000000000000000000'
 // FixedU128 representation of 2.0 (2 * 10^18)
 const UPDATED_RATE = '2000000000000000000'
 
-export async function assetRateCreateLifecycleTest<
+export async function assetRateCreateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -53,6 +72,7 @@ export async function assetRateCreateLifecycleTest<
   assert(api.events.system.ExtrinsicFailed.is(signedCreateFailed.event))
   expect(signedCreateFailed.event.data.dispatchError.isBadOrigin).toBe(true)
 
+  // Root origin can create a rate
   const createCall = api.tx.assetRate.create(ASSET_KIND as any, RATE)
   await scheduleInlineCallWithOrigin(
     client,
@@ -62,7 +82,6 @@ export async function assetRateCreateLifecycleTest<
   )
   await client.dev.newBlock()
 
-  // Assert AssetRateCreated event was emitted
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateCreated' })
     .redact()
     .toMatchSnapshot('AssetRateCreated event')
@@ -91,22 +110,36 @@ export async function assetRateCreateLifecycleTest<
   )
   await client.dev.newBlock()
 
-  const events = await api.query.system.events()
-
-  // Scheduled calls surface failures via scheduler.Dispatched, not system.ExtrinsicFailed
-  const [dispatchedEvent] = (events as any).filter((record: any) => api.events.scheduler.Dispatched.is(record.event))
+  const duplicateEvents = await api.query.system.events()
+  const [dispatchedEvent] = (duplicateEvents as any).filter((record: any) =>
+    api.events.scheduler.Dispatched.is(record.event),
+  )
   assert(api.events.scheduler.Dispatched.is(dispatchedEvent.event))
   const dispatchError = dispatchedEvent.event.data.result.asErr
   assert(dispatchError.isModule)
   expect(api.errors.assetRate.AlreadyExists.is(dispatchError.asModule)).toBe(true)
 
-  // Assert no AssetRateCreated event was emitted
-  const assetRateCreatedEvents = (events as any).filter((record: any) =>
+  const assetRateCreatedEvents = (duplicateEvents as any).filter((record: any) =>
     api.events.assetRate.AssetRateCreated.is(record.event),
   )
   expect(assetRateCreatedEvents.length).toBe(0)
+}
 
-  // Assert that signed origin cannot udpdate asset rate
+export async function assetRateUpdateTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const api = client.api
+
+  // Seed an existing rate so update and remove tests have something to work with
+  await client.dev.setStorage({
+    AssetRate: {
+      ConversionRateToNative: [[[ASSET_KIND], RATE]],
+    },
+  })
+
+  // Assert that signed origin cannot update asset rate
   await sendTransaction(api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE).signAsync(defaultAccounts.alice))
   await client.dev.newBlock()
 
@@ -121,24 +154,8 @@ export async function assetRateCreateLifecycleTest<
   assert(api.events.system.ExtrinsicFailed.is(signedUpdateFailed.event))
   expect(signedUpdateFailed.event.data.dispatchError.isBadOrigin).toBe(true)
 
-  // Trying to update unknown rate should fail
-  const unknownAssetKind = {
-    v4: {
-      location: {
-        parents: 0,
-        interior: {
-          x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
-        },
-      },
-      assetId: {
-        parents: 0,
-        interior: {
-          x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
-        },
-      },
-    },
-  }
-  const unknownUpdateCall = api.tx.assetRate.update(unknownAssetKind as any, UPDATED_RATE)
+  // Updating an unknown asset kind should fail with UnknownAssetKind
+  const unknownUpdateCall = api.tx.assetRate.update(UNKNOWN_ASSET_KIND as any, UPDATED_RATE)
   await scheduleInlineCallWithOrigin(
     client,
     unknownUpdateCall.method.toHex(),
@@ -156,7 +173,7 @@ export async function assetRateCreateLifecycleTest<
   assert(unknownDispatchError.isModule)
   expect(api.errors.assetRate.UnknownAssetKind.is(unknownDispatchError.asModule)).toBe(true)
 
-  // Update the rate for the same asset — should succeed since the entry now exists
+  // Root origin can update an existing rate
   const updateCall = api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE)
   await scheduleInlineCallWithOrigin(
     client,
@@ -166,14 +183,27 @@ export async function assetRateCreateLifecycleTest<
   )
   await client.dev.newBlock()
 
-  // Assert AssetRateUpdated event was emitted
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateUpdated' })
     .redact()
     .toMatchSnapshot('AssetRateUpdated event')
 
-  // Assert storage value reflects the new rate
   const updatedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(updatedRate.toString()).toBe(UPDATED_RATE)
+}
+
+export async function assetRateRemoveTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+  const api = client.api
+
+  // Seed an existing rate so the remove test has something to work with
+  await client.dev.setStorage({
+    AssetRate: {
+      ConversionRateToNative: [[[ASSET_KIND], RATE]],
+    },
+  })
 
   // Assert that signed origin cannot remove asset rate
   await sendTransaction(api.tx.assetRate.remove(ASSET_KIND as any).signAsync(defaultAccounts.alice))
@@ -190,8 +220,8 @@ export async function assetRateCreateLifecycleTest<
   assert(api.events.system.ExtrinsicFailed.is(signedRemoveFailed.event))
   expect(signedRemoveFailed.event.data.dispatchError.isBadOrigin).toBe(true)
 
-  // Trying to remove an unknown asset should fail with UnknownAssetKind
-  const unknownRemoveCall = api.tx.assetRate.remove(unknownAssetKind as any)
+  // Removing an unknown asset kind should fail with UnknownAssetKind
+  const unknownRemoveCall = api.tx.assetRate.remove(UNKNOWN_ASSET_KIND as any)
   await scheduleInlineCallWithOrigin(
     client,
     unknownRemoveCall.method.toHex(),
@@ -209,7 +239,7 @@ export async function assetRateCreateLifecycleTest<
   assert(unknownRemoveError.isModule)
   expect(api.errors.assetRate.UnknownAssetKind.is(unknownRemoveError.asModule)).toBe(true)
 
-  // Removing an existing asset should succeed and emit AssetRateRemoved
+  // Root origin can remove an existing rate
   const removeCall = api.tx.assetRate.remove(ASSET_KIND as any)
   await scheduleInlineCallWithOrigin(
     client,
@@ -249,8 +279,30 @@ export function baseAssetRateE2ETests<
         children: [
           {
             kind: 'test',
-            label: 'creates a conversion rate and emits AssetRateCreated event',
-            testFn: async () => await assetRateCreateLifecycleTest(chain),
+            label: 'rejects signed origin and creates a rate with root, rejecting duplicates',
+            testFn: async () => await assetRateCreateTest(chain),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'assetRate.update',
+        children: [
+          {
+            kind: 'test',
+            label: 'rejects signed origin and updates an existing rate with root, rejecting unknown assets',
+            testFn: async () => await assetRateUpdateTest(chain),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'assetRate.remove',
+        children: [
+          {
+            kind: 'test',
+            label: 'rejects signed origin and removes an existing rate with root, rejecting unknown assets',
+            testFn: async () => await assetRateRemoveTest(chain),
           },
         ],
       },

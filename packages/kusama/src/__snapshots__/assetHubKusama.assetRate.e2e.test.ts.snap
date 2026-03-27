@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateCreated event 1`] = `
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > rejects signed origin and creates a rate with root, rejecting duplicates > AssetRateCreated event 1`] = `
 [
   {
     "data": {
@@ -42,7 +42,27 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion r
 ]
 `;
 
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateRemoved event 1`] = `
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > rejects signed origin and creates a rate with root, rejecting duplicates > cannot create rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > AssetRateRemoved event 1`] = `
 [
   {
     "data": {
@@ -83,7 +103,27 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion r
 ]
 `;
 
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateUpdated event 1`] = `
+exports[`Kusama Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > cannot remove rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.update > rejects signed origin and updates an existing rate with root, rejecting unknown assets > AssetRateUpdated event 1`] = `
 [
   {
     "data": {
@@ -126,47 +166,7 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion r
 ]
 `;
 
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > cannot create rate with signed origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 500000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > cannot remove rate with signed origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 500000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > cannot update rate with signed origin 1`] = `
+exports[`Kusama Asset Hub Asset Rate > assetRate.update > rejects signed origin and updates an existing rate with root, rejecting unknown assets > cannot update rate with signed origin 1`] = `
 [
   {
     "data": {
