@@ -89,6 +89,41 @@ export async function assetRateCreateLifecycleTest<
   )
   expect(assetRateCreatedEvents.length).toBe(0)
 
+  // Trying to update unknown rate should fail
+  const unknownAssetKind = {
+    v4: {
+      location: {
+        parents: 0,
+        interior: {
+          x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
+        },
+      },
+      assetId: {
+        parents: 0,
+        interior: {
+          x2: [{ palletInstance: 50 }, { generalIndex: 1337 }],
+        },
+      },
+    },
+  }
+  const unknownUpdateCall = api.tx.assetRate.update(unknownAssetKind as any, UPDATED_RATE)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unknownUpdateCall.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const unknownUpdateEvents = await api.query.system.events()
+  const [unknownDispatchedEvent] = (unknownUpdateEvents as any).filter((record: any) =>
+    api.events.scheduler.Dispatched.is(record.event),
+  )
+  assert(api.events.scheduler.Dispatched.is(unknownDispatchedEvent.event))
+  const unknownDispatchError = unknownDispatchedEvent.event.data.result.asErr
+  assert(unknownDispatchError.isModule)
+  expect(api.errors.assetRate.UnknownAssetKind.is(unknownDispatchError.asModule)).toBe(true)
+
   // Update the rate for the same asset — should succeed since the entry now exists
   const updateCall = api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE)
   await scheduleInlineCallWithOrigin(
