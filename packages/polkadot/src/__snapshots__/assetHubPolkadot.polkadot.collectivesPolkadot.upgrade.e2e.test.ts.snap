@@ -159,80 +159,27 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
 [
   {
     "data": {
-      "error": "Corrupt",
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
-      },
+      "checkVersion": true,
+      "codeHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
     },
-    "method": "ProcessingFailed",
-    "section": "messageQueue",
+    "method": "UpgradeAuthorized",
+    "section": "system",
   },
   {
     "data": {
-      "error": "Corrupt",
       "id": "(redacted)",
       "origin": {
         "Ump": {
-          "Para": "(rounded 1000)",
+          "Para": 1000,
         },
       },
-    },
-    "method": "ProcessingFailed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "error": "Corrupt",
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3000)",
+        "refTime": "(rounded 100000000)",
       },
     },
-    "method": "ProcessingFailed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "error": "Corrupt",
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
-      },
-    },
-    "method": "ProcessingFailed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "error": "Corrupt",
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
-      },
-    },
-    "method": "ProcessingFailed",
-    "section": "messageQueue",
-  },
-  {
-    "data": {
-      "error": "Corrupt",
-      "id": "(redacted)",
-      "origin": {
-        "Ump": {
-          "Para": "(rounded 1000)",
-        },
-      },
-    },
-    "method": "ProcessingFailed",
+    "method": "Processed",
     "section": "messageQueue",
   },
 ]
