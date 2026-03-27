@@ -1,4 +1,6 @@
-import type { Chain } from '@e2e-test/networks'
+import { sendTransaction } from '@acala-network/chopsticks-testing'
+
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import { assert, expect } from 'vitest'
 
@@ -35,6 +37,21 @@ export async function assetRateCreateLifecycleTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
   const api = client.api
+
+  // Assert that signed origin cannot create asset rate
+  await sendTransaction(api.tx.assetRate.create(ASSET_KIND as any, RATE).signAsync(defaultAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cannot create rate with signed origin',
+  )
+
+  const signedCreateEvents = await api.query.system.events()
+  const [signedCreateFailed] = (signedCreateEvents as any).filter((record: any) =>
+    api.events.system.ExtrinsicFailed.is(record.event),
+  )
+  assert(api.events.system.ExtrinsicFailed.is(signedCreateFailed.event))
+  expect(signedCreateFailed.event.data.dispatchError.isBadOrigin).toBe(true)
 
   const createCall = api.tx.assetRate.create(ASSET_KIND as any, RATE)
   await scheduleInlineCallWithOrigin(
@@ -89,6 +106,21 @@ export async function assetRateCreateLifecycleTest<
   )
   expect(assetRateCreatedEvents.length).toBe(0)
 
+  // Assert that signed origin cannot udpdate asset rate
+  await sendTransaction(api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE).signAsync(defaultAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cannot update rate with signed origin',
+  )
+
+  const signedUpdateEvents = await api.query.system.events()
+  const [signedUpdateFailed] = (signedUpdateEvents as any).filter((record: any) =>
+    api.events.system.ExtrinsicFailed.is(record.event),
+  )
+  assert(api.events.system.ExtrinsicFailed.is(signedUpdateFailed.event))
+  expect(signedUpdateFailed.event.data.dispatchError.isBadOrigin).toBe(true)
+
   // Trying to update unknown rate should fail
   const unknownAssetKind = {
     v4: {
@@ -142,6 +174,21 @@ export async function assetRateCreateLifecycleTest<
   // Assert storage value reflects the new rate
   const updatedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(updatedRate.toString()).toBe(UPDATED_RATE)
+
+  // Assert that signed origin cannot remove asset rate
+  await sendTransaction(api.tx.assetRate.remove(ASSET_KIND as any).signAsync(defaultAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cannot remove rate with signed origin',
+  )
+
+  const signedRemoveEvents = await api.query.system.events()
+  const [signedRemoveFailed] = (signedRemoveEvents as any).filter((record: any) =>
+    api.events.system.ExtrinsicFailed.is(record.event),
+  )
+  assert(api.events.system.ExtrinsicFailed.is(signedRemoveFailed.event))
+  expect(signedRemoveFailed.event.data.dispatchError.isBadOrigin).toBe(true)
 
   // Trying to remove an unknown asset should fail with UnknownAssetKind
   const unknownRemoveCall = api.tx.assetRate.remove(unknownAssetKind as any)
