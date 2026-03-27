@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateCreated event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "rate": 1000000000000000000,
+    },
+    "method": "AssetRateCreated",
+    "section": "assetRate",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > cannot create an existing rate 1`] = `[]`;
