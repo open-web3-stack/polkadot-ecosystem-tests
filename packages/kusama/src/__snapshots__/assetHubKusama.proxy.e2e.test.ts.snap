@@ -290,11 +290,157 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
 ]
 `;
 
+exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama AssetHub Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `
+[
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "DAbUwtseJVK8571h1MgjeuPTBCW6NZt5G7moDa1iGJZQ8FL",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "ParaRegistration",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "DfeV9UQE55S368Ym2LfgJJpXcfkF5MmjnwFDvAe9VKMBpAy",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Assets",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "DgBeKgakkePrTGGSi4deeNAiZzPRJ8mszSZqmtp5CYWm9JY",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Spokesperson",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "E2SeX2FCET9jK6AgYaz2bjMsjp8DdE5BRchooMp5uMBoL9B",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "NominationPools",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "Ef4fPbsLDyyhBZMsLNxuErttrTVeZygduXM26bupXbrgjKP",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Governance",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "Eio83Zh4aVyhpaTTYr9wEp2pjiX1qTN4xngG9FKo5xoPwRQ",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "AssetManager",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "EwHAaLmkR3hm3Yu2ULBtfASxRT8L8Hhn5m1VYciJ7RVr5F4",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "AssetOwner",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "F1yN2phuNDeehafhtzb9bJmkdShgEuMqxwZbRKMaeAqvUfU",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Auction",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "Fju5xS5KrXfrYCDMRPZa38t7x73jumfQsTqxpFgjni58nXF",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Staking",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "HuzD9NcQaDgcMcSYWpeAPFDaLC7dS53TDruPCmU97njVEzZ",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Society",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama AssetHub Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -304,6 +450,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -313,6 +460,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -322,6 +470,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Assets",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -331,6 +480,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "AssetOwner",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -340,6 +490,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "AssetManager",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -349,6 +500,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Collator",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -358,6 +510,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Governance",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -367,6 +520,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Staking",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -376,6 +530,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "NominationPools",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -385,6 +540,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Auction",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -394,6 +550,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "ParaRegistration",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -403,6 +560,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Society",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -412,6 +570,7 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Spokesperson",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -741,11 +900,37 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama Ass
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`Kusama AssetHub Proxy full tests (includes call filtering) > Kusama AssetHub Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -1947,25 +2132,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetManager > events for proxy type AssetManager, pallet system, call remark 1`] = `
 [
   {
@@ -2118,25 +2284,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for AssetOwner > events for proxy type AssetOwner, pallet system, call remark 1`] = `
 [
   {
@@ -2233,25 +2380,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Assets > events for proxy type Assets, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -2384,25 +2512,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Auction > events for proxy type Auction, pallet system, call remark 1`] = `
 [
   {
@@ -2499,25 +2608,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -2650,25 +2740,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call remark 1`] = `
 [
   {
@@ -2765,25 +2836,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Governance > events for proxy type Governance, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -2917,25 +2969,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet staking, call bond 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for NominationPools > events for proxy type NominationPools, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -3144,25 +3177,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for ParaRegistration > events for proxy type ParaRegistration, pallet system, call remark 1`] = `
 [
   {
@@ -3278,25 +3292,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Society > events for proxy type Society, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Society > events for proxy type Society, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -3448,25 +3443,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Spokesperson > events for proxy type Spokesperson, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Spokesperson > events for proxy type Spokesperson, pallet system, call set_heap_pages 1`] = `
 [
   {
@@ -3563,25 +3539,6 @@ exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet referenda, call submit 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Kusama AssetHub Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Staking > events for proxy type Staking, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {

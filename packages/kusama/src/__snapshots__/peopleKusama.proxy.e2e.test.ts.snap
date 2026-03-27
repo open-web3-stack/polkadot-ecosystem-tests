@@ -130,11 +130,77 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
 ]
 `;
 
+exports[`People Kusama Proxy full tests (includes call filtering) > People Kusama Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `
+[
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "CuW7GM1JCXTG5Whmw7yV53Wi4trhqRFmDC49NSc4ZQ36UCg",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "FF84pi37FUToJKQSPaMDYsY96BLNzhyLQ5opd2AWFu7HCKe",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "Ftk6uzZmZVciEaSMHBZ3b1272KavruU4NxLjGLQVsUAKV3B",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "FyhwkyfubTPKDEaEs9V58pV3z8pRrYiGRj6TgGWRu8eMLXH",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "GvdYm4dtSFetLboSmKA3fRbobchAuFmZuWt9GR2f4MVH6GD",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "IdentityJudgement",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "HyXXTjiT1XBZBpCGSXjLbH4wkb7AGBt3NmHpsji77BXab7e",
+      "delegator": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
+      "proxyType": "Identity",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`People Kusama Proxy full tests (includes call filtering) > People Kusama Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -144,6 +210,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -153,6 +220,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -162,6 +230,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Identity",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -171,6 +240,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "IdentityJudgement",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -180,6 +250,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Collator",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
@@ -357,11 +428,37 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "PureCreated",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`People Kusama Proxy full tests (includes call filtering) > People Kusama Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -946,25 +1043,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > filtering te
 ]
 `;
 
-exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
@@ -1023,25 +1101,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > filtering te
 `;
 
 exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1137,25 +1196,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > filtering te
 `;
 
 exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1270,25 +1310,6 @@ exports[`People Kusama Proxy full tests (includes call filtering) > filtering te
 `;
 
 exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call clear_identity 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Kusama Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {

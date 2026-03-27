@@ -150,11 +150,87 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
 ]
 `;
 
+exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot Coretime Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `
+[
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "1jTd9vuEyiQDQcabMPAzeYX1ofs3gFyagdrKqD5Hq4vYXKC",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "OnDemandPurchaser",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "12NaihiwqpJcr9wGH1vCuXxES4nqjweiiHMteawbfS52MGnp",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "CoretimeRenewer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "12mp9Prons6EYn5vYhza8zHa7huRBCTKUcn6feygY68584FX",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Broker",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
+
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot Coretime Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -164,6 +240,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -173,6 +250,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -182,6 +260,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Broker",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -191,6 +270,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "CoretimeRenewer",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -200,6 +280,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "OnDemandPurchaser",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -209,6 +290,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Collator",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -405,11 +487,37 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot Coretime Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -1087,25 +1195,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 ]
 `;
 
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Broker > events for proxy type Broker, pallet system, call remark 1`] = `
 [
   {
@@ -1182,25 +1271,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 ]
 `;
 
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
@@ -1259,25 +1329,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1392,25 +1443,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CoretimeRenewer > events for proxy type CoretimeRenewer, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1544,25 +1576,6 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filterin
 `;
 
 exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`Polkadot Coretime Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for OnDemandPurchaser > events for proxy type OnDemandPurchaser, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {

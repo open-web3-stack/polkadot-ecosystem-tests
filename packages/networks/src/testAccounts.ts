@@ -25,7 +25,7 @@ export type DefaultAccounts = {
   keyringEth: KeyringInstance
 }
 
-export const defaultAccounts: DefaultAccounts = testingPairs() as DefaultAccounts
+export const defaultAccounts: DefaultAccounts = (await cryptoWaitReady().then(() => testingPairs())) as DefaultAccounts
 
 /**
  * Sr25519 keyring pairs for use in tests.

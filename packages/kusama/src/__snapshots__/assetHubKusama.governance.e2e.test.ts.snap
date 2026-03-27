@@ -17,11 +17,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
-        "ayes": "0x000000000000000018c59bfc3dbf6d18",
-        "nays": "0x00000000000000004a50d3f4b93e4748",
-        "support": "0x000000000000000018c59bfc3dbf6d18",
+        "ayes": "0x000000000000000018efae0ec4898c07",
+        "nays": "0x00000000000000004acf0a2c4d9ca415",
+        "support": "0x000000000000000018efae0ec4898c07",
       },
     ],
   },
@@ -49,7 +49,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -68,7 +68,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 0,
@@ -100,11 +100,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
-        "ayes": "0x000000000000000018c59bfc3dbf6d18",
-        "nays": "0x00000000000000004a50d3f4b93e4748",
-        "support": "0x000000000000000018c59bfc3dbf6d18",
+        "ayes": "0x000000000000000018efae0ec4898c07",
+        "nays": "0x00000000000000004acf0a2c4d9ca415",
+        "support": "0x000000000000000018efae0ec4898c07",
       },
     ],
   },
@@ -132,7 +132,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -151,7 +151,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 0,
@@ -183,11 +183,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
-        "ayes": "0x000000000000000018c59bfc3dbf6d18",
-        "nays": "0x00000000000000004a50d3f4b93e4748",
-        "support": "0x000000000000000018c59bfc3dbf6d18",
+        "ayes": "0x000000000000000018efae0ec4898c07",
+        "nays": "0x00000000000000004acf0a2c4d9ca415",
+        "support": "0x000000000000000018efae0ec4898c07",
       },
     ],
   },
@@ -215,7 +215,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -234,7 +234,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      637,
+      644,
       {
         "ayes": 0,
         "nays": 0,
@@ -778,6 +778,58 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > bob attempting to vote directly after delegating to charlie 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 91,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's removal of delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+      30,
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
   },
 ]
 `;

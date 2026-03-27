@@ -17,11 +17,11 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
-        "ayes": "0x000000000000000017304fe24dda2a9c",
-        "nays": "0x00000000000000004590efa6e98e7fd4",
-        "support": "0x000000000000000017304fe24dda2a9c",
+        "ayes": "0x00000000000000001743cbf495d5d359",
+        "nays": "0x000000000000000045cb63ddc1817a0b",
+        "support": "0x00000000000000001743cbf495d5d359",
       },
     ],
   },
@@ -49,7 +49,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -68,7 +68,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 0,
@@ -100,11 +100,11 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
-        "ayes": "0x000000000000000017304fe24dda2a9c",
-        "nays": "0x00000000000000004590efa6e98e7fd4",
-        "support": "0x000000000000000017304fe24dda2a9c",
+        "ayes": "0x00000000000000001743cbf495d5d359",
+        "nays": "0x000000000000000045cb63ddc1817a0b",
+        "support": "0x00000000000000001743cbf495d5d359",
       },
     ],
   },
@@ -132,7 +132,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -151,7 +151,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 0,
@@ -183,11 +183,11 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
-        "ayes": "0x000000000000000017304fe24dda2a9c",
-        "nays": "0x00000000000000004590efa6e98e7fd4",
-        "support": "0x000000000000000017304fe24dda2a9c",
+        "ayes": "0x00000000000000001743cbf495d5d359",
+        "nays": "0x000000000000000045cb63ddc1817a0b",
+        "support": "0x00000000000000001743cbf495d5d359",
       },
     ],
   },
@@ -215,7 +215,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 1000000000,
@@ -234,7 +234,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > negative execution fl
 {
   "event": {
     "data": [
-      1850,
+      1873,
       {
         "ayes": 0,
         "nays": 0,
@@ -778,6 +778,58 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > bob attempting to vote directly after delegating to charlie 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 61,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      30,
+    ],
+    "method": "Delegated",
+    "section": "convictionVoting",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work > events for bob's removal of delegation to charlie 1`] = `
+[
+  {
+    "data": [
+      "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      30,
+    ],
+    "method": "Undelegated",
+    "section": "convictionVoting",
   },
 ]
 `;

@@ -710,11 +710,6 @@ class ProxyActionBuilderImpl<
     return [
       {
         pallet: 'system',
-        extrinsic: 'apply_authorized_upgrade',
-        call: this.client.api.tx.system.applyAuthorizedUpgrade('code'),
-      },
-      {
-        pallet: 'system',
         extrinsic: 'set_heap_pages',
         call: this.client.api.tx.system.setHeapPages(2048),
       },
@@ -1516,17 +1511,40 @@ export async function addRemoveProxyTest<
   // Remove delay-having proxies
 
   const removeProxiesTx = client.api.tx.proxy.removeProxies()
-  await sendTransaction(removeProxiesTx.signAsync(alice))
+  const removeProxiesEvents = await sendTransaction(removeProxiesTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // TODO: `remove_proxies` emits no events; when/if it ever does, this'll fail.
-  const events = await client.api.query.system.events()
-  const removeProxiesEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'proxy'
-  })
-  expect(removeProxiesEvent).toBeUndefined()
+  await checkEvents(removeProxiesEvents, 'proxy').toMatchSnapshot(
+    `events when removing proxies from Alice (removeProxies)`,
+  )
+
+  // Verify that each proxy removal emitted a ProxyRemoved event with correct data.
+  // Note: `remove_all_proxy_delegates` emits `ProxyRemoved` events in the pallet source, but
+  // Polkadot's runtime does not yet include this change. Only assert on Kusama chains for now.
+  if (chain.networkGroup === 'kusama') {
+    const events = await client.api.query.system.events()
+    const proxyRemovedEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'proxy' && event.method === 'ProxyRemoved'
+    })
+
+    expect(proxyRemovedEvents.length).toBe(Object.keys(proxyTypes).length)
+
+    for (const record of proxyRemovedEvents) {
+      assert(client.api.events.proxy.ProxyRemoved.is(record.event))
+      const eventData = record.event.data
+      expect(eventData.delegator.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
+      expect(eventData.delay.eq(delay)).toBe(true)
+
+      const proxyType = eventData.proxyType.toString()
+      const expectedDelegate = proxyAccounts[proxyType]
+      expect(expectedDelegate, `Unexpected proxy type ${proxyType} in ProxyRemoved event`).toBeDefined()
+      expect(eventData.delegatee.eq(encodeAddress(expectedDelegate.address, chain.properties.addressEncoding))).toBe(
+        true,
+      )
+    }
+  }
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
@@ -1602,7 +1620,7 @@ export async function createKillPureProxyTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxiesEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(pure|at)$/ })
     .toMatchSnapshot(`events when creating pure proxies for Alice`)
 
   // Check created proxies
@@ -1748,6 +1766,57 @@ export async function proxyCallTest<
   ).toBe(true)
   charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
   expect(charlieBalance.eq(new BN(transferAmount.toString())), 'Charlie should have the transferred funds').toBe(true)
+}
+
+/**
+ * Test that `force_proxy_type` uses exact equality, not superset matching. Even though `Any`
+ * is a superset of `NonTransfer`, forcing `NonTransfer` when the proxy is registered as `Any`
+ * must fail because the pallet selects proxy definitions by exact type.
+ *
+ * 1. Fund Bob
+ * 2. Alice adds Bob as an `Any` proxy with no delay
+ * 3. Bob calls `proxy(alice, Some(NonTransfer), remark)` — force type doesn't match the `Any` definition
+ * 4. Verify that the extrinsic fails with `NotProxy`
+ */
+export async function proxyForceTypeExactMatchOnlyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const remarkCall = client.api.tx.system.remarkWithEvent('force type exact match test')
+  const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypes.NonTransfer, remarkCall)
+  const result = await sendTransaction(proxyTx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+  expect(client.api.errors.proxy.NotProxy.is(dispatchError.asModule)).toBe(true)
+
+  await checkEvents(result, 'system').toMatchSnapshot('proxy force_proxy_type requires exact match')
 }
 
 /**
@@ -1915,7 +1984,7 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxyEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(at|pure)$/ })
     .toMatchSnapshot(`events when creating a pure proxy for Alice`)
 
   const events = await client.api.query.system.events()
@@ -2016,6 +2085,11 @@ export function baseProxyE2ETests<
         kind: 'test',
         label: 'perform proxy call on behalf of delegator',
         testFn: async () => await proxyCallTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'reject force_proxy_type superset (exact match required)',
+        testFn: async () => await proxyForceTypeExactMatchOnlyTest(chain, proxyTypes),
       },
       {
         kind: 'test',
