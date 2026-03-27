@@ -136,12 +136,14 @@ export async function assetRateCreateTest<
   const [client] = await setupNetworks(chain)
   const api = client.api
 
-  // Signed origin cannot create asset rate
+  // 1. Signed origin cannot create asset rate
+  // 1.1 asserting the extrinsic fails with BadOrigin
   await assertSignedOriginRejected(client, api.tx.assetRate.create(ASSET_KIND as any, RATE))
 
-  // Root origin can create a rate
+  // 2. Root origin can create a rate
   await scheduleRootCall(client, api.tx.assetRate.create(ASSET_KIND as any, RATE))
 
+  // 2.1 asserting the AssetRateCreated event is emitted with the correct asset kind and rate
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateCreated' })
     .redact()
     .toMatchSnapshot('AssetRateCreated event')
@@ -155,16 +157,19 @@ export async function assetRateCreateTest<
   expect(rateCreatedEventData.assetKind.toJSON()).toEqual(ASSET_KIND)
   expect(rateCreatedEventData.rate.toString()).toBe(RATE)
 
+  // 2.2 asserting the ConversionRateToNative storage entry is set to the expected rate
   const storedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(storedRate.toString()).toBe(RATE)
 
-  // Duplicate create fails with AlreadyExists
+  // 3. Attempting to create a rate for the same asset again
+  // 3.1 asserting the call fails with AlreadyExists
   await assertRootCallFails(
     client,
     api.tx.assetRate.create(ASSET_KIND as any, RATE),
     api.errors.assetRate.AlreadyExists,
   )
 
+  // 3.2 asserting no additional AssetRateCreated event is emitted
   const duplicateEvents = await api.query.system.events()
   const assetRateCreatedEvents = (duplicateEvents as any).filter((record: any) =>
     api.events.assetRate.AssetRateCreated.is(record.event),
@@ -201,23 +206,27 @@ export async function assetRateUpdateTest<
     },
   })
 
-  // Signed origin cannot update asset rate
+  // 1. Signed origin cannot update asset rate
+  // 1.1 asserting the extrinsic fails with BadOrigin
   await assertSignedOriginRejected(client, api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE))
 
-  // Updating an unknown asset kind fails with UnknownAssetKind
+  // 2. Attempting to update the rate for an asset that has no existing entry
+  // 2.1 asserting the call fails with UnknownAssetKind
   await assertRootCallFails(
     client,
     api.tx.assetRate.update(UNKNOWN_ASSET_KIND as any, UPDATED_RATE),
     api.errors.assetRate.UnknownAssetKind,
   )
 
-  // Root origin can update an existing rate
+  // 3. Root origin can update an existing rate
   await scheduleRootCall(client, api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE))
 
+  // 3.1 asserting the AssetRateUpdated event is emitted
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateUpdated' })
     .redact()
     .toMatchSnapshot('AssetRateUpdated event')
 
+  // 3.2 asserting the ConversionRateToNative storage entry reflects the new rate
   const updatedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(updatedRate.toString()).toBe(UPDATED_RATE)
 }
@@ -251,19 +260,22 @@ export async function assetRateRemoveTest<
     },
   })
 
-  // Signed origin cannot remove asset rate
+  // 1. Signed origin cannot remove asset rate
+  // 1.1 asserting the extrinsic fails with BadOrigin
   await assertSignedOriginRejected(client, api.tx.assetRate.remove(ASSET_KIND as any))
 
-  // Removing an unknown asset kind fails with UnknownAssetKind
+  // 2. Attempting to remove the rate for an asset that has no existing entry
+  // 2.1 asserting the call fails with UnknownAssetKind
   await assertRootCallFails(
     client,
     api.tx.assetRate.remove(UNKNOWN_ASSET_KIND as any),
     api.errors.assetRate.UnknownAssetKind,
   )
 
-  // Root origin can remove an existing rate
+  // 3. Root origin can remove an existing rate
   await scheduleRootCall(client, api.tx.assetRate.remove(ASSET_KIND as any))
 
+  // 3.1 asserting the AssetRateRemoved event is emitted with the correct asset kind
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateRemoved' })
     .redact()
     .toMatchSnapshot('AssetRateRemoved event')
@@ -275,6 +287,7 @@ export async function assetRateRemoveTest<
   assert(api.events.assetRate.AssetRateRemoved.is(rateRemovedEvent.event))
   expect(rateRemovedEvent.event.data.assetKind.toJSON()).toEqual(ASSET_KIND)
 
+  // 3.2 asserting the ConversionRateToNative storage entry is deleted
   const removedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(removedRate.isEmpty).toBe(true)
 }
