@@ -111,6 +111,24 @@ async function scheduleRootCall(client: Client<any, any>, call: SubmittableExtri
   await client.dev.newBlock()
 }
 
+/**
+ * Test the assetRate.create extrinsic:
+ * 1. rejecting a create submitted with a signed (non-privileged) origin
+ *
+ *     1.1 asserting the extrinsic fails with BadOrigin
+ *
+ * 2. creating a conversion rate for USDT using Root origin via the scheduler
+ *
+ *     2.1 asserting the AssetRateCreated event is emitted with the correct asset kind and rate
+ *
+ *     2.2 asserting the ConversionRateToNative storage entry is set to the expected rate
+ *
+ * 3. attempting to create a rate for the same asset again
+ *
+ *     3.1 asserting the call fails with AlreadyExists
+ *
+ *     3.2 asserting no additional AssetRateCreated event is emitted
+ */
 export async function assetRateCreateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -154,6 +172,22 @@ export async function assetRateCreateTest<
   expect(assetRateCreatedEvents.length).toBe(0)
 }
 
+/**
+ * Test the assetRate.update extrinsic:
+ * 1. rejecting an update submitted with a signed (non-privileged) origin
+ *
+ *     1.1 asserting the extrinsic fails with BadOrigin
+ *
+ * 2. attempting to update the rate for an asset that has no existing entry
+ *
+ *     2.1 asserting the call fails with UnknownAssetKind
+ *
+ * 3. updating the conversion rate for USDT using Root origin via the scheduler
+ *
+ *     3.1 asserting the AssetRateUpdated event is emitted
+ *
+ *     3.2 asserting the ConversionRateToNative storage entry reflects the new rate
+ */
 export async function assetRateUpdateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -188,6 +222,22 @@ export async function assetRateUpdateTest<
   expect(updatedRate.toString()).toBe(UPDATED_RATE)
 }
 
+/**
+ * Test the assetRate.remove extrinsic:
+ * 1. rejecting a removal submitted with a signed (non-privileged) origin
+ *
+ *     1.1 asserting the extrinsic fails with BadOrigin
+ *
+ * 2. attempting to remove the rate for an asset that has no existing entry
+ *
+ *     2.1 asserting the call fails with UnknownAssetKind
+ *
+ * 3. removing the conversion rate for USDT using Root origin via the scheduler
+ *
+ *     3.1 asserting the AssetRateRemoved event is emitted with the correct asset kind
+ *
+ *     3.2 asserting the ConversionRateToNative storage entry is deleted
+ */
 export async function assetRateRemoveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
