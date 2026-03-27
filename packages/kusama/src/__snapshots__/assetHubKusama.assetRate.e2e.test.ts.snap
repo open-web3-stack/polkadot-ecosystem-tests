@@ -42,4 +42,45 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion r
 ]
 `;
 
-exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > cannot create an existing rate 1`] = `[]`;
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "new_": 2000000000000000000,
+      "old": 1000000000000000000,
+    },
+    "method": "AssetRateUpdated",
+    "section": "assetRate",
+  },
+]
+`;
