@@ -1491,19 +1491,15 @@ export async function insufficientApprovalTest<
 }
 
 /**
- * Test that a referendum is queued when the track's deciding capacity is saturated,
- * then promoted to deciding once a slot opens:
+ * Shared preamble for track capacity overflow tests:
  * 1. submitting a blocker referendum and placing its decision deposit
  * 2. submitting the overflow referendum and placing its decision deposit
  * 3. backdating the overflow past its preparation period and nudging it into the queue
  * 4. verifying the overflow is queued
- * 5. advancing the blocker to the last block of its confirmation period
- * 6. verifying the blocker passes and the overflow is promoted to deciding
+ *
+ * Returns everything needed for the caller to free the blocker's slot and verify promotion.
  */
-export async function trackCapacityOverflowTest<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+async function setupOverflow(chain: Chain<any, any>, trackConfig: GovernanceTrackConfig) {
   const [client] = await setupNetworks(chain)
 
   const referendaTracks = client.api.consts.referenda.tracks
@@ -1524,7 +1520,7 @@ export async function trackCapacityOverflowTest<
   })
 
   /**
-   * 1. Submit a blocker referendum on the root track and place its decision deposit
+   * 1. Submit a blocker referendum and place its decision deposit
    */
 
   const { referendumIndex: blockerIndex, ongoing: blockerOngoing } = await submitAndDeposit(client, trackConfig)
@@ -1548,9 +1544,9 @@ export async function trackCapacityOverflowTest<
   /**
    * 3. Backdate the overflow past its preparation period and nudge it into the queue
    *
-   * Setting `DecidingCount` to 1 makes the runtime believe the track is full (the blocker
-   * occupies the only slot). Backdating `submitted` past the preparation period and nudging
-   * causes the runtime to evaluate the overflow: because the track is full, it queues it.
+   * Setting `DecidingCount` to `maxDeciding` makes the runtime believe the track is full.
+   * Backdating `submitted` past the preparation period and nudging causes the runtime to
+   * evaluate the overflow: because the track is full, it queues it.
    */
 
   const block1 = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -1600,31 +1596,87 @@ export async function trackCapacityOverflowTest<
   assert(queuedOpt.isSome)
   const queued = queuedOpt.unwrap()
   assert(queued.isOngoing, 'overflow referendum should still be ongoing (queued, not terminal)')
-  const queuedRef = queued.asOngoing
+  expect(queued.asOngoing.inQueue.isTrue, 'overflow should be queued when track is at capacity').toBe(true)
+  expect(queued.asOngoing.deciding.isNone, 'queued overflow should not be in decision phase').toBe(true)
 
-  expect(queuedRef.inQueue.isTrue, 'overflow should be queued when track is at capacity').toBe(true)
-  expect(queuedRef.deciding.isNone, 'queued overflow should not be in decision phase').toBe(true)
+  return {
+    client,
+    chain,
+    track,
+    trackConfig,
+    blockerIndex,
+    blockerOngoing,
+    overflowIndex,
+    maxDeciding,
+    prepPeriod,
+    confirmPeriod,
+  }
+}
+
+/**
+ * Post-promotion verification shared across overflow test variants:
+ * checks the overflow left the queue, entered deciding, and emitted `DecisionStarted`.
+ */
+async function verifyPromotion(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  overflowIndex: number,
+  trackConfig: GovernanceTrackConfig,
+  maxDeciding: number,
+) {
+  const promotedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(promotedOpt.isSome)
+  const promoted = promotedOpt.unwrap()
+  assert(promoted.isOngoing, 'overflow should still be ongoing after promotion')
+  expect(promoted.asOngoing.deciding.isSome, 'overflow should now be in decision phase').toBe(true)
+  expect(promoted.asOngoing.inQueue.isFalse, 'overflow should no longer be queued').toBe(true)
+
+  const decidingCount = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
+  expect(decidingCount, 'DecidingCount should reflect the promoted overflow').toBe(maxDeciding)
+
+  const promotionEvents = await client.api.query.system.events()
+  const decisionStarted = promotionEvents.find(
+    ({ event }) => client.api.events.referenda.DecisionStarted.is(event) && event.data[0].toNumber() === overflowIndex,
+  )
+  assert(decisionStarted, 'DecisionStarted event should be emitted when the overflow is promoted')
+  assert(client.api.events.referenda.DecisionStarted.is(decisionStarted.event))
+  expect(decisionStarted.event.data[0].toNumber()).toBe(overflowIndex)
+  expect(decisionStarted.event.data[1].toNumber()).toBe(trackConfig.trackId)
+}
+
+/**
+ * Test that the overflow referendum is promoted after the blocker is approved:
+ * 1–4. shared setup (submit both refs, queue the overflow)
+ * 5. advancing the blocker to the last block of its confirmation period
+ * 6. verifying the blocker passes and the overflow is promoted to deciding
+ */
+export async function overflowPromotionViaApprovalTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(chain, trackConfig)
+  const { client, blockerIndex, blockerOngoing, overflowIndex, maxDeciding, prepPeriod, confirmPeriod } = ctx
 
   /**
    * 5. Advance the blocker to the last block of its confirmation period
    *
-   * Setting `confirming` to `block2 + 1` places the blocker at the exact block where
+   * Setting `confirming` to `block + 1` places the blocker at the exact block where
    * confirmation ends. The injected tally has full approval and support so `is_passing`
    * holds. The blocker's nudge is written directly into the scheduler agenda alongside
    * the referendum state to avoid a second `scheduleInlineCallWithOrigin` call.
    */
 
-  const block2 = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
 
-  const confirmDeadline = block2 + 1
+  const confirmDeadline = block + 1
   const decidingSince = confirmDeadline - confirmPeriod
   const blockerSubmitted = decidingSince - prepPeriod
 
   const schedulerBlock =
     chain.properties.schedulerBlockProvider === 'NonLocal'
       ? ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber()
-      : block2 + 1
+      : block + 1
 
   await client.dev.setStorage({
     Referenda: {
@@ -1643,7 +1695,7 @@ export async function trackCapacityOverflowTest<
               deciding: { since: decidingSince, confirming: confirmDeadline },
               tally: { ayes: totalIssuance.toString(), nays: 0, support: totalIssuance.toString() },
               inQueue: false,
-              alarm: [block2 + 1, [block2 + 1, 0]],
+              alarm: [block + 1, [block + 1, 0]],
             },
           },
         ],
@@ -1667,40 +1719,140 @@ export async function trackCapacityOverflowTest<
 
   await client.dev.newBlock()
 
-  /**
-   * 6. Verify the blocker passed and the overflow was promoted
-   *
-   * The blocker's approval triggers `note_one_fewer_deciding`, which schedules
-   * `one_fewer_deciding` for the next block. That call pops the overflow from
-   * the `TrackQueue` and begins its decision phase.
-   */
-
   const blockerResultOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     (await client.api.query.referenda.referendumInfoFor(blockerIndex)) as any
   assert(blockerResultOpt.isSome)
   expect(blockerResultOpt.unwrap().isApproved, 'blocker should have been approved').toBe(true)
 
+  /**
+   * 6. Verify the overflow was promoted
+   */
+
+  await client.dev.newBlock()
+  await verifyPromotion(client, overflowIndex, trackConfig, maxDeciding)
+}
+
+/**
+ * Test that the overflow referendum is promoted after the blocker is rejected:
+ * 1–4. shared setup (submit both refs, queue the overflow)
+ * 5. fast-forwarding the blocker past its decision period with a failing tally
+ * 6. verifying the blocker is rejected and the overflow is promoted to deciding
+ */
+export async function overflowPromotionViaRejectionTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(chain, trackConfig)
+  const { client, blockerIndex, blockerOngoing, overflowIndex, maxDeciding } = ctx
+
+  /**
+   * 5. Fast-forward the blocker past its decision period with a failing tally
+   *
+   * Backdating `deciding.since` so the decision period has elapsed by the next block.
+   * A nay-only tally is injected because `Perbill::from_rational(0, 0)` returns 100 %
+   * in Substrate — an empty tally would pass approval and enter confirmation instead.
+   */
+
+  const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const decisionPeriod = ctx.track[1].decisionPeriod.toNumber()
+  const prepPeriod = ctx.track[1].preparePeriod.toNumber()
+  const decidingSince = block + 1 - decisionPeriod
+  const blockerSubmitted = decidingSince - prepPeriod
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [blockerIndex],
+          {
+            Ongoing: {
+              track: blockerOngoing.track,
+              origin: blockerOngoing.origin,
+              proposal: blockerOngoing.proposal,
+              enactment: blockerOngoing.enactment,
+              submitted: blockerSubmitted,
+              submissionDeposit: blockerOngoing.submissionDeposit,
+              decisionDeposit: blockerOngoing.decisionDeposit,
+              deciding: { since: decidingSince, confirming: null },
+              tally: { ayes: 0, nays: 1, support: 0 },
+              inQueue: false,
+              alarm: [block + 1, [block + 1, 0]],
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.referenda.nudgeReferendum(blockerIndex).method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
   await client.dev.newBlock()
 
-  const promotedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
-    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
-  assert(promotedOpt.isSome)
-  const promoted = promotedOpt.unwrap()
-  assert(promoted.isOngoing, 'overflow should still be ongoing after promotion')
-  expect(promoted.asOngoing.deciding.isSome, 'overflow should now be in decision phase').toBe(true)
-  expect(promoted.asOngoing.inQueue.isFalse, 'overflow should no longer be queued').toBe(true)
+  const blockerResultOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(blockerIndex)) as any
+  assert(blockerResultOpt.isSome)
+  expect(blockerResultOpt.unwrap().isRejected, 'blocker should have been rejected').toBe(true)
 
-  const decidingCount = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
-  expect(decidingCount, 'DecidingCount should reflect the promoted overflow').toBe(maxDeciding)
+  /**
+   * 6. Verify the overflow was promoted
+   */
 
-  const promotionEvents = await client.api.query.system.events()
-  const decisionStarted = promotionEvents.find(
-    ({ event }) => client.api.events.referenda.DecisionStarted.is(event) && event.data[0].toNumber() === overflowIndex,
-  )
-  assert(decisionStarted, 'DecisionStarted event should be emitted when the overflow is promoted')
-  assert(client.api.events.referenda.DecisionStarted.is(decisionStarted.event))
-  expect(decisionStarted.event.data[0].toNumber()).toBe(overflowIndex)
-  expect(decisionStarted.event.data[1].toNumber()).toBe(trackConfig.trackId)
+  await client.dev.newBlock()
+  await verifyPromotion(client, overflowIndex, trackConfig, maxDeciding)
+}
+
+/**
+ * Test that the overflow referendum is promoted after the blocker is killed:
+ * 1–4. shared setup (submit both refs, queue the overflow)
+ * 5. killing the blocker with a Root-origin call via the scheduler
+ * 6. verifying the blocker is killed and the overflow is promoted to deciding
+ */
+export async function overflowPromotionViaKillTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(chain, trackConfig)
+  const { client, blockerIndex, overflowIndex, maxDeciding } = ctx
+
+  /**
+   * 5. Kill the blocker with a Root-origin call via the scheduler
+   */
+
+  const schedulerBlock =
+    chain.properties.schedulerBlockProvider === 'NonLocal'
+      ? ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber()
+      : (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [
+        [
+          [schedulerBlock],
+          [{ call: { Inline: client.api.tx.referenda.kill(blockerIndex).method.toHex() }, origin: { system: 'Root' } }],
+        ],
+      ],
+      incompleteSince: schedulerBlock,
+    },
+  })
+
+  await client.dev.newBlock()
+
+  const blockerResultOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(blockerIndex)) as any
+  assert(blockerResultOpt.isSome)
+  expect(blockerResultOpt.unwrap().isKilled, 'blocker should have been killed').toBe(true)
+
+  /**
+   * 6. Verify the overflow was promoted
+   */
+
+  await client.dev.newBlock()
+  await verifyPromotion(client, overflowIndex, trackConfig, maxDeciding)
 }
 
 /// -------
@@ -1728,9 +1880,25 @@ function negativeFlowsForTrack(chain: Chain<any, any>, trackConfig: GovernanceTr
         testFn: async () => await insufficientApprovalTest(chain, trackConfig),
       },
       {
-        kind: 'test' as const,
+        kind: 'describe' as const,
         label: 'track capacity overflow',
-        testFn: async () => await trackCapacityOverflowTest(chain, trackConfig),
+        children: [
+          {
+            kind: 'test' as const,
+            label: 'promotion via approval',
+            testFn: async () => await overflowPromotionViaApprovalTest(chain, trackConfig),
+          },
+          {
+            kind: 'test' as const,
+            label: 'promotion via rejection',
+            testFn: async () => await overflowPromotionViaRejectionTest(chain, trackConfig),
+          },
+          {
+            kind: 'test' as const,
+            label: 'promotion via kill',
+            testFn: async () => await overflowPromotionViaKillTest(chain, trackConfig),
+          },
+        ],
       },
     ],
   }
