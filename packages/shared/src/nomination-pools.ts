@@ -143,7 +143,7 @@ async function createNominationPool(
 }
 
 /// -------
-/// -------
+/// Tests
 /// -------
 
 /**
@@ -191,6 +191,129 @@ async function nominationPoolCreationFailureTest<
 
   assert(dispatchError.isModule)
   assert(client.api.errors.nominationPools.MinimumBondNotMet.is(dispatchError.asModule))
+}
+
+/**
+ * Test creating a pool with a specific, previously-used pool ID via `create_with_pool_id`.
+ *
+ * This extrinsic requires `pool_id < lastPoolId` and the ID not currently in use,
+ * so it's meant for re-creating pools at dissolved IDs.
+ *
+ * 1. Bump `lastPoolId` to create a gap
+ * 2. Create pool at the gap ID via `create_with_pool_id` — should succeed
+ * 3. Attempt to reuse the now-occupied ID — should fail with `PoolIdInUse`
+ * 4. Attempt to use an ID that was never allocated — should fail with `InvalidPoolId`
+ */
+async function nominationPoolCreateWithPoolIdTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }]],
+    },
+  })
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Bump lastPoolId to create a gap — pool at gapId won't exist
+   */
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const gapId = preLastPoolId + 1
+
+  await client.dev.setStorage({
+    NominationPools: {
+      lastPoolId: gapId + 1,
+    },
+  })
+
+  const lastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  expect(lastPoolId).toBe(gapId + 1)
+
+  let poolData = await client.api.query.nominationPools.bondedPools(gapId)
+  expect(poolData.isNone, 'Pool at gap ID should not exist').toBe(true)
+
+  /**
+   * 2. Create pool at the gap ID via `create_with_pool_id`
+   */
+
+  const createWithIdTx = client.api.tx.nominationPools.createWithPoolId(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    gapId,
+  )
+  const createWithIdEvents = await sendTransaction(createWithIdTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(createWithIdEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId|stash/ })
+    .toMatchSnapshot('create_with_pool_id events')
+
+  poolData = await client.api.query.nominationPools.bondedPools(gapId)
+  assert(poolData.isSome, 'Pool should exist after create_with_pool_id')
+
+  // lastPoolId should be unchanged — create_with_pool_id reuses an existing ID
+  const lastPoolIdAfter = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  expect(lastPoolIdAfter, 'lastPoolId should not change when reusing an ID').toBe(lastPoolId)
+
+  /**
+   * 3. Attempt to reuse the ID that's now occupied → PoolIdInUse
+   */
+
+  const duplicateTx = client.api.tx.nominationPools.createWithPoolId(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    gapId,
+  )
+  await sendTransaction(duplicateTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'create_with_pool_id PoolIdInUse failure events',
+  )
+
+  let events = await client.api.query.system.events()
+  let [ev] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  assert(ev.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.PoolIdInUse.is(ev.event.data.dispatchError.asModule))
+
+  /**
+   * 4. Attempt to use an ID that was never allocated → InvalidPoolId
+   */
+
+  const futureTx = client.api.tx.nominationPools.createWithPoolId(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    lastPoolId + 100,
+  )
+  await sendTransaction(futureTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'create_with_pool_id InvalidPoolId failure events',
+  )
+
+  events = await client.api.query.system.events()
+  ;[ev] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
+  assert(ev.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.InvalidPoolId.is(ev.event.data.dispatchError.asModule))
 }
 
 /**
@@ -1153,6 +1276,391 @@ async function nominationPoolsUpdateRolesTest<
   })
 }
 
+/**
+ * Test the full unbonding → withdrawal → pool dissolution lifecycle.
+ *
+ * This covers the gap identified in issue #257: after `unbond` is called, the unbonding period
+ * is bypassed by advancing `Staking.currentEra` via storage manipulation, so that
+ * `withdrawUnbonded` can be tested without waiting for real era progression.
+ *
+ * Steps:
+ * 1. Create pool (Alice = depositor+root+bouncer, Charlie = nominator)
+ * 2. Eve joins the pool
+ * 3. Eve unbonds all her funds
+ * 4. Advance `Staking.currentEra` past the unbonding period
+ * 5. Eve calls `withdrawUnbonded` → member removed, funds returned
+ * 6. Set pool to Destroying, depositor unbonds
+ * 7. Advance era again, depositor withdraws → pool dissolved
+ */
+async function nominationPoolWithdrawUnbondedTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool: Alice is depositor, root, and bouncer; Charlie is nominator
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.charlie.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  let poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should exist after creation')
+  expect(poolData.unwrap().memberCounter.toNumber()).toBe(1)
+
+  /**
+   * 2. Eve joins the pool
+   */
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  const joinEvents = await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  await checkEvents(joinEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId|stash/ })
+    .toMatchSnapshot('withdraw test: join pool events')
+
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome)
+  expect(poolData.unwrap().memberCounter.toNumber()).toBe(2)
+
+  /**
+   * 3. Eve unbonds all her funds
+   */
+
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
+  const unbondEvents = await sendTransaction(unbondTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  await checkEvents(unbondEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId|stash|era/ })
+    .toMatchSnapshot('withdraw test: unbond events')
+
+  // Verify the Unbonded event fields: member, pool_id, balance, points, era
+  let events = await client.api.query.system.events()
+  const [unbondedRecord] = events.filter(({ event }) => client.api.events.nominationPools.Unbonded.is(event))
+  assert(client.api.events.nominationPools.Unbonded.is(unbondedRecord?.event))
+  expect(unbondedRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(unbondedRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(unbondedRecord.event.data.balance.toNumber()).toBe(depositorMinBond)
+  expect(unbondedRecord.event.data.points.toNumber()).toBe(depositorMinBond)
+
+  const memberDataPostUnbond = await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)
+  assert(memberDataPostUnbond.isSome, 'Eve should still be a pool member after unbonding')
+  expect(memberDataPostUnbond.unwrap().points.toNumber(), 'Active points should be 0 after full unbond').toBe(0)
+
+  /**
+   * 4. Advance currentEra past the unbonding period
+   */
+
+  const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
+  const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
+  const targetEra = currentEra + bondingDuration + 1
+
+  await client.dev.setStorage({
+    Staking: {
+      currentEra: targetEra,
+      activeEra: { index: targetEra, start: null },
+    },
+  })
+
+  /**
+   * 5. Eve calls withdrawUnbonded → member removed, funds returned
+   */
+
+  const withdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.eve.address, 0)
+  const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  await checkEvents(withdrawEvents, 'staking', 'nominationPools', 'balances')
+    .redact({ removeKeys: /poolId|stash|era|who|member/ })
+    .toMatchSnapshot('withdraw test: member withdrawUnbonded events')
+
+  events = await client.api.query.system.events()
+
+  const [withdrawnRecord] = events.filter(({ event }) => client.api.events.nominationPools.Withdrawn.is(event))
+  assert(client.api.events.nominationPools.Withdrawn.is(withdrawnRecord?.event))
+  expect(withdrawnRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(withdrawnRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(withdrawnRecord.event.data.balance.toNumber()).toBe(depositorMinBond)
+  expect(withdrawnRecord.event.data.points.toNumber()).toBe(depositorMinBond)
+
+  const [memberRemovedRecord] = events.filter(({ event }) => client.api.events.nominationPools.MemberRemoved.is(event))
+  assert(client.api.events.nominationPools.MemberRemoved.is(memberRemovedRecord?.event))
+  expect(memberRemovedRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(memberRemovedRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+
+  const memberDataPostWithdraw = await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)
+  expect(memberDataPostWithdraw.isNone, 'Eve should be removed from pool after withdrawal').toBe(true)
+
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should still exist - depositor has not left')
+  expect(poolData.unwrap().memberCounter.toNumber(), 'Pool should have 1 member (depositor only)').toBe(1)
+
+  /**
+   * 6. Set pool to Destroying, depositor unbonds
+   */
+
+  const setStateTx = client.api.tx.nominationPools.setState(poolId, 'Destroying')
+  await sendTransaction(setStateTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome)
+  expect(poolData.unwrap().state.isDestroying, 'Pool state should be Destroying').toBe(true)
+
+  const depositorUnbondTx = client.api.tx.nominationPools.unbond(testAccounts.alice.address, depositorMinBond)
+  const depositorUnbondEvents = await sendTransaction(depositorUnbondTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(depositorUnbondEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId|stash|era/ })
+    .toMatchSnapshot('withdraw test: depositor unbond events')
+
+  /**
+   * 7. Advance era again for depositor's unbonding period
+   */
+
+  const currentEra2 = (await client.api.query.staking.currentEra()).unwrap().toNumber()
+  const targetEra2 = currentEra2 + bondingDuration + 1
+
+  await client.dev.setStorage({
+    Staking: {
+      currentEra: targetEra2,
+      activeEra: { index: targetEra2, start: null },
+    },
+  })
+
+  /**
+   * 8. Depositor withdraws → pool dissolves
+   */
+
+  const depositorWithdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.alice.address, 0)
+  const depositorWithdrawEvents = await sendTransaction(depositorWithdrawTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(depositorWithdrawEvents, 'staking', 'nominationPools', 'balances')
+    .redact({ removeKeys: /poolId|stash|era|who|member/ })
+    .toMatchSnapshot('withdraw test: depositor withdrawUnbonded (pool dissolution) events')
+
+  events = await client.api.query.system.events()
+
+  const [destroyedRecord] = events.filter(({ event }) => client.api.events.nominationPools.Destroyed.is(event))
+  assert(client.api.events.nominationPools.Destroyed.is(destroyedRecord?.event))
+  expect(destroyedRecord.event.data.poolId.toNumber()).toBe(poolId)
+
+  // Pool should no longer exist
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  expect(poolData.isNone, 'Pool should be dissolved after depositor withdraws').toBe(true)
+}
+
+/**
+ * Test that slashing an unbonding pool reduces the withdrawal amount for members.
+ *
+ * After a member unbonds, this test directly reduces the balance in `SubPoolsStorage`
+ * (simulating the effect of `Pallet::on_slash`) while keeping the points unchanged.
+ * The resulting points:balance ratio imbalance means `withdrawUnbonded` returns less
+ * than the original unbonded amount — the core mechanism by which slashing affects pools.
+ */
+async function nominationPoolSlashAndWithdrawTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.charlie.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  let poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should exist after creation')
+
+  /**
+   * 2. Eve joins the pool
+   */
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome)
+  expect(poolData.unwrap().memberCounter.toNumber()).toBe(2)
+
+  /**
+   * 3. Eve unbonds all her funds
+   */
+
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
+  await sendTransaction(unbondTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const memberDataPostUnbond = await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)
+  assert(memberDataPostUnbond.isSome, 'Eve should still be a pool member after unbonding')
+
+  /**
+   * 4. Read SubPoolsStorage to get the unbonding era and current balance
+   */
+
+  const subPoolsData = await client.api.query.nominationPools.subPoolsStorage(poolId)
+  assert(subPoolsData.isSome, 'SubPools should exist after unbonding')
+  const subPools = subPoolsData.unwrap()
+
+  // Find the unbonding era entry — there should be exactly one (Eve's unbond)
+  const withEraEntries = [...subPools.withEra.entries()]
+  assert(withEraEntries.length > 0, 'Expected at least one unbonding era entry')
+
+  const [unbondEra, unbondPool] = withEraEntries[withEraEntries.length - 1]
+  const originalBalance = unbondPool.balance.toBigInt()
+  const originalPoints = unbondPool.points.toBigInt()
+
+  expect(originalBalance).toBe(BigInt(depositorMinBond))
+  expect(originalPoints).toBe(BigInt(depositorMinBond))
+
+  /**
+   * 5. Simulate slash: reduce SubPools balance by half, keep points unchanged.
+   *
+   * This is what `Pallet::on_slash` does: it reduces `UnbondPool.balance` without
+   * changing `points`, breaking the 1:1 ratio so members receive less on withdrawal.
+   */
+
+  const slashedBalance = originalBalance / 2n
+  const unbondEraNum = unbondEra.toNumber()
+
+  // Get the current SubPools JSON, modify the balance, and write it back.
+  // This avoids BTreeMap encoding issues with setStorage.
+  const subPoolsJson = subPools.toJSON() as any
+  subPoolsJson.withEra[unbondEraNum.toString()] = {
+    points: Number(originalPoints),
+    balance: Number(slashedBalance),
+  }
+
+  await client.dev.setStorage({
+    NominationPools: {
+      subPoolsStorage: [[[poolId], subPoolsJson]],
+    },
+  })
+
+  // Verify the storage was updated
+  const subPoolsPostSlash = (await client.api.query.nominationPools.subPoolsStorage(poolId)).unwrap()
+  const postSlashEntries = [...subPoolsPostSlash.withEra.entries()]
+  const [, postSlashPool] = postSlashEntries[postSlashEntries.length - 1]
+  expect(postSlashPool.balance.toBigInt(), 'SubPool balance should be halved after simulated slash').toBe(
+    slashedBalance,
+  )
+  expect(postSlashPool.points.toBigInt(), 'SubPool points should be unchanged').toBe(originalPoints)
+
+  /**
+   * 6. Fast-forward past the unbonding period
+   */
+
+  const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
+  const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
+  const targetEra = currentEra + bondingDuration + 1
+
+  await client.dev.setStorage({
+    Staking: {
+      currentEra: targetEra,
+      activeEra: { index: targetEra, start: null },
+    },
+  })
+
+  /**
+   * 7. Eve withdraws → balance should reflect the slash
+   */
+
+  const withdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.eve.address, 0)
+  const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  await checkEvents(withdrawEvents, 'staking', 'nominationPools', 'balances')
+    .redact({ removeKeys: /poolId|stash|era|who|member/ })
+    .toMatchSnapshot('slash test: member withdrawUnbonded after slash events')
+
+  const events = await client.api.query.system.events()
+
+  // Withdrawn event should reflect the slash: balance < points (the 1:1 ratio is broken)
+  const [slashWithdrawnRecord] = events.filter(({ event }) => client.api.events.nominationPools.Withdrawn.is(event))
+  assert(client.api.events.nominationPools.Withdrawn.is(slashWithdrawnRecord?.event))
+  expect(slashWithdrawnRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(slashWithdrawnRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(slashWithdrawnRecord.event.data.points.toBigInt()).toBe(BigInt(depositorMinBond))
+  expect(
+    slashWithdrawnRecord.event.data.balance.toBigInt(),
+    'Withdrawn balance should be less than points due to slash',
+  ).toBeLessThan(slashWithdrawnRecord.event.data.points.toBigInt())
+  expect(slashWithdrawnRecord.event.data.balance.toBigInt(), 'Withdrawn balance should be approximately half').toBe(
+    slashedBalance,
+  )
+
+  const memberDataPostWithdraw = await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)
+  expect(memberDataPostWithdraw.isNone, 'Eve should be removed from pool after withdrawal').toBe(true)
+}
+
 export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -1190,6 +1698,21 @@ export function baseNominationPoolsE2ETests<
         kind: 'test',
         label: 'nomination pools update roles test',
         testFn: async () => await nominationPoolsUpdateRolesTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool withdraw unbonded test',
+        testFn: async () => await nominationPoolWithdrawUnbondedTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool slash and withdraw test',
+        testFn: async () => await nominationPoolSlashAndWithdrawTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool create with pool id test',
+        testFn: async () => await nominationPoolCreateWithPoolIdTest(chain),
       },
     ],
   }
