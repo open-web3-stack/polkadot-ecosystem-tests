@@ -735,13 +735,10 @@ async function setStakingConfigsTest<
   const preMinCommission = (await client.api.query.staking.minCommission()).toNumber()
   const preMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrapOr(tenPercent).toNumber()
 
-  const isKusama = chain.networkGroup === 'kusama'
-  const preAreNominatorsSlashable = isKusama
-    ? ((await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean)
-    : undefined
+  const preAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
   const setStakingConfigsCall = (inc: number) => {
-    const args: any[] = [
+    return (client.api.tx.staking.setStakingConfigs as any)(
       { Set: preMinNominatorBond + inc },
       { Set: preMinValidatorBond + inc },
       { Set: preMaxNominatorsCount + inc },
@@ -749,9 +746,8 @@ async function setStakingConfigsTest<
       { Set: preChillThreshold + inc },
       { Set: preMinCommission + inc },
       { Set: preMaxStakedRewards + inc },
-    ]
-    if (isKusama) args.push({ Set: !preAreNominatorsSlashable })
-    return (client.api.tx.staking.setStakingConfigs as any)(...args)
+      { Set: !preAreNominatorsSlashable },
+    )
   }
 
   ///
@@ -813,9 +809,7 @@ async function setStakingConfigsTest<
   const postChillThreshold = (await client.api.query.staking.chillThreshold()).unwrap().toNumber()
   const postMinCommission = (await client.api.query.staking.minCommission()).toNumber()
   const postMaxStakedRewards = (await client.api.query.staking.maxStakedRewards()).unwrap().toNumber()
-  const postAreNominatorsSlashable = isKusama
-    ? ((await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean)
-    : undefined
+  const postAreNominatorsSlashable = (await client.api.query.staking.areNominatorsSlashable()).toPrimitive() as boolean
 
   const [setStakingConfigsSuccess] = events.filter((record) => {
     const { event } = record
@@ -831,9 +825,7 @@ async function setStakingConfigsTest<
   expect(postChillThreshold).toBe(preChillThreshold + inc)
   expect(postMinCommission).toBe(preMinCommission + inc)
   expect(postMaxStakedRewards).toBe(preMaxStakedRewards + inc)
-  if (isKusama) {
-    expect(postAreNominatorsSlashable).toBe(!preAreNominatorsSlashable)
-  }
+  expect(postAreNominatorsSlashable).toBe(!preAreNominatorsSlashable)
 }
 
 /**
@@ -899,7 +891,7 @@ async function forceApplyValidatorCommissionTest<
 
   const newCommission = minCommission.add(new BN(10e6))
 
-  const setStakingConfigsArgs: any[] = [
+  const setStakingConfigsTx = (client.api.tx.staking.setStakingConfigs as any)(
     { Noop: null },
     { Noop: null },
     { Noop: null },
@@ -907,9 +899,8 @@ async function forceApplyValidatorCommissionTest<
     { Noop: null },
     { Set: newCommission },
     { Noop: null },
-  ]
-  if (chain.networkGroup === 'kusama') setStakingConfigsArgs.push({ Noop: null })
-  const setStakingConfigsTx = (client.api.tx.staking.setStakingConfigs as any)(...setStakingConfigsArgs)
+    { Noop: null },
+  )
 
   await scheduleInlineCallWithOrigin(
     client,
@@ -1096,7 +1087,7 @@ async function chillOtherTest<
   /// Disregard staking configs pre-test-execution, excluding minumum validator/nominator bonds, which are not
   /// optional, and whose pre-test values can be used in the test.
 
-  const chillConfigArgs: any[] = [
+  const setStakingConfigsCall = (client.api.tx.staking.setStakingConfigs as any)(
     { Noop: null },
     { Noop: null },
     { Remove: null },
@@ -1104,9 +1095,8 @@ async function chillOtherTest<
     { Remove: null },
     { Noop: null },
     { Noop: null },
-  ]
-  if (chain.networkGroup === 'kusama') chillConfigArgs.push({ Noop: null })
-  const setStakingConfigsCall = (client.api.tx.staking.setStakingConfigs as any)(...chillConfigArgs)
+    { Noop: null },
+  )
 
   await scheduleInlineCallWithOrigin(
     client,
@@ -1186,8 +1176,7 @@ async function chillOtherTest<
       [setNominatorCount, setValidatorCount],
     ]) {
       for (const chillThreshold of [remove, chillThresholdSet]) {
-        const trailingNoops = chain.networkGroup === 'kusama' ? 3 : 2
-        const args = [...bondLimits, ...countLimits, chillThreshold, ...Array(trailingNoops).fill(noop)]
+        const args = [...bondLimits, ...countLimits, chillThreshold, noop, noop, noop]
 
         setStakingConfigsCalls.push((client.api.tx.staking.setStakingConfigs as any)(...args))
       }

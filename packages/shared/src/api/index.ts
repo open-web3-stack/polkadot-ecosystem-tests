@@ -16,7 +16,7 @@ export const xtokens = {
     },
   }),
   relaychainV4: (acc: any) => ({
-    V4: {
+    V5: {
       parents: 1,
       interior: {
         X1: {
@@ -58,7 +58,7 @@ export const xtokens = {
     },
   }),
   parachainV4: (paraId: number) => (acc: any) => ({
-    V4: {
+    V5: {
       parents: 1,
       interior: {
         X2: [
@@ -92,7 +92,7 @@ export const xtokens = {
 
 export const xcmPallet = {
   relaychainV4: {
-    V4: {
+    V5: {
       parents: 1,
       interior: 'Here',
     },
@@ -106,7 +106,7 @@ export const xcmPallet = {
     },
   }),
   parachainV4: (parents: number, paraId: any) => ({
-    V4: {
+    V5: {
       parents,
       interior: {
         X1: [{ Parachain: paraId }],
@@ -235,12 +235,12 @@ export const xcmPallet = {
     ({ api }: { api: ApiPromise }, acc: any) =>
       (api.tx.xcmPallet || api.tx.polkadotXcm).transferAssetsUsingTypeAndThen(
         dest,
-        { V4: tokens },
+        { V5: tokens },
         assetTransferType,
-        { V4: remoteFeesId },
+        { V5: remoteFeesId },
         feesTransferType,
         {
-          V4: [
+          V5: [
             {
               DepositAsset: {
                 assets: {

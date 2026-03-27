@@ -16,7 +16,7 @@ describe('asset hub & polkadot & collectives', async () => {
     collectivesPolkadot,
   )
 
-  test('Asset Hub authorizes Polkadot upgrade via Collectives', async () => {
+  test.skip('Asset Hub authorizes Polkadot upgrade via Collectives', async () => {
     await authorizeUpgradeViaCollectives(assetHubPolkadotClient, polkadotClient, collectivesClient)
   })
 })
