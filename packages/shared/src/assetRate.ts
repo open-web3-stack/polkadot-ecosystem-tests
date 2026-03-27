@@ -142,6 +142,50 @@ export async function assetRateCreateLifecycleTest<
   // Assert storage value reflects the new rate
   const updatedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
   expect(updatedRate.toString()).toBe(UPDATED_RATE)
+
+  // Trying to remove an unknown asset should fail with UnknownAssetKind
+  const unknownRemoveCall = api.tx.assetRate.remove(unknownAssetKind as any)
+  await scheduleInlineCallWithOrigin(
+    client,
+    unknownRemoveCall.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const unknownRemoveEvents = await api.query.system.events()
+  const [unknownRemoveDispatchedEvent] = (unknownRemoveEvents as any).filter((record: any) =>
+    api.events.scheduler.Dispatched.is(record.event),
+  )
+  assert(api.events.scheduler.Dispatched.is(unknownRemoveDispatchedEvent.event))
+  const unknownRemoveError = unknownRemoveDispatchedEvent.event.data.result.asErr
+  assert(unknownRemoveError.isModule)
+  expect(api.errors.assetRate.UnknownAssetKind.is(unknownRemoveError.asModule)).toBe(true)
+
+  // Removing an existing asset should succeed and emit AssetRateRemoved
+  const removeCall = api.tx.assetRate.remove(ASSET_KIND as any)
+  await scheduleInlineCallWithOrigin(
+    client,
+    removeCall.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateRemoved' })
+    .redact()
+    .toMatchSnapshot('AssetRateRemoved event')
+
+  const removeEvents = await api.query.system.events()
+  const [rateRemovedEvent] = (removeEvents as any).filter((record: any) =>
+    api.events.assetRate.AssetRateRemoved.is(record.event),
+  )
+  assert(api.events.assetRate.AssetRateRemoved.is(rateRemovedEvent.event))
+  expect(rateRemovedEvent.event.data.assetKind.toJSON()).toEqual(ASSET_KIND)
+
+  // Assert storage entry was deleted
+  const removedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
+  expect(removedRate.isEmpty).toBe(true)
 }
 
 export function baseAssetRateE2ETests<

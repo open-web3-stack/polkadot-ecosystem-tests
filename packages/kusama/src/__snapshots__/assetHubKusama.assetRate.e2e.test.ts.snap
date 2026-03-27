@@ -42,6 +42,47 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion r
 ]
 `;
 
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateRemoved event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+    },
+    "method": "AssetRateRemoved",
+    "section": "assetRate",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Asset Rate > assetRate.create > creates a conversion rate and emits AssetRateCreated event > AssetRateUpdated event 1`] = `
 [
   {
