@@ -1,9 +1,6 @@
-import { sendTransaction } from '@acala-network/chopsticks-testing'
-
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 import {
   check,
-  checkSystemEvents,
   type RootTestTree,
   scheduleInlineCallListWithSameOrigin,
   scheduleInlineCallWithOrigin,
@@ -21,9 +18,9 @@ import type { ITuple } from '@polkadot/types/types'
 
 import { expect } from 'vitest'
 
-import type { TestConfig } from './helpers/index.js'
+import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 
-const devAccounts = defaultAccountsSr25519
+const devAccounts = defaultAccounts
 
 /**
  * Test the process of scheduling configuration updates. Schedules
@@ -39,11 +36,13 @@ const devAccounts = defaultAccountsSr25519
  *     6.2. checks that individual on-demand scheduler params can be set
  *
  *     6.3 checks that the entire scheduler params struct can be replaced at once
-
+ *
+ *     6.4 checks that setMaxRelayParentSessionAge value can be updated
+ *
  * 7. Checks that improper config values are rejected by consistency checks
- * 
+ *
  *     7.1. disabling consistency checks allows improper config values
- * 
+ *
  * 8. Checks that scheduling configuration updates with a signed origin fails
  */
 export async function configurationTest<
@@ -67,17 +66,26 @@ export async function configurationTest<
   const maxHeadDataSize = 20000
   const numCores = 50
 
+  const coreConfigCalls = [
+    // 0
+    client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown),
+    // 1
+    client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay),
+    // 2
+    client.api.tx.configuration.setCodeRetentionPeriod(codeRetentionPeriod),
+    // 3
+    client.api.tx.configuration.setMaxCodeSize(maxCodeSize),
+    // 4
+    client.api.tx.configuration.setMaxPovSize(maxPovSize),
+    // 5
+    client.api.tx.configuration.setMaxHeadDataSize(maxHeadDataSize),
+    // 6
+    client.api.tx.configuration.setCoretimeCores(numCores),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown).method.toHex(),
-      client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay).method.toHex(),
-      client.api.tx.configuration.setCodeRetentionPeriod(codeRetentionPeriod).method.toHex(),
-      client.api.tx.configuration.setMaxCodeSize(maxCodeSize).method.toHex(),
-      client.api.tx.configuration.setMaxPovSize(maxPovSize).method.toHex(),
-      client.api.tx.configuration.setMaxHeadDataSize(maxHeadDataSize).method.toHex(),
-      client.api.tx.configuration.setCoretimeCores(numCores).method.toHex(),
-    ],
+    coreConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -103,15 +111,22 @@ export async function configurationTest<
   const maxValidatorsPerCore = 10
   const maxValidators = 500
 
+  const schedulerConfigCalls = [
+    // 8
+    client.api.tx.configuration.setGroupRotationFrequency(groupRotationFrequency),
+    // 9
+    client.api.tx.configuration.setParasAvailabilityPeriod(parasAvailabilityPeriod),
+    // 11
+    client.api.tx.configuration.setSchedulingLookahead(schedulingLookahead),
+    // 12
+    client.api.tx.configuration.setMaxValidatorsPerCore(maxValidatorsPerCore),
+    // 13
+    client.api.tx.configuration.setMaxValidators(maxValidators),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setGroupRotationFrequency(groupRotationFrequency).method.toHex(),
-      client.api.tx.configuration.setParasAvailabilityPeriod(parasAvailabilityPeriod).method.toHex(),
-      client.api.tx.configuration.setSchedulingLookahead(schedulingLookahead).method.toHex(),
-      client.api.tx.configuration.setMaxValidatorsPerCore(maxValidatorsPerCore).method.toHex(),
-      client.api.tx.configuration.setMaxValidators(maxValidators).method.toHex(),
-    ],
+    schedulerConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -138,19 +153,26 @@ export async function configurationTest<
   const neededApprovals = 25
   const relayVrfModuloSamples = 8
 
+  const disputeConfigCalls = [
+    // 14
+    client.api.tx.configuration.setDisputePeriod(disputePeriod),
+    // 15
+    client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(disputePostConclusionAcceptancePeriod),
+    // 18
+    client.api.tx.configuration.setNoShowSlots(noShowSlots),
+    // 19
+    client.api.tx.configuration.setNDelayTranches(nDelayTranches),
+    // 20
+    client.api.tx.configuration.setZerothDelayTrancheWidth(zerothDelayTrancheWidth),
+    // 21
+    client.api.tx.configuration.setNeededApprovals(neededApprovals),
+    // 22
+    client.api.tx.configuration.setRelayVrfModuloSamples(relayVrfModuloSamples),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setDisputePeriod(disputePeriod).method.toHex(),
-      client.api.tx.configuration
-        .setDisputePostConclusionAcceptancePeriod(disputePostConclusionAcceptancePeriod)
-        .method.toHex(),
-      client.api.tx.configuration.setNoShowSlots(noShowSlots).method.toHex(),
-      client.api.tx.configuration.setNDelayTranches(nDelayTranches).method.toHex(),
-      client.api.tx.configuration.setZerothDelayTrancheWidth(zerothDelayTrancheWidth).method.toHex(),
-      client.api.tx.configuration.setNeededApprovals(neededApprovals).method.toHex(),
-      client.api.tx.configuration.setRelayVrfModuloSamples(relayVrfModuloSamples).method.toHex(),
-    ],
+    disputeConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -176,15 +198,22 @@ export async function configurationTest<
   const maxUpwardMessageSize = 80000
   const maxUpwardMessageNumPerCandidate = 25
 
+  const mqConfigCalls = [
+    // 23
+    client.api.tx.configuration.setMaxUpwardQueueCount(maxUpwardQueueCount),
+    // 24
+    client.api.tx.configuration.setMaxUpwardQueueSize(maxUpwardQueueSize),
+    // 25
+    client.api.tx.configuration.setMaxDownwardMessageSize(maxDownwardMessageSize),
+    // 27
+    client.api.tx.configuration.setMaxUpwardMessageSize(maxUpwardMessageSize),
+    // 28
+    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(maxUpwardMessageNumPerCandidate),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setMaxUpwardQueueCount(maxUpwardQueueCount).method.toHex(),
-      client.api.tx.configuration.setMaxUpwardQueueSize(maxUpwardQueueSize).method.toHex(),
-      client.api.tx.configuration.setMaxDownwardMessageSize(maxDownwardMessageSize).method.toHex(),
-      client.api.tx.configuration.setMaxUpwardMessageSize(maxUpwardMessageSize).method.toHex(),
-      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(maxUpwardMessageNumPerCandidate).method.toHex(),
-    ],
+    mqConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -211,18 +240,30 @@ export async function configurationTest<
   const hrmpMaxParachainOutboundChannels = 40
   const hrmpMaxMessageNumPerCandidate = 15
 
+  const hrmpConfigCalls = [
+    // 29
+    client.api.tx.configuration.setHrmpOpenRequestTtl(0),
+    // 30
+    client.api.tx.configuration.setHrmpSenderDeposit(hrmpSenderDeposit),
+    // 31
+    client.api.tx.configuration.setHrmpRecipientDeposit(hrmpRecipientDeposit),
+    // 32
+    client.api.tx.configuration.setHrmpChannelMaxCapacity(hrmpChannelMaxCapacity),
+    // 33
+    client.api.tx.configuration.setHrmpChannelMaxTotalSize(hrmpChannelMaxTotalSize),
+    // 34
+    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(hrmpMaxParachainInboundChannels),
+    // 36
+    client.api.tx.configuration.setHrmpChannelMaxMessageSize(hrmpChannelMaxMessageSize),
+    // 37
+    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(hrmpMaxParachainOutboundChannels),
+    // 39
+    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(hrmpMaxMessageNumPerCandidate),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setHrmpSenderDeposit(hrmpSenderDeposit).method.toHex(),
-      client.api.tx.configuration.setHrmpRecipientDeposit(hrmpRecipientDeposit).method.toHex(),
-      client.api.tx.configuration.setHrmpChannelMaxCapacity(hrmpChannelMaxCapacity).method.toHex(),
-      client.api.tx.configuration.setHrmpChannelMaxTotalSize(hrmpChannelMaxTotalSize).method.toHex(),
-      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(hrmpMaxParachainInboundChannels).method.toHex(),
-      client.api.tx.configuration.setHrmpChannelMaxMessageSize(hrmpChannelMaxMessageSize).method.toHex(),
-      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(hrmpMaxParachainOutboundChannels).method.toHex(),
-      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(hrmpMaxMessageNumPerCandidate).method.toHex(),
-    ],
+    hrmpConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -250,24 +291,32 @@ export async function configurationTest<
   const allowedAncestryLen = 3
   const maxApprovalCoalesceCount = 8
 
+  const advancedConfigCalls = [
+    // 42
+    client.api.tx.configuration.setPvfVotingTtl(pvfVotingTtl),
+    // 43
+    client.api.tx.configuration.setMinimumValidationUpgradeDelay(minimumValidationUpgradeDelay),
+    // 52
+    client.api.tx.configuration.setMinimumBackingVotes(minimumBackingVotes),
+    // 45
+    client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth, allowedAncestryLen }),
+    // 46
+    client.api.tx.configuration.setExecutorParams([
+      { MaxMemoryPages: 8192 },
+      { PvfExecTimeout: ['Backing', 3000] },
+      { PvfExecTimeout: ['Approval', 20000] },
+    ]),
+    // 54
+    client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount }),
+    // 44
+    client.api.tx.configuration.setBypassConsistencyCheck(false),
+    // 53
+    client.api.tx.configuration.setNodeFeature(4, true),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setPvfVotingTtl(pvfVotingTtl).method.toHex(),
-      client.api.tx.configuration.setMinimumValidationUpgradeDelay(minimumValidationUpgradeDelay).method.toHex(),
-      client.api.tx.configuration.setMinimumBackingVotes(minimumBackingVotes).method.toHex(),
-      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth, allowedAncestryLen }).method.toHex(),
-      client.api.tx.configuration
-        .setExecutorParams([
-          { MaxMemoryPages: 8192 },
-          { PvfExecTimeout: ['Backing', 3000] },
-          { PvfExecTimeout: ['Approval', 20000] },
-        ])
-        .method.toHex(),
-      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount }).method.toHex(),
-      client.api.tx.configuration.setBypassConsistencyCheck(false).method.toHex(),
-      client.api.tx.configuration.setNodeFeature(4, true).method.toHex(),
-    ],
+    advancedConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -308,14 +357,20 @@ export async function configurationTest<
   const onDemandQueueMaxSize = 600
   const onDemandTargetQueueUtilization = 350000000
 
+  const onDemandConfigCalls = [
+    // 47
+    client.api.tx.configuration.setOnDemandBaseFee(onDemandBaseFee),
+    // 48
+    client.api.tx.configuration.setOnDemandFeeVariability(onDemandFeeVariability),
+    // 49
+    client.api.tx.configuration.setOnDemandQueueMaxSize(onDemandQueueMaxSize),
+    // 50
+    client.api.tx.configuration.setOnDemandTargetQueueUtilization(onDemandTargetQueueUtilization),
+  ]
+
   await scheduleInlineCallListWithSameOrigin(
     client,
-    [
-      client.api.tx.configuration.setOnDemandBaseFee(onDemandBaseFee).method.toHex(),
-      client.api.tx.configuration.setOnDemandFeeVariability(onDemandFeeVariability).method.toHex(),
-      client.api.tx.configuration.setOnDemandQueueMaxSize(onDemandQueueMaxSize).method.toHex(),
-      client.api.tx.configuration.setOnDemandTargetQueueUtilization(onDemandTargetQueueUtilization).method.toHex(),
-    ],
+    onDemandConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -359,9 +414,12 @@ export async function configurationTest<
     ttl: schedulerTtl,
   }
 
+  // 55
+  const setSchedulerParamsCall = client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg)
+
   await scheduleInlineCallWithOrigin(
     client,
-    client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg).method.toHex(),
+    setSchedulerParamsCall.method.toHex(),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -379,6 +437,28 @@ export async function configurationTest<
   expect(updatedSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
   expect(updatedSchedulerParams.onDemandBaseFee.toJSON()).toBe(schedulerOnDemandBaseFee)
   expect(updatedSchedulerParams.ttl.toNumber()).toBe(schedulerTtl)
+
+  // 6.4 checks that setMaxRelayParentSessionAge value can be updated
+  const maxRelayParentSessionAge = 5
+
+  // 56
+  const setMaxRelayParentSessionAgeCall =
+    client.api.tx.configuration.setMaxRelayParentSessionAge(maxRelayParentSessionAge)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    setMaxRelayParentSessionAgeCall.method.toHex(),
+    { system: 'Root' },
+    chain.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const maxRelayParentSessionAgePending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  await check(maxRelayParentSessionAgePending).redact({ number: 1 }).toMatchSnapshot('maxRelayParentSessionAge updated')
 
   // 7. Assert that consistency checks disallows improper config values
   const hrmpImproperMaxParachainInboundChannels = 400000
@@ -435,15 +515,19 @@ export async function configurationTest<
   )
 
   // 8. Assert that tx should fail with signed origin
-  const extrinsic = client.api.tx.configuration.setHrmpMaxParachainInboundChannels(
-    hrmpImproperMaxParachainInboundChannels,
-  )
-  await sendTransaction(extrinsic.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const batchCalls = [
+    ...coreConfigCalls,
+    ...schedulerConfigCalls,
+    ...disputeConfigCalls,
+    ...mqConfigCalls,
+    ...hrmpConfigCalls,
+    ...advancedConfigCalls,
+    ...onDemandConfigCalls,
+    setSchedulerParamsCall,
+    setMaxRelayParentSessionAgeCall,
+  ]
 
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'attempting request with signed origin fails',
-  )
+  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /// ----------
