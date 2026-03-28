@@ -39,9 +39,16 @@ const devAccounts = defaultAccounts
  *
  *     6.4 checks that setMaxRelayParentSessionAge value can be updated
  *
- * 7. Checks that improper config values are rejected by consistency checks
+ * 7. Checks that all consistency check violations are rejected:
+ *     - Zero checks: groupRotationFrequency, parasAvailabilityPeriod, noShowSlots,
+ *       minimumBackingVotes, nDelayTranches, schedulingLookahead
+ *     - Hard limit violations: maxCodeSize, maxHeadDataSize, maxPovSize,
+ *       maxUpwardMessageSize, hrmpMaxMessageNumPerCandidate, maxUpwardMessageNumPerCandidate,
+ *       hrmpMaxParachainOutboundChannels, hrmpMaxParachainInboundChannels, onDemandQueueMaxSize
+ *     - Relational checks: minimumValidationUpgradeDelay > parasAvailabilityPeriod,
+ *       validationUpgradeDelay > 1
  *
- *     7.1. disabling consistency checks allows improper config values
+ *     7.1. disabling consistency checks allows all of the above improper values
  *
  * 8. Checks that scheduling configuration updates with a signed origin fails
  */
@@ -461,13 +468,32 @@ export async function configurationTest<
   await check(maxRelayParentSessionAgePending).redact({ number: 1 }).toMatchSnapshot('maxRelayParentSessionAge updated')
 
   // 7. Assert that consistency checks disallows improper config values
-  const hrmpImproperMaxParachainInboundChannels = 400000
+  const improperConfigCalls = [
+    // Zero checks
+    client.api.tx.configuration.setGroupRotationFrequency(0),
+    client.api.tx.configuration.setParasAvailabilityPeriod(0),
+    client.api.tx.configuration.setNoShowSlots(0),
+    client.api.tx.configuration.setMinimumBackingVotes(0),
+    client.api.tx.configuration.setNDelayTranches(0),
+    client.api.tx.configuration.setSchedulingLookahead(0),
+    // Hard limit violations
+    client.api.tx.configuration.setMaxCodeSize(3_145_729), // > MAX_CODE_SIZE (3,145,728)
+    client.api.tx.configuration.setMaxHeadDataSize(1_048_577), // > MAX_HEAD_DATA_SIZE (1,048,576)
+    client.api.tx.configuration.setMaxPovSize(16_777_217), // > POV_SIZE_HARD_LIMIT (16,777,216)
+    client.api.tx.configuration.setMaxUpwardMessageSize(131_073), // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
+    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(16_385), // > MAX_HORIZONTAL_MESSAGE_NUM (16,384)
+    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(16_385), // > MAX_UPWARD_MESSAGE_NUM (16,384)
+    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(129), // > HRMP_MAX_OUTBOUND_CHANNELS_BOUND (128)
+    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(129), // > HRMP_MAX_INBOUND_CHANNELS_BOUND (128)
+    client.api.tx.configuration.setOnDemandQueueMaxSize(10_001), // > ON_DEMAND_MAX_QUEUE_MAX_SIZE (10,000)
+    // Relational checks
+    client.api.tx.configuration.setMinimumValidationUpgradeDelay(1), // must be > paras_availability_period
+    client.api.tx.configuration.setValidationUpgradeDelay(1), // must be > 1
+  ]
 
-  await scheduleInlineCallWithOrigin(
+  await scheduleInlineCallListWithSameOrigin(
     client,
-    client.api.tx.configuration
-      .setHrmpMaxParachainInboundChannels(hrmpImproperMaxParachainInboundChannels)
-      .method.toHex(),
+    improperConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -479,10 +505,30 @@ export async function configurationTest<
   >
 
   const improperPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  const improperSchedulerParams = improperPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
-  await check(improperPending.hrmpMaxParachainInboundChannels)
-    .redact({ number: 1 })
-    .toMatchSnapshot('hrmpMaxParachainInboundChannels unchanged after improper value')
+  // Zero checks — all should retain their previous valid values
+  expect(improperSchedulerParams.groupRotationFrequency.toNumber()).toBe(schedulerGroupRotationFrequency)
+  expect(improperSchedulerParams.parasAvailabilityPeriod.toNumber()).toBe(schedulerParasAvailabilityPeriod)
+  expect(improperPending.noShowSlots.toNumber()).toBe(noShowSlots)
+  expect(improperPending.minimumBackingVotes.toNumber()).toBe(minimumBackingVotes)
+  expect(improperPending.nDelayTranches.toNumber()).toBe(nDelayTranches)
+  expect(improperSchedulerParams.lookahead.toNumber()).toBe(schedulerLookahead)
+
+  // Hard limit violations — all should retain their previous valid values
+  expect(improperPending.maxCodeSize.toNumber()).toBe(maxCodeSize)
+  expect(improperPending.maxHeadDataSize.toNumber()).toBe(maxHeadDataSize)
+  expect(improperPending.maxPovSize.toNumber()).toBe(maxPovSize)
+  expect(improperPending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
+  expect(improperPending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(hrmpMaxMessageNumPerCandidate)
+  expect(improperPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
+  expect(improperPending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(hrmpMaxParachainOutboundChannels)
+  expect(improperPending.hrmpMaxParachainInboundChannels.toNumber()).toBe(hrmpMaxParachainInboundChannels)
+  expect(improperSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
+
+  // Relational checks — all should retain their previous valid values
+  expect(improperPending.minimumValidationUpgradeDelay.toNumber()).toBe(minimumValidationUpgradeDelay)
+  expect(improperPending.validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
 
   // 7.1. Assert that disabling consistency checks allows improper config values
   await scheduleInlineCallWithOrigin(
@@ -493,11 +539,10 @@ export async function configurationTest<
   )
 
   await client.dev.newBlock()
-  await scheduleInlineCallWithOrigin(
+
+  await scheduleInlineCallListWithSameOrigin(
     client,
-    client.api.tx.configuration
-      .setHrmpMaxParachainInboundChannels(hrmpImproperMaxParachainInboundChannels)
-      .method.toHex(),
+    improperConfigCalls.map((tx) => tx.method.toHex()),
     { system: 'Root' },
     chain.properties.schedulerBlockProvider,
   )
@@ -509,10 +554,30 @@ export async function configurationTest<
   >
 
   const consistencyBypassedPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
+  const bypassedSchedulerParams = consistencyBypassedPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
-  expect(consistencyBypassedPending.hrmpMaxParachainInboundChannels.toNumber()).toBe(
-    hrmpImproperMaxParachainInboundChannels,
-  )
+  // Zero checks — all should now hold the improper (zero) values
+  expect(bypassedSchedulerParams.groupRotationFrequency.toNumber()).toBe(0)
+  expect(bypassedSchedulerParams.parasAvailabilityPeriod.toNumber()).toBe(0)
+  expect(consistencyBypassedPending.noShowSlots.toNumber()).toBe(0)
+  expect(consistencyBypassedPending.minimumBackingVotes.toNumber()).toBe(0)
+  expect(consistencyBypassedPending.nDelayTranches.toNumber()).toBe(0)
+  expect(bypassedSchedulerParams.lookahead.toNumber()).toBe(0)
+
+  // Hard limit violations — all should now hold the over-limit values
+  expect(consistencyBypassedPending.maxCodeSize.toNumber()).toBe(3_145_729)
+  expect(consistencyBypassedPending.maxHeadDataSize.toNumber()).toBe(1_048_577)
+  expect(consistencyBypassedPending.maxPovSize.toNumber()).toBe(16_777_217)
+  expect(consistencyBypassedPending.maxUpwardMessageSize.toNumber()).toBe(131_073)
+  expect(consistencyBypassedPending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(16_385)
+  expect(consistencyBypassedPending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(16_385)
+  expect(consistencyBypassedPending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(129)
+  expect(consistencyBypassedPending.hrmpMaxParachainInboundChannels.toNumber()).toBe(129)
+  expect(bypassedSchedulerParams.onDemandQueueMaxSize.toNumber()).toBe(10_001)
+
+  // Relational checks — all should now hold the relational-violating values
+  expect(consistencyBypassedPending.minimumValidationUpgradeDelay.toNumber()).toBe(1)
+  expect(consistencyBypassedPending.validationUpgradeDelay.toNumber()).toBe(1)
 
   // 8. Assert that tx should fail with signed origin
   const batchCalls = [
