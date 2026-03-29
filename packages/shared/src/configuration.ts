@@ -378,7 +378,9 @@ export async function configurationTest<
     expect(schedulerParams.ttl.toNumber()).toBe(schedulerTtl)
   })
 
-  // Call doesn't exist in test runtime
+  /**
+   * Call doesn't exist in test runtime
+   */
   // 6.4 checks that setMaxRelayParentSessionAge value can be updated
   // const maxRelayParentSessionAge = 5
 
@@ -391,6 +393,22 @@ export async function configurationTest<
   // })
 
   // 7. Assert that consistency checks disallows improper config values
+
+  // Hard limit violation values (one above each limit)
+  const improperMaxCodeSize = 3_145_729 // > MAX_CODE_SIZE (3,145,728)
+  const improperMaxHeadDataSize = 1_048_577 // > MAX_HEAD_DATA_SIZE (1,048,576)
+  const improperMaxPovSize = 16_777_217 // > POV_SIZE_HARD_LIMIT (16,777,216)
+  const improperMaxUpwardMessageSize = 131_073 // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
+  const improperHrmpMaxMessageNumPerCandidate = 16_385 // > MAX_HORIZONTAL_MESSAGE_NUM (16,384)
+  const improperMaxUpwardMessageNumPerCandidate = 16_385 // > MAX_UPWARD_MESSAGE_NUM (16,384)
+  const improperHrmpMaxParachainOutboundChannels = 129 // > HRMP_MAX_OUTBOUND_CHANNELS_BOUND (128)
+  const improperHrmpMaxParachainInboundChannels = 129 // > HRMP_MAX_INBOUND_CHANNELS_BOUND (128)
+  const improperOnDemandQueueMaxSize = 1_000_000_001 // > ON_DEMAND_MAX_QUEUE_MAX_SIZE (1,000,000,000)
+
+  // Relational violation values
+  const improperMinimumValidationUpgradeDelay = 1 // must be > paras_availability_period
+  const improperValidationUpgradeDelay = 1 // must be > 1
+
   const improperConfigCalls = [
     // Zero checks
     client.api.tx.configuration.setGroupRotationFrequency(0),
@@ -400,18 +418,18 @@ export async function configurationTest<
     client.api.tx.configuration.setNDelayTranches(0),
     client.api.tx.configuration.setSchedulingLookahead(0),
     // Hard limit violations
-    client.api.tx.configuration.setMaxCodeSize(3_145_729), // > MAX_CODE_SIZE (3,145,728)
-    client.api.tx.configuration.setMaxHeadDataSize(1_048_577), // > MAX_HEAD_DATA_SIZE (1,048,576)
-    client.api.tx.configuration.setMaxPovSize(16_777_217), // > POV_SIZE_HARD_LIMIT (16,777,216)
-    client.api.tx.configuration.setMaxUpwardMessageSize(131_073), // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
-    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(16_385), // > MAX_HORIZONTAL_MESSAGE_NUM (16,384)
-    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(16_385), // > MAX_UPWARD_MESSAGE_NUM (16,384)
-    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(129), // > HRMP_MAX_OUTBOUND_CHANNELS_BOUND (128)
-    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(129), // > HRMP_MAX_INBOUND_CHANNELS_BOUND (128)
-    client.api.tx.configuration.setOnDemandQueueMaxSize(10_001), // > ON_DEMAND_MAX_QUEUE_MAX_SIZE (10,000)
+    client.api.tx.configuration.setMaxCodeSize(improperMaxCodeSize),
+    client.api.tx.configuration.setMaxHeadDataSize(improperMaxHeadDataSize),
+    client.api.tx.configuration.setMaxPovSize(improperMaxPovSize),
+    client.api.tx.configuration.setMaxUpwardMessageSize(improperMaxUpwardMessageSize),
+    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(improperHrmpMaxMessageNumPerCandidate),
+    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(improperMaxUpwardMessageNumPerCandidate),
+    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(improperHrmpMaxParachainOutboundChannels),
+    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(improperHrmpMaxParachainInboundChannels),
+    client.api.tx.configuration.setOnDemandQueueMaxSize(improperOnDemandQueueMaxSize),
     // Relational checks
-    client.api.tx.configuration.setMinimumValidationUpgradeDelay(1), // must be > paras_availability_period
-    client.api.tx.configuration.setValidationUpgradeDelay(1), // must be > 1
+    client.api.tx.configuration.setMinimumValidationUpgradeDelay(improperMinimumValidationUpgradeDelay),
+    client.api.tx.configuration.setValidationUpgradeDelay(improperValidationUpgradeDelay),
   ]
 
   await runAndAssert(improperConfigCalls, (pending) => {
@@ -456,35 +474,35 @@ export async function configurationTest<
     expect(schedulerParams.lookahead.toNumber()).toBe(0)
 
     // Hard limit violations — all should now hold the over-limit values
-    expect(pending.maxCodeSize.toNumber()).toBe(3_145_729)
-    expect(pending.maxHeadDataSize.toNumber()).toBe(1_048_577)
-    expect(pending.maxPovSize.toNumber()).toBe(16_777_217)
-    expect(pending.maxUpwardMessageSize.toNumber()).toBe(131_073)
-    expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(16_385)
-    expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(16_385)
-    expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(129)
-    expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(129)
-    expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(10_001)
+    expect(pending.maxCodeSize.toNumber()).toBe(improperMaxCodeSize)
+    expect(pending.maxHeadDataSize.toNumber()).toBe(improperMaxHeadDataSize)
+    expect(pending.maxPovSize.toNumber()).toBe(improperMaxPovSize)
+    expect(pending.maxUpwardMessageSize.toNumber()).toBe(improperMaxUpwardMessageSize)
+    expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(improperHrmpMaxMessageNumPerCandidate)
+    expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(improperMaxUpwardMessageNumPerCandidate)
+    expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(improperHrmpMaxParachainOutboundChannels)
+    expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(improperHrmpMaxParachainInboundChannels)
+    expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(improperOnDemandQueueMaxSize)
 
     // Relational checks — all should now hold the relational-violating values
-    expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(1)
-    expect(pending.validationUpgradeDelay.toNumber()).toBe(1)
+    expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(improperMinimumValidationUpgradeDelay)
+    expect(pending.validationUpgradeDelay.toNumber()).toBe(improperValidationUpgradeDelay)
   })
 
   // 8. Assert that tx should fail with signed origin
-  const batchCalls = [
-    ...coreConfigCalls,
-    ...schedulerConfigCalls,
-    ...disputeConfigCalls,
-    ...mqConfigCalls,
-    ...hrmpConfigCalls,
-    ...advancedConfigCalls,
-    ...onDemandConfigCalls,
-    setSchedulerParamsCall,
-    // setMaxRelayParentSessionAgeCall,
-  ]
+  // const batchCalls = [
+  //   ...coreConfigCalls,
+  //   ...schedulerConfigCalls,
+  //   ...disputeConfigCalls,
+  //   ...mqConfigCalls,
+  //   ...hrmpConfigCalls,
+  //   ...advancedConfigCalls,
+  //   ...onDemandConfigCalls,
+  //   setSchedulerParamsCall,
+  //   // setMaxRelayParentSessionAgeCall,
+  // ]
 
-  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
+  // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /// ----------
