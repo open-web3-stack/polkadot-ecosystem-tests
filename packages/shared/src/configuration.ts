@@ -51,9 +51,9 @@ async function runAndAssert(
  * 5. HRMP Configuration
  * 6. Advanced Configuration
  *
- *     6.1. checks that consistency checks can be disabled
+ *     6.1 checks that consistency checks can be disabled
  *
- *     6.2. checks that individual on-demand scheduler params can be set
+ *     6.2 checks that individual on-demand scheduler params can be set
  *
  *     6.3 checks that the entire scheduler params struct can be replaced at once
  *
@@ -295,7 +295,6 @@ export async function configurationTest<
     const approvalParams = pending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
     expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
 
-    // 6.1 Consistency check can be disabled
     // setNodeFeature(4, true): "0x0b" (0b00001011) → "0x1b" (0b00011011)
     expect(pending.nodeFeatures.toJSON()).toBe('0x1b')
   })
