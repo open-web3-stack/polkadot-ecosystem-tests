@@ -969,6 +969,47 @@ export async function configurationOverwriteTest<
   )
 }
 
+/**
+ * Verifies that two unrelated configuration changes scheduled within the same block are
+ * merged into a single pendingConfigs tuple rather than producing two separate entries.
+ */
+export async function configurationSameBlockMergeTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
+
+  const maxCodeSize = 3_000_000
+  const disputePeriod = 8
+
+  // Both changes go into a single scheduler call so they execute in the same block.
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    [
+      client.api.tx.configuration.setMaxCodeSize(maxCodeSize).method.toHex() as `0x${string}`,
+      client.api.tx.configuration.setDisputePeriod(disputePeriod).method.toHex() as `0x${string}`,
+    ],
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+
+  await client.dev.newBlock()
+
+  const pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+
+  // Both changes must be folded into exactly one pending entry.
+  expect(pendingConfigs.length).toBe(1)
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
+
+  const pending = pendingConfigs[0][1]
+  expect(pending.maxCodeSize.toNumber()).toBe(maxCodeSize)
+  expect(pending.disputePeriod.toNumber()).toBe(disputePeriod)
+}
+
 /// ----------
 /// Test Trees
 /// ----------
@@ -997,10 +1038,15 @@ export const configurationE2ETests = <
         //   label: 'configuration test - scheduling the same change twice is idempotent',
         //   testFn: async () => await configurationIdempotencyTest(chain),
         // },
+        // {
+        //   kind: 'test',
+        //   label: 'configuration test - later scheduled values overwrite earlier ones',
+        //   testFn: async () => await configurationOverwriteTest(chain),
+        // },
         {
           kind: 'test',
-          label: 'configuration test - later scheduled values overwrite earlier ones',
-          testFn: async () => await configurationOverwriteTest(chain),
+          label: 'configuration test - two changes in the same block fold into one pending tuple',
+          testFn: async () => await configurationSameBlockMergeTest(chain),
         },
       ],
     },
