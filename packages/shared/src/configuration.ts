@@ -64,6 +64,8 @@ export async function configurationTest<
   let pendingConfigs = await client.api.query.configuration.pendingConfigs()
   expect(pendingConfigs.toJSON()).toEqual([])
 
+  const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
+
   // 1. Core configuration
   const validationUpgradeCooldown = 13300
   const validationUpgradeDelay = 700
@@ -102,6 +104,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const pending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(pending.validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
   expect(pending.validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
@@ -143,6 +146,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const schedulerPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   const schedulerParams = schedulerPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
   expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(groupRotationFrequency)
@@ -189,6 +193,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const disputePending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(disputePending.disputePeriod.toNumber()).toBe(disputePeriod)
   expect(disputePending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(disputePostConclusionAcceptancePeriod)
@@ -230,6 +235,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const mqPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(mqPending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
   expect(mqPending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
@@ -280,6 +286,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const hrmpPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(hrmpPending.hrmpSenderDeposit.toBigInt()).toBe(hrmpSenderDeposit)
   expect(hrmpPending.hrmpRecipientDeposit.toBigInt()).toBe(hrmpRecipientDeposit)
@@ -333,6 +340,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const advancedPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   expect(advancedPending.pvfVotingTtl.toNumber()).toBe(pvfVotingTtl)
   expect(advancedPending.minimumValidationUpgradeDelay.toNumber()).toBe(minimumValidationUpgradeDelay)
@@ -387,6 +395,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const onDemandPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   const onDemandSchedulerParams = onDemandPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
   expect(onDemandSchedulerParams.onDemandBaseFee.toBigInt()).toBe(onDemandBaseFee)
@@ -436,6 +445,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const schedulerParamsPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   const updatedSchedulerParams = schedulerParamsPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
   expect(updatedSchedulerParams.groupRotationFrequency.toNumber()).toBe(schedulerGroupRotationFrequency)
@@ -464,6 +474,7 @@ export async function configurationTest<
   pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const maxRelayParentSessionAgePending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   await check(maxRelayParentSessionAgePending).redact({ number: 1 }).toMatchSnapshot('maxRelayParentSessionAge updated')
 
@@ -504,6 +515,7 @@ export async function configurationTest<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
 
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const improperPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   const improperSchedulerParams = improperPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
@@ -553,6 +565,7 @@ export async function configurationTest<
     ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
   >
 
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
   const consistencyBypassedPending: PolkadotRuntimeParachainsConfigurationHostConfiguration = pendingConfigs[0][1]
   const bypassedSchedulerParams = consistencyBypassedPending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
