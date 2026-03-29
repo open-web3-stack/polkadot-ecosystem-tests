@@ -1116,7 +1116,7 @@ export const configurationE2ETests = <
         },
         {
           kind: 'test',
-          label: 'configuration test - consistency check 2×2 matrix',
+          label: 'configuration test - consistency check 2 by 2 matrix',
           testFn: async () => await configurationConsistencyMatrixTest(chain),
         },
       ],
