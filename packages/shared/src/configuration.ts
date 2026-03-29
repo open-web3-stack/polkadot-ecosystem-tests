@@ -490,19 +490,19 @@ export async function configurationTest<
   })
 
   // 8. Assert that tx should fail with signed origin
-  // const batchCalls = [
-  //   ...coreConfigCalls,
-  //   ...schedulerConfigCalls,
-  //   ...disputeConfigCalls,
-  //   ...mqConfigCalls,
-  //   ...hrmpConfigCalls,
-  //   ...advancedConfigCalls,
-  //   ...onDemandConfigCalls,
-  //   setSchedulerParamsCall,
-  //   // setMaxRelayParentSessionAgeCall,
-  // ]
+  const batchCalls = [
+    ...coreConfigCalls,
+    ...schedulerConfigCalls,
+    ...disputeConfigCalls,
+    ...mqConfigCalls,
+    ...hrmpConfigCalls,
+    ...advancedConfigCalls,
+    ...onDemandConfigCalls,
+    setSchedulerParamsCall,
+    // setMaxRelayParentSessionAgeCall,
+  ]
 
-  // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /// ----------
