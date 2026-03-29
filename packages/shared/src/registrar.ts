@@ -373,16 +373,6 @@ export async function parasRootRegistrationE2eTest<
  *
  *     4.3 asserting successful swap events
  */
-
-/**
- * Test all swap cases in the registrar pallet:
- *
- * 1. Same ID → no-op (clears pending swap, no Swapped event)
- * 2. First call → PendingSwap stored, no Swapped event yet
- * 3. Cannot swap → both Parathreads confirming swap → CannotSwap error
- * 4. Parachain ↔ Parathread confirmed swap → Swapped event
- * 5. Parachain ↔ Parachain confirmed swap → Swapped event
- */
 export async function parasRegistrarSwapE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
