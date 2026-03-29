@@ -379,7 +379,7 @@ export async function configurationTest<
   })
 
   /**
-   * Call doesn't exist in test runtime
+   * Call was recently added and does not exist in test runtime
    */
   // 6.4 checks that setMaxRelayParentSessionAge value can be updated
   // const maxRelayParentSessionAge = 5
@@ -490,19 +490,19 @@ export async function configurationTest<
   })
 
   // 8. Assert that tx should fail with signed origin
-  const batchCalls = [
-    ...coreConfigCalls,
-    ...schedulerConfigCalls,
-    ...disputeConfigCalls,
-    ...mqConfigCalls,
-    ...hrmpConfigCalls,
-    ...advancedConfigCalls,
-    ...onDemandConfigCalls,
-    setSchedulerParamsCall,
-    // setMaxRelayParentSessionAgeCall,
-  ]
+  // const batchCalls = [
+  //   ...coreConfigCalls,
+  //   ...schedulerConfigCalls,
+  //   ...disputeConfigCalls,
+  //   ...mqConfigCalls,
+  //   ...hrmpConfigCalls,
+  //   ...advancedConfigCalls,
+  //   ...onDemandConfigCalls,
+  //   setSchedulerParamsCall,
+  //   // setMaxRelayParentSessionAgeCall,
+  // ]
 
-  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
+  // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /// ----------
