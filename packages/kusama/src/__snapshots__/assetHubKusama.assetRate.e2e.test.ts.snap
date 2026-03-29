@@ -1,0 +1,187 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > rejects signed origin and creates a rate with root, rejecting duplicates > AssetRateCreated event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "rate": 1000000000000000000,
+    },
+    "method": "AssetRateCreated",
+    "section": "assetRate",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.create > rejects signed origin and creates a rate with root, rejecting duplicates > cannot create rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > AssetRateRemoved event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+    },
+    "method": "AssetRateRemoved",
+    "section": "assetRate",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.remove > rejects signed origin and removes an existing rate with root, rejecting unknown assets > cannot remove rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.update > rejects signed origin and updates an existing rate with root, rejecting unknown assets > AssetRateUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "new_": 2000000000000000000,
+      "old": 1000000000000000000,
+    },
+    "method": "AssetRateUpdated",
+    "section": "assetRate",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Asset Rate > assetRate.update > rejects signed origin and updates an existing rate with root, rejecting unknown assets > cannot update rate with signed origin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
