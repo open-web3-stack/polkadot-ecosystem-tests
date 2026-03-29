@@ -226,8 +226,8 @@ export async function configurationTest<
   const hrmpMaxMessageNumPerCandidate = 15
 
   const hrmpConfigCalls = [
-    // 29
-    client.api.tx.configuration.setHrmpOpenRequestTtl(0),
+    // 29 - Deprecated
+    // client.api.tx.configuration.setHrmpOpenRequestTtl(0),
     // 30
     client.api.tx.configuration.setHrmpSenderDeposit(hrmpSenderDeposit),
     // 31
@@ -395,19 +395,19 @@ export async function configurationTest<
   // })
 
   // 8. Assert that tx should fail with signed origin
-  // const batchCalls = [
-  //   ...coreConfigCalls,
-  //   ...schedulerConfigCalls,
-  //   ...disputeConfigCalls,
-  //   ...mqConfigCalls,
-  //   ...hrmpConfigCalls,
-  //   ...advancedConfigCalls,
-  //   ...onDemandConfigCalls,
-  //   setSchedulerParamsCall,
-  //   // setMaxRelayParentSessionAgeCall,
-  // ]
+  const batchCalls = [
+    ...coreConfigCalls,
+    ...schedulerConfigCalls,
+    ...disputeConfigCalls,
+    ...mqConfigCalls,
+    ...hrmpConfigCalls,
+    ...advancedConfigCalls,
+    ...onDemandConfigCalls,
+    setSchedulerParamsCall,
+    // setMaxRelayParentSessionAgeCall,
+  ]
 
-  // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /**
@@ -485,7 +485,6 @@ export async function configurationIdempotencyTest<
 
   // 5. HRMP configuration
   await assertIdempotent(client, currentSessionIndex, [
-    client.api.tx.configuration.setHrmpOpenRequestTtl(0),
     client.api.tx.configuration.setHrmpSenderDeposit(6000000000000n),
     client.api.tx.configuration.setHrmpRecipientDeposit(6000000000000n),
     client.api.tx.configuration.setHrmpChannelMaxCapacity(40),
@@ -697,7 +696,6 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setHrmpOpenRequestTtl(0),
       client.api.tx.configuration.setHrmpSenderDeposit(3000000000000n),
       client.api.tx.configuration.setHrmpRecipientDeposit(3000000000000n),
       client.api.tx.configuration.setHrmpChannelMaxCapacity(20),
@@ -713,7 +711,6 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setHrmpOpenRequestTtl(0),
       client.api.tx.configuration.setHrmpSenderDeposit(6000000000000n),
       client.api.tx.configuration.setHrmpRecipientDeposit(6000000000000n),
       client.api.tx.configuration.setHrmpChannelMaxCapacity(40),
