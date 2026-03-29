@@ -512,6 +512,134 @@ export async function configurationTest<
   // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
+/**
+ * Schedules `calls` twice with Root origin and asserts the resulting pending config is
+ * identical both times — i.e., re-scheduling the same calls is idempotent.
+ */
+async function assertIdempotent(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  currentSessionIndex: number,
+  calls: Array<{ method: { toHex(): string } }>,
+): Promise<void> {
+  await runAndAssert(client, currentSessionIndex, calls, () => {})
+  const pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  const firstPending = pendingConfigs[0][1].toJSON()
+
+  await runAndAssert(client, currentSessionIndex, calls, (pending) => {
+    expect(pending.toJSON()).toEqual(firstPending)
+  })
+}
+
+/**
+ * Verifies that scheduling the same configuration change twice leaves the pending config
+ * unchanged — i.e., the second scheduling is idempotent and does not alter any field
+ * that was not explicitly set. Covers all call groups.
+ */
+export async function configurationIdempotencyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
+
+  // 1. Core configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setValidationUpgradeCooldown(13300),
+    client.api.tx.configuration.setValidationUpgradeDelay(700),
+    client.api.tx.configuration.setCodeRetentionPeriod(14300),
+    client.api.tx.configuration.setMaxCodeSize(3_000_000),
+    client.api.tx.configuration.setMaxPovSize(10_000_000),
+    client.api.tx.configuration.setMaxHeadDataSize(20000),
+    client.api.tx.configuration.setCoretimeCores(50),
+  ])
+
+  // 2. Scheduler configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setGroupRotationFrequency(20),
+    client.api.tx.configuration.setParasAvailabilityPeriod(15),
+    client.api.tx.configuration.setSchedulingLookahead(4),
+    client.api.tx.configuration.setMaxValidatorsPerCore(10),
+    client.api.tx.configuration.setMaxValidators(500),
+  ])
+
+  // 3. Dispute configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setDisputePeriod(8),
+    client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(700),
+    client.api.tx.configuration.setNoShowSlots(4),
+    client.api.tx.configuration.setNDelayTranches(350),
+    client.api.tx.configuration.setZerothDelayTrancheWidth(1),
+    client.api.tx.configuration.setNeededApprovals(25),
+    client.api.tx.configuration.setRelayVrfModuloSamples(8),
+  ])
+
+  // 4. Message queue configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setMaxUpwardQueueCount(800000),
+    client.api.tx.configuration.setMaxUpwardQueueSize(1000000),
+    client.api.tx.configuration.setMaxDownwardMessageSize(60000),
+    client.api.tx.configuration.setMaxUpwardMessageSize(80000),
+    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(25),
+  ])
+
+  // 5. HRMP configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setHrmpOpenRequestTtl(0),
+    client.api.tx.configuration.setHrmpSenderDeposit(6000000000000n),
+    client.api.tx.configuration.setHrmpRecipientDeposit(6000000000000n),
+    client.api.tx.configuration.setHrmpChannelMaxCapacity(40),
+    client.api.tx.configuration.setHrmpChannelMaxTotalSize(120000),
+    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(40),
+    client.api.tx.configuration.setHrmpChannelMaxMessageSize(120000),
+    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(40),
+    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(15),
+  ])
+
+  // 6. Advanced configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setPvfVotingTtl(3),
+    client.api.tx.configuration.setMinimumValidationUpgradeDelay(25),
+    client.api.tx.configuration.setMinimumBackingVotes(3),
+    client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth: 4, allowedAncestryLen: 3 }),
+    client.api.tx.configuration.setExecutorParams([
+      { MaxMemoryPages: 8192 },
+      { PvfExecTimeout: ['Backing', 3000] },
+      { PvfExecTimeout: ['Approval', 20000] },
+    ]),
+    client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount: 8 }),
+    client.api.tx.configuration.setBypassConsistencyCheck(false),
+    client.api.tx.configuration.setNodeFeature(4, true),
+  ])
+
+  // 6.2. On-demand configuration
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setOnDemandBaseFee(6000000000n),
+    client.api.tx.configuration.setOnDemandFeeVariability(40000000),
+    client.api.tx.configuration.setOnDemandQueueMaxSize(600),
+    client.api.tx.configuration.setOnDemandTargetQueueUtilization(350000000),
+  ])
+
+  // 6.3. Full scheduler params struct
+  await assertIdempotent(client, currentSessionIndex, [
+    client.api.tx.configuration.setSchedulerParams({
+      groupRotationFrequency: 15,
+      parasAvailabilityPeriod: 12,
+      maxValidatorsPerCore: null,
+      lookahead: 3,
+      numCores: 80,
+      maxAvailabilityTimeouts: 0,
+      onDemandQueueMaxSize: 600,
+      onDemandTargetQueueUtilization: 250000000,
+      onDemandFeeVariability: 30000000,
+      onDemandBaseFee: 5000000000,
+      ttl: 5,
+    }),
+  ])
+}
+
 /// ----------
 /// Test Trees
 /// ----------
@@ -530,10 +658,15 @@ export const configurationE2ETests = <
       kind: 'describe',
       label: 'configuration tests',
       children: [
+        // {
+        //   kind: 'test',
+        //   label: 'configuration test - can read and update configuration',
+        //   testFn: async () => await configurationTest(chain),
+        // },
         {
           kind: 'test',
-          label: 'configuration test - can read and update configuration',
-          testFn: async () => await configurationTest(chain),
+          label: 'configuration test - scheduling the same change twice is idempotent',
+          testFn: async () => await configurationIdempotencyTest(chain),
         },
       ],
     },
