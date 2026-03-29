@@ -17,6 +17,32 @@ import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 const devAccounts = defaultAccounts
 
 /**
+ * Schedules `calls` with Root origin, advances one block, then fetches pendingConfigs,
+ * asserts the scheduled session is `currentSessionIndex + 2`, and calls `assertFn` with
+ * the pending configuration.
+ */
+async function runAndAssert(
+  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  currentSessionIndex: number,
+  calls: Array<{ method: { toHex(): string } }>,
+  assertFn: (pending: PolkadotRuntimeParachainsConfigurationHostConfiguration) => void | Promise<void>,
+): Promise<void> {
+  await scheduleInlineCallListWithSameOrigin(
+    client,
+    calls.map((tx) => tx.method.toHex() as `0x${string}`),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
+    ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
+  >
+  expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
+  await assertFn(pendingConfigs[0][1])
+}
+
+/**
  * Test the process of scheduling configuration updates. Schedules
  * 1. Core configuration
  * 2. Scheduler Configuration
@@ -60,30 +86,6 @@ export async function configurationTest<
 
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
-  /**
-   * Schedules `calls` with Root origin, advances one block, then fetches pendingConfigs,
-   * asserts the scheduled session is currentSessionIndex + 2, and calls assertFn with the
-   * pending configuration.
-   */
-  const runAndAssert = async (
-    calls: Array<{ method: { toHex(): string } }>,
-    assertFn: (pending: PolkadotRuntimeParachainsConfigurationHostConfiguration) => void | Promise<void>,
-  ) => {
-    await scheduleInlineCallListWithSameOrigin(
-      client,
-      calls.map((tx) => tx.method.toHex() as `0x${string}`),
-      { system: 'Root' },
-      chain.properties.schedulerBlockProvider,
-    )
-    await client.dev.newBlock()
-
-    const pendingConfigs = (await client.api.query.configuration.pendingConfigs()) as Vec<
-      ITuple<[u32, PolkadotRuntimeParachainsConfigurationHostConfiguration]>
-    >
-    expect(pendingConfigs[0][0].toNumber()).toBe(currentSessionIndex + 2)
-    await assertFn(pendingConfigs[0][1])
-  }
-
   // 1. Core configuration
   const validationUpgradeCooldown = 13300
   const validationUpgradeDelay = 700
@@ -110,7 +112,7 @@ export async function configurationTest<
     client.api.tx.configuration.setCoretimeCores(numCores),
   ]
 
-  await runAndAssert(coreConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, coreConfigCalls, (pending) => {
     expect(pending.validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
     expect(pending.validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
     expect(pending.codeRetentionPeriod.toNumber()).toBe(codeRetentionPeriod)
@@ -140,7 +142,7 @@ export async function configurationTest<
     client.api.tx.configuration.setMaxValidators(maxValidators),
   ]
 
-  await runAndAssert(schedulerConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, schedulerConfigCalls, (pending) => {
     const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
     expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(groupRotationFrequency)
     expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(parasAvailabilityPeriod)
@@ -175,7 +177,7 @@ export async function configurationTest<
     client.api.tx.configuration.setRelayVrfModuloSamples(relayVrfModuloSamples),
   ]
 
-  await runAndAssert(disputeConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, disputeConfigCalls, (pending) => {
     expect(pending.disputePeriod.toNumber()).toBe(disputePeriod)
     expect(pending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(disputePostConclusionAcceptancePeriod)
     expect(pending.noShowSlots.toNumber()).toBe(noShowSlots)
@@ -205,7 +207,7 @@ export async function configurationTest<
     client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(maxUpwardMessageNumPerCandidate),
   ]
 
-  await runAndAssert(mqConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, mqConfigCalls, (pending) => {
     expect(pending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
     expect(pending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
     expect(pending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
@@ -244,7 +246,7 @@ export async function configurationTest<
     client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(hrmpMaxMessageNumPerCandidate),
   ]
 
-  await runAndAssert(hrmpConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, hrmpConfigCalls, (pending) => {
     expect(pending.hrmpSenderDeposit.toBigInt()).toBe(hrmpSenderDeposit)
     expect(pending.hrmpRecipientDeposit.toBigInt()).toBe(hrmpRecipientDeposit)
     expect(pending.hrmpChannelMaxCapacity.toNumber()).toBe(hrmpChannelMaxCapacity)
@@ -286,7 +288,7 @@ export async function configurationTest<
     client.api.tx.configuration.setNodeFeature(4, true),
   ]
 
-  await runAndAssert(advancedConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, advancedConfigCalls, (pending) => {
     expect(pending.pvfVotingTtl.toNumber()).toBe(pvfVotingTtl)
     expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(minimumValidationUpgradeDelay)
     expect(pending.minimumBackingVotes.toNumber()).toBe(minimumBackingVotes)
@@ -330,7 +332,7 @@ export async function configurationTest<
     client.api.tx.configuration.setOnDemandTargetQueueUtilization(onDemandTargetQueueUtilization),
   ]
 
-  await runAndAssert(onDemandConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, onDemandConfigCalls, (pending) => {
     const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
     expect(schedulerParams.onDemandBaseFee.toBigInt()).toBe(onDemandBaseFee)
     expect(schedulerParams.onDemandFeeVariability.toNumber()).toBe(onDemandFeeVariability)
@@ -368,7 +370,7 @@ export async function configurationTest<
   // 55
   const setSchedulerParamsCall = client.api.tx.configuration.setSchedulerParams(newSchedulerParamsArg)
 
-  await runAndAssert([setSchedulerParamsCall], (pending) => {
+  await runAndAssert(client, currentSessionIndex, [setSchedulerParamsCall], (pending) => {
     const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
     expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(schedulerGroupRotationFrequency)
     expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(schedulerParasAvailabilityPeriod)
@@ -388,7 +390,7 @@ export async function configurationTest<
   // const setMaxRelayParentSessionAgeCall =
   //   client.api.tx.configuration.setMaxRelayParentSessionAge(maxRelayParentSessionAge)
 
-  // await runAndAssert([setMaxRelayParentSessionAgeCall], async (pending) => {
+  // await runAndAssert(client, currentSessionIndex,[setMaxRelayParentSessionAgeCall], async (pending) => {
   //   await check(pending).redact({ number: 1 }).toMatchSnapshot('maxRelayParentSessionAge updated')
   // })
 
@@ -432,7 +434,7 @@ export async function configurationTest<
     client.api.tx.configuration.setValidationUpgradeDelay(improperValidationUpgradeDelay),
   ]
 
-  await runAndAssert(improperConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, improperConfigCalls, (pending) => {
     const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
     // Zero checks — all should retain their previous valid values
@@ -460,9 +462,14 @@ export async function configurationTest<
   })
 
   // 7.1. Assert that disabling consistency checks allows improper config values
-  await runAndAssert([client.api.tx.configuration.setBypassConsistencyCheck(true)], () => {})
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [client.api.tx.configuration.setBypassConsistencyCheck(true)],
+    () => {},
+  )
 
-  await runAndAssert(improperConfigCalls, (pending) => {
+  await runAndAssert(client, currentSessionIndex, improperConfigCalls, (pending) => {
     const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
 
     // Zero checks — all should now hold the improper (zero) values
@@ -490,19 +497,19 @@ export async function configurationTest<
   })
 
   // 8. Assert that tx should fail with signed origin
-  // const batchCalls = [
-  //   ...coreConfigCalls,
-  //   ...schedulerConfigCalls,
-  //   ...disputeConfigCalls,
-  //   ...mqConfigCalls,
-  //   ...hrmpConfigCalls,
-  //   ...advancedConfigCalls,
-  //   ...onDemandConfigCalls,
-  //   setSchedulerParamsCall,
-  //   // setMaxRelayParentSessionAgeCall,
-  // ]
+  const batchCalls = [
+    ...coreConfigCalls,
+    ...schedulerConfigCalls,
+    ...disputeConfigCalls,
+    ...mqConfigCalls,
+    ...hrmpConfigCalls,
+    ...advancedConfigCalls,
+    ...onDemandConfigCalls,
+    setSchedulerParamsCall,
+    // setMaxRelayParentSessionAgeCall,
+  ]
 
-  // await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
+  await testCallsViaForceBatch(client, 'Configuration', batchCalls, devAccounts.alice, 'NotFiltered')
 }
 
 /// ----------
