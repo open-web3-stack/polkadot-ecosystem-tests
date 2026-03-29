@@ -640,6 +640,335 @@ export async function configurationIdempotencyTest<
   ])
 }
 
+/**
+ * Verifies that scheduling a value Y and then Z for the same field results in Z —
+ * i.e., later scheduled values overwrite earlier ones and the intermediate value Y
+ * is not preserved. Covers all call groups.
+ */
+export async function configurationOverwriteTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>) {
+  const [client] = await setupNetworks(chain)
+
+  const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
+
+  // 1. Core configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setValidationUpgradeCooldown(10000),
+      client.api.tx.configuration.setValidationUpgradeDelay(500),
+      client.api.tx.configuration.setCodeRetentionPeriod(10000),
+      client.api.tx.configuration.setMaxCodeSize(1_000_000),
+      client.api.tx.configuration.setMaxPovSize(5_000_000),
+      client.api.tx.configuration.setMaxHeadDataSize(10000),
+      client.api.tx.configuration.setCoretimeCores(30),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setValidationUpgradeCooldown(13300),
+      client.api.tx.configuration.setValidationUpgradeDelay(700),
+      client.api.tx.configuration.setCodeRetentionPeriod(14300),
+      client.api.tx.configuration.setMaxCodeSize(3_000_000),
+      client.api.tx.configuration.setMaxPovSize(10_000_000),
+      client.api.tx.configuration.setMaxHeadDataSize(20000),
+      client.api.tx.configuration.setCoretimeCores(50),
+    ],
+    (pending) => {
+      expect(pending.validationUpgradeCooldown.toNumber()).toBe(13300)
+      expect(pending.validationUpgradeDelay.toNumber()).toBe(700)
+      expect(pending.codeRetentionPeriod.toNumber()).toBe(14300)
+      expect(pending.maxCodeSize.toNumber()).toBe(3_000_000)
+      expect(pending.maxPovSize.toNumber()).toBe(10_000_000)
+      expect(pending.maxHeadDataSize.toNumber()).toBe(20000)
+      expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(50)
+    },
+  )
+
+  // 2. Scheduler configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setGroupRotationFrequency(10),
+      client.api.tx.configuration.setParasAvailabilityPeriod(10),
+      client.api.tx.configuration.setSchedulingLookahead(2),
+      client.api.tx.configuration.setMaxValidatorsPerCore(5),
+      client.api.tx.configuration.setMaxValidators(300),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setGroupRotationFrequency(20),
+      client.api.tx.configuration.setParasAvailabilityPeriod(15),
+      client.api.tx.configuration.setSchedulingLookahead(4),
+      client.api.tx.configuration.setMaxValidatorsPerCore(10),
+      client.api.tx.configuration.setMaxValidators(500),
+    ],
+    (pending) => {
+      const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+      expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(20)
+      expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(15)
+      expect(schedulerParams.lookahead.toNumber()).toBe(4)
+      expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(10)
+      expect(pending.maxValidators.toJSON()).toBe(500)
+    },
+  )
+
+  // 3. Dispute configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setDisputePeriod(5),
+      client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(500),
+      client.api.tx.configuration.setNoShowSlots(2),
+      client.api.tx.configuration.setNDelayTranches(200),
+      client.api.tx.configuration.setZerothDelayTrancheWidth(0),
+      client.api.tx.configuration.setNeededApprovals(15),
+      client.api.tx.configuration.setRelayVrfModuloSamples(4),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setDisputePeriod(8),
+      client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(700),
+      client.api.tx.configuration.setNoShowSlots(4),
+      client.api.tx.configuration.setNDelayTranches(350),
+      client.api.tx.configuration.setZerothDelayTrancheWidth(1),
+      client.api.tx.configuration.setNeededApprovals(25),
+      client.api.tx.configuration.setRelayVrfModuloSamples(8),
+    ],
+    (pending) => {
+      expect(pending.disputePeriod.toNumber()).toBe(8)
+      expect(pending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(700)
+      expect(pending.noShowSlots.toNumber()).toBe(4)
+      expect(pending.nDelayTranches.toNumber()).toBe(350)
+      expect(pending.zerothDelayTrancheWidth.toNumber()).toBe(1)
+      expect(pending.neededApprovals.toNumber()).toBe(25)
+      expect(pending.relayVrfModuloSamples.toNumber()).toBe(8)
+    },
+  )
+
+  // 4. Message queue configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setMaxUpwardQueueCount(500000),
+      client.api.tx.configuration.setMaxUpwardQueueSize(700000),
+      client.api.tx.configuration.setMaxDownwardMessageSize(40000),
+      client.api.tx.configuration.setMaxUpwardMessageSize(50000),
+      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(15),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setMaxUpwardQueueCount(800000),
+      client.api.tx.configuration.setMaxUpwardQueueSize(1000000),
+      client.api.tx.configuration.setMaxDownwardMessageSize(60000),
+      client.api.tx.configuration.setMaxUpwardMessageSize(80000),
+      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(25),
+    ],
+    (pending) => {
+      expect(pending.maxUpwardQueueCount.toNumber()).toBe(800000)
+      expect(pending.maxUpwardQueueSize.toNumber()).toBe(1000000)
+      expect(pending.maxDownwardMessageSize.toNumber()).toBe(60000)
+      expect(pending.maxUpwardMessageSize.toNumber()).toBe(80000)
+      expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(25)
+    },
+  )
+
+  // 5. HRMP configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setHrmpOpenRequestTtl(0),
+      client.api.tx.configuration.setHrmpSenderDeposit(3000000000000n),
+      client.api.tx.configuration.setHrmpRecipientDeposit(3000000000000n),
+      client.api.tx.configuration.setHrmpChannelMaxCapacity(20),
+      client.api.tx.configuration.setHrmpChannelMaxTotalSize(60000),
+      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(20),
+      client.api.tx.configuration.setHrmpChannelMaxMessageSize(60000),
+      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(20),
+      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(8),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setHrmpOpenRequestTtl(0),
+      client.api.tx.configuration.setHrmpSenderDeposit(6000000000000n),
+      client.api.tx.configuration.setHrmpRecipientDeposit(6000000000000n),
+      client.api.tx.configuration.setHrmpChannelMaxCapacity(40),
+      client.api.tx.configuration.setHrmpChannelMaxTotalSize(120000),
+      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(40),
+      client.api.tx.configuration.setHrmpChannelMaxMessageSize(120000),
+      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(40),
+      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(15),
+    ],
+    (pending) => {
+      expect(pending.hrmpSenderDeposit.toBigInt()).toBe(6000000000000n)
+      expect(pending.hrmpRecipientDeposit.toBigInt()).toBe(6000000000000n)
+      expect(pending.hrmpChannelMaxCapacity.toNumber()).toBe(40)
+      expect(pending.hrmpChannelMaxTotalSize.toNumber()).toBe(120000)
+      expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(40)
+      expect(pending.hrmpChannelMaxMessageSize.toNumber()).toBe(120000)
+      expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(40)
+      expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(15)
+    },
+  )
+
+  // 6. Advanced configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setPvfVotingTtl(2),
+      client.api.tx.configuration.setMinimumValidationUpgradeDelay(20),
+      client.api.tx.configuration.setMinimumBackingVotes(2),
+      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth: 2, allowedAncestryLen: 2 }),
+      client.api.tx.configuration.setExecutorParams([{ MaxMemoryPages: 4096 }]),
+      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount: 4 }),
+      client.api.tx.configuration.setBypassConsistencyCheck(true),
+      client.api.tx.configuration.setNodeFeature(4, false),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setPvfVotingTtl(3),
+      client.api.tx.configuration.setMinimumValidationUpgradeDelay(25),
+      client.api.tx.configuration.setMinimumBackingVotes(3),
+      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth: 4, allowedAncestryLen: 3 }),
+      client.api.tx.configuration.setExecutorParams([
+        { MaxMemoryPages: 8192 },
+        { PvfExecTimeout: ['Backing', 3000] },
+        { PvfExecTimeout: ['Approval', 20000] },
+      ]),
+      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount: 8 }),
+      client.api.tx.configuration.setBypassConsistencyCheck(false),
+      client.api.tx.configuration.setNodeFeature(4, true),
+    ],
+    (pending) => {
+      expect(pending.pvfVotingTtl.toNumber()).toBe(3)
+      expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(25)
+      expect(pending.minimumBackingVotes.toNumber()).toBe(3)
+      const asyncParams = pending.asyncBackingParams as PolkadotPrimitivesV8AsyncBackingAsyncBackingParams
+      expect(asyncParams.maxCandidateDepth.toNumber()).toBe(4)
+      expect(asyncParams.allowedAncestryLen.toNumber()).toBe(3)
+      expect(pending.executorParams.toJSON()).toEqual([
+        { maxMemoryPages: 8192 },
+        { pvfExecTimeout: ['Backing', 3000] },
+        { pvfExecTimeout: ['Approval', 20000] },
+      ])
+      const approvalParams = pending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
+      expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(8)
+      expect(pending.nodeFeatures.toJSON()).toBe('0x1b')
+    },
+  )
+
+  // 6.2. On-demand configuration
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setOnDemandBaseFee(4000000000n),
+      client.api.tx.configuration.setOnDemandFeeVariability(30000000),
+      client.api.tx.configuration.setOnDemandQueueMaxSize(400),
+      client.api.tx.configuration.setOnDemandTargetQueueUtilization(250000000),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setOnDemandBaseFee(6000000000n),
+      client.api.tx.configuration.setOnDemandFeeVariability(40000000),
+      client.api.tx.configuration.setOnDemandQueueMaxSize(600),
+      client.api.tx.configuration.setOnDemandTargetQueueUtilization(350000000),
+    ],
+    (pending) => {
+      const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+      expect(schedulerParams.onDemandBaseFee.toBigInt()).toBe(6000000000n)
+      expect(schedulerParams.onDemandFeeVariability.toNumber()).toBe(40000000)
+      expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(600)
+      expect(schedulerParams.onDemandTargetQueueUtilization.toNumber()).toBe(350000000)
+    },
+  )
+
+  // 6.3. Full scheduler params struct
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setSchedulerParams({
+        groupRotationFrequency: 10,
+        parasAvailabilityPeriod: 8,
+        maxValidatorsPerCore: null,
+        lookahead: 2,
+        numCores: 40,
+        maxAvailabilityTimeouts: 0,
+        onDemandQueueMaxSize: 400,
+        onDemandTargetQueueUtilization: 200000000,
+        onDemandFeeVariability: 20000000,
+        onDemandBaseFee: 3000000000,
+        ttl: 3,
+      }),
+    ],
+    () => {},
+  )
+  await runAndAssert(
+    client,
+    currentSessionIndex,
+    [
+      client.api.tx.configuration.setSchedulerParams({
+        groupRotationFrequency: 15,
+        parasAvailabilityPeriod: 12,
+        maxValidatorsPerCore: null,
+        lookahead: 3,
+        numCores: 80,
+        maxAvailabilityTimeouts: 0,
+        onDemandQueueMaxSize: 600,
+        onDemandTargetQueueUtilization: 250000000,
+        onDemandFeeVariability: 30000000,
+        onDemandBaseFee: 5000000000,
+        ttl: 5,
+      }),
+    ],
+    (pending) => {
+      const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+      expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(15)
+      expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(12)
+      expect(schedulerParams.numCores.toNumber()).toBe(80)
+      expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(600)
+      expect(schedulerParams.onDemandBaseFee.toJSON()).toBe(5000000000)
+      expect(schedulerParams.ttl.toNumber()).toBe(5)
+    },
+  )
+}
+
 /// ----------
 /// Test Trees
 /// ----------
@@ -663,10 +992,15 @@ export const configurationE2ETests = <
         //   label: 'configuration test - can read and update configuration',
         //   testFn: async () => await configurationTest(chain),
         // },
+        // {
+        //   kind: 'test',
+        //   label: 'configuration test - scheduling the same change twice is idempotent',
+        //   testFn: async () => await configurationIdempotencyTest(chain),
+        // },
         {
           kind: 'test',
-          label: 'configuration test - scheduling the same change twice is idempotent',
-          testFn: async () => await configurationIdempotencyTest(chain),
+          label: 'configuration test - later scheduled values overwrite earlier ones',
+          testFn: async () => await configurationOverwriteTest(chain),
         },
       ],
     },
