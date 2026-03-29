@@ -59,18 +59,7 @@ async function runAndAssert(
  *
  *     6.4 checks that setMaxRelayParentSessionAge value can be updated
  *
- * 7. Checks that all consistency check violations are rejected:
- *     - Zero checks: groupRotationFrequency, parasAvailabilityPeriod, noShowSlots,
- *       minimumBackingVotes, nDelayTranches, schedulingLookahead
- *     - Hard limit violations: maxCodeSize, maxHeadDataSize, maxPovSize,
- *       maxUpwardMessageSize, hrmpMaxMessageNumPerCandidate, maxUpwardMessageNumPerCandidate,
- *       hrmpMaxParachainOutboundChannels, hrmpMaxParachainInboundChannels, onDemandQueueMaxSize
- *     - Relational checks: minimumValidationUpgradeDelay > parasAvailabilityPeriod,
- *       validationUpgradeDelay > 1
- *
- *     7.1. disabling consistency checks allows all of the above improper values
- *
- * 8. Checks that scheduling configuration updates with a signed origin fails
+ * 7. Checks that scheduling configuration updates with a signed origin fails
  */
 export async function configurationTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -394,7 +383,7 @@ export async function configurationTest<
   //   await check(pending).redact({ number: 1 }).toMatchSnapshot('maxRelayParentSessionAge updated')
   // })
 
-  // 8. Assert that tx should fail with signed origin
+  // 7. Assert that tx should fail with signed origin
   const batchCalls = [
     ...coreConfigCalls,
     ...schedulerConfigCalls,
