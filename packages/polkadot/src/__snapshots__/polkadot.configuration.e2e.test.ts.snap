@@ -1,27 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Configuration > configuration tests > configuration test - can read and update configuration > attempting request with signed origin fails 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Operational",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 9000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Configuration > configuration tests > configuration test - can read and update configuration > hrmpMaxParachainInboundChannels unchanged after improper value 1`] = `40`;
-
 exports[`Polkadot Configuration > configuration tests > configuration test - can read and update configuration > initial active configuration 1`] = `
 {
   "approvalVotingParams": {
