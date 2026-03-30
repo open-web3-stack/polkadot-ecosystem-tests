@@ -137,7 +137,7 @@ export async function configurationTest<
     expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(parasAvailabilityPeriod)
     expect(schedulerParams.lookahead.toNumber()).toBe(schedulingLookahead)
     expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(maxValidatorsPerCore)
-    expect(pending.maxValidators.toJSON()).toBe(maxValidators)
+    expect(pending.maxValidators.unwrap().toNumber()).toBe(maxValidators)
   })
 
   // 3. Dispute Configuration
@@ -296,7 +296,7 @@ export async function configurationTest<
     expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
 
     // setNodeFeature(4, true): "0x0b" (0b00001011) → "0x1b" (0b00011011)
-    expect(pending.nodeFeatures.toJSON()).toBe('0x1b')
+    expect(pending.nodeFeatures.toString()).toBe('0x1b')
   })
 
   // 6.1 Verify bypassConsistencyCheck storage item is false (set via advancedConfigCalls above)
@@ -364,7 +364,7 @@ export async function configurationTest<
     expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(schedulerParasAvailabilityPeriod)
     expect(schedulerParams.numCores.toNumber()).toBe(schedulerNumCores)
     expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
-    expect(schedulerParams.onDemandBaseFee.toJSON()).toBe(schedulerOnDemandBaseFee)
+    expect(schedulerParams.onDemandBaseFee.toNumber()).toBe(schedulerOnDemandBaseFee)
     expect(schedulerParams.ttl.toNumber()).toBe(schedulerTtl)
   })
 
@@ -605,7 +605,7 @@ export async function configurationOverwriteTest<
       expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(15)
       expect(schedulerParams.lookahead.toNumber()).toBe(4)
       expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(10)
-      expect(pending.maxValidators.toJSON()).toBe(500)
+      expect(pending.maxValidators.unwrap().toNumber()).toBe(500)
     },
   )
 
@@ -767,7 +767,7 @@ export async function configurationOverwriteTest<
       ])
       const approvalParams = pending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
       expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(8)
-      expect(pending.nodeFeatures.toJSON()).toBe('0x1b')
+      expect(pending.nodeFeatures.toString()).toBe('0x1b')
     },
   )
 
@@ -846,7 +846,7 @@ export async function configurationOverwriteTest<
       expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(12)
       expect(schedulerParams.numCores.toNumber()).toBe(80)
       expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(600)
-      expect(schedulerParams.onDemandBaseFee.toJSON()).toBe(5000000000)
+      expect(schedulerParams.onDemandBaseFee.toNumber()).toBe(5000000000)
       expect(schedulerParams.ttl.toNumber()).toBe(5)
     },
   )
