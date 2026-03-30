@@ -274,7 +274,7 @@ export function createXcmTransactSend(
             encoded: call,
           },
           originKind,
-          fallbackMaxWeight,
+          fallbackMaxWeight: fallbackMaxWeight,
         },
       },
     ],
