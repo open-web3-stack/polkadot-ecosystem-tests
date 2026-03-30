@@ -1236,6 +1236,7 @@ async function verifyRejection(
   referendumIndex: number,
   trackLabel: string,
   scenarioLabel: string,
+  expectedTally: { ayes: bigint; nays: bigint; support: bigint },
 ) {
   /**
    * 1. Check the `Rejected` event
@@ -1246,11 +1247,12 @@ async function verifyRejection(
 
   expect(referendaEvents.length, 'rejecting a referendum should emit 1 referenda event').toBe(1)
   const rejectedEvent = referendaEvents[0]
-  expect(client.api.events.referenda.Rejected.is(rejectedEvent.event)).toBe(true)
-
-  await check(rejectedEvent)
-    .redact({ removeKeys: /index|pollIndex/ })
-    .toMatchSnapshot(`rejected referendum event (${scenarioLabel}) - ${trackLabel}`)
+  assert(client.api.events.referenda.Rejected.is(rejectedEvent.event))
+  const [index, tally] = rejectedEvent.event.data
+  expect(index.toNumber(), 'Rejected event should reference the correct referendum').toBe(referendumIndex)
+  expect(tally.ayes.toBigInt()).toBe(expectedTally.ayes)
+  expect(tally.nays.toBigInt()).toBe(expectedTally.nays)
+  expect(tally.support.toBigInt()).toBe(expectedTally.support)
 
   /**
    * 2. Check the rejected referendum's data
@@ -1385,7 +1387,11 @@ export async function insufficientSupportTest<
    *     4.3 checking that the submission deposit cannot be refunded (`BadStatus`)
    */
 
-  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient support')
+  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient support', {
+    ayes: ongoingPostVote.tally.ayes.toBigInt(),
+    nays: ongoingPostVote.tally.nays.toBigInt(),
+    support: ongoingPostVote.tally.support.toBigInt(),
+  })
 }
 
 /**
@@ -1495,7 +1501,11 @@ export async function insufficientApprovalTest<
    *     6.3 checking that the submission deposit cannot be refunded (`BadStatus`)
    */
 
-  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient approval')
+  await verifyRejection(client, referendumIndex, trackConfig.trackName, 'insufficient approval', {
+    ayes: ayeBalance,
+    nays: nayBalance,
+    support: ayeBalance,
+  })
 }
 
 /**
