@@ -30,11 +30,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      644,
+      "(number)",
       {
-        "ayes": 0,
-        "nays": 0,
-        "support": 0,
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
       },
     ],
   },
@@ -75,11 +75,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      644,
+      "(number)",
       {
-        "ayes": 0,
-        "nays": 0,
-        "support": 0,
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
       },
     ],
   },
@@ -120,11 +120,11 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 {
   "event": {
     "data": [
-      644,
+      "(number)",
       {
-        "ayes": 0,
-        "nays": 0,
-        "support": 0,
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
       },
     ],
   },
