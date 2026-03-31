@@ -2,6 +2,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
 
+import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Option } from '@polkadot/types'
 import type { ParaInfo } from '@polkadot/types/interfaces'
 import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
@@ -30,6 +31,31 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
       ],
     },
   })
+}
+
+async function submitAndAdvanceBlock(
+  client: Client<any, any>,
+  tx: { signAsync: (signer: KeyringPair) => Parameters<typeof sendTransaction>[0] },
+  signer: KeyringPair,
+): Promise<Awaited<ReturnType<typeof sendTransaction>>> {
+  const result = await sendTransaction(tx.signAsync(signer))
+  await client.dev.newBlock()
+  return result
+}
+
+async function assertExtrinsicFailed(
+  client: Client<any, any>,
+  errorMatcher: { is: (moduleError: any) => boolean },
+  snapshotLabel: string,
+): Promise<void> {
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(snapshotLabel)
+  const evs = await client.api.query.system.events()
+  const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+  const { dispatchError } = failedEv.event.data
+  assert(dispatchError.isModule, 'Expected module error')
+  assert(errorMatcher.is(dispatchError.asModule))
 }
 
 async function forceRegisterParaViaRoot(
@@ -125,27 +151,14 @@ export async function parasRegistrationE2ETest<
   const additionalNeeded = totalDeposit - paraDepositBigInt
 
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
+  await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.alice,
+  )
+  await assertExtrinsicFailed(client, client.api.errors.registrar.NotReserved, 'register para without reserving')
 
-  // 1. Reserve a para ID
-
-  // 1.1 Attempting to register a para without reserving should return a NotReserved error
-  {
-    const tx = client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-    await sendTransaction(tx.signAsync(devAccounts.alice))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError } = failedEv.event.data
-    assert(dispatchError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.NotReserved.is(dispatchError.asModule))
-  }
-
-  const reserveTx = client.api.tx.registrar.reserve()
-  const reserveEvent = await sendTransaction(reserveTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const reserveEvent = await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
 
   // Assert reserve events
   const unwantedFields = /Id/
@@ -189,21 +202,13 @@ export async function parasRegistrationE2ETest<
     },
   })
 
-  const failedReserveTx = client.api.tx.registrar.reserve()
-  await sendTransaction(failedReserveTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
 
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await assertExtrinsicFailed(
+    client,
+    client.api.errors.registrar.AlreadyRegistered,
     'cannot reserve para with existing ParaLifecycles ID',
   )
-
-  let events = await client.api.query.system.events()
-  let failedEvent = events.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-  assert(failedEvent !== undefined, 'Expected ExtrinsicFailed event')
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent.event))
-  let { dispatchError } = failedEvent.event.data
-  assert(dispatchError.isModule, 'Expected module error')
-  assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
 
   // 1.5 Assert error response when trying to reserve an existing lifecycle ID from Paras pallet
   // Force-set ParasLifecycles to trigger second AlreadyRegistered error
@@ -216,21 +221,13 @@ export async function parasRegistrationE2ETest<
     },
   })
 
-  const falseReserveTx = client.api.tx.registrar.reserve()
-  await sendTransaction(falseReserveTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
 
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+  await assertExtrinsicFailed(
+    client,
+    client.api.errors.registrar.AlreadyRegistered,
     'cannot reserve para with existing para ID',
   )
-
-  events = await client.api.query.system.events()
-  failedEvent = events.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-  assert(failedEvent !== undefined, 'Expected ExtrinsicFailed event')
-  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent.event))
-  dispatchError = failedEvent.event.data.dispatchError
-  assert(dispatchError.isModule, 'Expected module error')
-  assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
 
   // Undo storage set
   await client.dev.setStorage({
@@ -240,29 +237,21 @@ export async function parasRegistrationE2ETest<
   })
 
   // 1.6 Assert that bob (not owner) cannot register the para
-  const registerTxBob = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-  const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  const registerEventsBob = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.bob,
+  )
 
   await checkEvents(registerEventsBob, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para register failed event')
-
-  // 2. Register Para
-  // 2.1 Test that Non-manager cannot register para
-  {
-    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-    await sendTransaction(tx.signAsync(devAccounts.bob))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError: notOwnerError } = failedEv.event.data
-    assert(notOwnerError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.NotOwner.is(notOwnerError.asModule))
-  }
+  await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.bob,
+  )
+  await assertExtrinsicFailed(client, client.api.errors.registrar.NotOwner, 'non-manager cannot register para')
 
   // 2.2 Test that cannot register Locked Para
   {
@@ -274,17 +263,12 @@ export async function parasRegistrationE2ETest<
       },
     })
 
-    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-    await sendTransaction(tx.signAsync(devAccounts.alice))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError: lockedError } = failedEv.event.data
-    assert(lockedError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.ParaLocked.is(lockedError.asModule))
+    await submitAndAdvanceBlock(
+      client,
+      client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+      devAccounts.alice,
+    )
+    await assertExtrinsicFailed(client, client.api.errors.registrar.ParaLocked, 'cannot register locked para')
 
     // Restore unlocked state
     await client.dev.setStorage({
@@ -293,40 +277,37 @@ export async function parasRegistrationE2ETest<
       },
     })
   }
+  // Give paraId an existing lifecycle to simulate an already-registered para
+  await client.dev.setStorage({
+    Paras: {
+      ParaLifecycles: [[[paraId], 'Parachain']],
+    },
+  })
 
-  // 2.3 Assert that cannot register ID with existing Lifecycle
-  {
-    // Give paraId an existing lifecycle to simulate an already-registered para
-    await client.dev.setStorage({
-      Paras: {
-        ParaLifecycles: [[[paraId], 'Parachain']],
-      },
-    })
+  await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.alice,
+  )
+  await assertExtrinsicFailed(
+    client,
+    client.api.errors.registrar.AlreadyRegistered,
+    'cannot register para with existing lifecycle',
+  )
 
-    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-    await sendTransaction(tx.signAsync(devAccounts.alice))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError } = failedEv.event.data
-    assert(dispatchError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
-
-    // Clear the lifecycle so the actual registration below can proceed
-    await client.dev.setStorage({
-      Paras: {
-        ParaLifecycles: [[[paraId], null]],
-      },
-    })
-  }
+  // Clear the lifecycle so the actual registration below can proceed
+  await client.dev.setStorage({
+    Paras: {
+      ParaLifecycles: [[[paraId], null]],
+    },
+  })
 
   // 2.4 Assert register events
-  const registerTx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-  const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const registerEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.alice,
+  )
 
   await checkEvents(registerEvents, 'registrar')
     .redact({ removeKeys: unwantedFields })
@@ -349,30 +330,17 @@ export async function parasRegistrationE2ETest<
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
   // 2.6 alice trying to register again with the same paraId should fail
-  const registerTxDuplicate = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
-  const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const registerEventsDuplicate = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.alice,
+  )
 
   await checkEvents(registerEventsDuplicate, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('alice duplicate para register failed event')
-
-  // 3. Deregister para
-
-  // 3.1 Assert that NotParathread error is thrown when attempting to deregister non-Parathread
-  {
-    const tx = client.api.tx.registrar.deregister(paraId)
-    await sendTransaction(tx.signAsync(devAccounts.alice))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError } = failedEv.event.data
-    assert(dispatchError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.NotParathread.is(dispatchError.asModule))
-  }
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
+  await assertExtrinsicFailed(client, client.api.errors.registrar.NotParathread, 'deregister non-parathread')
 
   // 3.2 Assert CannotDeregister error when PvfActiveVoteList contains future hash code
   {
@@ -387,20 +355,15 @@ export async function parasRegistrationE2ETest<
       },
     })
 
-    const tx = client.api.tx.registrar.deregister(paraId)
-    await sendTransaction(tx.signAsync(devAccounts.alice))
-    await client.dev.newBlock()
-
-    const evs = await client.api.query.system.events()
-    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
-    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
-    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
-    const { dispatchError } = failedEv.event.data
-    assert(dispatchError.isModule, 'Expected module error')
-    assert(client.api.errors.registrar.CannotDeregister.is(dispatchError.asModule))
+    await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
+    await assertExtrinsicFailed(
+      client,
+      client.api.errors.registrar.CannotDeregister,
+      'cannot deregister para with active PVF vote',
+    )
   }
 
-  // set para lifecycle state directly
+  // update para lifecycle state
   await client.dev.setStorage({
     Paras: {
       ParaLifecycles: [[[paraId], 'Parathread']],
@@ -410,18 +373,18 @@ export async function parasRegistrationE2ETest<
   })
 
   // 3.3 Assert that bob (not owner) cannot deregister the para
-  const deregisterTxBob = client.api.tx.registrar.deregister(paraId)
-  const deregisterEventsBob = await sendTransaction(deregisterTxBob.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  const deregisterEventsBob = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.deregister(paraId),
+    devAccounts.bob,
+  )
 
   await checkEvents(deregisterEventsBob, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para deregister failed event')
 
   // 3.4 Alice deregisters the para
-  const deregisterTx = client.api.tx.registrar.deregister(paraId)
-  await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
 
   // Verify deregistered event data
   const systemEventsAfterDeregister = await client.api.query.system.events()
@@ -599,9 +562,7 @@ export async function parasRegistrarSwapE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraIdB)
 
   // 1. Swapping with same ID - no-op
-  const swapSameIdTx = client.api.tx.registrar.swap(paraIdA, paraIdA)
-  await sendTransaction(swapSameIdTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdA), devAccounts.alice)
 
   const eventsAfterSameSwap = await client.api.query.system.events()
 
@@ -625,9 +586,7 @@ export async function parasRegistrarSwapE2ETest<
     },
   })
 
-  const swapFirstTx = client.api.tx.registrar.swap(paraIdA, paraIdB)
-  await sendTransaction(swapFirstTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
 
   // 2.1 No Swapped event yet
   const eventsAfterFirstSwap = await client.api.query.system.events()
@@ -641,9 +600,7 @@ export async function parasRegistrarSwapE2ETest<
   expect(pendingSwapAfterFirst.toString()).toBe(paraIdB.toString())
 
   // 2.3 Assert that cannot swap two parathreads
-  const swapCannotTx = client.api.tx.registrar.swap(paraIdB, paraIdA)
-  await sendTransaction(swapCannotTx.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
   await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'cannot swap two parathreads',
@@ -667,16 +624,12 @@ export async function parasRegistrarSwapE2ETest<
   })
 
   // 3.1 Alice initiates: A ↔ B
-  const swapChainThreadFirstTx = client.api.tx.registrar.swap(paraIdA, paraIdB)
-  await sendTransaction(swapChainThreadFirstTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
   const pendingSwapChainThread = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapChainThread.toString()).toBe(paraIdB.toString())
 
   // 3.2 Bob confirms: B ↔ A
-  const swapChainThreadSecondTx = client.api.tx.registrar.swap(paraIdB, paraIdA)
-  await sendTransaction(swapChainThreadSecondTx.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
   const eventsAfterChainThreadSwap = await client.api.query.system.events()
   const [chainThreadSwapEvent] = eventsAfterChainThreadSwap.filter(
@@ -705,16 +658,12 @@ export async function parasRegistrarSwapE2ETest<
   })
 
   // 4.1 Alice initiates: A ↔ B
-  const swapChainChainFirstTx = client.api.tx.registrar.swap(paraIdA, paraIdB)
-  await sendTransaction(swapChainChainFirstTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
   const pendingSwapChainChain = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapChainChain.toString()).toBe(paraIdB.toString())
 
   // 4.2 Bob confirms: B ↔ A
-  const swapChainChainSecondTx = client.api.tx.registrar.swap(paraIdB, paraIdA)
-  await sendTransaction(swapChainChainSecondTx.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
   // 4.3 Assert swap events
   const eventsAfterChainChainSwap = await client.api.query.system.events()
@@ -758,9 +707,11 @@ export async function parasScheduleCodeUpgradeE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot schedule a code upgrade
-  const scheduleUpgradeBobTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
-  const scheduleUpgradeBobEvents = await sendTransaction(scheduleUpgradeBobTx.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  const scheduleUpgradeBobEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
+    devAccounts.bob,
+  )
 
   const unwantedFields = /Id/
   await checkEvents(scheduleUpgradeBobEvents, 'system')
@@ -768,9 +719,11 @@ export async function parasScheduleCodeUpgradeE2ETest<
     .toMatchSnapshot('bob schedule code upgrade failed')
 
   // 2. Manager (Alice) can schedule a code upgrade
-  const scheduleUpgradeAliceTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
-  const scheduleUpgradeAliceEvents = await sendTransaction(scheduleUpgradeAliceTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const scheduleUpgradeAliceEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
+    devAccounts.alice,
+  )
 
   await checkEvents(scheduleUpgradeAliceEvents, 'paras', 'system')
     .redact({ removeKeys: unwantedFields })
@@ -784,11 +737,11 @@ export async function parasScheduleCodeUpgradeE2ETest<
   expect(parasOption.unwrap().locked.toHuman()).toBe(true)
 
   // 4. Manager (Alice) cannot schedule a code upgrade when para is locked
-  const scheduleUpgradeAliceLockedTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
-  const scheduleUpgradeAliceLockedEvents = await sendTransaction(
-    scheduleUpgradeAliceLockedTx.signAsync(devAccounts.alice),
+  const scheduleUpgradeAliceLockedEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
+    devAccounts.alice,
   )
-  await client.dev.newBlock()
 
   await checkEvents(scheduleUpgradeAliceLockedEvents, 'system')
     .redact({ removeKeys: unwantedFields })
@@ -843,18 +796,18 @@ export async function parasSetCurrentHeadE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot set the current head
-  const setHeadBobTx = client.api.tx.registrar.setCurrentHead(paraId, newHead)
-  const setHeadBobEvents = await sendTransaction(setHeadBobTx.signAsync(devAccounts.bob))
-  await client.dev.newBlock()
+  const setHeadBobEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.setCurrentHead(paraId, newHead),
+    devAccounts.bob,
+  )
 
   await checkEvents(setHeadBobEvents, 'system')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('bob set current head failed')
 
   // 2. Manager (Alice, unlocked) can set the current head
-  const setHeadAliceTx = client.api.tx.registrar.setCurrentHead(paraId, newHead)
-  await sendTransaction(setHeadAliceTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.setCurrentHead(paraId, newHead), devAccounts.alice)
 
   const headAfterAlice = await client.api.query.paras.heads(paraId)
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
@@ -869,9 +822,11 @@ export async function parasSetCurrentHeadE2ETest<
   // 4. Manager (Alice, locked) cannot set the current head
   const updatedHeadRaw = new Uint8Array([0x04, 0x05, 0x06])
   const updatedHead = u8aToHex(updatedHeadRaw)
-  const setHeadAliceLockedTx = client.api.tx.registrar.setCurrentHead(paraId, updatedHead)
-  const setHeadAliceLockedEvents = await sendTransaction(setHeadAliceLockedTx.signAsync(devAccounts.alice))
-  await client.dev.newBlock()
+  const setHeadAliceLockedEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.setCurrentHead(paraId, updatedHead),
+    devAccounts.alice,
+  )
 
   await checkEvents(setHeadAliceLockedEvents, 'system')
     .redact({ removeKeys: /Id/ })
