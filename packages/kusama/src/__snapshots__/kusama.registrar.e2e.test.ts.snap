@@ -70,6 +70,31 @@ exports[`Kusama Registrar > pallet registrar - reserve and registration function
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - reserve and registration functions > cannot reserve para with existing para ID 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 800000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - reserve and registration functions > registrar register events 1`] = `
 [
   {

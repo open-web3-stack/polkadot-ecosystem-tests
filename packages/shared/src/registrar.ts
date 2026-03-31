@@ -71,9 +71,9 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
  *
  *     1.2 asserting that para deposit is reserved
  *
- *     1.3 asserting that non-owner cannot register para
+ *     1.3 asserting that cannot reserve para with an already registered ID
  *
- *     1.4 asserting Bob's frozen funds is equal to delegation amount
+ *     1.4 asserting that non-owner cannot register para
  *
  * 2. registering para
  *
@@ -110,6 +110,8 @@ export async function parasRegistrationE2ETest<
   const totalDeposit = paraDepositBigInt + dataDepositPerByte * maxCodeSize
   const additionalNeeded = totalDeposit - paraDepositBigInt
 
+  const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
+
   // 1. Reserve a para ID
   const reserveTx = client.api.tx.registrar.reserve()
   const reserveEvent = await sendTransaction(reserveTx.signAsync(devAccounts.alice))
@@ -131,6 +133,7 @@ export async function parasRegistrationE2ETest<
   // 1.1 Assert para events
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
+  expect(paraId).toEqual(nextFreeParaId)
   expect(reserveEventData[1].toString()).toBe(
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
@@ -148,7 +151,33 @@ export async function parasRegistrationE2ETest<
   let aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
 
-  // 1.3 Assert that bob (not owner) cannot register the para
+  // 1.3 Assert error response when trying to reserve an existing para ID
+  // Force-set NextFreeParaId to previously registered paraId
+  await client.dev.setStorage({
+    Registrar: {
+      NextFreeParaId: nextFreeParaId,
+    },
+  })
+
+  const falseReserveTx = client.api.tx.registrar.reserve()
+  await sendTransaction(falseReserveTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cannot reserve para with existing para ID',
+  )
+
+  const falseReserveEvents = await client.api.query.system.events()
+  const failedEvent = falseReserveEvents.find(
+    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
+  )
+  assert(failedEvent !== undefined, 'Expected ExtrinsicFailed event')
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent.event))
+  const { dispatchError } = failedEvent.event.data
+  assert(dispatchError.isModule, 'Expected module error')
+  assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
+
+  // 1.4 Assert that bob (not owner) cannot register the para
   const registerTxBob = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
@@ -686,6 +715,13 @@ export async function parasSetCurrentHeadE2ETest<
   expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
 }
 
+// export async function parasTestVariousErrorModes<
+//   TCustom extends Record<string, unknown> | undefined,
+//   TInitStorages extends Record<string, Record<string, any>> | undefined,
+// >(chain: Chain<TCustom, TInitStorages>) {
+
+// }
+
 export function registrarE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -719,6 +755,11 @@ export function registrarE2ETest<
         label: 'pallet registrar - set current head',
         testFn: async () => await parasSetCurrentHeadE2ETest(chain),
       },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - explore various error modes',
+      //   testFn: async () => await parasTestVariousErrorModes(chain),
+      // },
     ],
   }
 }
