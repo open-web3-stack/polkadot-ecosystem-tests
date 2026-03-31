@@ -74,28 +74,31 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
 
   // PSM-specific storage entries for Polkadot
   if ('psmStableAssetId' in config) {
+    ;(baseStorages.System.account as any).push(
+      [[testAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }], // DOT for Bob's tx fees
+    )
     ;(baseStorages.Assets.account as any).push(
-      [[config.psmUsdcId, defaultAccounts.alice.address], { balance: 1000e6 }], // USDC for Alice
-      [[config.psmUsdcId, defaultAccounts.bob.address], { balance: 1000e6 }], // USDC for Bob
-      [[config.psmStableAssetId, defaultAccounts.alice.address], { balance: 1000e6 }], // pUSD for Alice
+      [[config.psmUsdcId, testAccounts.alice.address], { balance: 1000e6 }], // USDC for Alice
+      [[config.psmUsdcId, testAccounts.bob.address], { balance: 1000e6 }], // USDC for Bob
+      [[config.psmStableAssetId, testAccounts.alice.address], { balance: 1000e6 }], // pUSD for Alice
     )
     ;(baseStorages as any).Psm = {
-      MaxPsmDebtOfTotal: 500_000, // Permill: 50% of MaxIssuance
-      ExternalAssets: [
-        [1337, { AllEnabled: null }], // USDC -> AllEnabled
-        [1984, { AllEnabled: null }], // USDT -> AllEnabled
+      maxPsmDebtOfTotal: 500_000, // Permill: 50% of MaxIssuance
+      externalAssets: [
+        [[1337], { AllEnabled: null }], // USDC -> AllEnabled
+        [[1984], { AllEnabled: null }], // USDT -> AllEnabled
       ],
-      MintingFee: [
-        [1337, 5_000], // Permill: 0.5% for USDC
-        [1984, 5_000], // Permill: 0.5% for USDT
+      mintingFee: [
+        [[1337], 5_000], // Permill: 0.5% for USDC
+        [[1984], 5_000], // Permill: 0.5% for USDT
       ],
-      RedemptionFee: [
-        [1337, 5_000], // Permill: 0.5%
-        [1984, 5_000], // Permill: 0.5%
+      redemptionFee: [
+        [[1337], 5_000], // Permill: 0.5%
+        [[1984], 5_000], // Permill: 0.5%
       ],
-      AssetCeilingWeight: [
-        [1337, 600_000], // Permill: 60% weight for USDC
-        [1984, 400_000], // Permill: 40% weight for USDT
+      assetCeilingWeight: [
+        [[1337], 600_000], // Permill: 60% weight for USDC
+        [[1984], 400_000], // Permill: 40% weight for USDT
       ],
     }
   }
