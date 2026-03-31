@@ -93,13 +93,15 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
  *
  * 3. deregistering para
  *
- *     3.1 asserting that non-owner cannot deregister para
+ *     3.1 asserting that cannot deregister non-parathread
  *
- *     3.2 asserting para deregister and events
+ *     3.2 asserting that non-owner cannot deregister para
  *
- *     3.3 asserting that reserved balance is removed after deregister
+ *     3.3 asserting para deregister and events
  *
- *     3.4 asserting that paras entry is gone
+ *     3.4 asserting that reserved balance is removed after deregister
+ *
+ *     3.5 asserting that paras entry is gone
  */
 export async function parasRegistrationE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -336,14 +338,30 @@ export async function parasRegistrationE2ETest<
     .toMatchSnapshot('alice duplicate para register failed event')
 
   // 3. Deregister para
+
+  // 3.1 Assert that NotParathread error is thrown when attempting to deregister non-Parathread
+  {
+    const tx = client.api.tx.registrar.deregister(paraId)
+    await sendTransaction(tx.signAsync(devAccounts.alice))
+    await client.dev.newBlock()
+
+    const evs = await client.api.query.system.events()
+    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+    const { dispatchError } = failedEv.event.data
+    assert(dispatchError.isModule, 'Expected module error')
+    assert(client.api.errors.registrar.NotParathread.is(dispatchError.asModule))
+  }
+
   // set para lifecycle state directly
   await client.dev.setStorage({
     Paras: {
-      paraLifecycles: [[[parseInt(paraId, 10)], 'Parathread']],
+      ParaLifecycles: [[[paraId], 'Parathread']],
     },
   })
 
-  // 3.1 Assert that bob (not owner) cannot deregister the para
+  // 3.2 Assert that bob (not owner) cannot deregister the para
   const deregisterTxBob = client.api.tx.registrar.deregister(paraId)
   const deregisterEventsBob = await sendTransaction(deregisterTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
@@ -352,7 +370,7 @@ export async function parasRegistrationE2ETest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para deregister failed event')
 
-  // 3.2 Alice deregisters the para
+  // 3.3 Alice deregisters the para
   const deregisterTx = client.api.tx.registrar.deregister(paraId)
   await sendTransaction(deregisterTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
@@ -367,11 +385,11 @@ export async function parasRegistrationE2ETest<
   assert(client.api.events.registrar.Deregistered.is(deregEvent.event))
   expect(deregEvent.event.data[0].toString()).toBe(paraId)
 
-  // 3.3 Assert that all reserved balance is returned after deregistration
+  // 3.4 Assert that all reserved balance is returned after deregistration
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe('0')
 
-  // 3.4 Assert paras entry is gone
+  // 3.5 Assert paras entry is gone
   const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOptionAfter.isSome).toBe(false)
 }
