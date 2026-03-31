@@ -67,15 +67,17 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
  * Test the process of
  * 1. reserving a para ID
  *
- *     1.1 asserting that the para ID was successfully reserved by alice and para info is correct
+ *     1.1 asserting that non-root user cannot register a para ID without reserving
  *
- *     1.2 asserting that para deposit is reserved
+ *     1.2 asserting that the para ID was successfully reserved by alice and para info is correct
  *
- *     1.3 asserting that cannot reserve para with an already registered ID
+ *     1.3 asserting that para deposit is reserved
  *
- *     1.4 asserting that cannot reserve para when lifecycles entry with ID exists
+ *     1.4 asserting that cannot reserve para with an already registered ID
  *
- *     1.5 asserting that non-owner cannot register para
+ *     1.5 asserting that cannot reserve para when lifecycles entry with ID exists
+ *
+ *     1.6 asserting that non-owner cannot register para
  *
  * 2. registering para
  *
@@ -125,6 +127,22 @@ export async function parasRegistrationE2ETest<
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
 
   // 1. Reserve a para ID
+
+  // 1.1 Attempting to register a para without reserving should return a NotReserved error
+  {
+    const tx = client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+    await sendTransaction(tx.signAsync(devAccounts.alice))
+    await client.dev.newBlock()
+
+    const evs = await client.api.query.system.events()
+    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+    const { dispatchError } = failedEv.event.data
+    assert(dispatchError.isModule, 'Expected module error')
+    assert(client.api.errors.registrar.NotReserved.is(dispatchError.asModule))
+  }
+
   const reserveTx = client.api.tx.registrar.reserve()
   const reserveEvent = await sendTransaction(reserveTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
@@ -142,7 +160,7 @@ export async function parasRegistrationE2ETest<
   })
   assert(client.api.events.registrar.Reserved.is(resEvent.event))
 
-  // 1.1 Assert para events
+  // 1.2 Assert para events
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
   expect(paraId).toEqual(nextFreeParaId)
@@ -159,11 +177,11 @@ export async function parasRegistrationE2ETest<
   expect(paras.deposit.toString()).toBe(paraDeposit.toString())
   expect(paras.locked.isEmpty).toBe(true)
 
-  // 1.2 Assert that the reserved balance is correct
+  // 1.3 Assert that the reserved balance is correct
   let aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
 
-  // 1.3 Assert error response when trying to reserve an existing para ID
+  // 1.4 Assert error response when trying to reserve an existing para ID
   // Force-set NextFreeParaId to previously reserved paraId to trigger first AlreadyRegistered error
   await client.dev.setStorage({
     Registrar: {
@@ -187,7 +205,7 @@ export async function parasRegistrationE2ETest<
   assert(dispatchError.isModule, 'Expected module error')
   assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
 
-  // 1.4 Assert error response when trying to reserve an existing lifecycle ID from Paras pallet
+  // 1.5 Assert error response when trying to reserve an existing lifecycle ID from Paras pallet
   // Force-set ParasLifecycles to trigger second AlreadyRegistered error
   await client.dev.setStorage({
     Registrar: {
@@ -221,7 +239,7 @@ export async function parasRegistrationE2ETest<
     },
   })
 
-  // 1.5 Assert that bob (not owner) cannot register the para
+  // 1.6 Assert that bob (not owner) cannot register the para
   const registerTxBob = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
