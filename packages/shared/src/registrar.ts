@@ -73,7 +73,9 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
  *
  *     1.3 asserting that cannot reserve para with an already registered ID
  *
- *     1.4 asserting that non-owner cannot register para
+ *     1.4 asserting that cannot reserve para when lifecycles entry with ID exists
+ *
+ *     1.5 asserting that non-owner cannot register para
  *
  * 2. registering para
  *
@@ -152,10 +154,37 @@ export async function parasRegistrationE2ETest<
   expect(aliceBalance.data.reserved.toString()).toBe(paraDeposit.toString())
 
   // 1.3 Assert error response when trying to reserve an existing para ID
-  // Force-set NextFreeParaId to previously registered paraId
+  // Force-set NextFreeParaId to previously reserved paraId to trigger first AlreadyRegistered error
   await client.dev.setStorage({
     Registrar: {
-      NextFreeParaId: nextFreeParaId,
+      NextFreeParaId: paraId,
+    },
+  })
+
+  const failedReserveTx = client.api.tx.registrar.reserve()
+  await sendTransaction(failedReserveTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'cannot reserve para with existing ParaLifecycles ID',
+  )
+
+  let events = await client.api.query.system.events()
+  let failedEvent = events.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(failedEvent !== undefined, 'Expected ExtrinsicFailed event')
+  assert(client.api.events.system.ExtrinsicFailed.is(failedEvent.event))
+  let { dispatchError } = failedEvent.event.data
+  assert(dispatchError.isModule, 'Expected module error')
+  assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
+
+  // 1.4 Assert error response when trying to reserve an existing lifecycle ID from Paras pallet
+  // Force-set ParasLifecycles to trigger second AlreadyRegistered error
+  await client.dev.setStorage({
+    Registrar: {
+      NextFreeParaId: null,
+    },
+    Paras: {
+      ParaLifecycles: [[[paraId], 'Parachain']],
     },
   })
 
@@ -167,17 +196,22 @@ export async function parasRegistrationE2ETest<
     'cannot reserve para with existing para ID',
   )
 
-  const falseReserveEvents = await client.api.query.system.events()
-  const failedEvent = falseReserveEvents.find(
-    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
-  )
+  events = await client.api.query.system.events()
+  failedEvent = events.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
   assert(failedEvent !== undefined, 'Expected ExtrinsicFailed event')
   assert(client.api.events.system.ExtrinsicFailed.is(failedEvent.event))
-  const { dispatchError } = failedEvent.event.data
+  dispatchError = failedEvent.event.data.dispatchError
   assert(dispatchError.isModule, 'Expected module error')
   assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
 
-  // 1.4 Assert that bob (not owner) cannot register the para
+  // Undo storage set
+  await client.dev.setStorage({
+    Paras: {
+      ParaLifecycles: [[[paraId], null]],
+    },
+  })
+
+  // 1.5 Assert that bob (not owner) cannot register the para
   const registerTxBob = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsBob = await sendTransaction(registerTxBob.signAsync(devAccounts.bob))
   await client.dev.newBlock()
