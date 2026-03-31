@@ -79,11 +79,17 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
  *
  * 2. registering para
  *
- *     2.1 asserting that register by alice was successful
+ *     2.1 asserting that non-manager cannot register para
  *
- *     2.2 asserting that new reserved balance includes additional deposit from registration
+ *     2.2 asserting that cannot register locked para
  *
- *     2.3 asserting that alice cannot register para ID twice
+ *     2.3 asserting that cannot register para when lifecycles entry with ID exists
+ *
+ *     2.4 asserting that register by alice was successful
+ *
+ *     2.5 asserting that new reserved balance includes additional deposit from registration
+ *
+ *     2.6 asserting that alice cannot register para ID twice
  *
  * 3. deregistering para
  *
@@ -220,12 +226,86 @@ export async function parasRegistrationE2ETest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para register failed event')
 
-  // 2. Test that alice can register the para
+  // 2. Register Para
+  // 2.1 Test that Non-manager cannot register para
+  {
+    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+    await sendTransaction(tx.signAsync(devAccounts.bob))
+    await client.dev.newBlock()
+
+    const evs = await client.api.query.system.events()
+    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+    const { dispatchError: notOwnerError } = failedEv.event.data
+    assert(notOwnerError.isModule, 'Expected module error')
+    assert(client.api.errors.registrar.NotOwner.is(notOwnerError.asModule))
+  }
+
+  // 2.2 Test that cannot register Locked Para
+  {
+    // Lock the para by setting its info with locked = true
+    const paraInfo = await client.api.query.registrar.paras(paraId)
+    await client.dev.setStorage({
+      Registrar: {
+        Paras: [[[paraId], { ...(paraInfo.toJSON() as object), locked: true }]],
+      },
+    })
+
+    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+    await sendTransaction(tx.signAsync(devAccounts.alice))
+    await client.dev.newBlock()
+
+    const evs = await client.api.query.system.events()
+    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+    const { dispatchError: lockedError } = failedEv.event.data
+    assert(lockedError.isModule, 'Expected module error')
+    assert(client.api.errors.registrar.ParaLocked.is(lockedError.asModule))
+
+    // Restore unlocked state
+    await client.dev.setStorage({
+      Registrar: {
+        Paras: [[[paraId], { ...(paraInfo.toJSON() as object), locked: null }]],
+      },
+    })
+  }
+
+  // 2.3 Assert that cannot register ID with existing Lifecycle
+  {
+    // Give paraId an existing lifecycle to simulate an already-registered para
+    await client.dev.setStorage({
+      Paras: {
+        ParaLifecycles: [[[paraId], 'Parachain']],
+      },
+    })
+
+    const tx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+    await sendTransaction(tx.signAsync(devAccounts.alice))
+    await client.dev.newBlock()
+
+    const evs = await client.api.query.system.events()
+    const failedEv = evs.find(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+    assert(failedEv !== undefined, 'Expected ExtrinsicFailed event')
+    assert(client.api.events.system.ExtrinsicFailed.is(failedEv.event))
+    const { dispatchError } = failedEv.event.data
+    assert(dispatchError.isModule, 'Expected module error')
+    assert(client.api.errors.registrar.AlreadyRegistered.is(dispatchError.asModule))
+
+    // Clear the lifecycle so the actual registration below can proceed
+    await client.dev.setStorage({
+      Paras: {
+        ParaLifecycles: [[[paraId], null]],
+      },
+    })
+  }
+
+  // 2.4 Assert register events
   const registerTx = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEvents = await sendTransaction(registerTx.signAsync(devAccounts.alice))
   await client.dev.newBlock()
 
-  // 2.1 Assert register events
   await checkEvents(registerEvents, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar register events')
@@ -242,11 +322,11 @@ export async function parasRegistrationE2ETest<
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
 
-  // 2.2 Assert that the new reserved balance includes additional deposit from registration
+  // 2.5 Assert that the new reserved balance includes additional deposit from registration
   aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
-  // 2.3 alice trying to register again with the same paraId should fail
+  // 2.6 alice trying to register again with the same paraId should fail
   const registerTxDuplicate = client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   const registerEventsDuplicate = await sendTransaction(registerTxDuplicate.signAsync(devAccounts.alice))
   await client.dev.newBlock()
