@@ -1971,6 +1971,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/pretty-format@npm:4.1.2":
+  version: 4.1.2
+  resolution: "@vitest/pretty-format@npm:4.1.2"
+  dependencies:
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10c0/6f57519c707e6a3d1ff8630ca87ce78fda9bf7bb33f6e4a0c775a8b510f2a6cee109849e2cdb736b0280681c567bd03e4cff724cbf0962950c9ff81377f0b2bc
+  languageName: node
+  linkType: hard
+
 "@vitest/runner@npm:4.0.18":
   version: 4.0.18
   resolution: "@vitest/runner@npm:4.0.18"
@@ -1999,20 +2008,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/ui@npm:^4.0.18":
-  version: 4.0.18
-  resolution: "@vitest/ui@npm:4.0.18"
+"@vitest/ui@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "@vitest/ui@npm:4.1.2"
   dependencies:
-    "@vitest/utils": "npm:4.0.18"
+    "@vitest/utils": "npm:4.1.2"
     fflate: "npm:^0.8.2"
-    flatted: "npm:^3.3.3"
+    flatted: "npm:^3.4.2"
     pathe: "npm:^2.0.3"
     sirv: "npm:^3.0.2"
     tinyglobby: "npm:^0.2.15"
-    tinyrainbow: "npm:^3.0.3"
+    tinyrainbow: "npm:^3.1.0"
   peerDependencies:
-    vitest: 4.0.18
-  checksum: 10c0/25ed45b52948101ba5c641aeb84126ce695d067984b8430f797498f7e3aeee53c5392e9e14290744a68b5114cfe933e84675b85340204cdbd118079217985157
+    vitest: 4.1.2
+  checksum: 10c0/9fad46c544f754e29739995fb00edcaa4567ff03d46ce347471f5fa6b905167ba1e11a00e96d2dcfe9c3271e18b54e52294728a04288fcc2b9438a753ff538d2
   languageName: node
   linkType: hard
 
@@ -2023,6 +2032,17 @@ __metadata:
     "@vitest/pretty-format": "npm:4.0.18"
     tinyrainbow: "npm:^3.0.3"
   checksum: 10c0/4a3c43c1421eb90f38576926496f6c80056167ba111e63f77cf118983902673737a1a38880b890d7c06ec0a12475024587344ee502b3c43093781533022f2aeb
+  languageName: node
+  linkType: hard
+
+"@vitest/utils@npm:4.1.2":
+  version: 4.1.2
+  resolution: "@vitest/utils@npm:4.1.2"
+  dependencies:
+    "@vitest/pretty-format": "npm:4.1.2"
+    convert-source-map: "npm:^2.0.0"
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10c0/d96475e0703b6e5208c6c0f570c1235278cbac3f3913a9aa4203a3e617c9eaca85a184bfd5d13cf366b84754df787ab8bc85242c5e0c63105ee7176c186a2136
   languageName: node
   linkType: hard
 
@@ -2496,6 +2516,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"convert-source-map@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "convert-source-map@npm:2.0.0"
+  checksum: 10c0/8f2f7a27a1a011cc6cc88cc4da2d7d0cfa5ee0369508baae3d98c260bb3ac520691464e5bbe4ae7cdf09860c1d69ecc6f70c63c6e7c7f7e3f18ec08484dc7d9b
+  languageName: node
+  linkType: hard
+
 "cross-spawn@npm:^7.0.6":
   version: 7.0.6
   resolution: "cross-spawn@npm:7.0.6"
@@ -2659,7 +2686,7 @@ __metadata:
     "@swc/core": "npm:^1.15.18"
     "@types/lodash": "npm:^4.17.24"
     "@types/node": "npm:^25.3.3"
-    "@vitest/ui": "npm:^4.0.18"
+    "@vitest/ui": "npm:^4.1.2"
     dotenv: "npm:^17.3.1"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.3.2"
@@ -3021,7 +3048,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatted@npm:^3.3.3":
+"flatted@npm:^3.4.2":
   version: 3.4.2
   resolution: "flatted@npm:3.4.2"
   checksum: 10c0/a65b67aae7172d6cdf63691be7de6c5cd5adbdfdfe2e9da1a09b617c9512ed794037741ee53d93114276bff3f93cd3b0d97d54f9b316e1e4885dde6e9ffdf7ed
@@ -5285,6 +5312,13 @@ __metadata:
   version: 3.0.3
   resolution: "tinyrainbow@npm:3.0.3"
   checksum: 10c0/1e799d35cd23cabe02e22550985a3051dc88814a979be02dc632a159c393a998628eacfc558e4c746b3006606d54b00bcdea0c39301133956d10a27aa27e988c
+  languageName: node
+  linkType: hard
+
+"tinyrainbow@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "tinyrainbow@npm:3.1.0"
+  checksum: 10c0/f11cf387a26c5c9255bec141a90ac511b26172981b10c3e50053bc6700ea7d2336edcc4a3a21dbb8412fe7c013477d2ba4d7e4877800f3f8107be5105aad6511
   languageName: node
   linkType: hard
 
