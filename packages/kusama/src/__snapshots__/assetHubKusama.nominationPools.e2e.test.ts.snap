@@ -1,5 +1,84 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Asset Hub Nomination Pools > nomination pool bond extra other test > bond_extra_other events 1`] = `
+[
+  {
+    "data": {
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": 5000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": 5000000000000,
+      "joined": false,
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id InvalidPoolId failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1d000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id PoolIdInUse failure events 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x1c000000",
+          "index": 80,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 3000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id events 1`] = `
 [
   {
@@ -484,6 +563,32 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool metadata test > set
       "caller": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
     },
     "method": "MetadataUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool reward claim test > reward claim: claim_payout events 1`] = `
+[
+  {
+    "data": {
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Nomination Pools > nomination pool reward claim test > reward claim: claim_payout_other events 1`] = `
+[
+  {
+    "data": {
+      "member": "Cdbxb6S9i8s4swqGZRWhcZyrcaXmTw1MkzLjbUiADjdSo2f",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
     "section": "nominationPools",
   },
 ]

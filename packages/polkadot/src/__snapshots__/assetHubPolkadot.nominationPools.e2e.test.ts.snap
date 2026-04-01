@@ -1,5 +1,34 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool bond extra other test > bond_extra_other events 1`] = `
+[
+  {
+    "data": {
+      "member": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
+    "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": 5000000000000,
+    },
+    "method": "Bonded",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "bonded": 5000000000000,
+      "joined": false,
+      "member": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+    },
+    "method": "Bonded",
+    "section": "nominationPools",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Nomination Pools > nomination pool create with pool id test > create_with_pool_id InvalidPoolId failure events 1`] = `
 [
   {
@@ -534,6 +563,32 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool metadata test > s
       "caller": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "MetadataUpdated",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool reward claim test > reward claim: claim_payout events 1`] = `
+[
+  {
+    "data": {
+      "member": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
+    "section": "nominationPools",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Nomination Pools > nomination pool reward claim test > reward claim: claim_payout_other events 1`] = `
+[
+  {
+    "data": {
+      "member": "14HSc1dP8PQkm8uTVfTwp38ZeHwf6fxyst5WEC7EWYetHdz",
+      "payout": 5000000000000,
+    },
+    "method": "PaidOut",
     "section": "nominationPools",
   },
 ]
