@@ -274,7 +274,7 @@ exports[`Polkadot Registrar > pallet registrar - reserve and registration functi
 [
   {
     "data": {
-      "manager": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "manager": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
     },
     "method": "Registered",
     "section": "registrar",
@@ -286,7 +286,7 @@ exports[`Polkadot Registrar > pallet registrar - reserve and registration functi
 [
   {
     "data": {
-      "who": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
     },
     "method": "Reserved",
     "section": "registrar",
