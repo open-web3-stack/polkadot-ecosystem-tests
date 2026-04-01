@@ -44,7 +44,7 @@
 		"@swc/core": "^1.15.18",
 		"lodash": "^4.17.23",
 		"ts-pattern": "^5.9.0",
-		"typescript": "^5.9.3",
+		"typescript": "^6.0.2",
 		"vitest": "^4.0.18"
 	},
 	"devDependencies": {
