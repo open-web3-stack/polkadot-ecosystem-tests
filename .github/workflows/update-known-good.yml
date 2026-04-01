@@ -30,9 +30,9 @@ jobs:
     outputs:
       tests: ${{ steps.tests.outputs.tests }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: setup node env
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
           cache: 'yarn'
@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Get failed jobs
         id: get-failed
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const response = await github.paginate(
@@ -136,7 +136,7 @@ jobs:
       - name: sleep
         run: sleep 300
       - name: Dispatch retry workflow
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({
@@ -155,7 +155,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const response = await github.paginate(

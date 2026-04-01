@@ -24,9 +24,9 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 1,
+  "nonce": 0,
   "providers": 1,
-  "sufficients": 1,
+  "sufficients": 0,
 }
 `;
 
@@ -85,7 +85,7 @@ exports[`encointerKusama & assetHubKusama > assetHubKusama transfer KSM to encoi
                   "x1": [
                     {
                       "accountId32": {
-                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "id": "0x682ee8d4d1d1c466c81dca96281f4dace5620b9b58b2c1978e5a65fe9a365e4b",
                         "network": null,
                       },
                     },
@@ -342,7 +342,7 @@ exports[`encointerKusama & assetHubKusama > encointerKusama transfer KSM to asse
                   "x1": [
                     {
                       "accountId32": {
-                        "id": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+                        "id": "0x682ee8d4d1d1c466c81dca96281f4dace5620b9b58b2c1978e5a65fe9a365e4b",
                         "network": null,
                       },
                     },

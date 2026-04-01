@@ -1,5 +1,140 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - big_spender 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 13000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > insufficient support rejection > decision deposit refund after rejection (insufficient support) - big_spender 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 13000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - big_spender 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1700000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient support rejection > decision deposit refund after rejection (insufficient support) - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 1700000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - referendum_killer 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - root 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 3300000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > insufficient support rejection > decision deposit refund after rejection (insufficient support) - root 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 3300000000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - root 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
 [
   {
@@ -162,7 +297,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "Standard": {
           "balance": 50000000000,
@@ -184,7 +318,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "Split": {
           "aye": 50000000000,
@@ -203,7 +336,6 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 [
   {
     "data": {
-      "pollIndex": 640,
       "vote": {
         "SplitAbstain": {
           "abstain": 20000000000,

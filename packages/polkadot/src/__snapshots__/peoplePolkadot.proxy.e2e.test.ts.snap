@@ -130,13 +130,77 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
 ]
 `;
 
-exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `[]`;
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > add proxies (with/without delay) to an account, and remove them > events when removing proxies from Alice (removeProxies) 1`] = `
+[
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "1LBbHGCXcmzwxhmxsMvjGWfR6cGbUADPL5nv1A18rD4Xf4R",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Any",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "13foYqdELfj1VBWUdKpJTkLgr7tkGdSvxWyYbFjZaYi8iLan",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "CancelProxy",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "14KRavukzykAQ7mWYDRWHnUAp42zpVeRgVr5Vu3oaAHBkn4J",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "NonTransfer",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "14QPRmts91hw16ReRoPSKLHdm1rEKVHftYcqEJyuWBwfnuJ6",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Collator",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "15MK2myq7rWCaDnsdhZ7HrtkWdL74XzjC2Qcuu8RjMAWieaR",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "IdentityJudgement",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+  {
+    "data": {
+      "delay": 5,
+      "delegatee": "16QD1UeugRmjF51GTNmgankDenJX3tvqfVf2bWT7BPzZ1yVf",
+      "delegator": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "proxyType": "Identity",
+    },
+    "method": "ProxyRemoved",
+    "section": "proxy",
+  },
+]
+`;
 
 exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > create and kill pure proxies > events when creating pure proxies for Alice 1`] = `
 [
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -146,6 +210,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "NonTransfer",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -155,6 +220,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "CancelProxy",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -164,6 +230,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Identity",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -173,6 +240,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "IdentityJudgement",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -182,6 +250,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Collator",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
@@ -359,11 +428,37 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
   {
     "data": {
       "disambiguationIndex": 0,
+      "extrinsicIndex": 2,
       "proxyType": "Any",
       "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "PureCreated",
     "section": "proxy",
+  },
+]
+`;
+
+exports[`People Polkadot Proxy full tests (includes call filtering) > People Polkadot Proxy base tests > reject force_proxy_type superset (exact match required) > proxy force_proxy_type requires exact match 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 42,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -948,25 +1043,6 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
 ]
 `;
 
-exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call apply_authorized_upgrade 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
 exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for CancelProxy > events for proxy type CancelProxy, pallet system, call remark 1`] = `
 [
   {
@@ -1025,25 +1101,6 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet balances, call burn 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Collator > events for proxy type Collator, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1139,25 +1196,6 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet collator_selection, call register_as_candidate 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for Identity > events for proxy type Identity, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
@@ -1272,25 +1310,6 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > filtering 
 `;
 
 exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet identity, call clear_identity 1`] = `
-[
-  {
-    "data": {
-      "result": {
-        "Err": {
-          "Module": {
-            "error": "0x05000000",
-            "index": 0,
-          },
-        },
-      },
-    },
-    "method": "ProxyExecuted",
-    "section": "proxy",
-  },
-]
-`;
-
-exports[`People Polkadot Proxy full tests (includes call filtering) > filtering tests for forbidden proxy calls > forbidden proxy calls for IdentityJudgement > events for proxy type IdentityJudgement, pallet system, call apply_authorized_upgrade 1`] = `
 [
   {
     "data": {
