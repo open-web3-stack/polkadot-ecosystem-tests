@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
+import { type Chain, defaultAccounts } from '@e2e-test/networks'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Option } from '@polkadot/types'
@@ -15,7 +15,7 @@ import type { TestConfig } from './helpers/index.js'
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, setupNetworks } from './index.js'
 import type { Client, RootTestTree } from './types.js'
 
-const devAccounts = defaultAccountsSr25519
+const devAccounts = defaultAccounts
 
 const GENESIS_HEAD = new Uint8Array([0x00])
 const MINIMAL_VALIDATION_CODE = u8aToHex(
