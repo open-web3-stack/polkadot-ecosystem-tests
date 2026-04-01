@@ -274,7 +274,7 @@ exports[`Kusama Registrar > pallet registrar - reserve and registration function
 [
   {
     "data": {
-      "manager": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "manager": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
     },
     "method": "Registered",
     "section": "registrar",
@@ -286,7 +286,7 @@ exports[`Kusama Registrar > pallet registrar - reserve and registration function
 [
   {
     "data": {
-      "who": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
     },
     "method": "Reserved",
     "section": "registrar",
