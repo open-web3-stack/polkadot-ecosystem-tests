@@ -1661,6 +1661,726 @@ async function nominationPoolSlashAndWithdrawTest<
   expect(memberDataPostWithdraw.isNone, 'Eve should be removed from pool after withdrawal').toBe(true)
 }
 
+/**
+ * Extracts the pool's reward account address from the creation block events.
+ *
+ * During pool creation, the depositor transfers ED to the reward account. This function
+ * finds the `nominationPools.Created` event's associated `balances.Transfer` to the
+ * reward account by filtering for the transfer that is NOT the staking bond.
+ */
+async function getRewardAccountFromCreationEvents(
+  client: Client,
+  depositorAddress: string,
+  addressEncoding: number,
+): Promise<string> {
+  const events = await client.api.query.system.events()
+  const transferEvents = events.filter(
+    ({ event }) =>
+      event.section === 'balances' &&
+      event.method === 'Transfer' &&
+      event.data[0].toString() === encodeAddress(depositorAddress, addressEncoding),
+  )
+  // The last transfer from the depositor during pool creation is the ED transfer to the reward account
+  const rewardTransfer = transferEvents[transferEvents.length - 1]
+  assert(rewardTransfer !== undefined, 'Expected balances.Transfer to reward account during pool creation')
+  return rewardTransfer.event.data[1].toString()
+}
+
+/**
+ * Test the reward claim lifecycle: `claim_payout`, `set_claim_permission`, `claim_payout_other`.
+ *
+ * 1. Create pool (zero commission), Eve joins
+ * 2. Simulate rewards by funding the reward account
+ * 3. Eve claims her rewards via `claim_payout`
+ * 4. Simulate more rewards
+ * 5. Eve sets `Permissioned` — Bob's `claim_payout_other` fails
+ * 6. Eve sets `PermissionlessWithdraw` — Bob's `claim_payout_other` succeeds
+ * 7. Simulate more rewards, Eve sets `PermissionlessCompound` — Bob's `claim_payout_other` fails
+ * 8. Eve sets `PermissionlessAll` — Bob's `claim_payout_other` succeeds
+ */
+async function nominationPoolRewardClaimTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool with zero commission
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const rewardAccount = await getRewardAccountFromCreationEvents(
+    client,
+    testAccounts.alice.address,
+    chain.properties.addressEncoding,
+  )
+
+  const poolData = await client.api.query.nominationPools.bondedPools(poolId)
+  assert(poolData.isSome, 'Pool should exist after creation')
+
+  /**
+   * 2. Eve joins the pool
+   */
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  /**
+   * 3. Simulate rewards by funding the reward account
+   */
+
+  const rewardAmount = 1000e10
+  const rewardAccountInfo = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 4. Eve claims her rewards via `claim_payout`
+   */
+
+  const eveFreePreClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
+
+  const claimTx = client.api.tx.nominationPools.claimPayout()
+  const claimEvents = await sendTransaction(claimTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  await checkEvents(claimEvents, 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('reward claim: claim_payout events')
+
+  let events = await client.api.query.system.events()
+  const [paidOutRecord] = events.filter(({ event }) => client.api.events.nominationPools.PaidOut.is(event))
+  assert(client.api.events.nominationPools.PaidOut.is(paidOutRecord?.event))
+  expect(paidOutRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(paidOutRecord.event.data.poolId.toNumber()).toBe(poolId)
+  // Eve holds half the pool's points (Alice and Eve bonded equal amounts), so she gets ~half the rewards.
+  // Not exact due to reward account ED and rounding in the reward counter.
+  const evePayout = paidOutRecord.event.data.payout.toNumber()
+  expect(evePayout).toBeGreaterThan(rewardAmount / 2 - rewardAmount / 10)
+  expect(evePayout).toBeLessThan(rewardAmount / 2 + rewardAmount / 10)
+
+  const eveFreePostClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
+  expect(eveFreePostClaim - eveFreePreClaim).toBeGreaterThan(0n)
+
+  /**
+   * 5. Simulate more rewards, then test `set_claim_permission` + `claim_payout_other`
+   */
+
+  const rewardAccountInfo2 = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo2.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo2.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo2.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  // Eve sets Permissioned — only she can claim
+  const setPermTx = client.api.tx.nominationPools.setClaimPermission('Permissioned')
+  await sendTransaction(setPermTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [permUpdatedRecord] = events.filter(({ event }) =>
+    client.api.events.nominationPools.MemberClaimPermissionUpdated.is(event),
+  )
+  assert(client.api.events.nominationPools.MemberClaimPermissionUpdated.is(permUpdatedRecord?.event))
+  expect(permUpdatedRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+
+  // Bob tries to claim for Eve — should fail with DoesNotHavePermission
+  const claimOtherFailTx = client.api.tx.nominationPools.claimPayoutOther(testAccounts.eve.address)
+  await sendTransaction(claimOtherFailTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [failRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(failRecord.event))
+  assert(failRecord.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord.event.data.dispatchError.asModule))
+
+  /**
+   * 6. Eve sets PermissionlessWithdraw — Bob can now claim on her behalf
+   */
+
+  const setPermTx2 = client.api.tx.nominationPools.setClaimPermission('PermissionlessWithdraw')
+  await sendTransaction(setPermTx2.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const eveFreePreOtherClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
+
+  const claimOtherTx = client.api.tx.nominationPools.claimPayoutOther(testAccounts.eve.address)
+  const claimOtherEvents = await sendTransaction(claimOtherTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkEvents(claimOtherEvents, 'nominationPools')
+    .redact({ removeKeys: /poolId/ })
+    .toMatchSnapshot('reward claim: claim_payout_other events')
+
+  events = await client.api.query.system.events()
+  const [paidOutOtherRecord] = events.filter(({ event }) => client.api.events.nominationPools.PaidOut.is(event))
+  assert(client.api.events.nominationPools.PaidOut.is(paidOutOtherRecord?.event))
+  expect(paidOutOtherRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(paidOutOtherRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(paidOutOtherRecord.event.data.payout.toNumber()).toBeGreaterThan(0)
+
+  const eveFreePostOtherClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
+  expect(eveFreePostOtherClaim, 'Eve balance should increase from claim_payout_other').toBeGreaterThan(
+    eveFreePreOtherClaim,
+  )
+
+  /**
+   * 7. Simulate more rewards, Eve sets PermissionlessCompound — Bob's claim_payout_other fails
+   */
+
+  const rewardAccountInfo3 = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo3.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo3.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo3.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  const setPermTx3 = client.api.tx.nominationPools.setClaimPermission('PermissionlessCompound')
+  await sendTransaction(setPermTx3.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  // PermissionlessCompound allows bond_extra_other but NOT claim_payout_other
+  const claimOtherFail2Tx = client.api.tx.nominationPools.claimPayoutOther(testAccounts.eve.address)
+  await sendTransaction(claimOtherFail2Tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [failRecord2] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(failRecord2?.event))
+  assert(failRecord2.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord2.event.data.dispatchError.asModule))
+
+  /**
+   * 8. Eve sets PermissionlessAll — Bob's claim_payout_other succeeds
+   */
+
+  const setPermTx4 = client.api.tx.nominationPools.setClaimPermission('PermissionlessAll')
+  await sendTransaction(setPermTx4.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const claimOtherAllTx = client.api.tx.nominationPools.claimPayoutOther(testAccounts.eve.address)
+  await sendTransaction(claimOtherAllTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [paidOutAllRecord] = events.filter(({ event }) => client.api.events.nominationPools.PaidOut.is(event))
+  assert(client.api.events.nominationPools.PaidOut.is(paidOutAllRecord?.event))
+  expect(paidOutAllRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(paidOutAllRecord.event.data.payout.toNumber()).toBeGreaterThan(0)
+}
+
+/**
+ * Test that reward claiming works correctly after a member has unbonded.
+ *
+ * Rewards are distributed based on active points only. A fully unbonded member
+ * (`active_points == 0`) cannot claim rewards, while the remaining bonded member
+ * receives the full reward share.
+ *
+ * 1. Create pool, Eve joins with equal bond
+ * 2. Eve unbonds all — her active points go to zero
+ * 3. Simulate rewards by funding the reward account
+ * 4. Eve tries to claim — should fail with `FullyUnbonding`
+ * 5. Alice claims — she holds all active points, gets all the rewards
+ */
+async function nominationPoolRewardClaimAfterUnbondTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool, Eve joins
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.charlie.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const rewardAccount = await getRewardAccountFromCreationEvents(
+    client,
+    testAccounts.alice.address,
+    chain.properties.addressEncoding,
+  )
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  /**
+   * 2. Eve unbonds all her funds
+   */
+
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
+  await sendTransaction(unbondTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  /**
+   * 3. Simulate rewards by funding the reward account
+   */
+
+  const rewardAmount = 1000e10
+  const rewardAccountInfo = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 4. Eve tries to claim — should fail with FullyUnbonding
+   */
+
+  const eveClaimTx = client.api.tx.nominationPools.claimPayout()
+  await sendTransaction(eveClaimTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  let events = await client.api.query.system.events()
+  const [eveFailRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(eveFailRecord?.event))
+  assert(eveFailRecord.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.FullyUnbonding.is(eveFailRecord.event.data.dispatchError.asModule))
+
+  /**
+   * 5. Alice claims — she holds all active points, gets all the rewards
+   */
+
+  const aliceFreePreClaim = (await client.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()
+
+  const claimTx = client.api.tx.nominationPools.claimPayout()
+  await sendTransaction(claimTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  const [paidOutRecord] = events.filter(({ event }) => client.api.events.nominationPools.PaidOut.is(event))
+  assert(client.api.events.nominationPools.PaidOut.is(paidOutRecord?.event))
+  expect(paidOutRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.alice.address, chain.properties.addressEncoding),
+  )
+  expect(paidOutRecord.event.data.poolId.toNumber()).toBe(poolId)
+  // Alice holds all active points (Eve fully unbonded), so she gets all the rewards
+  const alicePayout = paidOutRecord.event.data.payout.toNumber()
+  expect(alicePayout).toBeGreaterThan(rewardAmount - rewardAmount / 10)
+  expect(alicePayout).toBeLessThan(rewardAmount + rewardAmount / 10)
+
+  const aliceFreePostClaim = (await client.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()
+  expect(aliceFreePostClaim - aliceFreePreClaim).toBeGreaterThan(0n)
+}
+
+/**
+ * Test `bond_extra_other` with the `ClaimPermission` system.
+ *
+ * Third-party `bond_extra_other` can only use `BondExtra::Rewards` (not `FreeBalance`),
+ * and requires `can_bond_extra()` permission (`PermissionlessCompound` or `PermissionlessAll`).
+ *
+ * 1. Create pool, Eve joins, simulate rewards
+ * 2. Eve sets `Permissioned` — Bob's `bond_extra_other(Rewards)` fails
+ * 3. Eve sets `PermissionlessWithdraw` — Bob's `bond_extra_other(Rewards)` fails
+ * 4. Eve sets `PermissionlessCompound` — Bob's `bond_extra_other(Rewards)` succeeds
+ * 5. Simulate more rewards, Eve sets `PermissionlessAll` — Bob's `bond_extra_other(Rewards)` succeeds
+ */
+async function nominationPoolBondExtraOtherTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool, Eve joins, simulate rewards
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const rewardAccount = await getRewardAccountFromCreationEvents(
+    client,
+    testAccounts.alice.address,
+    chain.properties.addressEncoding,
+  )
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const rewardAmount = 1000e10
+  const rewardAccountInfo = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 2. Eve sets Permissioned — Bob's bond_extra_other(Rewards) fails
+   */
+
+  const setPermTx0 = client.api.tx.nominationPools.setClaimPermission('Permissioned')
+  await sendTransaction(setPermTx0.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const bondExtraFail0Tx = client.api.tx.nominationPools.bondExtraOther(testAccounts.eve.address, { Rewards: null })
+  await sendTransaction(bondExtraFail0Tx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  let events = await client.api.query.system.events()
+  const [failRecord0] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(failRecord0?.event))
+  assert(failRecord0.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord0.event.data.dispatchError.asModule))
+
+  /**
+   * 3. Eve sets PermissionlessWithdraw — Bob's bond_extra_other(Rewards) fails
+   */
+
+  const setPermTx = client.api.tx.nominationPools.setClaimPermission('PermissionlessWithdraw')
+  await sendTransaction(setPermTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  // PermissionlessWithdraw allows claim_payout_other but NOT bond_extra_other
+  const bondExtraFailTx = client.api.tx.nominationPools.bondExtraOther(testAccounts.eve.address, { Rewards: null })
+  await sendTransaction(bondExtraFailTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [failRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  assert(client.api.events.system.ExtrinsicFailed.is(failRecord?.event))
+  assert(failRecord.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord.event.data.dispatchError.asModule))
+
+  /**
+   * 3. Eve sets PermissionlessCompound — Bob's bond_extra_other(Rewards) succeeds
+   */
+
+  const setPermTx2 = client.api.tx.nominationPools.setClaimPermission('PermissionlessCompound')
+  await sendTransaction(setPermTx2.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const eveMemberPre = (await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)).unwrap()
+  const evePointsPre = eveMemberPre.points.toBigInt()
+
+  const bondExtraTx = client.api.tx.nominationPools.bondExtraOther(testAccounts.eve.address, { Rewards: null })
+  const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  await checkEvents(bondExtraEvents, 'staking', 'nominationPools')
+    .redact({ removeKeys: /poolId|stash/ })
+    .toMatchSnapshot('bond_extra_other events')
+
+  events = await client.api.query.system.events()
+  const [bondedRecord] = events.filter(({ event }) => client.api.events.nominationPools.Bonded.is(event))
+  assert(client.api.events.nominationPools.Bonded.is(bondedRecord?.event))
+  expect(bondedRecord.event.data.member.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  expect(bondedRecord.event.data.poolId.toNumber()).toBe(poolId)
+  expect(bondedRecord.event.data.bonded.toNumber()).toBeGreaterThan(0)
+  expect(bondedRecord.event.data.joined.toPrimitive()).toBe(false)
+
+  // Eve's points should have increased (rewards were compounded)
+  const eveMemberPost = (await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)).unwrap()
+  expect(eveMemberPost.points.toBigInt()).toBeGreaterThan(evePointsPre)
+
+  /**
+   * 5. Simulate more rewards, Eve sets PermissionlessAll — Bob's bond_extra_other(Rewards) succeeds
+   */
+
+  const rewardAccountInfo2 = await client.api.query.system.account(rewardAccount)
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [
+          [rewardAccount],
+          {
+            providers: rewardAccountInfo2.providers.toNumber(),
+            data: {
+              free: rewardAccountInfo2.data.free.toBigInt() + BigInt(rewardAmount),
+              frozen: rewardAccountInfo2.data.frozen.toBigInt(),
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  const setPermTx3 = client.api.tx.nominationPools.setClaimPermission('PermissionlessAll')
+  await sendTransaction(setPermTx3.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const evePointsPre2 = (await client.api.query.nominationPools.poolMembers(testAccounts.eve.address))
+    .unwrap()
+    .points.toBigInt()
+
+  const bondExtraAllTx = client.api.tx.nominationPools.bondExtraOther(testAccounts.eve.address, { Rewards: null })
+  await sendTransaction(bondExtraAllTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [bondedAllRecord] = events.filter(({ event }) => client.api.events.nominationPools.Bonded.is(event))
+  assert(client.api.events.nominationPools.Bonded.is(bondedAllRecord?.event))
+  expect(bondedAllRecord.event.data.bonded.toNumber()).toBeGreaterThan(0)
+
+  const evePointsPost2 = (await client.api.query.nominationPools.poolMembers(testAccounts.eve.address))
+    .unwrap()
+    .points.toBigInt()
+  expect(evePointsPost2).toBeGreaterThan(evePointsPre2)
+}
+
+/**
+ * Test `pool_withdraw_unbonded` — permissionless pool-level staking ledger cleanup.
+ *
+ * This is distinct from member `withdraw_unbonded`: it consolidates the pool's staking
+ * ledger after era advancement, allowing the staking layer to release unlocked funds.
+ * Callable by anyone, but only on non-Destroying pools.
+ *
+ * 1. Create pool, Eve joins and unbonds
+ * 2. Advance era past unbonding period
+ * 3. Anyone (Bob) calls `pool_withdraw_unbonded` — succeeds
+ * 4. Call on a Destroying pool — should fail with `NotDestroying`
+ */
+async function nominationPoolWithdrawUnbondedPoolTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  /**
+   * 1. Create pool, Eve joins and unbonds
+   */
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.charlie.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
+  await sendTransaction(unbondTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  /**
+   * 2. Advance era past unbonding period
+   */
+
+  const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
+  const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
+  const targetEra = currentEra + bondingDuration + 1
+
+  await client.dev.setStorage({
+    Staking: {
+      currentEra: targetEra,
+      activeEra: { index: targetEra, start: null },
+    },
+  })
+
+  /**
+   * 3. Bob (anyone) calls pool_withdraw_unbonded — succeeds
+   */
+
+  const poolWithdrawTx = client.api.tx.nominationPools.poolWithdrawUnbonded(poolId, 0)
+  await sendTransaction(poolWithdrawTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  let events = await client.api.query.system.events()
+  const [failRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  expect(failRecord, 'pool_withdraw_unbonded should succeed on non-Destroying pool').toBeUndefined()
+
+  /**
+   * 4. Set pool to Destroying — pool_withdraw_unbonded should fail with NotDestroying
+   */
+
+  const setStateTx = client.api.tx.nominationPools.setState(poolId, 'Destroying')
+  await sendTransaction(setStateTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  const poolWithdrawFailTx = client.api.tx.nominationPools.poolWithdrawUnbonded(poolId, 0)
+  await sendTransaction(poolWithdrawFailTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+  const [destroyingFailRecord] = events.filter(
+    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
+  )
+  assert(client.api.events.system.ExtrinsicFailed.is(destroyingFailRecord?.event))
+  assert(destroyingFailRecord.event.data.dispatchError.isModule)
+  assert(client.api.errors.nominationPools.NotDestroying.is(destroyingFailRecord.event.data.dispatchError.asModule))
+}
+
 export function baseNominationPoolsE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
@@ -1713,6 +2433,26 @@ export function baseNominationPoolsE2ETests<
         kind: 'test',
         label: 'nomination pool create with pool id test',
         testFn: async () => await nominationPoolCreateWithPoolIdTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool reward claim test',
+        testFn: async () => await nominationPoolRewardClaimTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool reward claim after unbond test',
+        testFn: async () => await nominationPoolRewardClaimAfterUnbondTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool bond extra other test',
+        testFn: async () => await nominationPoolBondExtraOtherTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool pool_withdraw_unbonded test',
+        testFn: async () => await nominationPoolWithdrawUnbondedPoolTest(chain),
       },
     ],
   }
