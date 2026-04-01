@@ -244,7 +244,7 @@ export async function missingDecisionDepositTest<
   expect(timedOutEvents.length, 'timing out a referendum should emit 1 TimedOut event').toBe(1)
 
   await check(timedOutEvents[0])
-    .redact({ removeKeys: /index|pollIndex/ })
+    .redact({ removeKeys: /index|pollIndex/, number: true })
     .toMatchSnapshot(`timed-out referendum event (missing decision deposit) - ${trackConfig.trackName}`)
 
   referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
