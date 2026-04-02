@@ -1915,7 +1915,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^25.0.10, @types/node@npm:^25.3.3":
+"@types/node@npm:*, @types/node@npm:^25.0.10":
   version: 25.3.3
   resolution: "@types/node@npm:25.3.3"
   dependencies:
@@ -1930,6 +1930,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~7.16.0"
   checksum: 10c0/4fb7390259e3b158d25dbecf52de8ce70fa18a4ed0949c9444bb6384517c361fa19781e6821ca8c18dc5f6af43eab72e9e159e07000e6b1286d082e8585d8c41
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^25.5.0":
+  version: 25.5.0
+  resolution: "@types/node@npm:25.5.0"
+  dependencies:
+    undici-types: "npm:~7.18.0"
+  checksum: 10c0/70c508165b6758c4f88d4f91abca526c3985eee1985503d4c2bd994dbaf588e52ac57e571160f18f117d76e963570ac82bd20e743c18987e82564312b3b62119
   languageName: node
   linkType: hard
 
@@ -2696,7 +2705,7 @@ __metadata:
     "@e2e-test/networks": "workspace:*"
     "@swc/core": "npm:^1.15.21"
     "@types/lodash": "npm:^4.17.24"
-    "@types/node": "npm:^25.3.3"
+    "@types/node": "npm:^25.5.0"
     "@vitest/ui": "npm:^4.1.2"
     dotenv: "npm:^17.3.1"
     husky: "npm:^9.1.7"
