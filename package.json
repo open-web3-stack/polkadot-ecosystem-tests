@@ -42,7 +42,7 @@
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
 		"@swc/core": "^1.15.21",
-		"lodash": "^4.17.23",
+		"lodash": "^4.18.1",
 		"ts-pattern": "^5.9.0",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
