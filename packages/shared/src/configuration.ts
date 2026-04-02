@@ -539,6 +539,14 @@ export async function configurationOverwriteTest<
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
   // 1. Core configuration
+  const validationUpgradeCooldown = 13300
+  const validationUpgradeDelay = 700
+  const codeRetentionPeriod = 14300
+  const maxCodeSize = 3_000_000
+  const maxPovSize = 10_000_000
+  const maxHeadDataSize = 20000
+  const numCores = 50
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -557,26 +565,32 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setValidationUpgradeCooldown(13300),
-      client.api.tx.configuration.setValidationUpgradeDelay(700),
-      client.api.tx.configuration.setCodeRetentionPeriod(14300),
-      client.api.tx.configuration.setMaxCodeSize(3_000_000),
-      client.api.tx.configuration.setMaxPovSize(10_000_000),
-      client.api.tx.configuration.setMaxHeadDataSize(20000),
-      client.api.tx.configuration.setCoretimeCores(50),
+      client.api.tx.configuration.setValidationUpgradeCooldown(validationUpgradeCooldown),
+      client.api.tx.configuration.setValidationUpgradeDelay(validationUpgradeDelay),
+      client.api.tx.configuration.setCodeRetentionPeriod(codeRetentionPeriod),
+      client.api.tx.configuration.setMaxCodeSize(maxCodeSize),
+      client.api.tx.configuration.setMaxPovSize(maxPovSize),
+      client.api.tx.configuration.setMaxHeadDataSize(maxHeadDataSize),
+      client.api.tx.configuration.setCoretimeCores(numCores),
     ],
     (pending) => {
-      expect(pending.validationUpgradeCooldown.toNumber()).toBe(13300)
-      expect(pending.validationUpgradeDelay.toNumber()).toBe(700)
-      expect(pending.codeRetentionPeriod.toNumber()).toBe(14300)
-      expect(pending.maxCodeSize.toNumber()).toBe(3_000_000)
-      expect(pending.maxPovSize.toNumber()).toBe(10_000_000)
-      expect(pending.maxHeadDataSize.toNumber()).toBe(20000)
-      expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(50)
+      expect(pending.validationUpgradeCooldown.toNumber()).toBe(validationUpgradeCooldown)
+      expect(pending.validationUpgradeDelay.toNumber()).toBe(validationUpgradeDelay)
+      expect(pending.codeRetentionPeriod.toNumber()).toBe(codeRetentionPeriod)
+      expect(pending.maxCodeSize.toNumber()).toBe(maxCodeSize)
+      expect(pending.maxPovSize.toNumber()).toBe(maxPovSize)
+      expect(pending.maxHeadDataSize.toNumber()).toBe(maxHeadDataSize)
+      expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).numCores.toNumber()).toBe(numCores)
     },
   )
 
   // 2. Scheduler configuration
+  const groupRotationFrequency = 20
+  const parasAvailabilityPeriod = 15
+  const schedulingLookahead = 4
+  const maxValidatorsPerCore = 10
+  const maxValidators = 500
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -593,23 +607,31 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setGroupRotationFrequency(20),
-      client.api.tx.configuration.setParasAvailabilityPeriod(15),
-      client.api.tx.configuration.setSchedulingLookahead(4),
-      client.api.tx.configuration.setMaxValidatorsPerCore(10),
-      client.api.tx.configuration.setMaxValidators(500),
+      client.api.tx.configuration.setGroupRotationFrequency(groupRotationFrequency),
+      client.api.tx.configuration.setParasAvailabilityPeriod(parasAvailabilityPeriod),
+      client.api.tx.configuration.setSchedulingLookahead(schedulingLookahead),
+      client.api.tx.configuration.setMaxValidatorsPerCore(maxValidatorsPerCore),
+      client.api.tx.configuration.setMaxValidators(maxValidators),
     ],
     (pending) => {
       const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
-      expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(20)
-      expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(15)
-      expect(schedulerParams.lookahead.toNumber()).toBe(4)
-      expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(10)
-      expect(pending.maxValidators.unwrap().toNumber()).toBe(500)
+      expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(groupRotationFrequency)
+      expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(parasAvailabilityPeriod)
+      expect(schedulerParams.lookahead.toNumber()).toBe(schedulingLookahead)
+      expect(schedulerParams.maxValidatorsPerCore.unwrap().toNumber()).toBe(maxValidatorsPerCore)
+      expect(pending.maxValidators.unwrap().toNumber()).toBe(maxValidators)
     },
   )
 
   // 3. Dispute configuration
+  const disputePeriod = 8
+  const disputePostConclusionAcceptancePeriod = 700
+  const noShowSlots = 4
+  const nDelayTranches = 350
+  const zerothDelayTrancheWidth = 1
+  const neededApprovals = 25
+  const relayVrfModuloSamples = 8
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -628,26 +650,32 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setDisputePeriod(8),
-      client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(700),
-      client.api.tx.configuration.setNoShowSlots(4),
-      client.api.tx.configuration.setNDelayTranches(350),
-      client.api.tx.configuration.setZerothDelayTrancheWidth(1),
-      client.api.tx.configuration.setNeededApprovals(25),
-      client.api.tx.configuration.setRelayVrfModuloSamples(8),
+      client.api.tx.configuration.setDisputePeriod(disputePeriod),
+      client.api.tx.configuration.setDisputePostConclusionAcceptancePeriod(disputePostConclusionAcceptancePeriod),
+      client.api.tx.configuration.setNoShowSlots(noShowSlots),
+      client.api.tx.configuration.setNDelayTranches(nDelayTranches),
+      client.api.tx.configuration.setZerothDelayTrancheWidth(zerothDelayTrancheWidth),
+      client.api.tx.configuration.setNeededApprovals(neededApprovals),
+      client.api.tx.configuration.setRelayVrfModuloSamples(relayVrfModuloSamples),
     ],
     (pending) => {
-      expect(pending.disputePeriod.toNumber()).toBe(8)
-      expect(pending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(700)
-      expect(pending.noShowSlots.toNumber()).toBe(4)
-      expect(pending.nDelayTranches.toNumber()).toBe(350)
-      expect(pending.zerothDelayTrancheWidth.toNumber()).toBe(1)
-      expect(pending.neededApprovals.toNumber()).toBe(25)
-      expect(pending.relayVrfModuloSamples.toNumber()).toBe(8)
+      expect(pending.disputePeriod.toNumber()).toBe(disputePeriod)
+      expect(pending.disputePostConclusionAcceptancePeriod.toNumber()).toBe(disputePostConclusionAcceptancePeriod)
+      expect(pending.noShowSlots.toNumber()).toBe(noShowSlots)
+      expect(pending.nDelayTranches.toNumber()).toBe(nDelayTranches)
+      expect(pending.zerothDelayTrancheWidth.toNumber()).toBe(zerothDelayTrancheWidth)
+      expect(pending.neededApprovals.toNumber()).toBe(neededApprovals)
+      expect(pending.relayVrfModuloSamples.toNumber()).toBe(relayVrfModuloSamples)
     },
   )
 
   // 4. Message queue configuration
+  const maxUpwardQueueCount = 800000
+  const maxUpwardQueueSize = 1000000
+  const maxDownwardMessageSize = 60000
+  const maxUpwardMessageSize = 80000
+  const maxUpwardMessageNumPerCandidate = 25
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -664,22 +692,31 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setMaxUpwardQueueCount(800000),
-      client.api.tx.configuration.setMaxUpwardQueueSize(1000000),
-      client.api.tx.configuration.setMaxDownwardMessageSize(60000),
-      client.api.tx.configuration.setMaxUpwardMessageSize(80000),
-      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(25),
+      client.api.tx.configuration.setMaxUpwardQueueCount(maxUpwardQueueCount),
+      client.api.tx.configuration.setMaxUpwardQueueSize(maxUpwardQueueSize),
+      client.api.tx.configuration.setMaxDownwardMessageSize(maxDownwardMessageSize),
+      client.api.tx.configuration.setMaxUpwardMessageSize(maxUpwardMessageSize),
+      client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(maxUpwardMessageNumPerCandidate),
     ],
     (pending) => {
-      expect(pending.maxUpwardQueueCount.toNumber()).toBe(800000)
-      expect(pending.maxUpwardQueueSize.toNumber()).toBe(1000000)
-      expect(pending.maxDownwardMessageSize.toNumber()).toBe(60000)
-      expect(pending.maxUpwardMessageSize.toNumber()).toBe(80000)
-      expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(25)
+      expect(pending.maxUpwardQueueCount.toNumber()).toBe(maxUpwardQueueCount)
+      expect(pending.maxUpwardQueueSize.toNumber()).toBe(maxUpwardQueueSize)
+      expect(pending.maxDownwardMessageSize.toNumber()).toBe(maxDownwardMessageSize)
+      expect(pending.maxUpwardMessageSize.toNumber()).toBe(maxUpwardMessageSize)
+      expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(maxUpwardMessageNumPerCandidate)
     },
   )
 
   // 5. HRMP configuration
+  const hrmpSenderDeposit = 6000000000000n
+  const hrmpRecipientDeposit = 6000000000000n
+  const hrmpChannelMaxCapacity = 40
+  const hrmpChannelMaxTotalSize = 120000
+  const hrmpMaxParachainInboundChannels = 40
+  const hrmpChannelMaxMessageSize = 120000
+  const hrmpMaxParachainOutboundChannels = 40
+  const hrmpMaxMessageNumPerCandidate = 15
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -699,28 +736,35 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setHrmpSenderDeposit(6000000000000n),
-      client.api.tx.configuration.setHrmpRecipientDeposit(6000000000000n),
-      client.api.tx.configuration.setHrmpChannelMaxCapacity(40),
-      client.api.tx.configuration.setHrmpChannelMaxTotalSize(120000),
-      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(40),
-      client.api.tx.configuration.setHrmpChannelMaxMessageSize(120000),
-      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(40),
-      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(15),
+      client.api.tx.configuration.setHrmpSenderDeposit(hrmpSenderDeposit),
+      client.api.tx.configuration.setHrmpRecipientDeposit(hrmpRecipientDeposit),
+      client.api.tx.configuration.setHrmpChannelMaxCapacity(hrmpChannelMaxCapacity),
+      client.api.tx.configuration.setHrmpChannelMaxTotalSize(hrmpChannelMaxTotalSize),
+      client.api.tx.configuration.setHrmpMaxParachainInboundChannels(hrmpMaxParachainInboundChannels),
+      client.api.tx.configuration.setHrmpChannelMaxMessageSize(hrmpChannelMaxMessageSize),
+      client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(hrmpMaxParachainOutboundChannels),
+      client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(hrmpMaxMessageNumPerCandidate),
     ],
     (pending) => {
-      expect(pending.hrmpSenderDeposit.toBigInt()).toBe(6000000000000n)
-      expect(pending.hrmpRecipientDeposit.toBigInt()).toBe(6000000000000n)
-      expect(pending.hrmpChannelMaxCapacity.toNumber()).toBe(40)
-      expect(pending.hrmpChannelMaxTotalSize.toNumber()).toBe(120000)
-      expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(40)
-      expect(pending.hrmpChannelMaxMessageSize.toNumber()).toBe(120000)
-      expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(40)
-      expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(15)
+      expect(pending.hrmpSenderDeposit.toBigInt()).toBe(hrmpSenderDeposit)
+      expect(pending.hrmpRecipientDeposit.toBigInt()).toBe(hrmpRecipientDeposit)
+      expect(pending.hrmpChannelMaxCapacity.toNumber()).toBe(hrmpChannelMaxCapacity)
+      expect(pending.hrmpChannelMaxTotalSize.toNumber()).toBe(hrmpChannelMaxTotalSize)
+      expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(hrmpMaxParachainInboundChannels)
+      expect(pending.hrmpChannelMaxMessageSize.toNumber()).toBe(hrmpChannelMaxMessageSize)
+      expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(hrmpMaxParachainOutboundChannels)
+      expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(hrmpMaxMessageNumPerCandidate)
     },
   )
 
   // 6. Advanced configuration
+  const pvfVotingTtl = 3
+  const minimumValidationUpgradeDelay = 25
+  const minimumBackingVotes = 3
+  const maxCandidateDepth = 4
+  const allowedAncestryLen = 3
+  const maxApprovalCoalesceCount = 8
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -740,38 +784,43 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setPvfVotingTtl(3),
-      client.api.tx.configuration.setMinimumValidationUpgradeDelay(25),
-      client.api.tx.configuration.setMinimumBackingVotes(3),
-      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth: 4, allowedAncestryLen: 3 }),
+      client.api.tx.configuration.setPvfVotingTtl(pvfVotingTtl),
+      client.api.tx.configuration.setMinimumValidationUpgradeDelay(minimumValidationUpgradeDelay),
+      client.api.tx.configuration.setMinimumBackingVotes(minimumBackingVotes),
+      client.api.tx.configuration.setAsyncBackingParams({ maxCandidateDepth, allowedAncestryLen }),
       client.api.tx.configuration.setExecutorParams([
         { MaxMemoryPages: 8192 },
         { PvfExecTimeout: ['Backing', 3000] },
         { PvfExecTimeout: ['Approval', 20000] },
       ]),
-      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount: 8 }),
+      client.api.tx.configuration.setApprovalVotingParams({ maxApprovalCoalesceCount }),
       client.api.tx.configuration.setBypassConsistencyCheck(false),
       client.api.tx.configuration.setNodeFeature(4, true),
     ],
     (pending) => {
-      expect(pending.pvfVotingTtl.toNumber()).toBe(3)
-      expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(25)
-      expect(pending.minimumBackingVotes.toNumber()).toBe(3)
+      expect(pending.pvfVotingTtl.toNumber()).toBe(pvfVotingTtl)
+      expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(minimumValidationUpgradeDelay)
+      expect(pending.minimumBackingVotes.toNumber()).toBe(minimumBackingVotes)
       const asyncParams = pending.asyncBackingParams as PolkadotPrimitivesV8AsyncBackingAsyncBackingParams
-      expect(asyncParams.maxCandidateDepth.toNumber()).toBe(4)
-      expect(asyncParams.allowedAncestryLen.toNumber()).toBe(3)
+      expect(asyncParams.maxCandidateDepth.toNumber()).toBe(maxCandidateDepth)
+      expect(asyncParams.allowedAncestryLen.toNumber()).toBe(allowedAncestryLen)
       expect(pending.executorParams.toJSON()).toEqual([
         { maxMemoryPages: 8192 },
         { pvfExecTimeout: ['Backing', 3000] },
         { pvfExecTimeout: ['Approval', 20000] },
       ])
       const approvalParams = pending.approvalVotingParams as PolkadotPrimitivesV8ApprovalVotingParams
-      expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(8)
+      expect(approvalParams.maxApprovalCoalesceCount.toNumber()).toBe(maxApprovalCoalesceCount)
       expect(pending.nodeFeatures.toString()).toBe('0x1b')
     },
   )
 
   // 6.2. On-demand configuration
+  const onDemandBaseFee = 6000000000n
+  const onDemandFeeVariability = 40000000
+  const onDemandQueueMaxSize = 600
+  const onDemandTargetQueueUtilization = 350000000
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -787,21 +836,35 @@ export async function configurationOverwriteTest<
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setOnDemandBaseFee(6000000000n),
-      client.api.tx.configuration.setOnDemandFeeVariability(40000000),
-      client.api.tx.configuration.setOnDemandQueueMaxSize(600),
-      client.api.tx.configuration.setOnDemandTargetQueueUtilization(350000000),
+      client.api.tx.configuration.setOnDemandBaseFee(onDemandBaseFee),
+      client.api.tx.configuration.setOnDemandFeeVariability(onDemandFeeVariability),
+      client.api.tx.configuration.setOnDemandQueueMaxSize(onDemandQueueMaxSize),
+      client.api.tx.configuration.setOnDemandTargetQueueUtilization(onDemandTargetQueueUtilization),
     ],
     (pending) => {
       const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
-      expect(schedulerParams.onDemandBaseFee.toBigInt()).toBe(6000000000n)
-      expect(schedulerParams.onDemandFeeVariability.toNumber()).toBe(40000000)
-      expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(600)
-      expect(schedulerParams.onDemandTargetQueueUtilization.toNumber()).toBe(350000000)
+      expect(schedulerParams.onDemandBaseFee.toBigInt()).toBe(onDemandBaseFee)
+      expect(schedulerParams.onDemandFeeVariability.toNumber()).toBe(onDemandFeeVariability)
+      expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(onDemandQueueMaxSize)
+      expect(schedulerParams.onDemandTargetQueueUtilization.toNumber()).toBe(onDemandTargetQueueUtilization)
     },
   )
 
   // 6.3. Full scheduler params struct
+  const schedulerParams = {
+    groupRotationFrequency: 15,
+    parasAvailabilityPeriod: 12,
+    maxValidatorsPerCore: null,
+    lookahead: 3,
+    numCores: 80,
+    maxAvailabilityTimeouts: 0,
+    onDemandQueueMaxSize: 600,
+    onDemandTargetQueueUtilization: 250000000,
+    onDemandFeeVariability: 30000000,
+    onDemandBaseFee: 5000000000,
+    ttl: 5,
+  }
+
   await runAndAssert(
     client,
     currentSessionIndex,
@@ -825,29 +888,15 @@ export async function configurationOverwriteTest<
   await runAndAssert(
     client,
     currentSessionIndex,
-    [
-      client.api.tx.configuration.setSchedulerParams({
-        groupRotationFrequency: 15,
-        parasAvailabilityPeriod: 12,
-        maxValidatorsPerCore: null,
-        lookahead: 3,
-        numCores: 80,
-        maxAvailabilityTimeouts: 0,
-        onDemandQueueMaxSize: 600,
-        onDemandTargetQueueUtilization: 250000000,
-        onDemandFeeVariability: 30000000,
-        onDemandBaseFee: 5000000000,
-        ttl: 5,
-      }),
-    ],
+    [client.api.tx.configuration.setSchedulerParams(schedulerParams)],
     (pending) => {
-      const schedulerParams = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
-      expect(schedulerParams.groupRotationFrequency.toNumber()).toBe(15)
-      expect(schedulerParams.parasAvailabilityPeriod.toNumber()).toBe(12)
-      expect(schedulerParams.numCores.toNumber()).toBe(80)
-      expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(600)
-      expect(schedulerParams.onDemandBaseFee.toNumber()).toBe(5000000000)
-      expect(schedulerParams.ttl.toNumber()).toBe(5)
+      const sp = pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams
+      expect(sp.groupRotationFrequency.toNumber()).toBe(schedulerParams.groupRotationFrequency)
+      expect(sp.parasAvailabilityPeriod.toNumber()).toBe(schedulerParams.parasAvailabilityPeriod)
+      expect(sp.numCores.toNumber()).toBe(schedulerParams.numCores)
+      expect(sp.onDemandQueueMaxSize.toNumber()).toBe(schedulerParams.onDemandQueueMaxSize)
+      expect(sp.onDemandBaseFee.toNumber()).toBe(schedulerParams.onDemandBaseFee)
+      expect(sp.ttl.toNumber()).toBe(schedulerParams.ttl)
     },
   )
 }
