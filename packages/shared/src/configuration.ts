@@ -931,6 +931,18 @@ export async function configurationConsistencyMatrixTest<
 
   const restoreActiveConfig = () => client.dev.setStorage({ configuration: { activeConfig: activeConfigJson } })
 
+  // Hard-limit boundary values (each is max_allowed + 1)
+  const improperMaxCodeSize = 3_145_729 // > MAX_CODE_SIZE (3,145,728)
+  const improperMaxHeadDataSize = 1_048_577 // > MAX_HEAD_DATA_SIZE (1,048,576)
+  const improperMaxPovSize = 16_777_217 // > POV_SIZE_HARD_LIMIT (16,777,216)
+  const improperMaxUpwardMessageSize = 131_073 // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
+  const improperMaxHorizontalMessageNum = 16_385 // > MAX_HORIZONTAL_MESSAGE_NUM / MAX_UPWARD_MESSAGE_NUM (16,384)
+  const improperHrmpMaxChannels = 129 // > HRMP_MAX_OUTBOUND/INBOUND_CHANNELS_BOUND (128)
+  const improperOnDemandQueueMaxSize = 1_000_000_001 // > ON_DEMAND_MAX_QUEUE_MAX_SIZE (1,000,000,000)
+  // Relational violation values
+  const improperMinimumValidationUpgradeDelay = 1 // must be > paras_availability_period
+  const improperValidationUpgradeDelay = 1 // must be > 1
+
   // All values that violate at least one consistency rule.
   const improperCalls = [
     // Zero checks
@@ -941,18 +953,18 @@ export async function configurationConsistencyMatrixTest<
     client.api.tx.configuration.setNDelayTranches(0),
     client.api.tx.configuration.setSchedulingLookahead(0),
     // Hard limit violations
-    client.api.tx.configuration.setMaxCodeSize(3_145_729), // > MAX_CODE_SIZE (3,145,728)
-    client.api.tx.configuration.setMaxHeadDataSize(1_048_577), // > MAX_HEAD_DATA_SIZE (1,048,576)
-    client.api.tx.configuration.setMaxPovSize(16_777_217), // > POV_SIZE_HARD_LIMIT (16,777,216)
-    client.api.tx.configuration.setMaxUpwardMessageSize(131_073), // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
-    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(16_385), // > MAX_HORIZONTAL_MESSAGE_NUM (16,384)
-    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(16_385), // > MAX_UPWARD_MESSAGE_NUM (16,384)
-    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(129), // > HRMP_MAX_OUTBOUND_CHANNELS_BOUND (128)
-    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(129), // > HRMP_MAX_INBOUND_CHANNELS_BOUND (128)
-    client.api.tx.configuration.setOnDemandQueueMaxSize(1_000_000_001), // > ON_DEMAND_MAX_QUEUE_MAX_SIZE (1,000,000,000)
+    client.api.tx.configuration.setMaxCodeSize(improperMaxCodeSize),
+    client.api.tx.configuration.setMaxHeadDataSize(improperMaxHeadDataSize),
+    client.api.tx.configuration.setMaxPovSize(improperMaxPovSize),
+    client.api.tx.configuration.setMaxUpwardMessageSize(improperMaxUpwardMessageSize),
+    client.api.tx.configuration.setHrmpMaxMessageNumPerCandidate(improperMaxHorizontalMessageNum),
+    client.api.tx.configuration.setMaxUpwardMessageNumPerCandidate(improperMaxHorizontalMessageNum),
+    client.api.tx.configuration.setHrmpMaxParachainOutboundChannels(improperHrmpMaxChannels),
+    client.api.tx.configuration.setHrmpMaxParachainInboundChannels(improperHrmpMaxChannels),
+    client.api.tx.configuration.setOnDemandQueueMaxSize(improperOnDemandQueueMaxSize),
     // Relational checks
-    client.api.tx.configuration.setMinimumValidationUpgradeDelay(1), // must be > paras_availability_period
-    client.api.tx.configuration.setValidationUpgradeDelay(1), // must be > 1
+    client.api.tx.configuration.setMinimumValidationUpgradeDelay(improperMinimumValidationUpgradeDelay),
+    client.api.tx.configuration.setValidationUpgradeDelay(improperValidationUpgradeDelay),
   ]
 
   const assertImproperValues = (pending: PolkadotRuntimeParachainsConfigurationHostConfiguration) => {
@@ -965,18 +977,18 @@ export async function configurationConsistencyMatrixTest<
     expect(pending.nDelayTranches.toNumber()).toBe(0)
     expect(schedulerParams.lookahead.toNumber()).toBe(0)
     // Hard limit violations
-    expect(pending.maxCodeSize.toNumber()).toBe(3_145_729)
-    expect(pending.maxHeadDataSize.toNumber()).toBe(1_048_577)
-    expect(pending.maxPovSize.toNumber()).toBe(16_777_217)
-    expect(pending.maxUpwardMessageSize.toNumber()).toBe(131_073)
-    expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(16_385)
-    expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(16_385)
-    expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(129)
-    expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(129)
-    expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(1_000_000_001)
+    expect(pending.maxCodeSize.toNumber()).toBe(improperMaxCodeSize)
+    expect(pending.maxHeadDataSize.toNumber()).toBe(improperMaxHeadDataSize)
+    expect(pending.maxPovSize.toNumber()).toBe(improperMaxPovSize)
+    expect(pending.maxUpwardMessageSize.toNumber()).toBe(improperMaxUpwardMessageSize)
+    expect(pending.hrmpMaxMessageNumPerCandidate.toNumber()).toBe(improperMaxHorizontalMessageNum)
+    expect(pending.maxUpwardMessageNumPerCandidate.toNumber()).toBe(improperMaxHorizontalMessageNum)
+    expect(pending.hrmpMaxParachainOutboundChannels.toNumber()).toBe(improperHrmpMaxChannels)
+    expect(pending.hrmpMaxParachainInboundChannels.toNumber()).toBe(improperHrmpMaxChannels)
+    expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(improperOnDemandQueueMaxSize)
     // Relational checks
-    expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(1)
-    expect(pending.validationUpgradeDelay.toNumber()).toBe(1)
+    expect(pending.minimumValidationUpgradeDelay.toNumber()).toBe(improperMinimumValidationUpgradeDelay)
+    expect(pending.validationUpgradeDelay.toNumber()).toBe(improperValidationUpgradeDelay)
   }
 
   // ── Case 1: Consistent base + inconsistent new → all violations rejected ────
@@ -1026,20 +1038,24 @@ export async function configurationConsistencyMatrixTest<
 
   // ── Case 3: Inconsistent base + consistent new → accepted ───────────────────
   // activeConfig is still broken. Representative valid values must be accepted.
+  const case3MaxCodeSize = 3_000_000
+  const case3GroupRotationFrequency = 20
+  const case3NoShowSlots = 4
+
   await runAndAssert(
     client,
     currentSessionIndex,
     [
-      client.api.tx.configuration.setMaxCodeSize(3_000_000),
-      client.api.tx.configuration.setGroupRotationFrequency(20),
-      client.api.tx.configuration.setNoShowSlots(4),
+      client.api.tx.configuration.setMaxCodeSize(case3MaxCodeSize),
+      client.api.tx.configuration.setGroupRotationFrequency(case3GroupRotationFrequency),
+      client.api.tx.configuration.setNoShowSlots(case3NoShowSlots),
     ],
     (pending) => {
-      expect(pending.maxCodeSize.toNumber()).toBe(3_000_000)
+      expect(pending.maxCodeSize.toNumber()).toBe(case3MaxCodeSize)
       expect((pending.schedulerParams as PolkadotPrimitivesV8SchedulerParams).groupRotationFrequency.toNumber()).toBe(
-        20,
+        case3GroupRotationFrequency,
       )
-      expect(pending.noShowSlots.toNumber()).toBe(4)
+      expect(pending.noShowSlots.toNumber()).toBe(case3NoShowSlots)
     },
   )
 
