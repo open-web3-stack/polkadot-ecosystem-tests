@@ -54,7 +54,7 @@
 		"@vitest/ui": "^4.0.18",
 		"dotenv": "^17.3.1",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.3.2",
+		"lint-staged": "^16.4.0",
 		"tsx": "^4.21.0",
 		"unplugin-swc": "^1.5.9",
 		"vite-tsconfig-paths": "^6.1.1"
