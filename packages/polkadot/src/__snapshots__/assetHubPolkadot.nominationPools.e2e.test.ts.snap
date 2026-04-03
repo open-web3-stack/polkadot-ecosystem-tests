@@ -612,11 +612,31 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool slash and withdra
   },
   {
     "data": {
+      "amount": 2500000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+  {
+    "data": {
       "balance": 2500000000000,
       "points": 5000000000000,
     },
     "method": "Withdrawn",
     "section": "nominationPools",
+  },
+  {
+    "data": {
+      "amount": 2500000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {
@@ -676,6 +696,16 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
     },
     "method": "Withdrawn",
     "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 5000000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {
@@ -766,6 +796,16 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
     },
     "method": "Withdrawn",
     "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 5000000000000,
+      "reason": {
+        "DelegatedStaking": "StakingDelegation",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
   },
   {
     "data": {
