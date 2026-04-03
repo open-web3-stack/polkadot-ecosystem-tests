@@ -551,7 +551,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": true,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -580,7 +580,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -609,7 +609,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
@@ -638,7 +638,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
