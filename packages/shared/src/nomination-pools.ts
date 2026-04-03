@@ -223,9 +223,7 @@ async function nominationPoolCreateWithPoolIdTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Bump lastPoolId to create a gap — pool at gapId won't exist
-   */
+  // 1. Bump lastPoolId to create a gap — pool at gapId won't exist
 
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const gapId = preLastPoolId + 1
@@ -242,9 +240,7 @@ async function nominationPoolCreateWithPoolIdTest<
   let poolData = await client.api.query.nominationPools.bondedPools(gapId)
   expect(poolData.isNone, 'Pool at gap ID should not exist').toBe(true)
 
-  /**
-   * 2. Create pool at the gap ID via `create_with_pool_id`
-   */
+  // 2. Create pool at the gap ID via `create_with_pool_id`
 
   const createWithIdTx = client.api.tx.nominationPools.createWithPoolId(
     depositorMinBond,
@@ -267,9 +263,7 @@ async function nominationPoolCreateWithPoolIdTest<
   const lastPoolIdAfter = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   expect(lastPoolIdAfter, 'lastPoolId should not change when reusing an ID').toBe(lastPoolId)
 
-  /**
-   * 3. Attempt to reuse the ID that's now occupied → PoolIdInUse
-   */
+  // 3. Attempt to reuse the ID that's now occupied → PoolIdInUse
 
   const duplicateTx = client.api.tx.nominationPools.createWithPoolId(
     depositorMinBond,
@@ -291,9 +285,7 @@ async function nominationPoolCreateWithPoolIdTest<
   assert(ev.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.PoolIdInUse.is(ev.event.data.dispatchError.asModule))
 
-  /**
-   * 4. Attempt to use an ID that was never allocated → InvalidPoolId
-   */
+  // 4. Attempt to use an ID that was never allocated → InvalidPoolId
 
   const futureTx = client.api.tx.nominationPools.createWithPoolId(
     depositorMinBond,
@@ -374,15 +366,11 @@ async function nominationPoolLifecycleTest<
 
   const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
 
-  /**
-   * Check that the network is not at max pool capacity; if so, increase it.
-   */
+  // Check that the network is not at max pool capacity; if so, increase it.
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * Create pool with sufficient funds
-   */
+  // Create pool with sufficient funds
 
   const createNomPoolTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -434,9 +422,7 @@ async function nominationPoolLifecycleTest<
   })
   expect(nominationPoolPostCreation.state.isOpen, 'Pool should be open after creation').toBe(true)
 
-  /**
-   * Update pool roles
-   */
+  // Update pool roles
 
   const updateRolesTx = client.api.tx.nominationPools.updateRoles(
     nomPoolId,
@@ -463,9 +449,7 @@ async function nominationPoolLifecycleTest<
     bouncer: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
   })
 
-  /**
-   * Set the pool's commission data
-   */
+  // Set the pool's commission data
 
   // This will be `Perbill` runtime-side, so 0.1%. Note that in TypeScript,
   // `10e1` = `10 * 10`
@@ -564,9 +548,7 @@ async function nominationPoolLifecycleTest<
 
   nominationPoolCmp(nominationPoolWithCommission, nominationPoolAfterNomination, [])
 
-  /**
-   * Have another account join the pool
-   */
+  // Have another account join the pool
 
   const joinPoolTx = client.api.tx.nominationPools.join(depositorMinBond, nomPoolId)
   const joinPoolEvents = await sendTransaction(joinPoolTx.signAsync(testAccounts.eve))
@@ -588,9 +570,7 @@ async function nominationPoolLifecycleTest<
 
   nominationPoolCmp(nominationPoolWithCommission, nominationPoolWithMembers, ['memberCounter', 'points'])
 
-  /**
-   * Bond additional funds as Eve
-   */
+  // Bond additional funds as Eve
 
   const bondExtraTx = client.api.tx.nominationPools.bondExtra({ FreeBalance: depositorMinBond - 1 })
   const bondExtraEvents = await sendTransaction(bondExtraTx.signAsync(testAccounts.eve))
@@ -611,11 +591,8 @@ async function nominationPoolLifecycleTest<
     3 * depositorMinBond - 1,
   )
 
-  /**
-   * Claim commission as a random account - commission claim was set to permissionless.
-   *
-   * Commission is still 0 at this point, so the extrinsic will fail; the goal is to test the process.
-   */
+  // Claim commission as a random account - commission claim was set to permissionless.
+  // Commission is still 0 at this point, so the extrinsic will fail; the goal is to test the process.
 
   const claimCommissionTx = client.api.tx.nominationPools.claimCommission(nomPoolId)
   await sendTransaction(claimCommissionTx.signAsync(ferdie))
@@ -649,9 +626,7 @@ async function nominationPoolLifecycleTest<
   // and not an access error due to Ferdie claiming the commission - the commission claim is permissionless.
   assert(client.api.errors.nominationPools.NoPendingCommission.is(dispatchError.asModule))
 
-  /**
-   * Unbond previously bonded funds
-   */
+  // Unbond previously bonded funds
 
   const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond - 1)
   const unbondEvents = await sendTransaction(unbondTx.signAsync(testAccounts.eve))
@@ -669,9 +644,7 @@ async function nominationPoolLifecycleTest<
   expect(nominationPoolPostUnbond.points.toNumber()).toBe(depositorMinBond * 2)
   nominationPoolCmp(nominationPoolWithExtraBond, nominationPoolPostUnbond, ['points'])
 
-  /**
-   * As the pool's nominator, call `chill`
-   */
+  // As the pool's nominator, call `chill`
 
   const chillTx = client.api.tx.nominationPools.chill(nomPoolId)
   const chillEvents = await sendTransaction(chillTx.signAsync(testAccounts.charlie))
@@ -691,9 +664,7 @@ async function nominationPoolLifecycleTest<
 
   nominationPoolCmp(nominationPoolPostUnbond, nominationPoolPostChill, [])
 
-  /**
-   * Set pool state to blocked
-   */
+  // Set pool state to blocked
 
   const setStateTx = client.api.tx.nominationPools.setState(nomPoolId, 'Blocked')
   const setStateEvents = await sendTransaction(setStateTx.signAsync(testAccounts.bob))
@@ -712,9 +683,7 @@ async function nominationPoolLifecycleTest<
   expect(nominationPoolBlocked.state.isBlocked, 'Pool state should now be blocked').toBe(true)
   nominationPoolCmp(nominationPoolPostUnbond, nominationPoolBlocked, ['state'])
 
-  /**
-   * Kick a member from the pool as the bouncer
-   */
+  // Kick a member from the pool as the bouncer
 
   const kickTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
   const kickEvents = await sendTransaction(kickTx.signAsync(testAccounts.dave))
@@ -735,9 +704,7 @@ async function nominationPoolLifecycleTest<
   // until the unbonding period (28/7 eras (Polkadot/Kusama)) has passed, and they withdraw.
   expect(nominationPoolPostKick.memberCounter.toNumber()).toBe(2)
 
-  /**
-   * Set pool state to `Destroying`
-   */
+  // Set pool state to `Destroying`
 
   const setDestroyingTx = client.api.tx.nominationPools.setState(nomPoolId, 'Destroying')
   const setDestroyingEvents = await sendTransaction(setDestroyingTx.signAsync(testAccounts.bob))
@@ -755,12 +722,9 @@ async function nominationPoolLifecycleTest<
   expect(nominationPoolDestroying.state.isDestroying).toBe(true)
   nominationPoolCmp(nominationPoolPostKick, nominationPoolDestroying, ['state'])
 
-  /**
-   * Unbond as depositor - allowed as the pool is set to destroying
-   *
-   * At this point in time, this operation will fail, as the previous depositor began the unbonding
-   * process, but has not fully unbonded and withdrawn their funds.
-   */
+  // Unbond as depositor - allowed as the pool is set to destroying.
+  // At this point in time, this operation will fail, as the previous depositor began the unbonding
+  // process, but has not fully unbonded and withdrawn their funds.
 
   const unbondDepositorTx = client.api.tx.nominationPools.unbond(testAccounts.alice.address, depositorMinBond)
   await sendTransaction(unbondDepositorTx.signAsync(testAccounts.alice))
@@ -893,9 +857,7 @@ async function nominationPoolDoubleJoinError<
 
   await client.dev.newBlock()
 
-  /**
-   * Have Eve join the pool
-   */
+  // Have Eve join the pool
 
   await client.dev.setStorage({
     System: {
@@ -923,9 +885,7 @@ async function nominationPoolDoubleJoinError<
   const nominationPoolWithMembers = poolData.unwrap()
   expect(nominationPoolWithMembers.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
 
-  /**
-   * Create a second pool
-   */
+  // Create a second pool
 
   /// The depositor in the second pool cannot be Alice, as that would also be a double join - precisely the object of this test.
   await createNominationPool(
@@ -940,9 +900,7 @@ async function nominationPoolDoubleJoinError<
 
   const secondPoolId = firstPoolId + 1
 
-  /**
-   * Try having Eve join the second pool
-   */
+  // Try having Eve join the second pool
 
   const joinSecondPoolTx = client.api.tx.nominationPools.join(minJoinBond, secondPoolId)
   await sendTransaction(joinSecondPoolTx.signAsync(testAccounts.eve))
@@ -968,9 +926,7 @@ async function nominationPoolDoubleJoinError<
   assert(dispatchError.isModule)
   assert(client.api.errors.nominationPools.AccountBelongsToOtherPool.is(dispatchError.asModule))
 
-  /**
-   * Check that Eve is still a member of the first pool
-   */
+  // Check that Eve is still a member of the first pool
 
   poolData = await client.api.query.nominationPools.bondedPools(firstPoolId)
   expect(poolData.isSome, 'Pool should still exist after failed join').toBe(true)
@@ -978,9 +934,7 @@ async function nominationPoolDoubleJoinError<
   const nominationPoolWithMembersAfterError = poolData.unwrap()
   expect(nominationPoolWithMembersAfterError.memberCounter.toNumber(), 'Pool should have 2 members').toBe(2)
 
-  /**
-   * Check that Eve is not a member of the second pool
-   */
+  // Check that Eve is not a member of the second pool
 
   poolData = await client.api.query.nominationPools.bondedPools(secondPoolId)
   expect(poolData.isSome, 'Pool should still exist after failed join').toBe(true)
@@ -1108,9 +1062,7 @@ async function nominationPoolsUpdateRolesTest<
   const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
   const poolId = preLastPoolId + 1
 
-  /**
-   * Create the pool - here, Bob is the initial root.
-   */
+  // Create the pool - here, Bob is the initial root.
 
   await createNominationPool(
     client,
@@ -1134,10 +1086,8 @@ async function nominationPoolsUpdateRolesTest<
     bouncer: encodeAddress(testAccounts.dave.address, chain.properties.addressEncoding),
   })
 
-  /**
-   * Change the pool's roles as the pool's current root - now Alice will be the root, though Bob's the one who
-   * must sign this transaction.
-   */
+  // Change the pool's roles as the pool's current root - now Alice will be the root, though Bob's
+  // the one who must sign this transaction.
 
   await client.dev.setStorage({
     System: {
@@ -1171,9 +1121,7 @@ async function nominationPoolsUpdateRolesTest<
     bouncer: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
   })
 
-  /**
-   * Try and fail to change the pool's roles as the previous root
-   */
+  // Try and fail to change the pool's roles as the previous root
 
   const updateRolesFailTx = client.api.tx.nominationPools.updateRoles(
     poolId,
@@ -1202,9 +1150,7 @@ async function nominationPoolsUpdateRolesTest<
   assert(dispatchError.isModule)
   assert(client.api.errors.nominationPools.DoesNotHavePermission.is(dispatchError.asModule))
 
-  /**
-   * As the pool's newly set root, remove oneself from the role.
-   */
+  // As the pool's newly set root, remove oneself from the role.
 
   const updateRolesRemoveSelfTx = client.api.tx.nominationPools.updateRoles(
     poolId,
@@ -1232,9 +1178,7 @@ async function nominationPoolsUpdateRolesTest<
     bouncer: encodeAddress(testAccounts.bob.address, chain.properties.addressEncoding),
   })
 
-  /**
-   * Set the pool's roles via scheduler pallet, with a `Root` origin.
-   */
+  // Set the pool's roles via scheduler pallet, with a `Root` origin.
 
   const updateRolesCall = client.api.tx.nominationPools.updateRoles(
     poolId,
@@ -1318,9 +1262,7 @@ async function nominationPoolWithdrawUnbondedTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool: Alice is depositor, root, and bouncer; Charlie is nominator
-   */
+  // 1. Create pool: Alice is depositor, root, and bouncer; Charlie is nominator
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -1335,9 +1277,7 @@ async function nominationPoolWithdrawUnbondedTest<
   assert(poolData.isSome, 'Pool should exist after creation')
   expect(poolData.unwrap().memberCounter.toNumber()).toBe(1)
 
-  /**
-   * 2. Eve joins the pool
-   */
+  // 2. Eve joins the pool
 
   const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
   const joinEvents = await sendTransaction(joinTx.signAsync(testAccounts.eve))
@@ -1351,9 +1291,7 @@ async function nominationPoolWithdrawUnbondedTest<
   assert(poolData.isSome)
   expect(poolData.unwrap().memberCounter.toNumber()).toBe(2)
 
-  /**
-   * 3. Eve unbonds all her funds
-   */
+  // 3. Eve unbonds all her funds
 
   const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
   const unbondEvents = await sendTransaction(unbondTx.signAsync(testAccounts.eve))
@@ -1378,9 +1316,7 @@ async function nominationPoolWithdrawUnbondedTest<
   assert(memberDataPostUnbond.isSome, 'Eve should still be a pool member after unbonding')
   expect(memberDataPostUnbond.unwrap().points.toNumber(), 'Active points should be 0 after full unbond').toBe(0)
 
-  /**
-   * 4. Advance currentEra past the unbonding period
-   */
+  // 4. Advance currentEra past the unbonding period
 
   const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
   const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
@@ -1393,9 +1329,7 @@ async function nominationPoolWithdrawUnbondedTest<
     },
   })
 
-  /**
-   * 5. Eve calls withdrawUnbonded → member removed, funds returned
-   */
+  // 5. Eve calls withdrawUnbonded → member removed, funds returned
 
   const withdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.eve.address, 0)
   const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
@@ -1430,9 +1364,7 @@ async function nominationPoolWithdrawUnbondedTest<
   assert(poolData.isSome, 'Pool should still exist - depositor has not left')
   expect(poolData.unwrap().memberCounter.toNumber(), 'Pool should have 1 member (depositor only)').toBe(1)
 
-  /**
-   * 6. Set pool to Destroying, depositor unbonds
-   */
+  // 6. Set pool to Destroying, depositor unbonds
 
   const setStateTx = client.api.tx.nominationPools.setState(poolId, 'Destroying')
   await sendTransaction(setStateTx.signAsync(testAccounts.alice))
@@ -1450,9 +1382,7 @@ async function nominationPoolWithdrawUnbondedTest<
     .redact({ removeKeys: /poolId|stash|era/ })
     .toMatchSnapshot('withdraw test: depositor unbond events')
 
-  /**
-   * 7. Advance era again for depositor's unbonding period
-   */
+  // 7. Advance era again for depositor's unbonding period
 
   const currentEra2 = (await client.api.query.staking.currentEra()).unwrap().toNumber()
   const targetEra2 = currentEra2 + bondingDuration + 1
@@ -1464,9 +1394,7 @@ async function nominationPoolWithdrawUnbondedTest<
     },
   })
 
-  /**
-   * 8. Depositor withdraws → pool dissolves
-   */
+  // 8. Depositor withdraws → pool dissolves
 
   const depositorWithdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.alice.address, 0)
   const depositorWithdrawEvents = await sendTransaction(depositorWithdrawTx.signAsync(testAccounts.alice))
@@ -1521,9 +1449,7 @@ async function nominationPoolSlashAndWithdrawTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool
-   */
+  // 1. Create pool
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -1537,9 +1463,7 @@ async function nominationPoolSlashAndWithdrawTest<
   let poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should exist after creation')
 
-  /**
-   * 2. Eve joins the pool
-   */
+  // 2. Eve joins the pool
 
   const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
   await sendTransaction(joinTx.signAsync(testAccounts.eve))
@@ -1549,9 +1473,7 @@ async function nominationPoolSlashAndWithdrawTest<
   assert(poolData.isSome)
   expect(poolData.unwrap().memberCounter.toNumber()).toBe(2)
 
-  /**
-   * 3. Eve unbonds all her funds
-   */
+  // 3. Eve unbonds all her funds
 
   const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
   await sendTransaction(unbondTx.signAsync(testAccounts.eve))
@@ -1560,9 +1482,7 @@ async function nominationPoolSlashAndWithdrawTest<
   const memberDataPostUnbond = await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)
   assert(memberDataPostUnbond.isSome, 'Eve should still be a pool member after unbonding')
 
-  /**
-   * 4. Read SubPoolsStorage to get the unbonding era and current balance
-   */
+  // 4. Read SubPoolsStorage to get the unbonding era and current balance
 
   const subPoolsData = await client.api.query.nominationPools.subPoolsStorage(poolId)
   assert(subPoolsData.isSome, 'SubPools should exist after unbonding')
@@ -1579,12 +1499,9 @@ async function nominationPoolSlashAndWithdrawTest<
   expect(originalBalance).toBe(BigInt(depositorMinBond))
   expect(originalPoints).toBe(BigInt(depositorMinBond))
 
-  /**
-   * 5. Simulate slash: reduce SubPools balance by half, keep points unchanged.
-   *
-   * This is what `Pallet::on_slash` does: it reduces `UnbondPool.balance` without
-   * changing `points`, breaking the 1:1 ratio so members receive less on withdrawal.
-   */
+  // 5. Simulate slash: reduce SubPools balance by half, keep points unchanged.
+  // `Pallet::on_slash` reduces `UnbondPool.balance` without changing `points`,
+  // breaking the 1:1 ratio so members receive less on withdrawal.
 
   const slashedBalance = originalBalance / 2n
   const unbondEraNum = unbondEra.toNumber()
@@ -1612,9 +1529,7 @@ async function nominationPoolSlashAndWithdrawTest<
   )
   expect(postSlashPool.points.toBigInt(), 'SubPool points should be unchanged').toBe(originalPoints)
 
-  /**
-   * 6. Fast-forward past the unbonding period
-   */
+  // 6. Fast-forward past the unbonding period
 
   const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
   const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
@@ -1627,9 +1542,7 @@ async function nominationPoolSlashAndWithdrawTest<
     },
   })
 
-  /**
-   * 7. Eve withdraws → balance should reflect the slash
-   */
+  // 7. Eve withdraws → balance should reflect the slash
 
   const withdrawTx = client.api.tx.nominationPools.withdrawUnbonded(testAccounts.eve.address, 0)
   const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
@@ -1674,16 +1587,13 @@ async function getRewardAccountFromCreationEvents(
   addressEncoding: number,
 ): Promise<string> {
   const events = await client.api.query.system.events()
-  const transferEvents = events.filter(
-    ({ event }) =>
-      event.section === 'balances' &&
-      event.method === 'Transfer' &&
-      event.data[0].toString() === encodeAddress(depositorAddress, addressEncoding),
-  )
-  // The last transfer from the depositor during pool creation is the ED transfer to the reward account
+  const transferEvents = events.filter(({ event }) => {
+    if (!client.api.events.balances.Transfer.is(event)) return false
+    return event.data.from.toString() === encodeAddress(depositorAddress, addressEncoding)
+  })
   const rewardTransfer = transferEvents[transferEvents.length - 1]
-  assert(rewardTransfer !== undefined, 'Expected balances.Transfer to reward account during pool creation')
-  return rewardTransfer.event.data[1].toString()
+  assert(client.api.events.balances.Transfer.is(rewardTransfer?.event))
+  return rewardTransfer.event.data.to.toString()
 }
 
 /**
@@ -1724,9 +1634,7 @@ async function nominationPoolRewardClaimTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool with zero commission
-   */
+  // 1. Create pool with zero commission
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -1746,17 +1654,13 @@ async function nominationPoolRewardClaimTest<
   const poolData = await client.api.query.nominationPools.bondedPools(poolId)
   assert(poolData.isSome, 'Pool should exist after creation')
 
-  /**
-   * 2. Eve joins the pool
-   */
+  // 2. Eve joins the pool
 
   const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
   await sendTransaction(joinTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  /**
-   * 3. Simulate rewards by funding the reward account
-   */
+  // 3. Simulate rewards by funding the reward account
 
   const rewardAmount = 1000e10
   const rewardAccountInfo = await client.api.query.system.account(rewardAccount)
@@ -1777,9 +1681,7 @@ async function nominationPoolRewardClaimTest<
     },
   })
 
-  /**
-   * 4. Eve claims her rewards via `claim_payout`
-   */
+  // 4. Eve claims her rewards via `claim_payout`
 
   const eveFreePreClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
 
@@ -1807,9 +1709,7 @@ async function nominationPoolRewardClaimTest<
   const eveFreePostClaim = (await client.api.query.system.account(testAccounts.eve.address)).data.free.toBigInt()
   expect(eveFreePostClaim - eveFreePreClaim).toBeGreaterThan(0n)
 
-  /**
-   * 5. Simulate more rewards, then test `set_claim_permission` + `claim_payout_other`
-   */
+  // 5. Simulate more rewards, then test `set_claim_permission` + `claim_payout_other`
 
   const rewardAccountInfo2 = await client.api.query.system.account(rewardAccount)
   await client.dev.setStorage({
@@ -1854,9 +1754,7 @@ async function nominationPoolRewardClaimTest<
   assert(failRecord.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord.event.data.dispatchError.asModule))
 
-  /**
-   * 6. Eve sets PermissionlessWithdraw — Bob can now claim on her behalf
-   */
+  // 6. Eve sets PermissionlessWithdraw — Bob can now claim on her behalf
 
   const setPermTx2 = client.api.tx.nominationPools.setClaimPermission('PermissionlessWithdraw')
   await sendTransaction(setPermTx2.signAsync(testAccounts.eve))
@@ -1886,9 +1784,7 @@ async function nominationPoolRewardClaimTest<
     eveFreePreOtherClaim,
   )
 
-  /**
-   * 7. Simulate more rewards, Eve sets PermissionlessCompound — Bob's claim_payout_other fails
-   */
+  // 7. Simulate more rewards, Eve sets PermissionlessCompound — Bob's claim_payout_other fails
 
   const rewardAccountInfo3 = await client.api.query.system.account(rewardAccount)
   await client.dev.setStorage({
@@ -1923,9 +1819,7 @@ async function nominationPoolRewardClaimTest<
   assert(failRecord2.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord2.event.data.dispatchError.asModule))
 
-  /**
-   * 8. Eve sets PermissionlessAll — Bob's claim_payout_other succeeds
-   */
+  // 8. Eve sets PermissionlessAll — Bob's claim_payout_other succeeds
 
   const setPermTx4 = client.api.tx.nominationPools.setClaimPermission('PermissionlessAll')
   await sendTransaction(setPermTx4.signAsync(testAccounts.eve))
@@ -1983,9 +1877,7 @@ async function nominationPoolRewardClaimAfterUnbondTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool, Eve joins
-   */
+  // 1. Create pool, Eve joins
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -2006,17 +1898,13 @@ async function nominationPoolRewardClaimAfterUnbondTest<
   await sendTransaction(joinTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  /**
-   * 2. Eve unbonds all her funds
-   */
+  // 2. Eve unbonds all her funds
 
   const unbondTx = client.api.tx.nominationPools.unbond(testAccounts.eve.address, depositorMinBond)
   await sendTransaction(unbondTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  /**
-   * 3. Simulate rewards by funding the reward account
-   */
+  // 3. Simulate rewards by funding the reward account
 
   const rewardAmount = 1000e10
   const rewardAccountInfo = await client.api.query.system.account(rewardAccount)
@@ -2037,9 +1925,7 @@ async function nominationPoolRewardClaimAfterUnbondTest<
     },
   })
 
-  /**
-   * 4. Eve tries to claim — should fail with FullyUnbonding
-   */
+  // 4. Eve tries to claim — should fail with FullyUnbonding
 
   const eveClaimTx = client.api.tx.nominationPools.claimPayout()
   await sendTransaction(eveClaimTx.signAsync(testAccounts.eve))
@@ -2051,9 +1937,7 @@ async function nominationPoolRewardClaimAfterUnbondTest<
   assert(eveFailRecord.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.FullyUnbonding.is(eveFailRecord.event.data.dispatchError.asModule))
 
-  /**
-   * 5. Alice claims — she holds all active points, gets all the rewards
-   */
+  // 5. Alice claims — she holds all active points, gets all the rewards
 
   const aliceFreePreClaim = (await client.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()
 
@@ -2116,9 +2000,7 @@ async function nominationPoolBondExtraOtherTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool, Eve joins, simulate rewards
-   */
+  // 1. Create pool, Eve joins, simulate rewards
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -2158,9 +2040,7 @@ async function nominationPoolBondExtraOtherTest<
     },
   })
 
-  /**
-   * 2. Eve sets Permissioned — Bob's bond_extra_other(Rewards) fails
-   */
+  // 2. Eve sets Permissioned — Bob's bond_extra_other(Rewards) fails
 
   const setPermTx0 = client.api.tx.nominationPools.setClaimPermission('Permissioned')
   await sendTransaction(setPermTx0.signAsync(testAccounts.eve))
@@ -2176,9 +2056,7 @@ async function nominationPoolBondExtraOtherTest<
   assert(failRecord0.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord0.event.data.dispatchError.asModule))
 
-  /**
-   * 3. Eve sets PermissionlessWithdraw — Bob's bond_extra_other(Rewards) fails
-   */
+  // 3. Eve sets PermissionlessWithdraw — Bob's bond_extra_other(Rewards) fails
 
   const setPermTx = client.api.tx.nominationPools.setClaimPermission('PermissionlessWithdraw')
   await sendTransaction(setPermTx.signAsync(testAccounts.eve))
@@ -2195,9 +2073,7 @@ async function nominationPoolBondExtraOtherTest<
   assert(failRecord.event.data.dispatchError.isModule)
   assert(client.api.errors.nominationPools.DoesNotHavePermission.is(failRecord.event.data.dispatchError.asModule))
 
-  /**
-   * 3. Eve sets PermissionlessCompound — Bob's bond_extra_other(Rewards) succeeds
-   */
+  // 3. Eve sets PermissionlessCompound — Bob's bond_extra_other(Rewards) succeeds
 
   const setPermTx2 = client.api.tx.nominationPools.setClaimPermission('PermissionlessCompound')
   await sendTransaction(setPermTx2.signAsync(testAccounts.eve))
@@ -2228,9 +2104,7 @@ async function nominationPoolBondExtraOtherTest<
   const eveMemberPost = (await client.api.query.nominationPools.poolMembers(testAccounts.eve.address)).unwrap()
   expect(eveMemberPost.points.toBigInt()).toBeGreaterThan(evePointsPre)
 
-  /**
-   * 5. Simulate more rewards, Eve sets PermissionlessAll — Bob's bond_extra_other(Rewards) succeeds
-   */
+  // 5. Simulate more rewards, Eve sets PermissionlessAll — Bob's bond_extra_other(Rewards) succeeds
 
   const rewardAccountInfo2 = await client.api.query.system.account(rewardAccount)
   await client.dev.setStorage({
@@ -2274,6 +2148,142 @@ async function nominationPoolBondExtraOtherTest<
 }
 
 /**
+ * Test `nomination_pools::apply_slash` — resolve a pending slash on a pool member.
+ *
+ * DelegateStake-only (gated by `StakeStrategyType::Delegate`). When a pool's backing validator
+ * is slashed, the slash becomes "pending" in `DelegatedStaking::Agents.pending_slash`.
+ * `apply_slash` resolves it for a specific member.
+ *
+ * The pending slash is simulated by injecting storage to mimic a staking-level slash:
+ * - Reduce the pool's active stake in the staking ledger (so `points_to_balance` returns less)
+ * - Set `DelegatedStaking::Agents[pool].pending_slash` to a non-zero value
+ * This makes `member_pending_slash = delegation.amount - total_balance() > 0`.
+ *
+ * 1. Create pool, Eve joins
+ * 2. Reduce pool's active stake + set pending_slash in DelegatedStaking
+ * 3. Bob calls `apply_slash(eve)` — should succeed, emits `delegatedStaking.Slashed`
+ */
+async function nominationPoolApplySlashTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStoragesRelay>) {
+  const [client] = await setupNetworks(chain)
+
+  if (!client.api.tx.nominationPools.applySlash) {
+    return
+  }
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[testAccounts.alice.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 10000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 10000e10 } }],
+      ],
+    },
+  })
+
+  const preLastPoolId = (await client.api.query.nominationPools.lastPoolId()).toNumber()
+  const poolId = preLastPoolId + 1
+
+  const minJoinBond = (await client.api.query.nominationPools.minJoinBond()).toNumber()
+  const minCreateBond = (await client.api.query.nominationPools.minCreateBond()).toNumber()
+  const minNominationBond = (await client.api.query.staking.minNominatorBond()).toNumber()
+  const depositorMinBond = Math.max(minJoinBond, minCreateBond, minNominationBond)
+
+  await ensureMaxPoolsCapacity(client)
+
+  // 1. Create pool, Eve joins
+
+  const createTx = client.api.tx.nominationPools.create(
+    depositorMinBond,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+    testAccounts.alice.address,
+  )
+  await sendTransaction(createTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  let events = await client.api.query.system.events()
+  const [stakingBondedRecord] = events.filter(({ event }) => client.api.events.staking.Bonded.is(event))
+  assert(client.api.events.staking.Bonded.is(stakingBondedRecord?.event))
+  const poolBondedAccount = stakingBondedRecord.event.data.stash.toString()
+
+  const joinTx = client.api.tx.nominationPools.join(depositorMinBond, poolId)
+  await sendTransaction(joinTx.signAsync(testAccounts.eve))
+  await client.dev.newBlock()
+
+  // 2. Simulate staking-level slash: reduce pool's active stake + set pending_slash
+
+  const slashAmount = BigInt(depositorMinBond) / 4n
+  const totalPoolStake = BigInt(depositorMinBond) * 2n
+
+  // Reduce the pool's active stake in the staking ledger
+  const stakingLedger = (await client.api.query.staking.ledger(poolBondedAccount)).unwrap()
+  const ledgerJson = stakingLedger.toJSON() as any
+  ledgerJson.active = Number(totalPoolStake - slashAmount)
+  ledgerJson.total = Number(totalPoolStake - slashAmount)
+
+  // Set pending_slash on the pool's AgentLedger
+  const agentLedger = (await client.api.query.delegatedStaking.agents(poolBondedAccount)).unwrap()
+  const agentLedgerJson = agentLedger.toJSON() as any
+  agentLedgerJson.pendingSlash = Number(slashAmount)
+
+  await client.dev.setStorage({
+    Staking: {
+      ledger: [[[poolBondedAccount], ledgerJson]],
+    },
+    DelegatedStaking: {
+      agents: [[[poolBondedAccount], agentLedgerJson]],
+    },
+  })
+
+  // 3. Bob calls apply_slash(eve) — should succeed
+
+  const eveAccountPreSlash = (await client.api.query.system.account(testAccounts.eve.address)).data
+  const eveDelegationPreSlash = (await client.api.query.delegatedStaking.delegators(testAccounts.eve.address))
+    .unwrap()
+    .amount.toBigInt()
+
+  const applySlashTx = client.api.tx.nominationPools.applySlash(testAccounts.eve.address)
+  await sendTransaction(applySlashTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+
+  events = await client.api.query.system.events()
+
+  const [failRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
+  if (failRecord) {
+    assert(client.api.events.system.ExtrinsicFailed.is(failRecord.event))
+    throw new Error(`apply_slash failed: ${failRecord.event.data.dispatchError.toString()}`)
+  }
+
+  const [slashedRecord] = events.filter(({ event }) => client.api.events.delegatedStaking.Slashed.is(event))
+  assert(client.api.events.delegatedStaking.Slashed.is(slashedRecord?.event))
+  expect(slashedRecord.event.data.agent.toString()).toBe(poolBondedAccount)
+  expect(slashedRecord.event.data.delegator.toString()).toBe(
+    encodeAddress(testAccounts.eve.address, chain.properties.addressEncoding),
+  )
+  // Eve holds half the pool's points, so her slash is slashAmount / 2
+  const eveExpectedSlash = slashAmount / 2n
+  const slashedAmount = slashedRecord.event.data.amount.toBigInt()
+  expect(slashedAmount).toBe(eveExpectedSlash)
+
+  // Eve holds half the pool's points, so her share is proportional to the total slash
+  const eveDelegationPostSlash = (await client.api.query.delegatedStaking.delegators(testAccounts.eve.address))
+    .unwrap()
+    .amount.toBigInt()
+  expect(eveDelegationPreSlash - eveDelegationPostSlash).toBe(slashedAmount)
+
+  const eveAccountPostSlash = (await client.api.query.system.account(testAccounts.eve.address)).data
+  const eveTotalPreSlash = eveAccountPreSlash.free.toBigInt() + eveAccountPreSlash.reserved.toBigInt()
+  const eveTotalPostSlash = eveAccountPostSlash.free.toBigInt() + eveAccountPostSlash.reserved.toBigInt()
+  expect(eveTotalPreSlash - eveTotalPostSlash).toBe(slashedAmount)
+
+  const agentLedgerPost = (await client.api.query.delegatedStaking.agents(poolBondedAccount)).unwrap()
+  expect(agentLedgerPost.pendingSlash.toBigInt()).toBeLessThan(slashAmount)
+}
+
+/**
  * Test `pool_withdraw_unbonded` — permissionless pool-level staking ledger cleanup.
  *
  * This is distinct from member `withdraw_unbonded`: it consolidates the pool's staking
@@ -2312,9 +2322,7 @@ async function nominationPoolWithdrawUnbondedPoolTest<
 
   await ensureMaxPoolsCapacity(client)
 
-  /**
-   * 1. Create pool, Eve joins and unbonds
-   */
+  // 1. Create pool, Eve joins and unbonds
 
   const createTx = client.api.tx.nominationPools.create(
     depositorMinBond,
@@ -2333,9 +2341,7 @@ async function nominationPoolWithdrawUnbondedPoolTest<
   await sendTransaction(unbondTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  /**
-   * 2. Advance era past unbonding period
-   */
+  // 2. Advance era past unbonding period
 
   const currentEra = (await client.api.query.staking.currentEra()).unwrap().toNumber()
   const bondingDuration = client.api.consts.staking.bondingDuration.toNumber()
@@ -2348,9 +2354,7 @@ async function nominationPoolWithdrawUnbondedPoolTest<
     },
   })
 
-  /**
-   * 3. Bob (anyone) calls pool_withdraw_unbonded — succeeds
-   */
+  // 3. Bob (anyone) calls pool_withdraw_unbonded — succeeds
 
   const poolWithdrawTx = client.api.tx.nominationPools.poolWithdrawUnbonded(poolId, 0)
   await sendTransaction(poolWithdrawTx.signAsync(testAccounts.bob))
@@ -2360,9 +2364,7 @@ async function nominationPoolWithdrawUnbondedPoolTest<
   const [failRecord] = events.filter(({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed')
   expect(failRecord, 'pool_withdraw_unbonded should succeed on non-Destroying pool').toBeUndefined()
 
-  /**
-   * 4. Set pool to Destroying — pool_withdraw_unbonded should fail with NotDestroying
-   */
+  // 4. Set pool to Destroying — pool_withdraw_unbonded should fail with NotDestroying
 
   const setStateTx = client.api.tx.nominationPools.setState(poolId, 'Destroying')
   await sendTransaction(setStateTx.signAsync(testAccounts.alice))
@@ -2453,6 +2455,11 @@ export function baseNominationPoolsE2ETests<
         kind: 'test',
         label: 'nomination pool pool_withdraw_unbonded test',
         testFn: async () => await nominationPoolWithdrawUnbondedPoolTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'nomination pool apply slash test',
+        testFn: async () => await nominationPoolApplySlashTest(chain),
       },
     ],
   }
