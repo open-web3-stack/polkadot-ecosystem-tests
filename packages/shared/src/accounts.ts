@@ -78,6 +78,41 @@ async function isAccountReaped(client: Client<any, any>, address: string): Promi
 }
 
 /**
+ * On Bifrost, transaction fees are emitted as `balances.Burned` events (instead of `balances.Withdraw`),
+ * which pollutes tests that look for explicit burn events. This helper returns only the Burned events
+ * for a given account that are NOT fee-related, by filtering out burns whose amount matches
+ * a `TransactionFeePaid` event for that same account.
+ */
+function findExplicitBurnEventsForAccount(
+  events: Vec<FrameSystemEventRecord>,
+  client: Client<any, any>,
+  address: string,
+  chain: Chain<any, any>,
+): FrameSystemEventRecord[] {
+  const isBifrostKusama = chain.name === 'bifrostKusama'
+  const encoded = encodeAddress(address, client.config.properties.addressEncoding)
+
+  const feeAmounts = new Set<bigint>()
+  if (isBifrostKusama) {
+    const feeInfos = client.config.properties.feeExtractor(events as unknown as any[], client.api)
+    for (const fi of feeInfos) {
+      if (fi.who === encoded) feeAmounts.add(fi.actualFee)
+    }
+  }
+
+  return events.filter((record) => {
+    const { event } = record
+    if (event.section === 'balances' && event.method === 'Burned') {
+      assert(client.api.events.balances.Burned.is(event))
+      if (event.data.who.toString() !== encoded) return false
+      if (feeAmounts.has(event.data.amount.toBigInt())) return false
+      return true
+    }
+    return false
+  })
+}
+
+/**
  * Find a transfer event between two specific accounts in a list of events.
  *
  * @param events - Array of event records to search through
@@ -810,20 +845,24 @@ async function transferAllowDeathNoKillTest<
   expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
-  // Verify withdraw event
-  const withdrawEvent = events.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Withdraw') {
-      assert(client.api.events.balances.Withdraw.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(withdrawEvent).toBeDefined()
-  assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
-  const withdrawEventData = withdrawEvent!.event.data
-  expect(withdrawEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
+  // On Bifrost Kusama, fees emit Burned (not Withdraw) events. Skip Withdraw check there.
+  if (chain.name !== 'bifrostKusama') {
+    const withdrawEvent = events.find((record) => {
+      const { event } = record
+      if (event.section === 'balances' && event.method === 'Withdraw') {
+        assert(client.api.events.balances.Withdraw.is(event))
+        return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
+      }
+      return false
+    })
+    expect(withdrawEvent).toBeDefined()
+    assert(client.api.events.balances.Withdraw.is(withdrawEvent!.event))
+    const withdrawEventData = withdrawEvent!.event.data
+    expect(withdrawEventData.who.toString()).toBe(
+      encodeAddress(alice.address, client.config.properties.addressEncoding),
+    )
+    expect(withdrawEventData.amount.toBigInt()).toBe(feeInfo.actualFee)
+  }
 
   // Verify endowment event
   const endowedEvent = events.find((record) => {
@@ -3713,17 +3752,10 @@ async function burnTestBaseCase<
 
   // Check burn event
   const eventsAfterBurn = await client.api.query.system.events()
-  const burnEvent = eventsAfterBurn.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Burned') {
-      assert(client.api.events.balances.Burned.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(burnEvent).toBeDefined()
-  assert(client.api.events.balances.Burned.is(burnEvent!.event))
-  const burnEventData = burnEvent!.event.data
+  const explicitBurns = findExplicitBurnEventsForAccount(eventsAfterBurn, client, alice.address, chain)
+  expect(explicitBurns).toHaveLength(1)
+  assert(client.api.events.balances.Burned.is(explicitBurns[0].event))
+  const burnEventData = explicitBurns[0].event.data
   expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
 }
@@ -3786,17 +3818,11 @@ async function burnTestWithReaping<
   expect(await isAccountReaped(client, alice.address)).toBe(true)
 
   const events = await client.api.query.system.events()
-  const burnEvent = events.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Burned') {
-      assert(client.api.events.balances.Burned.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(burnEvent).toBeDefined()
-  assert(client.api.events.balances.Burned.is(burnEvent!.event))
-  const burnEventData = burnEvent!.event.data
+
+  const explicitBurns = findExplicitBurnEventsForAccount(events, client, alice.address, chain)
+  expect(explicitBurns).toHaveLength(1)
+  assert(client.api.events.balances.Burned.is(explicitBurns[0].event))
+  const burnEventData = explicitBurns[0].event.data
   expect(burnEventData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(burnEventData.amount.toBigInt()).toBe(burnAmount)
 
@@ -3816,10 +3842,8 @@ async function burnTestWithReaping<
   )
   expect(dustLostEventData.amount.toBigInt()).toBe(existentialDeposit - 1n)
 
-  // 4. Verify that the total issuance is decreased by the amount burned and dust
+  // 4. Verify that the total issuance is decreased by the amount burned
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  // TODO: Bifrost (Polkadot/Kusama) doesn't remove dust from total issuance when accounts are reaped
-  // In them, total issuance only decreases by burn amount (not burn + dust).
   const isBifrost = chain.name.includes('bifrost')
   const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
@@ -3909,16 +3933,9 @@ async function burnKeepAliveTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned event for Alice
-  const burnEvent = systemEvents.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Burned') {
-      assert(client.api.events.balances.Burned.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(burnEvent).toBeUndefined()
+  // Verify no explicit Burned event for Alice (on Bifrost, fee-related Burned events are expected)
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  expect(explicitBurns).toHaveLength(0)
 }
 
 /**
@@ -3986,18 +4003,15 @@ async function burnWithDepositTest<
 
   await client.dev.newBlock()
 
-  // 3. Burn amount that would leave Alice with ED - 1 after burn and fee
+  // 3. Calculate burn amount that would leave Alice with exactly ED - 1n after burn and fee
 
-  // Get Alice's current free balance after adding consumer reference
   const aliceAccountAfterConsumer = await client.api.query.system.account(alice.address)
   const aliceFreeBefore = aliceAccountAfterConsumer.data.free.toBigInt()
 
-  // Estimate the fee
   const dummyBurnTx = client.api.tx.balances.burn(existentialDeposit * 999n, false)
   const paymentInfo = await dummyBurnTx.paymentInfo(alice)
   const estimatedFee = paymentInfo.partialFee.toBigInt()
 
-  // Calculate burn amount that would leave Alice with exactly ED - 1n after burn and fee
   // finalBalance = aliceFreeBefore - burnAmount - fee = ED - 1n
   // Therefore: burnAmount = aliceFreeBefore - fee - (ED - 1n)
   const burnAmount = aliceFreeBefore - estimatedFee - (existentialDeposit - 1n)
@@ -4032,17 +4046,10 @@ async function burnWithDepositTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify Burned event was not emitted for Alice
+  // Verify no explicit Burned event for Alice
   const systemEvents = await client.api.query.system.events()
-  const burnEvent = systemEvents.find((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Burned') {
-      assert(client.api.events.balances.Burned.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(burnEvent).toBeUndefined()
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  expect(explicitBurns).toHaveLength(0)
 
   // Verify no KilledAccount event for Alice
   const killedEvent = systemEvents.find((record) => {
@@ -4155,16 +4162,9 @@ async function burnDoubleAttemptTest<
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
 
-  // Verify no Burned event for Alice
-  const burnEvents = systemEvents.filter((record) => {
-    const { event } = record
-    if (event.section === 'balances' && event.method === 'Burned') {
-      assert(client.api.events.balances.Burned.is(event))
-      return event.data.who.toString() === encodeAddress(alice.address, client.config.properties.addressEncoding)
-    }
-    return false
-  })
-  expect(burnEvents).toHaveLength(0)
+  // Verify no explicit Burned event for Alice
+  const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
+  expect(explicitBurns).toHaveLength(0)
 }
 
 // ---------------------------------------
@@ -4439,11 +4439,18 @@ export const accountsE2ETests = <
           label: 'self-transfer of entire balance',
           testFn: () => transferAllowDeathSelfTest(chain),
         },
-        {
-          kind: 'test',
-          label: 'leaving an account below ED kills it',
-          testFn: () => transferAllowDeathTest(chain),
-        },
+        // TODO: Bifrost Kusama's FlexibleFee rejects txs that would leave balance below ED after fees.
+        // See https://github.com/bifrost-io/bifrost/blob/develop/pallets/flexible-fee/src/lib.rs
+        // Introduced in v0.22.0 (#1863): `can_withdraw` only matches `WithdrawConsequence::Success`.
+        ...(chain.name === 'bifrostKusama'
+          ? []
+          : [
+              {
+                kind: 'test' as const,
+                label: 'leaving an account below ED kills it',
+                testFn: () => transferAllowDeathTest(chain),
+              },
+            ]),
         {
           kind: 'test',
           label: 'account with reserves is not reaped when transferring funds',
@@ -4528,11 +4535,16 @@ export const accountsE2ETests = <
           label: 'transfer all with keepAlive true leaves 1 ED',
           testFn: () => transferAllKeepAliveTrueTest(chain),
         },
-        {
-          kind: 'test',
-          label: 'transfer all with keepAlive false kills sender',
-          testFn: () => transferAllKeepAliveFalseTest(chain),
-        },
+        // TODO: same Bifrost Kusama FlexibleFee issue as above — see v0.22.0 (#1863)
+        ...(chain.name === 'bifrostKusama'
+          ? []
+          : [
+              {
+                kind: 'test' as const,
+                label: 'transfer all with keepAlive false kills sender',
+                testFn: () => transferAllKeepAliveFalseTest(chain),
+              },
+            ]),
         {
           kind: 'test',
           label: 'account with reserves cannot transfer all funds',
@@ -4633,11 +4645,16 @@ export const accountsE2ETests = <
           label: 'burning entire balance, or more than it, fails',
           testFn: () => burnDoubleAttemptTest(chain),
         },
-        {
-          kind: 'test',
-          label: 'burning funds below ED leads to account reaping',
-          testFn: () => burnTestWithReaping(chain),
-        },
+        // TODO: same Bifrost Kusama FlexibleFee issue as above — see v0.22.0 (#1863)
+        ...(chain.name === 'bifrostKusama'
+          ? []
+          : [
+              {
+                kind: 'test' as const,
+                label: 'burning funds below ED leads to account reaping',
+                testFn: () => burnTestWithReaping(chain),
+              },
+            ]),
         {
           kind: 'test' as const,
           label: 'burning below ED with keep_alive is no-op',
