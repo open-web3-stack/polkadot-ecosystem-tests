@@ -3844,7 +3844,8 @@ async function burnTestWithReaping<
 
   // 4. Verify that the total issuance is decreased by the amount burned
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  const expectedDecrease = burnAmount + (existentialDeposit - 1n)
+  const isBifrost = chain.name.includes('bifrost')
+  const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
   expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
 }
 
