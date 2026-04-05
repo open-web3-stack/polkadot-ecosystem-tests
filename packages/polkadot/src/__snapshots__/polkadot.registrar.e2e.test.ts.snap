@@ -444,3 +444,23 @@ exports[`Polkadot Registrar > pallet registrar - swap functions > cannot swap tw
   },
 ]
 `;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > non-owner cannot register swap 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;

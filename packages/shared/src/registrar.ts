@@ -28,6 +28,7 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
       account: [
         [[devAccounts.alice.address], { providers: 1, data: { free: 100000e10 } }],
         [[devAccounts.bob.address], { providers: 1, data: { free: 100000e10 } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: 100000e10 } }],
       ],
     },
   })
@@ -517,9 +518,11 @@ export async function parasRootRegistrationE2eTest<
  * Test the process of
  * 1. swapping with same ID
  *
- *     1.1 asserting that no swap event was emmited
+ *     1.1 asserting that non-owner cannot register swap
  *
- *     1.2 asserting that no pending swap stored
+ *     1.2 asserting that no swap event was emmited
+ *
+ *     1.3 asserting that no pending swap stored
  *
  * 2. swapping two Parathreads
  *
@@ -562,17 +565,23 @@ export async function parasRegistrarSwapE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraIdB)
 
   // 1. Swapping with same ID - no-op
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdA), devAccounts.alice)
 
+  // 1.1 Assert that non-owner cannot register swap
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.charlie)
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'non-owner cannot register swap',
+  )
+
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdA), devAccounts.alice)
   const eventsAfterSameSwap = await client.api.query.system.events()
 
-  // 1.1 No Swapped event emitted
+  // 1.2 No Swapped event emitted
   const swappedEventSame = eventsAfterSameSwap.find(
     ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
   )
   expect(swappedEventSame).toBeUndefined()
 
-  // 1.2 No pending swap stored
+  // 1.3 No pending swap stored
   const pendingSwapSame = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapSame.isEmpty).toBe(true)
 
@@ -601,10 +610,7 @@ export async function parasRegistrarSwapE2ETest<
 
   // 2.3 Assert that cannot swap two parathreads
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'cannot swap two parathreads',
-  )
+  await assertExtrinsicFailed(client, client.api.errors.registrar.CannotSwap, 'cannot swap two parathreads')
 
   // 3. Swapping a Parathread and a Parachain
   // Clear pending swap from case 2, set A=Parachain, B=Parathread
