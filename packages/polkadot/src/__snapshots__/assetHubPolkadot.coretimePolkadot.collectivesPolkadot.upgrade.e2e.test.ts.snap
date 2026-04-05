@@ -24,7 +24,7 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
         {
           "Transact": {
             "call": {
-              "encoded": "0x400020883d25f1db1e4a6789b18726a0e94c8a8824c7f329d010633c5d8ad9a1a730",
+              "encoded": "0x4000f53a83d72e0d90d57a2440816fdd4a992860e57158eb5f530f88fc9394684ab6",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -37,12 +37,15 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -108,12 +111,12 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
 [
   {
     "data": {
-      "callHash": "0x20883d25f1db1e4a6789b18726a0e94c8a8824c7f329d010633c5d8ad9a1a730",
+      "callHash": "0xf53a83d72e0d90d57a2440816fdd4a992860e57158eb5f530f88fc9394684ab6",
       "result": {
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -129,7 +132,7 @@ exports[`asset hub & coretime & collectives > Asset Hub authorizes Coretime upgr
 [
   {
     "data": {
-      "callHash": "0x20883d25f1db1e4a6789b18726a0e94c8a8824c7f329d010633c5d8ad9a1a730",
+      "callHash": "0xf53a83d72e0d90d57a2440816fdd4a992860e57158eb5f530f88fc9394684ab6",
     },
     "method": "CallWhitelisted",
     "section": "whitelist",

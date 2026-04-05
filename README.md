@@ -166,6 +166,18 @@ These include:
     - Accepting curators in wrong child bounty states
     - Closing child bounties in pending payout status
     - Non-curator attempting to create child bounties
+- E2E test suite for the `configuration` pallet on relay chains:
+  - Scheduling configuration updates via Root origin across all parameter groups: core (code size, PoV size, upgrade cooldown/delay), scheduler (group rotation, availability period, lookahead, validators per core), dispute resolution, message queue (upward/downward queue limits), HRMP channel parameters, and advanced parameters (PVF voting TTL, async backing params, executor params, approval voting, node features)
+  - Verifying that the pending config entry is scheduled for session index `currentIndex + 2`
+  - Idempotency: re-scheduling the same configuration values leaves the pending entry unchanged
+  - Overwrite behaviour: a later scheduled value for the same field replaces the earlier one
+  - Same-block merge: multiple changes scheduled in the same block are folded into a single pending entry
+  - Consistency check matrix:
+    - Consistent base + inconsistent new value → rejected with `InvalidNewValue`
+    - Inconsistent base + inconsistent new value → accepted (recovery path)
+    - Inconsistent base + consistent new value → accepted
+    - `bypassConsistencyCheck` flag enabled → inconsistent values accepted unconditionally
+  - Asserting that all configuration setters fail when called with a signed (non-Root) origin
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.

@@ -24,7 +24,7 @@ exports[`asset hub & bridgeHub & collectives > Asset Hub authorizes Bridge Hub u
         {
           "Transact": {
             "call": {
-              "encoded": "0x40005fe91fd0226f96aa51381426e85ce9b72a0e49eefb8bf04e1ae4cf928dd186fd",
+              "encoded": "0x4000e23bcc7e09ab2df164a8e4d7370e2ebcda966eea34534c685a39452ffe206dc8",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -37,12 +37,15 @@ exports[`asset hub & bridgeHub & collectives > Asset Hub authorizes Bridge Hub u
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -108,12 +111,12 @@ exports[`asset hub & bridgeHub & collectives > Asset Hub authorizes Bridge Hub u
 [
   {
     "data": {
-      "callHash": "0x5fe91fd0226f96aa51381426e85ce9b72a0e49eefb8bf04e1ae4cf928dd186fd",
+      "callHash": "0xe23bcc7e09ab2df164a8e4d7370e2ebcda966eea34534c685a39452ffe206dc8",
       "result": {
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -129,7 +132,7 @@ exports[`asset hub & bridgeHub & collectives > Asset Hub authorizes Bridge Hub u
 [
   {
     "data": {
-      "callHash": "0x5fe91fd0226f96aa51381426e85ce9b72a0e49eefb8bf04e1ae4cf928dd186fd",
+      "callHash": "0xe23bcc7e09ab2df164a8e4d7370e2ebcda966eea34534c685a39452ffe206dc8",
     },
     "method": "CallWhitelisted",
     "section": "whitelist",

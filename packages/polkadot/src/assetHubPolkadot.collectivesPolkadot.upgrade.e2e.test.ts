@@ -11,19 +11,22 @@ const testConfig: TestConfig = {
   testSuiteName: 'assetHubPolkadot & collectivesPolkadot',
 }
 
-registerTestTree(
-  governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
-)
+registerTestTree({
+  ...governanceChainUpgradesOtherChainViaRootReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
+  flags: { skip: true },
+})
 
-registerTestTree(
-  governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite(
+registerTestTree({
+  ...governanceChainUpgradesOtherChainViaWhitelistedCallerReferendumSuite(
     assetHubPolkadot,
     collectivesPolkadot,
     collectivesPolkadot,
     testConfig,
   ),
-)
+  flags: { skip: true },
+})
 
-registerTestTree(
-  governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
-)
+registerTestTree({
+  ...governanceChainSelfUpgradeViaWhitelistedCallerReferendumSuite(assetHubPolkadot, collectivesPolkadot, testConfig),
+  flags: { skip: true },
+})

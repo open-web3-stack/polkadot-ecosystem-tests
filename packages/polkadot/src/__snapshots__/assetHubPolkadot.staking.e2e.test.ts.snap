@@ -417,7 +417,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > set staking configs >
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -525,7 +525,25 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > n
 ]
 `;
 
-exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `[]`;
+exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `
+[
+  {
+    "data": {
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+]
+`;
 
 exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > validate (blocked) events 1`] = `
 [
@@ -533,7 +551,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": true,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -562,7 +580,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -591,7 +609,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
@@ -620,7 +638,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
