@@ -826,6 +826,8 @@ export async function parasScheduleCodeUpgradeE2ETest<
  *
  * 5. asserting that Root can set the current head even when locked
  *
+ * 6. asserting that the para itself can set its own current head
+ *
  */
 export async function parasSetCurrentHeadE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -897,6 +899,21 @@ export async function parasSetCurrentHeadE2ETest<
 
   const headAfterRoot = await client.api.query.paras.heads(paraId)
   expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
+
+  // 6. The para itself can set its own current head via a para origin
+  const paraHeadRaw = new Uint8Array([0x07, 0x08, 0x09])
+  const paraHead = u8aToHex(paraHeadRaw)
+  const setHeadParaTx = client.api.tx.registrar.setCurrentHead(paraId, paraHead)
+  await scheduleInlineCallWithOrigin(
+    client,
+    setHeadParaTx.method.toHex(),
+    { ParachainsOrigin: { Parachain: paraId } },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const headAfterPara = await client.api.query.paras.heads(paraId)
+  expect(headAfterPara.toHex()).toBe(u8aToHex(compactAddLength(paraHeadRaw)))
 }
 
 export function registrarE2ETest<
