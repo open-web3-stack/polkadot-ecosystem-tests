@@ -540,13 +540,22 @@ export async function parasRootRegistrationE2eTest<
  *
  *     3.3 asserting successful swap events
  *
- * 4. swapping a Parachain and a Parachain
+ * 4. swapping a Parachain and a Parathread
  *
  *     4.1 asserting that Alice successfuly initiates swap
  *
  *     4.2 asserting that Bob successfully confirms swap
  *
  *     4.3 asserting successful swap events
+ *
+ * 5. swapping a Parachain and a Parachain
+ *
+ *     5.1 asserting that Alice successfuly initiates swap
+ *
+ *     5.2 asserting that Bob successfully confirms swap
+ *
+ *     5.3 asserting successful swap events
+ *
  */
 export async function parasRegistrarSwapE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -647,7 +656,41 @@ export async function parasRegistrarSwapE2ETest<
   expect(chainThreadSwapEvent.event.data[0].toString()).toBe(paraIdB.toString())
   expect(chainThreadSwapEvent.event.data[1].toString()).toBe(paraIdA.toString())
 
-  // 4: Parachain and Parachain confirmed swap
+  // 4. Parachain and Parathread: A=Parathread (Alice), B=Parachain (Bob)
+  await client.dev.setStorage({
+    Registrar: {
+      pendingSwap: [
+        [[paraIdA], null],
+        [[paraIdB], null],
+      ],
+    },
+    Paras: {
+      paraLifecycles: [
+        [[paraIdA], 'Parathread'],
+        [[paraIdB], 'Parachain'],
+      ],
+    },
+  })
+
+  // 4.1 Alice initiates: A ↔ B
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
+  const pendingSwapThreadChain = await client.api.query.registrar.pendingSwap(paraIdA)
+  expect(pendingSwapThreadChain.toString()).toBe(paraIdB.toString())
+
+  // 4.2 Bob confirms: B ↔ A
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
+
+  const eventsAfterThreadChainSwap = await client.api.query.system.events()
+  const [threadChainSwapEvent] = eventsAfterThreadChainSwap.filter(
+    ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
+  )
+  assert(client.api.events.registrar.Swapped.is(threadChainSwapEvent.event))
+
+  // 4.3 Asserting swap events
+  expect(threadChainSwapEvent.event.data[0].toString()).toBe(paraIdB.toString())
+  expect(threadChainSwapEvent.event.data[1].toString()).toBe(paraIdA.toString())
+
+  // 5: Parachain and Parachain confirmed swap
   await client.dev.setStorage({
     Registrar: {
       pendingSwap: [
@@ -663,15 +706,15 @@ export async function parasRegistrarSwapE2ETest<
     },
   })
 
-  // 4.1 Alice initiates: A ↔ B
+  // 5.1 Alice initiates: A ↔ B
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
   const pendingSwapChainChain = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapChainChain.toString()).toBe(paraIdB.toString())
 
-  // 4.2 Bob confirms: B ↔ A
+  // 5.2 Bob confirms: B ↔ A
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
-  // 4.3 Assert swap events
+  // 5.3 Assert swap events
   const eventsAfterChainChainSwap = await client.api.query.system.events()
   const [chainChainSwapEvent] = eventsAfterChainChainSwap.filter(
     ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
