@@ -903,6 +903,13 @@ export async function parasSetCurrentHeadE2ETest<
   const headAfterAlice = await client.api.query.paras.heads(paraId)
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
 
+  const eventsAfterAlice = await client.api.query.system.events()
+  const [currentHeadUpdatedAlice] = eventsAfterAlice.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
+  )
+  assert(client.api.events.paras.CurrentHeadUpdated.is(currentHeadUpdatedAlice.event))
+  expect(currentHeadUpdatedAlice.event.data[0].toString()).toBe(paraId.toString())
+
   // 3. Lock the para via Root
   await addLockViaRoot(client, chain, paraId)
 
@@ -940,6 +947,13 @@ export async function parasSetCurrentHeadE2ETest<
   const headAfterRoot = await client.api.query.paras.heads(paraId)
   expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
 
+  const eventsAfterRoot = await client.api.query.system.events()
+  const [currentHeadUpdatedRoot] = eventsAfterRoot.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
+  )
+  assert(client.api.events.paras.CurrentHeadUpdated.is(currentHeadUpdatedRoot.event))
+  expect(currentHeadUpdatedRoot.event.data[0].toString()).toBe(paraId.toString())
+
   // 6. The para itself can set its own current head via a para origin
   const paraHeadRaw = new Uint8Array([0x07, 0x08, 0x09])
   const paraHead = u8aToHex(paraHeadRaw)
@@ -954,6 +968,13 @@ export async function parasSetCurrentHeadE2ETest<
 
   const headAfterPara = await client.api.query.paras.heads(paraId)
   expect(headAfterPara.toHex()).toBe(u8aToHex(compactAddLength(paraHeadRaw)))
+
+  const eventsAfterPara = await client.api.query.system.events()
+  const [currentHeadUpdatedPara] = eventsAfterPara.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
+  )
+  assert(client.api.events.paras.CurrentHeadUpdated.is(currentHeadUpdatedPara.event))
+  expect(currentHeadUpdatedPara.event.data[0].toString()).toBe(paraId.toString())
 }
 
 export function registrarE2ETest<
@@ -964,31 +985,31 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - reserve and registration functions',
-      //   testFn: async () => await parasRegistrationE2ETest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - root registration functions',
-      //   testFn: async () => await parasRootRegistrationE2eTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - swap functions',
-      //   testFn: async () => await parasRegistrarSwapE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - reserve and registration functions',
+        testFn: async () => await parasRegistrationE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - root registration functions',
+        testFn: async () => await parasRootRegistrationE2eTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - swap functions',
+        testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      },
       {
         kind: 'test',
         label: 'pallet registrar - schedule code upgrade',
         testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
       },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - set current head',
-      //   testFn: async () => await parasSetCurrentHeadE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - set current head',
+        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+      },
     ],
   }
 }
