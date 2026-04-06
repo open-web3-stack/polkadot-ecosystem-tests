@@ -1,5 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > alice deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > alice duplicate para register failed event 1`] = `
 [
   {
@@ -294,6 +304,16 @@ exports[`Polkadot Registrar > pallet registrar - reserve and registration functi
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > alice locked schedule code upgrade failed 1`] = `
 [
   {
@@ -418,6 +438,18 @@ exports[`Polkadot Registrar > pallet registrar - set current head > alice locked
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - set current head > alice set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - set current head > bob set current head failed 1`] = `
 [
   {
@@ -434,6 +466,30 @@ exports[`Polkadot Registrar > pallet registrar - set current head > bob set curr
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > para set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > root set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
   },
 ]
 `;
@@ -479,6 +535,36 @@ exports[`Polkadot Registrar > pallet registrar - swap functions > non-owner cann
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parachain parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parachain parathread swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parathread parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
   },
 ]
 `;
