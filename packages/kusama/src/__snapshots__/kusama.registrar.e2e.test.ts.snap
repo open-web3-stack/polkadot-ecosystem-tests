@@ -373,7 +373,25 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > bob sched
 ]
 `;
 
-exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `[]`;
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(rounded 3400)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
 
 exports[`Kusama Registrar > pallet registrar - set current head > alice locked set current head failed 1`] = `
 [

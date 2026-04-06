@@ -749,6 +749,9 @@ export async function parasScheduleCodeUpgradeE2ETest<
   const newValidationCode = u8aToHex(
     new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00]),
   )
+  const rootValidationCode = u8aToHex(
+    new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00]),
+  )
 
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
@@ -804,7 +807,13 @@ export async function parasScheduleCodeUpgradeE2ETest<
     .toMatchSnapshot('alice locked schedule code upgrade failed')
 
   // 5. Root can schedule a code upgrade even when locked
-  const scheduleUpgradeRootTx = client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode)
+  // Use a fresh para so the UpgradeRestrictionSignal from case 2 does not interfere.
+  // Note: forceRegister does not update nextFreeParaId (only reserve() does), so paraId + 1 is safe.
+  const paraIdB = paraId + 1
+  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraIdB)
+  await addLockViaRoot(client, chain, paraIdB)
+
+  const scheduleUpgradeRootTx = client.api.tx.registrar.scheduleCodeUpgrade(paraIdB, rootValidationCode)
   await scheduleInlineCallWithOrigin(
     client,
     scheduleUpgradeRootTx.method.toHex(),
@@ -816,6 +825,14 @@ export async function parasScheduleCodeUpgradeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('root schedule code upgrade success')
+
+  const eventsAfterRootUpgrade = await client.api.query.system.events()
+  const dispatchedEvent = eventsAfterRootUpgrade.find(
+    ({ event }) => event.section === 'scheduler' && event.method === 'Dispatched',
+  )
+  assert(dispatchedEvent !== undefined, 'Expected scheduler.Dispatched event')
+  assert(client.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
+  expect(dispatchedEvent.event.data.result.isOk).toBe(true)
 }
 
 /**
@@ -931,31 +948,31 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - reserve and registration functions',
-      //   testFn: async () => await parasRegistrationE2ETest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - root registration functions',
-      //   testFn: async () => await parasRootRegistrationE2eTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - swap functions',
-      //   testFn: async () => await parasRegistrarSwapE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - reserve and registration functions',
+        testFn: async () => await parasRegistrationE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - root registration functions',
+        testFn: async () => await parasRootRegistrationE2eTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - swap functions',
+        testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      },
       {
         kind: 'test',
         label: 'pallet registrar - schedule code upgrade',
         testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
       },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - set current head',
-      //   testFn: async () => await parasSetCurrentHeadE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - set current head',
+        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+      },
     ],
   }
 }
