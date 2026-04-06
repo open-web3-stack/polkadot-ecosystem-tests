@@ -388,6 +388,10 @@ export async function parasRegistrationE2ETest<
   await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
 
   // Verify deregistered event data
+  await checkSystemEvents(client, { section: 'registrar', method: 'Deregistered' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('alice deregister event')
+
   const systemEventsAfterDeregister = await client.api.query.system.events()
 
   const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
@@ -501,6 +505,10 @@ export async function parasRootRegistrationE2eTest<
   await client.dev.newBlock()
 
   // 3.1 Assert Deregistered event
+  await checkSystemEvents(client, { section: 'registrar', method: 'Deregistered' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('root deregister event')
+
   const systemEventsAfterDeregister = await client.api.query.system.events()
   const [deregEvent] = systemEventsAfterDeregister.filter((record) => {
     const { event } = record
@@ -646,6 +654,10 @@ export async function parasRegistrarSwapE2ETest<
   // 3.2 Bob confirms: B ↔ A
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
+  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('parachain parathread swap event')
+
   const eventsAfterChainThreadSwap = await client.api.query.system.events()
   const [chainThreadSwapEvent] = eventsAfterChainThreadSwap.filter(
     ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
@@ -679,6 +691,10 @@ export async function parasRegistrarSwapE2ETest<
 
   // 4.2 Bob confirms: B ↔ A
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
+
+  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('parathread parachain swap event')
 
   const eventsAfterThreadChainSwap = await client.api.query.system.events()
   const [threadChainSwapEvent] = eventsAfterThreadChainSwap.filter(
@@ -715,6 +731,10 @@ export async function parasRegistrarSwapE2ETest<
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
 
   // 5.3 Assert swap events
+  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('parachain parachain swap event')
+
   const eventsAfterChainChainSwap = await client.api.query.system.events()
   const [chainChainSwapEvent] = eventsAfterChainChainSwap.filter(
     ({ event }) => event.section === 'registrar' && event.method === 'Swapped',

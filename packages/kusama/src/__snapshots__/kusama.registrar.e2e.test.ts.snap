@@ -1,5 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Registrar > pallet registrar - reserve and registration functions > alice deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - reserve and registration functions > alice duplicate para register failed event 1`] = `
 [
   {
@@ -294,6 +304,16 @@ exports[`Kusama Registrar > pallet registrar - reserve and registration function
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - schedule code upgrade > alice locked schedule code upgrade failed 1`] = `
 [
   {
@@ -515,6 +535,36 @@ exports[`Kusama Registrar > pallet registrar - swap functions > non-owner cannot
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - swap functions > parachain parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - swap functions > parachain parathread swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - swap functions > parathread parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
   },
 ]
 `;
