@@ -385,10 +385,14 @@ export async function parasRegistrationE2ETest<
     .toMatchSnapshot('bob para deregister failed event')
 
   // 3.4 Alice deregisters the para
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
+  const deregisterEventsAlice = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.deregister(paraId),
+    devAccounts.alice,
+  )
 
   // Verify deregistered event data
-  await checkSystemEvents(client, { section: 'registrar', method: 'Deregistered' })
+  await checkEvents(deregisterEventsAlice, 'registrar')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('alice deregister event')
 
@@ -584,10 +588,12 @@ export async function parasRegistrarSwapE2ETest<
   // 1. Swapping with same ID - no-op
 
   // 1.1 Assert that non-owner cannot register swap
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.charlie)
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'non-owner cannot register swap',
+  const nonOwnerSwapEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.swap(paraIdA, paraIdB),
+    devAccounts.charlie,
   )
+  await checkEvents(nonOwnerSwapEvents, 'system').toMatchSnapshot('non-owner cannot register swap')
 
   await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdA), devAccounts.alice)
   const eventsAfterSameSwap = await client.api.query.system.events()
@@ -652,9 +658,13 @@ export async function parasRegistrarSwapE2ETest<
   expect(pendingSwapChainThread.toString()).toBe(paraIdB.toString())
 
   // 3.2 Bob confirms: B ↔ A
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
+  const chainThreadSwapConfirmEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.swap(paraIdB, paraIdA),
+    devAccounts.bob,
+  )
 
-  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+  await checkEvents(chainThreadSwapConfirmEvents, 'registrar')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('parachain parathread swap event')
 
@@ -690,9 +700,13 @@ export async function parasRegistrarSwapE2ETest<
   expect(pendingSwapThreadChain.toString()).toBe(paraIdB.toString())
 
   // 4.2 Bob confirms: B ↔ A
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
+  const threadChainSwapConfirmEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.swap(paraIdB, paraIdA),
+    devAccounts.bob,
+  )
 
-  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+  await checkEvents(threadChainSwapConfirmEvents, 'registrar')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('parathread parachain swap event')
 
@@ -728,10 +742,14 @@ export async function parasRegistrarSwapE2ETest<
   expect(pendingSwapChainChain.toString()).toBe(paraIdB.toString())
 
   // 5.2 Bob confirms: B ↔ A
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdB, paraIdA), devAccounts.bob)
+  const chainChainSwapConfirmEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.swap(paraIdB, paraIdA),
+    devAccounts.bob,
+  )
 
   // 5.3 Assert swap events
-  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+  await checkEvents(chainChainSwapConfirmEvents, 'registrar')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('parachain parachain swap event')
 
@@ -924,12 +942,16 @@ export async function parasSetCurrentHeadE2ETest<
     .toMatchSnapshot('bob set current head failed')
 
   // 2. Manager (Alice, unlocked) can set the current head
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.setCurrentHead(paraId, newHead), devAccounts.alice)
+  const setHeadAliceEvents = await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.setCurrentHead(paraId, newHead),
+    devAccounts.alice,
+  )
 
   const headAfterAlice = await client.api.query.paras.heads(paraId)
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
 
-  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+  await checkEvents(setHeadAliceEvents, 'paras')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('alice set current head event')
 
