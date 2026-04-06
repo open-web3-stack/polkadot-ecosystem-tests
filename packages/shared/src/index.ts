@@ -1,4 +1,5 @@
 export * from './accounts.js'
+export * from './assetRate.js'
 export * from './bounties.js'
 export * from './childBounties.js'
 export * from './collectives.js'
