@@ -418,6 +418,18 @@ exports[`Kusama Registrar > pallet registrar - set current head > alice locked s
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - set current head > alice set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - set current head > bob set current head failed 1`] = `
 [
   {
@@ -434,6 +446,30 @@ exports[`Kusama Registrar > pallet registrar - set current head > bob set curren
     },
     "method": "ExtrinsicFailed",
     "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - set current head > para set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - set current head > root set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
   },
 ]
 `;

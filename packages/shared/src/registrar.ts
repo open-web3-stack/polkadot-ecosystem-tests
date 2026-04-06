@@ -842,6 +842,12 @@ export async function parasScheduleCodeUpgradeE2ETest<
   assert(client.api.events.scheduler.Dispatched.is(dispatchedEvent.event))
   expect(dispatchedEvent.event.data.result.isOk).toBe(true)
 
+  const [codeUpgradeScheduledRoot] = eventsAfterRootUpgrade.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(codeUpgradeScheduledRoot.event))
+  expect(codeUpgradeScheduledRoot.event.data[0].toString()).toBe(paraIdB.toString())
+
   const futureCodeHashRoot = (await client.api.query.paras.futureCodeHash(paraIdB)) as Option<any>
   expect(futureCodeHashRoot.isSome).toBe(true)
   expect(futureCodeHashRoot.unwrap().toHex()).toBe(blake2AsHex(hexToU8a(rootValidationCode)))
@@ -903,6 +909,10 @@ export async function parasSetCurrentHeadE2ETest<
   const headAfterAlice = await client.api.query.paras.heads(paraId)
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
 
+  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('alice set current head event')
+
   const eventsAfterAlice = await client.api.query.system.events()
   const [currentHeadUpdatedAlice] = eventsAfterAlice.filter(
     ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
@@ -947,6 +957,10 @@ export async function parasSetCurrentHeadE2ETest<
   const headAfterRoot = await client.api.query.paras.heads(paraId)
   expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
 
+  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('root set current head event')
+
   const eventsAfterRoot = await client.api.query.system.events()
   const [currentHeadUpdatedRoot] = eventsAfterRoot.filter(
     ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
@@ -968,6 +982,10 @@ export async function parasSetCurrentHeadE2ETest<
 
   const headAfterPara = await client.api.query.paras.heads(paraId)
   expect(headAfterPara.toHex()).toBe(u8aToHex(compactAddLength(paraHeadRaw)))
+
+  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('para set current head event')
 
   const eventsAfterPara = await client.api.query.system.events()
   const [currentHeadUpdatedPara] = eventsAfterPara.filter(
