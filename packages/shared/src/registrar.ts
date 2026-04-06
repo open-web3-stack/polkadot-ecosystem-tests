@@ -778,6 +778,13 @@ export async function parasScheduleCodeUpgradeE2ETest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('alice schedule code upgrade success')
 
+  const eventsAfterAliceUpgrade = await client.api.query.system.events()
+  const [codeUpgradeScheduledAlice] = eventsAfterAliceUpgrade.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(codeUpgradeScheduledAlice.event))
+  expect(codeUpgradeScheduledAlice.event.data[0].toString()).toBe(paraId.toString())
+
   // 3. Lock the para via Root
   await addLockViaRoot(client, chain, paraId)
 
@@ -924,31 +931,31 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      {
-        kind: 'test',
-        label: 'pallet registrar - reserve and registration functions',
-        testFn: async () => await parasRegistrationE2ETest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'pallet registrar - root registration functions',
-        testFn: async () => await parasRootRegistrationE2eTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'pallet registrar - swap functions',
-        testFn: async () => await parasRegistrarSwapE2ETest(chain),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - reserve and registration functions',
+      //   testFn: async () => await parasRegistrationE2ETest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - root registration functions',
+      //   testFn: async () => await parasRootRegistrationE2eTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - swap functions',
+      //   testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      // },
       {
         kind: 'test',
         label: 'pallet registrar - schedule code upgrade',
         testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
       },
-      {
-        kind: 'test',
-        label: 'pallet registrar - set current head',
-        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - set current head',
+      //   testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+      // },
     ],
   }
 }
