@@ -232,10 +232,20 @@ export async function assetRateUpdateTest<
   // 3. Root origin can update an existing rate
   await scheduleRootCall(client, api.tx.assetRate.update(ASSET_KIND as any, UPDATED_RATE))
 
-  // 3.1 asserting the AssetRateUpdated event is emitted
+  // 3.1 asserting the AssetRateUpdated event is emitted with the correct values
   await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateUpdated' })
     .redact()
     .toMatchSnapshot('AssetRateUpdated event')
+
+  const updateEvents = await api.query.system.events()
+  const [rateUpdatedEvent] = (updateEvents as any).filter((record: any) =>
+    api.events.assetRate.AssetRateUpdated.is(record.event),
+  )
+  assert(api.events.assetRate.AssetRateUpdated.is(rateUpdatedEvent.event))
+  const [eventAssetKind, eventOldRate, eventNewRate] = rateUpdatedEvent.event.data as any
+  expect(eventAssetKind.toJSON()).toEqual(ASSET_KIND)
+  expect(eventOldRate.toString()).toBe(RATE)
+  expect(eventNewRate.toString()).toBe(UPDATED_RATE)
 
   // 3.2 asserting the ConversionRateToNative storage entry reflects the new rate
   const updatedRate = await api.query.assetRate.conversionRateToNative(ASSET_KIND as any)
