@@ -2149,12 +2149,11 @@ export async function childBountyTooManyChildBountiesErrorTest<
   // ===== SECTION 2: Set parent child bounties count to exceed maxActiveChildBountyCount =====
 
   const maxActiveChildBountyCount = client.api.consts.childBounties.maxActiveChildBountyCount.toNumber()
-  const greaterThanMaxActiveChildBountyCount = maxActiveChildBountyCount + 1 // TODO : after the bug is fixed in child_bounties, this should be removed
 
   // set parent child bounties count to maxActiveChildBountyCount
   await client.dev.setStorage({
     ChildBounties: {
-      parentChildBounties: [[[bountyIndex], greaterThanMaxActiveChildBountyCount]],
+      parentChildBounties: [[[bountyIndex], maxActiveChildBountyCount]],
     },
   })
 
@@ -2162,7 +2161,7 @@ export async function childBountyTooManyChildBountiesErrorTest<
 
   // ensure the parent child bounties count is greater than maxActiveChildBountyCount
   const parentChildBountiesCount = await getParentChildBountiesCount(client, bountyIndex)
-  expect(parentChildBountiesCount).toBe(greaterThanMaxActiveChildBountyCount)
+  expect(parentChildBountiesCount).toBe(maxActiveChildBountyCount)
 
   // ===== SECTION 3: Attempt to create child bounty after setting parent child bounties count to maxActiveChildBountyCount =====
 
