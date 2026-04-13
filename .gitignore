@@ -116,6 +116,7 @@ dist
 *.sqlite-shm
 *.sqlite-wal
 
-# Claude related
+# LLM tooling
 /.claude/settings.local.json
 *.local.md
+.sisyphus/*
