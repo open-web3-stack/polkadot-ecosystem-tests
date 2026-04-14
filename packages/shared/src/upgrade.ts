@@ -106,10 +106,15 @@ export async function authorizeUpgradeViaCollectives(
   await assertAuthorizedUpgradeUnchanged()
 
   // collectives whitelisting a call
-  await sendWhitelistCallViaXcmTransact(governingChain, fellowshipChain, authorizeUpgradeCall.method.hash.toHex(), {
-    proofSize: '10000',
-    refTime: '500000000',
-  })
+  await sendWhitelistCallViaXcmTransact(
+    governingChain,
+    fellowshipChain,
+    authorizeUpgradeCall.method.hash.toHex() as `0x${string}`,
+    {
+      proofSize: '10000',
+      refTime: '500000000',
+    },
+  )
   await fellowshipChain.dev.newBlock()
   await checkSystemEvents(fellowshipChain, 'polkadotXcm')
     .redact({ hash: false, redactKeys: /messageId/ })
@@ -455,7 +460,7 @@ async function runAuthorizeUpgradeViaWhitelistedCallerReferendum(
   await sendWhitelistCallViaXcmTransact(
     clientOfGoverningChain,
     fellowshipClient,
-    authorizeUpgradeCall.method.hash.toHex(),
+    authorizeUpgradeCall.method.hash.toHex() as `0x${string}`,
     {
       proofSize: '10000',
       refTime: '500000000',

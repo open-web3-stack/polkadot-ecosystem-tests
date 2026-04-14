@@ -1510,8 +1510,8 @@ async function nominationPoolSlashAndWithdrawTest<
   // This avoids BTreeMap encoding issues with setStorage.
   const subPoolsJson = subPools.toJSON() as any
   subPoolsJson.withEra[unbondEraNum.toString()] = {
-    points: '0x' + originalPoints.toString(16),
-    balance: '0x' + slashedBalance.toString(16),
+    points: `0x${originalPoints.toString(16)}`,
+    balance: `0x${slashedBalance.toString(16)}`,
   }
 
   await client.dev.setStorage({
