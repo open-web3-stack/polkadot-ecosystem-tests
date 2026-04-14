@@ -57,6 +57,47 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > setMintingFee before adding 
 ]
 `;
 
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDC zero-weight mint ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 56,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDT still mintable 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 2000)",
+      "externalAmount": 100000000,
+      "fee": 500000,
+      "pusdReceived": "(rounded 100000000)",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt blocks mint: ExtrinsicFailed 1`] = `
 [
   {
@@ -98,6 +139,72 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) 
 ]
 `;
 
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: Redeemed event 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 1300)",
+      "externalReceived": "(rounded 100000000)",
+      "fee": 500000,
+      "pusdPaid": 100000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Redeemed",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: mint ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 56,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDC, 0) — mint fails despite AllEnabled circuit breaker > zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 56,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT, 0) — mint USDC succeeds, debt equals amount > zeroed ceiling other asset: Minted event 1`] = `
 [
   {
@@ -110,6 +217,88 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT,
     },
     "method": "Minted",
     "section": "psm",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC Redeemed event 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 1300)",
+      "externalReceived": "(rounded 100000000)",
+      "fee": 500000,
+      "pusdPaid": 100000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Redeemed",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC mint ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 56,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT Redeemed event 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 2000)",
+      "externalReceived": "(rounded 100000000)",
+      "fee": 500000,
+      "pusdPaid": 100000000,
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+    },
+    "method": "Redeemed",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT mint ExtrinsicFailed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 56,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
