@@ -1,0 +1,74 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Configuration > configuration tests > configuration test - can read and update configuration > initial active configuration 1`] = `
+{
+  "approvalVotingParams": {
+    "maxApprovalCoalesceCount": 6,
+  },
+  "asyncBackingParams": {
+    "allowedAncestryLen": 2,
+    "maxCandidateDepth": 6,
+  },
+  "codeRetentionPeriod": "(rounded 30000)",
+  "disputePeriod": 6,
+  "disputePostConclusionAcceptancePeriod": 600,
+  "executorParams": [
+    {
+      "maxMemoryPages": "(rounded 8000)",
+    },
+    {
+      "pvfExecTimeout": [
+        "Backing",
+        "(rounded 3000)",
+      ],
+    },
+    {
+      "pvfExecTimeout": [
+        "Approval",
+        "(rounded 20000)",
+      ],
+    },
+  ],
+  "hrmpChannelMaxCapacity": "(rounded 30)",
+  "hrmpChannelMaxMessageSize": "(rounded 100000)",
+  "hrmpChannelMaxTotalSize": "(rounded 100000)",
+  "hrmpMaxMessageNumPerCandidate": 10,
+  "hrmpMaxParachainInboundChannels": 30,
+  "hrmpMaxParachainOutboundChannels": 30,
+  "hrmpRecipientDeposit": 5000000000000,
+  "hrmpSenderDeposit": 5000000000000,
+  "maxCodeSize": "(rounded 3000000)",
+  "maxDownwardMessageSize": "(rounded 50000)",
+  "maxHeadDataSize": "(rounded 20000)",
+  "maxPovSize": "(rounded 10000000)",
+  "maxUpwardMessageNumPerCandidate": "(rounded 100)",
+  "maxUpwardMessageSize": "(rounded 70000)",
+  "maxUpwardQueueCount": "(rounded 700000)",
+  "maxUpwardQueueSize": "(rounded 4000000)",
+  "maxValidators": 700,
+  "minimumBackingVotes": 2,
+  "minimumValidationUpgradeDelay": 20,
+  "nDelayTranches": "(rounded 300)",
+  "neededApprovals": 30,
+  "noShowSlots": 3,
+  "nodeFeatures": "0x0b",
+  "pvfVotingTtl": 2,
+  "relayVrfModuloSamples": 6,
+  "schedulerParams": {
+    "groupRotationFrequency": 10,
+    "lookahead": 5,
+    "maxAvailabilityTimeouts": 0,
+    "maxValidatorsPerCore": 5,
+    "numCores": "(rounded 100)",
+    "onDemandBaseFee": 5000000000,
+    "onDemandFeeVariability": 30000000,
+    "onDemandQueueMaxSize": 500,
+    "onDemandTargetQueueUtilization": "(rounded 300000000)",
+    "parasAvailabilityPeriod": 10,
+    "ttl": 5,
+  },
+  "validationUpgradeCooldown": "(rounded 4000)",
+  "validationUpgradeDelay": 600,
+  "zerothDelayTrancheWidth": 0,
+}
+`;

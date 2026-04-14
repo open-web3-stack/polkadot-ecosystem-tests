@@ -1,5 +1,140 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > big_spender > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - big_spender 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > big_spender > insufficient support rejection > decision deposit refund after rejection (insufficient support) - big_spender 1`] = `
+[
+  {
+    "data": {
+      "amount": 50000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > big_spender > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - big_spender 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "amount": 500000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient support rejection > decision deposit refund after rejection (insufficient support) - referendum_killer 1`] = `
+[
+  {
+    "data": {
+      "amount": 500000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - referendum_killer 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - root 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > insufficient support rejection > decision deposit refund after rejection (insufficient support) - root 1`] = `
+[
+  {
+    "data": {
+      "amount": 1000000000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositRefunded",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > negative execution flows > root > missing decision deposit timeout > timed-out referendum event (missing decision deposit) - root 1`] = `
+{
+  "event": {
+    "data": [
+      "(number)",
+      {
+        "ayes": "(number)",
+        "nays": "(number)",
+        "support": "(number)",
+      },
+    ],
+  },
+  "phase": {
+    "initialization": null,
+  },
+  "topics": [],
+}
+`;
+
 exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
 [
   {
@@ -564,6 +699,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     "data": [
       "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
       "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+      30,
     ],
     "method": "Delegated",
     "section": "convictionVoting",
@@ -576,6 +712,7 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   {
     "data": [
       "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+      30,
     ],
     "method": "Undelegated",
     "section": "convictionVoting",

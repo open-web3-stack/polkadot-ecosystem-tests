@@ -24,7 +24,7 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
         {
           "Transact": {
             "call": {
-              "encoded": "0x40002172908cd3bec3912f6ff6a7b361d2243fdfddb22bd5968103efb21370f28ccf",
+              "encoded": "0x400019a4b1ddf1ff7c236211920240dadc19690698ccb339d63deaed5243ba9d551d",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -37,12 +37,15 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -108,12 +111,12 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
 [
   {
     "data": {
-      "callHash": "0x2172908cd3bec3912f6ff6a7b361d2243fdfddb22bd5968103efb21370f28ccf",
+      "callHash": "0x19a4b1ddf1ff7c236211920240dadc19690698ccb339d63deaed5243ba9d551d",
       "result": {
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -129,7 +132,7 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
 [
   {
     "data": {
-      "callHash": "0x2172908cd3bec3912f6ff6a7b361d2243fdfddb22bd5968103efb21370f28ccf",
+      "callHash": "0x19a4b1ddf1ff7c236211920240dadc19690698ccb339d63deaed5243ba9d551d",
     },
     "method": "CallWhitelisted",
     "section": "whitelist",

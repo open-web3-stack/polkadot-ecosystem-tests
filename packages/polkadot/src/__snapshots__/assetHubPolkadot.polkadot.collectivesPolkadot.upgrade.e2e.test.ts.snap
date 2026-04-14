@@ -24,7 +24,7 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
         {
           "Transact": {
             "call": {
-              "encoded": "0x4000e61d6ed952bf8af2eee37a3e20e0d9b705d08c30b6c6be8c0ef86877ec4650bf",
+              "encoded": "0x400090b9ad2949faef6a09f9feade6d4b21bb664e365c5414a84da0f698a314db6bd",
             },
             "fallbackMaxWeight": {
               "proofSize": 10000,
@@ -37,12 +37,15 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
       "messageId": "(redacted)",
       "origin": {
         "interior": {
-          "X1": [
+          "X2": [
             {
               "Plurality": {
                 "id": "Technical",
                 "part": "Voice",
               },
+            },
+            {
+              "GeneralIndex": 3,
             },
           ],
         },
@@ -108,12 +111,12 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
 [
   {
     "data": {
-      "callHash": "0xe61d6ed952bf8af2eee37a3e20e0d9b705d08c30b6c6be8c0ef86877ec4650bf",
+      "callHash": "0x90b9ad2949faef6a09f9feade6d4b21bb664e365c5414a84da0f698a314db6bd",
       "result": {
         "Ok": {
           "actualWeight": {
             "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
           "paysFee": "Yes",
         },
@@ -129,7 +132,7 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
 [
   {
     "data": {
-      "callHash": "0xe61d6ed952bf8af2eee37a3e20e0d9b705d08c30b6c6be8c0ef86877ec4650bf",
+      "callHash": "0x90b9ad2949faef6a09f9feade6d4b21bb664e365c5414a84da0f698a314db6bd",
     },
     "method": "CallWhitelisted",
     "section": "whitelist",

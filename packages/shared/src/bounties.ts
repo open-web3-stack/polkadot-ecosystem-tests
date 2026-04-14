@@ -25,7 +25,7 @@ import type { RootTestTree } from './types.js'
 // initial funding balance for accounts
 const TEST_ACCOUNT_BALANCE_MULTIPLIER = 100_000n // 100_000x existential deposit
 
-const NON_EXISTENT_BOUNTY_INDEX = 999 // randombounty index that doesn't exist
+const NON_EXISTENT_BOUNTY_INDEX_OFFSET = 1000
 
 // 4 blocks before the spend period block
 const TREASURY_SETUP_OFFSET = 4
@@ -2639,7 +2639,8 @@ async function invalidIndexApprovalTest<
 >(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
-  const nonExistentBountyIndex = NON_EXISTENT_BOUNTY_INDEX // random index that doesn't exist
+  const bountyCount = (await client.api.query.bounties.bountyCount()).toNumber()
+  const nonExistentBountyIndex = bountyCount + NON_EXISTENT_BOUNTY_INDEX_OFFSET
 
   await setupTestAccounts(client, ['alice'])
 
