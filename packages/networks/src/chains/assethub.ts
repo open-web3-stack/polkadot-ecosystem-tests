@@ -4,7 +4,7 @@ import { defineChain } from '../defineChain.js'
 import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
-const PSM_INSURANCE_FUND_RAW = '0x6d6f646c70792f696e7375720000000000000000000000000000000000000000'
+const PSM_INSURANCE_FUND_RAW = '0x6d6f646c70792f706567736d0000000000000000000000000000000000000000'
 
 const custom = {
   assetHubPolkadot: {
