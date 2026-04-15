@@ -343,7 +343,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > AllDisabled — both mint an
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -404,7 +404,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > signed setMintingFee without
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -502,7 +502,7 @@ exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, give Bob 2x debt
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -543,7 +543,7 @@ exports[`Polkadot Asset Hub PSM > Value conservation > Bob redeems more than res
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
