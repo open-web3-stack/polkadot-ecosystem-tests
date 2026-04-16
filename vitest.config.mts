@@ -3,11 +3,11 @@ import { defineConfig } from 'vitest/config'
 import { resolve } from 'node:path'
 import dotenv from 'dotenv'
 import swc from 'unplugin-swc'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
 dotenv.config()
 dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env') })
 dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env') })
+dotenv.config({ path: resolve(__dirname, 'KNOWN_GOOD_BLOCK_NUMBERS_WESTEND.env') })
 if (process.env.LOG_LEVEL === undefined) {
 	process.env.LOG_LEVEL = 'error'
 }
@@ -24,6 +24,10 @@ export default defineConfig({
 	build: {
 		outDir: '../../dist',
 	},
-	plugins: [tsconfigPaths(), swc.vite()],
+	resolve: {
+		tsconfigPaths: true,
+	},
+	plugins: [swc.vite({ tsconfigFile: true })],
+	oxc: false,
 	clearScreen: false,
 })
