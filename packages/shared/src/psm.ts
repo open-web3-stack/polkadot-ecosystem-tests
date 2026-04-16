@@ -260,17 +260,7 @@ async function addAssetThenSetCeiling<
   const [client] = await setupNetworks(chain)
   const alice = devAccounts.alice
 
-  // 1. Add asset
-  const addCall = (client.api.tx as any).psm.addExternalAsset(9999)
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Set ceiling
-  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(9999, 100_000)
-  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. Create asset and fund
+  // 1. Create asset with matching decimals before registering with PSM
   await client.dev.setStorage({
     Assets: {
       asset: [
@@ -292,9 +282,20 @@ async function addAssetThenSetCeiling<
           },
         ],
       ],
+      metadata: [[[9999], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }]],
       account: [[[9999, alice.address], { balance: 1000e6 }]],
     },
   })
+
+  // 2. Add asset
+  const addCall = (client.api.tx as any).psm.addExternalAsset(9999)
+  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  await client.dev.newBlock()
+
+  // 3. Set ceiling
+  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(9999, 100_000)
+  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  await client.dev.newBlock()
 
   // 4. Mint
   const mintCall = (client.api.tx as any).psm.mint(9999, MIN_SWAP)
@@ -428,13 +429,12 @@ async function removeAssetBlockedByDebt<
 }
 
 /**
- * Set a minting fee for an asset ID before registering it in the PSM, then
- * register the asset and mint against it. The fee set before registration
- * must apply to the subsequent mint.
+ * Register an asset in the PSM, set a non-default minting fee, then mint
+ * against it. Confirms that the fee applies to the subsequent mint.
  *
- * 1. Set a minting fee of 30_000 (3%) for asset 9998 via Root origin
+ * 1. Create asset 9998 in the Assets pallet and fund alice with 1000 UNIT
  * 2. Add asset 9998 and set its ceiling weight to 100_000
- * 3. Create asset 9998 in the Assets pallet and fund alice with 1000 UNIT
+ * 3. Set a minting fee of 30_000 (3%) for asset 9998 via Root origin
  * 4. Mint 1000 UNIT of asset 9998
  * 5. Verify the Minted event contains who, assetId 9998, externalAmount, and pusdReceived > 0
  * 6. Verify alice received less than 975 UNIT of pUSD, confirming the 3% fee was applied
@@ -448,21 +448,7 @@ async function setFeeBeforeAddingAsset<
   const alice = devAccounts.alice
   const newAssetId = 9998
 
-  // 1. Set fee
-  const setFeeCall = (client.api.tx as any).psm.setMintingFee(newAssetId, 30_000)
-  await scheduleInlineCallWithOrigin(client, setFeeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Add asset and ceiling
-  const addCall = (client.api.tx as any).psm.addExternalAsset(newAssetId)
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(newAssetId, 100_000)
-  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. Create asset and fund
+  // 1. Create asset with matching decimals before registering with PSM
   await client.dev.setStorage({
     Assets: {
       asset: [
@@ -484,9 +470,24 @@ async function setFeeBeforeAddingAsset<
           },
         ],
       ],
+      metadata: [[[newAssetId], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }]],
       account: [[[newAssetId, alice.address], { balance: 1000e6 }]],
     },
   })
+
+  // 2. Add asset and ceiling
+  const addCall = (client.api.tx as any).psm.addExternalAsset(newAssetId)
+  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  await client.dev.newBlock()
+
+  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(newAssetId, 100_000)
+  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  await client.dev.newBlock()
+
+  // 3. Set fee
+  const setFeeCall = (client.api.tx as any).psm.setMintingFee(newAssetId, 30_000)
+  await scheduleInlineCallWithOrigin(client, setFeeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  await client.dev.newBlock()
 
   const pUsdBefore = await assetBalance(client.api, psmStableAssetId, alice.address)
 

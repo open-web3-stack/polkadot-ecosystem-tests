@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: Minted event 1`] = `
 [
   {
     "data": {
@@ -8,7 +8,7 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > addExternalAsset then setCei
       "externalAmount": 100000000,
       "fee": 500000,
       "pusdReceived": "(rounded 100000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -16,14 +16,14 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > addExternalAsset then setCei
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ceiling — mint fails > add asset zero ceiling: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ceiling — mint fails > add asset zero ceiling: mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
-          "error": "0x01000000",
-          "index": 56,
+          "error": "0x05000000",
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -41,7 +41,7 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > addExternalAsset with zero c
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Asset lifecycle > setMintingFee before adding asset — 3% fee applied on mint > set fee before add: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Asset lifecycle > setMintingFee before adding asset — 3% fee applied on mint > set fee before add: Minted event 1`] = `
 [
   {
     "data": {
@@ -49,7 +49,7 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > setMintingFee before adding 
       "externalAmount": 1000000000,
       "fee": 30000000,
       "pusdReceived": 970000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -57,14 +57,14 @@ exports[`Polkadot Asset Hub PSM > Asset lifecycle > setMintingFee before adding 
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDC zero-weight mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDC zero-weight mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -82,7 +82,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight �
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDT still mintable 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDT still mintable 1`] = `
 [
   {
     "data": {
@@ -90,7 +90,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight �
       "externalAmount": 100000000,
       "fee": 500000,
       "pusdReceived": "(rounded 100000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -98,14 +98,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > both assets at 75% weight �
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt blocks mint: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt blocks mint: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -123,7 +123,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) 
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt restore: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt restore: Minted event 1`] = `
 [
   {
     "data": {
@@ -131,7 +131,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) 
       "externalAmount": 200000000,
       "fee": 1000000,
       "pusdReceived": "(rounded 200000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -139,7 +139,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) 
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: Redeemed event 1`] = `
 [
   {
     "data": {
@@ -147,7 +147,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt �
       "externalReceived": "(rounded 100000000)",
       "fee": 500000,
       "pusdPaid": 100000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -155,14 +155,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt �
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -180,14 +180,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt �
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDC, 0) — mint fails despite AllEnabled circuit breaker > zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDC, 0) — mint fails despite AllEnabled circuit breaker > zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -205,7 +205,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDC,
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT, 0) — mint USDC succeeds, debt equals amount > zeroed ceiling other asset: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT, 0) — mint USDC succeeds, debt equals amount > zeroed ceiling other asset: Minted event 1`] = `
 [
   {
     "data": {
@@ -213,7 +213,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT,
       "externalAmount": 500000000,
       "fee": 2500000,
       "pusdReceived": "(rounded 500000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -221,7 +221,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT,
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC Redeemed event 1`] = `
 [
   {
     "data": {
@@ -229,7 +229,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
       "externalReceived": "(rounded 100000000)",
       "fee": 500000,
       "pusdPaid": 100000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -237,14 +237,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDC mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -262,7 +262,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT Redeemed event 1`] = `
 [
   {
     "data": {
@@ -270,7 +270,7 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
       "externalReceived": "(rounded 100000000)",
       "fee": 500000,
       "pusdPaid": 100000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -278,14 +278,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -303,14 +303,14 @@ exports[`Polkadot Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after mint
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x03000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -328,14 +328,14 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > AllDisabled — both mint an
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: redeem ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: redeem ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x04000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -353,7 +353,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > AllDisabled — both mint an
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: Redeemed event 1`] = `
 [
   {
     "data": {
@@ -361,7 +361,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > MintingDisabled — mint fai
       "externalReceived": "(rounded 100000000)",
       "fee": 500000,
       "pusdPaid": 100000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -369,14 +369,14 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > MintingDisabled — mint fai
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: mint ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x03000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -394,7 +394,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > MintingDisabled — mint fai
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Circuit breaker > signed setMintingFee without root fails > signed setMintingFee: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Circuit breaker > signed setMintingFee without root fails > signed setMintingFee: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
@@ -414,7 +414,7 @@ exports[`Polkadot Asset Hub PSM > Circuit breaker > signed setMintingFee without
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Core swaps > mint USDC to pUSD — pUSD received > 0, debt equals mint amount, fee to insurance fund > mint USDC: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Core swaps > mint USDC to pUSD — pUSD received > 0, debt equals mint amount, fee to insurance fund > mint USDC: Minted event 1`] = `
 [
   {
     "data": {
@@ -422,7 +422,7 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint USDC to pUSD — pUSD receiv
       "externalAmount": 100000000,
       "fee": 500000,
       "pusdReceived": "(rounded 100000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -430,14 +430,14 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint USDC to pUSD — pUSD receiv
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Core swaps > mint below MIN_SWAP fails > mint below MIN_SWAP: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Core swaps > mint below MIN_SWAP fails > mint below MIN_SWAP: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x02000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -455,7 +455,7 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint below MIN_SWAP fails > mint 
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returned > 0 > mint then redeem: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Core swaps > mint then redeem — USDC returned > 0 > mint then redeem: Minted event 1`] = `
 [
   {
     "data": {
@@ -463,7 +463,7 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returne
       "externalAmount": 1000000000,
       "fee": 5000000,
       "pusdReceived": "(rounded 1000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -471,7 +471,7 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returne
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returned > 0 > mint then redeem: Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Core swaps > mint then redeem — USDC returned > 0 > mint then redeem: Redeemed event 1`] = `
 [
   {
     "data": {
@@ -479,7 +479,7 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returne
       "externalReceived": "(rounded 990000000)",
       "fee": "(rounded 5000000)",
       "pusdPaid": "(rounded 1000000000)",
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -487,14 +487,14 @@ exports[`Polkadot Asset Hub PSM > Core swaps > mint then redeem — USDC returne
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, give Bob 2x debt pUSD, Bob redeems debt plus MIN_SWAP — ExtrinsicFailed > bob over-redeem: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Reserve integrity > mint 500, give Bob 2x debt pUSD, Bob redeems debt plus MIN_SWAP — ExtrinsicFailed > bob over-redeem: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -512,7 +512,7 @@ exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, give Bob 2x debt
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, redeem MIN_SWAP — Redeemed event > healthy redeem: Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Reserve integrity > mint 500, redeem MIN_SWAP — Redeemed event > healthy redeem: Redeemed event 1`] = `
 [
   {
     "data": {
@@ -520,7 +520,7 @@ exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, redeem MIN_SWAP 
       "externalReceived": "(rounded 100000000)",
       "fee": 500000,
       "pusdPaid": 100000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
     "section": "psm",
@@ -528,14 +528,14 @@ exports[`Polkadot Asset Hub PSM > Reserve integrity > mint 500, redeem MIN_SWAP 
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Value conservation > Bob redeems more than reserve — ExtrinsicFailed > redeem exceeding reserve: ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Value conservation > Bob redeems more than reserve — ExtrinsicFailed > redeem exceeding reserve: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x00000000",
-          "index": 56,
+          "index": 65,
         },
       },
       "dispatchInfo": {
@@ -553,7 +553,7 @@ exports[`Polkadot Asset Hub PSM > Value conservation > Bob redeems more than res
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Value conservation > set 1% fees, mint and redeem all — insurance fund gain > 0 > insurance fund gain: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Value conservation > set 1% fees, mint and redeem all — insurance fund gain > 0 > insurance fund gain: Minted event 1`] = `
 [
   {
     "data": {
@@ -561,7 +561,7 @@ exports[`Polkadot Asset Hub PSM > Value conservation > set 1% fees, mint and red
       "externalAmount": 100000000,
       "fee": 1000000,
       "pusdReceived": 99000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
@@ -569,7 +569,7 @@ exports[`Polkadot Asset Hub PSM > Value conservation > set 1% fees, mint and red
 ]
 `;
 
-exports[`Polkadot Asset Hub PSM > Value conservation > set 1% mint fee, mint 1000, redeem all pUSD — residual debt > 0 > residual debt: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Value conservation > set 1% mint fee, mint 1000, redeem all pUSD — residual debt > 0 > residual debt: Minted event 1`] = `
 [
   {
     "data": {
@@ -577,7 +577,7 @@ exports[`Polkadot Asset Hub PSM > Value conservation > set 1% mint fee, mint 100
       "externalAmount": 1000000000,
       "fee": 10000000,
       "pusdReceived": 990000000,
-      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
     "section": "psm",
