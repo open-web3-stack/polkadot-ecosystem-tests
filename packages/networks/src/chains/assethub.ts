@@ -4,13 +4,12 @@ import { defineChain } from '../defineChain.js'
 import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
-const PSM_INSURANCE_FUND_RAW = '0x6d6f646c70792f706567736d0000000000000000000000000000000000000000'
-
 const custom = {
   assetHubPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    usdcIndex: 1337,
     eth: {
       parents: 2,
       interior: {
@@ -25,11 +24,6 @@ const custom = {
         ],
       },
     },
-    // PSM (Peg Stability Module) configuration
-    psmStableAssetId: 4242, // pUSD asset ID (matches kitchensink config)
-    psmUsdcId: 1337, // USDC asset ID on PAH
-    psmUsdtId: 1984, // USDT asset ID on PAH (already used for XCM tests)
-    psmInsuranceFundAccountRaw: PSM_INSURANCE_FUND_RAW,
   },
   assetHubKusama: {
     ksm: { Concrete: { parents: 1, interior: 'Here' } },
@@ -74,14 +68,12 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
     },
   }
 
-  // PSM-specific storage entries for Polkadot
-  if ('psmStableAssetId' in config) {
-    ;(baseStorages.System.account as any).push(
-      [[testAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }], // DOT for Bob's tx fees
-    )
-    if (!baseStorages.Assets.asset) (baseStorages.Assets as any).asset = []
-    ;(baseStorages.Assets.asset as any).push([
-      [config.psmStableAssetId],
+  if ('usdcIndex' in config) {
+    const PSM_STABLE_ASSET_ID = 4242
+    ;(baseStorages.System.account as any).push([[testAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }])
+    if (!(baseStorages.Assets as any).asset) (baseStorages.Assets as any).asset = []
+    ;((baseStorages.Assets as any).asset as any).push([
+      [PSM_STABLE_ASSET_ID],
       {
         owner: testAccounts.alice.address,
         issuer: testAccounts.alice.address,
@@ -98,27 +90,27 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
       },
     ])
     ;(baseStorages.Assets.account as any).push(
-      [[config.psmUsdcId, testAccounts.alice.address], { balance: 1000e6 }], // USDC for Alice
-      [[config.psmUsdcId, testAccounts.bob.address], { balance: 1000e6 }], // USDC for Bob
-      [[config.psmStableAssetId, testAccounts.alice.address], { balance: 1000e6 }], // pUSD for Alice
+      [[config.usdcIndex, testAccounts.alice.address], { balance: 1000e6 }],
+      [[config.usdcIndex, testAccounts.bob.address], { balance: 1000e6 }],
+      [[PSM_STABLE_ASSET_ID, testAccounts.alice.address], { balance: 1000e6 }],
     )
     ;(baseStorages as any).Psm = {
       maxPsmDebtOfTotal: 500_000, // Permill: 50% of MaxIssuance
       externalAssets: [
-        [[1337], { AllEnabled: null }], // USDC -> AllEnabled
-        [[1984], { AllEnabled: null }], // USDT -> AllEnabled
+        [[config.usdcIndex], { AllEnabled: null }], // USDC -> AllEnabled
+        [[config.usdtIndex], { AllEnabled: null }], // USDT -> AllEnabled
       ],
       mintingFee: [
-        [[1337], 5_000], // Permill: 0.5% for USDC
-        [[1984], 5_000], // Permill: 0.5% for USDT
+        [[config.usdcIndex], 5_000], // Permill: 0.5% for USDC
+        [[config.usdtIndex], 5_000], // Permill: 0.5% for USDT
       ],
       redemptionFee: [
-        [[1337], 5_000], // Permill: 0.5%
-        [[1984], 5_000], // Permill: 0.5%
+        [[config.usdcIndex], 5_000], // Permill: 0.5% for USDC
+        [[config.usdtIndex], 5_000], // Permill: 0.5% for USDT
       ],
       assetCeilingWeight: [
-        [[1337], 600_000], // Permill: 60% weight for USDC
-        [[1984], 400_000], // Permill: 40% weight for USDT
+        [[config.usdcIndex], 600_000], // Permill: 60% weight for USDC
+        [[config.usdtIndex], 400_000], // Permill: 40% weight for USDT
       ],
     }
   }
