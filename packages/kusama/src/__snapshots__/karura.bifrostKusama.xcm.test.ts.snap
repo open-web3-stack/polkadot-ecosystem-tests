@@ -142,7 +142,7 @@ exports[`karura & bifrostKusama > bifrostKusama transfer KSM to karura > route c
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -332,7 +332,7 @@ exports[`karura & bifrostKusama > karura transfer KSM to bifrostKusama > route c
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
