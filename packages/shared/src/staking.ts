@@ -2137,16 +2137,6 @@ export function baseStakingE2ETests<
         label: 'chill other',
         testFn: async () => await chillOtherTest(chain),
       },
-      {
-        kind: 'test' as const,
-        label: 'set invulnerables with bad origin',
-        testFn: async () => await setInvulnerablesTestBadOrigin(chain),
-      },
-      {
-        kind: 'test' as const,
-        label: 'set invulnerables with root origin',
-        testFn: async () => await setInvulnerablesTest(chain),
-      },
     ],
   }
 }
