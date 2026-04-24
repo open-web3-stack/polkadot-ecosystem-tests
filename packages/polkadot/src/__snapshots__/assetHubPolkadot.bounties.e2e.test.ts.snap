@@ -545,7 +545,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure
 [
   {
     "data": {
-      "bond": "(rounded 22000000)",
+      "bond": "(rounded 100000000000)",
       "index": "(redacted)",
     },
     "method": "BountyRejected",
@@ -558,7 +558,7 @@ exports[`Polkadot Asset Hub Bounties > All bounty success tests > Bounty Closure
 [
   {
     "data": {
-      "amount": "(rounded 22000000)",
+      "amount": "(rounded 100000000000)",
       "who": "(redacted)",
     },
     "method": "Slashed",
