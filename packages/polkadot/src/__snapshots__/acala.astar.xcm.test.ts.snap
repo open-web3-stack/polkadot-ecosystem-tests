@@ -359,7 +359,7 @@ exports[`acala & astar > acala transfer DOT to astar > route chain xcm events 1`
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -789,7 +789,7 @@ exports[`acala & astar > astar transfer DOT to acala > route chain xcm events 1`
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
