@@ -339,8 +339,6 @@ export async function configurationTest<
   const schedulerOnDemandTargetQueueUtilization = 250000000
   const schedulerOnDemandFeeVariability = 30000000
   const schedulerOnDemandBaseFee = 5000000000
-  const schedulerTtl = 5
-
   const newSchedulerParamsArg = {
     groupRotationFrequency: schedulerGroupRotationFrequency,
     parasAvailabilityPeriod: schedulerParasAvailabilityPeriod,
