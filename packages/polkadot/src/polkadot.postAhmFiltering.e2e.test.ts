@@ -3,7 +3,7 @@ import {
   commonFilteredTests,
   commonUnfilteredTests,
   postAhmFilteringE2ETests,
-  preimageFilteredTest,
+  preimageNotFilteredTest,
   registerTestTree,
   type TestConfig,
 } from '@e2e-test/shared'
@@ -12,8 +12,7 @@ const polkadotTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Post-AHM Filtering Tests',
 }
 
-// Polkadot: preimage calls ARE filtered post-AHM
-const filteredTests = [...commonFilteredTests, preimageFilteredTest]
-const unfilteredTests = commonUnfilteredTests
+const filteredTests = commonFilteredTests
+const unfilteredTests = [...commonUnfilteredTests, preimageNotFilteredTest]
 
 registerTestTree(postAhmFilteringE2ETests(polkadot, polkadotTestConfig, filteredTests, unfilteredTests))
