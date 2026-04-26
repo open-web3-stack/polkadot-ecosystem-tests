@@ -12,7 +12,6 @@ const kusamaTestConfig: TestConfig = {
   testSuiteName: 'Kusama Post-AHM Filtering Tests',
 }
 
-// Kusama: preimage calls are NOT filtered post-AHM (different from Polkadot)
 const filteredTests = commonFilteredTests
 const unfilteredTests = [...commonUnfilteredTests, preimageNotFilteredTest]
 
