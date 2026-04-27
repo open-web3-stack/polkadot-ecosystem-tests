@@ -1,0 +1,570 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > alice deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > alice duplicate para register failed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > bob para deregister failed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > bob para register failed event 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > cannot deregister para with active PVF vote 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x07000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > cannot register locked para 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > cannot register para with existing lifecycle 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > cannot reserve para with existing ParaLifecycles ID 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > cannot reserve para with existing para ID 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > deregister non-parathread 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x06000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > non-manager cannot register para 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > register para without reserving 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 9000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > registrar register events 1`] = `
+[
+  {
+    "data": {
+      "manager": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Registered",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - reserve and registration functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "146SvjUZXoMaemdeiecyxgALeYMm8ZWh1yrGo8RtpoPfe7WL",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Deregistered",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > alice locked schedule code upgrade failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > alice schedule code upgrade success 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(rounded 3400)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > bob schedule code upgrade failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(rounded 3400)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > alice locked set current head failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > alice set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > bob set current head failed 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > para set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - set current head > root set current head event 1`] = `
+[
+  {
+    "data": [
+      "(rounded 3400)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > cannot swap two parathreads 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > non-owner cannot register swap 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parachain parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parachain parathread swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > parathread parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
