@@ -89,11 +89,11 @@ function findExplicitBurnEventsForAccount(
   address: string,
   chain: Chain<any, any>,
 ): FrameSystemEventRecord[] {
-  const isBifrostKusama = chain.name === 'bifrostKusama'
+  const isBifrost = chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
   const encoded = encodeAddress(address, client.config.properties.addressEncoding)
 
   const feeAmounts = new Set<bigint>()
-  if (isBifrostKusama) {
+  if (isBifrost) {
     const feeInfos = client.config.properties.feeExtractor(events as unknown as any[], client.api)
     for (const fi of feeInfos) {
       if (fi.who === encoded) feeAmounts.add(fi.actualFee)
@@ -845,8 +845,8 @@ async function transferAllowDeathNoKillTest<
   expect(transferEventData.to.toString()).toBe(encodeAddress(bob.address, client.config.properties.addressEncoding))
   expect(transferEventData.amount.toBigInt()).toBe(transferAmount)
 
-  // On Bifrost Kusama, fees emit Burned (not Withdraw) events. Skip Withdraw check there.
-  if (chain.name !== 'bifrostKusama') {
+  // On Bifrost networks, fees emit Burned (not Withdraw) events. Skip Withdraw check there.
+  if (chain.name !== 'bifrostKusama' && chain.name !== 'bifrostPolkadot') {
     const withdrawEvent = events.find((record) => {
       const { event } = record
       if (event.section === 'balances' && event.method === 'Withdraw') {
@@ -4439,10 +4439,10 @@ export const accountsE2ETests = <
           label: 'self-transfer of entire balance',
           testFn: () => transferAllowDeathSelfTest(chain),
         },
-        // TODO: Bifrost Kusama's FlexibleFee rejects txs that would leave balance below ED after fees.
+        // TODO: Bifrost's FlexibleFee rejects txs that would leave balance below ED after fees.
         // See https://github.com/bifrost-io/bifrost/blob/develop/pallets/flexible-fee/src/lib.rs
         // Introduced in v0.22.0 (#1863): `can_withdraw` only matches `WithdrawConsequence::Success`.
-        ...(chain.name === 'bifrostKusama'
+        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
           ? []
           : [
               {
@@ -4535,8 +4535,8 @@ export const accountsE2ETests = <
           label: 'transfer all with keepAlive true leaves 1 ED',
           testFn: () => transferAllKeepAliveTrueTest(chain),
         },
-        // TODO: same Bifrost Kusama FlexibleFee issue as above — see v0.22.0 (#1863)
-        ...(chain.name === 'bifrostKusama'
+        // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
+        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
           ? []
           : [
               {
@@ -4645,8 +4645,8 @@ export const accountsE2ETests = <
           label: 'burning entire balance, or more than it, fails',
           testFn: () => burnDoubleAttemptTest(chain),
         },
-        // TODO: same Bifrost Kusama FlexibleFee issue as above — see v0.22.0 (#1863)
-        ...(chain.name === 'bifrostKusama'
+        // TODO: same Bifrost FlexibleFee issue as above — see v0.22.0 (#1863)
+        ...(chain.name === 'bifrostKusama' || chain.name === 'bifrostPolkadot'
           ? []
           : [
               {

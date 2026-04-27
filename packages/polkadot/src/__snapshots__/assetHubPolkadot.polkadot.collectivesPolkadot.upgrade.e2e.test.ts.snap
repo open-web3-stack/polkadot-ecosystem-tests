@@ -115,8 +115,8 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
           "paysFee": "Yes",
         },
@@ -145,8 +145,8 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",
@@ -175,7 +175,7 @@ exports[`asset hub & polkadot & collectives > Asset Hub authorizes Polkadot upgr
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 3000)",
+        "proofSize": 0,
         "refTime": "(rounded 100000000)",
       },
     },

@@ -23,7 +23,7 @@ import type { RootTestTree } from './types.js'
 /// -------
 
 // initial funding balance for accounts
-const TEST_ACCOUNT_BALANCE_MULTIPLIER = 100_000n // 100_000x existential deposit
+const TEST_ACCOUNT_BALANCE_MULTIPLIER = 1_000_000n // 1_000_000x existential deposit (bounty deposit base is ~100_000x ED)
 
 const NON_EXISTENT_BOUNTY_INDEX_OFFSET = 1000
 

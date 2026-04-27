@@ -807,7 +807,7 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > Polkadot
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
