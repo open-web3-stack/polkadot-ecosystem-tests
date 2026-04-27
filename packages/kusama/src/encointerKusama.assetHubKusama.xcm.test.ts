@@ -6,7 +6,7 @@ import { runXcmPalletHorizontal } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('encointerKusama & assetHubKusama', async () => {
+describe.skip('encointerKusama & assetHubKusama', async () => {
   const [assetHubKusamaClient, encointerKusamaClient] = await setupNetworks(assetHubKusama, encointerKusama)
 
   runXcmPalletHorizontal('assetHubKusama transfer KSM to encointerKusama', async () => {

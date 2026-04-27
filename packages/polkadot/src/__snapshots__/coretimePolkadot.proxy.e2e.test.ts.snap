@@ -512,7 +512,7 @@ exports[`Polkadot Coretime Proxy full tests (includes call filtering) > Polkadot
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

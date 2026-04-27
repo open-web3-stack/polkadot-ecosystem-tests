@@ -115,8 +115,8 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
           "paysFee": "Yes",
         },
@@ -145,8 +145,8 @@ exports[`collectives & asset hub > Asset Hub authorizes Collectives upgrade via 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",
@@ -325,8 +325,8 @@ exports[`collectives & asset hub > Asset Hub authorizes upgrade for itself > gov
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",
@@ -365,8 +365,8 @@ exports[`collectives & asset hub > whitelisting a call by fellowship > destinati
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",
