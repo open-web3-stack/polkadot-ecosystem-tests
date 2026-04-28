@@ -1433,11 +1433,11 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - reserve functions',
-      //   testFn: async () => await paraReservingE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - reserve functions',
+        testFn: async () => await paraReservingE2ETest(chain),
+      },
       {
         kind: 'test',
         label: 'pallet registrar - register functions',
@@ -1448,26 +1448,26 @@ export function registrarE2ETest<
         label: 'pallet registrar - deregister functions',
         testFn: async () => await paraDeregisteringE2ETest(chain),
       },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - root registration functions',
-      //   testFn: async () => await parasRootRegistrationE2eTest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - swap functions',
-      //   testFn: async () => await parasRegistrarSwapE2ETest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - schedule code upgrade',
-      //   testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
-      // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - set current head',
-      //   testFn: async () => await parasSetCurrentHeadE2ETest(chain),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - root registration functions',
+        testFn: async () => await parasRootRegistrationE2eTest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - swap functions',
+        testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - schedule code upgrade',
+        testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
+      },
+      {
+        kind: 'test',
+        label: 'pallet registrar - set current head',
+        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+      },
     ],
   }
 }
