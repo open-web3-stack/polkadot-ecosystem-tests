@@ -1,5 +1,106 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Registrar > pallet registrar - deregister functions > deregister non-parathread 1`] = `[]`;
+
+exports[`Kusama Registrar > pallet registrar - deregister functions > register para without reserving 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - deregister functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > non-manager cannot register para 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > register para without reserving 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - reserve and registration functions > alice deregister event 1`] = `
 [
   {
@@ -293,6 +394,93 @@ exports[`Kusama Registrar > pallet registrar - reserve and registration function
 `;
 
 exports[`Kusama Registrar > pallet registrar - reserve and registration functions > registrar reserve events 1`] = `
+[
+  {
+    "data": {
+      "who": "FfmSiZNJP72xtSaXiP2iUhBwWeMEvmjPrxY2ViVkWaeChDC",
+    },
+    "method": "Reserved",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - reserve functions > cannot reserve para with existing ParaLifecycles ID 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - reserve functions > cannot reserve para with existing para ID 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 700000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - reserve functions > register para without reserving 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0b000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - reserve functions > registrar reserve events 1`] = `
 [
   {
     "data": {

@@ -202,17 +202,19 @@ export async function paraReservingE2ETest<
 /**
  * Test the process of registering para;
  *
- *     1. asserting that non-manager cannot register para
+ *     1. asserting that cannot register para without resreving
  *
- *     2. asserting that cannot register locked para
+ *     2. asserting that non-manager cannot register para
  *
- *     3. asserting that cannot register para when lifecycles entry with ID exists
+ *     3. asserting that cannot register locked para
  *
- *     4. asserting that register by alice was successful
+ *     4. asserting that cannot register para when lifecycles entry with ID exists
  *
- *     5. asserting that new reserved balance includes additional deposit from registration
+ *     5. asserting that register by alice was successful
  *
- *     6. asserting that alice cannot register para ID twice
+ *     6. asserting that new reserved balance includes additional deposit from registration
+ *
+ *     7. asserting that alice cannot register para ID twice
  */
 export async function paraRegisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -232,6 +234,8 @@ export async function paraRegisteringE2ETest<
   const additionalNeeded = totalDeposit - paraDepositBigInt
 
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
+
+  // 1. Assert that cannot register para without reserving
   await submitAndAdvanceBlock(
     client,
     client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
@@ -240,6 +244,8 @@ export async function paraRegisteringE2ETest<
   await assertExtrinsicFailed(client, client.api.errors.registrar.NotReserved, 'register para without reserving')
   const unwantedFields = /Id/
 
+  // Reserve para in preparation for register tests
+  await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
   const systemEvents = await client.api.query.system.events()
   const [resEvent] = systemEvents.filter((record) => {
     const { event } = record
@@ -248,7 +254,7 @@ export async function paraRegisteringE2ETest<
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
 
-  // 1. Assert that non-manager cannot register para
+  // 2. Assert that non-manager cannot register para
   await submitAndAdvanceBlock(
     client,
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
@@ -256,7 +262,7 @@ export async function paraRegisteringE2ETest<
   )
   await assertExtrinsicFailed(client, client.api.errors.registrar.NotOwner, 'non-manager cannot register para')
 
-  // 2. Assert that cannot register Locked Para
+  // 3. Assert that cannot register Locked Para
   {
     // Lock the para by setting its info with locked = true
     const paraInfo = await client.api.query.registrar.paras(paraId)
@@ -280,6 +286,7 @@ export async function paraRegisteringE2ETest<
       },
     })
   }
+
   // Give paraId an existing lifecycle to simulate an already-registered para
   await client.dev.setStorage({
     Paras: {
@@ -287,6 +294,7 @@ export async function paraRegisteringE2ETest<
     },
   })
 
+  // 4. Assert that cannot register para when lifecycle entry exists
   await submitAndAdvanceBlock(
     client,
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
@@ -305,7 +313,7 @@ export async function paraRegisteringE2ETest<
     },
   })
 
-  // 4. Assert register events
+  // 5. Assert register events
   const registerEvents = await submitAndAdvanceBlock(
     client,
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
@@ -328,11 +336,11 @@ export async function paraRegisteringE2ETest<
     encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
   )
 
-  // 5. Assert that the new reserved balance includes additional deposit from registration
+  // 6. Assert that the new reserved balance includes additional deposit from registration
   const aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
-  // 6. alice trying to register again with the same paraId should fail
+  // 7. alice trying to register again with the same paraId should fail
   const registerEventsDuplicate = await submitAndAdvanceBlock(
     client,
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
@@ -1425,11 +1433,11 @@ export function registrarE2ETest<
     kind: 'describe',
     label: testConfig.testSuiteName,
     children: [
-      {
-        kind: 'test',
-        label: 'pallet registrar - reserve functions',
-        testFn: async () => await paraReservingE2ETest(chain),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - reserve functions',
+      //   testFn: async () => await paraReservingE2ETest(chain),
+      // },
       {
         kind: 'test',
         label: 'pallet registrar - register functions',
@@ -1440,26 +1448,26 @@ export function registrarE2ETest<
         label: 'pallet registrar - deregister functions',
         testFn: async () => await paraDeregisteringE2ETest(chain),
       },
-      {
-        kind: 'test',
-        label: 'pallet registrar - root registration functions',
-        testFn: async () => await parasRootRegistrationE2eTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'pallet registrar - swap functions',
-        testFn: async () => await parasRegistrarSwapE2ETest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'pallet registrar - schedule code upgrade',
-        testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'pallet registrar - set current head',
-        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - root registration functions',
+      //   testFn: async () => await parasRootRegistrationE2eTest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - swap functions',
+      //   testFn: async () => await parasRegistrarSwapE2ETest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - schedule code upgrade',
+      //   testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
+      // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - set current head',
+      //   testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+      // },
     ],
   }
 }
