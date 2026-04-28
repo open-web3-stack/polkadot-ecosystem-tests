@@ -28,7 +28,7 @@ const GENESIS_HEAD = new Uint8Array([0x00])
  * It is stored and executed by the relay chain.
  * It's the smallest structurally valid WASM binary for test purposes, it contains no actual content.
  * The breakdown is as follows;
- * WASM Magic Number                     - 0x00, 0x61, 0x73, 0x6d
+ * WASM Magic Number (\0asm)             - 0x00, 0x61, 0x73, 0x6d
  * WASM Version (1 - little endian, u32) - 0x01, 0x00, 0x00, 0x00
  * Section ID (1)                        - 0x01
  * Section Byte length (1)               - 0x01
