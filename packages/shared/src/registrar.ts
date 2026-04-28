@@ -38,6 +38,9 @@ const MINIMAL_VALIDATION_CODE = u8aToHex(
   new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]),
 )
 
+/**
+ * Helper to fund accounts
+ */
 async function fundAccounts(client: Client<any, any>): Promise<void> {
   await client.dev.setStorage({
     System: {
@@ -50,6 +53,9 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
   })
 }
 
+/**
+ * Helper to submit an extrinsic with a user account and advance the blockchain state
+ */
 async function submitAndAdvanceBlock(
   client: Client<any, any>,
   tx: { signAsync: (signer: KeyringPair) => Parameters<typeof sendTransaction>[0] },
@@ -60,6 +66,10 @@ async function submitAndAdvanceBlock(
   return result
 }
 
+/**
+ * Helper to send the force_register extrinsic via root with an inline call, advance the blockchain state
+ *  and assert the register events
+ */
 async function forceRegisterParaViaRoot(
   client: Client<any, any>,
   chain: Chain<any, any>,
@@ -80,6 +90,9 @@ async function forceRegisterParaViaRoot(
   expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
 }
 
+/**
+ * Helper to send the addLock extrinsic via root with an inline call, advance the blockchain state.
+ */
 async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, paraId: number): Promise<void> {
   const tx = client.api.tx.registrar.addLock(paraId)
   await scheduleInlineCallWithOrigin(
