@@ -385,6 +385,7 @@ export async function paraDeregisteringE2ETest<
   )
   await assertExtrinsicFailed(client, client.api.errors.registrar.NotReserved, 'register para without reserving')
 
+  // Reserve para in preparation for deregsiter tests
   const reserveEvent = await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
 
   // Assert reserve events
@@ -402,6 +403,13 @@ export async function paraDeregisteringE2ETest<
 
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
+
+  // Register para in preparation for deregister tests
+  await submitAndAdvanceBlock(
+    client,
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
+    devAccounts.alice,
+  )
 
   // 1. Assert that cannot deregister non-parathread
   await submitAndAdvanceBlock(client, client.api.tx.registrar.deregister(paraId), devAccounts.alice)
