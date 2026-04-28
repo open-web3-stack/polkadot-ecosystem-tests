@@ -39,7 +39,7 @@ const MINIMAL_VALIDATION_CODE = u8aToHex(
 )
 
 /**
- * Helper to fund accounts
+ * Helper to fund accounts.
  */
 async function fundAccounts(client: Client<any, any>): Promise<void> {
   await client.dev.setStorage({
@@ -54,7 +54,7 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
 }
 
 /**
- * Helper to submit an extrinsic with a user account and advance the blockchain state
+ * Helper to submit an extrinsic with a user account and advance the blockchain state.
  */
 async function submitAndAdvanceBlock(
   client: Client<any, any>,
@@ -68,7 +68,7 @@ async function submitAndAdvanceBlock(
 
 /**
  * Helper to send the force_register extrinsic via root with an inline call, advance the blockchain state
- *  and assert the register events
+ *  and assert the register events.
  */
 async function forceRegisterParaViaRoot(
   client: Client<any, any>,
