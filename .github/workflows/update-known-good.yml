@@ -7,8 +7,8 @@ on:
         description: 'If this is a retry run'
         required: false
         type: boolean
-      failed_tests:
-        description: 'Failed tests to retry (JSON array)'
+      failed_networks:
+        description: 'Failed networks to retry (JSON array of names)'
         required: false
         type: string
   schedule:
@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     outputs:
-      tests: ${{ steps.tests.outputs.tests }}
+      networks: ${{ steps.networks.outputs.networks }}
     steps:
       - uses: actions/checkout@v5
       - name: setup node env
@@ -37,13 +37,18 @@ jobs:
           node-version: 22.x
           cache: 'yarn'
       - run: yarn --immutable
-      - name: Define Tests
-        id: tests
+      - name: Define Networks
+        id: networks
         run: |
+          ALL_NETWORKS='[{"name":"polkadot","chains":[{"chain":"polkadot","port":9000,"endpoint_var":"POLKADOT_ENDPOINT"},{"chain":"assetHubPolkadot","port":9001,"endpoint_var":"ASSETHUBPOLKADOT_ENDPOINT"},{"chain":"bridgeHubPolkadot","port":9002,"endpoint_var":"BRIDGEHUBPOLKADOT_ENDPOINT"},{"chain":"collectivesPolkadot","port":9003,"endpoint_var":"COLLECTIVESPOLKADOT_ENDPOINT"},{"chain":"coretimePolkadot","port":9004,"endpoint_var":"CORETIMEPOLKADOT_ENDPOINT"},{"chain":"peoplePolkadot","port":9005,"endpoint_var":"PEOPLEPOLKADOT_ENDPOINT"},{"chain":"acala","port":9006,"endpoint_var":"ACALA_ENDPOINT"},{"chain":"hydration","port":9007,"endpoint_var":"HYDRATION_ENDPOINT"},{"chain":"bifrostPolkadot","port":9008,"endpoint_var":"BIFROSTPOLKADOT_ENDPOINT"}]},{"name":"kusama","chains":[{"chain":"kusama","port":9010,"endpoint_var":"KUSAMA_ENDPOINT"},{"chain":"assetHubKusama","port":9011,"endpoint_var":"ASSETHUBKUSAMA_ENDPOINT"},{"chain":"bridgeHubKusama","port":9012,"endpoint_var":"BRIDGEHUBKUSAMA_ENDPOINT"},{"chain":"coretimeKusama","port":9013,"endpoint_var":"CORETIMEKUSAMA_ENDPOINT"},{"chain":"peopleKusama","port":9014,"endpoint_var":"PEOPLEKUSAMA_ENDPOINT"},{"chain":"encointerKusama","port":9015,"endpoint_var":"ENCOINTERKUSAMA_ENDPOINT"},{"chain":"karura","port":9016,"endpoint_var":"KARURA_ENDPOINT"},{"chain":"bifrostKusama","port":9017,"endpoint_var":"BIFROSTKUSAMA_ENDPOINT"}]}]'
+
           if [ "${{ github.event.inputs.retry }}" == "true" ]; then
-            echo "tests=$(echo '${{ github.event.inputs.failed_tests }}' | sed 's/^"\(.*\)"$/\1/')" >> "$GITHUB_OUTPUT"
+            FAILED='${{ github.event.inputs.failed_networks }}'
+            FAILED=$(echo "$FAILED" | sed 's/^"\(.*\)"$/\1/')
+            FILTERED=$(echo "$ALL_NETWORKS" | jq --argjson failed "$FAILED" '[ .[] | select(.name as $n | $failed | index($n)) ]')
+            echo "networks=$FILTERED" >> "$GITHUB_OUTPUT"
           else
-            echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
+            echo "networks=$ALL_NETWORKS" >> "$GITHUB_OUTPUT"
           fi
       - name: Update Known Good Block Numbers
         run: |
@@ -56,27 +61,125 @@ jobs:
             KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
             KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
           retention-days: 1
+
   tests:
     needs: define-matrix
-    timeout-minutes: 60
+    name: "Tests (${{ matrix.network.name }})"
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
-        tests: ${{ fromJSON(needs.define-matrix.outputs.tests) }}
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: setup node env
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'yarn'
-    - run: yarn --immutable
-    - name: Download a single artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: KNOWN_GOOD_BLOCK_NUMBERS
-    - run: yarn test packages/${{ matrix.tests }}
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+
+      - run: yarn --immutable
+
+      - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KNOWN_GOOD_BLOCK_NUMBERS
+
+      - name: Source known good block numbers
+        run: |
+          NETWORK_UPPER=$(echo "${{ matrix.network.name }}" | tr '[:lower:]' '[:upper:]')
+          ENV_FILE="KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env"
+          echo "Sourcing block numbers from $ENV_FILE"
+          cat "$ENV_FILE" >> $GITHUB_ENV
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Get Subway commit hash
+        id: subway-commit
+        run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
+
+      - name: Cache Subway binary
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Install Subway
+        run: cargo install --git https://github.com/AcalaNetwork/subway
+
+      - name: Start all Subway instances
+        run: |
+          echo "Starting all Subway instances for ${{ matrix.network.name }}..."
+
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            CHAIN=$(echo $chain | jq -r '.chain')
+            PORT=$(echo $chain | jq -r '.port')
+
+            # Get endpoints from pet-chain-endpoints.json
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+
+            if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
+              echo "Error: No endpoints found for chain $CHAIN"
+              exit 1
+            fi
+
+            echo "Starting Subway for $CHAIN on port $PORT..."
+            sed -e "s/{{PORT}}/$PORT/g" -e "s|{{ENDPOINTS}}|$ENDPOINTS|g" .github/subway-template.yml > /tmp/subway-$PORT.yml
+            subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+            echo $! >> /tmp/subway.pids
+          done
+
+          echo "Waiting for all Subway instances to start..."
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            PORT=$(echo $chain | jq -r '.port')
+            timeout=60
+            elapsed=0
+            while [ $elapsed -lt $timeout ]; do
+              if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
+                echo "Subway on port $PORT started successfully!"
+                break
+              fi
+              sleep 1
+              elapsed=$((elapsed + 1))
+            done
+
+            if [ $elapsed -ge $timeout ]; then
+              echo "Timeout waiting for subway on port $PORT"
+              cat /tmp/subway-$PORT.log
+              exit 1
+            fi
+          done
+
+          echo "All Subway instances started successfully!"
+
+      - name: Set endpoint environment variables
+        run: |
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+            PORT=$(echo $chain | jq -r '.port')
+            echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
+          done
+
+      - name: Run ${{ matrix.network.name }} tests
+        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3
+
+      - name: Cleanup Subway instances
+        if: always()
+        run: |
+          if [ -f /tmp/subway.pids ]; then
+            cat /tmp/subway.pids | xargs kill || true
+          fi
+
+          for log in /tmp/subway-*.log; do
+            if [ -f "$log" ]; then
+              echo "=== $log ==="
+              tail -20 "$log" || true
+            fi
+          done
+
   save:
     needs: tests
     runs-on: ubuntu-latest
@@ -87,10 +190,10 @@ jobs:
       with:
         app-id: ${{ secrets.GH_APP_ID }}
         private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ steps.app-token.outputs.token }}
-    - name: Download a single artifact
+    - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
       uses: actions/download-artifact@v4
       with:
         name: KNOWN_GOOD_BLOCK_NUMBERS
@@ -105,12 +208,13 @@ jobs:
         else
           echo "No changes to commit"
         fi
+
   schedule-retry:
     needs: tests
     if: failure() && github.event.inputs.retry != 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Get failed jobs
+      - name: Get failed networks
         id: get-failed
         uses: actions/github-script@v8
         with:
@@ -124,15 +228,15 @@ jobs:
               }
             );
 
-            const failedTests = response
-              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
+            const failedNetworks = response
+              .filter(job => job.name.startsWith('Tests (') && job.conclusion === 'failure')
               .map(job => {
-                const match = job.name.match(/tests \((.*)\)/);
+                const match = job.name.match(/Tests \((.*)\)/);
                 return match ? match[1] : null;
               })
               .filter(Boolean);
 
-            return JSON.stringify(failedTests);
+            return JSON.stringify(failedNetworks);
       - name: sleep
         run: sleep 300
       - name: Dispatch retry workflow
@@ -146,9 +250,10 @@ jobs:
               ref: 'master',
               inputs: {
                 retry: 'true',
-                failed_tests: '${{ steps.get-failed.outputs.result }}'
+                failed_networks: '${{ steps.get-failed.outputs.result }}'
               }
             })
+
   notify:
     needs: tests
     if: failure() && github.event.inputs.retry == 'true'
@@ -167,10 +272,10 @@ jobs:
               },
             );
 
-            const failedTests = response
-              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
+            const failedNetworks = response
+              .filter(job => job.name.startsWith('Tests (') && job.conclusion === 'failure')
               .map(job => {
-                const match = job.name.match(/tests \((.*)\)/);
+                const match = job.name.match(/Tests \((.*)\)/);
                 return match ? match[1] : null;
               })
               .filter(Boolean);
@@ -184,27 +289,12 @@ jobs:
 
             const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
 
-            const impactedNetworks = new Set()
-            for (const test of failedTests) {
-              const filename = test.split('/').pop()
-              const segments = filename.replace(/\.test\.ts$/, '').split('.')
-              const chains = segments.filter(s => notifications[s] !== undefined)
-              if (chains.length === 0) {
-                impactedNetworks.add("unknown")
-              } else {
-                for (const chain of chains) {
-                  impactedNetworks.add(chain)
-                }
-              }
-            }
-
             const issuesToNotify = new Set()
-            for (const network of impactedNetworks) {
+            for (const network of failedNetworks) {
               issuesToNotify.add(notifications[network] ?? notifications['unknown'])
             }
 
             for (const issueNumber of issuesToNotify) {
-              // add a comment to the issue
               await github.rest.issues.createComment({
                 issue_number: issueNumber,
                 owner: context.repo.owner,
