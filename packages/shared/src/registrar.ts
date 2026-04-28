@@ -17,7 +17,23 @@ import type { Client, RootTestTree } from './types.js'
 
 const devAccounts = testAccounts
 
+/**
+ * The Genesis Head is the first block header of a parachain.
+ * It's a series of bytes that stores the hash of the starting state for that chain.
+ */
 const GENESIS_HEAD = new Uint8Array([0x00])
+
+/**
+ * This is the compiled WASM runtime that validators run to verify if a block is valid.
+ * It is stored and executed by the relay chain.
+ * It's the smallest structurally valid WASM binary for test purposes, it contains no actual content.
+ * The breakdown is as follows;
+ * WASM Magic Number                     - 0x00, 0x61, 0x73, 0x6d
+ * WASM Version (1 - little endian, u32) - 0x01, 0x00, 0x00, 0x00
+ * Section ID (1)                        - 0x01
+ * Section Byte length (1)               - 0x01
+ * Content (0)                           - 0x00
+ */
 const MINIMAL_VALIDATION_CODE = u8aToHex(
   new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00]),
 )
