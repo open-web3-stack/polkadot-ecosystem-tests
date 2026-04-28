@@ -2,7 +2,6 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, testAccounts } from '@e2e-test/networks'
 
-import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Option } from '@polkadot/types'
 import type { ParaInfo } from '@polkadot/types/interfaces'
 import type { PolkadotRuntimeParachainsConfigurationHostConfiguration } from '@polkadot/types/lookup'
@@ -51,19 +50,6 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
       ],
     },
   })
-}
-
-/**
- * Helper to submit an extrinsic with a user account and advance the blockchain state.
- */
-async function submitAndAdvanceBlock(
-  client: Client<any, any>,
-  tx: { signAsync: (signer: KeyringPair) => Parameters<typeof sendTransaction>[0] },
-  signer: KeyringPair,
-): Promise<Awaited<ReturnType<typeof sendTransaction>>> {
-  const result = await sendTransaction(tx.signAsync(signer))
-  await client.dev.newBlock()
-  return result
 }
 
 /**
@@ -127,14 +113,16 @@ export async function paraReservingE2ETest<
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
-  const unreservedRegisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const unreservedRegisterEvents = await sendTransaction(
+    client.api.tx.registrar
+      .register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+      .signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(unreservedRegisterEvents, 'system').toMatchSnapshot('register para without reserving')
 
-  const reserveEvent = await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
+  const reserveEvent = await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
+  await client.dev.newBlock()
 
   // Assert reserve events
   const unwantedFields = /Id/
@@ -178,11 +166,10 @@ export async function paraReservingE2ETest<
     },
   })
 
-  const existingParaReserveEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.reserve(),
-    devAccounts.alice,
+  const existingParaReserveEvents = await sendTransaction(
+    client.api.tx.registrar.reserve().signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(existingParaReserveEvents, 'system').toMatchSnapshot(
     'cannot reserve para with existing ParaLifecycles ID',
   )
@@ -198,11 +185,8 @@ export async function paraReservingE2ETest<
     },
   })
 
-  const lifecycleReserveEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.reserve(),
-    devAccounts.alice,
-  )
+  const lifecycleReserveEvents = await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   await checkEvents(lifecycleReserveEvents, 'system').toMatchSnapshot('cannot reserve para with existing para ID')
 
   // Undo storage set
@@ -250,16 +234,18 @@ export async function paraRegisteringE2ETest<
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
 
   // 1. Assert that cannot register para without reserving
-  const unreservedRegisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const unreservedRegisterEvents = await sendTransaction(
+    client.api.tx.registrar
+      .register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+      .signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(unreservedRegisterEvents, 'system').toMatchSnapshot('register para without reserving')
   const unwantedFields = /Id/
 
   // Reserve para in preparation for register tests
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   const systemEvents = await client.api.query.system.events()
   const [resEvent] = systemEvents.filter((record) => {
     const { event } = record
@@ -269,11 +255,10 @@ export async function paraRegisteringE2ETest<
   const paraId = reserveEventData[0].toString()
 
   // 2. Assert that non-manager cannot register para
-  const nonOwnerRegisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.bob,
+  const nonOwnerRegisterEvents = await sendTransaction(
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
   await checkEvents(nonOwnerRegisterEvents, 'system').toMatchSnapshot('non-manager cannot register para')
 
   // 3. Assert that cannot register Locked Para
@@ -286,11 +271,10 @@ export async function paraRegisteringE2ETest<
       },
     })
 
-    const lockedRegisterEvents = await submitAndAdvanceBlock(
-      client,
-      client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-      devAccounts.alice,
+    const lockedRegisterEvents = await sendTransaction(
+      client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
     )
+    await client.dev.newBlock()
     await checkEvents(lockedRegisterEvents, 'system').toMatchSnapshot('cannot register locked para')
 
     // Restore unlocked state
@@ -309,11 +293,10 @@ export async function paraRegisteringE2ETest<
   })
 
   // 4. Assert that cannot register para when lifecycle entry exists
-  const lifecycleRegisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const lifecycleRegisterEvents = await sendTransaction(
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(lifecycleRegisterEvents, 'system').toMatchSnapshot('cannot register para with existing lifecycle')
 
   // Clear the lifecycle so the actual registration below can proceed
@@ -324,11 +307,10 @@ export async function paraRegisteringE2ETest<
   })
 
   // 5. Assert register events
-  const registerEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const registerEvents = await sendTransaction(
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   await checkEvents(registerEvents, 'registrar')
     .redact({ removeKeys: unwantedFields })
@@ -351,20 +333,18 @@ export async function paraRegisteringE2ETest<
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
   // 7. alice trying to register again with the same paraId should fail
-  const registerEventsDuplicate = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const registerEventsDuplicate = await sendTransaction(
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   await checkEvents(registerEventsDuplicate, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('alice duplicate para register failed event')
-  const nonParathreadDeregisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.deregister(paraId),
-    devAccounts.alice,
+  const nonParathreadDeregisterEvents = await sendTransaction(
+    client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(nonParathreadDeregisterEvents, 'system').toMatchSnapshot('deregister non-parathread')
 }
 
@@ -392,15 +372,17 @@ export async function paraDeregisteringE2ETest<
   await fundAccounts(client)
 
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
-  const unreservedRegisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  const unreservedRegisterEvents = await sendTransaction(
+    client.api.tx.registrar
+      .register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
+      .signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(unreservedRegisterEvents, 'system').toMatchSnapshot('register para without reserving')
 
   // Reserve para in preparation for deregsiter tests
-  const reserveEvent = await submitAndAdvanceBlock(client, client.api.tx.registrar.reserve(), devAccounts.alice)
+  const reserveEvent = await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
+  await client.dev.newBlock()
 
   // Assert reserve events
   const unwantedFields = /Id/
@@ -419,18 +401,16 @@ export async function paraDeregisteringE2ETest<
   const paraId = reserveEventData[0].toString()
 
   // Register para in preparation for deregister tests
-  await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE),
-    devAccounts.alice,
+  await sendTransaction(
+    client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   // 1. Assert that cannot deregister non-parathread
-  const nonParathreadDeregisterEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.deregister(paraId),
-    devAccounts.alice,
+  const nonParathreadDeregisterEvents = await sendTransaction(
+    client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
   await checkEvents(nonParathreadDeregisterEvents, 'system').toMatchSnapshot('deregister non-parathread')
 
   // 2. Assert CannotDeregister error when PvfActiveVoteList contains future hash code
@@ -446,11 +426,10 @@ export async function paraDeregisteringE2ETest<
       },
     })
 
-    const pvfVoteDeregisterEvents = await submitAndAdvanceBlock(
-      client,
-      client.api.tx.registrar.deregister(paraId),
-      devAccounts.alice,
+    const pvfVoteDeregisterEvents = await sendTransaction(
+      client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.alice),
     )
+    await client.dev.newBlock()
     await checkEvents(pvfVoteDeregisterEvents, 'system').toMatchSnapshot('cannot deregister para with active PVF vote')
   }
 
@@ -464,22 +443,20 @@ export async function paraDeregisteringE2ETest<
   })
 
   // 3. Assert that bob (not owner) cannot deregister the para
-  const deregisterEventsBob = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.deregister(paraId),
-    devAccounts.bob,
+  const deregisterEventsBob = await sendTransaction(
+    client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   await checkEvents(deregisterEventsBob, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob para deregister failed event')
 
   // 4. Alice deregisters the para
-  const deregisterEventsAlice = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.deregister(paraId),
-    devAccounts.alice,
+  const deregisterEventsAlice = await sendTransaction(
+    client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   // Verify deregistered event data
   await checkEvents(deregisterEventsAlice, 'registrar')
@@ -678,14 +655,14 @@ export async function parasRegistrarSwapE2ETest<
   // 1. Swapping with same ID - no-op
 
   // 1.1 Assert that non-owner cannot register swap
-  const nonOwnerSwapEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.swap(paraIdA, paraIdB),
-    devAccounts.charlie,
+  const nonOwnerSwapEvents = await sendTransaction(
+    client.api.tx.registrar.swap(paraIdA, paraIdB).signAsync(devAccounts.charlie),
   )
+  await client.dev.newBlock()
   await checkEvents(nonOwnerSwapEvents, 'system').toMatchSnapshot('non-owner cannot register swap')
 
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdA), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.swap(paraIdA, paraIdA).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   const eventsAfterSameSwap = await client.api.query.system.events()
 
   // 1.2 No Swapped event emitted
@@ -708,7 +685,8 @@ export async function parasRegistrarSwapE2ETest<
     },
   })
 
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.swap(paraIdA, paraIdB).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
 
   // 2.1 No Swapped event yet
   const eventsAfterFirstSwap = await client.api.query.system.events()
@@ -722,11 +700,10 @@ export async function parasRegistrarSwapE2ETest<
   expect(pendingSwapAfterFirst.toString()).toBe(paraIdB.toString())
 
   // 2.3 Assert that cannot swap two parathreads
-  const cannotSwapEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.swap(paraIdB, paraIdA),
-    devAccounts.bob,
+  const cannotSwapEvents = await sendTransaction(
+    client.api.tx.registrar.swap(paraIdB, paraIdA).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
   await checkEvents(cannotSwapEvents, 'system').toMatchSnapshot('cannot swap two parathreads')
 
   // 3. Swapping a Parathread and a Parachain
@@ -747,16 +724,16 @@ export async function parasRegistrarSwapE2ETest<
   })
 
   // 3.1 Alice initiates: A ↔ B
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.swap(paraIdA, paraIdB).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   const pendingSwapChainThread = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapChainThread.toString()).toBe(paraIdB.toString())
 
   // 3.2 Bob confirms: B ↔ A
-  const chainThreadSwapConfirmEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.swap(paraIdB, paraIdA),
-    devAccounts.bob,
+  const chainThreadSwapConfirmEvents = await sendTransaction(
+    client.api.tx.registrar.swap(paraIdB, paraIdA).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   await checkEvents(chainThreadSwapConfirmEvents, 'registrar')
     .redact({ removeKeys: /Id/ })
@@ -789,16 +766,16 @@ export async function parasRegistrarSwapE2ETest<
   })
 
   // 4.1 Alice initiates: A ↔ B
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.swap(paraIdA, paraIdB).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   const pendingSwapThreadChain = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapThreadChain.toString()).toBe(paraIdB.toString())
 
   // 4.2 Bob confirms: B ↔ A
-  const threadChainSwapConfirmEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.swap(paraIdB, paraIdA),
-    devAccounts.bob,
+  const threadChainSwapConfirmEvents = await sendTransaction(
+    client.api.tx.registrar.swap(paraIdB, paraIdA).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   await checkEvents(threadChainSwapConfirmEvents, 'registrar')
     .redact({ removeKeys: /Id/ })
@@ -831,16 +808,16 @@ export async function parasRegistrarSwapE2ETest<
   })
 
   // 5.1 Alice initiates: A ↔ B
-  await submitAndAdvanceBlock(client, client.api.tx.registrar.swap(paraIdA, paraIdB), devAccounts.alice)
+  await sendTransaction(client.api.tx.registrar.swap(paraIdA, paraIdB).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
   const pendingSwapChainChain = await client.api.query.registrar.pendingSwap(paraIdA)
   expect(pendingSwapChainChain.toString()).toBe(paraIdB.toString())
 
   // 5.2 Bob confirms: B ↔ A
-  const chainChainSwapConfirmEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.swap(paraIdB, paraIdA),
-    devAccounts.bob,
+  const chainChainSwapConfirmEvents = await sendTransaction(
+    client.api.tx.registrar.swap(paraIdB, paraIdA).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   // 5.3 Assert swap events
   await checkEvents(chainChainSwapConfirmEvents, 'registrar')
@@ -891,11 +868,10 @@ export async function parasScheduleCodeUpgradeE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot schedule a code upgrade
-  const scheduleUpgradeBobEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
-    devAccounts.bob,
+  const scheduleUpgradeBobEvents = await sendTransaction(
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   const unwantedFields = /Id/
   await checkEvents(scheduleUpgradeBobEvents, 'system')
@@ -903,11 +879,10 @@ export async function parasScheduleCodeUpgradeE2ETest<
     .toMatchSnapshot('bob schedule code upgrade failed')
 
   // 2. Manager (Alice) can schedule a code upgrade
-  const scheduleUpgradeAliceEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
-    devAccounts.alice,
+  const scheduleUpgradeAliceEvents = await sendTransaction(
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   await checkEvents(scheduleUpgradeAliceEvents, 'paras', 'system')
     .redact({ removeKeys: unwantedFields })
@@ -936,11 +911,10 @@ export async function parasScheduleCodeUpgradeE2ETest<
   expect(parasOption.unwrap().locked.toHuman()).toBe(true)
 
   // 4. Manager (Alice) cannot schedule a code upgrade when para is locked
-  const scheduleUpgradeAliceLockedEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode),
-    devAccounts.alice,
+  const scheduleUpgradeAliceLockedEvents = await sendTransaction(
+    client.api.tx.registrar.scheduleCodeUpgrade(paraId, newValidationCode).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   await checkEvents(scheduleUpgradeAliceLockedEvents, 'system')
     .redact({ removeKeys: unwantedFields })
@@ -1025,22 +999,20 @@ export async function parasSetCurrentHeadE2ETest<
   await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot set the current head
-  const setHeadBobEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.setCurrentHead(paraId, newHead),
-    devAccounts.bob,
+  const setHeadBobEvents = await sendTransaction(
+    client.api.tx.registrar.setCurrentHead(paraId, newHead).signAsync(devAccounts.bob),
   )
+  await client.dev.newBlock()
 
   await checkEvents(setHeadBobEvents, 'system')
     .redact({ removeKeys: /Id/ })
     .toMatchSnapshot('bob set current head failed')
 
   // 2. Manager (Alice, unlocked) can set the current head
-  const setHeadAliceEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.setCurrentHead(paraId, newHead),
-    devAccounts.alice,
+  const setHeadAliceEvents = await sendTransaction(
+    client.api.tx.registrar.setCurrentHead(paraId, newHead).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   const headAfterAlice = await client.api.query.paras.heads(paraId)
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
@@ -1066,11 +1038,10 @@ export async function parasSetCurrentHeadE2ETest<
   // 4. Manager (Alice, locked) cannot set the current head
   const updatedHeadRaw = new Uint8Array([0x04, 0x05, 0x06])
   const updatedHead = u8aToHex(updatedHeadRaw)
-  const setHeadAliceLockedEvents = await submitAndAdvanceBlock(
-    client,
-    client.api.tx.registrar.setCurrentHead(paraId, updatedHead),
-    devAccounts.alice,
+  const setHeadAliceLockedEvents = await sendTransaction(
+    client.api.tx.registrar.setCurrentHead(paraId, updatedHead).signAsync(devAccounts.alice),
   )
+  await client.dev.newBlock()
 
   await checkEvents(setHeadAliceLockedEvents, 'system')
     .redact({ removeKeys: /Id/ })
