@@ -1335,7 +1335,7 @@ async function nominationPoolWithdrawUnbondedTest<
   const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  await checkEvents(withdrawEvents, 'staking', 'nominationPools', 'balances')
+  await checkEvents(withdrawEvents, 'staking', 'nominationPools', { section: 'balances', method: 'Released' })
     .redact({ removeKeys: /poolId|stash|era|who|member/ })
     .toMatchSnapshot('withdraw test: member withdrawUnbonded events')
 
@@ -1400,7 +1400,7 @@ async function nominationPoolWithdrawUnbondedTest<
   const depositorWithdrawEvents = await sendTransaction(depositorWithdrawTx.signAsync(testAccounts.alice))
   await client.dev.newBlock()
 
-  await checkEvents(depositorWithdrawEvents, 'staking', 'nominationPools', 'balances')
+  await checkEvents(depositorWithdrawEvents, 'staking', 'nominationPools', { section: 'balances', method: 'Released' })
     .redact({ removeKeys: /poolId|stash|era|who|member/ })
     .toMatchSnapshot('withdraw test: depositor withdrawUnbonded (pool dissolution) events')
 
@@ -1548,7 +1548,7 @@ async function nominationPoolSlashAndWithdrawTest<
   const withdrawEvents = await sendTransaction(withdrawTx.signAsync(testAccounts.eve))
   await client.dev.newBlock()
 
-  await checkEvents(withdrawEvents, 'staking', 'nominationPools', 'balances')
+  await checkEvents(withdrawEvents, 'staking', 'nominationPools', { section: 'balances', method: 'Released' })
     .redact({ removeKeys: /poolId|stash|era|who|member/ })
     .toMatchSnapshot('slash test: member withdrawUnbonded after slash events')
 

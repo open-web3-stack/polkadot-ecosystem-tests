@@ -127,7 +127,7 @@ exports[`bifrostKusama & assetHubKusama > assetHubKusama transfer KSM to bifrost
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -360,7 +360,7 @@ exports[`bifrostKusama & assetHubKusama > bifrostKusama transfer KSM to assetHub
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

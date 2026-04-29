@@ -373,7 +373,7 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9000)",
+        "proofSize": "(rounded 10000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -391,7 +391,7 @@ exports[`assetHubKusama & coretimeKusama > coretimeKusama transfer KSM to assetH
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 100000000)",
           },
         },
       },
