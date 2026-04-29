@@ -57,7 +57,8 @@
     "wss://acala-rpc.n.dwellir.com"
   ],
   "bifrostPolkadot": [
-    "wss://bifrost-polkadot.ibp.network"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
     "wss://hydration.dotters.network",
