@@ -180,6 +180,38 @@ exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt �
 ]
 `;
 
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint USDC to ceiling — USDT ceiling unaffected, USDT fully mintable > usdc at ceiling: Minted event 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 1300)",
+      "externalAmount": 15000000000000,
+      "fee": 75000000000,
+      "pusdReceived": "(rounded 15000000000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint USDC to ceiling — USDT ceiling unaffected, USDT fully mintable > usdt at ceiling: Minted event 1`] = `
+[
+  {
+    "data": {
+      "assetId": "(rounded 2000)",
+      "externalAmount": 10000000000000,
+      "fee": 50000000000,
+      "pusdReceived": "(rounded 10000000000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDC, 0) — mint fails despite AllEnabled circuit breaker > zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed 1`] = `
 [
   {
