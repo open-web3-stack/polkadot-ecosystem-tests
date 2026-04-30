@@ -9,6 +9,7 @@ const custom = {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
     usdt: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: 1984 }] } } },
     usdtIndex: 1984,
+    usdcIndex: 1337,
     eth: {
       parents: 2,
       interior: {
@@ -43,28 +44,50 @@ const custom = {
       },
     },
   },
+  assetHubWestend: {
+    wnd: { Concrete: { parents: 1, interior: 'Here' } },
+  },
 }
 
-const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => ({
-  System: {
-    account: [
-      [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-      [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-    ],
-  },
-  Assets: {
-    account: [
-      [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
-    ],
-  },
-  ForeignAssets: {
-    account: [
-      [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
-      [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
-    ],
-  },
-})
+const getAhwInitStorages = () => {
+  return {
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        [[testAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.dave.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.ferdie.address], { providers: 1, data: { free: 100_000e10 } }],
+      ],
+    },
+  }
+}
+
+const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.assetHubKusama) => {
+  const baseStorages = {
+    System: {
+      account: [
+        [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
+        [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
+      ],
+    },
+    Assets: {
+      account: [[[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }]],
+    },
+    ForeignAssets: {
+      account: [
+        [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }],
+        [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }],
+      ],
+    },
+  }
+
+  return baseStorages
+}
 
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
@@ -96,4 +119,22 @@ export const assetHubKusama = defineChain({
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,
   },
+})
+
+const ahwProperties = {
+  addressEncoding: 42,
+  proxyBlockProvider: 'NonLocal',
+  schedulerBlockProvider: 'NonLocal',
+  asyncBacking: 'Enabled',
+  feeExtractor: standardFeeExtractor,
+} as const
+
+export const assetHubWestend = defineChain({
+  name: 'assetHubWestend',
+  endpoint: endpoints.assetHubWestend,
+  paraId: 1000,
+  networkGroup: 'westend',
+  custom: custom.assetHubWestend,
+  initStorages: getAhwInitStorages(),
+  properties: ahwProperties,
 })
