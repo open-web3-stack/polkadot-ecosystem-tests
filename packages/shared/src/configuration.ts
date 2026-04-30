@@ -339,8 +339,6 @@ export async function configurationTest<
   const schedulerOnDemandTargetQueueUtilization = 250000000
   const schedulerOnDemandFeeVariability = 30000000
   const schedulerOnDemandBaseFee = 5000000000
-  const schedulerTtl = 5
-
   const newSchedulerParamsArg = {
     groupRotationFrequency: schedulerGroupRotationFrequency,
     parasAvailabilityPeriod: schedulerParasAvailabilityPeriod,
@@ -352,7 +350,6 @@ export async function configurationTest<
     onDemandTargetQueueUtilization: schedulerOnDemandTargetQueueUtilization,
     onDemandFeeVariability: schedulerOnDemandFeeVariability,
     onDemandBaseFee: schedulerOnDemandBaseFee,
-    ttl: schedulerTtl,
   }
 
   // 55
@@ -365,7 +362,6 @@ export async function configurationTest<
     expect(schedulerParams.numCores.toNumber()).toBe(schedulerNumCores)
     expect(schedulerParams.onDemandQueueMaxSize.toNumber()).toBe(schedulerOnDemandQueueMaxSize)
     expect(schedulerParams.onDemandBaseFee.toNumber()).toBe(schedulerOnDemandBaseFee)
-    expect(schedulerParams.ttl.toNumber()).toBe(schedulerTtl)
   })
 
   /**
@@ -896,7 +892,6 @@ export async function configurationOverwriteTest<
       expect(sp.numCores.toNumber()).toBe(schedulerParams.numCores)
       expect(sp.onDemandQueueMaxSize.toNumber()).toBe(schedulerParams.onDemandQueueMaxSize)
       expect(sp.onDemandBaseFee.toNumber()).toBe(schedulerParams.onDemandBaseFee)
-      expect(sp.ttl.toNumber()).toBe(schedulerParams.ttl)
     },
   )
 }

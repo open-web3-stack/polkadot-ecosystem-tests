@@ -120,3 +120,4 @@ dist
 /.claude/settings.local.json
 *.local.md
 .sisyphus/*
+.opencode/*

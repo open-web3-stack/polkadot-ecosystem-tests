@@ -545,7 +545,7 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
 [
   {
     "data": {
-      "bond": "(rounded 72000000)",
+      "bond": "(rounded 330000000000)",
       "index": "(redacted)",
     },
     "method": "BountyRejected",
@@ -558,7 +558,7 @@ exports[`Kusama Asset Hub Bounties > All bounty success tests > Bounty Closure T
 [
   {
     "data": {
-      "amount": "(rounded 72000000)",
+      "amount": "(rounded 330000000000)",
       "who": "(redacted)",
     },
     "method": "Slashed",

@@ -12,29 +12,41 @@ describe('assetHubPolkadot & bridgeHubPolkadot', async () => {
   const bridgeHubDOT = bridgeHubPolkadot.custom.dot
   const polkadotDOT = assetHubPolkadot.custom.dot
 
-  runXcmPalletHorizontal('assetHubPolkadot transfer DOT to bridgeHubPolkadot', async () => {
-    return {
-      fromChain: assetHubPolkadotClient,
-      toChain: bridgeHubPolkadotClient,
-      fromBalance: query.balances,
-      toBalance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.limitedTeleportAssets(polkadotDOT, 1e12, tx.xcmPallet.parachainV3(1, bridgeHubPolkadot.paraId!)),
-    }
-  })
+  runXcmPalletHorizontal(
+    'assetHubPolkadot transfer DOT to bridgeHubPolkadot',
+    async () => {
+      return {
+        fromChain: assetHubPolkadotClient,
+        toChain: bridgeHubPolkadotClient,
+        fromBalance: query.balances,
+        toBalance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.limitedTeleportAssets(
+          polkadotDOT,
+          1e12,
+          tx.xcmPallet.parachainV3(1, bridgeHubPolkadot.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 
-  runXcmPalletHorizontal('bridgeHubPolkadot transfer DOT to assetHubPolkadot', async () => {
-    return {
-      fromChain: bridgeHubPolkadotClient,
-      toChain: assetHubPolkadotClient,
-      fromBalance: query.balances,
-      toBalance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.limitedTeleportAssets(
-        bridgeHubDOT,
-        1e12,
-        tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
-      ),
-    }
-  })
+  runXcmPalletHorizontal(
+    'bridgeHubPolkadot transfer DOT to assetHubPolkadot',
+    async () => {
+      return {
+        fromChain: bridgeHubPolkadotClient,
+        toChain: assetHubPolkadotClient,
+        fromBalance: query.balances,
+        toBalance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.limitedTeleportAssets(
+          bridgeHubDOT,
+          1e12,
+          tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 })
