@@ -47,6 +47,28 @@ async function psmDebt(api: Client<any, any>['api'], assetId: number): Promise<b
   return ((await (api.query as any).psm.psmDebt(assetId)) as any).toBigInt()
 }
 
+/**
+ * Compute the per-asset ceiling using the same formula as the pallet:
+ *   max_asset_debt = max_psm_debt * (asset_weight / total_weight_sum)
+ * where max_psm_debt = MaxPsmDebtOfTotal * MaximumIssuance.
+ */
+async function maxAssetDebt(api: Client<any, any>['api'], assetId: number, maximumIssuance: bigint): Promise<bigint> {
+  const maxPsmDebtOfTotal: bigint = ((await (api.query as any).psm.maxPsmDebtOfTotal()) as any).toBigInt()
+  const maxPsmDebt = (maxPsmDebtOfTotal * maximumIssuance) / 1_000_000n
+
+  const assetWeight: bigint = ((await (api.query as any).psm.assetCeilingWeight(assetId)) as any).toBigInt()
+  if (assetWeight === 0n) return 0n
+
+  const allWeights = await (api.query as any).psm.assetCeilingWeight.entries()
+  const totalWeight: bigint = (allWeights as any[]).reduce(
+    (acc: bigint, [, v]: [any, any]) => acc + (v as any).toBigInt(),
+    0n,
+  )
+  if (totalWeight === 0n) return 0n
+
+  return (maxPsmDebt * assetWeight) / totalWeight
+}
+
 /// -------
 /// Tests — Core swaps
 /// -------
@@ -1092,6 +1114,187 @@ async function zeroedCeilingWeightAllowsOtherAsset<
   expect(debt).toBe(500n * UNIT)
 }
 
+/**
+ * Mint USDC to its exact per-asset ceiling and verify that the USDT ceiling
+ * is unaffected. USDT must remain fully mintable after USDC fills its allocation.
+ *
+ * The test derives both ceilings dynamically from PSM storage to avoid
+ * sensitivity to governance parameter changes.
+ *
+ * 1. Compute per-asset ceilings from storage and fund alice to each ceiling amount
+ * 2. Mint USDC to exactly its ceiling; verify Minted event and debt equals ceiling
+ * 3. Verify USDT ceiling is unchanged
+ * 4. Mint USDT to exactly its ceiling; verify Minted event and debt equals ceiling
+ */
+async function usdcAtCeilingDoesNotConsumeUsdtCeiling<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const [client] = await setupNetworks(chain)
+  const { usdcIndex: psmUsdcId, usdtIndex: psmUsdtId } = chain.custom as any
+  const alice = devAccounts.alice
+
+  // 1. Compute per-asset ceilings and fund alice accordingly
+  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
+  const usdcCeiling = await maxAssetDebt(client.api, psmUsdcId, WAH_MAXIMUM_ISSUANCE)
+  const usdtCeiling = await maxAssetDebt(client.api, psmUsdtId, WAH_MAXIMUM_ISSUANCE)
+
+  expect(usdcCeiling).toBeGreaterThan(0n)
+  expect(usdtCeiling).toBeGreaterThan(0n)
+
+  await client.dev.setStorage({
+    Assets: {
+      asset: [
+        [
+          [psmUsdcId],
+          {
+            supply: Number(usdcCeiling),
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+        [
+          [psmUsdtId],
+          {
+            supply: Number(usdtCeiling),
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+      ],
+      account: [
+        [[psmUsdcId, alice.address], { balance: Number(usdcCeiling) }],
+        [[psmUsdtId, alice.address], { balance: Number(usdtCeiling) }],
+      ],
+    },
+  })
+
+  // 2. Mint USDC to ceiling
+  const mintUsdc = (client.api.tx as any).psm.mint(psmUsdcId, usdcCeiling)
+  await sendTransaction(mintUsdc.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('usdc at ceiling: Minted event')
+
+  const debtUsdc = await psmDebt(client.api, psmUsdcId)
+  expect(debtUsdc).toBe(usdcCeiling)
+
+  // 3. USDT ceiling unchanged
+  const usdtCeilingAfter = await maxAssetDebt(client.api, psmUsdtId, WAH_MAXIMUM_ISSUANCE)
+  expect(usdtCeilingAfter).toBe(usdtCeiling)
+
+  // 4. Mint USDT to ceiling
+  const mintUsdt = (client.api.tx as any).psm.mint(psmUsdtId, usdtCeiling)
+  await sendTransaction(mintUsdt.signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('usdt at ceiling: Minted event')
+
+  const debtUsdt = await psmDebt(client.api, psmUsdtId)
+  expect(debtUsdt).toBe(usdtCeiling)
+}
+
+/**
+ * Mint both USDC and USDT to their respective per-asset ceilings and verify
+ * that the sum of debts equals the global ceiling exactly.
+ *
+ * 1. Compute per-asset ceilings and global ceiling from storage; fund alice accordingly
+ * 2. Mint USDC to its ceiling, then USDT to its ceiling
+ * 3. Verify total psmDebt equals max_psm_debt
+ */
+async function bothAssetsToCeilingFillsGlobalCeiling<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const [client] = await setupNetworks(chain)
+  const { usdcIndex: psmUsdcId, usdtIndex: psmUsdtId } = chain.custom as any
+  const alice = devAccounts.alice
+
+  // 1. Derive ceilings from storage and fund alice accordingly
+  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
+  const usdcCeiling = await maxAssetDebt(client.api, psmUsdcId, WAH_MAXIMUM_ISSUANCE)
+  const usdtCeiling = await maxAssetDebt(client.api, psmUsdtId, WAH_MAXIMUM_ISSUANCE)
+  const maxPsmDebtOfTotal: bigint = ((await (client.api.query as any).psm.maxPsmDebtOfTotal()) as any).toBigInt()
+  const globalCeiling = (maxPsmDebtOfTotal * WAH_MAXIMUM_ISSUANCE) / 1_000_000n
+
+  await client.dev.setStorage({
+    Assets: {
+      asset: [
+        [
+          [psmUsdcId],
+          {
+            supply: Number(usdcCeiling),
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+        [
+          [psmUsdtId],
+          {
+            supply: Number(usdtCeiling),
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+      ],
+      account: [
+        [[psmUsdcId, alice.address], { balance: Number(usdcCeiling) }],
+        [[psmUsdtId, alice.address], { balance: Number(usdtCeiling) }],
+      ],
+    },
+  })
+
+  // 2. Mint both to ceiling
+  const mintUsdc = (client.api.tx as any).psm.mint(psmUsdcId, usdcCeiling)
+  await sendTransaction(mintUsdc.signAsync(alice))
+  await client.dev.newBlock()
+
+  const mintUsdt = (client.api.tx as any).psm.mint(psmUsdtId, usdtCeiling)
+  await sendTransaction(mintUsdt.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. Total debt == global ceiling
+  const debtUsdc = await psmDebt(client.api, psmUsdcId)
+  const debtUsdt = await psmDebt(client.api, psmUsdtId)
+  expect(debtUsdc + debtUsdt).toBe(globalCeiling)
+}
+
 /// -------
 /// Tests — Reserve integrity
 /// -------
@@ -1703,6 +1906,16 @@ export function psmE2ETests<
             kind: 'test',
             label: 'mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt',
             testFn: () => maxDebtZeroCeilingDebtUnchangedRedeemsWork(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'mint USDC to ceiling — USDT ceiling unaffected, USDT fully mintable',
+            testFn: () => usdcAtCeilingDoesNotConsumeUsdtCeiling(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'mint both assets to per-asset ceilings — total debt equals global ceiling',
+            testFn: () => bothAssetsToCeilingFillsGlobalCeiling(chain, testConfig),
           },
         ],
       },
