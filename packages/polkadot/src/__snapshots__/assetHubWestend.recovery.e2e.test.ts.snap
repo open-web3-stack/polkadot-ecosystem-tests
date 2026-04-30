@@ -1,0 +1,95 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Alice sets friend groups 1`] = `
+[
+  {
+    "data": {
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "oldFriendGroups": [],
+    },
+    "method": "FriendGroupsChanged",
+    "section": "recovery",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob approves recovery attempt 1`] = `
+[
+  {
+    "data": {
+      "friend": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+      "friendGroupIndex": 0,
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "AttemptApproved",
+    "section": "recovery",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob finishes recovery attempt 1`] = `
+[
+  {
+    "data": {
+      "friendGroupIndex": 0,
+      "inheritor": "5C7zJGkZXM7wKE8PVrcTofCyi2JHxo7puP9bLwCkgRX8hrW2",
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "previousInheritor": null,
+    },
+    "method": "AttemptFinished",
+    "section": "recovery",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob initiates recovery attempt 1`] = `
+[
+  {
+    "data": {
+      "friendGroupIndex": 0,
+      "initiator": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "AttemptInitiated",
+    "section": "recovery",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Charlie approves recovery attempt 1`] = `
+[
+  {
+    "data": {
+      "friend": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+      "friendGroupIndex": 0,
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "AttemptApproved",
+    "section": "recovery",
+  },
+]
+`;
+
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Eve controls recovered account 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000000,
+      "from": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "to": "5EHWyX92SicrEwcmsJ5h3r7yozs2EHWMWexGnRgdoukobNh6",
+    },
+    "method": "Transfer",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "callHash": "(hash)",
+      "callResult": "Ok",
+      "inheritor": "5C7zJGkZXM7wKE8PVrcTofCyi2JHxo7puP9bLwCkgRX8hrW2",
+      "recovered": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "RecoveredAccountControlled",
+    "section": "recovery",
+  },
+]
+`;
