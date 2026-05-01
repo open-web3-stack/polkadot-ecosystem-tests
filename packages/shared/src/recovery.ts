@@ -3,12 +3,17 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { setupNetworks } from '@e2e-test/shared'
 
+import type { EventRecord } from '@polkadot/types/interfaces'
+import type { Codec } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import { checkEvents, getBlockNumber, sortAddressesByBytes, type TestConfig } from './helpers/index.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
+
+type TxResult = { events: Promise<Codec[]> }
+type EventSource = TxResult | EventRecord[]
 
 const UNIT = 1_000_000_000_000n
 const INHERITANCE_DELAY = 2
@@ -52,25 +57,25 @@ async function setupRecoveryNetwork<
   return client
 }
 
-async function getAccount(client: any, address: string) {
+async function getAccount(client: Client<any, any>, address: string) {
   return await client.api.query.system.account(address)
 }
 
-async function getFreeBalance(client: any, address: string): Promise<bigint> {
+async function getFreeBalance(client: Client<any, any>, address: string): Promise<bigint> {
   return (await getAccount(client, address)).data.free.toBigInt()
 }
 
 async function getProvidedBlockNumber<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: any, chain: Chain<TCustom, TInitStorages>): Promise<number> {
+>(client: Client<TCustom, TInitStorages>, chain: Chain<TCustom, TInitStorages>): Promise<number> {
   return await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
 }
 
 async function advanceUntilAtLeast<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: any, chain: Chain<TCustom, TInitStorages>, target: number) {
+>(client: Client<TCustom, TInitStorages>, chain: Chain<TCustom, TInitStorages>, target: number) {
   let current = await getProvidedBlockNumber(client, chain)
   let iterations = 0
 
@@ -84,12 +89,12 @@ async function advanceUntilAtLeast<
   return { current, iterations }
 }
 
-async function getAttempt(client: any, lost: string, friendGroupIndex: number) {
+async function getAttempt(client: Client<any, any>, lost: string, friendGroupIndex: number) {
   const attempt = await (client.api.query.recovery as any).attempt(lost, friendGroupIndex)
   return attempt.isSome ? attempt.unwrap() : null
 }
 
-async function getAttemptState(client: any, lost: string, friendGroupIndex: number) {
+async function getAttemptState(client: Client<any, any>, lost: string, friendGroupIndex: number) {
   const attempt = await getAttempt(client, lost, friendGroupIndex)
   if (!attempt) {
     return null
@@ -105,7 +110,7 @@ async function getAttemptState(client: any, lost: string, friendGroupIndex: numb
   }
 }
 
-async function getInheritorState(client: any, lost: string) {
+async function getInheritorState(client: Client<any, any>, lost: string) {
   const inheritor = await (client.api.query.recovery as any).inheritor(lost)
   if (inheritor.isNone) {
     return null
@@ -119,11 +124,12 @@ async function getInheritorState(client: any, lost: string) {
   }
 }
 
-async function getEventRecords(resultOrEvents: any): Promise<any[]> {
-  return Array.isArray(resultOrEvents) ? resultOrEvents : await resultOrEvents.events
+async function getEventRecords(resultOrEvents: EventSource): Promise<EventRecord[]> {
+  const raw = Array.isArray(resultOrEvents) ? resultOrEvents : await (resultOrEvents as TxResult).events
+  return raw as unknown as EventRecord[]
 }
 
-async function findEvent(resultOrEvents: any, predicate: (event: any) => boolean, message: string) {
+async function findEvent(resultOrEvents: EventSource, predicate: (event: any) => boolean, message: string) {
   const events = await getEventRecords(resultOrEvents)
   const event = events.find(({ event }) => predicate(event))
   expect(event, message).toBeDefined()
@@ -131,8 +137,8 @@ async function findEvent(resultOrEvents: any, predicate: (event: any) => boolean
 }
 
 async function expectModuleError(
-  client: any,
-  resultOrEvents: any,
+  client: Client<any, any>,
+  resultOrEvents: EventSource,
   matcher: (moduleError: any) => boolean,
   message: string,
 ) {
@@ -143,7 +149,7 @@ async function expectModuleError(
   expect(matcher(dispatchError.asModule), message).toBe(true)
 }
 
-async function expectProxyExecuted(client: any, resultOrEvents: any) {
+async function expectProxyExecuted(client: Client<any, any>, resultOrEvents: EventSource) {
   const proxyExecuted = await findEvent(
     resultOrEvents,
     (event) => client.api.events.proxy.ProxyExecuted.is(event),
@@ -156,7 +162,7 @@ async function expectProxyExecuted(client: any, resultOrEvents: any) {
 async function configureSingleGroup<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: any, chain: Chain<TCustom, TInitStorages>, group: RecoveryGroupConfig) {
+>(client: Client<TCustom, TInitStorages>, chain: Chain<TCustom, TInitStorages>, group: RecoveryGroupConfig) {
   const tx = client.api.tx.recovery.setFriendGroups([buildGroup(chain, group)])
   const events = await sendTransaction(tx.signAsync(testAccounts.alice))
   await client.dev.newBlock()
@@ -166,7 +172,7 @@ async function configureSingleGroup<
 async function configureGroups<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: any, chain: Chain<TCustom, TInitStorages>, groups: RecoveryGroupConfig[]) {
+>(client: Client<TCustom, TInitStorages>, chain: Chain<TCustom, TInitStorages>, groups: RecoveryGroupConfig[]) {
   const tx = client.api.tx.recovery.setFriendGroups(groups.map((group) => buildGroup(chain, group)))
   const events = await sendTransaction(tx.signAsync(testAccounts.alice))
   await client.dev.newBlock()
@@ -176,7 +182,12 @@ async function configureGroups<
 async function completeRecovery<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: any, chain: Chain<TCustom, TInitStorages>, friendGroupIndex: number, approvers: (typeof testAccounts.bob)[]) {
+>(
+  client: Client<TCustom, TInitStorages>,
+  chain: Chain<TCustom, TInitStorages>,
+  friendGroupIndex: number,
+  approvers: (typeof testAccounts.bob)[],
+) {
   const lost = testAccounts.alice.address
   const initiator = approvers[0]
 
@@ -225,9 +236,9 @@ async function fullLifecycleTest<
     'Expected AttemptInitiated event',
   )
   assert(client.api.events.recovery.AttemptInitiated.is(initiated.event))
-  expect(initiated.event.data.lost.toString()).toBe(normalizeAddress(chain, alice.address))
-  expect(initiated.event.data.initiator.toString()).toBe(normalizeAddress(chain, bob.address))
-  expect(initiated.event.data.friendGroupIndex.toNumber()).toBe(0)
+  expect((initiated.event.data as any).lost.toString()).toBe(normalizeAddress(chain, alice.address))
+  expect((initiated.event.data as any).initiator.toString()).toBe(normalizeAddress(chain, bob.address))
+  expect((initiated.event.data as any).friendGroupIndex.toNumber()).toBe(0)
 
   const approveByBobEvents = await sendTransaction(
     client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob),
@@ -256,8 +267,8 @@ async function fullLifecycleTest<
     'Expected AttemptFinished event',
   )
   assert(client.api.events.recovery.AttemptFinished.is(finished.event))
-  expect(finished.event.data.previousInheritor.isNone).toBe(true)
-  expect(finished.event.data.inheritor.toString()).toBe(normalizeAddress(chain, eve.address))
+  expect((finished.event.data as any).previousInheritor.isNone).toBe(true)
+  expect((finished.event.data as any).inheritor.toString()).toBe(normalizeAddress(chain, eve.address))
   const inheritor = await getInheritorState(client, alice.address)
   expect(inheritor).not.toBeNull()
   expect(inheritor!.order).toBe(0)
@@ -279,7 +290,7 @@ async function fullLifecycleTest<
     'Expected RecoveredAccountControlled event',
   )
   assert(client.api.events.recovery.RecoveredAccountControlled.is(controlled.event))
-  expect(controlled.event.data.callResult.isOk).toBe(true)
+  expect((controlled.event.data as any).callResult.isOk).toBe(true)
   expect(await getFreeBalance(client, ferdie.address)).toBe(ferdieBefore + 10n * UNIT)
 }
 
@@ -314,7 +325,7 @@ async function initiatorCancelsAfterDelayTest<
     'Expected AttemptCanceled event',
   )
   assert(client.api.events.recovery.AttemptCanceled.is(canceled.event))
-  expect(canceled.event.data.canceler.toString()).toBe(normalizeAddress(chain, bob.address))
+  expect((canceled.event.data as any).canceler.toString()).toBe(normalizeAddress(chain, bob.address))
   expect(await getAttempt(client, alice.address, 0)).toBeNull()
 }
 
@@ -345,7 +356,7 @@ async function lostAccountCancelsImmediatelyTest<
     'Expected AttemptCanceled event',
   )
   assert(client.api.events.recovery.AttemptCanceled.is(canceled.event))
-  expect(canceled.event.data.canceler.toString()).toBe(normalizeAddress(chain, alice.address))
+  expect((canceled.event.data as any).canceler.toString()).toBe(normalizeAddress(chain, alice.address))
   expect(await getAttempt(client, alice.address, 0)).toBeNull()
 }
 
@@ -468,8 +479,8 @@ async function inheritanceOrderConflictTest<
     'Expected first AttemptFinished event',
   )
   assert(client.api.events.recovery.AttemptFinished.is(firstFinished.event))
-  expect(firstFinished.event.data.previousInheritor.isNone).toBe(true)
-  expect(firstFinished.event.data.inheritor.toString()).toBe(normalizeAddress(chain, eve.address))
+  expect((firstFinished.event.data as any).previousInheritor.isNone).toBe(true)
+  expect((firstFinished.event.data as any).inheritor.toString()).toBe(normalizeAddress(chain, eve.address))
   expect((await getInheritorState(client, alice.address))!.inheritor).toBe(normalizeAddress(chain, eve.address))
 
   const finishOrder2Events = await sendTransaction(
@@ -482,7 +493,7 @@ async function inheritanceOrderConflictTest<
     'Expected AttemptDiscarded event',
   )
   assert(client.api.events.recovery.AttemptDiscarded.is(discarded.event))
-  expect(discarded.event.data.existingInheritor.toString()).toBe(normalizeAddress(chain, eve.address))
+  expect((discarded.event.data as any).existingInheritor.toString()).toBe(normalizeAddress(chain, eve.address))
   expect((await getInheritorState(client, alice.address))!.inheritor).toBe(normalizeAddress(chain, eve.address))
 
   const finishOrder0Events = await sendTransaction(
@@ -495,9 +506,9 @@ async function inheritanceOrderConflictTest<
     'Expected displacement AttemptFinished event',
   )
   assert(client.api.events.recovery.AttemptFinished.is(displaced.event))
-  expect(displaced.event.data.previousInheritor.isSome).toBe(true)
-  expect(displaced.event.data.previousInheritor.unwrap().toString()).toBe(normalizeAddress(chain, eve.address))
-  expect(displaced.event.data.inheritor.toString()).toBe(normalizeAddress(chain, bob.address))
+  expect((displaced.event.data as any).previousInheritor.isSome).toBe(true)
+  expect((displaced.event.data as any).previousInheritor.unwrap().toString()).toBe(normalizeAddress(chain, eve.address))
+  expect((displaced.event.data as any).inheritor.toString()).toBe(normalizeAddress(chain, bob.address))
   expect((await getInheritorState(client, alice.address))!.inheritor).toBe(normalizeAddress(chain, bob.address))
 }
 
@@ -569,7 +580,7 @@ async function controlInheritedAccountFailingCallTest<
     'Expected RecoveredAccountControlled event for failing inner call',
   )
   assert(client.api.events.recovery.RecoveredAccountControlled.is(failedControl.event))
-  expect(failedControl.event.data.callResult.isErr).toBe(true)
+  expect((failedControl.event.data as any).callResult.isErr).toBe(true)
   expect((await getInheritorState(client, alice.address))!.inheritor).toBe(normalizeAddress(chain, eve.address))
 
   const ferdieBefore = await getFreeBalance(client, ferdie.address)
@@ -585,7 +596,7 @@ async function controlInheritedAccountFailingCallTest<
     'Expected RecoveredAccountControlled event for successful inner call',
   )
   assert(client.api.events.recovery.RecoveredAccountControlled.is(successfulControl.event))
-  expect(successfulControl.event.data.callResult.isOk).toBe(true)
+  expect((successfulControl.event.data as any).callResult.isOk).toBe(true)
   expect(await getFreeBalance(client, ferdie.address)).toBe(ferdieBefore + UNIT)
 }
 
