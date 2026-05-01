@@ -2,18 +2,13 @@ import { kusama } from '@e2e-test/networks/chains'
 import {
   accountsE2ETests,
   createAccountsConfig,
-  type DescribeNode,
   manualLockAction,
   manualReserveAction,
   multisigCreationDepositAction,
   proxyAdditionDepositAction,
-  type RootTestTree,
   registerTestTree,
   type TestConfig,
-  type TestNode,
 } from '@e2e-test/shared'
-
-import { match } from 'ts-pattern'
 
 const generalTestConfig: TestConfig = {
   testSuiteName: 'Kusama Accounts',
@@ -37,30 +32,4 @@ const accountsTestCfg = createAccountsConfig({
   },
 })
 
-/**
- * `burn` tests are temporarily disabled on Kusama relay, see
- * https://github.com/paritytech/polkadot-sdk/issues/9986.
- *
- * TODO: reenable after fix
- */
-const filterOutBurnTests = (tree: RootTestTree): RootTestTree => {
-  const filterChildren = (children: (TestNode | DescribeNode)[]): (TestNode | DescribeNode)[] => {
-    return children
-      .filter((child) => !child.label.includes('burn'))
-      .map((child) => {
-        return match(child)
-          .with({ kind: 'test' }, () => child)
-          .with({ kind: 'describe' }, (desc) => {
-            return { ...desc, children: filterChildren(desc.children) }
-          })
-          .exhaustive()
-      })
-  }
-
-  return {
-    ...tree,
-    children: filterChildren(tree.children),
-  }
-}
-
-registerTestTree(filterOutBurnTests(accountsE2ETests(kusama, generalTestConfig, accountsTestCfg)))
+registerTestTree(accountsE2ETests(kusama, generalTestConfig, accountsTestCfg))

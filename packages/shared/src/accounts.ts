@@ -3748,7 +3748,15 @@ async function burnTestBaseCase<
 
   // Check total issuance decreased by burn amount (fees are not included)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
-  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - burnAmount)
+  const tiDelta = initialTotalIssuance.toBigInt() - totalIssuanceAfterBurn.toBigInt()
+  if (client.config.isRelayChain) {
+    // On relay chains the block author may be below ED; if so, the fee credit is dropped and
+    // TI shrinks by an extra authorShare on top of the burn (polkadot-sdk#9986).
+    const authorShare = burnFee - (burnFee * 4n) / 5n
+    expect(tiDelta === burnAmount || tiDelta === burnAmount + authorShare).toBe(true)
+  } else {
+    expect(tiDelta).toBe(burnAmount)
+  }
 
   // Check burn event
   const eventsAfterBurn = await client.api.query.system.events()
@@ -3845,8 +3853,17 @@ async function burnTestWithReaping<
   // 4. Verify that the total issuance is decreased by the amount burned
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   const isBifrost = chain.name.includes('bifrost')
+  const reapingFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
-  expect(totalIssuanceAfterBurn.toBigInt()).toBe(initialTotalIssuance.toBigInt() - expectedDecrease)
+  const tiAfter = totalIssuanceAfterBurn.toBigInt()
+  const tiExpect = initialTotalIssuance.toBigInt() - expectedDecrease
+  if (client.config.isRelayChain) {
+    // Block author may be below ED; fee credit may be dropped, shrinking TI further (polkadot-sdk#9986).
+    const reapingAuthorShare = reapingFee - (reapingFee * 4n) / 5n
+    expect(tiAfter === tiExpect || tiAfter === tiExpect - reapingAuthorShare).toBe(true)
+  } else {
+    expect(tiAfter).toBe(tiExpect)
+  }
 }
 
 /**
@@ -3928,10 +3945,21 @@ async function burnKeepAliveTest<
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFee)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
-  // 6. Verify that total issuance is unchanged
+  // 6. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+  const keepAliveFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
+  const keepAliveTI = finalTotalIssuance.toBigInt()
+  if (client.config.isRelayChain) {
+    // Block author may be below ED; fee credit may be dropped, shrinking TI (polkadot-sdk#9986).
+    const keepAliveAuthorShare = keepAliveFee - (keepAliveFee * 4n) / 5n
+    expect(
+      keepAliveTI === initialTotalIssuance.toBigInt() ||
+        keepAliveTI === initialTotalIssuance.toBigInt() - keepAliveAuthorShare,
+    ).toBe(true)
+  } else {
+    expect(keepAliveTI).toBe(initialTotalIssuance.toBigInt())
+  }
 
   // Verify no explicit Burned event for Alice (on Bifrost, fee-related Burned events are expected)
   const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
@@ -4041,10 +4069,21 @@ async function burnWithDepositTest<
   const expectedFreeBalance = aliceFreeBefore - totalFees
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedFreeBalance)
 
-  // 5. Verify that total issuance is unchanged
+  // 5. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+  const depositFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
+  const depositTI = finalTotalIssuance.toBigInt()
+  if (client.config.isRelayChain) {
+    // Block author may be below ED; fee credit may be dropped, shrinking TI (polkadot-sdk#9986).
+    const depositAuthorShare = depositFee - (depositFee * 4n) / 5n
+    expect(
+      depositTI === initialTotalIssuance.toBigInt() ||
+        depositTI === initialTotalIssuance.toBigInt() - depositAuthorShare,
+    ).toBe(true)
+  } else {
+    expect(depositTI).toBe(initialTotalIssuance.toBigInt())
+  }
 
   // Verify no explicit Burned event for Alice
   const systemEvents = await client.api.query.system.events()
@@ -4157,10 +4196,23 @@ async function burnDoubleAttemptTest<
   expect(aliceFinalBalance).toBe(aliceInitialBalance - transactionFees)
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
-  // 5. Verify total issuance is unchanged
+  // 5. Verify total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
+  // Two transactions: each fee goes through ration(80,20) independently, so we check per-fee drops.
 
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
-  expect(finalTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt())
+  const doubleFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
+  const singleFee = doubleFee / 2n
+  const singleAuthorShare = singleFee - (singleFee * 4n) / 5n
+  const doubleTI = finalTotalIssuance.toBigInt()
+  const ti0 = initialTotalIssuance.toBigInt()
+  if (client.config.isRelayChain) {
+    // Block author is either consistently above or below ED for both txs in the same context;
+    // either both fee credits are dropped or neither is (polkadot-sdk#9986).
+    const doubleAuthorShare = singleAuthorShare * 2n
+    expect(doubleTI === ti0 || doubleTI === ti0 - doubleAuthorShare).toBe(true)
+  } else {
+    expect(doubleTI).toBe(ti0)
+  }
 
   // Verify no explicit Burned event for Alice
   const explicitBurns = findExplicitBurnEventsForAccount(systemEvents, client, alice.address, chain)
