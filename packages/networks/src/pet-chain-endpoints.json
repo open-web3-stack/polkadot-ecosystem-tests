@@ -61,8 +61,8 @@
     "wss://acala-rpc-3.aca-api.network/ws"
   ],
   "bifrostPolkadot": [
-    "wss://hk.p.bifrost-rpc.liebi.com/ws",
-    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
     "wss://hydration.dotters.network",
