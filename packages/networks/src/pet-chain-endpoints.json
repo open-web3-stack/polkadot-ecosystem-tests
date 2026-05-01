@@ -56,12 +56,13 @@
     "wss://people-polkadot.api.onfinality.io/public-ws"
   ],
   "acala": [
-    "wss://acala.ibp.network",
+    "wss://acala-rpc-0.aca-api.network",
     "wss://acala-rpc-1.aca-api.network",
-    "wss://acala-rpc.n.dwellir.com"
+    "wss://acala-rpc-3.aca-api.network/ws"
   ],
   "bifrostPolkadot": [
-    "wss://bifrost-polkadot.ibp.network"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
     "wss://hydration.dotters.network",
