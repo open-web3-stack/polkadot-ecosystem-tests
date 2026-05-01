@@ -190,8 +190,7 @@ async function completeRecovery<
 
   const attempt = await getAttemptState(client, lost, friendGroupIndex)
   expect(attempt).not.toBeNull()
-  const delay = friendGroupIndex === 0 ? INHERITANCE_DELAY : INHERITANCE_DELAY
-  await advanceUntilAtLeast(client, chain, attempt!.initBlock + delay)
+  await advanceUntilAtLeast(client, chain, attempt!.initBlock + INHERITANCE_DELAY)
 
   const finishEvents = await sendTransaction(
     client.api.tx.recovery.finishAttempt(lost, friendGroupIndex).signAsync(initiator),
