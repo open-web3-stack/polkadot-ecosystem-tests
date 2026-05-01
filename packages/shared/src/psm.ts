@@ -332,7 +332,13 @@ async function addAssetThenSetCeiling<
   await sendTransaction(mintCall.signAsync(alice))
   await client.dev.newBlock()
 
-  // 5. Minted event
+  // 5. externalDecimals populated, internalDecimals correct
+  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(9999))
+  expect(extDec.unwrap().toNumber()).toBe(6)
+  const intDec = await (client.api.query as any).psm.internalDecimals()
+  expect(intDec.unwrap().toNumber()).toBe(6)
+
+  // 6. Minted event
   await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
     'add asset then set ceiling: Minted event',
   )
@@ -374,9 +380,11 @@ async function removeAssetWithZeroDebt<
   await scheduleInlineCallWithOrigin(client, removeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
-  // 3. Asset removed
+  // 3. Asset removed, externalDecimals cleared
   const assetStatus = await (client.api.query as any).psm.externalAssets(assetLocation(psmPrimaryId))
   expect(assetStatus.isNone).toBe(true)
+  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(psmPrimaryId))
+  expect(extDec.isNone).toBe(true)
 }
 
 /**
@@ -1240,9 +1248,6 @@ async function bothAssetsToCeilingFillsGlobalCeiling<
   const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
   const usdtCeiling = await maxAssetDebt(client.api, assetLocation(psmPrimaryId), WAH_MAXIMUM_ISSUANCE)
   const usdxCeiling = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
-  const maxPsmDebtOfTotal: bigint = ((await (client.api.query as any).psm.maxPsmDebtOfTotal()) as any).toBigInt()
-  const globalCeiling = (maxPsmDebtOfTotal * WAH_MAXIMUM_ISSUANCE) / 1_000_000n
-
   await client.dev.setStorage({
     Assets: {
       asset: [
@@ -1760,6 +1765,130 @@ async function maxDebtZeroCeilingDebtUnchangedRedeemsWork<
 /// Test Trees
 /// ----------
 
+async function multiDecimalMintRedeem<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const [client] = await setupNetworks(chain)
+  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = chain.custom as any
+  const alice = devAccounts.alice
+
+  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), 300n * USDX_UNIT)
+  await sendTransaction(mintUsdx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const usdxDebt = await psmDebt(client.api, assetLocation(psmUsdxId))
+  expect(usdxDebt).toBe(300n * UNIT)
+
+  const redeemUsdx = (client.api.tx as any).psm.redeem(assetLocation(psmUsdxId), 100n * UNIT)
+  await sendTransaction(redeemUsdx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const usdxDebtAfter = await psmDebt(client.api, assetLocation(psmUsdxId))
+  expect(usdxDebtAfter).toBeGreaterThan(0n)
+  expect(usdxDebtAfter).toBeLessThan(300n * UNIT)
+
+  const redeemEvents = await client.api.query.system.events()
+  const redeemed = redeemEvents.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))
+  expect(redeemed).toBeDefined()
+  const redeemData = redeemed!.event.data as any
+  expect(redeemData.externalReceived.toBigInt()).toBeGreaterThan(0n)
+
+  await client.dev.setStorage({
+    Assets: { account: [[[psmDaiId, alice.address], { balance: DAI_UNIT }]] },
+  })
+  const mintDai = (client.api.tx as any).psm.mint(assetLocation(psmDaiId), DAI_UNIT)
+  await sendTransaction(mintDai.signAsync(alice))
+  await client.dev.newBlock()
+
+  const daiDebt = await psmDebt(client.api, assetLocation(psmDaiId))
+  expect(daiDebt).toBe(UNIT)
+
+  const redeemDai = (client.api.tx as any).psm.redeem(assetLocation(psmDaiId), UNIT)
+  await sendTransaction(redeemDai.signAsync(alice))
+  await client.dev.newBlock()
+
+  const daiDebtAfter = await psmDebt(client.api, assetLocation(psmDaiId))
+  expect(daiDebtAfter).toBeLessThan(UNIT)
+}
+
+async function multiDecimalCeilings<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const [client] = await setupNetworks(chain)
+  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = chain.custom as any
+  const alice = devAccounts.alice
+
+  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
+  const usdxCeiling = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
+  const daiCeiling = await maxAssetDebt(client.api, assetLocation(psmDaiId), WAH_MAXIMUM_ISSUANCE)
+
+  expect(usdxCeiling).toBeGreaterThan(0n)
+  expect(daiCeiling).toBeGreaterThan(0n)
+
+  const usdxExternal = usdxCeiling / 10_000n // pUSD units → USDX units (÷ 10^(6-2))
+  const daiExternal = daiCeiling * 1_000_000_000_000n // pUSD units → DAI units  (× 10^(18-6))
+
+  await client.dev.setStorage({
+    Assets: {
+      asset: [
+        [
+          [psmUsdxId],
+          {
+            supply: Number(usdxExternal),
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+        [
+          [psmDaiId],
+          {
+            supply: daiExternal,
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 1,
+            sufficients: 1,
+            approvals: 0,
+            status: 'Live',
+            deposit: 0,
+            owner: alice.address,
+            issuer: alice.address,
+            admin: alice.address,
+            freezer: alice.address,
+          },
+        ],
+      ],
+      account: [
+        [[psmUsdxId, alice.address], { balance: Number(usdxExternal) }],
+        [[psmDaiId, alice.address], { balance: daiExternal }],
+      ],
+    },
+  })
+
+  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), usdxExternal)
+  await sendTransaction(mintUsdx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const mintDai = (client.api.tx as any).psm.mint(assetLocation(psmDaiId), daiExternal)
+  await sendTransaction(mintDai.signAsync(alice))
+  await client.dev.newBlock()
+
+  const debtUsdx = await psmDebt(client.api, assetLocation(psmUsdxId))
+  const debtDai = await psmDebt(client.api, assetLocation(psmDaiId))
+  expect(debtUsdx).toBe(usdxCeiling)
+  expect(debtDai).toBe(daiCeiling)
+}
+
 export function psmE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1925,6 +2054,22 @@ export function psmE2ETests<
             kind: 'test',
             label: 'mint both assets to per-asset ceilings — each debt equals its ceiling',
             testFn: () => bothAssetsToCeilingFillsGlobalCeiling(chain, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Decimal conversion',
+        children: [
+          {
+            kind: 'test',
+            label: 'mint and redeem USDX and DAI — debt and received match decimal-scaled amounts',
+            testFn: () => multiDecimalMintRedeem(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'USDX and DAI at per-asset ceilings — each debt equals its ceiling',
+            testFn: () => multiDecimalCeilings(chain, testConfig),
           },
         ],
       },
