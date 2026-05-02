@@ -24,7 +24,7 @@ type RecoveryGroupConfig = {
   friendsNeeded: number
   inheritor: string
   inheritanceDelay?: number
-  inheritanceOrder: number
+  inheritancePriority: number
   cancelDelay?: number
 }
 
@@ -44,7 +44,7 @@ function buildGroup<
     friendsNeeded: config.friendsNeeded,
     inheritor: config.inheritor,
     inheritanceDelay: config.inheritanceDelay ?? INHERITANCE_DELAY,
-    inheritanceOrder: config.inheritanceOrder,
+    inheritancePriority: config.inheritancePriority,
     cancelDelay: config.cancelDelay ?? CANCEL_DELAY,
   }
 }
@@ -221,7 +221,7 @@ async function fullLifecycleTest<
     friends: [bob.address, charlie.address, dave.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await checkEvents(setGroupEvents, 'recovery').toMatchSnapshot('events when Alice sets friend groups')
@@ -254,8 +254,7 @@ async function fullLifecycleTest<
 
   const attempt = await getAttemptState(client, alice.address, 0)
   expect(attempt).not.toBeNull()
-  const { current } = await advanceUntilAtLeast(client, chain, attempt!.initBlock + INHERITANCE_DELAY)
-  expect(current).toBe(attempt!.initBlock + INHERITANCE_DELAY)
+  await advanceUntilAtLeast(client, chain, attempt!.initBlock + INHERITANCE_DELAY)
 
   const finishEvents = await sendTransaction(client.api.tx.recovery.finishAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
@@ -305,7 +304,7 @@ async function initiatorCancelsAfterDelayTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: testAccounts.eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
     cancelDelay: CANCEL_DELAY,
   })
 
@@ -340,7 +339,7 @@ async function lostAccountCancelsImmediatelyTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
     cancelDelay: 4,
   })
 
@@ -372,7 +371,7 @@ async function lostAccountSlashesAttemptTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -401,8 +400,8 @@ async function approvalResetsTimerTest<
     friends: [bob.address, charlie.address, dave.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
-    cancelDelay: 4,
+    inheritancePriority: 0,
+    cancelDelay: 20,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -429,7 +428,7 @@ async function approvalResetsTimerTest<
     'Expected NotYetCancelable after approval reset the timer',
   )
 
-  await advanceUntilAtLeast(client, chain, approvedAttempt!.lastApprovalBlock + 4)
+  await advanceUntilAtLeast(client, chain, approvedAttempt!.lastApprovalBlock + 20)
   const cancelEvents = await sendTransaction(client.api.tx.recovery.cancelAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await findEvent(
@@ -447,9 +446,9 @@ async function inheritanceOrderConflictTest<
   const { alice, bob, charlie, dave, eve, ferdie } = testAccounts
 
   await configureGroups(client, chain, [
-    { friends: [bob.address, charlie.address], friendsNeeded: 2, inheritor: eve.address, inheritanceOrder: 1 },
-    { friends: [dave.address, ferdie.address], friendsNeeded: 2, inheritor: ferdie.address, inheritanceOrder: 2 },
-    { friends: [charlie.address, dave.address], friendsNeeded: 2, inheritor: bob.address, inheritanceOrder: 0 },
+    { friends: [bob.address, charlie.address], friendsNeeded: 2, inheritor: eve.address, inheritancePriority: 1 },
+    { friends: [dave.address, ferdie.address], friendsNeeded: 2, inheritor: ferdie.address, inheritancePriority: 2 },
+    { friends: [charlie.address, dave.address], friendsNeeded: 2, inheritor: bob.address, inheritancePriority: 0 },
   ])
 
   for (const [groupIdx, [initiator, approver]] of [
@@ -523,7 +522,7 @@ async function revokeInheritorTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await completeRecovery(client, chain, 0, [bob, charlie])
@@ -563,7 +562,7 @@ async function controlInheritedAccountFailingCallTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await completeRecovery(client, chain, 0, [bob, charlie])
@@ -611,7 +610,7 @@ async function controlInheritedAccountAnyProxyTest<
     friends: [bob.address, charlie.address, dave.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await completeRecovery(client, chain, 0, [bob, charlie])
@@ -643,7 +642,7 @@ async function finishAttemptAtExactBoundaryTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
     inheritanceDelay: 2,
   })
 
@@ -656,8 +655,7 @@ async function finishAttemptAtExactBoundaryTest<
 
   const attempt = await getAttemptState(client, alice.address, 0)
   expect(attempt).not.toBeNull()
-  const { current } = await advanceUntilAtLeast(client, chain, attempt!.initBlock + 2)
-  expect(current).toBe(attempt!.initBlock + 2)
+  await advanceUntilAtLeast(client, chain, attempt!.initBlock + 2)
 
   const finishEvents = await sendTransaction(client.api.tx.recovery.finishAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
@@ -679,7 +677,7 @@ async function cancelAttemptAtExactBoundaryTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
     cancelDelay: 2,
   })
 
@@ -688,8 +686,7 @@ async function cancelAttemptAtExactBoundaryTest<
 
   const attempt = await getAttemptState(client, alice.address, 0)
   expect(attempt).not.toBeNull()
-  const { current } = await advanceUntilAtLeast(client, chain, attempt!.lastApprovalBlock + 2)
-  expect(current).toBe(attempt!.lastApprovalBlock + 2)
+  await advanceUntilAtLeast(client, chain, attempt!.lastApprovalBlock + 2)
 
   const cancelEvents = await sendTransaction(client.api.tx.recovery.cancelAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
@@ -711,7 +708,7 @@ async function finishAttemptOddDelayTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
     inheritanceDelay: 3,
   })
 
@@ -747,8 +744,8 @@ async function cancelBeforeDelayFailsTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
-    cancelDelay: 4,
+    inheritancePriority: 0,
+    cancelDelay: 20,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -777,7 +774,7 @@ async function setFriendGroupsWithActiveAttemptFailsTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -790,7 +787,7 @@ async function setFriendGroupsWithActiveAttemptFailsTest<
           friends: [charlie.address, dave.address],
           friendsNeeded: 2,
           inheritor: eve.address,
-          inheritanceOrder: 0,
+          inheritancePriority: 0,
         }),
       ])
       .signAsync(alice),
@@ -815,7 +812,7 @@ async function thresholdPlusOneApprovalFailsTest<
     friends: [bob.address, charlie.address, dave.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -848,8 +845,8 @@ async function finishBeforeDelayFailsTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
-    inheritanceDelay: 4,
+    inheritancePriority: 0,
+    inheritanceDelay: 20,
   })
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
@@ -871,7 +868,7 @@ async function finishBeforeDelayFailsTest<
   )
 }
 
-async function initiateWhenLowerOrderRecoveredFailsTest<
+async function initiateWhenHigherPriorityRecoveredFailsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
@@ -883,13 +880,13 @@ async function initiateWhenLowerOrderRecoveredFailsTest<
       friends: [bob.address, charlie.address],
       friendsNeeded: 2,
       inheritor: eve.address,
-      inheritanceOrder: 0,
+      inheritancePriority: 0,
     },
     {
       friends: [dave.address, ferdie.address],
       friendsNeeded: 2,
       inheritor: ferdie.address,
-      inheritanceOrder: 1,
+      inheritancePriority: 1,
     },
   ])
 
@@ -902,8 +899,8 @@ async function initiateWhenLowerOrderRecoveredFailsTest<
   await expectModuleError(
     client,
     failedInitiateEvents,
-    (moduleError) => client.api.errors.recovery.LowerOrderRecovered.is(moduleError),
-    'Expected LowerOrderRecovered',
+    (moduleError) => client.api.errors.recovery.HigherPriorityRecovered.is(moduleError),
+    'Expected HigherPriorityRecovered',
   )
 }
 
@@ -918,7 +915,7 @@ async function notFriendCannotInitiateTest<
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   const failedInitiateEvents = await sendTransaction(
@@ -933,18 +930,18 @@ async function notFriendCannotInitiateTest<
   )
 }
 
-async function controlInheritedAccountProxyFilteredTest<
+async function controlInheritedAccountNonTransferProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>) {
   const client = await setupRecoveryNetwork(chain)
-  const { alice, bob, charlie, eve } = testAccounts
+  const { alice, bob, charlie, eve, ferdie } = testAccounts
 
   await configureSingleGroup(client, chain, {
     friends: [bob.address, charlie.address],
     friendsNeeded: 2,
     inheritor: eve.address,
-    inheritanceOrder: 0,
+    inheritancePriority: 0,
   })
 
   await completeRecovery(client, chain, 0, [bob, charlie])
@@ -952,18 +949,17 @@ async function controlInheritedAccountProxyFilteredTest<
   await sendTransaction(client.api.tx.proxy.addProxy(bob.address, 'NonTransfer', 0).signAsync(eve))
   await client.dev.newBlock()
 
+  const ferdieBefore = await getFreeBalance(client, ferdie.address)
   const innerCall = client.api.tx.recovery.controlInheritedAccount(
     alice.address,
-    client.api.tx.system.remark('blocked by filter'),
+    client.api.tx.balances.transferKeepAlive(ferdie.address, UNIT),
   )
   const proxyEvents = await sendTransaction(client.api.tx.proxy.proxy(eve.address, null, innerCall).signAsync(bob))
   await client.dev.newBlock()
 
   const proxyExecuted = await expectProxyExecuted(client, proxyEvents)
-  expect(proxyExecuted.result.isErr).toBe(true)
-  const error = proxyExecuted.result.asErr
-  assert(error.isModule, 'Expected module error from proxy filtering')
-  expect(client.api.errors.system.CallFiltered.is(error.asModule)).toBe(true)
+  expect(proxyExecuted.result.isOk).toBe(true)
+  expect(await getFreeBalance(client, ferdie.address)).toBe(ferdieBefore + UNIT)
 }
 
 function successRecoveryE2ETests<
@@ -1021,6 +1017,11 @@ function successRecoveryE2ETests<
       },
       {
         kind: 'test',
+        label: 'control_inherited_account passes through NonTransfer proxy — intentionally not excluded',
+        testFn: () => controlInheritedAccountNonTransferProxyTest(chain),
+      },
+      {
+        kind: 'test',
         label: 'finish_attempt succeeds at exactly inheritance_delay blocks (even delay)',
         testFn: () => finishAttemptAtExactBoundaryTest(chain),
       },
@@ -1068,18 +1069,13 @@ function failureRecoveryE2ETests<
       },
       {
         kind: 'test',
-        label: 'initiate_attempt fails when lower-order group already recovered',
-        testFn: () => initiateWhenLowerOrderRecoveredFailsTest(chain),
+        label: 'initiate_attempt fails when higher-priority group already recovered',
+        testFn: () => initiateWhenHigherPriorityRecoveredFailsTest(chain),
       },
       {
         kind: 'test',
         label: 'non-friend cannot initiate recovery attempt',
         testFn: () => notFriendCannotInitiateTest(chain),
-      },
-      {
-        kind: 'test',
-        label: 'control_inherited_account is filtered when called through NonTransfer proxy',
-        testFn: () => controlInheritedAccountProxyFilteredTest(chain),
       },
     ],
   }

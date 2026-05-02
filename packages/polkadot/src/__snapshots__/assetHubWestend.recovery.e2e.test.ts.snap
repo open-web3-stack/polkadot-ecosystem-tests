@@ -5,7 +5,6 @@ exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend
   {
     "data": {
       "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-      "oldFriendGroups": [],
     },
     "method": "FriendGroupsChanged",
     "section": "recovery",
@@ -13,19 +12,7 @@ exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend
 ]
 `;
 
-exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob approves recovery attempt 1`] = `
-[
-  {
-    "data": {
-      "friend": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
-      "friendGroupIndex": 0,
-      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "AttemptApproved",
-    "section": "recovery",
-  },
-]
-`;
+exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob approves recovery attempt 1`] = `[]`;
 
 exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend_groups → initiate → approve × 2 → finish → control > events when Bob finishes recovery attempt 1`] = `
 [
@@ -51,6 +38,15 @@ exports[`Westend Asset Hub Recovery > success tests > full lifecycle: set_friend
       "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "AttemptInitiated",
+    "section": "recovery",
+  },
+  {
+    "data": {
+      "friend": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+      "friendGroupIndex": 0,
+      "lost": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "AttemptApproved",
     "section": "recovery",
   },
 ]
