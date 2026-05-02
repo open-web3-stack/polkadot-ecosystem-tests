@@ -13,13 +13,13 @@ import { checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from
 /// Constants
 /// -------
 
-const UNIT = 1_000_000n
-export const USDX_UNIT = 100n
+const UNIT = 1_000_000n // 1 token in 6-decimal precision (pUSD / USDT)
+export const USDX_UNIT = 100n // 1 token in 2-decimal precision (USDX)
+export const DAI_UNIT = 10n ** 18n // 1 token in 18-decimal precision (DAI)
 
-/** 1 unit in 18-decimal precision (DAI). */
-export const DAI_UNIT = 10n ** 18n
+const MIN_SWAP = 100n * UNIT // minimum swap enforced by the PSM pallet
 
-const MIN_SWAP = 100n * UNIT
+const SYNTHETIC_ASSET_ID = 9999 // test-only asset injected via Chopsticks storage overrides
 
 /** XCM V5 Location for a local Assets pallet asset — PSM pallet keys changed from u32 to StagingXcmV5Location. */
 const assetLocation = (assetId: number) => ({
@@ -117,7 +117,7 @@ async function mintUsdtToPusd<
   await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('mint USDT: Minted event')
 
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const mintedData = mintedRecord!.event.data as any
   expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -169,7 +169,7 @@ async function mintThenRedeem<
   )
 
   const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const mintedData = mintedRecord!.event.data as any
   const received = mintedData.received.toBigInt()
@@ -188,7 +188,7 @@ async function mintThenRedeem<
   )
 
   const redeemEvents = await client.api.query.system.events()
-  const redeemedRecord = redeemEvents.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))
+  const redeemedRecord = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
   expect(redeemedRecord).toBeDefined()
   const redeemedData = redeemedRecord!.event.data as any
   expect(redeemedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -241,8 +241,8 @@ async function mintBelowMinSwapFails<
  * Register a new external asset via addExternalAsset without setting a ceiling
  * weight. Minting against it must fail because the effective ceiling is zero.
  *
- * 1. Add external asset 9999 via Root origin
- * 2. Attempt to mint MIN_SWAP of asset 9999
+ * 1. Add external asset SYNTHETIC_ASSET_ID via Root origin
+ * 2. Attempt to mint MIN_SWAP of asset SYNTHETIC_ASSET_ID
  * 3. Verify the mint failed with an ExtrinsicFailed event
  */
 async function addAssetWithZeroCeiling<
@@ -253,12 +253,21 @@ async function addAssetWithZeroCeiling<
   const alice = devAccounts.alice
 
   // 1. Add asset
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(9999))
+  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(SYNTHETIC_ASSET_ID))
   await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetAdded' }).toMatchSnapshot(
+    'add asset zero ceiling: ExternalAssetAdded event',
+  )
+  const addedEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'ExternalAssetAdded',
+  )
+  expect(addedEvt).toBeDefined()
+  expect((addedEvt!.event.data as any).assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
+
   // 2. Try mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(9999), MIN_SWAP)
+  const mintCall = (client.api.tx as any).psm.mint(assetLocation(SYNTHETIC_ASSET_ID), MIN_SWAP)
   await sendTransaction(mintCall.signAsync(alice))
   await client.dev.newBlock()
 
@@ -277,11 +286,11 @@ async function addAssetWithZeroCeiling<
  * it in the Assets pallet, and mint against it. Exercises the full asset
  * onboarding flow from governance to first swap.
  *
- * 1. Add external asset 9999 via Root origin
- * 2. Set ceiling weight to 100_000 for asset 9999
- * 3. Create asset 9999 in the Assets pallet and fund alice with 1000 UNIT
- * 4. Mint MIN_SWAP of asset 9999
- * 5. Verify the Minted event contains who, assetId 9999, externalAmount, and received > 0
+ * 1. Add external asset SYNTHETIC_ASSET_ID via Root origin
+ * 2. Set ceiling weight to 100_000 for asset SYNTHETIC_ASSET_ID
+ * 3. Create asset SYNTHETIC_ASSET_ID in the Assets pallet and fund alice with 1000 UNIT
+ * 4. Mint MIN_SWAP of asset SYNTHETIC_ASSET_ID
+ * 5. Verify the Minted event contains who, assetId SYNTHETIC_ASSET_ID, externalAmount, and received > 0
  */
 async function addAssetThenSetCeiling<
   TCustom extends Record<string, unknown> | undefined,
@@ -295,7 +304,7 @@ async function addAssetThenSetCeiling<
     Assets: {
       asset: [
         [
-          [9999],
+          [SYNTHETIC_ASSET_ID],
           {
             owner: alice.address,
             issuer: alice.address,
@@ -312,28 +321,40 @@ async function addAssetThenSetCeiling<
           },
         ],
       ],
-      metadata: [[[9999], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }]],
-      account: [[[9999, alice.address], { balance: 1000e6 }]],
+      metadata: [
+        [[SYNTHETIC_ASSET_ID], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }],
+      ],
+      account: [[[SYNTHETIC_ASSET_ID, alice.address], { balance: 1000e6 }]],
     },
   })
 
   // 2. Add asset
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(9999))
+  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(SYNTHETIC_ASSET_ID))
   await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
   // 3. Set ceiling
-  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(9999), 100_000)
+  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(SYNTHETIC_ASSET_ID), 100_000)
   await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'AssetCeilingWeightUpdated' }).toMatchSnapshot(
+    'add asset then set ceiling: AssetCeilingWeightUpdated event',
+  )
+  const ceilingEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'AssetCeilingWeightUpdated',
+  )
+  expect(ceilingEvt).toBeDefined()
+  expect((ceilingEvt!.event.data as any).assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
+  expect((ceilingEvt!.event.data as any).newValue.toNumber()).toBe(100_000)
+
   // 4. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(9999), MIN_SWAP)
+  const mintCall = (client.api.tx as any).psm.mint(assetLocation(SYNTHETIC_ASSET_ID), MIN_SWAP)
   await sendTransaction(mintCall.signAsync(alice))
   await client.dev.newBlock()
 
   // 5. externalDecimals populated, internalDecimals correct
-  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(9999))
+  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(SYNTHETIC_ASSET_ID))
   expect(extDec.unwrap().toNumber()).toBe(6)
   const intDec = await (client.api.query as any).psm.internalDecimals()
   expect(intDec.unwrap().toNumber()).toBe(6)
@@ -344,11 +365,11 @@ async function addAssetThenSetCeiling<
   )
 
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
   expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
-  expect(data.assetId.eq(assetLocation(9999))).toBe(true)
+  expect(data.assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
   expect(data.externalAmount.toBigInt()).toBe(MIN_SWAP)
   expect(data.received.toBigInt()).toBeGreaterThan(0n)
 }
@@ -380,6 +401,15 @@ async function removeAssetWithZeroDebt<
   await scheduleInlineCallWithOrigin(client, removeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetRemoved' }).toMatchSnapshot(
+    'remove asset: ExternalAssetRemoved event',
+  )
+  const removedEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'ExternalAssetRemoved',
+  )
+  expect(removedEvt).toBeDefined()
+  expect((removedEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
+
   // 3. Asset removed, externalDecimals cleared
   const assetStatus = await (client.api.query as any).psm.externalAssets(assetLocation(psmPrimaryId))
   expect(assetStatus.isNone).toBe(true)
@@ -408,6 +438,16 @@ async function feeResetsAfterRemoveAndReAdd<
   const setFeeCall = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 30_000)
   await scheduleInlineCallWithOrigin(client, setFeeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'MintingFeeUpdated' }).toMatchSnapshot(
+    'fee reset: MintingFeeUpdated event',
+  )
+  const mintFeeEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'MintingFeeUpdated',
+  )
+  expect(mintFeeEvt).toBeDefined()
+  expect((mintFeeEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
+  expect((mintFeeEvt!.event.data as any).newValue.toNumber()).toBe(30_000)
 
   // 2. Zero debt
   await client.dev.setStorage({
@@ -540,7 +580,7 @@ async function setFeeBeforeAddingAsset<
   )
 
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const mintedData = mintedRecord!.event.data as any
   expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -587,6 +627,16 @@ async function mintingDisabledBlocksMintAllowsRedeem<
   await scheduleInlineCallWithOrigin(client, disableCall.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'AssetStatusUpdated' }).toMatchSnapshot(
+    'MintingDisabled: AssetStatusUpdated event',
+  )
+  const statusEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'AssetStatusUpdated',
+  )
+  expect(statusEvt).toBeDefined()
+  expect((statusEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
+  expect((statusEvt!.event.data as any).status.toString()).toBe('MintingDisabled')
+
   // 3. Mint fails
   const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
   await sendTransaction(mintCall2.signAsync(alice))
@@ -612,7 +662,7 @@ async function mintingDisabledBlocksMintAllowsRedeem<
     )
 
     const events = await client.api.query.system.events()
-    const redeemedRecord = events.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))
+    const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
     expect(redeemedRecord).toBeDefined()
     const data = redeemedRecord!.event.data as any
     expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -786,6 +836,16 @@ async function mintRedeemInsuranceFundGain<
   await scheduleInlineCallWithOrigin(client, setRedeemFee.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'RedemptionFeeUpdated' }).toMatchSnapshot(
+    'insurance fund gain: RedemptionFeeUpdated event',
+  )
+  const redeemFeeEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'RedemptionFeeUpdated',
+  )
+  expect(redeemFeeEvt).toBeDefined()
+  expect((redeemFeeEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
+  expect((redeemFeeEvt!.event.data as any).newValue.toNumber()).toBe(10_000)
+
   // 2. Record balance
   const insuranceBefore = await assetBalance(client.api, psmStableAssetId, insuranceFund)
 
@@ -799,7 +859,7 @@ async function mintRedeemInsuranceFundGain<
   )
 
   const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const received = (mintedRecord!.event.data as any).received.toBigInt()
 
@@ -844,7 +904,7 @@ async function mintRedeemResidualDebt<
   await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('residual debt: Minted event')
 
   const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const received = (mintedRecord!.event.data as any).received.toBigInt()
 
@@ -997,6 +1057,15 @@ async function maxDebtBlocksMintRestoreAllows<
   await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
   await client.dev.newBlock()
 
+  await checkSystemEvents(client, { section: 'psm', method: 'MaxPsmDebtOfTotalUpdated' }).toMatchSnapshot(
+    'set max debt: MaxPsmDebtOfTotalUpdated event',
+  )
+  const maxDebtEvt = (await client.api.query.system.events()).find(
+    ({ event }) => event.section === 'psm' && event.method === 'MaxPsmDebtOfTotalUpdated',
+  )
+  expect(maxDebtEvt).toBeDefined()
+  expect((maxDebtEvt!.event.data as any).newValue.toNumber()).toBe(0)
+
   await client.dev.setStorage({
     Assets: {
       account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
@@ -1036,7 +1105,7 @@ async function maxDebtBlocksMintRestoreAllows<
   )
 
   events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
   expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -1118,7 +1187,7 @@ async function zeroedCeilingWeightAllowsOtherAsset<
   )
 
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => (client.api.events as any).psm.Minted.is(event))
+  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
   expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -1461,7 +1530,7 @@ async function healthyRedeemSucceeds<
   )
 
   const events = await client.api.query.system.events()
-  const redeemedRecord = events.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))
+  const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
   expect(redeemedRecord).toBeDefined()
   const data = redeemedRecord!.event.data as any
   expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
@@ -1591,7 +1660,7 @@ async function zeroMaxDebtBlocksBothAssetsRedeemsWork<
     'zero maxDebt: USDT Redeemed event',
   )
   events = await client.api.query.system.events()
-  expect(events.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))).toBeDefined()
+  expect(events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
 
   // 6. USDX redeem works
   const redeemUsdx = (client.api.tx as any).psm.redeem(assetLocation(psmUsdxId), MIN_SWAP)
@@ -1602,7 +1671,7 @@ async function zeroMaxDebtBlocksBothAssetsRedeemsWork<
     'zero maxDebt: USDX Redeemed event',
   )
   events = await client.api.query.system.events()
-  expect(events.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))).toBeDefined()
+  expect(events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
 }
 
 /**
@@ -1688,7 +1757,7 @@ async function normalizedCeilingWeightEnforcement<
   )
 
   const mintEvents = await client.api.query.system.events()
-  expect(mintEvents.find(({ event }) => (client.api.events as any).psm.Minted.is(event))).toBeDefined()
+  expect(mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')).toBeDefined()
 }
 
 /**
@@ -1755,7 +1824,7 @@ async function maxDebtZeroCeilingDebtUnchangedRedeemsWork<
     'maxDebt zero: Redeemed event',
   )
   const redeemEvents = await client.api.query.system.events()
-  expect(redeemEvents.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))).toBeDefined()
+  expect(redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
 
   const debtAfterRedeem = await psmDebt(client.api, assetLocation(psmPrimaryId))
   expect(debtAfterRedeem).toBeLessThan(debtAfterMint)
@@ -1789,7 +1858,7 @@ async function multiDecimalMintRedeem<
   expect(usdxDebtAfter).toBeLessThan(300n * UNIT)
 
   const redeemEvents = await client.api.query.system.events()
-  const redeemed = redeemEvents.find(({ event }) => (client.api.events as any).psm.Redeemed.is(event))
+  const redeemed = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
   expect(redeemed).toBeDefined()
   const redeemData = redeemed!.event.data as any
   expect(redeemData.externalReceived.toBigInt()).toBeGreaterThan(0n)

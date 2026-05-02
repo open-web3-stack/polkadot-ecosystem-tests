@@ -1,5 +1,31 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: AssetCeilingWeightUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 10000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "10.00%",
+      "oldValue": "0.00%",
+    },
+    "method": "AssetCeilingWeightUpdated",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: Minted event 1`] = `
 [
   {
@@ -23,6 +49,30 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeil
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ceiling — mint fails > add asset zero ceiling: ExternalAssetAdded event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 10000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "ExternalAssetAdded",
     "section": "psm",
   },
 ]
@@ -53,6 +103,32 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ce
 ]
 `;
 
+exports[`Westend Asset Hub PSM > Asset lifecycle > set custom fee, remove, re-add — fee resets to default > fee reset: MintingFeeUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "3.00%",
+      "oldValue": "0.50%",
+    },
+    "method": "MintingFeeUpdated",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Asset lifecycle > setMintingFee before adding asset — 3% fee applied on mint > set fee before add: Minted event 1`] = `
 [
   {
@@ -76,6 +152,30 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > setMintingFee before adding a
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Asset lifecycle > zero debt then removeExternalAsset — asset is None > remove asset: ExternalAssetRemoved event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "ExternalAssetRemoved",
     "section": "psm",
   },
 ]
@@ -182,6 +282,19 @@ exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) b
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > set max debt: MaxPsmDebtOfTotalUpdated event 1`] = `
+[
+  {
+    "data": {
+      "newValue": "0.00%",
+      "oldValue": "50.00%",
+    },
+    "method": "MaxPsmDebtOfTotalUpdated",
     "section": "psm",
   },
 ]
@@ -505,6 +618,31 @@ exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and
 ]
 `;
 
+exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: AssetStatusUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "status": "MintingDisabled",
+    },
+    "method": "AssetStatusUpdated",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: Redeemed event 1`] = `
 [
   {
@@ -788,6 +926,32 @@ exports[`Westend Asset Hub PSM > Value conservation > set 1% fees, mint and rede
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Value conservation > set 1% fees, mint and redeem all — insurance fund gain > 0 > insurance fund gain: RedemptionFeeUpdated event 1`] = `
+[
+  {
+    "data": {
+      "assetId": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "1.00%",
+      "oldValue": "0.50%",
+    },
+    "method": "RedemptionFeeUpdated",
     "section": "psm",
   },
 ]
