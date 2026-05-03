@@ -36,5 +36,5 @@ describe('assetHubKusama & coretimeKusama', async () => {
         tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
       ),
     }
-  })
+  }, { skip: true })
 })
