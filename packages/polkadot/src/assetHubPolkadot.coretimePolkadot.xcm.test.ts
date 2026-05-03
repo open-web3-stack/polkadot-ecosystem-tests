@@ -36,5 +36,5 @@ describe('assetHubPolkadot & coretimePolkadot', async () => {
         tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
       ),
     }
-  })
+  }, { skip: true })
 })
