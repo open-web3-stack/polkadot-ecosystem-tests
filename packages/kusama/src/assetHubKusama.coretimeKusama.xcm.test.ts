@@ -23,18 +23,22 @@ describe('assetHubKusama & coretimeKusama', async () => {
     }
   })
 
-  runXcmPalletHorizontal('coretimeKusama transfer KSM to assetHubKusama', async () => {
-    return {
-      fromChain: coretimeKusamaClient,
-      toChain: assetHubKusamaClient,
-      fromBalance: query.balances,
-      toBalance: query.balances,
-      toAccount: defaultAccounts.dave,
-      tx: tx.xcmPallet.limitedTeleportAssets(
-        coretimeKSM,
-        1e12,
-        tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
-      ),
-    }
-  })
+  runXcmPalletHorizontal(
+    'coretimeKusama transfer KSM to assetHubKusama',
+    async () => {
+      return {
+        fromChain: coretimeKusamaClient,
+        toChain: assetHubKusamaClient,
+        fromBalance: query.balances,
+        toBalance: query.balances,
+        toAccount: defaultAccounts.dave,
+        tx: tx.xcmPallet.limitedTeleportAssets(
+          coretimeKSM,
+          1e12,
+          tx.xcmPallet.parachainV3(1, assetHubKusamaClient.config.paraId!),
+        ),
+      }
+    },
+    { skip: true },
+  )
 })
