@@ -3,6 +3,9 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
 
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { Event, EventRecord } from '@polkadot/types/interfaces'
+
 import { assert, expect } from 'vitest'
 
 import { checkSystemEvents, getBlockNumber, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
@@ -61,7 +64,12 @@ async function fundAccounts(client: Client<any, any>, addresses: string[], amoun
   })
 }
 
-function findEvent(events: any[], section: string, method: string, matchFn?: (data: any) => boolean): any | undefined {
+function findEvent(
+  events: EventRecord[],
+  section: string,
+  method: string,
+  matchFn?: (data: any) => boolean,
+): Event | undefined {
   for (const { event } of events) {
     if (event.section === section && event.method === method && (!matchFn || matchFn(event.data))) {
       return event
@@ -76,7 +84,7 @@ async function notePreimage(client: Client<any, any>, _callHash: string, encoded
   await client.dev.newBlock()
 }
 
-async function dispatchWithRoot(client: Client<any, any>, tx: any) {
+async function dispatchWithRoot(client: Client<any, any>, tx: SubmittableExtrinsic<'promise'>) {
   await scheduleInlineCallWithOrigin(
     client,
     tx.method.toHex(),
@@ -130,9 +138,9 @@ async function deferredDispatchHappyPathTest<T extends Chain>(chain: Chain<T>) {
     await dispatchWithRoot(client, client.api.tx.whitelist.dispatchWhitelistedCallWithPreimage(call.method.toHex()))
     await client.dev.newBlock()
 
-    const events1 = await client.api.query.system.events()
+    const eventsAfterDeferral = await client.api.query.system.events()
     const deferredEvent = findEvent(
-      events1 as any,
+      eventsAfterDeferral,
       'whitelist',
       'DispatchDeferred',
       (d: any) => d.callHash.toHex() === callHash,
@@ -151,9 +159,9 @@ async function deferredDispatchHappyPathTest<T extends Chain>(chain: Chain<T>) {
     await sendTransaction(executeTx.signAsync(bob))
     await client.dev.newBlock()
 
-    const events2 = await client.api.query.system.events()
+    const eventsAfterExecution = await client.api.query.system.events()
     const dispatchedEvent = findEvent(
-      events2 as any,
+      eventsAfterExecution,
       'whitelist',
       'WhitelistedCallDispatched',
       (d: any) => d.callHash.toHex() === callHash,
@@ -162,7 +170,7 @@ async function deferredDispatchHappyPathTest<T extends Chain>(chain: Chain<T>) {
     expect(dispatchedEvent.data.result.asOk).toBeDefined()
 
     const executedEvent = findEvent(
-      events2 as any,
+      eventsAfterExecution,
       'whitelist',
       'DeferredDispatchExecuted',
       (d: any) => d.callHash.toHex() === callHash,
@@ -198,7 +206,7 @@ async function directDispatchWithPreimageTest<T extends Chain>(chain: Chain<T>) 
 
     const events = await client.api.query.system.events()
     const deferredEvent = findEvent(
-      events as any,
+      events,
       'whitelist',
       'DispatchDeferred',
       (d: any) => d.callHash.toHex() === callHash,
@@ -206,7 +214,7 @@ async function directDispatchWithPreimageTest<T extends Chain>(chain: Chain<T>) 
     expect(deferredEvent).toBeUndefined()
 
     const hasDispatchedEvent = findEvent(
-      events as any,
+      events,
       'whitelist',
       'WhitelistedCallDispatched',
       (d: any) => d.callHash.toHex() === callHash,
@@ -251,7 +259,7 @@ async function deferredDispatchRootSemanticsTest<T extends Chain>(chain: Chain<T
 
     const allEvents = await client.api.query.system.events()
     const dispatchedEvent = findEvent(
-      allEvents as any,
+      allEvents,
       'whitelist',
       'WhitelistedCallDispatched',
       (d: any) => d.callHash.toHex() === callHash,
@@ -292,9 +300,9 @@ async function deferredDispatchHashOnlyTest<T extends Chain>(chain: Chain<T>) {
     )
     await client.dev.newBlock()
 
-    const events1 = await client.api.query.system.events()
+    const eventsAfterDeferral = await client.api.query.system.events()
     const deferredEvent = findEvent(
-      events1 as any,
+      eventsAfterDeferral,
       'whitelist',
       'DispatchDeferred',
       (d: any) => d.callHash.toHex() === callHash,
@@ -316,9 +324,9 @@ async function deferredDispatchHashOnlyTest<T extends Chain>(chain: Chain<T>) {
     await sendTransaction(executeTx.signAsync(bob))
     await client.dev.newBlock()
 
-    const events2 = await client.api.query.system.events()
+    const eventsAfterExecution = await client.api.query.system.events()
     const executedEvent = findEvent(
-      events2 as any,
+      eventsAfterExecution,
       'whitelist',
       'DeferredDispatchExecuted',
       (d: any) => d.callHash.toHex() === callHash,
@@ -540,7 +548,7 @@ async function permissionlessRemovalTest<T extends Chain>(chain: Chain<T>) {
     expect(removalFailed).toBeUndefined()
 
     const removedEvent = findEvent(
-      removalEvents as any,
+      removalEvents,
       'whitelist',
       'DeferredDispatchRemoved',
       (d: any) => d.callHash.toHex() === callHash,
