@@ -4,6 +4,11 @@ import { defineChain } from '../defineChain.js'
 import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
+const assetLocation = (assetId: number) => ({
+  parents: 0,
+  interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: assetId }] },
+})
+
 const custom = {
   assetHubPolkadot: {
     dot: { Concrete: { parents: 1, interior: 'Here' } },
@@ -46,10 +51,17 @@ const custom = {
   },
   assetHubWestend: {
     wnd: { Concrete: { parents: 1, interior: 'Here' } },
+    usdtIndex: 1984, // Test-Tether (USDTT), 6 decimals — existing PSM external asset on WAH
+    usdxIndex: 1338, // synthetic USDX (2 decimals) injected via Chopsticks override
+    daiIndex: 1339, // synthetic DAI (18 decimals) injected via Chopsticks override
+    psmStableAssetId: 50000342, // pUSD stable asset ID as deployed on WAH
+    usdtLocation: assetLocation(1984),
+    usdxLocation: assetLocation(1338),
+    daiLocation: assetLocation(1339),
   },
 }
 
-const getAhwInitStorages = () => {
+const getAhwInitStorages = (config: typeof custom.assetHubWestend) => {
   return {
     System: {
       account: [
@@ -61,6 +73,93 @@ const getAhwInitStorages = () => {
         [[testAccounts.dave.address], { providers: 1, data: { free: 100_000e10 } }],
         [[testAccounts.eve.address], { providers: 1, data: { free: 100_000e10 } }],
         [[testAccounts.ferdie.address], { providers: 1, data: { free: 100_000e10 } }],
+      ],
+    },
+    Assets: {
+      asset: [
+        [
+          [config.usdxIndex],
+          {
+            owner: testAccounts.alice.address,
+            issuer: testAccounts.alice.address,
+            admin: testAccounts.alice.address,
+            freezer: testAccounts.alice.address,
+            supply: 10000 * 100,
+            deposit: 0,
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 2,
+            sufficients: 2,
+            approvals: 0,
+            status: 'Live',
+          },
+        ],
+        [
+          [config.daiIndex],
+          {
+            owner: testAccounts.alice.address,
+            issuer: testAccounts.alice.address,
+            admin: testAccounts.alice.address,
+            freezer: testAccounts.alice.address,
+            supply: 10000n * 10n ** 18n,
+            deposit: 0,
+            minBalance: 1,
+            isSufficient: true,
+            accounts: 2,
+            sufficients: 2,
+            approvals: 0,
+            status: 'Live',
+          },
+        ],
+      ],
+      metadata: [
+        [
+          [config.usdxIndex],
+          { deposit: 0, name: 'Low-Decimal Stablecoin', symbol: 'USDX', decimals: 2, isFrozen: false },
+        ],
+        [[config.daiIndex], { deposit: 0, name: 'Dai Stablecoin', symbol: 'DAI', decimals: 18, isFrozen: false }],
+      ],
+      account: [
+        [[config.usdtIndex, testAccounts.alice.address], { balance: 1000e6 }],
+        [[config.usdtIndex, testAccounts.bob.address], { balance: 1000e6 }],
+        [[config.usdxIndex, testAccounts.alice.address], { balance: 1000 * 100 }],
+        [[config.usdxIndex, testAccounts.bob.address], { balance: 1000 * 100 }],
+        [[config.daiIndex, testAccounts.alice.address], { balance: 1000n * 10n ** 18n }],
+        [[config.daiIndex, testAccounts.bob.address], { balance: 1000n * 10n ** 18n }],
+        [[config.psmStableAssetId, testAccounts.alice.address], { balance: 1000e6 }],
+      ],
+    },
+    Psm: {
+      maxPsmDebtOfTotal: 500_000,
+      externalAssets: [
+        [[config.usdtLocation], { AllEnabled: null }],
+        [[config.usdxLocation], { AllEnabled: null }],
+        [[config.daiLocation], { AllEnabled: null }],
+      ],
+      externalDecimals: [
+        [[config.usdtLocation], 6],
+        [[config.usdxLocation], 2],
+        [[config.daiLocation], 18],
+      ],
+      mintingFee: [
+        [[config.usdtLocation], 5_000],
+        [[config.usdxLocation], 5_000],
+        [[config.daiLocation], 5_000],
+      ],
+      redemptionFee: [
+        [[config.usdtLocation], 5_000],
+        [[config.usdxLocation], 5_000],
+        [[config.daiLocation], 5_000],
+      ],
+      assetCeilingWeight: [
+        [[config.usdtLocation], 400_000],
+        [[config.usdxLocation], 300_000],
+        [[config.daiLocation], 300_000],
+      ],
+      psmDebt: [
+        [[config.usdtLocation], 0],
+        [[config.usdxLocation], 0],
+        [[config.daiLocation], 0],
       ],
     },
   }
@@ -76,12 +175,14 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
       ],
     },
     Assets: {
-      account: [[[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }]],
+      account: [
+        [[config.usdtIndex, defaultAccounts.alice.address], { balance: 1000e6 }], // USDT
+      ],
     },
     ForeignAssets: {
       account: [
-        [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }],
-        [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }],
+        [[config.eth, defaultAccounts.alice.address], { balance: 10n ** 18n }], // 1 ETH
+        [[config.eth, '13cKp89Msu7M2PiaCuuGr1BzAsD5V3vaVbDMs3YtjMZHdGwR'], { balance: 10n ** 20n }], // 100 ETH for Sibling 2000
       ],
     },
   }
@@ -135,6 +236,6 @@ export const assetHubWestend = defineChain({
   paraId: 1000,
   networkGroup: 'westend',
   custom: custom.assetHubWestend,
-  initStorages: getAhwInitStorages(),
+  initStorages: getAhwInitStorages(custom.assetHubWestend),
   properties: ahwProperties,
 })

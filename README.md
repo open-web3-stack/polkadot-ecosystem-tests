@@ -166,6 +166,17 @@ These include:
     - Accepting curators in wrong child bounty states
     - Closing child bounties in pending payout status
     - Non-curator attempting to create child bounties
+- E2E test suite for the PSM (Peg Stability Module), covering mint/redeem
+  swaps between pUSD and three external stablecoins: USDT (1984, 6 dec), USDX (1338, 2 dec), DAI
+  (1339, 18 dec). PSM storage and extrinsics are keyed by XCM V5 location rather than asset ID.
+  Tests are grouped into:
+  - core swaps: mint, redeem, minimum swap enforcement
+  - asset lifecycle: adding/removing assets, ceiling assignment, fee persistence across removal
+  - circuit breaker: MintingDisabled and AllDisabled status modes, signed-origin rejection
+  - value conservation: fee accounting, insurance fund, residual debt after full redemption
+  - ceiling dynamics: per-asset and global debt ceilings, weight normalisation, interactions
+    between assets at their respective ceilings
+  - reserve integrity: minting within/exceeding global ceiling, debt accumulation, over-redemption
 - E2E test suite for the `configuration` pallet on relay chains:
   - Scheduling configuration updates via Root origin across all parameter groups: core (code size, PoV size, upgrade cooldown/delay), scheduler (group rotation, availability period, lookahead, validators per core), dispute resolution, message queue (upward/downward queue limits), HRMP channel parameters, and advanced parameters (PVF voting TTL, async backing params, executor params, approval voting, node features)
   - Verifying that the pending config entry is scheduled for session index `currentIndex + 2`

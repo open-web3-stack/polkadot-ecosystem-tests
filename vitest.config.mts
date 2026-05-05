@@ -24,11 +24,10 @@ export default defineConfig({
 	build: {
 		outDir: '../../dist',
 	},
-	oxc: false,
-
 	resolve: {
 		tsconfigPaths: true,
 	},
-	plugins: [swc.vite()],
+	plugins: [swc.vite({ tsconfigFile: true })],
+	oxc: false,
 	clearScreen: false,
 })
