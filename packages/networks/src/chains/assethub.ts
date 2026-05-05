@@ -4,10 +4,6 @@ import { defineChain } from '../defineChain.js'
 import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
-/**
- * Build an XCM V5 Location for a local Assets pallet asset.
- * PSM storage and extrinsics now key by `StagingXcmV5Location` instead of raw asset IDs.
- */
 const assetLocation = (assetId: number) => ({
   parents: 0,
   interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: assetId }] },
@@ -65,21 +61,26 @@ const custom = {
   },
 }
 
-const getPsmInitStorages = (config: typeof custom.assetHubWestend) => {
+const getAhwInitStorages = (config: typeof custom.assetHubWestend) => {
   return {
     System: {
       account: [
         [[defaultAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
         [[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 1000e10 } }],
-        [[testAccounts.alice.address], { providers: 1, data: { free: 1000e10 } }],
-        [[testAccounts.bob.address], { providers: 1, data: { free: 1000e10 } }],
+        // testAccounts funded at 100k WND — enough to cover recovery SecurityDeposit (10 WND) plus fees
+        [[testAccounts.alice.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.bob.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.charlie.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.dave.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.eve.address], { providers: 1, data: { free: 100_000e10 } }],
+        [[testAccounts.ferdie.address], { providers: 1, data: { free: 100_000e10 } }],
       ],
     },
     Assets: {
+      // Synthetic assets injected via Chopsticks override — not present on live WAH
       asset: [
-        // USDX (1338) — synthetic, 2 decimals
         [
-          [config.usdxIndex],
+          [config.usdxIndex], // USDX: 2 decimals, total supply 10,000 USDX
           {
             owner: testAccounts.alice.address,
             issuer: testAccounts.alice.address,
@@ -95,9 +96,8 @@ const getPsmInitStorages = (config: typeof custom.assetHubWestend) => {
             status: 'Live',
           },
         ],
-        // DAI (1339) — synthetic, 18 decimals
         [
-          [config.daiIndex],
+          [config.daiIndex], // DAI: 18 decimals, total supply 10,000 DAI
           {
             owner: testAccounts.alice.address,
             issuer: testAccounts.alice.address,
@@ -122,41 +122,50 @@ const getPsmInitStorages = (config: typeof custom.assetHubWestend) => {
         [[config.daiIndex], { deposit: 0, name: 'Dai Stablecoin', symbol: 'DAI', decimals: 18, isFrozen: false }],
       ],
       account: [
+        // USDT (live on WAH) — alice and bob start with 1,000 USDT each
         [[config.usdtIndex, testAccounts.alice.address], { balance: 1000e6 }],
         [[config.usdtIndex, testAccounts.bob.address], { balance: 1000e6 }],
+        // USDX — alice and bob start with 1,000 USDX each (2 decimals)
         [[config.usdxIndex, testAccounts.alice.address], { balance: 1000 * 100 }],
         [[config.usdxIndex, testAccounts.bob.address], { balance: 1000 * 100 }],
+        // DAI — alice and bob start with 1,000 DAI each (18 decimals)
         [[config.daiIndex, testAccounts.alice.address], { balance: 1000n * 10n ** 18n }],
         [[config.daiIndex, testAccounts.bob.address], { balance: 1000n * 10n ** 18n }],
+        // pUSD stable asset — alice starts with 1,000 pUSD (6 decimals)
         [[config.psmStableAssetId, testAccounts.alice.address], { balance: 1000e6 }],
       ],
     },
     Psm: {
-      maxPsmDebtOfTotal: 500_000,
+      maxPsmDebtOfTotal: 500_000, // 50% of total supply ceiling
+      // registered external assets the PSM will accept for minting/redemption
       externalAssets: [
         [[config.usdtLocation], { AllEnabled: null }],
         [[config.usdxLocation], { AllEnabled: null }],
         [[config.daiLocation], { AllEnabled: null }],
       ],
+      // decimal precision for each external asset — used to normalise amounts
       externalDecimals: [
         [[config.usdtLocation], 6],
         [[config.usdxLocation], 2],
         [[config.daiLocation], 18],
       ],
+      // 0.5% minting fee (5_000 / 1_000_000)
       mintingFee: [
         [[config.usdtLocation], 5_000],
         [[config.usdxLocation], 5_000],
         [[config.daiLocation], 5_000],
       ],
+      // 0.5% redemption fee
       redemptionFee: [
         [[config.usdtLocation], 5_000],
         [[config.usdxLocation], 5_000],
         [[config.daiLocation], 5_000],
       ],
+      // per-asset ceiling as a fraction of maxPsmDebtOfTotal (parts per million)
       assetCeilingWeight: [
-        [[config.usdtLocation], 400_000],
-        [[config.usdxLocation], 300_000],
-        [[config.daiLocation], 300_000],
+        [[config.usdtLocation], 400_000], // 40%
+        [[config.usdxLocation], 300_000], // 30%
+        [[config.daiLocation], 300_000], // 30%
       ],
       psmDebt: [
         [[config.usdtLocation], 0],
@@ -192,6 +201,16 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
   return baseStorages
 }
 
+const assetHubProperties = (addressEncoding: number) =>
+  ({
+    addressEncoding,
+    proxyBlockProvider: 'NonLocal',
+    schedulerBlockProvider: 'NonLocal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  }) as const
+
+// Asset Hub Polkadot (SS58: 0)
 export const assetHubPolkadot = defineChain({
   name: 'assetHubPolkadot',
   endpoint: endpoints.assetHubPolkadot,
@@ -199,15 +218,10 @@ export const assetHubPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
-  properties: {
-    addressEncoding: 0,
-    proxyBlockProvider: 'NonLocal',
-    schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
-    feeExtractor: standardFeeExtractor,
-  },
+  properties: assetHubProperties(0),
 })
 
+// Asset Hub Kusama (SS58: 2)
 export const assetHubKusama = defineChain({
   name: 'assetHubKusama',
   endpoint: endpoints.assetHubKusama,
@@ -215,27 +229,16 @@ export const assetHubKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
-  properties: {
-    addressEncoding: 2,
-    proxyBlockProvider: 'NonLocal',
-    schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
-    feeExtractor: standardFeeExtractor,
-  },
+  properties: assetHubProperties(2),
 })
 
+// Asset Hub Westend (SS58: 42) — includes PSM and recovery init storages
 export const assetHubWestend = defineChain({
   name: 'assetHubWestend',
   endpoint: endpoints.assetHubWestend,
   paraId: 1000,
   networkGroup: 'westend',
   custom: custom.assetHubWestend,
-  initStorages: getPsmInitStorages(custom.assetHubWestend),
-  properties: {
-    addressEncoding: 42,
-    proxyBlockProvider: 'NonLocal',
-    schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
-    feeExtractor: standardFeeExtractor,
-  },
+  initStorages: getAhwInitStorages(custom.assetHubWestend),
+  properties: assetHubProperties(42),
 })
