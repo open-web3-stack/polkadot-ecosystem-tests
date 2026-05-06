@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, setupBalances, setupNetworks, verifyPureProxy } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import { type Client, setupBalances, verifyPureProxy } from '@e2e-test/shared'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { AccountId32 } from '@polkadot/types/interfaces/runtime'
@@ -123,9 +123,7 @@ async function getMultisigCosts(client: Client<any, any>, threshold: number): Pr
 async function multisigWithPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -149,7 +147,7 @@ async function multisigWithPureProxyTest<
   await client.dev.newBlock()
 
   // Check that the pure proxy was created successfully.
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, bob, chain.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, bob, client.config.properties.addressEncoding)
 
   // Check that Bob has had funds reserved for the pure proxy.
   bobReservedFunds = await getReservedFunds(client, bob.address)
@@ -162,7 +160,10 @@ async function multisigWithPureProxyTest<
   // 2. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([pureProxyAddress, charlie.address], chain.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes(
+    [pureProxyAddress, charlie.address],
+    client.config.properties.addressEncoding,
+  )
 
   // The first and last approvals require an encoded call, while all intermediate approvals require a hash.
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -193,7 +194,7 @@ async function multisigWithPureProxyTest<
   const [multisigAddress, multisigExtrinsicIndex, multisigCallHash] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Funds the multisig account to execute the call.
@@ -201,7 +202,7 @@ async function multisigWithPureProxyTest<
   await setupBalances(client, [{ address: multisigAddress, amount: transferAmount + extraFunds }])
 
   // Prepare the second multisig approval call. As this is the final approval, `multisig.asMulti` is used.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -253,7 +254,7 @@ async function multisigWithPureProxyTest<
 
   const multisigExecutedEventData = multisigExecutedEvent.event.data
   expect(multisigExecutedEventData.approving.toString()).toBe(
-    encodeAddress(pureProxyAddress, chain.properties.addressEncoding),
+    encodeAddress(pureProxyAddress, client.config.properties.addressEncoding),
   )
   expect(multisigExecutedEventData.timepoint.height.toNumber()).toBe(currBlockNumber + 1)
   expect(multisigExecutedEventData.multisig.toString()).toBe(multisigAddress.toString())
@@ -272,9 +273,7 @@ async function multisigWithPureProxyTest<
 async function multisigAsStandardProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number, expectTransfer: boolean) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number, expectTransfer: boolean) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -295,7 +294,7 @@ async function multisigAsStandardProxyTest<
   // 1. Alice creates a 2-of-3 multisig for the transfer, with Bob and Charlie as the other signatories.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.config.properties.addressEncoding)
 
   const asMultiTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -325,7 +324,7 @@ async function multisigAsStandardProxyTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Funds the multisig account to execute the call.
@@ -352,7 +351,7 @@ async function multisigAsStandardProxyTest<
   expect(charlieFreeFunds, 'Charlie should have no free funds').toBe(0n)
 
   // 3. Bob approves the multisig operation, which triggers the sending of the funds if the proxy type allows it.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
   const finalApprovalTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -413,9 +412,7 @@ async function multisigAsStandardProxyTest<
 async function multisigWithPureProxyMultisigTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -440,12 +437,12 @@ async function multisigWithPureProxyMultisigTest<
   const charlieReservedFunds = await getReservedFunds(client, charlie.address)
   expect(charlieReservedFunds, 'Charlie should have reserved funds').toBe(await getProxyCosts(client, 1))
 
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, charlie, chain.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, charlie, client.config.properties.addressEncoding)
 
   // 2. Alice creates a 2-of-3 multisig operation with Bob and Charlie's pure proxy as other signatories.
   const threshold = 2
   const primarymaxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], chain.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, pureProxyAddress], client.config.properties.addressEncoding)
 
   const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(dave.address, transferAmount)
@@ -479,7 +476,7 @@ async function multisigWithPureProxyMultisigTest<
   const [primaryMultisigAddress, primaryMultisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Fund the multisig account.
@@ -487,7 +484,7 @@ async function multisigWithPureProxyMultisigTest<
   await setupBalances(client, [{ address: primaryMultisigAddress, amount: transferAmount + extraFunds }])
 
   // Define the second (and last) approval call for the primary multisig.
-  otherSignatories = sortAddressesByBytes([alice.address, bob.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, bob.address], client.config.properties.addressEncoding)
   const primaryMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
@@ -504,7 +501,7 @@ async function multisigWithPureProxyMultisigTest<
   const secondaryMaxWeight = { refTime: 7000000000, proofSize: 3000000 } // Conservative weight limit
 
   // Charlie is the first approver of the secondary multisig.
-  otherSignatories = sortAddressesByBytes([dave.address, eve.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([dave.address, eve.address], client.config.properties.addressEncoding)
   const secondaryMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
     otherSignatories,
@@ -522,7 +519,7 @@ async function multisigWithPureProxyMultisigTest<
   const [secondaryMultisigAddress, secondaryMultisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     charlie.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   await setupBalances(client, [{ address: pureProxyAddress, amount: extraFunds }])
@@ -542,7 +539,7 @@ async function multisigWithPureProxyMultisigTest<
   await client.dev.newBlock()
 
   // 5. Eve approves the secondary multisig call, which makes the pure proxy sign the first multisig call, thus funding Dave
-  otherSignatories = sortAddressesByBytes([charlie.address, dave.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([charlie.address, dave.address], client.config.properties.addressEncoding)
 
   const secondaryMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -586,9 +583,7 @@ async function multisigWithPureProxyMultisigTest<
 async function cancelMultisigWithPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -606,7 +601,7 @@ async function cancelMultisigWithPureProxyTest<
   await client.dev.newBlock()
 
   // Check that the pure proxy was created successfully.
-  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, alice, chain.properties.addressEncoding)
+  const pureProxyAddress = await getAndVerifyPureProxyAddress(client, alice, client.config.properties.addressEncoding)
 
   // Check that Alice has had funds reserved for the pure proxy.
   const aliceReservedFunds = await getReservedFunds(client, alice.address)
@@ -622,7 +617,10 @@ async function cancelMultisigWithPureProxyTest<
   // 1. Alice creates a 2-of-3 multisig with Bob's pure proxy and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  const otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+  const otherSignatories = sortAddressesByBytes(
+    [bob.address, charlie.address],
+    client.config.properties.addressEncoding,
+  )
 
   // The first and last approvals require an encoded call, while intermediate calls require a hash.
   const asMultiTx = client.api.tx.multisig.asMulti(
@@ -658,7 +656,7 @@ async function cancelMultisigWithPureProxyTest<
   const [, multisigExtrinsicIndex, multisigCallHash] = await getAndVerifyMultisigEventData(
     client,
     pureProxyAddress,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Check that Charlie has no funds.
@@ -704,9 +702,7 @@ async function cancelMultisigWithPureProxyTest<
 async function multisigAsStandardProxyAnnouncementTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -728,7 +724,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   // 1. Alice creates a 2-of-3 multisig with Bob and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.config.properties.addressEncoding)
 
   const announceMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -753,7 +749,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Funds the multisig account in order to execute the call.
@@ -771,7 +767,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   expect(daveReservedFunds, 'Dave should have reserved funds').toBe(await getProxyCosts(client, 1))
 
   // 3. Bob co-signs the multisig, which allows it to announce the transfer as a proxy of Dave.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
   let announceMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -794,9 +790,9 @@ async function multisigAsStandardProxyAnnouncementTest<
     .toMatchSnapshot('events when Bob approves multisig call')
 
   const announcementObject = {
-    real: encodeAddress(dave.address, chain.properties.addressEncoding),
+    real: encodeAddress(dave.address, client.config.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
-    height: await getBlockNumber(client.api, chain.properties.proxyBlockProvider!),
+    height: await getBlockNumber(client.api, client.config.properties.proxyBlockProvider!),
   }
 
   // Sanity check - the announcement should be associated to the multisig and not its delegator, Dave.
@@ -816,7 +812,7 @@ async function multisigAsStandardProxyAnnouncementTest<
   await checkEvents(rejectEvents, 'proxy').toMatchSnapshot('events when Dave rejects the announced call')
 
   // The multisig still attempts to execute the announced call.
-  otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.config.properties.addressEncoding)
 
   const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(multisigAddress, dave.address, null, transferCall)
   const proxyAnnouncedMultiFirstTx = client.api.tx.multisig.asMulti(
@@ -836,14 +832,14 @@ async function multisigAsStandardProxyAnnouncementTest<
   const [multisigAddress2, multisigExtrinsicIndex2] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Multisigs are uniquely defined by the set of signatories and the threshold only, so the address should be the same.
   expect(multisigAddress2.toString()).toBe(multisigAddress.toString())
 
   // Bob again co-signs the multisig.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
   let proxyAnnouncedMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -941,9 +937,7 @@ async function multisigAsStandardProxyAnnouncementTest<
 async function multisigAsStandardProxyAnnouncementWithDelayTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number, proxyDelay: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number, proxyDelay: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -965,7 +959,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   // 1. Alice creates a 2-of-3 multisig with Bob and Charlie.
   const threshold = 2
   const maxWeight = { refTime: 1000000000, proofSize: 1000000 } // Conservative weight limit
-  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+  let otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.config.properties.addressEncoding)
 
   const announceMultiFirstTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -984,7 +978,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   const [multisigAddress, multisigExtrinsicIndex] = await getAndVerifyMultisigEventData(
     client,
     alice.address,
-    chain.properties.addressEncoding,
+    client.config.properties.addressEncoding,
   )
 
   // Funds the multisig account in order to execute the call.
@@ -998,7 +992,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   await client.dev.newBlock()
 
   // 3. Bob co-signs the multisig, which allows it to announce the transfer.
-  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+  otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
   const announceMultiLastTx = client.api.tx.multisig.asMulti(
     threshold,
@@ -1019,7 +1013,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
   // The multisig attempts to execute the announced call before and after the delay has passed.
   do {
     currBlockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-    otherSignatories = sortAddressesByBytes([bob.address, charlie.address], chain.properties.addressEncoding)
+    otherSignatories = sortAddressesByBytes([bob.address, charlie.address], client.config.properties.addressEncoding)
 
     // Alice again signs the multisig first, in order to execute the announced call.
     const proxyAnnouncedTx = client.api.tx.proxy.proxyAnnounced(multisigAddress, dave.address, null, transferCall)
@@ -1035,19 +1029,19 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
     await client.dev.newBlock()
 
     const blockOffset = blockProviderOffset(
-      chain.properties.proxyBlockProvider!,
-      (chain.properties as any).asyncBacking,
+      client.config.properties.proxyBlockProvider!,
+      (client.config.properties as any).asyncBacking,
     )
     proxyDelay -= blockOffset
 
     const [, multisigExtrinsicIndex2] = await getAndVerifyMultisigEventData(
       client,
       alice.address,
-      chain.properties.addressEncoding,
+      client.config.properties.addressEncoding,
     )
 
     // Bob again co-signs the multisig.
-    otherSignatories = sortAddressesByBytes([alice.address, charlie.address], chain.properties.addressEncoding)
+    otherSignatories = sortAddressesByBytes([alice.address, charlie.address], client.config.properties.addressEncoding)
 
     const proxyAnnouncedMultiLastTx = client.api.tx.multisig.asMulti(
       threshold,
@@ -1094,7 +1088,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
 export function successMultisigProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
@@ -1102,37 +1096,37 @@ export function successMultisigProxyE2ETests<
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy (any)',
-        testFn: () => multisigWithPureProxyTest(chain, proxyTypes['Any']),
+        testFn: () => multisigWithPureProxyTest(client, proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy (non-transfer)',
-        testFn: () => multisigWithPureProxyTest(chain, proxyTypes['NonTransfer']),
+        testFn: () => multisigWithPureProxyTest(client, proxyTypes['NonTransfer']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy (any)',
-        testFn: () => multisigAsStandardProxyTest(chain, proxyTypes['Any'], true),
+        testFn: () => multisigAsStandardProxyTest(client, proxyTypes['Any'], true),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy multisig',
-        testFn: () => multisigWithPureProxyMultisigTest(chain, proxyTypes['Any']),
+        testFn: () => multisigWithPureProxyMultisigTest(client, proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: 'Cancel 2-of-3 multisig with pure proxy before any other approvals',
-        testFn: () => cancelMultisigWithPureProxyTest(chain, proxyTypes['Any']),
+        testFn: () => cancelMultisigWithPureProxyTest(client, proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy with announcement and rejection',
-        testFn: () => multisigAsStandardProxyAnnouncementTest(chain, proxyTypes['Any']),
+        testFn: () => multisigAsStandardProxyAnnouncementTest(client, proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy with announcement and delay',
-        testFn: () => multisigAsStandardProxyAnnouncementWithDelayTest(chain, proxyTypes['Any'], 7),
+        testFn: () => multisigAsStandardProxyAnnouncementWithDelayTest(client, proxyTypes['Any'], 7),
       },
     ],
   }
@@ -1141,7 +1135,7 @@ export function successMultisigProxyE2ETests<
 export function failureMultisigProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -1149,7 +1143,7 @@ export function failureMultisigProxyE2ETests<
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy (non-transfer)',
-        testFn: () => multisigAsStandardProxyTest(chain, proxyTypes['NonTransfer'], false),
+        testFn: () => multisigAsStandardProxyTest(client, proxyTypes['NonTransfer'], false),
       },
     ],
   }
@@ -1170,9 +1164,24 @@ export function baseMultisigProxyE2Etests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [successMultisigProxyE2ETests(chain, proxyTypes), failureMultisigProxyE2ETests(chain, proxyTypes)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [successMultisigProxyE2ETests(client, proxyTypes), failureMultisigProxyE2ETests(client, proxyTypes)],
   }
 }
