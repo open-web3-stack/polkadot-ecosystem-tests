@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type DescribeNode, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, defaultAccountsSr25519 } from '@e2e-test/networks'
+import type { Client, DescribeNode, RootTestTree } from '@e2e-test/shared'
 
 import type { Option, u32 } from '@polkadot/types'
 import type {
@@ -117,9 +117,7 @@ function referendumCmp(
 export async function missingDecisionDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
   const submissionDeposit = client.api.consts.referenda.submissionDeposit.toBigInt()
@@ -226,7 +224,7 @@ export async function missingDecisionDepositTest<
     client,
     client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -308,9 +306,7 @@ export async function missingDecisionDepositTest<
 export async function referendumLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -402,7 +398,7 @@ export async function referendumLifecycleTest<
   expect(ongoingRefPreDecDep.decisionDeposit.isNone).toBeTruthy()
 
   expect(ongoingRefPreDecDep.submissionDeposit.who.toString()).toBe(
-    encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
   )
   expect(ongoingRefPreDecDep.submissionDeposit.amount.toString()).toBe(
     client.api.consts.referenda.submissionDeposit.toString(),
@@ -452,7 +448,7 @@ export async function referendumLifecycleTest<
   assert(ongoingRefPostDecDep.decisionDeposit.isSome)
 
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().who.toString()).toBe(
-    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
   )
   expect(ongoingRefPostDecDep.decisionDeposit.unwrap().amount.toString()).toBe(
     smallTipper[1].decisionDeposit.toString(),
@@ -479,7 +475,7 @@ export async function referendumLifecycleTest<
   let refPost: PalletReferendaReferendumStatusConvictionVotingTally
 
   let iters: number
-  match(chain.properties.schedulerBlockProvider)
+  match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
@@ -596,7 +592,7 @@ export async function referendumLifecycleTest<
   expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
   expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  let blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  let blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -668,7 +664,7 @@ export async function referendumLifecycleTest<
   expect(daveVote.aye.toNumber()).toBe(ayeVote)
   expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   // After a vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -739,7 +735,7 @@ export async function referendumLifecycleTest<
   expect(eveVote.nay.toNumber()).toBe(nayVote)
   expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
   // included in.
   expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
@@ -766,7 +762,7 @@ export async function referendumLifecycleTest<
     client,
     cancelRefCall.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -803,8 +799,8 @@ export async function referendumLifecycleTest<
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
-  match(chain.properties.schedulerBlockProvider)
+  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(cancelledRef[0].toNumber()).toBe(blockNumber)
     })
@@ -813,12 +809,12 @@ export async function referendumLifecycleTest<
     })
   // Check that the referendum's submission deposit was refunded to Alice
   expect(cancelledRef[1].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
+    who: encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
     amount: client.api.consts.referenda.submissionDeposit.toNumber(),
   })
   // Check that the referendum's submission deposit was refunded to Bob
   expect(cancelledRef[2].unwrap().toJSON()).toEqual({
-    who: encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+    who: encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
     amount: smallTipper[1].decisionDeposit.toNumber(),
   })
 
@@ -955,8 +951,7 @@ export async function referendumLifecycleTest<
 export async function referendumLifecycleKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>) {
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -1030,7 +1025,7 @@ export async function referendumLifecycleKillTest<
     client,
     killRefCall.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1060,9 +1055,9 @@ export async function referendumLifecycleKillTest<
     } else if (client.api.events.referenda.DepositSlashed.is(event)) {
       const [who, amount] = event.data
 
-      if (who.toString() === encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding)) {
+      if (who.toString() === encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding)) {
         expect(amount.toNumber()).toBe(client.api.consts.referenda.submissionDeposit.toNumber())
-      } else if (who.toString() === encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding)) {
+      } else if (who.toString() === encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding)) {
         expect(amount.toNumber()).toBe(smallTipper[1].decisionDeposit.toNumber())
       } else {
         expect.fail('malformed decision slashed events')
@@ -1076,9 +1071,9 @@ export async function referendumLifecycleKillTest<
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = await getBlockNumber(client.api, chain.properties.schedulerBlockProvider)
+  const blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
-  match(chain.properties.schedulerBlockProvider)
+  match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(killedRef.toNumber()).toBe(blockNumber)
     })
@@ -1098,10 +1093,7 @@ export async function referendumLifecycleKillTest<
  * pre-reading `referendumCount`, because scheduled calls from the fork block can
  * create other referenda in the same `newBlock()` call.
  */
-async function submitAndDeposit(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
-  trackConfig: GovernanceTrackConfig,
-) {
+async function submitAndDeposit(client: Client<any, any>, trackConfig: GovernanceTrackConfig) {
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)
   assert(track, `Track '${trackConfig.trackName}' (ID ${trackConfig.trackId}) not found in runtime`)
@@ -1167,7 +1159,7 @@ async function submitAndDeposit(
  * 2. scheduling a `nudgeReferendum` call via the scheduler
  */
 async function injectDecisionPeriodEnd(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  client: Client<any, any>,
   chain: Chain<any, any>,
   referendumIndex: number,
   ongoing: PalletReferendaReferendumStatusConvictionVotingTally,
@@ -1220,7 +1212,7 @@ async function injectDecisionPeriodEnd(
     client,
     client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 }
 
@@ -1232,7 +1224,7 @@ async function injectDecisionPeriodEnd(
  * 4. attempting to refund the submission deposit (should fail with `BadStatus`)
  */
 async function verifyRejection(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  client: Client<any, any>,
   referendumIndex: number,
   trackLabel: string,
   scenarioLabel: string,
@@ -1316,9 +1308,7 @@ async function verifyRejection(
 export async function insufficientSupportTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
   const decisionDeposit = track[1].decisionDeposit.toBigInt()
@@ -1374,7 +1364,7 @@ export async function insufficientSupportTest<
    * 3. Fast-forward past the decision period and nudge
    */
 
-  await injectDecisionPeriodEnd(client, chain, referendumIndex, ongoingPostVote, track)
+  await injectDecisionPeriodEnd(client, client.config, referendumIndex, ongoingPostVote, track)
   await client.dev.newBlock()
 
   /**
@@ -1412,9 +1402,7 @@ export async function insufficientSupportTest<
 export async function insufficientApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
   const decisionDeposit = track[1].decisionDeposit.toBigInt()
@@ -1488,7 +1476,7 @@ export async function insufficientApprovalTest<
    * 5. Fast-forward past the decision period and nudge
    */
 
-  await injectDecisionPeriodEnd(client, chain, referendumIndex, ongoingPostVote, track)
+  await injectDecisionPeriodEnd(client, client.config, referendumIndex, ongoingPostVote, track)
   await client.dev.newBlock()
 
   /**
@@ -1517,9 +1505,7 @@ export async function insufficientApprovalTest<
  *
  * Returns everything needed for the caller to free the blocker's slot and verify promotion.
  */
-async function setupOverflow(chain: Chain<any, any>, trackConfig: GovernanceTrackConfig) {
-  const [client] = await setupNetworks(chain)
-
+async function setupOverflow(client: Client<any, any>, trackConfig: GovernanceTrackConfig) {
   const referendaTracks = client.api.consts.referenda.tracks
   const track = referendaTracks.find((t) => t[0].toNumber() === trackConfig.trackId)!
   const decisionDeposit = track[1].decisionDeposit.toBigInt()
@@ -1600,7 +1586,7 @@ async function setupOverflow(chain: Chain<any, any>, trackConfig: GovernanceTrac
     client,
     client.api.tx.referenda.nudgeReferendum(overflowIndex).method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1619,7 +1605,7 @@ async function setupOverflow(chain: Chain<any, any>, trackConfig: GovernanceTrac
 
   return {
     client,
-    chain,
+    chain: client.config,
     track,
     trackConfig,
     blockerIndex,
@@ -1636,7 +1622,7 @@ async function setupOverflow(chain: Chain<any, any>, trackConfig: GovernanceTrac
  * checks the overflow left the queue, entered deciding, and emitted `DecisionStarted`.
  */
 async function verifyPromotion(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  client: Client<any, any>,
   overflowIndex: number,
   trackConfig: GovernanceTrackConfig,
   maxDeciding: number,
@@ -1671,9 +1657,9 @@ async function verifyPromotion(
 export async function overflowPromotionViaApprovalTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const ctx = await setupOverflow(chain, trackConfig)
-  const { client, blockerIndex, blockerOngoing, overflowIndex, maxDeciding, prepPeriod, confirmPeriod } = ctx
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(client, trackConfig)
+  const { blockerIndex, blockerOngoing, overflowIndex, maxDeciding, prepPeriod, confirmPeriod } = ctx
 
   /**
    * 5. Advance the blocker to the last block of its confirmation period
@@ -1692,7 +1678,7 @@ export async function overflowPromotionViaApprovalTest<
   const blockerSubmitted = decidingSince - prepPeriod
 
   const schedulerBlock =
-    chain.properties.schedulerBlockProvider === 'NonLocal'
+    client.config.properties.schedulerBlockProvider === 'NonLocal'
       ? ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber()
       : block + 1
 
@@ -1759,9 +1745,9 @@ export async function overflowPromotionViaApprovalTest<
 export async function overflowPromotionViaRejectionTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const ctx = await setupOverflow(chain, trackConfig)
-  const { client, blockerIndex, blockerOngoing, overflowIndex, maxDeciding } = ctx
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(client, trackConfig)
+  const { blockerIndex, blockerOngoing, overflowIndex, maxDeciding } = ctx
 
   /**
    * 5. Fast-forward the blocker past its decision period with a failing tally
@@ -1806,7 +1792,7 @@ export async function overflowPromotionViaRejectionTest<
     client,
     client.api.tx.referenda.nudgeReferendum(blockerIndex).method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -1833,16 +1819,16 @@ export async function overflowPromotionViaRejectionTest<
 export async function overflowPromotionViaKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
-  const ctx = await setupOverflow(chain, trackConfig)
-  const { client, blockerIndex, overflowIndex, maxDeciding } = ctx
+>(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
+  const ctx = await setupOverflow(client, trackConfig)
+  const { blockerIndex, overflowIndex, maxDeciding } = ctx
 
   /**
    * 5. Kill the blocker with a Root-origin call via the scheduler
    */
 
   const schedulerBlock =
-    chain.properties.schedulerBlockProvider === 'NonLocal'
+    client.config.properties.schedulerBlockProvider === 'NonLocal'
       ? ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber()
       : (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
 
@@ -1877,7 +1863,7 @@ export async function overflowPromotionViaKillTest<
 /// Test trees
 /// -------
 
-function negativeFlowsForTrack(chain: Chain<any, any>, trackConfig: GovernanceTrackConfig): DescribeNode {
+function negativeFlowsForTrack(client: Client<any, any>, trackConfig: GovernanceTrackConfig): DescribeNode {
   return {
     kind: 'describe',
     label: trackConfig.trackName,
@@ -1885,17 +1871,17 @@ function negativeFlowsForTrack(chain: Chain<any, any>, trackConfig: GovernanceTr
       {
         kind: 'test' as const,
         label: 'missing decision deposit timeout',
-        testFn: async () => await missingDecisionDepositTest(chain, trackConfig),
+        testFn: async () => await missingDecisionDepositTest(client, trackConfig),
       },
       {
         kind: 'test' as const,
         label: 'insufficient support rejection',
-        testFn: async () => await insufficientSupportTest(chain, trackConfig),
+        testFn: async () => await insufficientSupportTest(client, trackConfig),
       },
       {
         kind: 'test' as const,
         label: 'insufficient approval rejection',
-        testFn: async () => await insufficientApprovalTest(chain, trackConfig),
+        testFn: async () => await insufficientApprovalTest(client, trackConfig),
       },
       {
         kind: 'describe' as const,
@@ -1904,17 +1890,17 @@ function negativeFlowsForTrack(chain: Chain<any, any>, trackConfig: GovernanceTr
           {
             kind: 'test' as const,
             label: 'promotion via approval',
-            testFn: async () => await overflowPromotionViaApprovalTest(chain, trackConfig),
+            testFn: async () => await overflowPromotionViaApprovalTest(client, trackConfig),
           },
           {
             kind: 'test' as const,
             label: 'promotion via rejection',
-            testFn: async () => await overflowPromotionViaRejectionTest(chain, trackConfig),
+            testFn: async () => await overflowPromotionViaRejectionTest(client, trackConfig),
           },
           {
             kind: 'test' as const,
             label: 'promotion via kill',
-            testFn: async () => await overflowPromotionViaKillTest(chain, trackConfig),
+            testFn: async () => await overflowPromotionViaKillTest(client, trackConfig),
           },
         ],
       },
@@ -1955,9 +1941,7 @@ function negativeFlowsForTrack(chain: Chain<any, any>, trackConfig: GovernanceTr
 export async function referendumLifecycleDelegationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Fund test accounts not already provisioned in the test chain spec.
   await client.dev.setStorage({
     System: {
@@ -1997,10 +1981,10 @@ export async function referendumLifecycleDelegationTest<
   assert(client.api.events.convictionVoting.Delegated.is(delEvent.event))
   const delegatedEventData = delEvent.event.data
   expect(delegatedEventData[0].toString()).toBe(
-    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
   )
   expect(delegatedEventData[1].toString()).toBe(
-    encodeAddress(devAccounts.charlie.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.charlie.address, client.config.properties.addressEncoding),
   )
 
   // Assert delegation state
@@ -2009,7 +1993,7 @@ export async function referendumLifecycleDelegationTest<
   assert(bobVoting.isDelegating, 'bob should be delegting his vote to charlie')
   const bobDelegating = bobVoting.asDelegating
   expect(bobDelegating.target.toString()).toBe(
-    encodeAddress(devAccounts.charlie.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.charlie.address, client.config.properties.addressEncoding),
   )
   expect(bobDelegating.conviction.isLocked2x).toBeTruthy()
   expect(bobDelegating.balance.toNumber()).toBe(delegationAmount)
@@ -2074,7 +2058,7 @@ export async function referendumLifecycleDelegationTest<
 
   // Advance to the start of the decision period
   let iters: number
-  match(chain.properties.schedulerBlockProvider)
+  match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
@@ -2156,7 +2140,7 @@ export async function referendumLifecycleDelegationTest<
   assert(client.api.events.convictionVoting.Undelegated.is(undelegatedEvent.event))
   const undelegatedEventData = undelegatedEvent.event.data
   expect(undelegatedEventData[0].toString()).toBe(
-    encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
   )
 
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
@@ -2196,7 +2180,7 @@ export async function referendumLifecycleDelegationTest<
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, govConfig: GovernanceTestConfig): RootTestTree {
+>(client: Client<TCustom, TInitStorages>, govConfig: GovernanceTestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: govConfig.testSuiteName,
@@ -2208,23 +2192,23 @@ export function baseGovernanceE2ETests<
           {
             kind: 'test',
             label: 'referendum lifecycle test - submission, decision deposit, various voting should all work',
-            testFn: async () => await referendumLifecycleTest(chain),
+            testFn: async () => await referendumLifecycleTest(client),
           },
           {
             kind: 'test',
             label: 'referendum lifecycle test 2 - submission, decision deposit, and killing should work',
-            testFn: async () => await referendumLifecycleKillTest(chain),
+            testFn: async () => await referendumLifecycleKillTest(client),
           },
           {
             kind: 'test',
             label:
               'referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work',
-            testFn: async () => await referendumLifecycleDelegationTest(chain),
+            testFn: async () => await referendumLifecycleDelegationTest(client),
           },
           {
             kind: 'describe',
             label: 'negative execution flows',
-            children: govConfig.tracks.map((trackConfig) => negativeFlowsForTrack(chain, trackConfig)),
+            children: govConfig.tracks.map((trackConfig) => negativeFlowsForTrack(client, trackConfig)),
           },
         ],
       },
