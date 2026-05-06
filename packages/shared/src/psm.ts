@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import { encodeAddress } from '@polkadot/util-crypto'
 
@@ -95,11 +95,10 @@ async function maxAssetDebt(api: Client<any, any>['api'], location: any, maximum
 async function mintUsdtToPusd<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId, psmInsuranceFundAccountRaw } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
-  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, chain.properties.addressEncoding)
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
+  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, client.config.properties.addressEncoding)
 
   const alice = devAccounts.alice
   const mintAmount = MIN_SWAP
@@ -120,7 +119,7 @@ async function mintUsdtToPusd<
   const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const mintedData = mintedRecord!.event.data as any
-  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(mintedData.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
   expect(mintedData.externalAmount.toBigInt()).toBe(mintAmount)
   expect(mintedData.received.toBigInt()).toBeGreaterThan(0n)
@@ -151,9 +150,8 @@ async function mintUsdtToPusd<
 async function mintThenRedeem<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
 
   const alice = devAccounts.alice
 
@@ -191,7 +189,7 @@ async function mintThenRedeem<
   const redeemedRecord = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
   expect(redeemedRecord).toBeDefined()
   const redeemedData = redeemedRecord!.event.data as any
-  expect(redeemedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(redeemedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(redeemedData.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
   expect(redeemedData.paid.toBigInt()).toBe(received)
   expect(redeemedData.externalReceived.toBigInt()).toBeGreaterThan(0n)
@@ -211,9 +209,8 @@ async function mintThenRedeem<
 async function mintBelowMinSwapFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
 
   const alice = devAccounts.alice
   const tinyAmount = 1n
@@ -248,8 +245,7 @@ async function mintBelowMinSwapFails<
 async function addAssetWithZeroCeiling<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
   const alice = devAccounts.alice
 
   // 1. Add asset
@@ -295,8 +291,7 @@ async function addAssetWithZeroCeiling<
 async function addAssetThenSetCeiling<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
   const alice = devAccounts.alice
 
   // 1. Create asset with matching decimals before registering with PSM
@@ -368,7 +363,7 @@ async function addAssetThenSetCeiling<
   const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(data.assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
   expect(data.externalAmount.toBigInt()).toBe(MIN_SWAP)
   expect(data.received.toBigInt()).toBeGreaterThan(0n)
@@ -385,9 +380,8 @@ async function addAssetThenSetCeiling<
 async function removeAssetWithZeroDebt<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
 
   // 1. Force debt zero
   await client.dev.setStorage({
@@ -430,9 +424,8 @@ async function removeAssetWithZeroDebt<
 async function feeResetsAfterRemoveAndReAdd<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
 
   // 1. Set fee
   const setFeeCall = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 30_000)
@@ -482,9 +475,8 @@ async function feeResetsAfterRemoveAndReAdd<
 async function removeAssetBlockedByDebt<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint
@@ -520,8 +512,7 @@ async function removeAssetBlockedByDebt<
 async function setFeeBeforeAddingAsset<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
   const alice = devAccounts.alice
   const newAssetId = 9998
@@ -583,7 +574,7 @@ async function setFeeBeforeAddingAsset<
   const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const mintedData = mintedRecord!.event.data as any
-  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(mintedData.assetId.eq(assetLocation(newAssetId))).toBe(true)
   expect(mintedData.externalAmount.toBigInt()).toBe(1000n * UNIT)
   expect(mintedData.received.toBigInt()).toBeGreaterThan(0n)
@@ -611,10 +602,9 @@ async function setFeeBeforeAddingAsset<
 async function mintingDisabledBlocksMintAllowsRedeem<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint
@@ -665,7 +655,7 @@ async function mintingDisabledBlocksMintAllowsRedeem<
     const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
     expect(redeemedRecord).toBeDefined()
     const data = redeemedRecord!.event.data as any
-    expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+    expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
     expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
     expect(data.paid.toBigInt()).toBe(MIN_SWAP)
     expect(data.externalReceived.toBigInt()).toBeGreaterThan(0n)
@@ -683,10 +673,9 @@ async function mintingDisabledBlocksMintAllowsRedeem<
 async function allDisabledBlocksBoth<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Disable all
@@ -738,10 +727,9 @@ async function allDisabledBlocksBoth<
 async function mintingDisabledDebtUnchangedRedeemReduces<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint
@@ -784,9 +772,8 @@ async function mintingDisabledDebtUnchangedRedeemReduces<
 async function signedSetMintingFeeFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Submit signed
@@ -821,11 +808,10 @@ async function signedSetMintingFeeFails<
 async function mintRedeemInsuranceFundGain<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId, psmInsuranceFundAccountRaw } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
-  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, chain.properties.addressEncoding)
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
+  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, client.config.properties.addressEncoding)
   const alice = devAccounts.alice
 
   // 1. Set fees
@@ -886,9 +872,8 @@ async function mintRedeemInsuranceFundGain<
 async function mintRedeemResidualDebt<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Set fee
@@ -931,10 +916,9 @@ async function mintRedeemResidualDebt<
 async function redeemExceedingReserveFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
   const bob = devAccounts.bob
 
@@ -980,10 +964,9 @@ async function redeemExceedingReserveFails<
 async function feeImpactOnMintOutput<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Zero fee
@@ -1041,10 +1024,9 @@ async function feeImpactOnMintOutput<
 async function maxDebtBlocksMintRestoreAllows<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint 500 UNIT
@@ -1108,7 +1090,7 @@ async function maxDebtBlocksMintRestoreAllows<
   const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
   expect(data.externalAmount.toBigInt()).toBe(200n * UNIT)
 }
@@ -1125,9 +1107,8 @@ async function maxDebtBlocksMintRestoreAllows<
 async function globalDebtAcrossMultipleAssets<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Set max debt
@@ -1167,9 +1148,8 @@ async function globalDebtAcrossMultipleAssets<
 async function zeroedCeilingWeightAllowsOtherAsset<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Zero USDX ceiling
@@ -1190,7 +1170,7 @@ async function zeroedCeilingWeightAllowsOtherAsset<
   const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
   expect(mintedRecord).toBeDefined()
   const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
   expect(data.externalAmount.toBigInt()).toBe(500n * UNIT)
 
@@ -1214,9 +1194,8 @@ async function zeroedCeilingWeightAllowsOtherAsset<
 async function usdtAtCeilingDoesNotConsumeUsdxCeiling<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Compute per-asset ceilings and fund alice accordingly
@@ -1308,9 +1287,8 @@ async function usdtAtCeilingDoesNotConsumeUsdxCeiling<
 async function bothAssetsToCeilingFillsGlobalCeiling<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Derive ceilings from storage and fund alice accordingly
@@ -1393,9 +1371,8 @@ async function bothAssetsToCeilingFillsGlobalCeiling<
 async function mintWithinCeiling<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Set max debt
@@ -1426,10 +1403,9 @@ async function mintWithinCeiling<
 async function bobRedeemExceedingReserveFails<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
   const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
   const bob = devAccounts.bob
 
@@ -1475,9 +1451,8 @@ async function bobRedeemExceedingReserveFails<
 async function consecutiveMintsAccumulateDebt<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. First mint
@@ -1510,9 +1485,8 @@ async function consecutiveMintsAccumulateDebt<
 async function healthyRedeemSucceeds<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint
@@ -1533,7 +1507,7 @@ async function healthyRedeemSucceeds<
   const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
   expect(redeemedRecord).toBeDefined()
   const data = redeemedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, chain.properties.addressEncoding))
+  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
   expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
   expect(data.paid.toBigInt()).toBe(MIN_SWAP)
   expect(data.externalReceived.toBigInt()).toBeGreaterThan(0n)
@@ -1551,9 +1525,8 @@ async function healthyRedeemSucceeds<
 async function zeroCeilingBlocksMintDespiteAllEnabled<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Verify non-zero ceiling
@@ -1594,9 +1567,8 @@ async function zeroCeilingBlocksMintDespiteAllEnabled<
 async function zeroMaxDebtBlocksBothAssetsRedeemsWork<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Fund USDX and mint both
@@ -1693,9 +1665,8 @@ async function zeroMaxDebtBlocksBothAssetsRedeemsWork<
 async function normalizedCeilingWeightEnforcement<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Set equal weights, fund both
@@ -1777,9 +1748,8 @@ async function normalizedCeilingWeightEnforcement<
 async function maxDebtZeroCeilingDebtUnchangedRedeemsWork<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdtIndex: psmPrimaryId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   // 1. Mint and verify debt
@@ -1837,9 +1807,8 @@ async function maxDebtZeroCeilingDebtUnchangedRedeemsWork<
 async function multiDecimalMintRedeem<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), 300n * USDX_UNIT)
@@ -1884,9 +1853,8 @@ async function multiDecimalMintRedeem<
 async function multiDecimalCeilings<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const [client] = await setupNetworks(chain)
-  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = chain.custom as any
+>(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
+  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = (client.config as any).custom as any
   const alice = devAccounts.alice
 
   const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
@@ -1962,9 +1930,24 @@ export function psmE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'describe',
@@ -1973,17 +1956,17 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'mint USDT to pUSD — pUSD received > 0, debt equals mint amount, fee to insurance fund',
-            testFn: () => mintUsdtToPusd(chain, testConfig),
+            testFn: () => mintUsdtToPusd(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint then redeem — USDT returned > 0',
-            testFn: () => mintThenRedeem(chain, testConfig),
+            testFn: () => mintThenRedeem(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint below MIN_SWAP fails',
-            testFn: () => mintBelowMinSwapFails(chain, testConfig),
+            testFn: () => mintBelowMinSwapFails(client, testConfig),
           },
         ],
       },
@@ -1994,32 +1977,32 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'addExternalAsset with zero ceiling — mint fails',
-            testFn: () => addAssetWithZeroCeiling(chain, testConfig),
+            testFn: () => addAssetWithZeroCeiling(client, testConfig),
           },
           {
             kind: 'test',
             label: 'addExternalAsset then setCeiling — mint succeeds',
-            testFn: () => addAssetThenSetCeiling(chain, testConfig),
+            testFn: () => addAssetThenSetCeiling(client, testConfig),
           },
           {
             kind: 'test',
             label: 'zero debt then removeExternalAsset — asset is None',
-            testFn: () => removeAssetWithZeroDebt(chain, testConfig),
+            testFn: () => removeAssetWithZeroDebt(client, testConfig),
           },
           {
             kind: 'test',
             label: 'set custom fee, remove, re-add — fee resets to default',
-            testFn: () => feeResetsAfterRemoveAndReAdd(chain, testConfig),
+            testFn: () => feeResetsAfterRemoveAndReAdd(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint creates debt, removeExternalAsset blocked — asset still present',
-            testFn: () => removeAssetBlockedByDebt(chain, testConfig),
+            testFn: () => removeAssetBlockedByDebt(client, testConfig),
           },
           {
             kind: 'test',
             label: 'setMintingFee before adding asset — 3% fee applied on mint',
-            testFn: () => setFeeBeforeAddingAsset(chain, testConfig),
+            testFn: () => setFeeBeforeAddingAsset(client, testConfig),
           },
         ],
       },
@@ -2030,22 +2013,22 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'MintingDisabled — mint fails, redeem succeeds',
-            testFn: () => mintingDisabledBlocksMintAllowsRedeem(chain, testConfig),
+            testFn: () => mintingDisabledBlocksMintAllowsRedeem(client, testConfig),
           },
           {
             kind: 'test',
             label: 'AllDisabled — both mint and redeem fail',
-            testFn: () => allDisabledBlocksBoth(chain, testConfig),
+            testFn: () => allDisabledBlocksBoth(client, testConfig),
           },
           {
             kind: 'test',
             label: 'MintingDisabled — debt unchanged, redeem reduces debt',
-            testFn: () => mintingDisabledDebtUnchangedRedeemReduces(chain, testConfig),
+            testFn: () => mintingDisabledDebtUnchangedRedeemReduces(client, testConfig),
           },
           {
             kind: 'test',
             label: 'signed setMintingFee without root fails',
-            testFn: () => signedSetMintingFeeFails(chain, testConfig),
+            testFn: () => signedSetMintingFeeFails(client, testConfig),
           },
         ],
       },
@@ -2056,22 +2039,22 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'set 1% fees, mint and redeem all — insurance fund gain > 0',
-            testFn: () => mintRedeemInsuranceFundGain(chain, testConfig),
+            testFn: () => mintRedeemInsuranceFundGain(client, testConfig),
           },
           {
             kind: 'test',
             label: 'set 1% mint fee, mint 1000, redeem all pUSD — residual debt > 0',
-            testFn: () => mintRedeemResidualDebt(chain, testConfig),
+            testFn: () => mintRedeemResidualDebt(client, testConfig),
           },
           {
             kind: 'test',
             label: 'Bob redeems more than reserve — ExtrinsicFailed',
-            testFn: () => redeemExceedingReserveFails(chain, testConfig),
+            testFn: () => redeemExceedingReserveFails(client, testConfig),
           },
           {
             kind: 'test',
             label: 'fee 0% mint vs fee 5% mint — higher fee yields less pUSD',
-            testFn: () => feeImpactOnMintOutput(chain, testConfig),
+            testFn: () => feeImpactOnMintOutput(client, testConfig),
           },
         ],
       },
@@ -2082,47 +2065,47 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint',
-            testFn: () => maxDebtBlocksMintRestoreAllows(chain, testConfig),
+            testFn: () => maxDebtBlocksMintRestoreAllows(client, testConfig),
           },
           {
             kind: 'test',
             label: 'setMaxPsmDebt(10_000), fund USDX, mint USDT and USDX — total debt > 0',
-            testFn: () => globalDebtAcrossMultipleAssets(chain, testConfig),
+            testFn: () => globalDebtAcrossMultipleAssets(client, testConfig),
           },
           {
             kind: 'test',
             label: 'setAssetCeilingWeight(USDX, 0) — mint USDT succeeds, debt equals amount',
-            testFn: () => zeroedCeilingWeightAllowsOtherAsset(chain, testConfig),
+            testFn: () => zeroedCeilingWeightAllowsOtherAsset(client, testConfig),
           },
           {
             kind: 'test',
             label: 'setAssetCeilingWeight(USDT, 0) — mint fails despite AllEnabled circuit breaker',
-            testFn: () => zeroCeilingBlocksMintDespiteAllEnabled(chain, testConfig),
+            testFn: () => zeroCeilingBlocksMintDespiteAllEnabled(client, testConfig),
           },
           {
             kind: 'test',
             label: 'both assets at 75% weight — normalized to 50/50, enforced at boundary',
-            testFn: () => normalizedCeilingWeightEnforcement(chain, testConfig),
+            testFn: () => normalizedCeilingWeightEnforcement(client, testConfig),
           },
           {
             kind: 'test',
             label: 'setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work',
-            testFn: () => zeroMaxDebtBlocksBothAssetsRedeemsWork(chain, testConfig),
+            testFn: () => zeroMaxDebtBlocksBothAssetsRedeemsWork(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt',
-            testFn: () => maxDebtZeroCeilingDebtUnchangedRedeemsWork(chain, testConfig),
+            testFn: () => maxDebtZeroCeilingDebtUnchangedRedeemsWork(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint USDT to ceiling — USDX ceiling unaffected, USDX fully mintable',
-            testFn: () => usdtAtCeilingDoesNotConsumeUsdxCeiling(chain, testConfig),
+            testFn: () => usdtAtCeilingDoesNotConsumeUsdxCeiling(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint both assets to per-asset ceilings — each debt equals its ceiling',
-            testFn: () => bothAssetsToCeilingFillsGlobalCeiling(chain, testConfig),
+            testFn: () => bothAssetsToCeilingFillsGlobalCeiling(client, testConfig),
           },
         ],
       },
@@ -2133,12 +2116,12 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'mint and redeem USDX and DAI — debt and received match decimal-scaled amounts',
-            testFn: () => multiDecimalMintRedeem(chain, testConfig),
+            testFn: () => multiDecimalMintRedeem(client, testConfig),
           },
           {
             kind: 'test',
             label: 'USDX and DAI at per-asset ceilings — each debt equals its ceiling',
-            testFn: () => multiDecimalCeilings(chain, testConfig),
+            testFn: () => multiDecimalCeilings(client, testConfig),
           },
         ],
       },
@@ -2149,22 +2132,22 @@ export function psmE2ETests<
           {
             kind: 'test',
             label: 'setMaxPsmDebt(5_000), mint 200 — debt > 0',
-            testFn: () => mintWithinCeiling(chain, testConfig),
+            testFn: () => mintWithinCeiling(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint 500, give Bob 2x debt pUSD, Bob redeems debt plus MIN_SWAP — ExtrinsicFailed',
-            testFn: () => bobRedeemExceedingReserveFails(chain, testConfig),
+            testFn: () => bobRedeemExceedingReserveFails(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint 500 then mint 200 more — debt > 500 UNIT',
-            testFn: () => consecutiveMintsAccumulateDebt(chain, testConfig),
+            testFn: () => consecutiveMintsAccumulateDebt(client, testConfig),
           },
           {
             kind: 'test',
             label: 'mint 500, redeem MIN_SWAP — Redeemed event',
-            testFn: () => healthyRedeemSucceeds(chain, testConfig),
+            testFn: () => healthyRedeemSucceeds(client, testConfig),
           },
         ],
       },
