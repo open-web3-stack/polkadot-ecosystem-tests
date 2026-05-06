@@ -5,7 +5,7 @@ import type { Chain } from '@e2e-test/networks'
 import type { ApiPromise, WsProvider } from '@polkadot/api'
 
 import type { TestContext } from 'vitest'
-import { afterAll, beforeAll, describe, test } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, test } from 'vitest'
 
 import { match } from 'ts-pattern'
 
@@ -60,6 +60,7 @@ export type DescribeNode = {
   label: string
   children: TestTreeChild[]
   beforeAll?: () => Promise<void>
+  beforeEach?: () => Promise<void>
   afterAll?: () => Promise<void>
   flags?: { only?: boolean; skip?: boolean }
   meta?: Record<string, any>
@@ -107,6 +108,7 @@ export function registerTestTree(testTree: TestTreeChild) {
       // Recall this is `describe` from `vitest`
       d(describeNode.label, () => {
         if (describeNode.beforeAll) beforeAll(describeNode.beforeAll)
+        if (describeNode.beforeEach) beforeEach(describeNode.beforeEach)
         if (describeNode.afterAll) afterAll(describeNode.afterAll)
         describeNode.children.forEach(registerTestTree)
       })
