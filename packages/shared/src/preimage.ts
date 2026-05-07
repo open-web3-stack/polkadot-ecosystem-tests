@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupBalances, setupNetworks } from '@e2e-test/shared'
+import { type Client, type RootTestTree, setupBalances } from '@e2e-test/shared'
 
 import type { IsError } from '@polkadot/types/metadata/decorate/types'
 import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'

@@ -774,7 +774,7 @@ export async function coretimeCallsNotFilteredTest<
  */
 export interface PostAhmTest {
   label: string
-  testFn: (chain: Chain<any, any>) => Promise<void>
+  testFn: (client: Client<any, any>) => Promise<void>
 }
 
 /**

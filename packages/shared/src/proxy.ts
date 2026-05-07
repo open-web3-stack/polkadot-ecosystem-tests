@@ -7,7 +7,6 @@ import {
   type ProxyTypeMap,
   type RootTestTree,
   setupBalances,
-  setupNetworks,
   type TestNode,
 } from '@e2e-test/shared'
 

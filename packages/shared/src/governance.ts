@@ -1160,7 +1160,6 @@ async function submitAndDeposit(client: Client<any, any>, trackConfig: Governanc
  */
 async function injectDecisionPeriodEnd(
   client: Client<any, any>,
-  chain: Chain<any, any>,
   referendumIndex: number,
   ongoing: PalletReferendaReferendumStatusConvictionVotingTally,
   track: (typeof client.api.consts.referenda.tracks)[number],
@@ -1364,7 +1363,7 @@ export async function insufficientSupportTest<
    * 3. Fast-forward past the decision period and nudge
    */
 
-  await injectDecisionPeriodEnd(client, client.config, referendumIndex, ongoingPostVote, track)
+  await injectDecisionPeriodEnd(client, referendumIndex, ongoingPostVote, track)
   await client.dev.newBlock()
 
   /**
@@ -1476,7 +1475,7 @@ export async function insufficientApprovalTest<
    * 5. Fast-forward past the decision period and nudge
    */
 
-  await injectDecisionPeriodEnd(client, client.config, referendumIndex, ongoingPostVote, track)
+  await injectDecisionPeriodEnd(client, referendumIndex, ongoingPostVote, track)
   await client.dev.newBlock()
 
   /**

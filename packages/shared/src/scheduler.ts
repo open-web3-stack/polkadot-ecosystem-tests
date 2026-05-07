@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { SpWeightsWeightV2Weight } from '@polkadot/types/lookup'
