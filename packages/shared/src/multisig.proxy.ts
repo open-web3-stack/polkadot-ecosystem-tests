@@ -1088,7 +1088,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
 export function successMultisigProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
@@ -1096,37 +1096,37 @@ export function successMultisigProxyE2ETests<
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy (any)',
-        testFn: () => multisigWithPureProxyTest(client, proxyTypes['Any']),
+        testFn: () => multisigWithPureProxyTest(getClient(), proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy (non-transfer)',
-        testFn: () => multisigWithPureProxyTest(client, proxyTypes['NonTransfer']),
+        testFn: () => multisigWithPureProxyTest(getClient(), proxyTypes['NonTransfer']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy (any)',
-        testFn: () => multisigAsStandardProxyTest(client, proxyTypes['Any'], true),
+        testFn: () => multisigAsStandardProxyTest(getClient(), proxyTypes['Any'], true),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig with pure proxy multisig',
-        testFn: () => multisigWithPureProxyMultisigTest(client, proxyTypes['Any']),
+        testFn: () => multisigWithPureProxyMultisigTest(getClient(), proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: 'Cancel 2-of-3 multisig with pure proxy before any other approvals',
-        testFn: () => cancelMultisigWithPureProxyTest(client, proxyTypes['Any']),
+        testFn: () => cancelMultisigWithPureProxyTest(getClient(), proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy with announcement and rejection',
-        testFn: () => multisigAsStandardProxyAnnouncementTest(client, proxyTypes['Any']),
+        testFn: () => multisigAsStandardProxyAnnouncementTest(getClient(), proxyTypes['Any']),
       },
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy with announcement and delay',
-        testFn: () => multisigAsStandardProxyAnnouncementWithDelayTest(client, proxyTypes['Any'], 7),
+        testFn: () => multisigAsStandardProxyAnnouncementWithDelayTest(getClient(), proxyTypes['Any'], 7),
       },
     ],
   }
@@ -1135,7 +1135,7 @@ export function successMultisigProxyE2ETests<
 export function failureMultisigProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -1143,7 +1143,7 @@ export function failureMultisigProxyE2ETests<
       {
         kind: 'test',
         label: '2-of-3 multisig as standard proxy (non-transfer)',
-        testFn: () => multisigAsStandardProxyTest(client, proxyTypes['NonTransfer'], false),
+        testFn: () => multisigAsStandardProxyTest(getClient(), proxyTypes['NonTransfer'], false),
       },
     ],
   }
@@ -1182,6 +1182,9 @@ export function baseMultisigProxyE2Etests<
       await client.api.disconnect().catch(() => {})
       await client.teardown().catch(() => {})
     },
-    children: [successMultisigProxyE2ETests(client, proxyTypes), failureMultisigProxyE2ETests(client, proxyTypes)],
+    children: [
+      successMultisigProxyE2ETests(() => client, proxyTypes),
+      failureMultisigProxyE2ETests(() => client, proxyTypes),
+    ],
   }
 }
