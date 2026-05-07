@@ -1322,9 +1322,11 @@ async function proxyCallFilteringSingleTestRunner<
 function proxyCallFilteringTestTree<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testType: ProxyCallFilteringTestType, proxyCfg: ProxyTestConfig): DescribeNode {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(
+  getClient: () => Client<TCustom, TInitStorages>,
+  testType: ProxyCallFilteringTestType,
+  proxyCfg: ProxyTestConfig,
+): DescribeNode {
   const kr = testAccounts.keyring
 
   const proxyTypes = proxyCfg.proxyTypes
@@ -1339,7 +1341,7 @@ function proxyCallFilteringTestTree<
       label: `${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`,
       testFn: async () =>
         await proxyCallFilteringSingleTestRunner(
-          client,
+          getClient(),
           proxyType,
           proxyTypeIx,
           proxyAccounts[proxyType],
@@ -1352,19 +1354,6 @@ function proxyCallFilteringTestTree<
   return {
     kind: 'describe',
     label: `filtering tests for ${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls`,
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children,
   }
 }
@@ -2078,12 +2067,67 @@ export async function pureProxyOwnershipChangeTest<
 export function baseProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(
+  getClient: () => Client<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  proxyTypes: Record<string, number>,
+): RootTestTree {
   return {
     kind: 'describe',
     label: `${testConfig.testSuiteName} base tests`,
+    children: [
+      {
+        kind: 'test',
+        label: 'add proxies (with/without delay) to an account, and remove them',
+        testFn: async () => await addRemoveProxyTest(getClient(), proxyTypes, PROXY_DELAY),
+      },
+      {
+        kind: 'test',
+        label: 'create and kill pure proxies',
+        testFn: async () => await createKillPureProxyTest(getClient(), proxyTypes),
+      },
+      {
+        kind: 'test',
+        label: 'perform proxy call on behalf of delegator',
+        testFn: async () => await proxyCallTest(getClient()),
+      },
+      {
+        kind: 'test',
+        label: 'reject force_proxy_type superset (exact match required)',
+        testFn: async () => await proxyForceTypeExactMatchOnlyTest(getClient(), proxyTypes),
+      },
+      {
+        kind: 'test',
+        label: 'proxy announcement lifecycle test',
+        testFn: async () => await proxyAnnouncementLifecycleTest(getClient()),
+      },
+      {
+        kind: 'test',
+        label: 'pure proxy ownership change test',
+        testFn: async () => await pureProxyOwnershipChangeTest(getClient(), proxyTypes['Any']),
+      },
+    ],
+  }
+}
+
+export function fullProxyE2ETests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyCfg: ProxyTestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+  const allowedFilteringTests = proxyCallFilteringTestTree(() => client, ProxyCallFilteringTestType.Permitted, proxyCfg)
+  const forbiddenFilteringTests = proxyCallFilteringTestTree(
+    () => client,
+    ProxyCallFilteringTestType.Forbidden,
+    proxyCfg,
+  )
+
+  const baseTestTree = baseProxyE2ETests(() => client, testConfig, proxyCfg.proxyTypes)
+
+  return {
+    kind: 'describe' as const,
+    label: `${testConfig.testSuiteName} full tests (includes call filtering)`,
     beforeAll: async () => {
       ;[client] = await createNetworks(chain)
       restoreSnapshot = captureSnapshot(client)
@@ -2097,53 +2141,6 @@ export function baseProxyE2ETests<
       await client.api.disconnect().catch(() => {})
       await client.teardown().catch(() => {})
     },
-    children: [
-      {
-        kind: 'test',
-        label: 'add proxies (with/without delay) to an account, and remove them',
-        testFn: async () => await addRemoveProxyTest(client, proxyTypes, PROXY_DELAY),
-      },
-      {
-        kind: 'test',
-        label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(client, proxyTypes),
-      },
-      {
-        kind: 'test',
-        label: 'perform proxy call on behalf of delegator',
-        testFn: async () => await proxyCallTest(client),
-      },
-      {
-        kind: 'test',
-        label: 'reject force_proxy_type superset (exact match required)',
-        testFn: async () => await proxyForceTypeExactMatchOnlyTest(client, proxyTypes),
-      },
-      {
-        kind: 'test',
-        label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(client),
-      },
-      {
-        kind: 'test',
-        label: 'pure proxy ownership change test',
-        testFn: async () => await pureProxyOwnershipChangeTest(client, proxyTypes['Any']),
-      },
-    ],
-  }
-}
-
-export function fullProxyE2ETests<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyCfg: ProxyTestConfig): RootTestTree {
-  const allowedFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Permitted, proxyCfg)
-  const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Forbidden, proxyCfg)
-
-  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyCfg.proxyTypes)
-
-  return {
-    kind: 'describe' as const,
-    label: `${testConfig.testSuiteName} full tests (includes call filtering)`,
     children: [baseTestTree, allowedFilteringTests, forbiddenFilteringTests],
   }
 }
