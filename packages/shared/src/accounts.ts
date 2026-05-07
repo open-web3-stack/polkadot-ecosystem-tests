@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
-import { type Client, type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
@@ -1168,6 +1168,7 @@ async function forceTransferKillTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
   // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
   const hasScheduler = !!baseClient.api.tx.scheduler
@@ -1176,9 +1177,15 @@ async function forceTransferKillTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // Create fresh account
@@ -1328,6 +1335,7 @@ async function forceTransferKillTest<
   expect(newAccountEventData.account.toString()).toBe(
     encodeAddress(bob.address, baseClient.config.properties.addressEncoding),
   )
+  await teardownExtras?.()
 }
 
 /**
@@ -1344,6 +1352,7 @@ async function forceTransferBelowExistentialDepositTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   if (!hasScheduler) {
@@ -1351,9 +1360,15 @@ async function forceTransferBelowExistentialDepositTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // Create fresh accounts
@@ -1435,6 +1450,7 @@ async function forceTransferBelowExistentialDepositTest<
   // Alice's balance should be unchanged (no fees for failed force transfers)
   const aliceAccount = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
+  await teardownExtras?.()
 }
 
 /**
@@ -1451,6 +1467,7 @@ async function forceTransferInsufficientFundsTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   if (!hasScheduler) {
@@ -1458,9 +1475,15 @@ async function forceTransferInsufficientFundsTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // Create fresh accounts
@@ -1535,6 +1558,7 @@ async function forceTransferInsufficientFundsTest<
   // Alice's balance should be unchanged (no fees for failed force transfers)
   const aliceAccount = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
+  await teardownExtras?.()
 }
 
 /**
@@ -1553,6 +1577,7 @@ async function forceTransferWithReserveTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
   // and the base client needs to be recreated simultaneously - otherwise, they would be unable to communicate.
   const hasScheduler = !!baseClient.api.tx.scheduler
@@ -1561,9 +1586,15 @@ async function forceTransferWithReserveTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
@@ -1691,6 +1722,7 @@ async function forceTransferWithReserveTest<
     const tokenError = dispatchError.asToken
     expect(tokenError.isFrozen).toBeTruthy()
   }
+  await teardownExtras?.()
 }
 
 /**
@@ -1733,6 +1765,7 @@ async function forceTransferSelfTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   if (!hasScheduler) {
@@ -1740,9 +1773,15 @@ async function forceTransferSelfTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // 1. Create Alice's account
@@ -1839,6 +1878,7 @@ async function forceTransferSelfTest<
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  await teardownExtras?.()
 }
 
 // --------------
@@ -2698,6 +2738,7 @@ async function forceUnreserveNoReservesTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   let paraId: number | undefined
@@ -2706,9 +2747,15 @@ async function forceUnreserveNoReservesTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
 
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
@@ -2778,6 +2825,7 @@ async function forceUnreserveNoReservesTest<
   const aliceAccountAfter = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccountAfter.data.free.toBigInt()).toBe(aliceBalance)
   expect(aliceAccountAfter.data.reserved.toBigInt()).toBe(0n)
+  await teardownExtras?.()
 }
 
 /**
@@ -2794,6 +2842,7 @@ async function forceUnreserveNonExistentAccountTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   let paraId: number | undefined
@@ -2802,9 +2851,15 @@ async function forceUnreserveNonExistentAccountTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
 
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
@@ -2864,6 +2919,7 @@ async function forceUnreserveNonExistentAccountTest<
 
   // 4. Verify the account remains non-existent
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
+  await teardownExtras?.()
 }
 
 /**
@@ -2883,6 +2939,7 @@ async function forceUnreserveWithReservesTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   let paraId: number | undefined
@@ -2891,9 +2948,15 @@ async function forceUnreserveWithReservesTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
 
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
@@ -3003,6 +3066,7 @@ async function forceUnreserveWithReservesTest<
   const consumersAfterUnreserve = aliceAccountFinal.consumers.toNumber()
   expect(consumersAfterUnreserve).toBeLessThan(consumersAfterReserve)
   expect(consumersAfterUnreserve).toBe(0)
+  await teardownExtras?.()
 }
 
 // -------------------
@@ -3048,6 +3112,7 @@ async function forceSetBalanceSuccessTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   if (!hasScheduler) {
@@ -3055,9 +3120,15 @@ async function forceSetBalanceSuccessTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // 1. Create Alice's account with 100 ED
@@ -3152,6 +3223,7 @@ async function forceSetBalanceSuccessTest<
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
+  await teardownExtras?.()
 }
 
 /**
@@ -3168,6 +3240,7 @@ async function forceSetBalanceBelowEdTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   if (!hasScheduler) {
@@ -3175,9 +3248,15 @@ async function forceSetBalanceBelowEdTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
   }
 
   // 1. Create Alice's account with 100 ED
@@ -3280,6 +3359,7 @@ async function forceSetBalanceBelowEdTest<
   // Check new total issuance
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
   expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() - initialBalance)
+  await teardownExtras?.()
 }
 
 // -----------------------------
@@ -3326,6 +3406,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   let paraId: number | undefined
@@ -3334,9 +3415,15 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
 
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
@@ -3470,6 +3557,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 
   const issuanceAfter2 = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
   expect(issuanceAfter2).toBe(issuanceBefore)
+  await teardownExtras?.()
 }
 
 /**
@@ -3487,6 +3575,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
   let relayClient: Client<TCustom, TInitStoragesRelay>
+  let teardownExtras: (() => Promise<void>) | undefined
   // Check if scheduler pallet is available
   const hasScheduler = !!baseClient.api.tx.scheduler
   let paraId: number | undefined
@@ -3495,9 +3584,15 @@ async function forceAdjustTotalIssuanceSuccessTest<
       throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
     }
 
-    const [rc, bc] = await setupNetworks(relayChain, baseClient.config)
+    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
     relayClient = rc
     baseClient = bc
+    teardownExtras = async () => {
+      await rc.api.disconnect().catch(() => {})
+      await rc.teardown().catch(() => {})
+      await bc.api.disconnect().catch(() => {})
+      await bc.teardown().catch(() => {})
+    }
 
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
@@ -3613,6 +3708,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   issuanceEventData = issuanceEvent!.event.data
   assert(issuanceEventData.old.eq(afterIncreaseIssuance))
   assert(issuanceEventData.new_.eq(finalIssuanceBigInt))
+  await teardownExtras?.()
 }
 
 // ------
@@ -4391,7 +4487,7 @@ export const accountsE2ETests = <
     beforeEach: async () => {
       await restoreSnapshot()
       const blockNumber = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
-      baseClient.dev.setHead(blockNumber)
+      await baseClient.dev.setHead(blockNumber)
     },
     afterAll: async () => {
       await baseClient.api.disconnect().catch(() => {})
