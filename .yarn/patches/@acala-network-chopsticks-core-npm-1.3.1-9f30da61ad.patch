@@ -1,0 +1,49 @@
+diff --git a/dist/cjs/blockchain/block.js b/dist/cjs/blockchain/block.js
+index d751a928b5c04a4fac2d9bb3e69df09b8d65187c..5fe2bb034834407e9c8b09bd1b1c6da6e25b1be5 100644
+--- a/dist/cjs/blockchain/block.js
++++ b/dist/cjs/blockchain/block.js
+@@ -167,10 +167,17 @@ class Block {
+     /**
+    * Pop a layer from the storage stack.
+    */ popStorageLayer() {
+-        _class_private_field_get(this, _storages).pop();
++         _class_private_field_get(this, _storages).pop();
++     }
++    resetStorageLayers(targetCount) {
++        const s = _class_private_field_get(this, _storages);
++        while (s.length > targetCount) s.pop();
+     }
+-    /**
+-   * Get storage diff.
++    get storageLayerCount() {
++        return _class_private_field_get(this, _storages).length;
++    }
++     /**
++    * Get storage diff.
+    */ async storageDiff() {
+         const storage = {};
+         for (const layer of _class_private_field_get(this, _storages)){
+diff --git a/dist/esm/blockchain/block.js b/dist/esm/blockchain/block.js
+index edff7f74638a5c21c5f73c6831708b46eb6a576c..c9b9687bb6cc0169e1cad54bce99efb1c950cc1f 100644
+--- a/dist/esm/blockchain/block.js
++++ b/dist/esm/blockchain/block.js
+@@ -157,10 +157,16 @@ import { RemoteStorageLayer, StorageLayer, StorageValueKind } from './storage-la
+     /**
+    * Pop a layer from the storage stack.
+    */ popStorageLayer() {
+-        this.#storages.pop();
++         this.#storages.pop();
++     }
++    resetStorageLayers(targetCount) {
++        while (this.#storages.length > targetCount) this.#storages.pop();
+     }
+-    /**
+-   * Get storage diff.
++    get storageLayerCount() {
++        return this.#storages.length;
++    }
++     /**
++    * Get storage diff.
+    */ async storageDiff() {
+         const storage = {};
+         for (const layer of this.#storages){
