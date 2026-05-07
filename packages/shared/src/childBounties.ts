@@ -1353,40 +1353,25 @@ export async function childBountyStorageVerificationTest<
 export function allUnassignChildBountyCuratorTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All unassign child bounty curator tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'child curator self-unassign refunds deposit',
-        testFn: async () => await childBountyUnassignCuratorSelfUnassignRefundsDepositTest(client),
+        testFn: async () => await childBountyUnassignCuratorSelfUnassignRefundsDepositTest(getClient()),
       },
       {
         kind: 'test',
         label: 'parent curator unassign slashes child curator deposit',
-        testFn: async () => await childBountyUnassignCuratorParentUnassignSlashesDepositTest(client),
+        testFn: async () => await childBountyUnassignCuratorParentUnassignSlashesDepositTest(getClient()),
       },
       {
         kind: 'test',
         label: 'public user unassign curator fails with Premature error',
-        testFn: async () => await childBountyUnassignCuratorPublicUserPrematureFailsTest(client),
+        testFn: async () => await childBountyUnassignCuratorPublicUserPrematureFailsTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -1399,55 +1384,42 @@ export function allUnassignChildBountyCuratorTests<
 export function allChildBountiesSuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All child bounties success tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      {
-        await restoreSnapshot()
-        const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-        await client.dev.setHead(blockNumber)
-      }
-    },
     children: [
       {
         kind: 'test',
         label: 'child bounty creation',
-        testFn: async () => await childBountyCreationTest(client),
+        testFn: async () => await childBountyCreationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'assigning and accepting a child bounty curator',
-        testFn: async () => await childBountyAssigningAndAcceptingTest(client),
+        testFn: async () => await childBountyAssigningAndAcceptingTest(getClient()),
       },
       {
         kind: 'test',
         label: 'awarding and claiming a child bounty',
-        testFn: async () => await childBountyAwardingAndClaimingTest(client),
+        testFn: async () => await childBountyAwardingAndClaimingTest(getClient()),
       },
       {
         kind: 'test',
         label: 'closure and payout of a child bounty',
-        testFn: async () => await childBountyClosureAndPayoutTest(client),
+        testFn: async () => await childBountyClosureAndPayoutTest(getClient()),
       },
       {
         kind: 'test',
         label: 'rejection by child curator and closure by parent curator of a child bounty',
-        testFn: async () => await childBountyRejectionAndCancellationTest(client),
+        testFn: async () => await childBountyRejectionAndCancellationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'child bounty storage verification',
-        testFn: async () => await childBountyStorageVerificationTest(client),
+        testFn: async () => await childBountyStorageVerificationTest(getClient()),
       },
-      allUnassignChildBountyCuratorTests(chain),
+      allUnassignChildBountyCuratorTests(getClient),
     ],
   } as RootTestTree
 }
@@ -2451,79 +2423,64 @@ export async function childBountyProposingCuratorForInvalidIndexErrorTest<
 export function allChildBountiesFailureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All child bounties failure tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'create child bounty from non-active parent bounty throws ParentBountyNotActive error',
-        testFn: async () => await childBountyParentBountyNotActiveErrorTest(client),
+        testFn: async () => await childBountyParentBountyNotActiveErrorTest(getClient()),
       },
       {
         kind: 'test',
         label:
           'create child bounty with value larger than parent bounty balance throws InsufficientBountyBalance error',
-        testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(client),
+        testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'create child bounty with value below minimum throws InvalidValue error',
-        testFn: async () => await childBountyInvalidValueErrorTest(client),
+        testFn: async () => await childBountyInvalidValueErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'propose curator with fee >= child bounty value throws InvalidFee error',
-        testFn: async () => await childBountyInvalidFeeErrorTest(client),
+        testFn: async () => await childBountyInvalidFeeErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'accept curator when child bounty is in Added status throws UnexpectedStatus error',
-        testFn: async () => await childBountyUnexpectedStatusErrorTest(client),
+        testFn: async () => await childBountyUnexpectedStatusErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'close child bounty in PendingPayout status throws PendingPayout error',
-        testFn: async () => await childBountyPendingPayoutErrorTest(client),
+        testFn: async () => await childBountyPendingPayoutErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'non-curator trying to create child bounty throws RequireCurator error',
-        testFn: async () => await childBountyRequireCuratorErrorTest(client),
+        testFn: async () => await childBountyRequireCuratorErrorTest(getClient()),
       },
       {
         kind: 'test',
         label:
           'parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error',
-        testFn: async () => await childBountyTooManyChildBountiesErrorTest(client),
+        testFn: async () => await childBountyTooManyChildBountiesErrorTest(getClient()),
       },
       // ReasonTooBig
       {
         kind: 'test',
         label: 'child bounty description larger than MaximumReasonLength throws ReasonTooBig error',
-        testFn: async () => await childBountyReasonTooBigErrorTest(client),
+        testFn: async () => await childBountyReasonTooBigErrorTest(getClient()),
       },
       // InvalidIndex
       {
         kind: 'test',
         label: 'proposing curator for invalid child bounty index throws InvalidIndex error',
-        testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(client),
+        testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2537,9 +2494,24 @@ export function baseChildBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allChildBountiesSuccessTests(chain), allChildBountiesFailureTests(chain)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [allChildBountiesSuccessTests(() => client), allChildBountiesFailureTests(() => client)],
   }
 }
