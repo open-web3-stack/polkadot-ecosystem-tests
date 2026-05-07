@@ -104,6 +104,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.3.1-1c404ca1be.patch":
+  version: 1.3.1
+  resolution: "@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.3.1-1c404ca1be.patch::version=1.3.1&hash=b68aab"
+  dependencies:
+    "@acala-network/chopsticks": "npm:1.3.1"
+    "@acala-network/chopsticks-core": "npm:1.3.1"
+    "@polkadot-labs/hdkd": "npm:^0.0.19"
+    "@polkadot-labs/hdkd-helpers": "npm:^0.0.19"
+    "@polkadot/api": "npm:^16.4.1"
+    "@polkadot/api-base": "npm:^16.4.1"
+    "@polkadot/keyring": "npm:^14.0.1"
+    "@polkadot/types": "npm:^16.4.1"
+    "@polkadot/util": "npm:^14.0.1"
+    polkadot-api: "npm:^1.14.1"
+  checksum: 10c0/0c78ad435dfd33207b6ed2ca3db97ee7c2c7fb0af72706c9b18476fc7a36b17e389adbadc04e55b517715283ee0e3bd33764286f2b02499682ec4a67caf0a6de
+  languageName: node
+  linkType: hard
+
 "@acala-network/chopsticks@npm:1.3.1, @acala-network/chopsticks@npm:^1.3.1":
   version: 1.3.1
   resolution: "@acala-network/chopsticks@npm:1.3.1"
