@@ -1863,7 +1863,7 @@ export async function overflowPromotionViaKillTest<
 /// Test trees
 /// -------
 
-function negativeFlowsForTrack(client: Client<any, any>, trackConfig: GovernanceTrackConfig): DescribeNode {
+function negativeFlowsForTrack(getClient: () => Client<any, any>, trackConfig: GovernanceTrackConfig): DescribeNode {
   return {
     kind: 'describe',
     label: trackConfig.trackName,
@@ -1871,17 +1871,17 @@ function negativeFlowsForTrack(client: Client<any, any>, trackConfig: Governance
       {
         kind: 'test' as const,
         label: 'missing decision deposit timeout',
-        testFn: async () => await missingDecisionDepositTest(client, trackConfig),
+        testFn: async () => await missingDecisionDepositTest(getClient(), trackConfig),
       },
       {
         kind: 'test' as const,
         label: 'insufficient support rejection',
-        testFn: async () => await insufficientSupportTest(client, trackConfig),
+        testFn: async () => await insufficientSupportTest(getClient(), trackConfig),
       },
       {
         kind: 'test' as const,
         label: 'insufficient approval rejection',
-        testFn: async () => await insufficientApprovalTest(client, trackConfig),
+        testFn: async () => await insufficientApprovalTest(getClient(), trackConfig),
       },
       {
         kind: 'describe' as const,
@@ -1890,17 +1890,17 @@ function negativeFlowsForTrack(client: Client<any, any>, trackConfig: Governance
           {
             kind: 'test' as const,
             label: 'promotion via approval',
-            testFn: async () => await overflowPromotionViaApprovalTest(client, trackConfig),
+            testFn: async () => await overflowPromotionViaApprovalTest(getClient(), trackConfig),
           },
           {
             kind: 'test' as const,
             label: 'promotion via rejection',
-            testFn: async () => await overflowPromotionViaRejectionTest(client, trackConfig),
+            testFn: async () => await overflowPromotionViaRejectionTest(getClient(), trackConfig),
           },
           {
             kind: 'test' as const,
             label: 'promotion via kill',
-            testFn: async () => await overflowPromotionViaKillTest(client, trackConfig),
+            testFn: async () => await overflowPromotionViaKillTest(getClient(), trackConfig),
           },
         ],
       },
@@ -2180,10 +2180,25 @@ export async function referendumLifecycleDelegationTest<
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, govConfig: GovernanceTestConfig): RootTestTree {
+>(chain: Chain<TCustom, TInitStorages>, govConfig: GovernanceTestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: govConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'describe',
@@ -2208,7 +2223,7 @@ export function baseGovernanceE2ETests<
           {
             kind: 'describe',
             label: 'negative execution flows',
-            children: govConfig.tracks.map((trackConfig) => negativeFlowsForTrack(client, trackConfig)),
+            children: govConfig.tracks.map((trackConfig) => negativeFlowsForTrack(() => client, trackConfig)),
           },
         ],
       },
