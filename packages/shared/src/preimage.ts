@@ -57,7 +57,7 @@ export async function preimageSingleNoteUnnoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -290,7 +290,7 @@ export async function preimageNoteThenRequestTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -388,7 +388,7 @@ export async function preimageRequestAndUnnoteTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -499,7 +499,7 @@ export async function preimageRequestThenNoteTest<
   expect(requestedEvent).toBeDefined()
 
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 2. Alice registers (notes) the previously-requested preimage
   const notePreimageTx = client.api.tx.preimage.notePreimage(encodedProposal.toHex())
@@ -590,7 +590,7 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -647,7 +647,7 @@ export async function preimageRepeatedNoteUnnoteTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
@@ -763,7 +763,7 @@ async function preimageEmptyTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
+  await setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers an empty preimage.
   const emptyBytes = new Uint8Array(0)
@@ -822,7 +822,7 @@ async function preimageSizeLimitTest<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
-  setupBalances(client, [{ address: alice.address, amount: 500_000n * 10n ** 12n }])
+  await setupBalances(client, [{ address: alice.address, amount: 500_000n * 10n ** 12n }])
 
   const blockLength = client.api.consts.system.blockLength as any
   const normalBlockLimit: number = blockLength.max.normal.toNumber()
@@ -931,7 +931,7 @@ async function preimageEnsureUpdatedTest<
 >(client: Client<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
   const alice = testAccounts.alice
   const addressEncoding = client.config.properties.addressEncoding
-  setupBalances(client, [
+  await setupBalances(client, [
     { address: alice.address, amount: 10_000_000n * 10n ** 10n },
     { address: testAccounts.bob.address, amount: 10_000_000n * 10n ** 10n },
   ])
