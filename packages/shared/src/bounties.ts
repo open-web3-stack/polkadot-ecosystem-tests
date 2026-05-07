@@ -1979,40 +1979,25 @@ export async function unassignCuratorPendingPayoutTest<
 export function bountyClosureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty Closure Tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'Bounty closure in proposed state',
-        testFn: async () => await bountyClosureProposedTest(client),
+        testFn: async () => await bountyClosureProposedTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty closure in funded state',
-        testFn: async () => await bountyClosureFundedTest(client),
+        testFn: async () => await bountyClosureFundedTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty closure in active state',
-        testFn: async () => await bountyClosureActiveTest(client),
+        testFn: async () => await bountyClosureActiveTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2026,50 +2011,35 @@ export function bountyClosureTests<
 export function allCuratorUnassignTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All curator unassign tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'Unassign curator in ApprovedWithCurator state',
-        testFn: async () => await unassignCuratorApprovedWithCuratorTest(client),
+        testFn: async () => await unassignCuratorApprovedWithCuratorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unassign curator in CuratorProposed state',
-        testFn: async () => await unassignCuratorCuratorProposedTest(client),
+        testFn: async () => await unassignCuratorCuratorProposedTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by curator themselves',
-        testFn: async () => await unassignCuratorActiveByCuratorTest(client),
+        testFn: async () => await unassignCuratorActiveByCuratorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unassign curator in Active state by Treasurer',
-        testFn: async () => await unassignCuratorActiveByTreasurerTest(client),
+        testFn: async () => await unassignCuratorActiveByTreasurerTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unassign curator in PendingPayout state',
-        testFn: async () => await unassignCuratorPendingPayoutTest(client),
+        testFn: async () => await unassignCuratorPendingPayoutTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2084,35 +2054,20 @@ export function allCuratorUnassignTests<
 export function bountyApprovalTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty approval tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'Bounty approval flow',
-        testFn: async () => await bountyApprovalTest(client),
+        testFn: async () => await bountyApprovalTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty approval flow with curator',
-        testFn: async () => await bountyApprovalWithCuratorTest(client),
+        testFn: async () => await bountyApprovalWithCuratorTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2128,35 +2083,20 @@ export function bountyApprovalTests<
 export function bountyFundingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Bounty funding tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'Bounty funding for Approved Bounties',
-        testFn: async () => await bountyFundingTest(client),
+        testFn: async () => await bountyFundingTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty funding for ApprovedWithCurator Bounties',
-        testFn: async () => await bountyFundingForApprovedWithCuratorTest(client),
+        testFn: async () => await bountyFundingForApprovedWithCuratorTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2172,46 +2112,35 @@ export function bountyFundingTests<
 export function allBountySuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty success tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
     children: [
       {
         kind: 'test',
         label: 'Creating a bounty',
-        testFn: async () => await bountyCreationTest(client),
+        testFn: async () => await bountyCreationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Curator assignment and acceptance',
-        testFn: async () => await curatorAssignmentAndAcceptanceTest(client),
+        testFn: async () => await curatorAssignmentAndAcceptanceTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty extension',
-        testFn: async () => await bountyExtensionTest(client),
+        testFn: async () => await bountyExtensionTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty awarding and claiming',
-        testFn: async () => await bountyAwardingAndClaimingTest(client),
+        testFn: async () => await bountyAwardingAndClaimingTest(getClient()),
       },
-      bountyFundingTests(chain),
-      bountyApprovalTests(chain),
-      bountyClosureTests(chain),
-      allCuratorUnassignTests(chain),
+      bountyFundingTests(getClient),
+      bountyApprovalTests(getClient),
+      bountyClosureTests(getClient),
+      allCuratorUnassignTests(getClient),
     ],
   } as RootTestTree
 }
@@ -3061,75 +2990,60 @@ export async function bountyAwardingAndClaimingInActiveStateTest<
 export function allBountyFailureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All bounty failure tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'Bounty closure in approved state',
-        testFn: async () => await bountyClosureApprovedTest(client),
+        testFn: async () => await bountyClosureApprovedTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty closure in pending payout state',
-        testFn: async () => await bountyClosurePendingPayoutTest(client),
+        testFn: async () => await bountyClosurePendingPayoutTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unassign curator in active state by public premature',
-        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(client),
+        testFn: async () => await unassignCuratorActiveStateByPublicPrematureTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Reason too big',
-        testFn: async () => await reasonTooBigTest(client),
+        testFn: async () => await reasonTooBigTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Invalid value',
-        testFn: async () => await invalidValueTest(client),
+        testFn: async () => await invalidValueTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Invalid bounty index approval',
-        testFn: async () => await invalidIndexApprovalTest(client),
+        testFn: async () => await invalidIndexApprovalTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Unexpected status when proposing curator before bounty is funded',
-        testFn: async () => await unexpectedStatusProposeCuratorTest(client),
+        testFn: async () => await unexpectedStatusProposeCuratorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Non-curator trying to accept curator role',
-        testFn: async () => await requireCuratorAcceptTest(client),
+        testFn: async () => await requireCuratorAcceptTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be awarded if it has an active child bounty',
-        testFn: async () => await hasActiveChildBountyTest(client),
+        testFn: async () => await hasActiveChildBountyTest(getClient()),
       },
       {
         kind: 'test',
         label: 'Bounty cannot be claimed in active state',
-        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(client),
+        testFn: async () => await bountyAwardingAndClaimingInActiveStateTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -3147,9 +3061,24 @@ export function baseBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allBountySuccessTests(chain), allBountyFailureTests(chain)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [allBountySuccessTests(() => client), allBountyFailureTests(() => client)],
   }
 }
