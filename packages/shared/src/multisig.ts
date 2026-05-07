@@ -2168,51 +2168,36 @@ async function maxWeightTooLowTest<
 export function successMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'success tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'basic 2-of-3 multisig creation and execution',
-        testFn: () => basicMultisigTest(client),
+        testFn: () => basicMultisigTest(getClient()),
       },
       {
         kind: 'test',
         label: 'multisig cancellation works',
-        testFn: () => multisigCancellationTest(client),
+        testFn: () => multisigCancellationTest(getClient()),
       },
       {
         kind: 'test',
         label:
           'second approval (with `approveAsMulti`) in 2-of-3 multisig is successful and does not lead to execution',
-        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(client),
+        testFn: () => approveAsMulti2Of3DoesNotExecuteTest(getClient()),
       },
       {
         kind: 'test',
         label: 'final approval with `approveAsMulti` does not lead to execution',
-        testFn: () => finalApprovalApproveAsMultiTest(client),
+        testFn: () => finalApprovalApproveAsMultiTest(getClient()),
       },
       {
         kind: 'test',
         label: 'beginning multisig approval with `approveAsMulti` works',
-        testFn: () => approveAsMultiFirstTest(client),
+        testFn: () => approveAsMultiFirstTest(getClient()),
       },
     ],
   }
@@ -2221,110 +2206,95 @@ export function successMultisigE2ETests<
 export function failureMultisigE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'multisig cancellation with threshold < 2 fails',
-        testFn: () => minimumThresholdCancelTest(client),
+        testFn: () => minimumThresholdCancelTest(getClient()),
       },
       {
         kind: 'test',
         label: 'creating a multisig with threshold < 2 fails',
-        testFn: () => minimumThresholdAsMultiTest(client),
+        testFn: () => minimumThresholdAsMultiTest(getClient()),
       },
       {
         kind: 'test',
         label: 'repeated approval with `approveAsMulti` fails',
-        testFn: () => approveAsMultiAlreadyApprovedTest(client),
+        testFn: () => approveAsMultiAlreadyApprovedTest(getClient()),
       },
       {
         kind: 'test',
         label: 'multisig creation with too few signatories fails',
-        testFn: () => tooFewSignatoriesTest(client),
+        testFn: () => tooFewSignatoriesTest(getClient()),
       },
       {
         kind: 'test',
         label: 'multisig creation with too many signatories fails',
-        testFn: () => tooManySignatoriesTest(client),
+        testFn: () => tooManySignatoriesTest(getClient()),
       },
       {
         kind: 'test',
         label: 'multisig execution with remaining signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInExecutionTest(client),
+        testFn: () => signatoriesOutOfOrderInExecutionTest(getClient()),
       },
       {
         kind: 'test',
         label: 'multisig cancellation with remaining signatories out of order fails',
-        testFn: () => cancelWithSignatoriesOutOfOrderTest(client),
+        testFn: () => cancelWithSignatoriesOutOfOrderTest(getClient()),
       },
       {
         kind: 'test',
         label: 'approval with signatories out of order fails',
-        testFn: () => signatoriesOutOfOrderInApprovalTest(client),
+        testFn: () => signatoriesOutOfOrderInApprovalTest(getClient()),
       },
       {
         kind: 'test',
         label: 'execution with sender in signatories fails',
-        testFn: () => senderInSignatoriesInExecutionTest(client),
+        testFn: () => senderInSignatoriesInExecutionTest(getClient()),
       },
       {
         kind: 'test',
         label: 'cancellation with sender in signatories fails',
-        testFn: () => senderInSignatoriesInCancellationTest(client),
+        testFn: () => senderInSignatoriesInCancellationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'approval with sender in signatories fails',
-        testFn: () => senderInSignatoriesInApprovalTest(client),
+        testFn: () => senderInSignatoriesInApprovalTest(getClient()),
       },
       {
         kind: 'test',
         label: 'cancelling a non-existent multisig operation fails',
-        testFn: () => notFoundCancelTest(client),
+        testFn: () => notFoundCancelTest(getClient()),
       },
       {
         kind: 'test',
         label: 'non-depositor tries to cancel multisig fails',
-        testFn: () => notOwnerCancelTest(client),
+        testFn: () => notOwnerCancelTest(getClient()),
       },
       {
         kind: 'test',
         label: 'approval without timepoint fails',
-        testFn: () => noTimepointTest(client),
+        testFn: () => noTimepointTest(getClient()),
       },
       {
         kind: 'test',
         label: 'approval with wrong timepoint fails',
-        testFn: () => wrongTimepointTest(client),
+        testFn: () => wrongTimepointTest(getClient()),
       },
       {
         kind: 'test',
         label: 'first call with unexpected timepoint fails',
-        testFn: () => unexpectedTimepointTest(client),
+        testFn: () => unexpectedTimepointTest(getClient()),
       },
       {
         kind: 'test',
         label: 'approval with max weight too low fails',
-        testFn: () => maxWeightTooLowTest(client),
+        testFn: () => maxWeightTooLowTest(getClient()),
       },
     ],
   }
@@ -2345,9 +2315,24 @@ export function baseMultisigE2Etests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [successMultisigE2ETests(chain), failureMultisigE2ETests(chain)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [successMultisigE2ETests(() => client), failureMultisigE2ETests(() => client)],
   }
 }
