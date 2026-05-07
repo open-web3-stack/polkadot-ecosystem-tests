@@ -1743,45 +1743,30 @@ async function cancelDeferredSlashTestAsAdmin<
 export function slashingTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'slashing tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'unapplied slash',
-        testFn: async () => await unappliedSlashTest(client),
+        testFn: async () => await unappliedSlashTest(getClient()),
       },
       {
         kind: 'test',
         label: 'cancel deferred slash with bad origin',
-        testFn: async () => await cancelDeferredSlashTestBadOrigin(client),
+        testFn: async () => await cancelDeferredSlashTestBadOrigin(getClient()),
       },
       {
         kind: 'test',
         label: 'cancel deferred slash as root',
-        testFn: async () => await cancelDeferredSlashTestAsRoot(client),
+        testFn: async () => await cancelDeferredSlashTestAsRoot(getClient()),
       },
       {
         kind: 'test',
         label: 'cancel deferred slash as admin',
-        testFn: async () => await cancelDeferredSlashTestAsAdmin(client),
+        testFn: async () => await cancelDeferredSlashTestAsAdmin(getClient()),
       },
     ],
   }
@@ -1790,70 +1775,55 @@ export function slashingTests<
 export function baseStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'base staking tests',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test' as const,
         label: 'trying to become a validator with no bonded funds fails',
-        testFn: async () => await validateNoBondedFundsFailureTest(client),
+        testFn: async () => await validateNoBondedFundsFailureTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'trying to nominate with no bonded funds fails',
-        testFn: async () => await nominateNoBondedFundsFailureTest(client),
+        testFn: async () => await nominateNoBondedFundsFailureTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'staking lifecycle',
-        testFn: async () => await stakingLifecycleTest(client),
+        testFn: async () => await stakingLifecycleTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'test force unstaking of nominator',
-        testFn: async () => await forceUnstakeTest(client),
+        testFn: async () => await forceUnstakeTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'set minimum validator commission',
-        testFn: async () => await setMinCommission(client),
+        testFn: async () => await setMinCommission(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'set staking configs',
-        testFn: async () => await setStakingConfigsTest(client),
+        testFn: async () => await setStakingConfigsTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'force apply validator commission',
-        testFn: async () => await forceApplyValidatorCommissionTest(client),
+        testFn: async () => await forceApplyValidatorCommissionTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'modify validator count',
-        testFn: async () => await modifyValidatorCountTest(client),
+        testFn: async () => await modifyValidatorCountTest(getClient()),
       },
       {
         kind: 'test' as const,
         label: 'chill other',
-        testFn: async () => await chillOtherTest(client),
+        testFn: async () => await chillOtherTest(getClient()),
       },
     ],
   }
@@ -1865,30 +1835,15 @@ export function baseStakingE2ETests<
 export function fastUnstakeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
-  let client!: Client<TCustom, TInitStorages>
-  let restoreSnapshot: () => Promise<void>
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'fast unstake',
-    beforeAll: async () => {
-      ;[client] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(client)
-    },
-    beforeEach: async () => {
-      await restoreSnapshot()
-      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
-      await client.dev.setHead(blockNumber)
-    },
-    afterAll: async () => {
-      await client.api.disconnect().catch(() => {})
-      await client.teardown().catch(() => {})
-    },
     children: [
       {
         kind: 'test',
         label: 'test fast unstake',
-        testFn: async () => await fastUnstakeTest(client, client.config.properties.addressEncoding),
+        testFn: async () => await fastUnstakeTest(getClient(), getClient().config.properties.addressEncoding),
       },
     ],
   }
@@ -1901,12 +1856,27 @@ export function fullStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
-  const basalTestTree = baseStakingE2ETests(chain)
-  const slashingTestTree = slashingTests(chain)
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+  const basalTestTree = baseStakingE2ETests(() => client)
+  const slashingTestTree = slashingTests(() => client)
 
   return {
     kind: 'describe' as const,
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [basalTestTree, slashingTestTree],
   }
 }
@@ -1921,13 +1891,28 @@ export function completeStakingE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
-  const basalTestTree = baseStakingE2ETests(chain)
-  const slashingTestTree = slashingTests(chain)
-  const fastUnstakeTestTree = fastUnstakeTests(chain)
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+  const basalTestTree = baseStakingE2ETests(() => client)
+  const slashingTestTree = slashingTests(() => client)
+  const fastUnstakeTestTree = fastUnstakeTests(() => client)
 
   return {
     kind: 'describe' as const,
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [basalTestTree, slashingTestTree, fastUnstakeTestTree],
   }
 }
