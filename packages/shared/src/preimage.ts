@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 import { type Client, type RootTestTree, setupBalances, setupNetworks } from '@e2e-test/shared'
 
 import type { IsError } from '@polkadot/types/metadata/decorate/types'
@@ -32,6 +32,7 @@ async function expectFailedExtrinsicWithType(client: Client<any, any>, errorType
     return event.section === 'system' && event.method === 'ExtrinsicFailed'
   })
 
+  assert(ev !== undefined, 'Expected an ExtrinsicFailed event but none was found')
   assert(client.api.events.system.ExtrinsicFailed.is(ev.event))
   const dispatchError = ev.event.data.dispatchError
 
@@ -55,9 +56,7 @@ const PALLET_MAX_PREIMAGE_SIZE = 4 * 1024 * 1024
 export async function preimageSingleNoteUnnoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. Alice registers (notes) a preimage for a treasury spend proposal.
@@ -102,9 +101,7 @@ export async function preimageSingleNoteUnnoteTest<
 export async function preimageSingleRequestUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. A root account requests a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
@@ -114,7 +111,7 @@ export async function preimageSingleRequestUnrequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -130,7 +127,7 @@ export async function preimageSingleRequestUnrequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -150,9 +147,7 @@ export async function preimageSingleRequestUnrequestTest<
 export async function preimageSingleRequestMultipleUnrequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. A root account requests a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
@@ -162,7 +157,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -208,7 +203,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     encodedCallList,
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -245,7 +240,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -293,9 +288,7 @@ export async function preimageSingleRequestMultipleUnrequestTest<
 export async function preimageNoteThenRequestTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
@@ -329,7 +322,7 @@ export async function preimageNoteThenRequestTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -349,7 +342,7 @@ export async function preimageNoteThenRequestTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -393,9 +386,7 @@ export async function preimageNoteThenRequestTest<
 export async function preimageRequestAndUnnoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
@@ -423,7 +414,7 @@ export async function preimageRequestAndUnnoteTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -458,7 +449,7 @@ export async function preimageRequestAndUnnoteTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -482,9 +473,7 @@ export async function preimageRequestAndUnnoteTest<
 export async function preimageRequestThenNoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // 1. A root account requests a preimage for a treasury spend proposal.
   const encodedProposal = client.api.tx.system.remarkWithEvent(REMARK_DATA).method
   const proposalHash = encodedProposal.hash.toHex()
@@ -494,7 +483,7 @@ export async function preimageRequestThenNoteTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -544,7 +533,7 @@ export async function preimageRequestThenNoteTest<
     client,
     unrequestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -584,7 +573,7 @@ export async function preimageRequestThenNoteTest<
   expect(preimageEventAfterUnnote).toBeUndefined()
 
   // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
-  expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
+  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
 /**
@@ -600,9 +589,7 @@ export async function preimageRequestThenNoteTest<
 export async function preimageSingleRequestUnrequestAsNonRootTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
   // 1. A standard account attempts unsuccessfully to request a preimage for a treasury spend proposal.
@@ -623,7 +610,7 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
     client,
     requestTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -658,9 +645,7 @@ export async function preimageSingleRequestUnrequestAsNonRootTest<
 export async function preimageRepeatedNoteUnnoteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
@@ -710,7 +695,7 @@ export async function preimageRepeatedNoteUnnoteTest<
   expect(preimageEventAfterRepeatNote).toBeUndefined()
 
   // We expect an "ExtrinsicFailed" event because the preimage has already been noted.
-  expectFailedExtrinsicWithType(client, client.api.errors.preimage.AlreadyNoted)
+  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.AlreadyNoted)
 
   // The preimage is queried to ensure it remains stored correctly.
   preimage = await client.api.query.preimage.preimageFor([proposalHash, encodedProposal.encodedLength])
@@ -763,7 +748,7 @@ export async function preimageRepeatedNoteUnnoteTest<
   expect(preimageEventAfterRepeatUnnote).toBeUndefined()
 
   // We expect an "ExtrinsicFailed" event because the preimage is not (considered to be) noted.
-  expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
+  await expectFailedExtrinsicWithType(client, client.api.errors.preimage.NotNoted)
 }
 
 /**
@@ -776,9 +761,7 @@ export async function preimageRepeatedNoteUnnoteTest<
 async function preimageEmptyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   setupBalances(client, [{ address: testAccounts.alice.address, amount: 100_000n * 10n ** 10n }])
 
@@ -837,9 +820,7 @@ async function preimageEmptyTest<
 async function preimageSizeLimitTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   setupBalances(client, [{ address: alice.address, amount: 500_000n * 10n ** 12n }])
 
@@ -947,11 +928,9 @@ async function preimageSizeLimitTest<
 async function preimageEnsureUpdatedTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, oldPreimagesCount: number, newPreimagesCount: number) {
   const alice = testAccounts.alice
-  const addressEncoding = chain.properties.addressEncoding
+  const addressEncoding = client.config.properties.addressEncoding
   setupBalances(client, [
     { address: alice.address, amount: 10_000_000n * 10n ** 10n },
     { address: testAccounts.bob.address, amount: 10_000_000n * 10n ** 10n },
@@ -1103,7 +1082,7 @@ async function preimageEnsureUpdatedTest<
 
   // Get the transaction fee from the payment event.
   const events = await client.api.query.system.events()
-  const feeEvents = chain.properties.feeExtractor(events, client.api)
+  const feeEvents = client.config.properties.feeExtractor(events, client.api)
   assert(feeEvents.length === 1, `expected exactly 1 TransactionFeePaid event, got ${feeEvents.length}`)
   const feeInfo = feeEvents[0]
   expect(feeInfo.tip, 'Unexpected extrinsic tip').toBe(0n)
@@ -1118,7 +1097,7 @@ async function preimageEnsureUpdatedTest<
 export function successPreimageE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -1130,47 +1109,47 @@ export function successPreimageE2ETests<
           {
             kind: 'test',
             label: 'preimage single note and unnote test',
-            testFn: async () => await preimageSingleNoteUnnoteTest(chain),
+            testFn: async () => await preimageSingleNoteUnnoteTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage single request and unrequest test',
-            testFn: async () => await preimageSingleRequestUnrequestTest(chain),
+            testFn: async () => await preimageSingleRequestUnrequestTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage single request and multiple unrequest test',
-            testFn: async () => await preimageSingleRequestMultipleUnrequestTest(chain),
+            testFn: async () => await preimageSingleRequestMultipleUnrequestTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage note and then request test',
-            testFn: async () => await preimageNoteThenRequestTest(chain),
+            testFn: async () => await preimageNoteThenRequestTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage request and unnote test',
-            testFn: async () => await preimageRequestAndUnnoteTest(chain),
+            testFn: async () => await preimageRequestAndUnnoteTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage request and then note test',
-            testFn: async () => await preimageRequestThenNoteTest(chain),
+            testFn: async () => await preimageRequestThenNoteTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage empty test',
-            testFn: async () => await preimageEmptyTest(chain),
+            testFn: async () => await preimageEmptyTest(getClient()),
           },
           {
             kind: 'test',
             label: 'preimage ensure updated test (no fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 10, 1),
+            testFn: async () => await preimageEnsureUpdatedTest(getClient(), 10, 1),
           },
           {
             kind: 'test',
             label: 'preimage ensure updated test (fees due)',
-            testFn: async () => await preimageEnsureUpdatedTest(chain, 5, 5),
+            testFn: async () => await preimageEnsureUpdatedTest(getClient(), 5, 5),
           },
         ],
       },
@@ -1181,7 +1160,7 @@ export function successPreimageE2ETests<
 export function failurePreimageE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'failure tests',
@@ -1189,17 +1168,17 @@ export function failurePreimageE2ETests<
       {
         kind: 'test',
         label: 'preimage single request and unrequest test as non-root',
-        testFn: async () => await preimageSingleRequestUnrequestAsNonRootTest(chain),
+        testFn: async () => await preimageSingleRequestUnrequestAsNonRootTest(getClient()),
       },
       {
         kind: 'test',
         label: 'preimage repeated note and unnote test',
-        testFn: async () => await preimageRepeatedNoteUnnoteTest(chain),
+        testFn: async () => await preimageRepeatedNoteUnnoteTest(getClient()),
       },
       {
         kind: 'test',
         label: 'preimage size limit test',
-        testFn: async () => await preimageSizeLimitTest(chain),
+        testFn: async () => await preimageSizeLimitTest(getClient()),
       },
     ],
   }
@@ -1209,9 +1188,24 @@ export function basePreimageE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [successPreimageE2ETests(chain, testConfig), failurePreimageE2ETests(chain)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [successPreimageE2ETests(() => client, testConfig), failurePreimageE2ETests(() => client)],
   }
 }
