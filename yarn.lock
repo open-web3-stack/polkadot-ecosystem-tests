@@ -270,7 +270,7 @@ __metadata:
     "@acala-network/chopsticks-testing": "npm:^1.3.1"
     "@e2e-test/networks": "workspace:*"
     "@polkadot/api": "npm:^16.5.6"
-    "@polkadot/types": "npm:^16.5.6"
+    "@polkadot/types": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch"
     "@polkadot/types-augment": "npm:^16.5.6"
   languageName: unknown
   linkType: soft
@@ -1277,7 +1277,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@polkadot/types@npm:^16.5.4":
+"@polkadot/types@npm:16.5.6":
   version: 16.5.6
   resolution: "@polkadot/types@npm:16.5.6"
   dependencies:
@@ -1290,6 +1290,22 @@ __metadata:
     rxjs: "npm:^7.8.1"
     tslib: "npm:^2.8.1"
   checksum: 10c0/917bf03b0755b483f85cb1e662ae041f2b187f1f8559ea552064212fe29ae95cde55d037c6aa4bf5bdb17562ccb1e36b788c8571f2174be3996627820e59ef0e
+  languageName: node
+  linkType: hard
+
+"@polkadot/types@patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch":
+  version: 16.5.6
+  resolution: "@polkadot/types@patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch::version=16.5.6&hash=086fdb"
+  dependencies:
+    "@polkadot/keyring": "npm:^14.0.3"
+    "@polkadot/types-augment": "npm:16.5.6"
+    "@polkadot/types-codec": "npm:16.5.6"
+    "@polkadot/types-create": "npm:16.5.6"
+    "@polkadot/util": "npm:^14.0.3"
+    "@polkadot/util-crypto": "npm:^14.0.3"
+    rxjs: "npm:^7.8.1"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/eb22a547c309d241511a6530edb02b41494b159332a3e4a598f55c01d87b15f415670aa4fc2c884b4c8b124c153b96175a958f9c97b93ae75817b078bc4e49c6
   languageName: node
   linkType: hard
 
