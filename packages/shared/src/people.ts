@@ -587,15 +587,8 @@ export async function addRegistrarViaRelayAsRoot<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, sharedPeopleClient: Client<TCustom, TInitStoragesPara>) {
-  const addressEncoding = sharedPeopleClient.config.properties.addressEncoding
-  const [relayClient, peopleClient] = await createNetworks(relayChain, sharedPeopleClient.config)
-  const teardownExtras = async () => {
-    await relayClient.api.disconnect().catch(() => {})
-    await relayClient.teardown().catch(() => {})
-    await peopleClient.api.disconnect().catch(() => {})
-    await peopleClient.teardown().catch(() => {})
-  }
+>(relayClient: Client<TCustom, TInitStoragesRelay>, peopleClient: Client<TCustom, TInitStoragesPara>) {
+  const addressEncoding = peopleClient.config.properties.addressEncoding
 
   /**
    * Executing extrinsic with wrong origin
@@ -710,8 +703,6 @@ export async function addRegistrarViaRelayAsRoot<
     registrars,
     'Registrars after parachain chain block differ from expected',
   )
-
-  await teardownExtras()
 }
 
 /**
@@ -734,22 +725,27 @@ export function basePeopleChainE2ETests<
   testConfig: { testSuiteName: string },
 ): RootTestTree {
   let peopleClient!: Client<TCustom, TInitStoragesPara>
+  let relayClient!: Client<TCustom, TInitStoragesRelay>
   let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
     beforeAll: async () => {
-      ;[peopleClient] = await createNetworks(peopleChain)
-      restoreSnapshot = captureSnapshot(peopleClient)
+      ;[relayClient, peopleClient] = await createNetworks(relayChain, peopleChain)
+      restoreSnapshot = captureSnapshot(peopleClient, relayClient)
     },
     beforeEach: async () => {
       await restoreSnapshot()
-      const blockNumber = (await peopleClient.api.rpc.chain.getHeader()).number.toNumber()
-      await peopleClient.dev.setHead(blockNumber)
+      const peopleBlock = (await peopleClient.api.rpc.chain.getHeader()).number.toNumber()
+      await peopleClient.dev.setHead(peopleBlock)
+      const relayBlock = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+      await relayClient.dev.setHead(relayBlock)
     },
     afterAll: async () => {
       await peopleClient.api.disconnect().catch(() => {})
       await peopleClient.teardown().catch(() => {})
+      await relayClient.api.disconnect().catch(() => {})
+      await relayClient.teardown().catch(() => {})
     },
     children: [
       {
@@ -778,7 +774,7 @@ export function basePeopleChainE2ETests<
       {
         kind: 'test',
         label: 'adding a registrar as root from the relay chain works',
-        testFn: async () => await addRegistrarViaRelayAsRoot(relayChain, peopleClient),
+        testFn: async () => await addRegistrarViaRelayAsRoot(relayClient, peopleClient),
       },
     ],
   }
