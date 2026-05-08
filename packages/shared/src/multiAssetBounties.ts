@@ -1695,6 +1695,17 @@ export async function completeDOTBountyLifecycleCustomTest<
  *
  * Together (1)+(2)+(3) confirm that *if* the referendum passed, the bounty would be created.
  */
+
+/// Bounty `value` in foreign DOT smallest units (10 decimals). Must satisfy:
+///   - converted to native via the asset rate, the value >= `bountyValueMinimum`
+///   - converted to native, the value <= SmallSpender's max spend limit
+const SMALL_SPENDER_BOUNTY_VALUE = 20_000_000_000n // 2 DOT
+/// Curator AccountId pubkey. Any 32-byte hex pubkey works — the test ends after BountyCreated,
+/// so we don't need to control the corresponding private key for this test.
+const SMALL_SPENDER_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
+/// UTF-8 text whose blake2 hash becomes the `metadata` argument; the preimage is noted on-chain.
+const SMALL_SPENDER_BOUNTY_PREIMAGE_TEXT = 'SmallSpender referendum-funded DOT bounty'
+
 export async function fundBountyViaSmallSpenderReferendumTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -1702,14 +1713,16 @@ export async function fundBountyViaSmallSpenderReferendumTest<
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
 
-  const metadata = await createPreimage(client, 'Referendum-funded DOT bounty (SmallSpender track)')
-  const { assetKind, dotBountyValue } = await ensureDOTBountySetup(client, chain)
+  const metadata = await createPreimage(client, SMALL_SPENDER_BOUNTY_PREIMAGE_TEXT)
+  // ensureDOTBountySetup registers the asset rate and creates the foreign asset; its returned
+  // `dotBountyValue` is ignored — we use our configurable constant instead.
+  const { assetKind } = await ensureDOTBountySetup(client, chain)
 
   // Build the fund_bounty call we want to put up for referendum.
   const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
     assetKind,
-    dotBountyValue,
-    testAccounts.bob.address,
+    SMALL_SPENDER_BOUNTY_VALUE,
+    SMALL_SPENDER_CURATOR_PUBKEY,
     metadata,
   )
   const fundBountyEncoded = fundBountyTx.method.toHex()
@@ -1813,6 +1826,8 @@ export async function fundBountyViaSmallSpenderReferendumTest<
   )
   await client.dev.newBlock()
 
+  // await client.pause() // pause the test (uncomment to inspect via Polkadot.js Apps)
+
   const newBountyCount = await getBountyCount(client)
   console.log('[smallSpender ref] bounty count after forced enact:', newBountyCount)
   expect(
@@ -1828,7 +1843,7 @@ export async function fundBountyViaSmallSpenderReferendumTest<
   const enactedBountyIndex = newBountyCount - 1
   const enactedBounty = await getBounty(client, enactedBountyIndex)
   expect(enactedBounty).toBeTruthy()
-  expect(enactedBounty.value.toBigInt()).toBe(dotBountyValue)
+  expect(enactedBounty.value.toBigInt()).toBe(SMALL_SPENDER_BOUNTY_VALUE)
   expect(enactedBounty.metadata.toHex()).toBe(metadata)
   expect(enactedBounty.status.isFundingAttempted).toBe(true)
   console.log('[smallSpender ref] enacted bounty:', JSON.stringify(enactedBounty, null, 2))
