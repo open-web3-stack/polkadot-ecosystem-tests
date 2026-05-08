@@ -1,11 +1,8 @@
-import { assetHubPolkadotLocal } from '@e2e-test/networks/chains'
-import { baseMultiAssetBountiesE2ETests, type ParaTestConfig, registerTestTree } from '@e2e-test/shared'
+import { assetHubPolkadot } from '@e2e-test/networks/chains'
+import { baseMultiAssetBountiesE2ETests, registerTestTree, type TestConfig } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
-  testSuiteName: 'Polkadot Asset Hub Multi-Asset Bounties (Local)',
-  addressEncoding: 0,
-  blockProvider: 'Local',
-  asyncBacking: 'Disabled',
+const testConfig: TestConfig = {
+  testSuiteName: 'Polkadot Asset Hub Multi-Asset Bounties',
 }
 
-registerTestTree(baseMultiAssetBountiesE2ETests(assetHubPolkadotLocal, testConfig))
+registerTestTree(baseMultiAssetBountiesE2ETests(assetHubPolkadot, testConfig))

@@ -388,7 +388,7 @@ async function createPreimage(client: Client<any, any>, content: string): Promis
 export async function fundNativeBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   // Setup: Fund Alice's account
@@ -426,7 +426,7 @@ export async function fundNativeBountyTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
 
   await client.dev.newBlock()
@@ -482,7 +482,7 @@ const TREASURY_USDT_SEED_MULTIPLIER = 100n
  * Ensures the chain is ready for USDT bounties: asset rate set for USDT (so BalanceConverter works)
  * and treasury has enough USDT. Call before fundBounty with USDT asset kind.
  */
-async function ensureUSDTBountySetup(client: Client<any, any>, testConfig: TestConfig): Promise<{ assetKind: any }> {
+async function ensureUSDTBountySetup(client: Client<any, any>, chain: Chain<any, any>): Promise<{ assetKind: any }> {
   const assetKind = createUSDTAssetKind()
   const treasuryPot = getTreasuryPotAccount(client)
   const bountyValueMinimum = (client.api.consts.multiAssetBounties.bountyValueMinimum as any).toBigInt()
@@ -498,7 +498,7 @@ async function ensureUSDTBountySetup(client: Client<any, any>, testConfig: TestC
         client,
         createRateTx(assetKind, rate).method.toHex(),
         { system: 'Root' },
-        testConfig.blockProvider,
+        chain.properties.schedulerBlockProvider,
       )
       await client.dev.newBlock()
       weCreatedRate = true
@@ -542,7 +542,7 @@ const DOT_BOUNTY_MULTIPLIER = 10n // Keep below Treasurer spend limit
  */
 async function ensureDOTBountySetup(
   client: Client<any, any>,
-  testConfig: TestConfig,
+  chain: Chain<any, any>,
 ): Promise<{ assetKind: any; dotBountyValue: bigint }> {
   const assetKind = createDOTAssetKind()
   const treasuryPot = getTreasuryPotAccount(client)
@@ -574,7 +574,7 @@ async function ensureDOTBountySetup(
         client,
         createRateTx(assetKind, rateOneToOne).method.toHex(),
         { system: 'Root' },
-        testConfig.blockProvider,
+        chain.properties.schedulerBlockProvider,
       )
       await client.dev.newBlock()
       weCreatedRate = true
@@ -600,7 +600,7 @@ async function ensureDOTBountySetup(
         client,
         createTx(assetLocation, treasuryPot, minBalance, false).method.toHex(),
         { system: 'Root' },
-        testConfig.blockProvider,
+        chain.properties.schedulerBlockProvider,
       )
       await client.dev.newBlock()
       console.log('[DOT setup] Created foreign asset (DOT on Polkadot) via ForeignAssets.create')
@@ -666,7 +666,7 @@ async function ensureDOTBountySetup(
 export async function fundUSDTBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
 
   await setupTestAccounts(client, ['alice', 'bob'], true)
@@ -675,7 +675,7 @@ export async function fundUSDTBountyTest<
 
   const metadata = await createPreimage(client, 'Build a USDT-funded integration for Kusama Asset Hub')
 
-  const { assetKind } = await ensureUSDTBountySetup(client, testConfig)
+  const { assetKind } = await ensureUSDTBountySetup(client, chain)
 
   const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
     assetKind,
@@ -688,7 +688,7 @@ export async function fundUSDTBountyTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -729,7 +729,7 @@ export async function fundUSDTBountyTest<
 export async function checkFundingStatusTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob'])
 
@@ -749,7 +749,7 @@ export async function checkFundingStatusTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -787,7 +787,7 @@ export async function checkFundingStatusTest<
 export async function acceptCuratorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob'])
 
@@ -807,7 +807,7 @@ export async function acceptCuratorTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -854,7 +854,7 @@ export async function acceptCuratorTest<
 export async function awardBountyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -875,7 +875,7 @@ export async function awardBountyTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -929,7 +929,7 @@ export async function awardBountyTest<
 export async function completeBountyLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
@@ -955,7 +955,7 @@ export async function completeBountyLifecycleTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1051,12 +1051,12 @@ export async function completeBountyLifecycleTest<
 export async function completeUSDTBountyLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
 
   const metadata = await createPreimage(client, 'Complete USDT bounty lifecycle')
-  const { assetKind } = await ensureUSDTBountySetup(client, testConfig)
+  const { assetKind } = await ensureUSDTBountySetup(client, chain)
 
   // Step 1: Fund bounty with USDT
   const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
@@ -1069,7 +1069,7 @@ export async function completeUSDTBountyLifecycleTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1197,12 +1197,12 @@ export async function completeUSDTBountyLifecycleTest<
 export async function completeDOTBountyLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
 
   const metadata = await createPreimage(client, 'Complete DOT bounty lifecycle')
-  const { assetKind, dotBountyValue } = await ensureDOTBountySetup(client, testConfig)
+  const { assetKind, dotBountyValue } = await ensureDOTBountySetup(client, chain)
 
   const initialBountyCount = await getBountyCount(client)
   const headerBefore = await client.api.rpc.chain.getHeader()
@@ -1264,13 +1264,13 @@ export async function completeDOTBountyLifecycleTest<
     '[DOT lifecycle] Scheduling fund_bounty for block',
     scheduledBlock,
     '| blockProvider:',
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await scheduleInlineCallWithOrigin(
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   console.log('[DOT lifecycle] Calling newBlock() - scheduler will run fund_bounty in this block...')
   await client.dev.newBlock()
@@ -1446,41 +1446,15 @@ const CUSTOM_DOT_BOUNTY_VALUE = 10_000_000_000n
 const CUSTOM_DOT_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
 const CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT = 'Custom-values DOT bounty lifecycle'
 
-/**
- * Pretty-print events emitted by selected pallets in the latest block, grouped under a labeled
- * header so each lifecycle step's effects are easy to scan in test output.
- *
- * Defaults to the pallets that matter for the multi-asset bounty flow: multiAssetBounties (state
- * transitions), foreignAssets (DOT movements), balances (curator deposits / fees).
- */
-async function logBountyLifecycleEvents(
-  client: Client<any, any>,
-  label: string,
-  sections: string[] = ['multiAssetBounties', 'foreignAssets', 'balances'],
-) {
-  const events = await client.api.query.system.events()
-  console.log(`\n────── ${label} ──────`)
-  let printed = 0
-  ;(events as any).forEach((rec: any, idx: number) => {
-    const ev = rec.event
-    if (!ev || !sections.includes(ev.section)) return
-    const data = ev.toHuman?.()?.data ?? ev.data
-    console.log(`  #${idx} ${ev.section}.${ev.method}:`, JSON.stringify(data))
-    printed++
-  })
-  if (printed === 0) console.log(`  (no events from: ${sections.join(', ')})`)
-  console.log(`────── end ${label} ──────\n`)
-}
-
 export async function completeDOTBountyLifecycleCustomTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
   const [client] = await setupNetworks(chain)
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
 
   const metadata = await createPreimage(client, CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT)
-  const { assetKind } = await ensureDOTBountySetup(client, testConfig)
+  const { assetKind } = await ensureDOTBountySetup(client, chain)
   const assetLocation = DOT_FOREIGN_ASSET_LOCATION
 
   const treasuryPot = getTreasuryPotAccount(client)
@@ -1502,7 +1476,7 @@ export async function completeDOTBountyLifecycleCustomTest<
     client,
     fundBountyTx.method.toHex(),
     { Origins: 'Treasurer' },
-    testConfig.blockProvider,
+    chain.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1843,20 +1817,20 @@ export function baseMultiAssetBountiesE2ETests<
 }
 
 export {
+  BOUNTY_MULTIPLIER,
+  CHILD_BOUNTY_MULTIPLIER,
+  createDOTAssetKind,
+  createNativeAssetKind,
+  createPreimage,
+  createUSDTAssetKind,
+  DOT_FOREIGN_ASSET_LOCATION,
+  getBounty,
   // Helper functions
   getBountyCount,
-  getBounty,
   getChildBounty,
   getCuratorDeposit,
   setupTestAccounts,
-  createNativeAssetKind,
-  createUSDTAssetKind,
-  createDOTAssetKind,
-  createPreimage,
   // Constants
   TEST_ACCOUNT_BALANCE_MULTIPLIER,
-  BOUNTY_MULTIPLIER,
-  CHILD_BOUNTY_MULTIPLIER,
   USDT_ASSET_ID,
-  DOT_FOREIGN_ASSET_LOCATION,
 }
