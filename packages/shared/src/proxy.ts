@@ -16,12 +16,20 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import type { HexString } from '@polkadot/util/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
-import { blockProviderOffset, check, checkEvents, getBlockNumber, type TestConfig } from './helpers/index.js'
+import {
+  blockProviderOffset,
+  check,
+  checkEvents,
+  eventsFromAmortizedDryRunResult,
+  getBlockNumber,
+  type TestConfig,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1244,17 +1252,25 @@ async function proxyCallFilteringSingleTestRunner<
     },
   })
 
-  // Execute each proxy action in its own block and check its results immediately
-  for (const proxyAction of proxyActions) {
-    // Execute the proxy action
-    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
-    const result = await sendTransaction(proxyTx.signAsync(proxyAccount))
+  // Same base nonce for every action: dryRunExtrinsicsAmortized rolls back nonce per call.
+  const proxyAccountInfo = await client.api.query.system.account(proxyAccount.address)
+  const baseNonce = proxyAccountInfo.nonce.toNumber()
 
-    // Advance to the next block to ensure events are processed
-    await client.dev.newBlock()
+  const signedExtrinsics = await Promise.all(
+    proxyActions.map((proxyAction) =>
+      client.api.tx.proxy
+        .proxy(alice.address, proxyTypeIx, proxyAction.call)
+        .signAsync(proxyAccount, { nonce: baseNonce })
+        .then((signed) => signed.toHex() as HexString),
+    ),
+  )
 
-    // Check the events for this specific call
-    const events = await client.api.query.system.events()
+  const dryRunResults = await client.chain.dryRunExtrinsicsAmortized(signedExtrinsics)
+
+  for (let i = 0; i < proxyActions.length; i++) {
+    const proxyAction = proxyActions[i]
+    const result = eventsFromAmortizedDryRunResult(client.api, dryRunResults[i].storageDiff)
+    const events = await result.events
     const proxyExecutedEvents = events.filter((record) => {
       const { event } = record
       return event.section === 'proxy' && event.method === 'ProxyExecuted'
