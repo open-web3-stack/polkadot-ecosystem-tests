@@ -545,12 +545,9 @@ export type LiqRestrTestResExpectation = 'failure' | 'success'
 export interface AccountsTestConfig<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
 > {
   /** Expected behavior for liquidity restriction tests */
   expectation: LiqRestrTestResExpectation
-  /** Optional relay chain for XCM-based operations */
-  relayChain?: Chain<TCustom, TInitStoragesRelay>
   /** Custom action lists - if not provided, defaults will be used */
   actions?: {
     reserveActions: ReserveAction<TCustom, TInitStoragesBase>[]
@@ -566,12 +563,9 @@ export interface AccountsTestConfig<
 export function createAccountsConfig<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
->(
-  overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>>,
-): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> {
+>(overrides?: Partial<AccountsTestConfig<TCustom, TInitStoragesBase>>): AccountsTestConfig<TCustom, TInitStoragesBase> {
   return {
-    ...defaultAccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay>(),
+    ...defaultAccountsTestConfig<TCustom, TInitStoragesBase>(),
     ...overrides,
   }
 }
@@ -580,14 +574,12 @@ export function createAccountsConfig<
  * Default accounts E2E test configuration.
  *
  * 1. Liquidity restriction tests are expected to fail
- * 2. The relay chain field is empty, meaning the chain has the `scheduler` pallet available
- * 3. The action lists used in liq. restriction tests are all defaults
+ * 2. The action lists used in liq. restriction tests are all defaults
  */
 const defaultAccountsTestConfig = <
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>>,
->(): AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> => ({
+>(): AccountsTestConfig<TCustom, TInitStoragesBase> => ({
   expectation: 'failure',
   actions: {
     reserveActions: createDefaultReserveActions(),
@@ -1165,29 +1157,7 @@ async function transferAllowDeathSelfTest<
 async function forceTransferKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
-  // and the base client needs to be recreated simultaneously - otherwise, they would be unable tocommunicate.
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh account
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const eps = existentialDeposit / 2n
@@ -1200,7 +1170,7 @@ async function forceTransferKillTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, existentialDeposit)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -1216,7 +1186,7 @@ async function forceTransferKillTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1227,10 +1197,10 @@ async function forceTransferKillTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1335,7 +1305,6 @@ async function forceTransferKillTest<
   expect(newAccountEventData.account.toString()).toBe(
     encodeAddress(bob.address, baseClient.config.properties.addressEncoding),
   )
-  await teardownExtras?.()
 }
 
 /**
@@ -1349,28 +1318,7 @@ async function forceTransferKillTest<
 async function forceTransferBelowExistentialDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh accounts
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n // 100 ED
@@ -1384,7 +1332,7 @@ async function forceTransferBelowExistentialDepositTest<
   const transferAmount = existentialDeposit - 1n
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -1400,7 +1348,7 @@ async function forceTransferBelowExistentialDepositTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1411,10 +1359,10 @@ async function forceTransferBelowExistentialDepositTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1427,7 +1375,7 @@ async function forceTransferBelowExistentialDepositTest<
   // No events are emitted from this failure, as it was the result of a manually injected scheduler call.
   expect(failedEvent).toBeUndefined()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1450,7 +1398,6 @@ async function forceTransferBelowExistentialDepositTest<
   // Alice's balance should be unchanged (no fees for failed force transfers)
   const aliceAccount = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
-  await teardownExtras?.()
 }
 
 /**
@@ -1464,28 +1411,7 @@ async function forceTransferBelowExistentialDepositTest<
 async function forceTransferInsufficientFundsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // Create fresh accounts
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit
@@ -1499,7 +1425,7 @@ async function forceTransferInsufficientFundsTest<
   const transferAmount = 2n * aliceBalance
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceTransferTx.method.toHex(),
@@ -1514,7 +1440,7 @@ async function forceTransferInsufficientFundsTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1525,17 +1451,17 @@ async function forceTransferInsufficientFundsTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // Check for failure
   const events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1558,7 +1484,6 @@ async function forceTransferInsufficientFundsTest<
   // Alice's balance should be unchanged (no fees for failed force transfers)
   const aliceAccount = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccount.data.free.toBigInt()).toBe(aliceBalance)
-  await teardownExtras?.()
 }
 
 /**
@@ -1574,29 +1499,7 @@ async function forceTransferInsufficientFundsTest<
 async function forceTransferWithReserveTest<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available - if not, a relay client needs to be created for an XCM interaction,
-  // and the base client needs to be recreated simultaneously - otherwise, they would be unable to communicate.
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create fresh addresses, one with 100 ED (plus some extra for fees)
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const totalBalance = existentialDeposit * 100n + existentialDeposit
@@ -1627,7 +1530,7 @@ async function forceTransferWithReserveTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, bob.address, transferAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -1644,7 +1547,7 @@ async function forceTransferWithReserveTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1655,10 +1558,10 @@ async function forceTransferWithReserveTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -1707,7 +1610,7 @@ async function forceTransferWithReserveTest<
   )
   expect(transferEvent).toBeUndefined()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -1722,7 +1625,6 @@ async function forceTransferWithReserveTest<
     const tokenError = dispatchError.asToken
     expect(tokenError.isFrozen).toBeTruthy()
   }
-  await teardownExtras?.()
 }
 
 /**
@@ -1762,28 +1664,7 @@ async function forceTransferBadOriginTest(client: Client<any, any>) {
 async function forceTransferSelfTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
   const aliceBalance = existentialDeposit * 100n
@@ -1795,7 +1676,7 @@ async function forceTransferSelfTest<
 
   const forceTransferTx = baseClient.api.tx.balances.forceTransfer(alice.address, alice.address, aliceBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force transfer directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -1811,7 +1692,7 @@ async function forceTransferSelfTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -1822,7 +1703,7 @@ async function forceTransferSelfTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
     await baseClient.dev.newBlock()
   }
 
@@ -1878,7 +1759,6 @@ async function forceTransferSelfTest<
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
-  await teardownExtras?.()
 }
 
 // --------------
@@ -2735,28 +2615,9 @@ async function forceUnreserveBadOriginTest(client: Client<any, any>) {
 async function forceUnreserveNoReservesTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -2779,7 +2640,7 @@ async function forceUnreserveNoReservesTest<
   const unreserveAmount = 0n
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
@@ -2790,7 +2651,7 @@ async function forceUnreserveNoReservesTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -2801,10 +2662,10 @@ async function forceUnreserveNoReservesTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -2825,7 +2686,6 @@ async function forceUnreserveNoReservesTest<
   const aliceAccountAfter = await baseClient.api.query.system.account(alice.address)
   expect(aliceAccountAfter.data.free.toBigInt()).toBe(aliceBalance)
   expect(aliceAccountAfter.data.reserved.toBigInt()).toBe(0n)
-  await teardownExtras?.()
 }
 
 /**
@@ -2839,28 +2699,9 @@ async function forceUnreserveNoReservesTest<
 async function forceUnreserveNonExistentAccountTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -2876,7 +2717,7 @@ async function forceUnreserveNonExistentAccountTest<
   const unreserveAmount = existentialDeposit
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(bob.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
@@ -2887,7 +2728,7 @@ async function forceUnreserveNonExistentAccountTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -2898,10 +2739,10 @@ async function forceUnreserveNonExistentAccountTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -2919,7 +2760,6 @@ async function forceUnreserveNonExistentAccountTest<
 
   // 4. Verify the account remains non-existent
   expect(await isAccountReaped(baseClient, bob.address)).toBe(true)
-  await teardownExtras?.()
 }
 
 /**
@@ -2936,28 +2776,9 @@ async function forceUnreserveNonExistentAccountTest<
 async function forceUnreserveWithReservesTest<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -3004,7 +2825,7 @@ async function forceUnreserveWithReservesTest<
   const unreserveAmount = multisigDeposit
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceUnreserveTx.method.toHex(),
@@ -3015,7 +2836,7 @@ async function forceUnreserveWithReservesTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3026,10 +2847,10 @@ async function forceUnreserveWithReservesTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3066,7 +2887,6 @@ async function forceUnreserveWithReservesTest<
   const consumersAfterUnreserve = aliceAccountFinal.consumers.toNumber()
   expect(consumersAfterUnreserve).toBeLessThan(consumersAfterReserve)
   expect(consumersAfterUnreserve).toBe(0)
-  await teardownExtras?.()
 }
 
 // -------------------
@@ -3109,28 +2929,7 @@ async function forceSetBalanceBadOriginTest(client: Client<any, any>) {
 async function forceSetBalanceSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account with 100 ED
 
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
@@ -3152,7 +2951,7 @@ async function forceSetBalanceSuccessTest<
   const expectedIssuanceIncrease = newBalance - initialBalance
   const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force set balance directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -3168,7 +2967,7 @@ async function forceSetBalanceSuccessTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3179,8 +2978,8 @@ async function forceSetBalanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
-    await relayClient!.dev.newBlock()
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3223,7 +3022,6 @@ async function forceSetBalanceSuccessTest<
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
-  await teardownExtras?.()
 }
 
 /**
@@ -3237,28 +3035,7 @@ async function forceSetBalanceSuccessTest<
 async function forceSetBalanceBelowEdTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-  }
-
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   // 1. Create Alice's account with 100 ED
 
   const existentialDeposit = baseClient.api.consts.balances.existentialDeposit.toBigInt()
@@ -3279,7 +3056,7 @@ async function forceSetBalanceBelowEdTest<
   const newBalance = existentialDeposit - 1n // Below ED
   const forceSetBalanceTx = baseClient.api.tx.balances.forceSetBalance(alice.address, newBalance)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     // Use root origin to execute force set balance directly
     await scheduleInlineCallWithOrigin(
       baseClient,
@@ -3295,7 +3072,7 @@ async function forceSetBalanceBelowEdTest<
 
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3306,8 +3083,8 @@ async function forceSetBalanceBelowEdTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
-    await relayClient!.dev.newBlock()
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3359,7 +3136,6 @@ async function forceSetBalanceBelowEdTest<
   // Check new total issuance
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
   expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() - initialBalance)
-  await teardownExtras?.()
 }
 
 // -----------------------------
@@ -3403,28 +3179,9 @@ async function forceAdjustTotalIssuanceBadOriginTest(client: Client<any, any>) {
 async function forceAdjustTotalIssuanceZeroDeltaTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -3438,7 +3195,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   const zeroDelta = 0n
   const forceAdjustIncreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, zeroDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustIncreaseZeroTx.method.toHex(),
@@ -3449,7 +3206,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3460,10 +3217,10 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3471,7 +3228,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 
   let events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -3501,7 +3258,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   const decreaseDirection = 'Decrease'
   const forceAdjustDecreaseZeroTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, zeroDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustDecreaseZeroTx.method.toHex(),
@@ -3512,7 +3269,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3523,17 +3280,17 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
   // 4. Verify that the decrease transaction failed
   events = await baseClient.api.query.system.events()
 
-  if (hasScheduler) {
+  if (!relayClient) {
     const dispatchedEvent = events.find((record) => {
       const { event } = record
       return event.section === 'scheduler' && event.method === 'Dispatched'
@@ -3557,7 +3314,6 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 
   const issuanceAfter2 = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
   expect(issuanceAfter2).toBe(issuanceBefore)
-  await teardownExtras?.()
 }
 
 /**
@@ -3572,28 +3328,9 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
 async function forceAdjustTotalIssuanceSuccessTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesBase extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(baseClient: Client<TCustom, TInitStoragesBase>, relayChain?: Chain<TCustom, TInitStoragesRelay>) {
-  let relayClient: Client<TCustom, TInitStoragesRelay>
-  let teardownExtras: (() => Promise<void>) | undefined
-  // Check if scheduler pallet is available
-  const hasScheduler = !!baseClient.api.tx.scheduler
+>(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
   let paraId: number | undefined
-  if (!hasScheduler) {
-    if (!relayChain) {
-      throw new Error('Scheduler pallet not available and no relay chain provided for XCM execution')
-    }
-
-    const [rc, bc] = await createNetworks(relayChain, baseClient.config)
-    relayClient = rc
-    baseClient = bc
-    teardownExtras = async () => {
-      await rc.api.disconnect().catch(() => {})
-      await rc.teardown().catch(() => {})
-      await bc.api.disconnect().catch(() => {})
-      await bc.teardown().catch(() => {})
-    }
-
+  if (relayClient) {
     // Query parachain ID once for XCM operations
     const parachainInfo = await baseClient.api.query.parachainInfo.parachainId()
     paraId = (parachainInfo as any).toNumber()
@@ -3609,7 +3346,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   const increaseDelta = 1n
   const forceAdjustIncreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(increaseDirection, increaseDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustIncreaseTx.method.toHex(),
@@ -3620,7 +3357,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3631,10 +3368,10 @@ async function forceAdjustTotalIssuanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3661,7 +3398,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   const decreaseDelta = 2n
   const forceAdjustDecreaseTx = baseClient.api.tx.balances.forceAdjustTotalIssuance(decreaseDirection, decreaseDelta)
 
-  if (hasScheduler) {
+  if (!relayClient) {
     await scheduleInlineCallWithOrigin(
       baseClient,
       forceAdjustDecreaseTx.method.toHex(),
@@ -3672,7 +3409,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
   } else {
     // Create XCM transact message
     const xcmTx = createXcmTransactSend(
-      relayClient!,
+      relayClient,
       {
         parents: 0,
         interior: {
@@ -3683,10 +3420,10 @@ async function forceAdjustTotalIssuanceSuccessTest<
       'Superuser',
     )
 
-    await scheduleInlineCallWithOrigin(relayClient!, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
+    await scheduleInlineCallWithOrigin(relayClient, xcmTx.method.toHex(), { system: 'Root' }, 'Local')
 
     // Advance blocks on both chains
-    await relayClient!.dev.newBlock()
+    await relayClient.dev.newBlock()
     await baseClient.dev.newBlock()
   }
 
@@ -3708,7 +3445,6 @@ async function forceAdjustTotalIssuanceSuccessTest<
   issuanceEventData = issuanceEvent!.event.data
   assert(issuanceEventData.old.eq(afterIncreaseIssuance))
   assert(issuanceEventData.new_.eq(finalIssuanceBigInt))
-  await teardownExtras?.()
 }
 
 // ------
@@ -4473,25 +4209,40 @@ export const accountsE2ETests = <
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
-  accountsCfg: AccountsTestConfig<TCustom, TInitStoragesBase, TInitStoragesRelay> = defaultAccountsTestConfig(),
+  accountsCfg: AccountsTestConfig<TCustom, TInitStoragesBase> = defaultAccountsTestConfig(),
+  relayChain?: Chain<TCustom, TInitStoragesRelay>,
 ): RootTestTree => {
   let baseClient: Client<TCustom, TInitStoragesBase>
+  let relayClient: Client<TCustom, TInitStoragesRelay> | undefined
   let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
     beforeAll: async () => {
-      ;[baseClient] = await createNetworks(chain)
-      restoreSnapshot = captureSnapshot(baseClient)
+      if (relayChain) {
+        ;[relayClient, baseClient] = await createNetworks(relayChain, chain)
+        restoreSnapshot = captureSnapshot(baseClient, relayClient)
+      } else {
+        ;[baseClient] = await createNetworks(chain)
+        restoreSnapshot = captureSnapshot(baseClient)
+      }
     },
     beforeEach: async () => {
       await restoreSnapshot()
-      const blockNumber = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
-      await baseClient.dev.setHead(blockNumber)
+      const baseBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
+      await baseClient.dev.setHead(baseBlock)
+      if (relayClient) {
+        const relayBlock = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+        await relayClient.dev.setHead(relayBlock)
+      }
     },
     afterAll: async () => {
       await baseClient.api.disconnect().catch(() => {})
       await baseClient.teardown().catch(() => {})
+      if (relayClient) {
+        await relayClient.api.disconnect().catch(() => {})
+        await relayClient.teardown().catch(() => {})
+      }
     },
     children: [
       // `transfer_allow_death` tests
@@ -4545,22 +4296,22 @@ export const accountsE2ETests = <
           {
             kind: 'test' as const,
             label: 'force transferring origin below ED can kill it',
-            testFn: () => forceTransferKillTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceTransferKillTest(baseClient, relayClient),
           },
           {
             kind: 'test' as const,
             label: 'force transfer below existential deposit fails',
-            testFn: () => forceTransferBelowExistentialDepositTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceTransferBelowExistentialDepositTest(baseClient, relayClient),
           },
           {
             kind: 'test' as const,
             label: 'force transfer with insufficient funds fails',
-            testFn: () => forceTransferInsufficientFundsTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceTransferInsufficientFundsTest(baseClient, relayClient),
           },
           {
             kind: 'test',
             label: 'account with reserves cannot be force transferred from',
-            testFn: () => forceTransferWithReserveTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceTransferWithReserveTest(baseClient, relayClient),
           },
           {
             kind: 'test',
@@ -4570,7 +4321,7 @@ export const accountsE2ETests = <
           {
             kind: 'test',
             label: 'self-transfer is a no-op',
-            testFn: () => forceTransferSelfTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceTransferSelfTest(baseClient, relayClient),
           },
         ],
       },
@@ -4654,17 +4405,17 @@ export const accountsE2ETests = <
           {
             kind: 'test',
             label: 'unreserving 0 from account with no reserves is a no-op',
-            testFn: () => forceUnreserveNoReservesTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceUnreserveNoReservesTest(baseClient, relayClient),
           },
           {
             kind: 'test',
             label: 'unreserving from non-existent account is a no-op',
-            testFn: () => forceUnreserveNonExistentAccountTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceUnreserveNonExistentAccountTest(baseClient, relayClient),
           },
           {
             kind: 'test',
             label: 'unreserving from account with reserves works correctly',
-            testFn: () => forceUnreserveWithReservesTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceUnreserveWithReservesTest(baseClient, relayClient),
           },
         ],
       },
@@ -4680,12 +4431,12 @@ export const accountsE2ETests = <
           {
             kind: 'test',
             label: 'successfully sets balance and and adjusts total issuance',
-            testFn: () => forceSetBalanceSuccessTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceSetBalanceSuccessTest(baseClient, relayClient),
           },
           {
             kind: 'test',
             label: 'setting balance below ED reaps account and updates total issuance',
-            testFn: () => forceSetBalanceBelowEdTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceSetBalanceBelowEdTest(baseClient, relayClient),
           },
         ],
       },
@@ -4701,12 +4452,12 @@ export const accountsE2ETests = <
           {
             kind: 'test',
             label: 'zero delta fails with DeltaZero error in both directions',
-            testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceAdjustTotalIssuanceZeroDeltaTest(baseClient, relayClient),
           },
           {
             kind: 'test',
             label: 'successful adjustments increase and decrease total issuance',
-            testFn: () => forceAdjustTotalIssuanceSuccessTest(baseClient, accountsCfg.relayChain),
+            testFn: () => forceAdjustTotalIssuanceSuccessTest(baseClient, relayClient),
           },
         ],
       },
