@@ -5,11 +5,14 @@ import { type Client, setupNetworks } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import type { Option } from '@polkadot/types'
+import type { PalletReferendaReferendumInfoConvictionVotingTally } from '@polkadot/types/lookup'
 
 import { expect } from 'vitest'
 
 import { logAllEvents } from './helpers/helpers.js'
 import {
+  check,
   checkEvents,
   checkSystemEvents,
   getFreeFunds,
@@ -611,34 +614,42 @@ async function ensureDOTBountySetup(
   console.log('[DOT setup] Treasury pot:', treasuryPot)
   console.log('[DOT setup] Asset kind (foreign DOT):', JSON.stringify(assetKind, null, 2))
   console.log(
-    '[DOT setup] Setting ForeignAssets::account key (assetLocation, accountId), balance:',
+    '[DOT setup] (skipped) Would have set ForeignAssets::account key (assetLocation, accountId), balance:',
     treasuryDotSeedAmount.toString(),
   )
 
-  await client.dev.setStorage({
-    ForeignAssets: {
-      account: [[[assetLocation, treasuryPot], { balance: treasuryDotSeedAmount }]],
-    },
-  })
-  let treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
+  // NOTE: Treasury foreign-DOT seeding intentionally disabled to verify whether the on-chain
+  // treasury already holds enough foreign DOT to fund a 1 DOT bounty without test pre-seeding.
+  // Re-enable the block below if fund_bounty fails with a Paymaster/funding error.
+  // await client.dev.setStorage({
+  //   ForeignAssets: {
+  //     account: [[[assetLocation, treasuryPot], { balance: treasuryDotSeedAmount }]],
+  //   },
+  // })
+  const treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
   const rawAccountAfterSet = faQuery?.account ? await faQuery.account(assetLocation, treasuryPot) : null
-  console.log('[DOT setup] After setStorage - getTreasuryForeignAssetBalance:', treasuryDotAfterSeed.toString())
-  console.log('[DOT setup] After setStorage - raw foreignAssets.account isSome:', (rawAccountAfterSet as any)?.isSome)
+  console.log('[DOT setup] (no seed) treasury foreign DOT balance:', treasuryDotAfterSeed.toString())
+  console.log('[DOT setup] (no seed) raw foreignAssets.account isSome:', (rawAccountAfterSet as any)?.isSome)
 
-  if (treasuryDotAfterSeed < dotBountyValue) {
-    await client.dev.setStorage({
-      ForeignAssets: {
-        account: [[[assetLocation, treasuryPot], { balance: dotBountyValue * 2n }]],
-      },
-    })
-    treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
-  }
-  expect(
-    treasuryDotAfterSeed >= dotBountyValue,
-    `Treasury must have at least ${dotBountyValue} foreign DOT for bounties, got ${treasuryDotAfterSeed}`,
-  ).toBe(true)
-
-  console.log('[DOT setup] treasury foreign DOT balance after seeding:', treasuryDotAfterSeed.toString())
+  // if (treasuryDotAfterSeed < dotBountyValue) {
+  //   await client.dev.setStorage({
+  //     ForeignAssets: {
+  //       account: [[[assetLocation, treasuryPot], { balance: dotBountyValue * 2n }]],
+  //     },
+  //   })
+  //   treasuryDotAfterSeed = await getTreasuryForeignAssetBalance(client, assetLocation)
+  // }
+  // expect(
+  //   treasuryDotAfterSeed >= dotBountyValue,
+  //   `Treasury must have at least ${dotBountyValue} foreign DOT for bounties, got ${treasuryDotAfterSeed}`,
+  // ).toBe(true)
+  console.log(
+    '[DOT setup] (no seed) treasury vs bounty value:',
+    treasuryDotAfterSeed.toString(),
+    'vs',
+    dotBountyValue.toString(),
+    treasuryDotAfterSeed >= dotBountyValue ? '(SUFFICIENT)' : '(INSUFFICIENT — fund_bounty likely to fail)',
+  )
   console.log('[DOT setup] bounty value for DOT:', dotBountyValue.toString())
   console.log(
     '[DOT setup] asset rate for DOT:',
@@ -1442,7 +1453,7 @@ export async function completeDOTBountyLifecycleTest<
  * The override is a raw 32-byte substitution at the bounty's storage key — the supplied pubkey is
  * the only place those exact bytes appear in the encoded bounty, so a single replace is safe.
  */
-const CUSTOM_DOT_BOUNTY_VALUE = 10_000_000_000n
+const CUSTOM_DOT_BOUNTY_VALUE = 20_000_000_000n // 2 DOT (10 decimals) — equal to treasury foreign DOT balance at pin block
 const CUSTOM_DOT_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
 const CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT = 'Custom-values DOT bounty lifecycle'
 
@@ -1458,11 +1469,21 @@ export async function completeDOTBountyLifecycleCustomTest<
   const assetLocation = DOT_FOREIGN_ASSET_LOCATION
 
   const treasuryPot = getTreasuryPotAccount(client)
-  await client.dev.setStorage({
-    ForeignAssets: {
-      account: [[[assetLocation, treasuryPot], { balance: CUSTOM_DOT_BOUNTY_VALUE * 100n }]],
-    },
-  })
+  // NOTE: treasury top-up commented out — testing whether the real on-chain treasury balance
+  // (≈ 2 DOT at pin block) is enough to fund a 1 DOT bounty without test pre-seeding.
+  // await client.dev.setStorage({
+  //   ForeignAssets: {
+  //     account: [[[assetLocation, treasuryPot], { balance: CUSTOM_DOT_BOUNTY_VALUE * 100n }]],
+  //   },
+  // })
+  const treasuryDotBeforeFund = await getForeignAssetBalance(client, assetLocation, treasuryPot)
+  console.log(
+    '[custom DOT lifecycle] treasury foreign DOT (real chain, no pre-seed):',
+    treasuryDotBeforeFund.toString(),
+    '| bounty value:',
+    CUSTOM_DOT_BOUNTY_VALUE.toString(),
+    treasuryDotBeforeFund >= CUSTOM_DOT_BOUNTY_VALUE ? '(SUFFICIENT)' : '(INSUFFICIENT)',
+  )
 
   const initialBountyCount = await getBountyCount(client)
 
@@ -1656,6 +1677,163 @@ export async function completeDOTBountyLifecycleCustomTest<
   expect(await getCuratorDeposit(client, bountyIndex)).toBeNull()
 }
 
+/**
+ * Test: Submit a referendum on the SmallSpender track for `multiAssetBounties.fundBounty`,
+ * place its decision deposit, then verify the same call dispatches successfully when run with
+ * `Origins: 'SmallSpender'`.
+ *
+ * Why bypass the full referendum lifecycle?
+ * Chopsticks builds blocks at ~1-10 blk/s, so waiting through SmallSpender's preparation +
+ * decision + confirmation periods (multiple days of blocks) is impractical for a CI test.
+ * Instead we:
+ *   1. Submit the referendum and assert it lands on the small_spender track with the right
+ *      proposal — proving the referendum mechanism accepts a `fund_bounty` proposal here.
+ *   2. Place the decision deposit so the referendum is "ready to decide".
+ *   3. Force-dispatch the same encoded call via the scheduler with `Origins: 'SmallSpender'`,
+ *      which is the origin the referendum would use upon enactment — proving `fund_bounty`
+ *      succeeds under that origin.
+ *
+ * Together (1)+(2)+(3) confirm that *if* the referendum passed, the bounty would be created.
+ */
+export async function fundBountyViaSmallSpenderReferendumTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, _testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
+
+  const metadata = await createPreimage(client, 'Referendum-funded DOT bounty (SmallSpender track)')
+  const { assetKind, dotBountyValue } = await ensureDOTBountySetup(client, chain)
+
+  // Build the fund_bounty call we want to put up for referendum.
+  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
+    assetKind,
+    dotBountyValue,
+    testAccounts.bob.address,
+    metadata,
+  )
+  const fundBountyEncoded = fundBountyTx.method.toHex()
+  console.log('[smallSpender ref] fund_bounty call (hex):', fundBountyEncoded)
+
+  // Locate the small_spender track on this chain.
+  const referendaTracks = client.api.consts.referenda.tracks
+  const smallSpenderEntry = (referendaTracks as any).find((track: any) =>
+    track[1].name.toString().startsWith('small_spender'),
+  )
+  expect(smallSpenderEntry, 'chain must define a small_spender track').toBeTruthy()
+  const smallSpenderTrackId = smallSpenderEntry[0].toNumber()
+  const smallSpenderTrackInfo = smallSpenderEntry[1]
+  console.log(
+    '[smallSpender ref] small_spender track id:',
+    smallSpenderTrackId,
+    '| decisionDeposit:',
+    smallSpenderTrackInfo.decisionDeposit.toString(),
+  )
+
+  // STEP 1 — submit the referendum on SmallSpender with fund_bounty as the inline proposal.
+  const submissionTx = client.api.tx.referenda.submit(
+    { Origins: 'SmallSpender' } as any,
+    { Inline: fundBountyEncoded },
+    { After: 1 },
+  )
+  const submissionEvents = await sendTransaction(submissionTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+
+  await checkEvents(submissionEvents, 'referenda')
+    .redact({ redactKeys: /index/, removeKeys: /track|when|hash|origin/ })
+    .toMatchSnapshot('SmallSpender fund_bounty referendum submission events')
+
+  // Pull the referendum index from referenda.Submitted.
+  const sysEvents = await client.api.query.system.events()
+  const submittedRecord = (sysEvents as any).find(
+    (rec: any) => rec.event.section === 'referenda' && rec.event.method === 'Submitted',
+  )
+  expect(submittedRecord, 'referenda.Submitted must fire after submit()').toBeTruthy()
+  const referendumIndex = submittedRecord.event.data[0].toNumber()
+  console.log('[smallSpender ref] referendum index:', referendumIndex)
+
+  // Verify the on-chain referendum: ongoing, on the small_spender track, with our fund_bounty proposal.
+  const refOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
+  expect(refOpt.isSome).toBe(true)
+  const refInfo = refOpt.unwrap()
+  expect(refInfo.isOngoing).toBe(true)
+  const ongoing = refInfo.asOngoing
+  expect(ongoing.track.toNumber()).toBe(smallSpenderTrackId)
+  await check(ongoing.origin).toMatchObject({ origins: 'SmallSpender' })
+  expect(ongoing.proposal.isInline, 'proposal must be Inline').toBe(true)
+  expect(ongoing.proposal.asInline.toHex()).toBe(fundBountyEncoded)
+  expect(ongoing.deciding.isNone, 'no deciding before decision deposit').toBe(true)
+
+  // STEP 2 — place the decision deposit so the referendum is "ready to decide".
+  // setupTestAccounts seeds Bob with 100_000 × ED (~0.33 KSM on AH-Kusama), but the SmallSpender
+  // decision deposit is ~3.33 KSM. Top Bob up so he can lock the deposit.
+  const requiredDeposit = (smallSpenderTrackInfo.decisionDeposit as any).toBigInt()
+  await client.dev.setStorage({
+    System: {
+      account: [[[testAccounts.bob.address], { providers: 1, data: { free: requiredDeposit * 10n } }]],
+    },
+  })
+  const bobBalanceBeforeDep = (await client.api.query.system.account(testAccounts.bob.address)) as any
+  console.log(
+    '[smallSpender ref] bob balance before decision deposit: free =',
+    bobBalanceBeforeDep.data.free.toString(),
+    '| required deposit =',
+    requiredDeposit.toString(),
+  )
+
+  const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  const decisionDepEvents = await sendTransaction(decisionDepTx.signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  await checkEvents(decisionDepEvents, 'referenda')
+    .redact({ redactKeys: /index/, removeKeys: /track|when/ })
+    .toMatchSnapshot('SmallSpender fund_bounty referendum decision deposit events')
+
+  const refOptAfterDep = (await client.api.query.referenda.referendumInfoFor(referendumIndex)) as any
+  expect(refOptAfterDep.unwrap().asOngoing.decisionDeposit.isSome).toBe(true)
+  console.log(
+    '[smallSpender ref] referendum after decision deposit (track=',
+    refOptAfterDep.unwrap().asOngoing.track.toNumber(),
+    ', deposit set =',
+    refOptAfterDep.unwrap().asOngoing.decisionDeposit.isSome,
+    ')',
+  )
+
+  // STEP 3 — force-dispatch the same encoded call with `Origins: 'SmallSpender'` to verify that
+  // fund_bounty succeeds under this origin (i.e. the runtime's SpendOrigin admits SmallSpender for
+  // the supplied value/asset_kind).
+  const initialBountyCount = await getBountyCount(client)
+  console.log('[smallSpender ref] bounty count before forced enact:', initialBountyCount)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    fundBountyEncoded,
+    { Origins: 'SmallSpender' },
+    chain.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const newBountyCount = await getBountyCount(client)
+  console.log('[smallSpender ref] bounty count after forced enact:', newBountyCount)
+  expect(
+    newBountyCount,
+    'fund_bounty must succeed when dispatched with Origins: SmallSpender (governance enactment path)',
+  ).toBe(initialBountyCount + 1)
+
+  // Verify BountyCreated for the new bounty.
+  await checkSystemEvents(client, { section: 'multiAssetBounties', method: 'BountyCreated' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot('SmallSpender enacted fund_bounty BountyCreated events')
+
+  const enactedBountyIndex = newBountyCount - 1
+  const enactedBounty = await getBounty(client, enactedBountyIndex)
+  expect(enactedBounty).toBeTruthy()
+  expect(enactedBounty.value.toBigInt()).toBe(dotBountyValue)
+  expect(enactedBounty.metadata.toHex()).toBe(metadata)
+  expect(enactedBounty.status.isFundingAttempted).toBe(true)
+  console.log('[smallSpender ref] enacted bounty:', JSON.stringify(enactedBounty, null, 2))
+}
+
 /// -------
 /// Base Test Tree Builder
 /// -------
@@ -1809,6 +1987,18 @@ export function baseMultiAssetBountiesE2ETests<
             kind: 'test',
             label: 'Should complete full DOT bounty lifecycle with custom call values',
             testFn: () => completeDOTBountyLifecycleCustomTest(chain, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Governance',
+        children: [
+          {
+            kind: 'test',
+            label:
+              'Should submit a SmallSpender referendum for fund_bounty and dispatch successfully under that origin',
+            testFn: () => fundBountyViaSmallSpenderReferendumTest(chain, testConfig),
           },
         ],
       },
