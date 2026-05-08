@@ -3,9 +3,6 @@ import { accountsE2ETests, createAccountsConfig, registerTestTree, type TestConf
 
 const testCfg: TestConfig = {
   testSuiteName: 'Polkadot Bridge Hub Accounts',
-  blockProvider: 'Local',
-  addressEncoding: 0,
-  chainEd: 'Normal',
 }
 
 const accountsCfg = createAccountsConfig({

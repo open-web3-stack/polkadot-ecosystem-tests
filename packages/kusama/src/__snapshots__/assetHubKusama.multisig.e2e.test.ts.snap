@@ -15,7 +15,7 @@ exports[`AssetHubKusama Multisig > failure tests > approval with sender in signa
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`AssetHubKusama Multisig > failure tests > approval with signatories out
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`AssetHubKusama Multisig > failure tests > cancellation with sender in s
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`AssetHubKusama Multisig > failure tests > cancelling a non-existent mul
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`AssetHubKusama Multisig > failure tests > cancelling a non-existent mul
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`AssetHubKusama Multisig > failure tests > creating a multisig with thre
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`AssetHubKusama Multisig > failure tests > execution with sender in sign
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -204,7 +204,7 @@ exports[`AssetHubKusama Multisig > failure tests > multisig cancellation with re
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -229,7 +229,7 @@ exports[`AssetHubKusama Multisig > failure tests > multisig cancellation with th
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -293,7 +293,7 @@ exports[`AssetHubKusama Multisig > failure tests > multisig execution with remai
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -318,7 +318,7 @@ exports[`AssetHubKusama Multisig > failure tests > non-depositor tries to cancel
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -343,7 +343,7 @@ exports[`AssetHubKusama Multisig > failure tests > repeated approval with \`appr
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },

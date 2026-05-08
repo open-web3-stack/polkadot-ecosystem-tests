@@ -3,9 +3,6 @@ import { basePreimageE2ETests, registerTestTree, type TestConfig } from '@e2e-te
 
 const testConfig: TestConfig = {
   testSuiteName: 'Polkadot Asset Hub Preimage',
-  addressEncoding: 0,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(basePreimageE2ETests(assetHubPolkadot, testConfig))

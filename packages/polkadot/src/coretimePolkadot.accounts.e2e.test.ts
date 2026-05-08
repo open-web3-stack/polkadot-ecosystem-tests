@@ -3,10 +3,6 @@ import { accountsE2ETests, createAccountsConfig, registerTestTree, type TestConf
 
 const testCfg: TestConfig = {
   testSuiteName: 'Polkadot Coretime Accounts',
-  addressEncoding: 0,
-  blockProvider: 'Local',
-  asyncBacking: 'Enabled',
-  chainEd: 'Normal',
 }
 
 const accountsCfg = createAccountsConfig({

@@ -854,20 +854,8 @@ export const commonUnfilteredTests: PostAhmTest[] = [
   { label: 'stakingAhClient calls are not filtered', testFn: stakingAhClientCallsNotFilteredTest },
   { label: 'paras calls are not filtered', testFn: parasCallsNotFilteredTest },
   { label: 'coretime calls are not filtered', testFn: coretimeCallsNotFilteredTest },
+  { label: 'preimage calls are not filtered', testFn: preimageCallsNotFilteredTest },
 ]
-
-/**
- * Chain-specific test variations.
- */
-export const preimageFilteredTest: PostAhmTest = {
-  label: 'preimage calls are filtered',
-  testFn: preimageCallsFilteredTest,
-}
-
-export const preimageNotFilteredTest: PostAhmTest = {
-  label: 'preimage calls are not filtered',
-  testFn: preimageCallsNotFilteredTest,
-}
 
 export function postAhmFilteringE2ETests<
   TCustom extends Record<string, unknown> | undefined,

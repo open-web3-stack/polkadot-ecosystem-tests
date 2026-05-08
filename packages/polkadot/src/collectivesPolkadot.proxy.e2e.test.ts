@@ -3,16 +3,13 @@ import {
   CollectivesProxyTypes,
   createProxyConfig,
   fullProxyE2ETests,
-  type ParaTestConfig,
   type ProxyTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Polkadot Collectives Proxy',
-  addressEncoding: 0,
-  blockProvider: 'Local',
-  asyncBacking: 'Enabled',
 }
 
 const collectivesPolkadotProxyCfg: ProxyTestConfig = createProxyConfig(CollectivesProxyTypes)

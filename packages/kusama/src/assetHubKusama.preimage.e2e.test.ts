@@ -3,9 +3,6 @@ import { basePreimageE2ETests, registerTestTree, type TestConfig } from '@e2e-te
 
 const testConfig: TestConfig = {
   testSuiteName: 'Kusama Asset Hub Preimage',
-  addressEncoding: 2,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
 }
 
 registerTestTree(basePreimageE2ETests(assetHubKusama, testConfig))

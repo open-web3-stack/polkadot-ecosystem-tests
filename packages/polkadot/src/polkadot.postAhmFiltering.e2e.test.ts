@@ -3,19 +3,12 @@ import {
   commonFilteredTests,
   commonUnfilteredTests,
   postAhmFilteringE2ETests,
-  preimageFilteredTest,
-  type RelayTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const polkadotTestConfig: RelayTestConfig = {
+const polkadotTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Post-AHM Filtering Tests',
-  addressEncoding: 0,
-  blockProvider: 'Local',
 }
 
-// Polkadot: preimage calls ARE filtered post-AHM
-const filteredTests = [...commonFilteredTests, preimageFilteredTest]
-const unfilteredTests = commonUnfilteredTests
-
-registerTestTree(postAhmFilteringE2ETests(polkadot, polkadotTestConfig, filteredTests, unfilteredTests))
+registerTestTree(postAhmFilteringE2ETests(polkadot, polkadotTestConfig, commonFilteredTests, commonUnfilteredTests))

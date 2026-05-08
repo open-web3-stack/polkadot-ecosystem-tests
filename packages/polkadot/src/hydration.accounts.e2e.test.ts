@@ -5,16 +5,12 @@ import {
   createDefaultDepositActions,
   manualLockAction,
   manualReserveAction,
-  type ParaTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Hydration Accounts',
-  addressEncoding: 0,
-  chainEd: 'Normal',
-  blockProvider: 'Local',
-  asyncBacking: 'Enabled',
 }
 
 const accountsCfg = createAccountsConfig({

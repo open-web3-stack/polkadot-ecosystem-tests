@@ -1,5 +1,4 @@
 import { kusama } from '@e2e-test/networks/chains'
-import type { RelayTestConfig, RootTestTree } from '@e2e-test/shared'
 import {
   accountsE2ETests,
   createAccountsConfig,
@@ -8,13 +7,11 @@ import {
   multisigCreationDepositAction,
   proxyAdditionDepositAction,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const generalTestConfig: RelayTestConfig = {
+const generalTestConfig: TestConfig = {
   testSuiteName: 'Kusama Accounts',
-  addressEncoding: 2,
-  blockProvider: 'Local',
-  chainEd: 'LowEd',
 }
 
 // Staking and nomination pools are disabled on Kusama relay, so the only reserve action available is manual.
@@ -35,29 +32,4 @@ const accountsTestCfg = createAccountsConfig({
   },
 })
 
-/**
- * Some `burn` tests are temporarily disabled on Kusama relay, see
- * https://github.com/paritytech/polkadot-sdk/issues/9986.
- *
- * TODO: reenable after fix
- */
-const filterOutBurnTests = (tree: RootTestTree): RootTestTree => {
-  return {
-    ...tree,
-    children: tree.children.map((child) => {
-      if (child.kind === 'describe' && child.label === '`burn`') {
-        return {
-          ...child,
-          children: child.children.filter(
-            (test) =>
-              test.label !== 'burning funds from account works' &&
-              test.label !== 'burning entire balance, or more than it, fails',
-          ),
-        }
-      }
-      return child
-    }),
-  }
-}
-
-registerTestTree(filterOutBurnTests(accountsE2ETests(kusama, generalTestConfig, accountsTestCfg)))
+registerTestTree(accountsE2ETests(kusama, generalTestConfig, accountsTestCfg))

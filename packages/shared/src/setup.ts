@@ -37,7 +37,7 @@ export async function setupNetworks<T extends Chain[]>(...chains: T) {
   return networks
 }
 
-export async function setupBalances(client: any, accounts: { address: any; amount: number }[]) {
+export async function setupBalances(client: any, accounts: { address: any; amount: bigint }[]) {
   for (const { address, amount } of accounts) {
     await client.dev.setStorage({
       System: {
@@ -46,8 +46,8 @@ export async function setupBalances(client: any, accounts: { address: any; amoun
     })
 
     const account = await client.api.query.system.account(address)
-    expect(account.data.free.toNumber(), `User ${address} free balance should be ${amount}`).toBe(amount)
-    expect(account.data.frozen.toNumber(), `User ${address} frozen balance should be 0`).toBe(0)
-    expect(account.data.reserved.toNumber(), `User ${address} reserved balance should be 0`).toBe(0)
+    expect(account.data.free.toBigInt(), `User ${address} free balance should be ${amount}`).toBe(BigInt(amount))
+    expect(account.data.frozen.toBigInt(), `User ${address} frozen balance should be 0`).toBe(0n)
+    expect(account.data.reserved.toBigInt(), `User ${address} reserved balance should be 0`).toBe(0n)
   }
 }

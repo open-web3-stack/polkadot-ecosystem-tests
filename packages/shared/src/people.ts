@@ -451,7 +451,8 @@ export async function setIdentityThenRequesThenCancelThenClear<
 export async function setIdentityThenAddSubsThenRemove<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
+>(peopleChain: Chain<TCustom, TInitStorages>) {
+  const addressEncoding = peopleChain.properties.addressEncoding
   const [peopleClient] = await setupNetworks(peopleChain)
 
   const querier = peopleClient.api.query
@@ -593,11 +594,8 @@ export async function addRegistrarViaRelayAsRoot<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  relayChain: Chain<TCustom, TInitStoragesRelay>,
-  peopleChain: Chain<TCustom, TInitStoragesPara>,
-  addressEncoding: number,
-) {
+>(relayChain: Chain<TCustom, TInitStoragesRelay>, peopleChain: Chain<TCustom, TInitStoragesPara>) {
+  const addressEncoding = peopleChain.properties.addressEncoding
   const [relayClient, peopleClient] = await setupNetworks(relayChain, peopleChain)
 
   /**
@@ -732,7 +730,7 @@ export function basePeopleChainE2ETests<
 >(
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   peopleChain: Chain<TCustom, TInitStoragesPara>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
+  testConfig: { testSuiteName: string },
 ): RootTestTree {
   return {
     kind: 'describe',
@@ -759,12 +757,12 @@ export function basePeopleChainE2ETests<
         kind: 'test',
         label:
           'setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work',
-        testFn: async () => await setIdentityThenAddSubsThenRemove(peopleChain, testConfig.addressEncoding),
+        testFn: async () => await setIdentityThenAddSubsThenRemove(peopleChain),
       },
       {
         kind: 'test',
         label: 'adding a registrar as root from the relay chain works',
-        testFn: async () => await addRegistrarViaRelayAsRoot(relayChain, peopleChain, testConfig.addressEncoding),
+        testFn: async () => await addRegistrarViaRelayAsRoot(relayChain, peopleChain),
       },
     ],
   }

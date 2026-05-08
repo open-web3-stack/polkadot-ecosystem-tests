@@ -6,14 +6,12 @@ import {
   PolkadotProxyTypes,
   type ProxyTestConfig,
   type ProxyTypeConfig,
-  type RelayTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: RelayTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'Polkadot Proxy',
-  addressEncoding: 0,
-  blockProvider: 'Local',
 }
 
 /**

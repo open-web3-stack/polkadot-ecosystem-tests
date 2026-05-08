@@ -1,4 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -43,17 +46,29 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
 export const astar = defineChain({
   name: 'astar',
   paraId: 2006,
-  endpoint: 'wss://astar-rpc.n.dwellir.com',
+  endpoint: endpoints.astar,
   networkGroup: 'polkadot',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const shiden = defineChain({
   name: 'shiden',
   paraId: 2007,
-  endpoint: 'wss://shiden-rpc.n.dwellir.com',
+  endpoint: endpoints.shiden,
   networkGroup: 'kusama',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })

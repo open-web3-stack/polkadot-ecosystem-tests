@@ -710,11 +710,6 @@ class ProxyActionBuilderImpl<
     return [
       {
         pallet: 'system',
-        extrinsic: 'apply_authorized_upgrade',
-        call: this.client.api.tx.system.applyAuthorizedUpgrade('code'),
-      },
-      {
-        pallet: 'system',
         extrinsic: 'set_heap_pages',
         call: this.client.api.tx.system.setHeapPages(2048),
       },
@@ -1404,7 +1399,7 @@ export function createProxyConfig(proxyTypes: ProxyTypeMap, proxyTypeConfig?: Pr
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>, delay: number) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, delay: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1448,7 +1443,7 @@ export async function addRemoveProxyTest<
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
-      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
+      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
       proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
       delay: 0,
     })
@@ -1508,7 +1503,7 @@ export async function addRemoveProxyTest<
     await check(proxy)
       .redact({ removeKeys: /proxyType/ })
       .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, testConfig.addressEncoding),
+        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
         delay: delay,
       })
   }
@@ -1516,17 +1511,40 @@ export async function addRemoveProxyTest<
   // Remove delay-having proxies
 
   const removeProxiesTx = client.api.tx.proxy.removeProxies()
-  await sendTransaction(removeProxiesTx.signAsync(alice))
+  const removeProxiesEvents = await sendTransaction(removeProxiesTx.signAsync(alice))
 
   await client.dev.newBlock()
 
-  // TODO: `remove_proxies` emits no events; when/if it ever does, this'll fail.
-  const events = await client.api.query.system.events()
-  const removeProxiesEvent = events.find((record) => {
-    const { event } = record
-    return event.section === 'proxy'
-  })
-  expect(removeProxiesEvent).toBeUndefined()
+  await checkEvents(removeProxiesEvents, 'proxy').toMatchSnapshot(
+    `events when removing proxies from Alice (removeProxies)`,
+  )
+
+  // Verify that each proxy removal emitted a ProxyRemoved event with correct data.
+  // Note: `remove_all_proxy_delegates` emits `ProxyRemoved` events in the pallet source, but
+  // Polkadot's runtime does not yet include this change. Only assert on Kusama chains for now.
+  if (chain.networkGroup === 'kusama') {
+    const events = await client.api.query.system.events()
+    const proxyRemovedEvents = events.filter((record) => {
+      const { event } = record
+      return event.section === 'proxy' && event.method === 'ProxyRemoved'
+    })
+
+    expect(proxyRemovedEvents.length).toBe(Object.keys(proxyTypes).length)
+
+    for (const record of proxyRemovedEvents) {
+      assert(client.api.events.proxy.ProxyRemoved.is(record.event))
+      const eventData = record.event.data
+      expect(eventData.delegator.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
+      expect(eventData.delay.eq(delay)).toBe(true)
+
+      const proxyType = eventData.proxyType.toString()
+      const expectedDelegate = proxyAccounts[proxyType]
+      expect(expectedDelegate, `Unexpected proxy type ${proxyType} in ProxyRemoved event`).toBeDefined()
+      expect(eventData.delegatee.eq(encodeAddress(expectedDelegate.address, chain.properties.addressEncoding))).toBe(
+        true,
+      )
+    }
+  }
 
   proxyData = await client.api.query.proxy.proxies(alice.address)
   proxies = proxyData[0]
@@ -1537,7 +1555,6 @@ export async function addRemoveProxyTest<
 }
 
 /**
- *
  * Helper function to check that a pure proxy was correctly created.
  */
 export async function verifyPureProxy(
@@ -1572,7 +1589,7 @@ export async function verifyPureProxy(
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>) {
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1603,7 +1620,7 @@ export async function createKillPureProxyTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxiesEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(pure|at)$/ })
     .toMatchSnapshot(`events when creating pure proxies for Alice`)
 
   // Check created proxies
@@ -1636,7 +1653,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
+    await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
   }
 
   // Kill pure proxies
@@ -1644,7 +1661,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1683,7 +1700,7 @@ export async function createKillPureProxyTest<
       expect(pureProxy[1].eq(0)).toBe(true)
     } else {
       expect(pureProxy[0].length).toBe(1)
-      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, testConfig.addressEncoding))).toBe(true)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1724,7 +1741,7 @@ export async function proxyCallTest<
   await client.dev.newBlock()
 
   // Bob performs a proxy call to transfer funds to Charlie
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
   const proxyTx = client.api.tx.proxy.proxy(alice.address, null, transferCall)
 
@@ -1743,11 +1760,63 @@ export async function proxyCallTest<
 
   // Check Alice's and Charlie's balances
   const newAliceBalance = (await client.api.query.system.account(alice.address)).data.free
-  expect(newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount))), 'Alice should have transferred funds').toBe(
-    true,
-  )
+  expect(
+    newAliceBalance.eq(oldAliceBalance.sub(new BN(transferAmount.toString()))),
+    'Alice should have transferred funds',
+  ).toBe(true)
   charlieBalance = (await client.api.query.system.account(charlie.address)).data.free
-  expect(charlieBalance.eq(transferAmount), 'Charlie should have the transferred funds').toBe(true)
+  expect(charlieBalance.eq(new BN(transferAmount.toString())), 'Charlie should have the transferred funds').toBe(true)
+}
+
+/**
+ * Test that `force_proxy_type` uses exact equality, not superset matching. Even though `Any`
+ * is a superset of `NonTransfer`, forcing `NonTransfer` when the proxy is registered as `Any`
+ * must fail because the pallet selects proxy definitions by exact type.
+ *
+ * 1. Fund Bob
+ * 2. Alice adds Bob as an `Any` proxy with no delay
+ * 3. Bob calls `proxy(alice, Some(NonTransfer), remark)` — force type doesn't match the `Any` definition
+ * 4. Verify that the extrinsic fails with `NotProxy`
+ */
+export async function proxyForceTypeExactMatchOnlyTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
+  const [client] = await setupNetworks(chain)
+
+  const alice = testAccounts.alice
+  const bob = testAccounts.bob
+
+  await client.dev.setStorage({
+    System: {
+      account: [[[bob.address], { providers: 1, data: { free: 1000e10 } }]],
+    },
+  })
+
+  const addProxyTx = client.api.tx.proxy.addProxy(bob.address, 'Any', 0)
+  await sendTransaction(addProxyTx.signAsync(alice))
+  await client.dev.newBlock()
+
+  const remarkCall = client.api.tx.system.remarkWithEvent('force type exact match test')
+  const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypes.NonTransfer, remarkCall)
+  const result = await sendTransaction(proxyTx.signAsync(bob))
+  await client.dev.newBlock()
+
+  const events = await client.api.query.system.events()
+
+  const failedEvents = events.filter((record: any) => {
+    const { event } = record
+    return event.section === 'system' && event.method === 'ExtrinsicFailed'
+  })
+  expect(failedEvents.length).toBe(1)
+
+  const { event } = failedEvents[0]
+  assert(client.api.events.system.ExtrinsicFailed.is(event))
+  const { dispatchError } = event.data
+  expect(dispatchError.isModule).toBeTruthy()
+  expect(client.api.errors.proxy.NotProxy.is(dispatchError.asModule)).toBe(true)
+
+  await checkEvents(result, 'system').toMatchSnapshot('proxy force_proxy_type requires exact match')
 }
 
 /**
@@ -1764,7 +1833,7 @@ export async function proxyCallTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+>(chain: Chain<TCustom, TInitStorages>) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1797,9 +1866,9 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = await getBlockNumber(client.api, testConfig.blockProvider)
+  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
   const announcementObject = {
-    real: encodeAddress(alice.address, testConfig.addressEncoding),
+    real: encodeAddress(alice.address, chain.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
     height: currBlockNumber,
   }
@@ -1842,7 +1911,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = blockProviderOffset(testConfig)
+  const offset = blockProviderOffset(chain.properties.proxyBlockProvider!, (chain.properties as any).asyncBacking)
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
@@ -1895,7 +1964,7 @@ export async function proxyAnnouncementLifecycleTest<
 export async function pureProxyOwnershipChangeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyType: number) {
+>(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
   const [client] = await setupNetworks(chain)
 
   const alice = testAccounts.alice
@@ -1903,9 +1972,9 @@ export async function pureProxyOwnershipChangeTest<
   const charlie = testAccounts.charlie
 
   await setupBalances(client, [
-    { address: alice.address, amount: 100e10 },
-    { address: bob.address, amount: 100e10 },
-    { address: charlie.address, amount: 0e10 },
+    { address: alice.address, amount: 100n * 10n ** 10n },
+    { address: bob.address, amount: 100n * 10n ** 10n },
+    { address: charlie.address, amount: 0n },
   ])
 
   // Create a pure proxy for Alice of type `Any`
@@ -1915,7 +1984,7 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   await checkEvents(createPureProxyEvents, 'proxy')
-    .redact({ removeKeys: /pure/ })
+    .redact({ removeKeys: /^(at|pure)$/ })
     .toMatchSnapshot(`events when creating a pure proxy for Alice`)
 
   const events = await client.api.query.system.events()
@@ -1932,12 +2001,12 @@ export async function pureProxyOwnershipChangeTest<
   const pureProxyAddress = eventData.pure.toString()
 
   // Verify the pure proxy was created correctly.
-  await verifyPureProxy(client, eventData, alice.address, testConfig.addressEncoding)
+  await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
 
   // Add funds to the pure proxy account.
-  await setupBalances(client, [{ address: pureProxyAddress, amount: 300e10 }])
+  await setupBalances(client, [{ address: pureProxyAddress, amount: 300n * 10n ** 10n }])
 
-  const transferAmount: number = 100e10
+  const transferAmount = 100n * 10n ** 10n
   const transferCall = client.api.tx.balances.transferKeepAlive(charlie.address, transferAmount)
 
   // Alice uses her pure proxy to transfer some funds to Charlie.
@@ -1947,7 +2016,7 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Confirm that Charlie received the funds.
-  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+  let charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
 
   expect(charlieBalance, 'Charlie should have received the funds').toBe(transferAmount)
 
@@ -1973,9 +2042,9 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Confirm that Charlie received the funds again.
-  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
 
-  expect(charlieBalance, 'Charlie should have received the funds again').toBe(2 * transferAmount)
+  expect(charlieBalance, 'Charlie should have received the funds again').toBe(2n * transferAmount)
 
   // Check that Alice can no longer use the pure proxy.
   proxyTx = client.api.tx.proxy.proxy(pureProxyAddress, null, transferCall)
@@ -1984,8 +2053,8 @@ export async function pureProxyOwnershipChangeTest<
   await client.dev.newBlock()
 
   // Also confirm that Charlie did not receive any additional funds.
-  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toNumber()
-  expect(charlieBalance, 'Charlie should not have received any additional funds').toBe(2 * transferAmount)
+  charlieBalance = (await client.api.query.system.account(charlie.address)).data.free.toBigInt()
+  expect(charlieBalance, 'Charlie should not have received any additional funds').toBe(2n * transferAmount)
 }
 
 /**
@@ -2005,12 +2074,12 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'add proxies (with/without delay) to an account, and remove them',
-        testFn: async () => await addRemoveProxyTest(chain, testConfig, proxyTypes, PROXY_DELAY),
+        testFn: async () => await addRemoveProxyTest(chain, proxyTypes, PROXY_DELAY),
       },
       {
         kind: 'test',
         label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(chain, testConfig, proxyTypes),
+        testFn: async () => await createKillPureProxyTest(chain, proxyTypes),
       },
       {
         kind: 'test',
@@ -2019,13 +2088,18 @@ export function baseProxyE2ETests<
       },
       {
         kind: 'test',
+        label: 'reject force_proxy_type superset (exact match required)',
+        testFn: async () => await proxyForceTypeExactMatchOnlyTest(chain, proxyTypes),
+      },
+      {
+        kind: 'test',
         label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(chain, testConfig),
+        testFn: async () => await proxyAnnouncementLifecycleTest(chain),
       },
       {
         kind: 'test',
         label: 'pure proxy ownership change test',
-        testFn: async () => await pureProxyOwnershipChangeTest(chain, testConfig, proxyTypes['Any']),
+        testFn: async () => await pureProxyOwnershipChangeTest(chain, proxyTypes['Any']),
       },
     ],
   }

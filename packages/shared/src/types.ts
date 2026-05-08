@@ -4,6 +4,7 @@ import type { Chain } from '@e2e-test/networks'
 
 import type { ApiPromise, WsProvider } from '@polkadot/api'
 
+import type { TestContext } from 'vitest'
 import { afterAll, beforeAll, describe, test } from 'vitest'
 
 import { match } from 'ts-pattern'
@@ -20,6 +21,11 @@ export type Client<
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 > = {
   config: Chain<TCustom, TInitStorages>
+
+  /**
+   * Chain properties derived from the chain definition.
+   * See {@link Chain} type in @e2e-test/networks for what these values represent.
+   */
   url: string
   chain: Blockchain
   ws: WsProvider
@@ -44,7 +50,7 @@ export type TestNode = {
    * A function returning a promise (actual test body).
    * This is passed into `vitest.test(...)` during registration.
    */
-  testFn: () => Promise<void>
+  testFn: (ctx?: TestContext) => Promise<void>
   flags?: { only?: boolean; skip?: boolean; timeout?: number }
   meta?: Record<string, any>
 }

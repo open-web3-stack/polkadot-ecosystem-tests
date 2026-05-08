@@ -15,7 +15,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -40,7 +40,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -65,7 +65,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > chill other > chill o
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -196,7 +196,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > force apply validator
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -262,127 +262,6 @@ exports[`Polkadot Asset Hub Staking > base staking tests > modify validator coun
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
-[
-  {
-    "data": {
-      "id": null,
-      "result": {
-        "Err": "BadOrigin",
-      },
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 400000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > alice funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 5000000000000,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > alice funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > balances slash events 1`] = `[]`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > bob funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > bob funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > charlie funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > charlie funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 10000000000000,
-}
-`;
-
-exports[`Polkadot Asset Hub Staking > base staking tests > set invulnerables with root origin > staking slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": 5000000000000,
-      "staker": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": 10000000000000,
-      "staker": "1TUmpQQUiXWobQcoUMcqxbAuw6PW9KQaKAZe3bjv3fFaWSy",
-    },
-    "method": "Slashed",
-    "section": "staking",
   },
 ]
 `;
@@ -476,7 +355,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > e
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -525,7 +404,25 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > n
 ]
 `;
 
-exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `[]`;
+exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `
+[
+  {
+    "data": {
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": 10000000000000,
+      "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+]
+`;
 
 exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > validate (blocked) events 1`] = `
 [
@@ -533,7 +430,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": true,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -562,7 +459,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13piny9qppZ5hvZyxpbRiDDGFLa1rwqHkqxe5iDLQ7TXGdnM",
     },
@@ -591,7 +488,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "15KNQmEzwTTVzdDqa1ox9VaWSASEcboQHDLoiXbXDnwnZVzn",
     },
@@ -620,7 +517,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > staking lifecycle > v
     "data": {
       "prefs": {
         "blocked": false,
-        "commission": "0.00%",
+        "commission": "10.00%",
       },
       "stash": "13H7FnvuDAYZWhvRzJuNDd1Jrdm91bnWBuD9dqN1HJZAeNt9",
     },
@@ -665,7 +562,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > trying to become a va
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -690,7 +587,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > trying to nominate wi
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -764,7 +661,7 @@ exports[`Polkadot Asset Hub Staking > slashing tests > cancel deferred slash wit
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },

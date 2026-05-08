@@ -13,12 +13,12 @@ import { ApiPromise, HttpProvider, WsProvider } from '@polkadot/api'
 
 const isUpdateKnownGood = process.argv.includes('--update-known-good')
 
-const getEnvPath = (networkGroup?: 'polkadot' | 'kusama') => {
+const getEnvPath = (networkGroup?: 'polkadot' | 'kusama' | 'westend') => {
   const envFile = isUpdateKnownGood ? `KNOWN_GOOD_BLOCK_NUMBERS_${networkGroup?.toUpperCase()}.env` : '.env'
   return path.resolve(dirname(__filename), '../', envFile)
 }
 
-const readEnvFile = (networkGroup?: 'polkadot' | 'kusama') => {
+const readEnvFile = (networkGroup?: 'polkadot' | 'kusama' | 'westend') => {
   try {
     return fs.readFileSync(getEnvPath(networkGroup), 'utf8').toString()
   } catch (_err) {
@@ -30,7 +30,7 @@ const main = async () => {
   await cryptoWaitReady()
 
   if (isUpdateKnownGood) {
-    for (const networkGroup of ['polkadot', 'kusama'] as const) {
+    for (const networkGroup of ['polkadot', 'kusama', 'westend'] as const) {
       const envFileContent = readEnvFile(networkGroup)
       const currentEnv = dotenv.parse(envFileContent)
 

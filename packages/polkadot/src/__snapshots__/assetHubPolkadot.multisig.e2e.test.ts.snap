@@ -65,7 +65,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > cancellation with sender in
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -90,7 +90,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > cancelling a non-existent m
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -115,7 +115,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > cancelling a non-existent m
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -140,7 +140,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > creating a multisig with th
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -165,7 +165,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > execution with sender in si
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -204,7 +204,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig cancellation with 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -229,7 +229,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig cancellation with 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -254,7 +254,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig creation with too 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -293,7 +293,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > multisig execution with rem
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 2000000000)",
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -318,7 +318,7 @@ exports[`AssetHubPolkadot Multisig > failure tests > non-depositor tries to canc
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },

@@ -137,7 +137,7 @@ export function baseTreasuryE2ETests<
 >(
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   ahChain: Chain<TCustom, TInitStoragesPara>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
+  testConfig: { testSuiteName: string },
 ): RootTestTree {
   return {
     kind: 'describe',

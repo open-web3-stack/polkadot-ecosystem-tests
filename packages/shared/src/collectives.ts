@@ -10,7 +10,7 @@
 
 import type { Chain, Client } from '@e2e-test/networks'
 
-import { checkSystemEvents, createXcmTransactSend, scheduleInlineCallWithOrigin } from './helpers/index.js'
+import { checkSystemEvents, createXcmTransactSend, getXcmRoute, scheduleInlineCallWithOrigin } from './helpers/index.js'
 import { setupNetworks } from './setup.js'
 import type { RootTestTree } from './types.js'
 /**
@@ -59,19 +59,7 @@ export async function sendWhitelistCallViaXcmTransact(
   encodedChainCallData: `0x${string}`,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
 ): Promise<any> {
-  let dest: { parents: number; interior: any }
-
-  if (destClient.config.isRelayChain) {
-    dest = {
-      parents: 1,
-      interior: 'Here',
-    }
-  } else {
-    dest = {
-      parents: 1,
-      interior: { X1: [{ Parachain: destClient.config.paraId }] },
-    }
-  }
+  const dest = getXcmRoute(collectivesClient.config, destClient.config)
 
   const xcmTx = createXcmTransactSend(
     collectivesClient,
@@ -81,7 +69,14 @@ export async function sendWhitelistCallViaXcmTransact(
     requireWeightAtMost,
   )
 
-  await scheduleInlineCallWithOrigin(collectivesClient, xcmTx.method.toHex(), { FellowshipOrigins: 'Fellows' })
+  let origin: { Origins: 'Fellows' } | { FellowshipOrigins: 'Fellows' }
+  if (collectivesClient.config.name === 'kusama') {
+    origin = { Origins: 'Fellows' }
+  } else {
+    origin = { FellowshipOrigins: 'Fellows' }
+  }
+
+  await scheduleInlineCallWithOrigin(collectivesClient, xcmTx.method.toHex(), origin)
 }
 
 /**

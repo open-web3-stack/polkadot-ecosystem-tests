@@ -1,4 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -22,22 +25,32 @@ const getInitStorages = (_config: typeof custom.coretimePolkadot | typeof custom
 
 export const coretimePolkadot = defineChain({
   name: 'coretimePolkadot',
-  endpoint: 'wss://polkadot-coretime-rpc.polkadot.io',
+  endpoint: endpoints.coretimePolkadot,
   paraId: 1005,
   networkGroup: 'polkadot',
   custom: custom.coretimePolkadot,
   initStorages: getInitStorages(custom.coretimePolkadot),
+  properties: {
+    addressEncoding: 0,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const coretimeKusama = defineChain({
   name: 'coretimeKusama',
-  endpoint: [
-    'wss://sys.ibp.network/coretime-kusama',
-    'wss://coretime-kusama.dotters.network',
-    'wss://kusama-coretime-rpc.polkadot.io',
-  ],
+  endpoint: endpoints.coretimeKusama,
   paraId: 1005,
   networkGroup: 'kusama',
   custom: custom.coretimeKusama,
   initStorages: getInitStorages(custom.coretimeKusama),
+  properties: {
+    addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    asyncBacking: 'Enabled',
+    feeExtractor: standardFeeExtractor,
+  },
 })
