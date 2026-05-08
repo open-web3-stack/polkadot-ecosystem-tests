@@ -1426,6 +1426,262 @@ export async function completeDOTBountyLifecycleTest<
   expect(curatorDeposit).toBeNull()
 }
 
+/**
+ * Test: Complete DOT Bounty Lifecycle with caller-supplied values
+ *
+ * Uses the exact values from the user's `fund_bounty` call:
+ *   - asset_kind = V5 DOT-on-Polkadot foreign asset (createDOTAssetKind matches the supplied JSON)
+ *   - value      = 10_000_000_000 (1 DOT, 10 decimals)
+ *   - curator    = 0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c
+ *   - metadata   = freshly noted preimage hash (we don't have the original preimage for the user's
+ *                  hash, so we note arbitrary content and use the resulting hash so on-chain lookup
+ *                  works during the lifecycle)
+ *
+ * Because we don't have the private key for the supplied curator pubkey, we override the bounty's
+ * curator field in storage to testAccounts.bob.publicKey AFTER fund_bounty + checkStatus succeed.
+ * The override is a raw 32-byte substitution at the bounty's storage key — the supplied pubkey is
+ * the only place those exact bytes appear in the encoded bounty, so a single replace is safe.
+ */
+const CUSTOM_DOT_BOUNTY_VALUE = 10_000_000_000n
+const CUSTOM_DOT_CURATOR_PUBKEY = '0xe104b438e7893a9f9cbc59e7d057d61a85ed1b88e3a0ebc59733cb89637a5e7c'
+const CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT = 'Custom-values DOT bounty lifecycle'
+
+/**
+ * Pretty-print events emitted by selected pallets in the latest block, grouped under a labeled
+ * header so each lifecycle step's effects are easy to scan in test output.
+ *
+ * Defaults to the pallets that matter for the multi-asset bounty flow: multiAssetBounties (state
+ * transitions), foreignAssets (DOT movements), balances (curator deposits / fees).
+ */
+async function logBountyLifecycleEvents(
+  client: Client<any, any>,
+  label: string,
+  sections: string[] = ['multiAssetBounties', 'foreignAssets', 'balances'],
+) {
+  const events = await client.api.query.system.events()
+  console.log(`\n────── ${label} ──────`)
+  let printed = 0
+  ;(events as any).forEach((rec: any, idx: number) => {
+    const ev = rec.event
+    if (!ev || !sections.includes(ev.section)) return
+    const data = ev.toHuman?.()?.data ?? ev.data
+    console.log(`  #${idx} ${ev.section}.${ev.method}:`, JSON.stringify(data))
+    printed++
+  })
+  if (printed === 0) console.log(`  (no events from: ${sections.join(', ')})`)
+  console.log(`────── end ${label} ──────\n`)
+}
+
+export async function completeDOTBountyLifecycleCustomTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
+  const [client] = await setupNetworks(chain)
+  await setupTestAccounts(client, ['alice', 'bob', 'charlie'], true)
+
+  const metadata = await createPreimage(client, CUSTOM_DOT_BOUNTY_PREIMAGE_TEXT)
+  const { assetKind } = await ensureDOTBountySetup(client, testConfig)
+  const assetLocation = DOT_FOREIGN_ASSET_LOCATION
+
+  const treasuryPot = getTreasuryPotAccount(client)
+  await client.dev.setStorage({
+    ForeignAssets: {
+      account: [[[assetLocation, treasuryPot], { balance: CUSTOM_DOT_BOUNTY_VALUE * 100n }]],
+    },
+  })
+
+  const initialBountyCount = await getBountyCount(client)
+
+  const fundBountyTx = client.api.tx.multiAssetBounties.fundBounty(
+    assetKind,
+    CUSTOM_DOT_BOUNTY_VALUE,
+    CUSTOM_DOT_CURATOR_PUBKEY,
+    metadata,
+  )
+  await scheduleInlineCallWithOrigin(
+    client,
+    fundBountyTx.method.toHex(),
+    { Origins: 'Treasurer' },
+    testConfig.blockProvider,
+  )
+  await client.dev.newBlock()
+
+  // await logBountyLifecycleEvents(client, 'STEP 1: fund_bounty (Treasurer origin)')
+  console.log('STEP 1: fund_bounty (Treasurer origin)')
+  await logAllEvents(client)
+
+  const newBountyCount = await getBountyCount(client)
+  expect(newBountyCount, 'fund_bounty must succeed with the supplied custom values').toBe(initialBountyCount + 1)
+  const bountyIndex = initialBountyCount
+
+  const bountyAfterFund = await getBounty(client, bountyIndex)
+  expect(bountyAfterFund).toBeTruthy()
+  expect(bountyAfterFund.value.toBigInt()).toBe(CUSTOM_DOT_BOUNTY_VALUE)
+  console.log('[custom DOT lifecycle] bounty after fund:', JSON.stringify(bountyAfterFund, null, 2))
+
+  // Find the bounty's account from the foreignAssets.Transferred event emitted by fund_bounty
+  // (treasury pot -> bounty account). The bounty account is derived by the pallet from the bounty
+  // index and is the holder of the funding payment.
+  const fundEvents = await client.api.query.system.events()
+  const transferEvent = (fundEvents as any).find((rec: any) => {
+    const ev = rec.event
+    return ev.section === 'foreignAssets' && ev.method === 'Transferred' && ev.data.from.toString() === treasuryPot
+  })
+  expect(
+    transferEvent,
+    'foreignAssets.Transferred (treasury -> bounty account) must be emitted by fund_bounty',
+  ).toBeTruthy()
+  const bountyAccount = (transferEvent as any).event.data.to.toString()
+  const transferAmount = (transferEvent as any).event.data.amount.toBigInt()
+  console.log('[custom DOT lifecycle] Treasury pot:', treasuryPot)
+  console.log('[custom DOT lifecycle] Bounty account (from event):', bountyAccount)
+  console.log('[custom DOT lifecycle] Transfer amount in event:', transferAmount.toString())
+  expect(transferAmount).toBe(CUSTOM_DOT_BOUNTY_VALUE)
+
+  // Verify the bounty account received exactly the funded value as foreign DOT
+  const bountyAccountDotAfterFund = await getForeignAssetBalance(client, assetLocation, bountyAccount)
+  console.log(
+    '[custom DOT lifecycle] Bounty account foreign DOT balance after fund_bounty:',
+    bountyAccountDotAfterFund.toString(),
+  )
+  expect(bountyAccountDotAfterFund).toBeGreaterThanOrEqual(CUSTOM_DOT_BOUNTY_VALUE)
+
+  // Ensure Alice has enough foreign DOT to send some to the bounty account; top up if needed.
+  const ALICE_DOT_TOPUP = 50_000_000_000n // 5 DOT (10 decimals)
+  const ALICE_DOT_SEND = 10_000_000_000n // 1 DOT (sent to bounty account)
+  let aliceDotBalance = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
+  console.log('[custom DOT lifecycle] Alice foreign DOT balance before top-up:', aliceDotBalance.toString())
+  if (aliceDotBalance < ALICE_DOT_SEND) {
+    await client.dev.setStorage({
+      ForeignAssets: {
+        account: [[[assetLocation, testAccounts.alice.address], { balance: ALICE_DOT_TOPUP }]],
+      },
+    })
+    aliceDotBalance = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
+    console.log('[custom DOT lifecycle] Alice topped up; new foreign DOT balance:', aliceDotBalance.toString())
+  }
+  expect(
+    aliceDotBalance >= ALICE_DOT_SEND,
+    `Alice needs at least ${ALICE_DOT_SEND} foreign DOT, got ${aliceDotBalance}`,
+  ).toBe(true)
+
+  // Alice sends foreign DOT to the bounty account; verify the balance increases by the sent amount.
+  const bountyAccountDotBeforeAliceSend = await getForeignAssetBalance(client, assetLocation, bountyAccount)
+  const aliceDotBeforeSend = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
+  console.log(
+    '[custom DOT lifecycle] Pre-send: bounty account DOT =',
+    bountyAccountDotBeforeAliceSend.toString(),
+    '| alice DOT =',
+    aliceDotBeforeSend.toString(),
+  )
+  const aliceSendTx = (client.api.tx as any).foreignAssets.transfer(assetLocation, bountyAccount, ALICE_DOT_SEND)
+  await sendTransaction(aliceSendTx.signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  // await logBountyLifecycleEvents(client, 'STEP 2: alice -> bounty account foreignAssets.transfer')
+  console.log('STEP 2: alice -> bounty account foreignAssets.transfer')
+  await logAllEvents(client)
+  const bountyAccountDotAfterAliceSend = await getForeignAssetBalance(client, assetLocation, bountyAccount)
+  const aliceDotAfterSend = await getForeignAssetBalance(client, assetLocation, testAccounts.alice.address)
+  console.log(
+    '[custom DOT lifecycle] Post-send: bounty account DOT =',
+    bountyAccountDotAfterAliceSend.toString(),
+    '| alice DOT =',
+    aliceDotAfterSend.toString(),
+  )
+  expect(bountyAccountDotAfterAliceSend - bountyAccountDotBeforeAliceSend).toBe(ALICE_DOT_SEND)
+  expect(aliceDotBeforeSend - aliceDotAfterSend).toBe(ALICE_DOT_SEND)
+
+  await sendTransaction(client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice))
+  await client.dev.newBlock()
+  // await logBountyLifecycleEvents(client, 'STEP 3: checkStatus (FundingAttempted -> Funded)')
+  console.log('STEP 3: checkStatus (FundingAttempted -> Funded)')
+  await logAllEvents(client)
+  const bountyAfterCheck = await getBounty(client, bountyIndex)
+  expect(bountyAfterCheck.status.isFunded).toBe(true)
+  console.log('[custom DOT lifecycle] bounty after checkStatus:', JSON.stringify(bountyAfterCheck, null, 2))
+
+  const bountyStorageKey = client.api.query.multiAssetBounties.bounties.key(bountyIndex)
+  const bountyOptBefore = await client.api.query.multiAssetBounties.bounties(bountyIndex)
+  const bountyHexBefore = (bountyOptBefore as any).toHex().toLowerCase()
+  const customCuratorBytes = CUSTOM_DOT_CURATOR_PUBKEY.toLowerCase().slice(2)
+  const bobCuratorBytes = Buffer.from(testAccounts.bob.publicKey).toString('hex')
+  expect(
+    bountyHexBefore.includes(customCuratorBytes),
+    'Custom curator bytes must appear in encoded bounty before substitution',
+  ).toBe(true)
+  expect(bountyHexBefore.indexOf(customCuratorBytes)).toBe(bountyHexBefore.lastIndexOf(customCuratorBytes))
+  const newBountyHex = `0x${bountyHexBefore.slice(2).replace(customCuratorBytes, bobCuratorBytes)}`
+
+  await client.dev.setStorage([[bountyStorageKey, newBountyHex]])
+  const bountyOptAfter = await client.api.query.multiAssetBounties.bounties(bountyIndex)
+  const bountyHexAfter = (bountyOptAfter as any).toHex().toLowerCase()
+  expect(
+    bountyHexAfter.includes(bobCuratorBytes),
+    'Bob curator bytes must appear in encoded bounty after substitution',
+  ).toBe(true)
+  expect(bountyHexAfter.includes(customCuratorBytes), 'Custom curator bytes must be gone after substitution').toBe(
+    false,
+  )
+  console.log('[custom DOT lifecycle] curator overridden to bob, continuing lifecycle')
+
+  await sendTransaction(client.api.tx.multiAssetBounties.acceptCurator(bountyIndex, null).signAsync(testAccounts.bob))
+  await client.dev.newBlock()
+  // await logBountyLifecycleEvents(client, 'STEP 4: acceptCurator (Funded -> Active, curator deposit locked)')
+  console.log('STEP 4: acceptCurator (Funded -> Active, curator deposit locked)')
+  await logAllEvents(client)
+  const bountyAfterAccept = await getBounty(client, bountyIndex)
+  expect(bountyAfterAccept.status.isActive).toBe(true)
+  console.log('[custom DOT lifecycle] bounty after acceptCurator:', JSON.stringify(bountyAfterAccept, null, 2))
+  const curatorDepositAfterAccept = await getCuratorDeposit(client, bountyIndex)
+  console.log(
+    '[custom DOT lifecycle] curator deposit after acceptCurator:',
+    JSON.stringify(curatorDepositAfterAccept, null, 2),
+  )
+
+  const beneficiaryDotBefore = await getForeignAssetBalance(client, assetLocation, testAccounts.charlie.address)
+  console.log('[custom DOT lifecycle] charlie foreign DOT before award:', beneficiaryDotBefore.toString())
+
+  const beneficiary = createBeneficiary(client.api, testAccounts.charlie)
+  await sendTransaction(
+    client.api.tx.multiAssetBounties.awardBounty(bountyIndex, null, beneficiary).signAsync(testAccounts.bob),
+  )
+  await client.dev.newBlock()
+  // await logBountyLifecycleEvents(client, 'STEP 5: awardBounty (Active -> PayoutAttempted, payout initiated)')
+  console.log('STEP 5: awardBounty (Active -> PayoutAttempted, payout initiated)')
+  await logAllEvents(client)
+  const bountyAfterAward = await getBounty(client, bountyIndex)
+  console.log('[custom DOT lifecycle] bounty after awardBounty:', JSON.stringify(bountyAfterAward, null, 2))
+
+  const finalEvents = await sendTransaction(
+    client.api.tx.multiAssetBounties.checkStatus(bountyIndex, null).signAsync(testAccounts.alice),
+  )
+  await client.dev.newBlock()
+  // await logBountyLifecycleEvents(client, 'STEP 6: checkStatus final (PayoutAttempted -> Paid, bounty removed)')
+  console.log('STEP 6: checkStatus final (PayoutAttempted -> Paid, bounty removed)')
+  await logAllEvents(client)
+
+  await checkEvents(finalEvents, { section: 'multiAssetBounties', method: 'BountyPayoutProcessed' })
+    .redact({ redactKeys: /id/ })
+    .toMatchSnapshot('custom DOT bounty completed events')
+
+  const beneficiaryDotAfter = await getForeignAssetBalance(client, assetLocation, testAccounts.charlie.address)
+  console.log('[custom DOT lifecycle] charlie foreign DOT after payout:', beneficiaryDotAfter.toString())
+  expect(beneficiaryDotAfter - beneficiaryDotBefore).toBe(CUSTOM_DOT_BOUNTY_VALUE)
+
+  // Bounty account should retain Alice's residual transfer (it was outside the bounty's tracked value).
+  const bountyAccountResidual = await getForeignAssetBalance(client, assetLocation, bountyAccount)
+  console.log(
+    '[custom DOT lifecycle] bounty account residual DOT after payout:',
+    bountyAccountResidual.toString(),
+    '(should equal alice send amount =',
+    ALICE_DOT_SEND.toString(),
+    ')',
+  )
+
+  expect(await getBounty(client, bountyIndex)).toBeNull()
+  expect(await getCuratorDeposit(client, bountyIndex)).toBeNull()
+}
+
 /// -------
 /// Base Test Tree Builder
 /// -------
@@ -1574,6 +1830,11 @@ export function baseMultiAssetBountiesE2ETests<
             kind: 'test',
             label: 'Should complete full DOT bounty lifecycle',
             testFn: () => completeDOTBountyLifecycleTest(chain, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'Should complete full DOT bounty lifecycle with custom call values',
+            testFn: () => completeDOTBountyLifecycleCustomTest(chain, testConfig),
           },
         ],
       },
