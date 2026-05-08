@@ -1,48 +1,54 @@
 diff --git a/dist/cjs/index.js b/dist/cjs/index.js
-index 9cf516b64e3c90359229c86745cc27cfc823756f..5e686ce3f3f1bef2d30b184c16b1b25175d0314c 100644
+index 9cf516b64e3c90359229c86745cc27cfc823756f..68a4dfb2ef3443eaf662482bd64d66fbf0f904c2 100644
 --- a/dist/cjs/index.js
 +++ b/dist/cjs/index.js
-@@ -178,15 +178,18 @@ function defer() {
+@@ -178,15 +178,21 @@ function defer() {
  const sendTransaction = async (tx)=>{
      const signed = await tx;
      const deferred = defer();
 -    await signed.send((status)=>{
++    // Swallow rejections that arrive after the deferred has already settled (the
++    // subscription continues to fire callbacks after isInBlock/isFinalized).
 +    deferred.promise.catch(()=>{});
-+    const unsub = await signed.send((status)=>{
++    let unsub;
++    unsub = await signed.send((status)=>{
          logger.debug({
              status: status.status.toHuman()
          }, 'Transaction status');
          if (status.isInBlock || status.isFinalized) {
              deferred.resolve(status.events);
-+            unsub();
++            if (unsub) unsub();
          }
          if (status.isError) {
              deferred.reject(status.status);
-+            unsub();
++            if (unsub) unsub();
          }
      });
      return {
 diff --git a/dist/esm/index.js b/dist/esm/index.js
-index 041cd24640792496bcc04c876d4471589e5b91c5..c607a1540cd5c118fb306ff2b55ce3adb02c5bac 100644
+index 041cd24640792496bcc04c876d4471589e5b91c5..6509ac6f609c0abcef9996b563181930ae933413 100644
 --- a/dist/esm/index.js
 +++ b/dist/esm/index.js
-@@ -152,15 +152,18 @@ export * from './signFake.js';
+@@ -152,15 +152,21 @@ export * from './signFake.js';
   */ export const sendTransaction = async (tx)=>{
      const signed = await tx;
      const deferred = defer();
 -    await signed.send((status)=>{
++    // Swallow rejections that arrive after the deferred has already settled (the
++    // subscription continues to fire callbacks after isInBlock/isFinalized).
 +    deferred.promise.catch(()=>{});
-+    const unsub = await signed.send((status)=>{
++    let unsub;
++    unsub = await signed.send((status)=>{
          logger.debug({
              status: status.status.toHuman()
          }, 'Transaction status');
          if (status.isInBlock || status.isFinalized) {
              deferred.resolve(status.events);
-+            unsub();
++            if (unsub) unsub();
          }
          if (status.isError) {
              deferred.reject(status.status);
-+            unsub();
++            if (unsub) unsub();
          }
      });
      return {

@@ -1,49 +1,945 @@
+diff --git a/dist/cjs/api.d.ts b/dist/cjs/api.d.ts
+index 8d0e88231efcff26a43a7c7a8dff86913215d810..ddb1f95bf24537512883e71f48974af32ebf7799 100644
+--- a/dist/cjs/api.d.ts
++++ b/dist/cjs/api.d.ts
+@@ -1,6 +1,7 @@
+ import type { ProviderInterface, ProviderInterfaceCallback } from '@polkadot/rpc-provider/types';
+ import type { ExtDef } from '@polkadot/types/extrinsic/signedExtensions/types';
+ import type { HexString } from '@polkadot/util/types';
++import type { Database } from './database.js';
+ import type { ChainProperties, Header, SignedBlock } from './index.js';
+ /**
+  * API class. Calls provider to get on-chain data.
+@@ -18,6 +19,7 @@ export declare class Api {
+     #private;
+     readonly signedExtensions: ExtDef;
+     constructor(provider: ProviderInterface, signedExtensions?: ExtDef);
++    setDb(db: Database, scope: string): void;
+     disconnect(): Promise<void>;
+     get isReady(): Promise<void> | undefined;
+     get chain(): Promise<string>;
+diff --git a/dist/cjs/api.js b/dist/cjs/api.js
+index 80a747c2150dae57ba4062c2d4d545bcd8bf5b8a..0160fdd7cd620654b10664d26943fc2146edee23 100644
+--- a/dist/cjs/api.js
++++ b/dist/cjs/api.js
+@@ -51,6 +51,16 @@ function _class_private_field_set(receiver, privateMap, value) {
+     _class_apply_descriptor_set(receiver, descriptor, value);
+     return value;
+ }
++function _class_private_method_get(receiver, privateSet, fn) {
++    if (!privateSet.has(receiver)) {
++        throw new TypeError("attempted to get private field on non-instance");
++    }
++    return fn;
++}
++function _class_private_method_init(obj, privateSet) {
++    _check_private_redeclaration(obj, privateSet);
++    privateSet.add(obj);
++}
+ function _define_property(obj, key, value) {
+     if (key in obj) {
+         Object.defineProperty(obj, key, {
+@@ -69,8 +79,19 @@ function _interop_require_default(obj) {
+         default: obj
+     };
+ }
+-var _provider = /*#__PURE__*/ new WeakMap(), _ready = /*#__PURE__*/ new WeakMap(), _chain = /*#__PURE__*/ new WeakMap(), _chainProperties = /*#__PURE__*/ new WeakMap(), _apiHooks = /*#__PURE__*/ new WeakMap();
++const CACHEABLE_METHODS = new Set([
++    'system_chain',
++    'system_properties',
++    'system_name',
++    'chain_getBlockHash',
++    'chain_getHeader'
++]);
++var _provider = /*#__PURE__*/ new WeakMap(), _ready = /*#__PURE__*/ new WeakMap(), _chain = /*#__PURE__*/ new WeakMap(), _chainProperties = /*#__PURE__*/ new WeakMap(), _db = /*#__PURE__*/ new WeakMap(), _scope = /*#__PURE__*/ new WeakMap(), _apiHooks = /*#__PURE__*/ new WeakMap(), _cachedSend = /*#__PURE__*/ new WeakSet();
+ class Api {
++    setDb(db, scope) {
++        _class_private_field_set(this, _db, db);
++        _class_private_field_set(this, _scope, scope);
++    }
+     async disconnect() {
+         return _class_private_field_get(this, _provider).disconnect();
+     }
+@@ -112,21 +133,21 @@ class Api {
+         return _class_private_field_get(this, _provider).send(method, params, isCacheable);
+     }
+     async getSystemName() {
+-        return this.send('system_name', []);
++        return _class_private_method_get(this, _cachedSend, cachedSend).call(this, 'system_name', []);
+     }
+     async getSystemProperties() {
+-        return this.send('system_properties', []);
++        return _class_private_method_get(this, _cachedSend, cachedSend).call(this, 'system_properties', []);
+     }
+     async getSystemChain() {
+-        return this.send('system_chain', []);
++        return _class_private_method_get(this, _cachedSend, cachedSend).call(this, 'system_chain', []);
+     }
+     async getBlockHash(blockNumber) {
+-        return this.send('chain_getBlockHash', Number.isInteger(blockNumber) ? [
++        return _class_private_method_get(this, _cachedSend, cachedSend).call(this, 'chain_getBlockHash', Number.isInteger(blockNumber) ? [
+             blockNumber
+         ] : [], !!blockNumber);
+     }
+     async getHeader(hash) {
+-        return this.send('chain_getHeader', hash ? [
++        return _class_private_method_get(this, _cachedSend, cachedSend).call(this, 'chain_getHeader', hash ? [
+             hash
+         ] : [], !!hash);
+     }
+@@ -226,6 +247,7 @@ class Api {
+         return _class_private_field_get(this, _provider).subscribe('chain_finalizedHead', 'chain_subscribeFinalizedHeads', [], cb);
+     }
+     constructor(provider, signedExtensions){
++        _class_private_method_init(this, _cachedSend);
+         _class_private_field_init(this, _provider, {
+             writable: true,
+             value: void 0
+@@ -242,6 +264,14 @@ class Api {
+             writable: true,
+             value: void 0
+         });
++        _class_private_field_init(this, _db, {
++            writable: true,
++            value: void 0
++        });
++        _class_private_field_init(this, _scope, {
++            writable: true,
++            value: void 0
++        });
+         _define_property(this, "signedExtensions", void 0);
+         _class_private_field_init(this, _apiHooks, {
+             writable: true,
+@@ -251,3 +281,16 @@ class Api {
+         this.signedExtensions = signedExtensions || {};
+     }
+ }
++async function cachedSend(method, params, isCacheable) {
++    if (_class_private_field_get(this, _db)?.queryRpcCall && _class_private_field_get(this, _scope) && CACHEABLE_METHODS.has(method)) {
++        const key = JSON.stringify(params);
++        const cached = await _class_private_field_get(this, _db).queryRpcCall(_class_private_field_get(this, _scope), method, key);
++        if (cached !== null) return JSON.parse(cached);
++        _class_private_field_get(this, _apiHooks)?.fetching?.();
++        const result = await _class_private_field_get(this, _provider).send(method, params, isCacheable);
++        await _class_private_field_get(this, _db).saveRpcCall?.(_class_private_field_get(this, _scope), method, key, JSON.stringify(result));
++        return result;
++    }
++    _class_private_field_get(this, _apiHooks)?.fetching?.();
++    return _class_private_field_get(this, _provider).send(method, params, isCacheable);
++}
+diff --git a/dist/cjs/blockchain/block-builder.d.ts b/dist/cjs/blockchain/block-builder.d.ts
+index a5aa89355d7195670934e832c71aba7a8d47241b..d1e1932960cb4d772c6ff2b0e6045dd87ca0fc67 100644
+--- a/dist/cjs/blockchain/block-builder.d.ts
++++ b/dist/cjs/blockchain/block-builder.d.ts
+@@ -1,4 +1,4 @@
+-import type { Header, TransactionValidityError } from '@polkadot/types/interfaces';
++import type { ApplyExtrinsicResult, Header, TransactionValidityError } from '@polkadot/types/interfaces';
+ import type { HexString } from '@polkadot/util/types';
+ import type { TaskCallResponse } from '../wasm-executor/index.js';
+ import { Block } from './block.js';
+@@ -10,6 +10,21 @@ export type BuildBlockCallbacks = {
+     onPhaseApplied?: (phase: 'initialize' | 'finalize' | number, resp: TaskCallResponse) => void;
+ };
+ export declare const buildBlock: (head: Block, inherentProviders: InherentProvider[], params: BuildBlockParams, callbacks?: BuildBlockCallbacks) => Promise<[Block, HexString[]]>;
++export type DryRunResult = {
++    outcome: ApplyExtrinsicResult;
++    storageDiff: [HexString, HexString | null][];
++};
++/**
++ * Dry-run a batch of extrinsics against the same initialized block.
++ *
++ * Core_initialize_block and the inherents are executed once. Each extrinsic
++ * is then applied on a temporary storage layer that is pushed before the call
++ * and popped after, so no extrinsic side-effects leak into the next.
++ *
++ * Caveat: because account nonces revert with each pop, all extrinsics must be
++ * pre-signed with the same base nonce.
++ */
++export declare const dryRunExtrinsicsAmortized: (head: Block, inherentProviders: InherentProvider[], extrinsics: HexString[], params: BuildBlockParams) => Promise<DryRunResult[]>;
+ export declare const dryRunExtrinsic: (head: Block, inherentProviders: InherentProvider[], extrinsic: HexString | {
+     call: HexString;
+     address: string;
+diff --git a/dist/cjs/blockchain/block-builder.js b/dist/cjs/blockchain/block-builder.js
+index 2d38e44bfbea231b9a7a607c2ff0abcd095ce7e4..16c87b02d15539d243581c308bc7b196f48bf40e 100644
+--- a/dist/cjs/blockchain/block-builder.js
++++ b/dist/cjs/blockchain/block-builder.js
+@@ -15,6 +15,9 @@ _export(exports, {
+     get dryRunExtrinsic () {
+         return dryRunExtrinsic;
+     },
++    get dryRunExtrinsicsAmortized () {
++        return dryRunExtrinsicsAmortized;
++    },
+     get dryRunInherents () {
+         return dryRunInherents;
+     },
+@@ -378,6 +381,25 @@ const buildBlock = async (head, inherentProviders, params, callbacks)=>{
+         pendingExtrinsics
+     ];
+ };
++const dryRunExtrinsicsAmortized = async (head, inherentProviders, extrinsics, params)=>{
++    const registry = await head.registry;
++    const header = await newHeader(head);
++    const { block: newBlock } = await initNewBlock(head, header, inherentProviders, params);
++    const results = [];
++    for (const extrinsic of extrinsics){
++        newBlock.pushStorageLayer();
++        const resp = await newBlock.call('BlockBuilder_apply_extrinsic', [
++            extrinsic
++        ]);
++        const outcome = registry.createType('ApplyExtrinsicResult', resp.result);
++        results.push({
++            outcome,
++            storageDiff: resp.storageDiff
++        });
++        newBlock.popStorageLayer();
++    }
++    return results;
++};
+ const dryRunExtrinsic = async (head, inherentProviders, extrinsic, params)=>{
+     const registry = await head.registry;
+     const header = await newHeader(head);
+diff --git a/dist/cjs/blockchain/block.d.ts b/dist/cjs/blockchain/block.d.ts
+index ae1116a41adfe0c5dd04e0295aba39283720258d..c1f95ae1d59e29b8f4c257db5234561430f5209e 100644
+--- a/dist/cjs/blockchain/block.d.ts
++++ b/dist/cjs/blockchain/block.d.ts
+@@ -69,6 +69,16 @@ export declare class Block {
+      * Pop a layer from the storage stack.
+      */
+     popStorageLayer(): void;
++    /**
++     * Truncate the storage layer stack back to a target depth.
++     *
++     * Used by snapshot-restore mechanisms to undo accumulated dev.setStorage
++     * calls when reverting to a previously captured state, without losing the
++     * underlying block.
++     */
++    resetStorageLayers(targetCount: number): void;
++    /** The current depth of the storage layer stack. */
++    get storageLayerCount(): number;
+     /**
+      * Get storage diff.
+      */
 diff --git a/dist/cjs/blockchain/block.js b/dist/cjs/blockchain/block.js
-index d751a928b5c04a4fac2d9bb3e69df09b8d65187c..5fe2bb034834407e9c8b09bd1b1c6da6e25b1be5 100644
+index d751a928b5c04a4fac2d9bb3e69df09b8d65187c..39881ab9740042b86e13ae48307438c442489fed 100644
 --- a/dist/cjs/blockchain/block.js
 +++ b/dist/cjs/blockchain/block.js
-@@ -167,10 +167,17 @@ class Block {
-     /**
-    * Pop a layer from the storage stack.
-    */ popStorageLayer() {
--        _class_private_field_get(this, _storages).pop();
-+         _class_private_field_get(this, _storages).pop();
-+     }
-+    resetStorageLayers(targetCount) {
-+        const s = _class_private_field_get(this, _storages);
-+        while (s.length > targetCount) s.pop();
+@@ -170,6 +170,18 @@ class Block {
+         _class_private_field_get(this, _storages).pop();
      }
--    /**
--   * Get storage diff.
-+    get storageLayerCount() {
+     /**
++   * Truncate the storage layer stack back to a target depth.
++   *
++   * Used by snapshot-restore mechanisms to undo accumulated dev.setStorage
++   * calls when reverting to a previously captured state, without losing the
++   * underlying block.
++   */ resetStorageLayers(targetCount) {
++        while(_class_private_field_get(this, _storages).length > targetCount)_class_private_field_get(this, _storages).pop();
++    }
++    /** The current depth of the storage layer stack. */ get storageLayerCount() {
 +        return _class_private_field_get(this, _storages).length;
 +    }
-+     /**
-+    * Get storage diff.
++    /**
+    * Get storage diff.
     */ async storageDiff() {
          const storage = {};
-         for (const layer of _class_private_field_get(this, _storages)){
+diff --git a/dist/cjs/blockchain/head-state.js b/dist/cjs/blockchain/head-state.js
+index e56be80f2324711de32b392ae5260926ec029d08..5273c5b19ebd13a11d6d8e7273c056bf04e37eb3 100644
+--- a/dist/cjs/blockchain/head-state.js
++++ b/dist/cjs/blockchain/head-state.js
+@@ -95,20 +95,40 @@ class HeadState {
+             }
+         }
+         const diff = await _class_private_field_get(this, _head).storageDiff();
++        const newValues = {
++            ...diff
++        };
++        const watchedKeys = new Set();
++        for (const [keys] of Object.values(_class_private_field_get(this, _storageListeners))){
++            for (const key of keys)watchedKeys.add(key);
++        }
++        for (const key of watchedKeys){
++            if (newValues[key] === undefined && _class_private_field_get(this, _oldValues)[key] !== undefined) {
++                newValues[key] = await head.get(key) ?? null;
++            }
++        }
+         for (const [keys, cb] of Object.values(_class_private_field_get(this, _storageListeners))){
+-            const changed = keys.filter((key)=>diff[key]).map((key)=>[
+-                    key,
+-                    diff[key]
+-                ]);
+-            if (changed.length > 0) {
++            const changes = [];
++            for (const key of keys){
++                if (newValues[key] === undefined) continue;
++                if (newValues[key] !== _class_private_field_get(this, _oldValues)[key]) {
++                    changes.push([
++                        key,
++                        newValues[key]
++                    ]);
++                }
++            }
++            if (changes.length > 0) {
+                 try {
+-                    await cb(head, changed);
++                    await cb(head, changes);
+                 } catch (error) {
+                     logger.error(error, 'setHead storage diff callback error');
+                 }
+             }
+         }
+-        Object.assign(_class_private_field_get(this, _oldValues), diff);
++        for (const [key, value] of Object.entries(newValues)){
++            _class_private_field_get(this, _oldValues)[key] = value;
++        }
+     }
+     constructor(head){
+         _class_private_field_init(this, _headListeners, {
+diff --git a/dist/cjs/blockchain/index.d.ts b/dist/cjs/blockchain/index.d.ts
+index 37cab2402b1115d834161d0ce85e0add5b042ce9..94057ef7b98ee1cc9339219cb713197802f8784b 100644
+--- a/dist/cjs/blockchain/index.d.ts
++++ b/dist/cjs/blockchain/index.d.ts
+@@ -151,6 +151,15 @@ export declare class Blockchain {
+         outcome: ApplyExtrinsicResult;
+         storageDiff: [HexString, HexString | null][];
+     }>;
++    /**
++     * Dry-run a batch of extrinsics in block `at`, amortizing block initialization
++     * across the whole batch. Each extrinsic is applied independently — its storage
++     * changes do not accumulate into subsequent extrinsics.
++     */
++    dryRunExtrinsicsAmortized(extrinsics: HexString[], at?: HexString): Promise<{
++        outcome: ApplyExtrinsicResult;
++        storageDiff: [HexString, HexString | null][];
++    }[]>;
+     /**
+      * Dry run hrmp messages in block `at`.
+      * Return the storage diff.
+diff --git a/dist/cjs/blockchain/index.js b/dist/cjs/blockchain/index.js
+index b137dd792a3f8fb475dc8ad7df49aa16e48be0b0..95241247a5448b922385aef29081e82af7fdc130 100644
+--- a/dist/cjs/blockchain/index.js
++++ b/dist/cjs/blockchain/index.js
+@@ -326,6 +326,24 @@ class Blockchain {
+         };
+     }
+     /**
++   * Dry-run a batch of extrinsics in block `at`, amortizing block initialization
++   * across the whole batch. Each extrinsic is applied independently — its storage
++   * changes do not accumulate into subsequent extrinsics.
++   */ async dryRunExtrinsicsAmortized(extrinsics, at) {
++        await this.api.isReady;
++        const head = at ? await this.getBlock(at) : this.head;
++        if (!head) {
++            throw new Error(`Cannot find block ${at}`);
++        }
++        const params = {
++            transactions: [],
++            downwardMessages: [],
++            upwardMessages: [],
++            horizontalMessages: {}
++        };
++        return (0, _blockbuilder.dryRunExtrinsicsAmortized)(head, _class_private_field_get(this, _inherentProviders), extrinsics, params);
++    }
++    /**
+    * Dry run hrmp messages in block `at`.
+    * Return the storage diff.
+    */ async dryRunHrmp(hrmp, at) {
+diff --git a/dist/cjs/blockchain/storage-layer.js b/dist/cjs/blockchain/storage-layer.js
+index 369c63a9ba16c5ddc6464c7cf7ca7e3ef029d7d6..eb91d0e11a60b759b55714e578274b469764654b 100644
+--- a/dist/cjs/blockchain/storage-layer.js
++++ b/dist/cjs/blockchain/storage-layer.js
+@@ -87,7 +87,7 @@ var StorageValueKind = /*#__PURE__*/ function(StorageValueKind) {
+     StorageValueKind["DeletedPrefix"] = "DeletedPrefix";
+     return StorageValueKind;
+ }({});
+-var _api = /*#__PURE__*/ new WeakMap(), _at = /*#__PURE__*/ new WeakMap(), _db = /*#__PURE__*/ new WeakMap(), _keyCache = /*#__PURE__*/ new WeakMap(), _defaultChildKeyCache = /*#__PURE__*/ new WeakMap();
++var _api = /*#__PURE__*/ new WeakMap(), _at = /*#__PURE__*/ new WeakMap(), _db = /*#__PURE__*/ new WeakMap(), _keyCache = /*#__PURE__*/ new WeakMap(), _defaultChildKeyCache = /*#__PURE__*/ new WeakMap(), _inflight = /*#__PURE__*/ new WeakMap();
+ class RemoteStorageLayer {
+     deleted(_key) {
+         return false;
+@@ -99,13 +99,20 @@ class RemoteStorageLayer {
+                 return res.value ?? undefined;
+             }
+         }
++        const inflight = _class_private_field_get(this, _inflight).get(key);
++        if (inflight) return inflight;
+         logger.trace({
+             at: _class_private_field_get(this, _at),
+             key
+         }, 'RemoteStorageLayer get');
+-        const data = await _class_private_field_get(this, _api).getStorage(key, _class_private_field_get(this, _at));
+-        _class_private_field_get(this, _db)?.saveStorage(_class_private_field_get(this, _at), key, data);
+-        return data ?? undefined;
++        const fetch = _class_private_field_get(this, _api).getStorage(key, _class_private_field_get(this, _at)).then((data)=>{
++            _class_private_field_get(this, _db)?.saveStorage(_class_private_field_get(this, _at), key, data);
++            return data ?? undefined;
++        }).finally(()=>{
++            _class_private_field_get(this, _inflight).delete(key);
++        });
++        _class_private_field_get(this, _inflight).set(key, fetch);
++        return fetch;
+     }
+     async getMany(keys, _cache) {
+         const result = [];
+@@ -165,12 +172,33 @@ class RemoteStorageLayer {
+         }, 'RemoteStorageLayer getKeysPaged');
+         const isChild = (0, _index.isPrefixedChildKey)(prefix);
+         const minPrefixLen = isChild ? _index.CHILD_PREFIX_LENGTH : _index.PREFIX_LENGTH;
+-        // can't handle keyCache without prefix
+-        if (prefix === startKey || prefix.length < minPrefixLen || startKey.length < minPrefixLen) {
++        // KeyCache groups by the first `minPrefixLen` chars; it cannot correctly answer queries
++        // whose prefix is longer than that grouping width, so proxy directly to upstream.
++        if (prefix.length < minPrefixLen || startKey.length < minPrefixLen || prefix.length > minPrefixLen || startKey.length > minPrefixLen) {
+             return _class_private_field_get(this, _api).getKeysPaged(prefix, pageSize, startKey, _class_private_field_get(this, _at));
+         }
++        const startKeyEqualsPrefix = startKey === prefix;
++        let cachedKeys;
++        if (_class_private_field_get(this, _db)?.queryPagedKeys && startKeyEqualsPrefix) {
++            const cached = await _class_private_field_get(this, _db).queryPagedKeys(_class_private_field_get(this, _at), prefix);
++            if (cached) {
++                cachedKeys = cached;
++                isChild ? _class_private_field_get(this, _defaultChildKeyCache).feed([
++                    startKey,
++                    ...cached
++                ]) : _class_private_field_get(this, _keyCache).feed([
++                    startKey,
++                    ...cached
++                ]);
++            }
++        }
+         let batchComplete = false;
++        let fetchedNewKeys = false;
+         const keysPaged = [];
++        // Seed with cached keys so a cache-hit-then-extend doesn't truncate the persisted set.
++        const allFetchedKeys = cachedKeys ? [
++            ...cachedKeys
++        ] : [];
+         while(keysPaged.length < pageSize){
+             const nextKey = isChild ? await _class_private_field_get(this, _defaultChildKeyCache).next(startKey) : await _class_private_field_get(this, _keyCache).next(startKey);
+             if (nextKey) {
+@@ -203,15 +231,7 @@ class RemoteStorageLayer {
+                 break;
+             }
+             if (_class_private_field_get(this, _db)) {
+-                // filter out keys that are not in the db]
+-                const newBatch = [];
+-                for (const key of batch){
+-                    const res = await _class_private_field_get(this, _db).queryStorage(_class_private_field_get(this, _at), key);
+-                    if (res) {
+-                        continue;
+-                    }
+-                    newBatch.push(key);
+-                }
++                const newBatch = await Promise.all(batch.map((key)=>_class_private_field_get(this, _db).queryStorage(_class_private_field_get(this, _at), key).then((r)=>r ? null : key))).then((rs)=>rs.filter((k)=>k !== null));
+                 if (newBatch.length > 0) {
+                     // batch fetch storage values and save to db, they may be used later
+                     _class_private_field_get(this, _api).getStorageBatch(prefix, newBatch, _class_private_field_get(this, _at)).then((storage)=>{
+@@ -220,8 +240,15 @@ class RemoteStorageLayer {
+                         }
+                     });
+                 }
++                if (startKeyEqualsPrefix) {
++                    allFetchedKeys.push(...batch);
++                    fetchedNewKeys = true;
++                }
+             }
+         }
++        if (_class_private_field_get(this, _db)?.savePagedKeys && startKeyEqualsPrefix && fetchedNewKeys) {
++            await _class_private_field_get(this, _db).savePagedKeys(_class_private_field_get(this, _at), prefix, allFetchedKeys);
++        }
+         return keysPaged;
+     }
+     constructor(api, at, db){
+@@ -245,6 +272,10 @@ class RemoteStorageLayer {
+             writable: true,
+             value: new _keycache.default(_index.CHILD_PREFIX_LENGTH)
+         });
++        _class_private_field_init(this, _inflight, {
++            writable: true,
++            value: new Map()
++        });
+         _class_private_field_set(this, _api, api);
+         _class_private_field_set(this, _at, at);
+         _class_private_field_set(this, _db, db);
+diff --git a/dist/cjs/database.d.ts b/dist/cjs/database.d.ts
+index b1423f2783b11eca809a0c1f9e7a1e7e70f4a718..69357c92e7c90ae94931b805c51100ec402e785a 100644
+--- a/dist/cjs/database.d.ts
++++ b/dist/cjs/database.d.ts
+@@ -24,4 +24,8 @@ export declare class Database {
+     saveStorage: (blockHash: HexString, key: HexString, value: HexString | null) => Promise<void>;
+     saveStorageBatch?: (entries: KeyValueEntry[]) => Promise<void>;
+     queryStorage: (blockHash: HexString, key: HexString) => Promise<KeyValueEntry | null>;
++    queryPagedKeys?: (blockHash: HexString, prefix: HexString) => Promise<HexString[] | null>;
++    savePagedKeys?: (blockHash: HexString, prefix: HexString, keys: HexString[]) => Promise<void>;
++    queryRpcCall?: (scope: string, method: string, params: string) => Promise<string | null>;
++    saveRpcCall?: (scope: string, method: string, params: string, result: string) => Promise<void>;
+ }
+diff --git a/dist/cjs/setup.js b/dist/cjs/setup.js
+index 263e58ff483731038e9b8287770b81f50e0dcee1..65d5c5f71db1f213762516b8d9048c02894e2eb3 100644
+--- a/dist/cjs/setup.js
++++ b/dist/cjs/setup.js
+@@ -38,6 +38,10 @@ const processOptions = async (options)=>{
+     const api = new _api.Api(provider);
+     // setup api hooks
+     api.onFetching(options.hooks?.apiFetching);
++    if (options.db) {
++        const scope = typeof options.endpoint === 'string' ? options.endpoint : JSON.stringify(options.endpoint ?? '');
++        api.setDb(options.db, scope);
++    }
+     await api.isReady;
+     let blockHash;
+     if (options.block == null) {
+diff --git a/dist/esm/api.d.ts b/dist/esm/api.d.ts
+index 8d0e88231efcff26a43a7c7a8dff86913215d810..ddb1f95bf24537512883e71f48974af32ebf7799 100644
+--- a/dist/esm/api.d.ts
++++ b/dist/esm/api.d.ts
+@@ -1,6 +1,7 @@
+ import type { ProviderInterface, ProviderInterfaceCallback } from '@polkadot/rpc-provider/types';
+ import type { ExtDef } from '@polkadot/types/extrinsic/signedExtensions/types';
+ import type { HexString } from '@polkadot/util/types';
++import type { Database } from './database.js';
+ import type { ChainProperties, Header, SignedBlock } from './index.js';
+ /**
+  * API class. Calls provider to get on-chain data.
+@@ -18,6 +19,7 @@ export declare class Api {
+     #private;
+     readonly signedExtensions: ExtDef;
+     constructor(provider: ProviderInterface, signedExtensions?: ExtDef);
++    setDb(db: Database, scope: string): void;
+     disconnect(): Promise<void>;
+     get isReady(): Promise<void> | undefined;
+     get chain(): Promise<string>;
+diff --git a/dist/esm/api.js b/dist/esm/api.js
+index 0bc9bb060e404c59ff992170c0deb73346f96c5d..732aee2462d50f67d37ad948e39df41dc44972ec 100644
+--- a/dist/esm/api.js
++++ b/dist/esm/api.js
+@@ -1,6 +1,13 @@
+ import RpcError from '@polkadot/rpc-provider/coder/error';
+ import _ from 'lodash';
+ import { prefixedChildKey, splitChildKey, stripChildPrefix } from './utils/index.js';
++const CACHEABLE_METHODS = new Set([
++    'system_chain',
++    'system_properties',
++    'system_name',
++    'chain_getBlockHash',
++    'chain_getHeader'
++]);
+ /**
+  * API class. Calls provider to get on-chain data.
+  * Either `endpoint` or `genesis` porvider must be provided.
+@@ -17,12 +24,31 @@ import { prefixedChildKey, splitChildKey, stripChildPrefix } from './utils/index
+     #ready;
+     #chain;
+     #chainProperties;
++    #db;
++    #scope;
+     signedExtensions;
+     #apiHooks = {};
+     constructor(provider, signedExtensions){
+         this.#provider = provider;
+         this.signedExtensions = signedExtensions || {};
+     }
++    setDb(db, scope) {
++        this.#db = db;
++        this.#scope = scope;
++    }
++    async #cachedSend(method, params, isCacheable) {
++        if (this.#db?.queryRpcCall && this.#scope && CACHEABLE_METHODS.has(method)) {
++            const key = JSON.stringify(params);
++            const cached = await this.#db.queryRpcCall(this.#scope, method, key);
++            if (cached !== null) return JSON.parse(cached);
++            this.#apiHooks?.fetching?.();
++            const result = await this.#provider.send(method, params, isCacheable);
++            await this.#db.saveRpcCall?.(this.#scope, method, key, JSON.stringify(result));
++            return result;
++        }
++        this.#apiHooks?.fetching?.();
++        return this.#provider.send(method, params, isCacheable);
++    }
+     async disconnect() {
+         return this.#provider.disconnect();
+     }
+@@ -64,21 +90,21 @@ import { prefixedChildKey, splitChildKey, stripChildPrefix } from './utils/index
+         return this.#provider.send(method, params, isCacheable);
+     }
+     async getSystemName() {
+-        return this.send('system_name', []);
++        return this.#cachedSend('system_name', []);
+     }
+     async getSystemProperties() {
+-        return this.send('system_properties', []);
++        return this.#cachedSend('system_properties', []);
+     }
+     async getSystemChain() {
+-        return this.send('system_chain', []);
++        return this.#cachedSend('system_chain', []);
+     }
+     async getBlockHash(blockNumber) {
+-        return this.send('chain_getBlockHash', Number.isInteger(blockNumber) ? [
++        return this.#cachedSend('chain_getBlockHash', Number.isInteger(blockNumber) ? [
+             blockNumber
+         ] : [], !!blockNumber);
+     }
+     async getHeader(hash) {
+-        return this.send('chain_getHeader', hash ? [
++        return this.#cachedSend('chain_getHeader', hash ? [
+             hash
+         ] : [], !!hash);
+     }
+diff --git a/dist/esm/blockchain/block-builder.d.ts b/dist/esm/blockchain/block-builder.d.ts
+index a5aa89355d7195670934e832c71aba7a8d47241b..d1e1932960cb4d772c6ff2b0e6045dd87ca0fc67 100644
+--- a/dist/esm/blockchain/block-builder.d.ts
++++ b/dist/esm/blockchain/block-builder.d.ts
+@@ -1,4 +1,4 @@
+-import type { Header, TransactionValidityError } from '@polkadot/types/interfaces';
++import type { ApplyExtrinsicResult, Header, TransactionValidityError } from '@polkadot/types/interfaces';
+ import type { HexString } from '@polkadot/util/types';
+ import type { TaskCallResponse } from '../wasm-executor/index.js';
+ import { Block } from './block.js';
+@@ -10,6 +10,21 @@ export type BuildBlockCallbacks = {
+     onPhaseApplied?: (phase: 'initialize' | 'finalize' | number, resp: TaskCallResponse) => void;
+ };
+ export declare const buildBlock: (head: Block, inherentProviders: InherentProvider[], params: BuildBlockParams, callbacks?: BuildBlockCallbacks) => Promise<[Block, HexString[]]>;
++export type DryRunResult = {
++    outcome: ApplyExtrinsicResult;
++    storageDiff: [HexString, HexString | null][];
++};
++/**
++ * Dry-run a batch of extrinsics against the same initialized block.
++ *
++ * Core_initialize_block and the inherents are executed once. Each extrinsic
++ * is then applied on a temporary storage layer that is pushed before the call
++ * and popped after, so no extrinsic side-effects leak into the next.
++ *
++ * Caveat: because account nonces revert with each pop, all extrinsics must be
++ * pre-signed with the same base nonce.
++ */
++export declare const dryRunExtrinsicsAmortized: (head: Block, inherentProviders: InherentProvider[], extrinsics: HexString[], params: BuildBlockParams) => Promise<DryRunResult[]>;
+ export declare const dryRunExtrinsic: (head: Block, inherentProviders: InherentProvider[], extrinsic: HexString | {
+     call: HexString;
+     address: string;
+diff --git a/dist/esm/blockchain/block-builder.js b/dist/esm/blockchain/block-builder.js
+index a5252f8266ccbf70bd8590b40799ba652123ff68..bdded3af9d49206f82ae93e27ff3dad2645ab400 100644
+--- a/dist/esm/blockchain/block-builder.js
++++ b/dist/esm/blockchain/block-builder.js
+@@ -354,6 +354,34 @@ export const buildBlock = async (head, inherentProviders, params, callbacks)=>{
+         pendingExtrinsics
+     ];
+ };
++/**
++ * Dry-run a batch of extrinsics against the same initialized block.
++ *
++ * Core_initialize_block and the inherents are executed once. Each extrinsic
++ * is then applied on a temporary storage layer that is pushed before the call
++ * and popped after, so no extrinsic side-effects leak into the next.
++ *
++ * Caveat: because account nonces revert with each pop, all extrinsics must be
++ * pre-signed with the same base nonce.
++ */ export const dryRunExtrinsicsAmortized = async (head, inherentProviders, extrinsics, params)=>{
++    const registry = await head.registry;
++    const header = await newHeader(head);
++    const { block: newBlock } = await initNewBlock(head, header, inherentProviders, params);
++    const results = [];
++    for (const extrinsic of extrinsics){
++        newBlock.pushStorageLayer();
++        const resp = await newBlock.call('BlockBuilder_apply_extrinsic', [
++            extrinsic
++        ]);
++        const outcome = registry.createType('ApplyExtrinsicResult', resp.result);
++        results.push({
++            outcome,
++            storageDiff: resp.storageDiff
++        });
++        newBlock.popStorageLayer();
++    }
++    return results;
++};
+ export const dryRunExtrinsic = async (head, inherentProviders, extrinsic, params)=>{
+     const registry = await head.registry;
+     const header = await newHeader(head);
+diff --git a/dist/esm/blockchain/block.d.ts b/dist/esm/blockchain/block.d.ts
+index ae1116a41adfe0c5dd04e0295aba39283720258d..c1f95ae1d59e29b8f4c257db5234561430f5209e 100644
+--- a/dist/esm/blockchain/block.d.ts
++++ b/dist/esm/blockchain/block.d.ts
+@@ -69,6 +69,16 @@ export declare class Block {
+      * Pop a layer from the storage stack.
+      */
+     popStorageLayer(): void;
++    /**
++     * Truncate the storage layer stack back to a target depth.
++     *
++     * Used by snapshot-restore mechanisms to undo accumulated dev.setStorage
++     * calls when reverting to a previously captured state, without losing the
++     * underlying block.
++     */
++    resetStorageLayers(targetCount: number): void;
++    /** The current depth of the storage layer stack. */
++    get storageLayerCount(): number;
+     /**
+      * Get storage diff.
+      */
 diff --git a/dist/esm/blockchain/block.js b/dist/esm/blockchain/block.js
-index edff7f74638a5c21c5f73c6831708b46eb6a576c..c9b9687bb6cc0169e1cad54bce99efb1c950cc1f 100644
+index edff7f74638a5c21c5f73c6831708b46eb6a576c..d8683ea3b96b7d7235ca3542d5ff6181b02263d2 100644
 --- a/dist/esm/blockchain/block.js
 +++ b/dist/esm/blockchain/block.js
-@@ -157,10 +157,16 @@ import { RemoteStorageLayer, StorageLayer, StorageValueKind } from './storage-la
-     /**
-    * Pop a layer from the storage stack.
-    */ popStorageLayer() {
--        this.#storages.pop();
-+         this.#storages.pop();
-+     }
-+    resetStorageLayers(targetCount) {
-+        while (this.#storages.length > targetCount) this.#storages.pop();
+@@ -160,6 +160,18 @@ import { RemoteStorageLayer, StorageLayer, StorageValueKind } from './storage-la
+         this.#storages.pop();
      }
--    /**
--   * Get storage diff.
-+    get storageLayerCount() {
+     /**
++   * Truncate the storage layer stack back to a target depth.
++   *
++   * Used by snapshot-restore mechanisms to undo accumulated dev.setStorage
++   * calls when reverting to a previously captured state, without losing the
++   * underlying block.
++   */ resetStorageLayers(targetCount) {
++        while(this.#storages.length > targetCount)this.#storages.pop();
++    }
++    /** The current depth of the storage layer stack. */ get storageLayerCount() {
 +        return this.#storages.length;
 +    }
-+     /**
-+    * Get storage diff.
++    /**
+    * Get storage diff.
     */ async storageDiff() {
          const storage = {};
-         for (const layer of this.#storages){
+diff --git a/dist/esm/blockchain/head-state.js b/dist/esm/blockchain/head-state.js
+index 7a806a7612f7cd9c859a3f41e89764a3a80e2b80..cb086041886b6a5b10afd1b245838ba290a96b4c 100644
+--- a/dist/esm/blockchain/head-state.js
++++ b/dist/esm/blockchain/head-state.js
+@@ -43,19 +43,39 @@ export class HeadState {
+             }
+         }
+         const diff = await this.#head.storageDiff();
++        const newValues = {
++            ...diff
++        };
++        const watchedKeys = new Set();
++        for (const [keys] of Object.values(this.#storageListeners)){
++            for (const key of keys)watchedKeys.add(key);
++        }
++        for (const key of watchedKeys){
++            if (newValues[key] === undefined && this.#oldValues[key] !== undefined) {
++                newValues[key] = await head.get(key) ?? null;
++            }
++        }
+         for (const [keys, cb] of Object.values(this.#storageListeners)){
+-            const changed = keys.filter((key)=>diff[key]).map((key)=>[
+-                    key,
+-                    diff[key]
+-                ]);
+-            if (changed.length > 0) {
++            const changes = [];
++            for (const key of keys){
++                if (newValues[key] === undefined) continue;
++                if (newValues[key] !== this.#oldValues[key]) {
++                    changes.push([
++                        key,
++                        newValues[key]
++                    ]);
++                }
++            }
++            if (changes.length > 0) {
+                 try {
+-                    await cb(head, changed);
++                    await cb(head, changes);
+                 } catch (error) {
+                     logger.error(error, 'setHead storage diff callback error');
+                 }
+             }
+         }
+-        Object.assign(this.#oldValues, diff);
++        for (const [key, value] of Object.entries(newValues)){
++            this.#oldValues[key] = value;
++        }
+     }
+ }
+diff --git a/dist/esm/blockchain/index.d.ts b/dist/esm/blockchain/index.d.ts
+index 37cab2402b1115d834161d0ce85e0add5b042ce9..94057ef7b98ee1cc9339219cb713197802f8784b 100644
+--- a/dist/esm/blockchain/index.d.ts
++++ b/dist/esm/blockchain/index.d.ts
+@@ -151,6 +151,15 @@ export declare class Blockchain {
+         outcome: ApplyExtrinsicResult;
+         storageDiff: [HexString, HexString | null][];
+     }>;
++    /**
++     * Dry-run a batch of extrinsics in block `at`, amortizing block initialization
++     * across the whole batch. Each extrinsic is applied independently — its storage
++     * changes do not accumulate into subsequent extrinsics.
++     */
++    dryRunExtrinsicsAmortized(extrinsics: HexString[], at?: HexString): Promise<{
++        outcome: ApplyExtrinsicResult;
++        storageDiff: [HexString, HexString | null][];
++    }[]>;
+     /**
+      * Dry run hrmp messages in block `at`.
+      * Return the storage diff.
+diff --git a/dist/esm/blockchain/index.js b/dist/esm/blockchain/index.js
+index 345fc565ff7bcf116f3fed9375abcd04ca2d95f5..0cd01806e58a95ee918a60ec2617d061cb55a643 100644
+--- a/dist/esm/blockchain/index.js
++++ b/dist/esm/blockchain/index.js
+@@ -7,7 +7,7 @@ import { defaultLogger } from '../logger.js';
+ import { OffchainWorker } from '../offchain.js';
+ import { compactHex } from '../utils/index.js';
+ import { Block } from './block.js';
+-import { dryRunExtrinsic, dryRunInherents } from './block-builder.js';
++import { dryRunExtrinsic, dryRunExtrinsicsAmortized, dryRunInherents } from './block-builder.js';
+ import { HeadState } from './head-state.js';
+ import { TxPool } from './txpool.js';
+ const logger = defaultLogger.child({
+@@ -330,6 +330,24 @@ const logger = defaultLogger.child({
+         };
+     }
+     /**
++   * Dry-run a batch of extrinsics in block `at`, amortizing block initialization
++   * across the whole batch. Each extrinsic is applied independently — its storage
++   * changes do not accumulate into subsequent extrinsics.
++   */ async dryRunExtrinsicsAmortized(extrinsics, at) {
++        await this.api.isReady;
++        const head = at ? await this.getBlock(at) : this.head;
++        if (!head) {
++            throw new Error(`Cannot find block ${at}`);
++        }
++        const params = {
++            transactions: [],
++            downwardMessages: [],
++            upwardMessages: [],
++            horizontalMessages: {}
++        };
++        return dryRunExtrinsicsAmortized(head, this.#inherentProviders, extrinsics, params);
++    }
++    /**
+    * Dry run hrmp messages in block `at`.
+    * Return the storage diff.
+    */ async dryRunHrmp(hrmp, at) {
+diff --git a/dist/esm/blockchain/storage-layer.js b/dist/esm/blockchain/storage-layer.js
+index 98debde42290804ee12be4f2c31fd8ac70799bd3..77b22c1db9aba42b771e93f8adc3d1165cad98d3 100644
+--- a/dist/esm/blockchain/storage-layer.js
++++ b/dist/esm/blockchain/storage-layer.js
+@@ -17,6 +17,7 @@ export class RemoteStorageLayer {
+     #db;
+     #keyCache = new KeyCache(PREFIX_LENGTH);
+     #defaultChildKeyCache = new KeyCache(CHILD_PREFIX_LENGTH);
++    #inflight = new Map();
+     constructor(api, at, db){
+         this.#api = api;
+         this.#at = at;
+@@ -32,13 +33,20 @@ export class RemoteStorageLayer {
+                 return res.value ?? undefined;
+             }
+         }
++        const inflight = this.#inflight.get(key);
++        if (inflight) return inflight;
+         logger.trace({
+             at: this.#at,
+             key
+         }, 'RemoteStorageLayer get');
+-        const data = await this.#api.getStorage(key, this.#at);
+-        this.#db?.saveStorage(this.#at, key, data);
+-        return data ?? undefined;
++        const fetch = this.#api.getStorage(key, this.#at).then((data)=>{
++            this.#db?.saveStorage(this.#at, key, data);
++            return data ?? undefined;
++        }).finally(()=>{
++            this.#inflight.delete(key);
++        });
++        this.#inflight.set(key, fetch);
++        return fetch;
+     }
+     async getMany(keys, _cache) {
+         const result = [];
+@@ -98,12 +106,33 @@ export class RemoteStorageLayer {
+         }, 'RemoteStorageLayer getKeysPaged');
+         const isChild = isPrefixedChildKey(prefix);
+         const minPrefixLen = isChild ? CHILD_PREFIX_LENGTH : PREFIX_LENGTH;
+-        // can't handle keyCache without prefix
+-        if (prefix === startKey || prefix.length < minPrefixLen || startKey.length < minPrefixLen) {
++        // KeyCache groups by the first `minPrefixLen` chars; it cannot correctly answer queries
++        // whose prefix is longer than that grouping width, so proxy directly to upstream.
++        if (prefix.length < minPrefixLen || startKey.length < minPrefixLen || prefix.length > minPrefixLen || startKey.length > minPrefixLen) {
+             return this.#api.getKeysPaged(prefix, pageSize, startKey, this.#at);
+         }
++        const startKeyEqualsPrefix = startKey === prefix;
++        let cachedKeys;
++        if (this.#db?.queryPagedKeys && startKeyEqualsPrefix) {
++            const cached = await this.#db.queryPagedKeys(this.#at, prefix);
++            if (cached) {
++                cachedKeys = cached;
++                isChild ? this.#defaultChildKeyCache.feed([
++                    startKey,
++                    ...cached
++                ]) : this.#keyCache.feed([
++                    startKey,
++                    ...cached
++                ]);
++            }
++        }
+         let batchComplete = false;
++        let fetchedNewKeys = false;
+         const keysPaged = [];
++        // Seed with cached keys so a cache-hit-then-extend doesn't truncate the persisted set.
++        const allFetchedKeys = cachedKeys ? [
++            ...cachedKeys
++        ] : [];
+         while(keysPaged.length < pageSize){
+             const nextKey = isChild ? await this.#defaultChildKeyCache.next(startKey) : await this.#keyCache.next(startKey);
+             if (nextKey) {
+@@ -136,15 +165,7 @@ export class RemoteStorageLayer {
+                 break;
+             }
+             if (this.#db) {
+-                // filter out keys that are not in the db]
+-                const newBatch = [];
+-                for (const key of batch){
+-                    const res = await this.#db.queryStorage(this.#at, key);
+-                    if (res) {
+-                        continue;
+-                    }
+-                    newBatch.push(key);
+-                }
++                const newBatch = await Promise.all(batch.map((key)=>this.#db.queryStorage(this.#at, key).then((r)=>r ? null : key))).then((rs)=>rs.filter((k)=>k !== null));
+                 if (newBatch.length > 0) {
+                     // batch fetch storage values and save to db, they may be used later
+                     this.#api.getStorageBatch(prefix, newBatch, this.#at).then((storage)=>{
+@@ -153,8 +174,15 @@ export class RemoteStorageLayer {
+                         }
+                     });
+                 }
++                if (startKeyEqualsPrefix) {
++                    allFetchedKeys.push(...batch);
++                    fetchedNewKeys = true;
++                }
+             }
+         }
++        if (this.#db?.savePagedKeys && startKeyEqualsPrefix && fetchedNewKeys) {
++            await this.#db.savePagedKeys(this.#at, prefix, allFetchedKeys);
++        }
+         return keysPaged;
+     }
+ }
+diff --git a/dist/esm/database.d.ts b/dist/esm/database.d.ts
+index b1423f2783b11eca809a0c1f9e7a1e7e70f4a718..69357c92e7c90ae94931b805c51100ec402e785a 100644
+--- a/dist/esm/database.d.ts
++++ b/dist/esm/database.d.ts
+@@ -24,4 +24,8 @@ export declare class Database {
+     saveStorage: (blockHash: HexString, key: HexString, value: HexString | null) => Promise<void>;
+     saveStorageBatch?: (entries: KeyValueEntry[]) => Promise<void>;
+     queryStorage: (blockHash: HexString, key: HexString) => Promise<KeyValueEntry | null>;
++    queryPagedKeys?: (blockHash: HexString, prefix: HexString) => Promise<HexString[] | null>;
++    savePagedKeys?: (blockHash: HexString, prefix: HexString, keys: HexString[]) => Promise<void>;
++    queryRpcCall?: (scope: string, method: string, params: string) => Promise<string | null>;
++    saveRpcCall?: (scope: string, method: string, params: string, result: string) => Promise<void>;
+ }
+diff --git a/dist/esm/setup.js b/dist/esm/setup.js
+index 528f4f74a9b10867da2cadcc0ee1b5d75eaadda8..00907f13e8258912c3b24063f4a47b74c3fbf991 100644
+--- a/dist/esm/setup.js
++++ b/dist/esm/setup.js
+@@ -20,6 +20,10 @@ export const processOptions = async (options)=>{
+     const api = new Api(provider);
+     // setup api hooks
+     api.onFetching(options.hooks?.apiFetching);
++    if (options.db) {
++        const scope = typeof options.endpoint === 'string' ? options.endpoint : JSON.stringify(options.endpoint ?? '');
++        api.setDb(options.db, scope);
++    }
+     await api.isReady;
+     let blockHash;
+     if (options.block == null) {
