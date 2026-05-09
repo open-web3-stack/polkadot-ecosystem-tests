@@ -780,3 +780,22 @@ export async function testCallsViaForceBatch(
     }
   }
 }
+
+/**
+ * Decode the `system.events` value from a `dryRunExtrinsicsAmortized` storageDiff.
+ *
+ * Returns an object shaped like the one `sendTransaction` returns (`{ events: Promise<Codec[]> }`)
+ * so it can be passed straight to `checkEvents`.
+ */
+export function eventsFromAmortizedDryRunResult(
+  api: ApiPromise,
+  storageDiff: [HexString, HexString | null][],
+): { events: Promise<EventRecord[]> } {
+  const eventsKey = api.query.system.events.key()
+  const entry = storageDiff.find(([k]) => k.toLowerCase() === eventsKey.toLowerCase())
+  const decoded =
+    entry && entry[1] !== null
+      ? (api.createType('Vec<FrameSystemEventRecord>', entry[1]) as unknown as EventRecord[])
+      : []
+  return { events: Promise.resolve(decoded) }
+}

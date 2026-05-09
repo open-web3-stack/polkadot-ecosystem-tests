@@ -28,6 +28,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@acala-network/chopsticks-core@patch:@acala-network/chopsticks-core@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-core-npm-1.3.1-9f30da61ad.patch":
+  version: 1.3.1
+  resolution: "@acala-network/chopsticks-core@patch:@acala-network/chopsticks-core@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-core-npm-1.3.1-9f30da61ad.patch::version=1.3.1&hash=34e351"
+  dependencies:
+    "@acala-network/chopsticks-executor": "npm:1.3.1"
+    "@polkadot/rpc-provider": "npm:^16.4.1"
+    "@polkadot/types": "npm:^16.4.1"
+    "@polkadot/types-codec": "npm:^16.4.1"
+    "@polkadot/types-known": "npm:^16.4.1"
+    "@polkadot/util": "npm:^14.0.1"
+    "@polkadot/util-crypto": "npm:^14.0.1"
+    comlink: "npm:^4.4.2"
+    eventemitter3: "npm:^5.0.1"
+    lodash: "npm:^4.18.1"
+    lru-cache: "npm:^11.1.0"
+    pino: "npm:^9.7.0"
+    pino-pretty: "npm:^13.0.0"
+    rxjs: "npm:^7.8.2"
+    zod: "npm:^3.25.76"
+  checksum: 10c0/f400e2a1b281164955373d80a34ed91e24f41c09b48bfb9a760d0c5edd5890cbe4141131aca1f7631feef667524ef00ad917e036518f75bf9442ab7c51ffa90b
+  languageName: node
+  linkType: hard
+
 "@acala-network/chopsticks-db@npm:1.3.1":
   version: 1.3.1
   resolution: "@acala-network/chopsticks-db@npm:1.3.1"
@@ -39,6 +62,20 @@ __metadata:
     sqlite3: "npm:^5.1.7"
     typeorm: "npm:^0.3.26"
   checksum: 10c0/cea9c915eb49db77963746139cc8bf83b3e088c7bc468c4392b532628d39a64214bafeb917526d6bf1df4ef72bf932f8558bbaa86285b3247676828e286d7036
+  languageName: node
+  linkType: hard
+
+"@acala-network/chopsticks-db@patch:@acala-network/chopsticks-db@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-db-npm-1.3.1-3e5ee4ba00.patch":
+  version: 1.3.1
+  resolution: "@acala-network/chopsticks-db@patch:@acala-network/chopsticks-db@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-db-npm-1.3.1-3e5ee4ba00.patch::version=1.3.1&hash=6d08d1"
+  dependencies:
+    "@acala-network/chopsticks-core": "npm:1.3.1"
+    "@polkadot/util": "npm:^14.0.1"
+    idb: "npm:^8.0.3"
+    reflect-metadata: "npm:^0.2.2"
+    sqlite3: "npm:^5.1.7"
+    typeorm: "npm:^0.3.26"
+  checksum: 10c0/fe7f7e09888489ea112a9b13fde2b3d2f8572b1b2515e98af3520aa2ee0a87a233a4a262d2e5e0e554adfb2d0f43da96e780a549b7bed0c281c40cd79e82d84a
   languageName: node
   linkType: hard
 
@@ -78,6 +115,24 @@ __metadata:
     "@polkadot/util": "npm:^14.0.1"
     polkadot-api: "npm:^1.14.1"
   checksum: 10c0/0eeb5597eebde02085560ce2536d28fc5144bb1440f6d246969df9ca008dd01de2b8a994f1bfdd0dddce3630a4cc0382db67b92bd2ab7f6707c34a995ac96fca
+  languageName: node
+  linkType: hard
+
+"@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.3.1-1c404ca1be.patch":
+  version: 1.3.1
+  resolution: "@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.3.1-1c404ca1be.patch::version=1.3.1&hash=196c31"
+  dependencies:
+    "@acala-network/chopsticks": "npm:1.3.1"
+    "@acala-network/chopsticks-core": "npm:1.3.1"
+    "@polkadot-labs/hdkd": "npm:^0.0.19"
+    "@polkadot-labs/hdkd-helpers": "npm:^0.0.19"
+    "@polkadot/api": "npm:^16.4.1"
+    "@polkadot/api-base": "npm:^16.4.1"
+    "@polkadot/keyring": "npm:^14.0.1"
+    "@polkadot/types": "npm:^16.4.1"
+    "@polkadot/util": "npm:^14.0.1"
+    polkadot-api: "npm:^1.14.1"
+  checksum: 10c0/e51da98ffea4633458ac0d6dbefbbed5f5391e067aa92343f925e19a584c9121543c24fdd98a0029db3f632b6ef27775c8aabd4e7577c91d70d2177cae82750c
   languageName: node
   linkType: hard
 
@@ -270,7 +325,7 @@ __metadata:
     "@acala-network/chopsticks-testing": "npm:^1.3.1"
     "@e2e-test/networks": "workspace:*"
     "@polkadot/api": "npm:^16.5.6"
-    "@polkadot/types": "npm:^16.5.6"
+    "@polkadot/types": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch"
     "@polkadot/types-augment": "npm:^16.5.6"
   languageName: unknown
   linkType: soft

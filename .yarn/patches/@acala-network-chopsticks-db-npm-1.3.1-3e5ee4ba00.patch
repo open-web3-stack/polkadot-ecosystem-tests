@@ -1,0 +1,301 @@
+diff --git a/dist/cjs/base-sql.d.ts b/dist/cjs/base-sql.d.ts
+index 04c6083e33ca834e3e46599cc1b9f02ec6d2e08a..697b5010b7d311b89bfd87c2b732ca3bae16a095 100644
+--- a/dist/cjs/base-sql.d.ts
++++ b/dist/cjs/base-sql.d.ts
+@@ -13,4 +13,8 @@ export declare abstract class BaseSqlDatabase implements Database {
+     saveStorage(blockHash: HexString, key: HexString, value: HexString | null): Promise<void>;
+     saveStorageBatch(entries: KeyValueEntry[]): Promise<void>;
+     queryStorage(blockHash: HexString, key: HexString): Promise<KeyValueEntry | null>;
++    queryPagedKeys(blockHash: HexString, prefix: HexString): Promise<HexString[] | null>;
++    savePagedKeys(blockHash: HexString, prefix: HexString, keys: HexString[]): Promise<void>;
++    queryRpcCall(scope: string, method: string, params: string): Promise<string | null>;
++    saveRpcCall(scope: string, method: string, params: string, result: string): Promise<void>;
+ }
+diff --git a/dist/cjs/base-sql.js b/dist/cjs/base-sql.js
+index 5734ae19b072c0a878ae8aca70e1c7392075c579..f10d667006466c265564def304271733d0de6d3f 100644
+--- a/dist/cjs/base-sql.js
++++ b/dist/cjs/base-sql.js
+@@ -107,6 +107,51 @@ class BaseSqlDatabase {
+             }
+         });
+     }
++    async queryPagedKeys(blockHash, prefix) {
++        const db = await this.datasource;
++        const row = await db.getRepository(_entities.PagedKeys).findOne({
++            where: {
++                blockHash,
++                prefix
++            }
++        });
++        return row ? JSON.parse(row.keys) : null;
++    }
++    async savePagedKeys(blockHash, prefix, keys) {
++        const db = await this.datasource;
++        await db.getRepository(_entities.PagedKeys).upsert({
++            blockHash,
++            prefix,
++            keys: JSON.stringify(keys)
++        }, [
++            'blockHash',
++            'prefix'
++        ]);
++    }
++    async queryRpcCall(scope, method, params) {
++        const db = await this.datasource;
++        const row = await db.getRepository(_entities.RpcCall).findOne({
++            where: {
++                scope,
++                method,
++                params
++            }
++        });
++        return row?.result ?? null;
++    }
++    async saveRpcCall(scope, method, params, result) {
++        const db = await this.datasource;
++        await db.getRepository(_entities.RpcCall).upsert({
++            scope,
++            method,
++            params,
++            result
++        }, [
++            'scope',
++            'method',
++            'params'
++        ]);
++    }
+     constructor(){
+         _define_property(this, "close", async ()=>{
+             const db = await this.datasource;
+diff --git a/dist/cjs/db/entities.d.ts b/dist/cjs/db/entities.d.ts
+index 879c444011b699b4a7bf4068c8874c2895209405..24cb0016d0535caf10a644591f6b3becd989dfdb 100644
+--- a/dist/cjs/db/entities.d.ts
++++ b/dist/cjs/db/entities.d.ts
+@@ -1,4 +1,17 @@
+ import type { BlockEntry, KeyValueEntry } from '@acala-network/chopsticks-core';
+ import { EntitySchema } from 'typeorm';
++export type PagedKeysEntry = {
++    blockHash: string;
++    prefix: string;
++    keys: string;
++};
++export type RpcCallEntry = {
++    scope: string;
++    method: string;
++    params: string;
++    result: string;
++};
+ export declare const KeyValuePair: EntitySchema<KeyValueEntry>;
+ export declare const BlockEntity: EntitySchema<BlockEntry>;
++export declare const PagedKeys: EntitySchema<PagedKeysEntry>;
++export declare const RpcCall: EntitySchema<RpcCallEntry>;
+diff --git a/dist/cjs/db/entities.js b/dist/cjs/db/entities.js
+index 5e19c84a85685cc01772a85c104d642ed50e4f8a..e03ba46a3abdb0e4b23196604537d0aebed5669a 100644
+--- a/dist/cjs/db/entities.js
++++ b/dist/cjs/db/entities.js
+@@ -14,6 +14,12 @@ _export(exports, {
+     },
+     get KeyValuePair () {
+         return KeyValuePair;
++    },
++    get PagedKeys () {
++        return PagedKeys;
++    },
++    get RpcCall () {
++        return RpcCall;
+     }
+ });
+ const _typeorm = require("typeorm");
+@@ -66,3 +72,46 @@ const BlockEntity = new _typeorm.EntitySchema({
+         }
+     }
+ });
++const PagedKeys = new _typeorm.EntitySchema({
++    name: 'PagedKeys',
++    columns: {
++        blockHash: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        prefix: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        keys: {
++            type: 'text',
++            nullable: false
++        }
++    }
++});
++const RpcCall = new _typeorm.EntitySchema({
++    name: 'RpcCall',
++    columns: {
++        scope: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        method: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        params: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        result: {
++            type: 'text',
++            nullable: false
++        }
++    }
++});
+diff --git a/dist/esm/base-sql.d.ts b/dist/esm/base-sql.d.ts
+index 04c6083e33ca834e3e46599cc1b9f02ec6d2e08a..697b5010b7d311b89bfd87c2b732ca3bae16a095 100644
+--- a/dist/esm/base-sql.d.ts
++++ b/dist/esm/base-sql.d.ts
+@@ -13,4 +13,8 @@ export declare abstract class BaseSqlDatabase implements Database {
+     saveStorage(blockHash: HexString, key: HexString, value: HexString | null): Promise<void>;
+     saveStorageBatch(entries: KeyValueEntry[]): Promise<void>;
+     queryStorage(blockHash: HexString, key: HexString): Promise<KeyValueEntry | null>;
++    queryPagedKeys(blockHash: HexString, prefix: HexString): Promise<HexString[] | null>;
++    savePagedKeys(blockHash: HexString, prefix: HexString, keys: HexString[]): Promise<void>;
++    queryRpcCall(scope: string, method: string, params: string): Promise<string | null>;
++    saveRpcCall(scope: string, method: string, params: string, result: string): Promise<void>;
+ }
+diff --git a/dist/esm/base-sql.js b/dist/esm/base-sql.js
+index 539cb415345dc9ac4eb0d32eb9e4bbda6e54df75..08739df5d4f3676e0c4d99c3e5ddd415caee854a 100644
+--- a/dist/esm/base-sql.js
++++ b/dist/esm/base-sql.js
+@@ -1,4 +1,4 @@
+-import { BlockEntity, KeyValuePair } from './db/entities.js';
++import { BlockEntity, KeyValuePair, PagedKeys, RpcCall } from './db/entities.js';
+ export class BaseSqlDatabase {
+     close = async ()=>{
+         const db = await this.datasource;
+@@ -88,4 +88,49 @@ export class BaseSqlDatabase {
+             }
+         });
+     }
++    async queryPagedKeys(blockHash, prefix) {
++        const db = await this.datasource;
++        const row = await db.getRepository(PagedKeys).findOne({
++            where: {
++                blockHash,
++                prefix
++            }
++        });
++        return row ? JSON.parse(row.keys) : null;
++    }
++    async savePagedKeys(blockHash, prefix, keys) {
++        const db = await this.datasource;
++        await db.getRepository(PagedKeys).upsert({
++            blockHash,
++            prefix,
++            keys: JSON.stringify(keys)
++        }, [
++            'blockHash',
++            'prefix'
++        ]);
++    }
++    async queryRpcCall(scope, method, params) {
++        const db = await this.datasource;
++        const row = await db.getRepository(RpcCall).findOne({
++            where: {
++                scope,
++                method,
++                params
++            }
++        });
++        return row?.result ?? null;
++    }
++    async saveRpcCall(scope, method, params, result) {
++        const db = await this.datasource;
++        await db.getRepository(RpcCall).upsert({
++            scope,
++            method,
++            params,
++            result
++        }, [
++            'scope',
++            'method',
++            'params'
++        ]);
++    }
+ }
+diff --git a/dist/esm/db/entities.d.ts b/dist/esm/db/entities.d.ts
+index 879c444011b699b4a7bf4068c8874c2895209405..24cb0016d0535caf10a644591f6b3becd989dfdb 100644
+--- a/dist/esm/db/entities.d.ts
++++ b/dist/esm/db/entities.d.ts
+@@ -1,4 +1,17 @@
+ import type { BlockEntry, KeyValueEntry } from '@acala-network/chopsticks-core';
+ import { EntitySchema } from 'typeorm';
++export type PagedKeysEntry = {
++    blockHash: string;
++    prefix: string;
++    keys: string;
++};
++export type RpcCallEntry = {
++    scope: string;
++    method: string;
++    params: string;
++    result: string;
++};
+ export declare const KeyValuePair: EntitySchema<KeyValueEntry>;
+ export declare const BlockEntity: EntitySchema<BlockEntry>;
++export declare const PagedKeys: EntitySchema<PagedKeysEntry>;
++export declare const RpcCall: EntitySchema<RpcCallEntry>;
+diff --git a/dist/esm/db/entities.js b/dist/esm/db/entities.js
+index b9acbe3aba398e7ddd034efeca4e1a081b478a83..bc92dd457944aed10638dd3d66faa9cb8bd4b031 100644
+--- a/dist/esm/db/entities.js
++++ b/dist/esm/db/entities.js
+@@ -48,3 +48,46 @@ export const BlockEntity = new EntitySchema({
+         }
+     }
+ });
++export const PagedKeys = new EntitySchema({
++    name: 'PagedKeys',
++    columns: {
++        blockHash: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        prefix: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        keys: {
++            type: 'text',
++            nullable: false
++        }
++    }
++});
++export const RpcCall = new EntitySchema({
++    name: 'RpcCall',
++    columns: {
++        scope: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        method: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        params: {
++            primary: true,
++            type: 'varchar',
++            nullable: false
++        },
++        result: {
++            type: 'text',
++            nullable: false
++        }
++    }
++});

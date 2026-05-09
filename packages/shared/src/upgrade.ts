@@ -1,7 +1,13 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, type Client, defaultAccounts, defaultAccountsSr25519 as devAccounts } from '@e2e-test/networks'
-import { type RootTestTree, sendWhitelistCallViaXcmTransact, setupNetworks } from '@e2e-test/shared'
+import {
+  type Chain,
+  type Client,
+  createNetworks,
+  defaultAccounts,
+  defaultAccountsSr25519 as devAccounts,
+} from '@e2e-test/networks'
+import { type RootTestTree, sendWhitelistCallViaXcmTransact } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { IU8a } from '@polkadot/types/types'
@@ -545,23 +551,32 @@ export async function authorizeUpgradeViaRootReferendumTests<
   let toBeUpgradedClient: Client
 
   if (governanceChain.url === toBeUpgradedChain.url) {
-    ;[governanceClient] = await setupNetworks(governanceChain)
+    ;[governanceClient] = await createNetworks(governanceChain)
     toBeUpgradedClient = governanceClient
   } else {
-    ;[governanceClient, toBeUpgradedClient] = await setupNetworks(governanceChain, toBeUpgradedChain)
+    ;[governanceClient, toBeUpgradedClient] = await createNetworks(governanceChain, toBeUpgradedChain)
   }
-  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
-    call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
-    expectedAfterApply: (hash) => [
-      {
-        type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
-        args: {
-          codeHash: hash,
-          error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
+  try {
+    return await runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
+      call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
+      expectedAfterApply: (hash) => [
+        {
+          type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
+          args: {
+            codeHash: hash,
+            error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
+          },
         },
-      },
-    ],
-  })
+      ],
+    })
+  } finally {
+    const distinct =
+      governanceClient === toBeUpgradedClient ? [governanceClient] : [governanceClient, toBeUpgradedClient]
+    for (const c of distinct) {
+      await c.api.disconnect().catch(() => {})
+      await c.teardown().catch(() => {})
+    }
+  }
 }
 
 /**
@@ -581,30 +596,39 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   let toBeUpgradedClient: Client
 
   if (governanceChain.url === toBeUpgradedChain.url) {
-    ;[governanceClient] = await setupNetworks(governanceChain)
+    ;[governanceClient] = await createNetworks(governanceChain)
     toBeUpgradedClient = governanceClient
   } else {
-    ;[governanceClient, toBeUpgradedClient] = await setupNetworks(governanceChain, toBeUpgradedChain)
+    ;[governanceClient, toBeUpgradedClient] = await createNetworks(governanceChain, toBeUpgradedChain)
   }
 
-  await skipIfRealUpgradePending(governanceClient, ctx)
-  await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+  try {
+    await skipIfRealUpgradePending(governanceClient, ctx)
+    await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
 
-  let expectedEvents: ExpectedEvents = []
-  if (toBeUpgradedChain.isRelayChain) {
-    expectedEvents = [{ type: toBeUpgradedClient.api.events.system.CodeUpdated }]
-  } else {
-    expectedEvents = [
-      { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionStored },
-      { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionApplied },
-      { type: toBeUpgradedClient.api.events.system.CodeUpdated },
-    ]
+    let expectedEvents: ExpectedEvents = []
+    if (toBeUpgradedChain.isRelayChain) {
+      expectedEvents = [{ type: toBeUpgradedClient.api.events.system.CodeUpdated }]
+    } else {
+      expectedEvents = [
+        { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionStored },
+        { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionApplied },
+        { type: toBeUpgradedClient.api.events.system.CodeUpdated },
+      ]
+    }
+
+    return await runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
+      call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
+      expectedAfterApply: () => expectedEvents,
+    })
+  } finally {
+    const distinct =
+      governanceClient === toBeUpgradedClient ? [governanceClient] : [governanceClient, toBeUpgradedClient]
+    for (const c of distinct) {
+      await c.api.disconnect().catch(() => {})
+      await c.teardown().catch(() => {})
+    }
   }
-
-  return runAuthorizeUpgradeViaRootReferendum(governanceClient, toBeUpgradedClient, {
-    call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
-    expectedAfterApply: () => expectedEvents,
-  })
 }
 
 /**
@@ -627,27 +651,42 @@ export async function authorizeUpgradeViaWhitelistedCallerReferendumTests<
   let fellowshipClient: Client
 
   if (governanceChain.url === toBeUpgradedChain.url) {
-    ;[governanceClient, fellowshipClient] = await setupNetworks(governanceChain, fellowshipChain)
+    ;[governanceClient, fellowshipClient] = await createNetworks(governanceChain, fellowshipChain)
     toBeUpgradedClient = governanceClient
   } else {
-    ;[governanceClient, toBeUpgradedClient, fellowshipClient] = await setupNetworks(
+    ;[governanceClient, toBeUpgradedClient, fellowshipClient] = await createNetworks(
       governanceChain,
       toBeUpgradedChain,
       fellowshipChain,
     )
   }
-  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(governanceClient, toBeUpgradedClient, fellowshipClient, {
-    call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
-    expectedAfterApply: (hash) => [
+  try {
+    return await runAuthorizeUpgradeViaWhitelistedCallerReferendum(
+      governanceClient,
+      toBeUpgradedClient,
+      fellowshipClient,
       {
-        type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
-        args: {
-          codeHash: hash,
-          error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
-        },
+        call: toBeUpgradedClient.api.tx.system.authorizeUpgrade,
+        expectedAfterApply: (hash) => [
+          {
+            type: toBeUpgradedClient.api.events.system.RejectedInvalidAuthorizedUpgrade,
+            args: {
+              codeHash: hash,
+              error: (r: any) => toBeUpgradedClient.api.errors.system.SpecVersionNeedsToIncrease.is(r.asModule),
+            },
+          },
+        ],
       },
-    ],
-  })
+    )
+  } finally {
+    const seen = new Set<Client>()
+    for (const c of [governanceClient, toBeUpgradedClient, fellowshipClient]) {
+      if (seen.has(c)) continue
+      seen.add(c)
+      await c.api.disconnect().catch(() => {})
+      await c.teardown().catch(() => {})
+    }
+  }
 }
 
 /**
@@ -671,34 +710,49 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   let fellowshipClient: Client
 
   if (governanceChain.url === toBeUpgradedChain.url) {
-    ;[governanceClient, fellowshipClient] = await setupNetworks(governanceChain, fellowshipChain)
+    ;[governanceClient, fellowshipClient] = await createNetworks(governanceChain, fellowshipChain)
     toBeUpgradedClient = governanceClient
   } else {
-    ;[governanceClient, toBeUpgradedClient, fellowshipClient] = await setupNetworks(
+    ;[governanceClient, toBeUpgradedClient, fellowshipClient] = await createNetworks(
       governanceChain,
       toBeUpgradedChain,
       fellowshipChain,
     )
   }
 
-  await skipIfRealUpgradePending(governanceClient, ctx)
-  await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+  try {
+    await skipIfRealUpgradePending(governanceClient, ctx)
+    await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
 
-  let expectedEvents: ExpectedEvents = []
-  if (toBeUpgradedChain.isRelayChain) {
-    expectedEvents = [{ type: toBeUpgradedClient.api.events.system.CodeUpdated }]
-  } else {
-    expectedEvents = [
-      { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionStored },
-      { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionApplied },
-      { type: toBeUpgradedClient.api.events.system.CodeUpdated },
-    ]
+    let expectedEvents: ExpectedEvents = []
+    if (toBeUpgradedChain.isRelayChain) {
+      expectedEvents = [{ type: toBeUpgradedClient.api.events.system.CodeUpdated }]
+    } else {
+      expectedEvents = [
+        { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionStored },
+        { type: toBeUpgradedClient.api.events.parachainSystem.ValidationFunctionApplied },
+        { type: toBeUpgradedClient.api.events.system.CodeUpdated },
+      ]
+    }
+
+    return await runAuthorizeUpgradeViaWhitelistedCallerReferendum(
+      governanceClient,
+      toBeUpgradedClient,
+      fellowshipClient,
+      {
+        call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
+        expectedAfterApply: () => expectedEvents,
+      },
+    )
+  } finally {
+    const seen = new Set<Client>()
+    for (const c of [governanceClient, toBeUpgradedClient, fellowshipClient]) {
+      if (seen.has(c)) continue
+      seen.add(c)
+      await c.api.disconnect().catch(() => {})
+      await c.teardown().catch(() => {})
+    }
   }
-
-  return runAuthorizeUpgradeViaWhitelistedCallerReferendum(governanceClient, toBeUpgradedClient, fellowshipClient, {
-    call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
-    expectedAfterApply: () => expectedEvents,
-  })
 }
 
 /**
