@@ -1,5 +1,5 @@
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
-import { check, type RootTestTree, scheduleInlineCallListWithSameOrigin, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, defaultAccounts } from '@e2e-test/networks'
+import { type Client, check, type RootTestTree, scheduleInlineCallListWithSameOrigin } from '@e2e-test/shared'
 
 import type { u32, Vec } from '@polkadot/types'
 import type {
@@ -22,7 +22,7 @@ const devAccounts = defaultAccounts
  * the pending configuration.
  */
 async function runAndAssert(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  client: Client<any, any>,
   currentSessionIndex: number,
   calls: Array<{ method: { toHex(): string } }>,
   assertFn: (pending: PolkadotRuntimeParachainsConfigurationHostConfiguration) => void | Promise<void>,
@@ -64,9 +64,7 @@ async function runAndAssert(
 export async function configurationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const activeConfig = await client.api.query.configuration.activeConfig()
   await check(activeConfig).redact({ number: 1 }).toMatchSnapshot('initial active configuration')
 
@@ -399,7 +397,7 @@ export async function configurationTest<
  * identical both times — i.e., re-scheduling the same calls is idempotent.
  */
 async function assertIdempotent(
-  client: Awaited<ReturnType<typeof setupNetworks>>[0],
+  client: Client<any, any>,
   currentSessionIndex: number,
   calls: Array<{ method: { toHex(): string } }>,
 ): Promise<void> {
@@ -422,9 +420,7 @@ async function assertIdempotent(
 export async function configurationIdempotencyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
   // 1. Core configuration
@@ -529,9 +525,7 @@ export async function configurationIdempotencyTest<
 export async function configurationOverwriteTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
   // 1. Core configuration
@@ -903,9 +897,7 @@ export async function configurationOverwriteTest<
 export async function configurationSameBlockMergeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
   const maxCodeSize = 3_000_000
@@ -950,9 +942,7 @@ export async function configurationSameBlockMergeTest<
 export async function configurationConsistencyMatrixTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const currentSessionIndex = (await client.api.query.session.currentIndex()).toNumber()
 
   // Capture the original active config so we can restore it between cases.
@@ -1131,40 +1121,57 @@ export const configurationE2ETests = <
 >(
   chain: Chain<TCustom, TInitStoragesBase>,
   testConfig: TestConfig,
-): RootTestTree => ({
-  kind: 'describe',
-  label: testConfig.testSuiteName,
-  children: [
-    {
-      kind: 'describe',
-      label: 'configuration tests',
-      children: [
-        {
-          kind: 'test',
-          label: 'configuration test - can read and update configuration',
-          testFn: async () => await configurationTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'configuration test - scheduling the same change twice is idempotent',
-          testFn: async () => await configurationIdempotencyTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'configuration test - later scheduled values overwrite earlier ones',
-          testFn: async () => await configurationOverwriteTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'configuration test - two changes in the same block fold into one pending tuple',
-          testFn: async () => await configurationSameBlockMergeTest(chain),
-        },
-        {
-          kind: 'test',
-          label: 'configuration test - consistency check 2 by 2 matrix',
-          testFn: async () => await configurationConsistencyMatrixTest(chain),
-        },
-      ],
+): RootTestTree => {
+  let client!: Client<TCustom, TInitStoragesBase>
+  let restoreSnapshot: () => Promise<void>
+  return {
+    kind: 'describe',
+    label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
     },
-  ],
-})
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [
+      {
+        kind: 'describe',
+        label: 'configuration tests',
+        children: [
+          {
+            kind: 'test',
+            label: 'configuration test - can read and update configuration',
+            testFn: async () => await configurationTest(client),
+          },
+          {
+            kind: 'test',
+            label: 'configuration test - scheduling the same change twice is idempotent',
+            testFn: async () => await configurationIdempotencyTest(client),
+          },
+          {
+            kind: 'test',
+            label: 'configuration test - later scheduled values overwrite earlier ones',
+            testFn: async () => await configurationOverwriteTest(client),
+          },
+          {
+            kind: 'test',
+            label: 'configuration test - two changes in the same block fold into one pending tuple',
+            testFn: async () => await configurationSameBlockMergeTest(client),
+          },
+          {
+            kind: 'test',
+            label: 'configuration test - consistency check 2 by 2 matrix',
+            testFn: async () => await configurationConsistencyMatrixTest(client),
+          },
+        ],
+      },
+    ],
+  }
+}
