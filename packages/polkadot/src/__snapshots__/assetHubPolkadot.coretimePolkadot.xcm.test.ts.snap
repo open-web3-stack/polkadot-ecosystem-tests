@@ -187,12 +187,12 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
 {
   "consumers": 0,
   "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "flags": 0,
+    "free": 10000000000000,
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 1,
+  "nonce": 0,
   "providers": 1,
   "sufficients": 0,
 }
@@ -213,81 +213,7 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
 }
 `;
 
-exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
-[
-  {
-    "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "receiveTeleportedAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 1,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
-                    },
-                  ],
-                },
-                "parents": 0,
-              },
-            },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
-    ],
-    "recipient": 1000,
-  },
-]
-`;
+exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `[]`;
 
 exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
 [
