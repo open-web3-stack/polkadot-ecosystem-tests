@@ -23,22 +23,18 @@ describe('assetHubPolkadot & coretimePolkadot', async () => {
     }
   })
 
-  runXcmPalletHorizontal(
-    'coretimePolkadot transfer DOT to assetHubPolkadot',
-    async () => {
-      return {
-        fromChain: coretimePolkadotClient,
-        toChain: assetHubPolkadotClient,
-        fromBalance: query.balances,
-        toBalance: query.balances,
-        toAccount: defaultAccounts.dave,
-        tx: tx.xcmPallet.limitedTeleportAssets(
-          coretimeDOT,
-          1e12,
-          tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
-        ),
-      }
-    },
-    { skip: true },
-  )
+  runXcmPalletHorizontal('coretimePolkadot transfer DOT to assetHubPolkadot', async () => {
+    return {
+      fromChain: coretimePolkadotClient,
+      toChain: assetHubPolkadotClient,
+      fromBalance: query.balances,
+      toBalance: query.balances,
+      toAccount: defaultAccounts.dave,
+      tx: tx.xcmPallet.limitedTeleportAssets(
+        coretimeDOT,
+        1e12,
+        tx.xcmPallet.parachainV3(1, assetHubPolkadotClient.config.paraId!),
+      ),
+    }
+  })
 })
