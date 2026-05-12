@@ -154,6 +154,11 @@ function stats(arr) {
   }
 }
 
+// Storage key for `System.Number` (twox_128("System") ++ twox_128("Number")).
+// Universal across every Substrate runtime, so we can probe historical state
+// against any chain without chain-specific metadata. Used both for the
+// one-shot archive-capability check and as the payload for repeated
+// `state_getStorage` pings during the sample window.
 const SYSTEM_NUMBER_KEY = '0x26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7'
 
 async function probeEndpoint(endpoint, blockNumber) {
@@ -172,11 +177,20 @@ async function probeEndpoint(endpoint, blockNumber) {
     await client.connect()
     out.connect_ms = client.connectMs
   } catch (e) {
+    // Connect failure counts as total loss: the endpoint is unreachable, so
+    // no pings can be sampled. Return early with samples=failures so the
+    // score function sees a 100% loss rate and ranks it last.
     out.errors.push(`connect: ${e.message}`)
     out.failures = SAMPLES
     return out
   }
 
+  // Resolve the pinned block hash from `KNOWN_GOOD_BLOCK_NUMBERS_*.env`.
+  // We need it both for the one-shot archive-capability probe and for the
+  // repeated `state_getStorage` pings during the sample window. If the
+  // endpoint can't even return the hash, we proceed with pinnedHash = null:
+  // the sample loop falls back to header/getBlockHash-only pings and the
+  // endpoint's archive_capable stays null (unknown rather than false).
   let pinnedHash = null
   if (blockNumber != null) {
     try {
@@ -185,6 +199,12 @@ async function probeEndpoint(endpoint, blockNumber) {
       out.errors.push(`getBlockHash: ${e.message}`)
     }
   }
+  // One-shot archive probe before the sample window starts: read System.Number
+  // at the pinned block. Pruned/non-archive endpoints fail this with either
+  // an "UnknownBlock: State already discarded" RPC error or an RPC timeout.
+  // archive_capable=false adds a large flat penalty in the scoring function
+  // because a non-archive endpoint is unusable for any pinned-block test
+  // regardless of how fast its header queries are.
   if (pinnedHash) {
     try {
       await client.call('state_getStorage', [SYSTEM_NUMBER_KEY, pinnedHash])
@@ -195,18 +215,35 @@ async function probeEndpoint(endpoint, blockNumber) {
     }
   }
 
+  // Pacing: spread SAMPLES pings evenly across WINDOW_MS. At any moment at
+  // most INFLIGHT pings are outstanding, so the throughput is bounded by
+  // both the pacing schedule and the in-flight cap. INFLIGHT >= 2 lets us
+  // measure tail latency under mild concurrency (matching how Subway
+  // multiplexes client requests onto a single upstream WS) without flooding
+  // the endpoint.
   const interval = WINDOW_MS / Math.max(SAMPLES, 1)
   const started = Date.now()
   const inflight = new Set()
 
   for (let i = 0; i < SAMPLES; i++) {
+    // Block until a slot frees up if INFLIGHT is saturated.
     while (inflight.size >= INFLIGHT) {
       await Promise.race(inflight)
     }
+    // Hold each sample to its scheduled slot. If we're ahead of schedule
+    // (a previous ping returned faster than `interval`), sleep until the
+    // next slot; if behind, fire immediately. This keeps the wall-clock
+    // shape of the probe close to WINDOW_MS regardless of endpoint speed.
     const targetTime = started + i * interval
     const sleepFor = targetTime - Date.now()
     if (sleepFor > 0) await delay(sleepFor)
 
+    // Round-robin three method types so the ranking reflects a representative
+    // mix of read patterns rather than just one: chain_getHeader (no state,
+    // pure tip query), chain_getBlockHash (cheap, archive-indexed), and
+    // state_getStorage at the pinned block (heaviest, exercises archive).
+    // The split is roughly 50% header, 25% getBlockHash, 25% getStorage
+    // (i % 2 == 0, i % 3 == 2, else respectively).
     const t0 = Date.now()
     const method =
       pinnedHash && i % 3 === 2
@@ -233,11 +270,27 @@ async function probeEndpoint(endpoint, blockNumber) {
       .finally(() => inflight.delete(p))
     inflight.add(p)
   }
+  // Drain remaining in-flight pings before closing the socket; otherwise
+  // they'd be rejected with "ws closed" and inflate the failure count.
   await Promise.all(inflight)
   client.close()
   return out
 }
 
+// Health score: lower is better. The score combines three signals into a
+// single comparable number so endpoints can be sorted as a list.
+//
+//   score = p95_ping_ms + loss_pct*50 + (archive=false ? 5000 : 0)
+//
+// p95 is preferred over median because test workloads care about tail
+// latency: one slow ping in a hundred can hold up an entire snapshot
+// assertion. The loss multiplier (50) puts a 10% loss endpoint at +500
+// score, roughly an order of magnitude penalty over the typical 20-30ms
+// p95 spread. The archive-false penalty (5000) intentionally dominates:
+// a non-archive endpoint is unusable for pinned-block queries, so it
+// gets sunk to the bottom of the ranking regardless of speed.
+//
+// An endpoint with zero successes returns Infinity so it sorts last.
 function score(endpointStats) {
   const { samples, failures, successes } = endpointStats
   if (samples === 0 || successes === 0) return Number.POSITIVE_INFINITY
@@ -291,6 +344,12 @@ async function main() {
   )
   process.stderr.write(`# Probing ${chains.length} chains (${CHAIN_CONCURRENCY} at a time)\n`)
 
+  // Chain pools are independent (no endpoint appears in two chains), so
+  // probing them serially adds no correctness loss but eliminates host-IO
+  // contention that would otherwise inflate p95 latencies on whichever
+  // chains happened to overlap in wall-clock. CHAIN_CONCURRENCY=1 is the
+  // sane default for the cron job; override to N>1 only for local fast
+  // iterations where ranking accuracy can be traded for speed.
   const startedAt = Date.now()
   const output = {}
   const queue = [...chains]

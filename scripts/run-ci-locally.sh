@@ -27,6 +27,11 @@ if [[ -z "$NETWORK" ]]; then
 fi
 shift
 
+# Chain/port/env-var triples per network, hardcoded to mirror the matrix in
+# .github/workflows/ci.yml. Kept literal here (rather than parsed from the
+# YAML) for two reasons: (1) no YAML parser dependency for a local script,
+# (2) drift between this script and the CI workflow is rare and obvious in
+# review when both change. If a chain is added to CI, mirror it here.
 case "$NETWORK" in
   polkadot)
     CHAIN_SPECS=(
@@ -80,6 +85,11 @@ for f in "$TEMPLATE" "$ENDPOINTS_JSON" "$KNOWN_GOOD_ENV"; do
   fi
 done
 
+# PID suffixed with $$ so multiple instances of this script (e.g. one for
+# polkadot, one for kusama) coexist without stomping each other's PIDFILE
+# or tmux session. The pidfile is the only persistent record of children
+# we spawn; cleanup reads it on EXIT to make sure Subways die with us
+# even if the test command panics.
 SESSION="pet-local-${NETWORK}-$$"
 PIDFILE="/tmp/run-ci-locally-${SESSION}.pids"
 ENVFILE="/tmp/run-ci-locally-${SESSION}.env"
@@ -96,6 +106,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Seed the per-run env file with KNOWN_GOOD block numbers for the chosen
+# network. The test pane sources this file via `set -a` to export every
+# variable in one shot; ENDPOINT vars are appended per-chain below.
 cat "$KNOWN_GOOD_ENV" > "$ENVFILE"
 
 echo "Starting Subway instances for $NETWORK..."
@@ -134,10 +147,19 @@ for spec in "${CHAIN_SPECS[@]}"; do
   fi
 done
 
+# `set -a` makes every variable assignment thereafter automatically exported
+# so the env file's KEY=VALUE lines become exported env vars; `set +a` then
+# restores normal scoping for the test command itself. `${VITEST_ARGS[*]@Q}`
+# (bash >=4.4) re-quotes each element so spaces/quotes in vitest args
+# survive being embedded inside the outer double-quoted string.
 VITEST_ARGS=("$@")
 TEST_CMD="set -a; . '$ENVFILE'; set +a; yarn test:$NETWORK ${VITEST_ARGS[*]@Q}; echo; echo 'test command exited; press any key to close window'; read -n 1"
 LOG_CMD="tail -F /tmp/subway-*.log"
 
+# Two-pane layout: pane 0 (top) follows Subway logs across all instances;
+# pane 1 (bottom) runs the test command. Created detached (`-d`) so this
+# script can be invoked from inside an existing tmux session without
+# nesting; the operator attaches with `tmux a -t $SESSION`.
 tmux new-session -d -s "$SESSION" -x 220 -y 60 "bash -lc \"$LOG_CMD\""
 tmux split-window -v -t "$SESSION" "bash -lc \"$TEST_CMD\""
 tmux select-pane -t "$SESSION":0.1

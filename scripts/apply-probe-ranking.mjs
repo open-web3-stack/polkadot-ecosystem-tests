@@ -53,6 +53,12 @@ try {
 
 const original = JSON.parse(fs.readFileSync(ENDPOINTS_PATH, 'utf8'))
 
+// Chain-set invariant: the probe must cover exactly the chains in the
+// endpoints JSON (and vice versa). Either side adding or removing a chain
+// is a deliberate human decision (new parachain onboarded, deprecated
+// chain pruned) and should not happen silently as a side effect of running
+// this script. Bail with exit 3 so the cron workflow surfaces the
+// mismatch rather than committing a half-applied ranking.
 const probeChains = new Set(Object.keys(probe))
 const endpointsChains = new Set(Object.keys(original))
 
@@ -75,6 +81,11 @@ for (const chain of Object.keys(original)) {
   const rankedEndpoints = probeResults.map((r) => r.endpoint)
   const originalEndpoints = original[chain]
 
+  // Per-chain safety check: if the probe and the JSON disagree on the
+  // endpoint membership for this chain (cardinality or set contents), keep
+  // the original order rather than risk dropping an endpoint or inserting
+  // an unknown one. This handles the in-between state where a chain has
+  // been edited in the JSON between the probe run and this apply step.
   if (rankedEndpoints.length !== originalEndpoints.length) {
     process.stderr.write(
       `! ${chain}: probe has ${rankedEndpoints.length} endpoints, JSON has ${originalEndpoints.length}; keeping original order\n`,
@@ -95,6 +106,10 @@ for (const chain of Object.keys(original)) {
     continue
   }
 
+  // Probe results are already sorted ascending by score in probe-endpoints.mjs,
+  // so iteration order equals desired array order. Track whether anything
+  // actually changed so we can short-circuit the rewrite when no diff exists
+  // (avoids spurious commits/PRs from the cron job).
   reordered[chain] = rankedEndpoints
   const sameOrder = rankedEndpoints.every((e, i) => e === originalEndpoints[i])
   if (!sameOrder) chainsChanged++
