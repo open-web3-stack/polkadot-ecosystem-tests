@@ -47,6 +47,9 @@
     "wss://coretime-polkadot.api.onfinality.io/public-ws",
     "wss://rpc-coretime-polkadot.luckyfriday.io"
   ],
+  "bulletinPolkadot": [
+    "wss://bulletin.amperfix.de"
+  ],
   "peoplePolkadot": [
     "wss://sys.ibp.network/people-polkadot",
     "wss://people-polkadot.dotters.network",
