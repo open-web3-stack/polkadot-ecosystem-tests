@@ -34,6 +34,22 @@ import {
 // be executed with a different amount of funds depending on the ED ~ tx. fee relationship.
 //
 // This is currently not done in favor of skipping those tests in low ED chains; it is left for a future PR.
+//
+// Note about `IS_NEW_LOGIC_FLAG`
+//
+// `pallet_balances::AccountData::flags` is a u128 bitfield used by `ensure_upgraded` to track which accounts
+// have been migrated from the legacy `locks/reserves` consumer-ref model to the modern `freezes/holds` model
+// (FRAME 4 -> FRAME 5 transition, polkadot v1.0/v1.1). The high bit (`1 << 127`) is `IS_NEW_LOGIC`.
+//
+// Accounts created via `setStorage` (bypassing FRAME code paths) default to `flags = 0`, which marks them as
+// "legacy". On the next mutation, `ensure_upgraded` runs the legacy-to-new repair: if the account has non-zero
+// `reserved` and zero `frozen`, it defensively calls `inc_consumers_without_limit` to fix the invariant. This
+// corrupts consumer-ref accounting in tests that manually inject reserves via `setStorage`.
+//
+// All `setStorage` writes to `System.Account` in this module must set `flags: IS_NEW_LOGIC_FLAG` to avoid this
+// path. See `pallet-balances-*/src/lib.rs::ensure_upgraded` and `pallet-balances-*/src/types.rs::IS_NEW_LOGIC`.
+
+const IS_NEW_LOGIC_FLAG = '0x80000000000000000000000000000000'
 
 /// -------
 /// Helpers
@@ -49,10 +65,9 @@ async function createAccountWithBalance<
   // Create fresh account from seed
   const newAccount = testAccounts.keyring.createFromUri(`${seed}`)
 
-  // Set account balance directly via storage
   await client.dev.setStorage({
     System: {
-      account: [[[newAccount.address], { providers: 1, data: { free: balance } }]],
+      account: [[[newAccount.address], { providers: 1, data: { free: balance, flags: IS_NEW_LOGIC_FLAG } }]],
     },
   })
 
@@ -283,7 +298,7 @@ export const manualReserveAction = <
                 free: currentFree - amount,
                 reserved: amount,
                 frozen: currentFrozen,
-                flags: currentAccount.data.flags,
+                flags: IS_NEW_LOGIC_FLAG,
               },
             },
           ],
@@ -365,7 +380,7 @@ export const manualLockAction = <
                 free: currentFree,
                 reserved: currentReserved,
                 frozen: amount,
-                flags: currentAccount.data.flags,
+                flags: IS_NEW_LOGIC_FLAG,
               },
             },
           ],
@@ -2777,6 +2792,8 @@ async function forceUnreserveWithReservesTest<
   TCustom extends Record<string, unknown>,
   TInitStoragesBase extends Record<string, Record<string, any>>,
 >(baseClient: Client<TCustom, TInitStoragesBase>, relayClient?: Client<TCustom, any>) {
+  const reserveAction = manualReserveAction<TCustom, TInitStoragesBase>()
+
   let paraId: number | undefined
   if (relayClient) {
     // Query parachain ID once for XCM operations
@@ -2798,31 +2815,20 @@ async function forceUnreserveWithReservesTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(aliceBalance)
   expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
 
-  // 2. Create a reserve a multisig operation - available on most chains
+  // 2. Create a reserve using the configured reserve action
 
-  const multisigThreshold = 2n
-  const multisigDeposit =
-    baseClient.api.consts.multisig.depositBase.toBigInt() +
-    multisigThreshold * baseClient.api.consts.multisig.depositFactor.toBigInt()
-  const multisigTx = baseClient.api.tx.multisig.asMulti(
-    multisigThreshold,
-    [testAccounts.bob.address],
-    null,
-    baseClient.api.tx.system.remark('multisig test').method.toHex(),
-    { refTime: 1000000, proofSize: 1000 },
-  )
-  await sendTransaction(multisigTx.signAsync(alice))
-  await baseClient.dev.newBlock()
+  const reserveAmount = existentialDeposit * 20n
+  const reservedAmount = await reserveAction.execute(baseClient, alice, reserveAmount)
 
   // Verify the reserve was created and consumer count increased
   const aliceAccountAfterReserve = await baseClient.api.query.system.account(alice.address)
-  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(multisigDeposit)
+  expect(aliceAccountAfterReserve.data.reserved.toBigInt()).toBe(reservedAmount)
   expect(aliceAccountAfterReserve.consumers.toNumber()).toEqual(1)
   const consumersAfterReserve = aliceAccountAfterReserve.consumers.toNumber()
 
   // 3. Forcefully unreserve 20 ED from Alice
 
-  const unreserveAmount = multisigDeposit
+  const unreserveAmount = reservedAmount
   const forceUnreserveTx = baseClient.api.tx.balances.forceUnreserve(alice.address, unreserveAmount)
 
   if (!relayClient) {
@@ -2883,7 +2889,6 @@ async function forceUnreserveWithReservesTest<
   const expectedFreeBalance = aliceAccountAfterReserve.data.free.toBigInt() + unreserveAmount
   expect(aliceAccountFinal.data.free.toBigInt()).toBe(expectedFreeBalance)
 
-  // Consumer count should have decreased back to 0 (or at least decreased from after reserve)
   const consumersAfterUnreserve = aliceAccountFinal.consumers.toNumber()
   expect(consumersAfterUnreserve).toBeLessThan(consumersAfterReserve)
   expect(consumersAfterUnreserve).toBe(0)
@@ -3773,7 +3778,7 @@ async function burnWithDepositTest<
               reserved: currentReserved,
               // No frozen balance required - to forestall the burn, only a consumer reference is needed.
               frozen: 0n,
-              flags: currentAccount.data.flags,
+              flags: IS_NEW_LOGIC_FLAG,
             },
           },
         ],
