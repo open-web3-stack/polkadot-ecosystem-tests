@@ -1,5 +1,6 @@
 # Daily health probe over every RPC endpoint in `pet-chain-endpoints.json`.
-# Opens a PR if the resulting ranking changed the chain endpoint order.
+# Commits the new ranking directly to master if it differs from the current
+# order (same convention as `update-known-good.yml`).
 #
 # This workflow stacks three behaviors to deliver a "use the healthiest
 # endpoint" policy without any per-test or per-job change:
@@ -20,8 +21,7 @@
 #
 # Cadence: daily. Endpoint health drifts on the order of weeks, but a
 # single-day cadence keeps the latency between "an endpoint goes bad"
-# and "the JSON reflects it" bounded. The PR is opened against master,
-# gated by human review.
+# and "the JSON reflects it" bounded.
 
 name: Probe RPC endpoints
 
@@ -49,7 +49,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   probe-and-rank:
@@ -82,14 +81,7 @@ jobs:
         run: node scripts/probe-endpoints.mjs
 
       - name: Apply ranking
-        id: apply
-        run: |
-          node scripts/apply-probe-ranking.mjs
-          if git diff --quiet packages/networks/src/pet-chain-endpoints.json; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: node scripts/apply-probe-ranking.mjs
 
       - name: Upload probe report
         if: always()
@@ -99,27 +91,14 @@ jobs:
           path: endpoint-probe.json
           retention-days: 30
 
-      - name: Open PR
-        if: steps.apply.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          branch: endpoints/rerank
-          base: master
-          delete-branch: true
-          add-paths: packages/networks/src/pet-chain-endpoints.json
-          commit-message: 'Re-rank RPC endpoints by health'
-          title: 'Re-rank RPC endpoints by health'
-          body: |
-            Automated re-ranking of `packages/networks/src/pet-chain-endpoints.json`
-            from the daily endpoint probe.
-
-            The probe report (`endpoint-probe.json`) is attached as a workflow
-            artifact on this run. Each chain's array is sorted ascending by score
-            (failure rate, p95 ping latency, archive-capable). Endpoints are
-            reordered, never removed: the back of the list is the failover ladder.
-
-            Review checklist:
-            - [ ] No surprising demotions of a previously-trusted endpoint?
-            - [ ] No surprising promotions of an endpoint that's historically been flaky?
-            - [ ] Archive-capable endpoints remain available for each chain that needs them?
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/networks/src/pet-chain-endpoints.json
+          if ! git diff --cached --quiet; then
+            git commit -m "[ci skip] Re-rank RPC endpoints by health"
+            git push
+          else
+            echo "No changes to commit"
+          fi
