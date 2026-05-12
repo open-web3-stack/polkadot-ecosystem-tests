@@ -22,7 +22,7 @@ set -euo pipefail
 
 NETWORK="${1:-}"
 if [[ -z "$NETWORK" ]]; then
-  echo "Usage: $0 <polkadot|kusama> [vitest args...]" >&2
+  echo "Usage: $0 <polkadot|kusama|both> [vitest args...]" >&2
   exit 1
 fi
 shift
@@ -32,34 +32,56 @@ shift
 # YAML) for two reasons: (1) no YAML parser dependency for a local script,
 # (2) drift between this script and the CI workflow is rare and obvious in
 # review when both change. If a chain is added to CI, mirror it here.
+#
+# `both` runs polkadot + kusama in a single tmux session. Westend is
+# intentionally excluded because CI does not run a Westend job (the matrix
+# in .github/workflows/ci.yml only covers polkadot and kusama).
+POLKADOT_CHAINS=(
+  "polkadot:9000:POLKADOT_ENDPOINT"
+  "assetHubPolkadot:9001:ASSETHUBPOLKADOT_ENDPOINT"
+  "bridgeHubPolkadot:9002:BRIDGEHUBPOLKADOT_ENDPOINT"
+  "collectivesPolkadot:9003:COLLECTIVESPOLKADOT_ENDPOINT"
+  "coretimePolkadot:9004:CORETIMEPOLKADOT_ENDPOINT"
+  "peoplePolkadot:9005:PEOPLEPOLKADOT_ENDPOINT"
+  "acala:9006:ACALA_ENDPOINT"
+  "hydration:9007:HYDRATION_ENDPOINT"
+  "bifrostPolkadot:9008:BIFROSTPOLKADOT_ENDPOINT"
+)
+KUSAMA_CHAINS=(
+  "kusama:9010:KUSAMA_ENDPOINT"
+  "assetHubKusama:9011:ASSETHUBKUSAMA_ENDPOINT"
+  "bridgeHubKusama:9012:BRIDGEHUBKUSAMA_ENDPOINT"
+  "coretimeKusama:9013:CORETIMEKUSAMA_ENDPOINT"
+  "peopleKusama:9014:PEOPLEKUSAMA_ENDPOINT"
+  "encointerKusama:9015:ENCOINTERKUSAMA_ENDPOINT"
+  "karura:9016:KARURA_ENDPOINT"
+  "bifrostKusama:9017:BIFROSTKUSAMA_ENDPOINT"
+)
+
 case "$NETWORK" in
   polkadot)
-    CHAIN_SPECS=(
-      "polkadot:9000:POLKADOT_ENDPOINT"
-      "assetHubPolkadot:9001:ASSETHUBPOLKADOT_ENDPOINT"
-      "bridgeHubPolkadot:9002:BRIDGEHUBPOLKADOT_ENDPOINT"
-      "collectivesPolkadot:9003:COLLECTIVESPOLKADOT_ENDPOINT"
-      "coretimePolkadot:9004:CORETIMEPOLKADOT_ENDPOINT"
-      "peoplePolkadot:9005:PEOPLEPOLKADOT_ENDPOINT"
-      "acala:9006:ACALA_ENDPOINT"
-      "hydration:9007:HYDRATION_ENDPOINT"
-      "bifrostPolkadot:9008:BIFROSTPOLKADOT_ENDPOINT"
-    )
+    CHAIN_SPECS=("${POLKADOT_CHAINS[@]}")
+    KNOWN_GOOD_ENVS=("KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env")
+    TEST_SCRIPT="test:polkadot"
     ;;
   kusama)
-    CHAIN_SPECS=(
-      "kusama:9010:KUSAMA_ENDPOINT"
-      "assetHubKusama:9011:ASSETHUBKUSAMA_ENDPOINT"
-      "bridgeHubKusama:9012:BRIDGEHUBKUSAMA_ENDPOINT"
-      "coretimeKusama:9013:CORETIMEKUSAMA_ENDPOINT"
-      "peopleKusama:9014:PEOPLEKUSAMA_ENDPOINT"
-      "encointerKusama:9015:ENCOINTERKUSAMA_ENDPOINT"
-      "karura:9016:KARURA_ENDPOINT"
-      "bifrostKusama:9017:BIFROSTKUSAMA_ENDPOINT"
+    CHAIN_SPECS=("${KUSAMA_CHAINS[@]}")
+    KNOWN_GOOD_ENVS=("KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env")
+    TEST_SCRIPT="test:kusama"
+    ;;
+  both)
+    CHAIN_SPECS=("${POLKADOT_CHAINS[@]}" "${KUSAMA_CHAINS[@]}")
+    KNOWN_GOOD_ENVS=(
+      "KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env"
+      "KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env"
     )
+    # `yarn test` (no suffix) runs every package: polkadot + kusama + westend.
+    # We only boot polkadot+kusama Subways here, so the westend tests will
+    # fall back to their public endpoints from pet-chain-endpoints.json.
+    TEST_SCRIPT="test"
     ;;
   *)
-    echo "Unknown network: $NETWORK (expected polkadot or kusama)" >&2
+    echo "Unknown network: $NETWORK (expected polkadot, kusama, or both)" >&2
     exit 1
     ;;
 esac
@@ -69,7 +91,6 @@ cd "$REPO_ROOT"
 
 TEMPLATE=".github/subway-template.yml"
 ENDPOINTS_JSON="packages/networks/src/pet-chain-endpoints.json"
-KNOWN_GOOD_ENV="KNOWN_GOOD_BLOCK_NUMBERS_$(echo "$NETWORK" | tr '[:lower:]' '[:upper:]').env"
 
 for tool in jq tmux subway curl; do
   if ! command -v "$tool" &> /dev/null; then
@@ -78,7 +99,7 @@ for tool in jq tmux subway curl; do
   fi
 done
 
-for f in "$TEMPLATE" "$ENDPOINTS_JSON" "$KNOWN_GOOD_ENV"; do
+for f in "$TEMPLATE" "$ENDPOINTS_JSON" "${KNOWN_GOOD_ENVS[@]}"; do
   if [[ ! -f "$f" ]]; then
     echo "Error: required file missing: $f" >&2
     exit 1
@@ -106,10 +127,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Seed the per-run env file with KNOWN_GOOD block numbers for the chosen
-# network. The test pane sources this file via `set -a` to export every
-# variable in one shot; ENDPOINT vars are appended per-chain below.
-cat "$KNOWN_GOOD_ENV" > "$ENVFILE"
+# Seed the per-run env file with KNOWN_GOOD block numbers for every
+# selected network. The test pane sources this file via `set -a` to export
+# every variable in one shot; ENDPOINT vars are appended per-chain below.
+cat "${KNOWN_GOOD_ENVS[@]}" > "$ENVFILE"
 
 echo "Starting Subway instances for $NETWORK..."
 for spec in "${CHAIN_SPECS[@]}"; do
@@ -156,7 +177,7 @@ done
 # (bash >=4.4) re-quotes each element so spaces/quotes in vitest args
 # survive being embedded inside the outer double-quoted string.
 VITEST_ARGS=("$@")
-TEST_CMD="set -a; . '$ENVFILE'; set +a; yarn test:$NETWORK --pool=forks --maxWorkers=8 ${VITEST_ARGS[*]@Q}; echo; echo 'test command exited; press any key to close window'; read -n 1"
+TEST_CMD="set -a; . '$ENVFILE'; set +a; yarn $TEST_SCRIPT --pool=forks --maxWorkers=8 ${VITEST_ARGS[*]@Q}; echo; echo 'test command exited; press any key to close window'; read -n 1"
 LOG_CMD="tail -F /tmp/subway-*.log"
 
 # Two-pane layout: left pane follows Subway logs across all instances;
