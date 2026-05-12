@@ -38,30 +38,27 @@
 		"glob": "^11.0.0",
 		"brace-expansion": "^5.0.2",
 		"node-gyp": "^11.0.0",
-		"@acala-network/chopsticks-core@npm:1.3.1": "patch:@acala-network/chopsticks-core@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-core-npm-1.3.1-9f30da61ad.patch",
-		"@acala-network/chopsticks-utils@npm:1.3.1": "patch:@acala-network/chopsticks-utils@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.3.1-1c404ca1be.patch",
 		"@polkadot/types@npm:^16.4.1": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch",
 		"@polkadot/types@npm:^16.5.4": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch",
-		"@polkadot/types@npm:16.5.6": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch",
-		"@acala-network/chopsticks-db@npm:1.3.1": "patch:@acala-network/chopsticks-db@npm%3A1.3.1#~/.yarn/patches/@acala-network-chopsticks-db-npm-1.3.1-3e5ee4ba00.patch"
+		"@polkadot/types@npm:16.5.6": "patch:@polkadot/types@npm%3A16.5.6#~/.yarn/patches/@polkadot-types-npm-16.5.6-6fe2703ed8.patch"
 	},
 	"packageManager": "yarn@4.14.1",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
-		"@swc/core": "^1.15.32",
+		"@swc/core": "^1.15.33",
 		"lodash": "^4.18.1",
 		"ts-pattern": "^5.9.0",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.5"
+		"vitest": "^4.1.6"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.12",
+		"@biomejs/biome": "2.4.15",
 		"@types/lodash": "^4.17.24",
-		"@types/node": "^25.6.0",
-		"@vitest/ui": "^4.1.5",
+		"@types/node": "^25.6.2",
+		"@vitest/ui": "^4.1.6",
 		"dotenv": "^17.4.2",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.4.0",
+		"lint-staged": "^17.0.4",
 		"tsx": "^4.21.0",
 		"unplugin-swc": "^1.5.9",
 		"vite-tsconfig-paths": "^6.1.1"
