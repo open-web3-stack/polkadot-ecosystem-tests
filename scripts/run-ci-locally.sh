@@ -132,15 +132,18 @@ echo "Waiting for /health on each Subway..."
 for spec in "${CHAIN_SPECS[@]}"; do
   IFS=':' read -r CHAIN PORT _ <<< "$spec"
   elapsed=0
-  while (( elapsed < 60 )); do
+  # `(( elapsed++ ))` returns exit status 1 when the pre-increment value is
+  # 0, which trips `set -e`. Same trap on `(( elapsed < 60 ))` once elapsed
+  # falsifies. Trailing `|| true` keeps the loop's exit status 0 either way.
+  while [[ $elapsed -lt 60 ]]; do
     if curl -sf "http://127.0.0.1:$PORT/health" > /dev/null 2>&1; then
       echo "  $CHAIN ($PORT) ready"
       break
     fi
     sleep 1
-    (( elapsed++ ))
+    elapsed=$((elapsed + 1))
   done
-  if (( elapsed >= 60 )); then
+  if [[ $elapsed -ge 60 ]]; then
     echo "  timeout waiting for $CHAIN ($PORT)" >&2
     tail -20 "/tmp/subway-${PORT}.log" >&2 || true
     exit 1
@@ -153,23 +156,27 @@ done
 # (bash >=4.4) re-quotes each element so spaces/quotes in vitest args
 # survive being embedded inside the outer double-quoted string.
 VITEST_ARGS=("$@")
-TEST_CMD="set -a; . '$ENVFILE'; set +a; yarn test:$NETWORK ${VITEST_ARGS[*]@Q}; echo; echo 'test command exited; press any key to close window'; read -n 1"
+TEST_CMD="set -a; . '$ENVFILE'; set +a; yarn test:$NETWORK --pool=forks --maxWorkers=8 ${VITEST_ARGS[*]@Q}; echo; echo 'test command exited; press any key to close window'; read -n 1"
 LOG_CMD="tail -F /tmp/subway-*.log"
 
-# Two-pane layout: pane 0 (top) follows Subway logs across all instances;
-# pane 1 (bottom) runs the test command. Created detached (`-d`) so this
-# script can be invoked from inside an existing tmux session without
-# nesting; the operator attaches with `tmux a -t $SESSION`.
+# Two-pane layout: left pane follows Subway logs across all instances;
+# right pane runs the test command. Created detached (`-d`) and then
+# auto-attached after a brief settle, so the operator sees output without
+# having to type anything.
 tmux new-session -d -s "$SESSION" -x 220 -y 60 "bash -lc \"$LOG_CMD\""
-tmux split-window -v -t "$SESSION" "bash -lc \"$TEST_CMD\""
+tmux split-window -h -t "$SESSION" "bash -lc \"$TEST_CMD\""
 tmux select-pane -t "$SESSION":0.1
 
 echo
 echo "tmux session: $SESSION"
-echo "attach with:  tmux a -t $SESSION"
-echo
-echo "leave running; cleanup happens when you Ctrl-C this script."
-echo
+echo "attaching in 3 seconds (detach with Ctrl-b d to leave it running)..."
+sleep 3
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux switch-client -t "$SESSION"
+else
+  tmux attach-session -t "$SESSION"
+fi
 
 while true; do
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
