@@ -75,10 +75,9 @@ case "$NETWORK" in
       "KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env"
       "KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env"
     )
-    # `yarn test` (no suffix) runs every package: polkadot + kusama + westend.
-    # We only boot polkadot+kusama Subways here, so the westend tests will
-    # fall back to their public endpoints from pet-chain-endpoints.json.
-    TEST_SCRIPT="test"
+    # Use vitest's package filter rather than `yarn test` (which would also
+    # run Westend, whose Subway pool we don't boot here).
+    TEST_SCRIPT="vitest packages/polkadot packages/kusama"
     ;;
   *)
     echo "Unknown network: $NETWORK (expected polkadot, kusama, or both)" >&2
