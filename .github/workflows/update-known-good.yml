@@ -1,16 +1,15 @@
+# Updates KNOWN_GOOD_BLOCK_NUMBERS_*.env files every 6 hours and runs the full
+# test suite against them. If all tests pass, the updated block numbers are
+# committed to master. If tests fail, per-chain notifications are posted to
+# the relevant GitHub issues (mapped in notifications.json).
+#
+# The test matrix (chains, ports, endpoints) is generated from source configs
+# by scripts/generate-ci-matrix.mjs rather than hardcoded here.
+
 name: Update Known Good Block Numbers
 
 on:
   workflow_dispatch:
-    inputs:
-      retry:
-        description: 'If this is a retry run'
-        required: false
-        type: boolean
-      failed_tests:
-        description: 'Failed tests to retry (JSON array)'
-        required: false
-        type: string
   schedule:
     - cron: '0 */6 * * *'
 
@@ -24,11 +23,13 @@ permissions:
   issues: write
 
 jobs:
+  # Fetches latest block numbers and generates the test matrix from source.
+  # The matrix output is consumed by the `tests` job below.
   define-matrix:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     outputs:
-      tests: ${{ steps.tests.outputs.tests }}
+      networks: ${{ steps.networks.outputs.networks }}
     steps:
       - uses: actions/checkout@v5
       - name: setup node env
@@ -37,14 +38,9 @@ jobs:
           node-version: 22.x
           cache: 'yarn'
       - run: yarn --immutable
-      - name: Define Tests
-        id: tests
-        run: |
-          if [ "${{ github.event.inputs.retry }}" == "true" ]; then
-            echo "tests=$(echo '${{ github.event.inputs.failed_tests }}' | sed 's/^"\(.*\)"$/\1/')" >> "$GITHUB_OUTPUT"
-          else
-            echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
-          fi
+      - name: Generate network matrix
+        id: networks
+        run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
       - name: Update Known Good Block Numbers
         run: |
           yarn update-known-good
@@ -56,41 +52,184 @@ jobs:
             KNOWN_GOOD_BLOCK_NUMBERS_POLKADOT.env
             KNOWN_GOOD_BLOCK_NUMBERS_KUSAMA.env
           retention-days: 1
+
+  # Runs all tests for each network (polkadot/kusama) using Subway caching
+  # proxies to avoid hitting production endpoints directly.
+  # Vitest retries each failing test 3 times (--retry=3).
   tests:
     needs: define-matrix
-    timeout-minutes: 60
+    name: "Tests (${{ matrix.network.name }})"
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
-        tests: ${{ fromJSON(needs.define-matrix.outputs.tests) }}
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: setup node env
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'yarn'
-    - run: yarn --immutable
-    - name: Download a single artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: KNOWN_GOOD_BLOCK_NUMBERS
-    - run: yarn test packages/${{ matrix.tests }}
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+
+      - run: yarn --immutable
+
+      - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KNOWN_GOOD_BLOCK_NUMBERS
+
+      - name: Source known good block numbers
+        run: |
+          NETWORK_UPPER=$(echo "${{ matrix.network.name }}" | tr '[:lower:]' '[:upper:]')
+          ENV_FILE="KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env"
+          echo "Sourcing block numbers from $ENV_FILE"
+          cat "$ENV_FILE" >> $GITHUB_ENV
+
+      # Subway is a WebSocket proxy that caches RPC responses, avoiding
+      # rate-limiting from production endpoints during test runs
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Get Subway commit hash
+        id: subway-commit
+        run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
+
+      - name: Cache Subway binary
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Install Subway
+        run: cargo install --git https://github.com/AcalaNetwork/subway
+
+      # Start one Subway instance per chain in this network, each on its own port
+      - name: Start all Subway instances
+        run: |
+          echo "Starting all Subway instances for ${{ matrix.network.name }}..."
+
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            CHAIN=$(echo $chain | jq -r '.chain')
+            PORT=$(echo $chain | jq -r '.port')
+
+            # Get endpoints from pet-chain-endpoints.json
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+
+            if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
+              echo "Error: No endpoints found for chain $CHAIN"
+              exit 1
+            fi
+
+            echo "Starting Subway for $CHAIN on port $PORT..."
+            sed -e "s/{{PORT}}/$PORT/g" -e "s|{{ENDPOINTS}}|$ENDPOINTS|g" .github/subway-template.yml > /tmp/subway-$PORT.yml
+            subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+            echo $! >> /tmp/subway.pids
+          done
+
+          echo "Waiting for all Subway instances to start..."
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            PORT=$(echo $chain | jq -r '.port')
+            timeout=60
+            elapsed=0
+            while [ $elapsed -lt $timeout ]; do
+              if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
+                echo "Subway on port $PORT started successfully!"
+                break
+              fi
+              sleep 1
+              elapsed=$((elapsed + 1))
+            done
+
+            if [ $elapsed -ge $timeout ]; then
+              echo "Timeout waiting for subway on port $PORT"
+              cat /tmp/subway-$PORT.log
+              exit 1
+            fi
+          done
+
+          echo "All Subway instances started successfully!"
+
+      # Route test traffic through local Subway proxies instead of production endpoints
+      - name: Set endpoint environment variables
+        run: |
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+            PORT=$(echo $chain | jq -r '.port')
+            echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
+          done
+
+      # --reporter=json writes test results to file for chain extraction below
+      # --reporter=verbose keeps human-readable output in the CI log
+      - name: Run ${{ matrix.network.name }} tests
+        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3 --reporter=json --outputFile=test-results.json --reporter=verbose
+
+      # Parse Vitest JSON output to find which chains had failing tests.
+      # Test filenames encode chain names as dot-separated segments, e.g.
+      # "acala.hydration.xcm.test.ts" implies chains acala and hydration.
+      # The extracted chain names are uploaded for the notify job to consume.
+      - name: Extract failed chains
+        if: always()
+        run: |
+          node -e "
+          const fs = require('fs');
+          if (!fs.existsSync('test-results.json')) process.exit(0);
+          const results = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+          const failedFiles = (results.testResults || [])
+            .filter(r => r.status === 'failed')
+            .map(r => {
+              const filename = r.name.split('/').pop();
+              return filename.replace(/\.test\.ts$/, '').split('.');
+            });
+          const chains = new Set();
+          for (const segments of failedFiles) {
+            for (const s of segments) {
+              chains.add(s);
+            }
+          }
+          fs.writeFileSync('failed-chains.json', JSON.stringify([...chains]));
+          "
+
+      - name: Upload failed chains
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-chains-${{ matrix.network.name }}
+          path: failed-chains.json
+          retention-days: 1
+
+      - name: Cleanup Subway instances
+        if: always()
+        run: |
+          if [ -f /tmp/subway.pids ]; then
+            cat /tmp/subway.pids | xargs kill || true
+          fi
+
+          for log in /tmp/subway-*.log; do
+            if [ -f "$log" ]; then
+              echo "=== $log ==="
+              tail -20 "$log" || true
+            fi
+          done
+
+  # Commits updated block numbers to master if all tests passed.
+  # Uses a GitHub App token so the commit doesn't trigger another CI run.
   save:
     needs: tests
     runs-on: ubuntu-latest
-    if: success() && github.event.inputs.retry != 'true'
+    if: success()
     steps:
     - uses: actions/create-github-app-token@v1
       id: app-token
       with:
         app-id: ${{ secrets.GH_APP_ID }}
         private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ steps.app-token.outputs.token }}
-    - name: Download a single artifact
+    - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
       uses: actions/download-artifact@v4
       with:
         name: KNOWN_GOOD_BLOCK_NUMBERS
@@ -105,110 +244,66 @@ jobs:
         else
           echo "No changes to commit"
         fi
-  schedule-retry:
-    needs: tests
-    if: failure() && github.event.inputs.retry != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get failed jobs
-        id: get-failed
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const response = await github.paginate(
-              github.rest.actions.listJobsForWorkflowRun,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId
-              }
-            );
 
-            const failedTests = response
-              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
-              .map(job => {
-                const match = job.name.match(/tests \((.*)\)/);
-                return match ? match[1] : null;
-              })
-              .filter(Boolean);
-
-            return JSON.stringify(failedTests);
-      - name: sleep
-        run: sleep 300
-      - name: Dispatch retry workflow
-        uses: actions/github-script@v8
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'update-known-good.yml',
-              ref: 'master',
-              inputs: {
-                retry: 'true',
-                failed_tests: '${{ steps.get-failed.outputs.result }}'
-              }
-            })
+  # Posts failure notifications to the GitHub issues mapped in notifications.json.
+  # Downloads per-chain failure artifacts from the test jobs and maps each chain
+  # name to its notification issue, preserving the per-chain granularity that
+  # existed before the workflow refactor.
   notify:
     needs: tests
-    if: failure() && github.event.inputs.retry == 'true'
+    if: failure()
     runs-on: ubuntu-latest
     steps:
-      - name: Create Comment
+      - name: Download failed chains artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: failed-chains
+          pattern: failed-chains-*
+      - name: Notify
         uses: actions/github-script@v8
         with:
           script: |
-            const response = await github.paginate(
-              github.rest.actions.listJobsForWorkflowRun,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId
-              },
-            );
+            const fs = require('fs');
+            const path = require('path');
 
-            const failedTests = response
-              .filter(job => job.name.startsWith('tests (') && job.conclusion === 'failure')
-              .map(job => {
-                const match = job.name.match(/tests \((.*)\)/);
-                return match ? match[1] : null;
-              })
-              .filter(Boolean);
+            // Collect all failed chain names from across both network jobs
+            const chainsDir = 'failed-chains';
+            const allChains = new Set();
 
-            const { data: config } = await github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: '.github/workflows/notifications.json',
-              ref: 'master'
-            })
-
-            const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'))
-
-            const impactedNetworks = new Set()
-            for (const test of failedTests) {
-              const filename = test.split('/').pop()
-              const segments = filename.replace(/\.test\.ts$/, '').split('.')
-              const chains = segments.filter(s => notifications[s] !== undefined)
-              if (chains.length === 0) {
-                impactedNetworks.add("unknown")
-              } else {
-                for (const chain of chains) {
-                  impactedNetworks.add(chain)
+            if (fs.existsSync(chainsDir)) {
+              for (const dir of fs.readdirSync(chainsDir)) {
+                const filePath = path.join(chainsDir, dir, 'failed-chains.json');
+                if (fs.existsSync(filePath)) {
+                  const chains = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                  for (const c of chains) allChains.add(c);
                 }
               }
             }
 
-            const issuesToNotify = new Set()
-            for (const network of impactedNetworks) {
-              issuesToNotify.add(notifications[network] ?? notifications['unknown'])
+            if (allChains.size === 0) {
+              console.log('No failed chains found');
+              return;
             }
 
+            // Map chain names to notification issue numbers
+            const { data: config } = await github.rest.repos.getContent({
+              ...context.repo,
+              path: '.github/workflows/notifications.json',
+              ref: 'master'
+            });
+
+            const notifications = JSON.parse(Buffer.from(config.content, 'base64').toString('utf8'));
+
+            const issuesToNotify = new Set();
+            for (const chain of allChains) {
+              issuesToNotify.add(notifications[chain] ?? notifications['unknown']);
+            }
+
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             for (const issueNumber of issuesToNotify) {
-              // add a comment to the issue
               await github.rest.issues.createComment({
                 issue_number: issueNumber,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `Workflow failed: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-              })
+                ...context.repo,
+                body: `Workflow failed: ${runUrl}`
+              });
             }
