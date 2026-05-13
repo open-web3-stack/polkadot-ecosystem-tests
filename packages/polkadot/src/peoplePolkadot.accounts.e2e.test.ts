@@ -7,7 +7,6 @@ const testCfg: TestConfig = {
 
 const accountsCfg = createAccountsConfig({
   expectation: 'success',
-  relayChain: polkadot,
 })
 
-registerTestTree(accountsE2ETests(peoplePolkadot, testCfg, accountsCfg))
+registerTestTree(accountsE2ETests(peoplePolkadot, testCfg, accountsCfg, polkadot))
