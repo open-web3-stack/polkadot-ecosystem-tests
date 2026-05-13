@@ -21,14 +21,22 @@ import type { RootTestTree } from './types.js'
  * and the delay has elapsed, anyone can finish the attempt and the inheritor
  * gains access to the lost account via `control_inherited_account`.
  *
+ * The initiator's call to `initiate_attempt` already counts as the first
+ * approval — their bit is set in the attempt's approval bitfield. Calling
+ * `approve_attempt` again from the initiator's account fails with
+ * `AlreadyVoted`. Tests reflect this: in a 2-of-N group, the initiator and
+ * exactly one other friend are required to reach threshold.
+ *
  * Groups have an `inheritancePriority` field: lower numbers take precedence
  * over higher ones. A finished higher-priority group displaces an existing
  * lower-priority inheritor; a lower-priority group attempting to finish after a
  * higher-priority one has succeeded gets `AttemptDiscarded` (not an error).
  *
- * The slash path lets the lost account burn the initiator's `SecurityDeposit`
- * if it can reach the chain within the cancel window — the cancel delay exists
- * specifically to prevent initiators from frontrunning a slash with a cancel.
+ * The slash path lets the lost account route the initiator's `SecurityDeposit`
+ * to `T::Slash` (on AHW: the treasury) if it can reach the chain within the
+ * cancel window — the cancel delay exists specifically to prevent initiators
+ * from frontrunning a slash with a cancel. Only the attempt's own initiator
+ * or the lost account itself may call `cancel_attempt`.
  *
  * All tests target Asset Hub Westend. The pallet's `BlockNumberProvider` is
  * `RelaychainDataProvider<Runtime>`, so the delays are measured in relay-chain
@@ -308,20 +316,28 @@ async function configureGroups<
   return events
 }
 
-// Drives a friend group all the way to a completed recovery.
-// The initiator is approvers[0]; they both initiate and approve.
-// By the time this returns, the Inheritor storage entry is set.
+/**
+ * Drive a friend group all the way to a completed recovery.
+ *
+ * `signers[0]` is the initiator (their `initiate_attempt` already counts as
+ * the first approval, so they don't call `approve_attempt`); `signers[1..]`
+ * each call `approve_attempt` exactly once. Pass `friends_needed` total
+ * signers to reach threshold; passing more would fail `AlreadyApproved` once
+ * the threshold is met.
+ *
+ * By the time this returns, the `Inheritor` storage entry is set.
+ */
 async function completeRecovery<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, friendGroupIndex: number, approvers: (typeof testAccounts.bob)[]) {
+>(client: Client<TCustom, TInitStorages>, friendGroupIndex: number, signers: (typeof testAccounts.bob)[]) {
   const lost = testAccounts.alice.address
-  const initiator = approvers[0]
+  const initiator = signers[0]
 
   await sendTransaction(client.api.tx.recovery.initiateAttempt(lost, friendGroupIndex).signAsync(initiator))
   await client.dev.newBlock()
 
-  for (const approver of approvers) {
+  for (const approver of signers.slice(1)) {
     await sendTransaction(client.api.tx.recovery.approveAttempt(lost, friendGroupIndex).signAsync(approver))
     await client.dev.newBlock()
   }
@@ -341,9 +357,10 @@ async function completeRecovery<
 
 /**
  * Full happy-path lifecycle: Alice configures a friend group, Bob initiates a
- * recovery attempt, Bob and Charlie approve, the inheritance delay elapses,
- * Bob finishes the attempt, Eve becomes the inheritor and successfully
- * dispatches a transfer from Alice's account.
+ * recovery attempt (counting as the first approval), Charlie approves
+ * (reaching threshold), the inheritance delay elapses, Bob finishes the
+ * attempt, Eve becomes the inheritor and successfully dispatches a transfer
+ * from Alice's account.
  */
 async function fullLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -361,7 +378,8 @@ async function fullLifecycleTest<
 
   await checkEvents(setGroupEvents, 'recovery').toMatchSnapshot('events when Alice sets friend groups')
 
-  // 2. Bob initiates a recovery attempt on Alice's account
+  // 2. Bob initiates a recovery attempt on Alice's account.
+  //    This emits AttemptInitiated AND AttemptApproved (the initiator counts as the first vote).
   const initiateEvents = await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await checkEvents(initiateEvents, 'recovery').toMatchSnapshot('events when Bob initiates recovery attempt')
@@ -377,26 +395,19 @@ async function fullLifecycleTest<
   expect(recoveryEventData(initiated).initiator.toString()).toBe(normalizeAddress(client, bob.address))
   expect(recoveryEventData(initiated).friendGroupIndex.toNumber()).toBe(0)
 
-  // 3. Bob approves the attempt
-  const approveByBobEvents = await sendTransaction(
-    client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob),
-  )
-  await client.dev.newBlock()
-  await checkEvents(approveByBobEvents, 'recovery').toMatchSnapshot('events when Bob approves recovery attempt')
-
-  // 4. Charlie approves, reaching the threshold of 2
+  // 3. Charlie approves, reaching the threshold of 2 (Bob's initiation was the first vote)
   const approveByCharlieEvents = await sendTransaction(
     client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(charlie),
   )
   await client.dev.newBlock()
   await checkEvents(approveByCharlieEvents, 'recovery').toMatchSnapshot('events when Charlie approves recovery attempt')
 
-  // 5. Advance past the inheritance delay
+  // 4. Advance past the inheritance delay
   const attempt = await getAttemptState(client, alice.address, 0)
   expect(attempt).not.toBeNull()
   await advanceUntilAtLeast(client, attempt!.initBlock + INHERITANCE_DELAY)
 
-  // 6. Bob finishes the attempt, setting Eve as the inheritor
+  // 5. Bob finishes the attempt, setting Eve as the inheritor
   const finishEvents = await sendTransaction(client.api.tx.recovery.finishAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await checkEvents(finishEvents, 'recovery').toMatchSnapshot('events when Bob finishes recovery attempt')
@@ -522,10 +533,11 @@ async function lostAccountCancelsImmediatelyTest<
 }
 
 /**
- * The lost account can slash an ongoing attempt, burning the initiator's
- * `SecurityDeposit`. `slashAttempt` takes only the friend group index; the
- * lost account is inferred from the signed origin (which is why the
- * signature differs from `cancelAttempt(lost, idx)`).
+ * The lost account can slash an ongoing attempt, removing the initiator's
+ * `SecurityDeposit` hold and routing the funds to `T::Slash` (on AHW: the
+ * treasury). `slashAttempt` takes only the friend group index; the lost
+ * account is inferred from the signed origin (which is why the signature
+ * differs from `cancelAttempt(lost, idx)`).
  */
 async function lostAccountSlashesAttemptTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -626,14 +638,15 @@ async function approvalResetsTimerTest<
 
 /**
  * Inheritance priority resolution: three groups with priorities 1, 2, 0 all
- * reach threshold before any of them finish, then finish in the order they
- * were initiated. The middle priority displaces the first (because 2 > 1,
- * lower-priority is discarded), then priority 0 displaces the inheritor set
- * by priority 1.
+ * reach threshold before any of them finish, then they finish in priority
+ * order (1, then 2, then 0). Priority 1 wins the empty slot; priority 2 is
+ * discarded because it is lower priority (higher number) than the existing
+ * inheritor; priority 0 displaces priority 1 because it has the highest
+ * priority (lowest number) of the three.
  *
- * All three groups must achieve threshold before any of them finish:
- * `initiate_attempt` is rejected with `HigherPriorityRecovered` once a
- * higher-priority group has set the inheritor.
+ * All three groups must reach threshold before any of them finish, because
+ * once a finished group sets the inheritor, `initiate_attempt` for any group
+ * with equal or lower priority is rejected with `HigherPriorityRecovered`.
  */
 async function inheritanceOrderConflictTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -649,15 +662,14 @@ async function inheritanceOrderConflictTest<
   ])
 
   // 2. All three groups reach threshold before any finish — done first so the
-  //    priority-2 (lowest) initiation isn't blocked by a higher-priority finish
+  //    priority-2 (lowest) initiation isn't blocked by a higher-priority finish.
+  //    The initiator's initiation already counts as the first vote.
   for (const [groupIdx, [initiator, approver]] of [
     [0, [bob, charlie]],
     [1, [dave, ferdie]],
     [2, [charlie, dave]],
   ] as const) {
     await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, groupIdx).signAsync(initiator))
-    await client.dev.newBlock()
-    await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, groupIdx).signAsync(initiator))
     await client.dev.newBlock()
     await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, groupIdx).signAsync(approver))
     await client.dev.newBlock()
@@ -881,10 +893,8 @@ async function finishAttemptAtExactBoundaryTest<
     inheritanceDelay: 2,
   })
 
-  // 2. Bob initiates and Bob+Charlie approve (reach threshold)
+  // 2. Bob initiates (= first vote) and Charlie approves (reaches threshold)
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
-  await client.dev.newBlock()
-  await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(charlie))
   await client.dev.newBlock()
@@ -963,10 +973,8 @@ async function finishAttemptOddDelayTest<
     inheritanceDelay: 3,
   })
 
-  // 2. Reach threshold
+  // 2. Bob initiates (= first vote) and Charlie approves (reaches threshold)
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
-  await client.dev.newBlock()
-  await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(charlie))
   await client.dev.newBlock()
@@ -1087,10 +1095,8 @@ async function thresholdPlusOneApprovalFailsTest<
     inheritancePriority: 0,
   })
 
-  // 2. Bob initiates, Bob and Charlie approve (threshold reached)
+  // 2. Bob initiates (= first vote) and Charlie approves (reaches threshold of 2)
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
-  await client.dev.newBlock()
-  await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(charlie))
   await client.dev.newBlock()
@@ -1128,10 +1134,8 @@ async function finishBeforeDelayFailsTest<
     inheritanceDelay: 20,
   })
 
-  // 2. Reach threshold without advancing past the delay
+  // 2. Bob initiates (= first vote) and Charlie approves (threshold met) without advancing past the delay
   await sendTransaction(client.api.tx.recovery.initiateAttempt(alice.address, 0).signAsync(bob))
-  await client.dev.newBlock()
-  await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(bob))
   await client.dev.newBlock()
   await sendTransaction(client.api.tx.recovery.approveAttempt(alice.address, 0).signAsync(charlie))
   await client.dev.newBlock()
