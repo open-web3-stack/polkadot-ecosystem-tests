@@ -1,7 +1,12 @@
 extensions:
   client:
     endpoints: {{ENDPOINTS}}
-    shuffle_endpoints: true
+    # Use endpoints in the order they appear in `pet-chain-endpoints.json`,
+    # which the `.github/workflows/probe-endpoints.yml` workflow keeps sorted
+    # by ascending health score. Subway falls through to array[1..N-1] as
+    # the failover ladder on stall/disconnect via its existing rotation
+    # logic, so an initial bias toward array[0] doesn't sacrifice resilience.
+    shuffle_endpoints: false
   event_bus:
   substrate_api:
     stale_timeout_seconds: 180
