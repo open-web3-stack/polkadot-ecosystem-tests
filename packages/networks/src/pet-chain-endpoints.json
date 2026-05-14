@@ -10,6 +10,10 @@
     "wss://rpc-polkadot.helixstreet.io",
     "wss://rpc-polkadot.luckyfriday.io"
   ],
+  "assetHubWestend": [
+    "wss://westend-asset-hub-rpc.polkadot.io",
+    "wss://asset-hub-westend-rpc.n.dwellir.com"
+  ],
   "assetHubPolkadot": [
     "wss://sys.ibp.network/asset-hub-polkadot",
     "wss://asset-hub-polkadot.dotters.network",
