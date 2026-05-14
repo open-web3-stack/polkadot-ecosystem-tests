@@ -1,6 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
 import type { Option } from '@polkadot/types'
 import type { ParaInfo } from '@polkadot/types/interfaces'
@@ -11,7 +11,7 @@ import { blake2AsHex, encodeAddress } from '@polkadot/util-crypto'
 import { assert, expect } from 'vitest'
 
 import type { TestConfig } from './helpers/index.js'
-import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, setupNetworks } from './index.js'
+import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin } from './index.js'
 import type { Client, RootTestTree } from './types.js'
 
 const devAccounts = testAccounts
@@ -56,18 +56,13 @@ async function fundAccounts(client: Client<any, any>): Promise<void> {
  * Helper to send the force_register extrinsic via root with an inline call, advance the blockchain state
  *  and assert the register events.
  */
-async function forceRegisterParaViaRoot(
-  client: Client<any, any>,
-  chain: Chain<any, any>,
-  manager: string,
-  paraId: number,
-): Promise<void> {
+async function forceRegisterParaViaRoot(client: Client<any, any>, manager: string, paraId: number): Promise<void> {
   const tx = client.api.tx.registrar.forceRegister(manager, BigInt(0), paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
   await scheduleInlineCallWithOrigin(
     client,
     tx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
   const events = await client.api.query.system.events()
@@ -79,13 +74,13 @@ async function forceRegisterParaViaRoot(
 /**
  * Helper to send the addLock extrinsic via root with an inline call, advance the blockchain state.
  */
-async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, paraId: number): Promise<void> {
+async function addLockViaRoot(client: Client<any, any>, paraId: number): Promise<void> {
   const tx = client.api.tx.registrar.addLock(paraId)
   await scheduleInlineCallWithOrigin(
     client,
     tx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 }
@@ -106,9 +101,7 @@ async function addLockViaRoot(client: Client<any, any>, chain: Chain<any, any>, 
 export async function paraReservingE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
@@ -142,7 +135,7 @@ export async function paraReservingE2ETest<
   const paraId = reserveEventData[0].toString()
   expect(paraId).toEqual(nextFreeParaId)
   expect(reserveEventData[1].toString()).toBe(
-    encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
   )
 
   // Assert that para info is correct
@@ -150,7 +143,9 @@ export async function paraReservingE2ETest<
   expect(parasOption.isSome).toBe(true)
   const paras = parasOption.unwrap()
 
-  expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding))
+  expect(paras.manager.toString()).toBe(
+    encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
+  )
   expect(paras.deposit.toString()).toBe(paraDeposit.toString())
   expect(paras.locked.isEmpty).toBe(true)
 
@@ -217,9 +212,7 @@ export async function paraReservingE2ETest<
 export async function paraRegisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
@@ -325,7 +318,7 @@ export async function paraRegisteringE2ETest<
   assert(client.api.events.registrar.Registered.is(regEvent.event))
   expect(regEvent.event.data[0].toString()).toBe(paraId)
   expect(regEvent.event.data[1].toString()).toBe(
-    encodeAddress(devAccounts.alice.address, chain.properties.addressEncoding),
+    encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
   )
 
   // 6. Assert that the new reserved balance includes additional deposit from registration
@@ -366,9 +359,7 @@ export async function paraRegisteringE2ETest<
 export async function paraDeregisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
@@ -508,9 +499,7 @@ export async function paraDeregisteringE2ETest<
 export async function parasRootRegistrationE2eTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Pay 0 DOT for registration
   const paraDepositBigInt = BigInt(0)
 
@@ -519,13 +508,15 @@ export async function parasRootRegistrationE2eTest<
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
   // 1.1 force_register via Root — sets Bob as manager, asserts Registered event
-  await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraId)
+  await forceRegisterParaViaRoot(client, devAccounts.bob.address, paraId)
 
   // 1.2 Assert ParaInfo has Bob as manager and correct deposit
   let parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
   let paras = parasOption.unwrap()
-  expect(paras.manager.toString()).toBe(encodeAddress(devAccounts.bob.address, chain.properties.addressEncoding))
+  expect(paras.manager.toString()).toBe(
+    encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
+  )
   expect(paras.deposit.toString()).toBe(paraDepositBigInt.toString())
   expect(paras.locked.isEmpty).toBe(true)
 
@@ -534,7 +525,7 @@ export async function parasRootRegistrationE2eTest<
   expect(bobBalanceAfter.data.reserved.toString()).toBe(paraDepositBigInt.toString())
 
   // 2. Apply lock via Root
-  await addLockViaRoot(client, chain, paraId)
+  await addLockViaRoot(client, paraId)
 
   // 2.2 Assert locked is true
   parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
@@ -548,7 +539,7 @@ export async function parasRootRegistrationE2eTest<
     client,
     removeLockTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -571,7 +562,7 @@ export async function parasRootRegistrationE2eTest<
     client,
     deregisterTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -639,9 +630,7 @@ export async function parasRootRegistrationE2eTest<
 export async function parasRegistrarSwapE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   // Register para A (Alice manager) and para B (Bob manager) via Root
@@ -649,8 +638,8 @@ export async function parasRegistrarSwapE2ETest<
   const paraIdA = parseInt(nextFreeParaId.toString(), 10)
   const paraIdB = paraIdA + 1
 
-  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraIdA)
-  await forceRegisterParaViaRoot(client, chain, devAccounts.bob.address, paraIdB)
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdA)
+  await forceRegisterParaViaRoot(client, devAccounts.bob.address, paraIdB)
 
   // 1. Swapping with same ID - no-op
 
@@ -850,9 +839,7 @@ export async function parasRegistrarSwapE2ETest<
 export async function parasScheduleCodeUpgradeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   const newValidationCode = u8aToHex(
@@ -865,7 +852,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
-  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot schedule a code upgrade
   const scheduleUpgradeBobEvents = await sendTransaction(
@@ -904,7 +891,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   expect(upgradeRestrictionAlice.unwrap().isPresent).toBe(true)
 
   // 3. Lock the para via Root
-  await addLockViaRoot(client, chain, paraId)
+  await addLockViaRoot(client, paraId)
 
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
@@ -924,15 +911,15 @@ export async function parasScheduleCodeUpgradeE2ETest<
   // Use a fresh para so the UpgradeRestrictionSignal from case 2 does not interfere.
   // Note: forceRegister does not update nextFreeParaId (only reserve() does), so paraId + 1 is safe.
   const paraIdB = paraId + 1
-  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraIdB)
-  await addLockViaRoot(client, chain, paraIdB)
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdB)
+  await addLockViaRoot(client, paraIdB)
 
   const scheduleUpgradeRootTx = client.api.tx.registrar.scheduleCodeUpgrade(paraIdB, rootValidationCode)
   await scheduleInlineCallWithOrigin(
     client,
     scheduleUpgradeRootTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -984,9 +971,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
 export async function parasSetCurrentHeadE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await fundAccounts(client)
 
   const newHeadRaw = new Uint8Array([0x01, 0x02, 0x03])
@@ -996,7 +981,7 @@ export async function parasSetCurrentHeadE2ETest<
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
   const paraId = parseInt(nextFreeParaId.toString(), 10)
 
-  await forceRegisterParaViaRoot(client, chain, devAccounts.alice.address, paraId)
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
 
   // 1. Non-owner (Bob) cannot set the current head
   const setHeadBobEvents = await sendTransaction(
@@ -1029,7 +1014,7 @@ export async function parasSetCurrentHeadE2ETest<
   expect(currentHeadUpdatedAlice.event.data[0].toString()).toBe(paraId.toString())
 
   // 3. Lock the para via Root
-  await addLockViaRoot(client, chain, paraId)
+  await addLockViaRoot(client, paraId)
 
   const parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
@@ -1057,7 +1042,7 @@ export async function parasSetCurrentHeadE2ETest<
     client,
     setHeadRootTx.method.toHex(),
     { system: 'Root' },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1083,7 +1068,7 @@ export async function parasSetCurrentHeadE2ETest<
     client,
     setHeadParaTx.method.toHex(),
     { ParachainsOrigin: { Parachain: paraId } },
-    chain.properties.schedulerBlockProvider,
+    client.config.properties.schedulerBlockProvider,
   )
   await client.dev.newBlock()
 
@@ -1106,44 +1091,59 @@ export function registrarE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'test',
         label: 'pallet registrar - reserve functions',
-        testFn: async () => await paraReservingE2ETest(chain),
+        testFn: async () => await paraReservingE2ETest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - register functions',
-        testFn: async () => await paraRegisteringE2ETest(chain),
+        testFn: async () => await paraRegisteringE2ETest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - deregister functions',
-        testFn: async () => await paraDeregisteringE2ETest(chain),
+        testFn: async () => await paraDeregisteringE2ETest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - root registration functions',
-        testFn: async () => await parasRootRegistrationE2eTest(chain),
+        testFn: async () => await parasRootRegistrationE2eTest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - swap functions',
-        testFn: async () => await parasRegistrarSwapE2ETest(chain),
+        testFn: async () => await parasRegistrarSwapE2ETest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - schedule code upgrade',
-        testFn: async () => await parasScheduleCodeUpgradeE2ETest(chain),
+        testFn: async () => await parasScheduleCodeUpgradeE2ETest(client),
       },
       {
         kind: 'test',
         label: 'pallet registrar - set current head',
-        testFn: async () => await parasSetCurrentHeadE2ETest(chain),
+        testFn: async () => await parasSetCurrentHeadE2ETest(client),
       },
     ],
   }
