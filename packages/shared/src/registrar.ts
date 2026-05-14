@@ -273,7 +273,7 @@ export async function paraRegisteringE2ETest<
     // Restore unlocked state
     await client.dev.setStorage({
       Registrar: {
-        Paras: [[[paraId], { ...(paraInfo.toJSON() as object), locked: null }]],
+        Paras: [[[paraId], { ...(paraInfo.toJSON() as object), locked: false }]],
       },
     })
   }
@@ -429,7 +429,7 @@ export async function paraDeregisteringE2ETest<
     Paras: {
       ParaLifecycles: [[[paraId], 'Parathread']],
       futureCodeHash: [[[paraId], null]],
-      pvfActiveVoteList: [null],
+      pvfActiveVoteList: [],
     },
   })
 
