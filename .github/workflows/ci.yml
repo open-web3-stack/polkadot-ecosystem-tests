@@ -36,13 +36,14 @@ jobs:
 
   ecosystem-tests:
     needs: define-matrix
-    name: "Tests (${{ matrix.network.name }})"
+    name: "Tests (${{ matrix.network.name }}, shard ${{ matrix.shard }}/3)"
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v5
 
@@ -130,8 +131,8 @@ jobs:
             echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
           done
 
-      - name: Run ${{ matrix.network.name }} tests
-        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=3
+      - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
+        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3
 
       - name: Cleanup Subway instances
         if: always()
