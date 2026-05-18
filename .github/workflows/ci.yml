@@ -134,8 +134,10 @@ jobs:
       # Reporters: verbose+github-actions keep live per-shard output and
       # job-summary annotations; blob writes a binary report per shard that
       # the merge-reports job below combines into a single unified summary.
+      # Blob filename includes (network, shard) so multi-network artifacts
+      # don't collide on merge-multiple download.
       - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
-        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3 --reporter=verbose --reporter=github-actions --reporter=blob
+        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3 --reporter=verbose --reporter=github-actions --reporter=blob --outputFile=.vitest-reports/blob-${{ matrix.network.name }}-${{ matrix.shard }}.json
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
