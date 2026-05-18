@@ -58,12 +58,13 @@ jobs:
   # Vitest retries each failing test 3 times (--retry=3).
   tests:
     needs: define-matrix
-    name: "Tests (${{ matrix.network.name }})"
-    timeout-minutes: 150
+    name: "Tests (${{ matrix.network.name }}, shard ${{ matrix.shard }}/3)"
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
+        shard: [1, 2, 3]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -163,8 +164,8 @@ jobs:
 
       # --reporter=json writes test results to file for chain extraction below
       # --reporter=verbose keeps human-readable output in the CI log
-      - name: Run ${{ matrix.network.name }} tests
-        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3 --reporter=json --outputFile=test-results.json --reporter=verbose
+      - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
+        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3 --shard=${{ matrix.shard }}/3 --reporter=json --outputFile=test-results.json --reporter=verbose
 
       # Parse Vitest JSON output to find which chains had failing tests.
       # Test filenames encode chain names as dot-separated segments, e.g.
@@ -196,7 +197,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failed-chains-${{ matrix.network.name }}
+          name: failed-chains-${{ matrix.network.name }}-${{ matrix.shard }}
           path: failed-chains.json
           retention-days: 1
 
