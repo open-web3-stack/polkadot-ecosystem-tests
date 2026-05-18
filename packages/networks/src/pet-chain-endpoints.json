@@ -48,7 +48,7 @@
     "wss://dot-rpc.stakeworld.io/coretime"
   ],
   "bulletinPolkadot": [
-    "wss://bulletin.amperfix.de"
+    "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
     "wss://sys.ibp.network/people-polkadot",
