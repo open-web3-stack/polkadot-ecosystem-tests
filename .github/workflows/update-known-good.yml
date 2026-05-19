@@ -93,7 +93,7 @@ jobs:
       # rate-limiting from production endpoints during test runs
       - name: Install Subway
         run: |
-          curl -sSL https://github.com/AcalaNetwork/subway/releases/download/v0.1.0/subway-v0.1.0-x86_64-unknown-linux-musl.tar.gz \
+          curl -fsSL https://github.com/AcalaNetwork/subway/releases/download/v0.1.0/subway-v0.1.0-x86_64-unknown-linux-musl.tar.gz \
             | sudo tar -xz -C /usr/local/bin
           sudo chmod +x /usr/local/bin/subway
           subway --version
