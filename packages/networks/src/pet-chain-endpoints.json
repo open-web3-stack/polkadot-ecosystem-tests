@@ -33,7 +33,6 @@
   "collectivesPolkadot": [
     "wss://sys.ibp.network/collectives-polkadot",
     "wss://collectives-polkadot.dotters.network",
-    "wss://collectives.api.onfinality.io/public-ws",
     "wss://rpc-collectives-polkadot.luckyfriday.io",
     "wss://collectives-polkadot-rpc.n.dwellir.com",
     "wss://dot-rpc.stakeworld.io/collectives",
