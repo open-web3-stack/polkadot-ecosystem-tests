@@ -48,7 +48,7 @@
     "wss://dot-rpc.stakeworld.io/coretime"
   ],
   "bulletinPolkadot": [
-    "wss://bulletin.amperfix.de"
+    "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
     "wss://sys.ibp.network/people-polkadot",
@@ -94,7 +94,6 @@
     "wss://statemine.public.curie.radiumblock.co/ws"
   ],
   "bridgeHubKusama": [
-    "wss://bridgehub-kusama.public.curie.radiumblock.co/ws",
     "wss://sys.ibp.network/bridgehub-kusama",
     "wss://bridge-hub-kusama.dotters.network",
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",

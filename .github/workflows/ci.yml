@@ -36,13 +36,14 @@ jobs:
 
   ecosystem-tests:
     needs: define-matrix
-    name: "Tests (${{ matrix.network.name }})"
+    name: "Tests (${{ matrix.network.name }}, shard ${{ matrix.shard }}/3)"
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v5
 
@@ -130,8 +131,22 @@ jobs:
             echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
           done
 
-      - name: Run ${{ matrix.network.name }} tests
-        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=3
+      # Reporters: verbose+github-actions keep live per-shard output and
+      # job-summary annotations; blob writes a binary report per shard that
+      # the merge-reports job below combines into a single unified summary.
+      # Blob filename includes (network, shard) so multi-network artifacts
+      # don't collide on merge-multiple download.
+      - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
+        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3 --reporter=verbose --reporter=github-actions --reporter=blob --outputFile=.vitest-reports/blob-${{ matrix.network.name }}-${{ matrix.shard }}.json
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.network.name }}-${{ matrix.shard }}
+          path: .vitest-reports/*
+          include-hidden-files: true
+          retention-days: 1
 
       - name: Cleanup Subway instances
         if: always()
@@ -146,6 +161,29 @@ jobs:
               tail -20 "$log" || true
             fi
           done
+
+  # Merges per-shard blob reports into one unified job summary so the run page
+  # shows a single set of test totals instead of one section per shard.
+  merge-reports:
+    needs: ecosystem-tests
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+      - run: yarn --immutable
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge reports
+        run: yarn vitest --merge-reports --reporter=github-actions --reporter=verbose
 
   all-passed:
     runs-on: ubuntu-latest
