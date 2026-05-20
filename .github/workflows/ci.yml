@@ -55,21 +55,13 @@ jobs:
 
       - run: yarn --immutable
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Get Subway commit hash
-        id: subway-commit
-        run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
-
-      - name: Cache Subway binary
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
-          save-if: ${{ github.ref == 'refs/heads/master' }}
-
       - name: Install Subway
-        run: cargo install --git https://github.com/AcalaNetwork/subway
+        run: |
+          docker create --name subway-extract acala/subway:v0.1.1
+          sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+          docker rm subway-extract
+          sudo chmod +x /usr/local/bin/subway
+          subway --version
 
       - name: Source known good block numbers
         run: |
