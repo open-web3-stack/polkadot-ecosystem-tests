@@ -1,0 +1,86 @@
+diff --git a/dist/cjs/index.d.ts b/dist/cjs/index.d.ts
+index e072ffe6156827581272398cf9acd9352d1b502b..ecec2991498332c287c47f35546932126141b001 100644
+--- a/dist/cjs/index.d.ts
++++ b/dist/cjs/index.d.ts
+@@ -23,6 +23,8 @@ export type SetupOption = {
+     db?: string;
+     /** Connection timeout in milliseconds */
+     timeout?: number;
++    /** Upstream RPC timeout in milliseconds (chopsticks -> upstream/proxy). Forwarded as rpc-timeout. */
++    rpcTimeout?: number;
+     /** Host address to bind the server to */
+     host?: string;
+     /** Port number to bind the server to */
+@@ -52,7 +54,7 @@ export type SetupConfig = Config & {
+  * @param options - Setup options for the network
+  * @returns Configuration object compatible with chopsticks
+  */
+-export declare const createConfig: ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock, }: SetupOption) => SetupConfig;
++export declare const createConfig: ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, rpcTimeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock, }: SetupOption) => SetupConfig;
+ /**
+  * Sets up a blockchain network context using provided options
+  * @param option - Setup options for the network
+diff --git a/dist/cjs/index.js b/dist/cjs/index.js
+index 68a4dfb2ef3443eaf662482bd64d66fbf0f904c2..dce2a4c1cb6a048adef2b41506c7d2b516eae5d7 100644
+--- a/dist/cjs/index.js
++++ b/dist/cjs/index.js
+@@ -57,7 +57,7 @@ function _export_star(from, to) {
+ const logger = _chopsticks.defaultLogger.child({
+     name: 'utils'
+ });
+-const createConfig = ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock })=>{
++const createConfig = ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, rpcTimeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock })=>{
+     // random port if not specified
+     port = port ?? Math.floor(Math.random() * 10000) + 10000;
+     const config = {
+@@ -72,6 +72,7 @@ const createConfig = ({ endpoint, blockNumber, blockHash, wasmOverride, db, time
+         db,
+         'wasm-override': wasmOverride,
+         timeout,
++        'rpc-timeout': rpcTimeout,
+         resume: resume ?? false,
+         'allow-unresolved-imports': allowUnresolvedImports,
+         'process-queued-messages': processQueuedMessages,
+diff --git a/dist/esm/index.d.ts b/dist/esm/index.d.ts
+index e072ffe6156827581272398cf9acd9352d1b502b..ecec2991498332c287c47f35546932126141b001 100644
+--- a/dist/esm/index.d.ts
++++ b/dist/esm/index.d.ts
+@@ -23,6 +23,8 @@ export type SetupOption = {
+     db?: string;
+     /** Connection timeout in milliseconds */
+     timeout?: number;
++    /** Upstream RPC timeout in milliseconds (chopsticks -> upstream/proxy). Forwarded as rpc-timeout. */
++    rpcTimeout?: number;
+     /** Host address to bind the server to */
+     host?: string;
+     /** Port number to bind the server to */
+@@ -52,7 +54,7 @@ export type SetupConfig = Config & {
+  * @param options - Setup options for the network
+  * @returns Configuration object compatible with chopsticks
+  */
+-export declare const createConfig: ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock, }: SetupOption) => SetupConfig;
++export declare const createConfig: ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, rpcTimeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock, }: SetupOption) => SetupConfig;
+ /**
+  * Sets up a blockchain network context using provided options
+  * @param option - Setup options for the network
+diff --git a/dist/esm/index.js b/dist/esm/index.js
+index 6509ac6f609c0abcef9996b563181930ae933413..bb2db6a13d46f46cc5d1c7cee53708e3f53b08da 100644
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -12,7 +12,7 @@ export * from './signFake.js';
+  * Creates a configuration object from setup options
+  * @param options - Setup options for the network
+  * @returns Configuration object compatible with chopsticks
+- */ export const createConfig = ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock })=>{
++ */ export const createConfig = ({ endpoint, blockNumber, blockHash, wasmOverride, db, timeout, rpcTimeout, host, port, maxMemoryBlockCount, resume, runtimeLogLevel, allowUnresolvedImports, processQueuedMessages, saveBlock })=>{
+     // random port if not specified
+     port = port ?? Math.floor(Math.random() * 10000) + 10000;
+     const config = {
+@@ -27,6 +27,7 @@ export * from './signFake.js';
+         db,
+         'wasm-override': wasmOverride,
+         timeout,
++        'rpc-timeout': rpcTimeout,
+         resume: resume ?? false,
+         'allow-unresolved-imports': allowUnresolvedImports,
+         'process-queued-messages': processQueuedMessages,

@@ -33,7 +33,6 @@
   "collectivesPolkadot": [
     "wss://sys.ibp.network/collectives-polkadot",
     "wss://collectives-polkadot.dotters.network",
-    "wss://collectives.api.onfinality.io/public-ws",
     "wss://rpc-collectives-polkadot.luckyfriday.io",
     "wss://collectives-polkadot-rpc.n.dwellir.com",
     "wss://dot-rpc.stakeworld.io/collectives",
@@ -131,7 +130,8 @@
     "wss://karura-rpc.n.dwellir.com"
   ],
   "bifrostKusama": [
-    "wss://us.bifrost-rpc.liebi.com/ws"
+    "wss://hk.bifrost-rpc.liebi.com/ws",
+    "wss://bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://basilisk-rpc.n.dwellir.com",
