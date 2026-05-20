@@ -130,7 +130,8 @@
     "wss://karura-rpc.n.dwellir.com"
   ],
   "bifrostKusama": [
-    "wss://us.bifrost-rpc.liebi.com/ws"
+    "wss://hk.bifrost-rpc.liebi.com/ws",
+    "wss://bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://basilisk-rpc.n.dwellir.com",
