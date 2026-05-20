@@ -20,6 +20,15 @@ export default defineConfig({
 		passWithNoTests: true,
 		retry: 1,
 		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['default'],
+		// Bifrost Kusama public RPCs (us./hk./generic Liebi) are unreachable or
+		// pruned at the pinned block; every shard that runs these tests stalls on
+		// setup. Excluded until a workable endpoint set is identified.
+		exclude: [
+			'**/node_modules/**',
+			'**/.git/**',
+			'packages/kusama/src/bifrostKusama.*.test.ts',
+			'packages/kusama/src/karura.bifrostKusama.xcm.test.ts',
+		],
 	},
 	build: {
 		outDir: '../../dist',
