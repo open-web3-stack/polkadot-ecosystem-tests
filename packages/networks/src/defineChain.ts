@@ -35,6 +35,7 @@ export function defineChain<
     runtimeLogLevel: process.env.RUNTIME_LOG_LEVEL ? Number(process.env.RUNTIME_LOG_LEVEL) : 0,
     blockNumber: toNumber(process.env[`${upperName}_BLOCK_NUMBER`]),
     timeout: 90_000,
+    rpcTimeout: 90_000,
     port: 0,
     allowUnresolvedImports: true,
     saveBlock: false,
