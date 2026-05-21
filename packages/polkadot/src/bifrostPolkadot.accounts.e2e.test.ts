@@ -37,7 +37,7 @@ const depositActions = [
 ]
 
 const accountsCfg = createAccountsConfig({
-  expectation: 'failure',
+  expectation: 'success',
   actions: {
     reserveActions: createDefaultReserveActions(),
     lockActions,

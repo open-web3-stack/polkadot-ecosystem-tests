@@ -25,13 +25,18 @@ export async function setupNetworks<T extends Chain[]>(...chains: T) {
       networks.map(async (network) => {
         const blockNumber = (await network.api.rpc.chain.getHeader()).number.toNumber()
 
-        network.dev.setHead(blockNumber)
+        await network.dev.setHead(blockNumber)
       }),
     )
   })
 
   afterAll(async () => {
-    await Promise.all(networks.map((network) => network.teardown()))
+    await Promise.all(
+      networks.map(async (network) => {
+        await network.api.disconnect().catch(() => {})
+        await network.teardown().catch(() => {})
+      }),
+    )
   })
 
   return networks

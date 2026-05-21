@@ -46,7 +46,7 @@ type ChainConfigBase = {
   name: string
   endpoint: string | string[]
   isRelayChain?: boolean
-  networkGroup: 'polkadot' | 'kusama'
+  networkGroup: 'polkadot' | 'kusama' | 'westend'
 } & (ChainConfigRelaychain | ChainConfigParachain)
 
 export type ChainConfig<

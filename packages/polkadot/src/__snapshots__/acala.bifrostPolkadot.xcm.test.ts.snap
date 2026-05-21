@@ -142,7 +142,7 @@ exports[`acala & bifrostPolkadot > acala transfer DOT to bifrostPolkadot > route
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -361,7 +361,7 @@ exports[`acala & bifrostPolkadot > bifrostPolkadot transfer DOT to acala > route
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

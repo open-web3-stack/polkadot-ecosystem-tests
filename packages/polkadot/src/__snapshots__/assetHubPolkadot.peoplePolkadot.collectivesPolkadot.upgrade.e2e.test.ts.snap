@@ -115,8 +115,8 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
       "result": {
         "Ok": {
           "actualWeight": {
-            "proofSize": "(rounded 5000)",
-            "refTime": "(rounded 300000000)",
+            "proofSize": "(rounded 4000)",
+            "refTime": "(rounded 200000000)",
           },
           "paysFee": "Yes",
         },
@@ -145,8 +145,8 @@ exports[`asset hub & people & collectives > Asset Hub authorizes People upgrade 
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
-        "refTime": "(rounded 200000000)",
+        "proofSize": "(rounded 4000)",
+        "refTime": "(rounded 100000000)",
       },
     },
     "method": "Processed",

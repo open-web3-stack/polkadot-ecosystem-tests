@@ -453,7 +453,7 @@ exports[`People Kusama Proxy full tests (includes call filtering) > People Kusam
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

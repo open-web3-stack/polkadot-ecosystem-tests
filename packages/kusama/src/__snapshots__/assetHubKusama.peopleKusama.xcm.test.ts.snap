@@ -116,7 +116,7 @@ exports[`assetHubKusama & peopleKusama > assetHubKusama transfer KSM to peopleKu
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 4000)",
+        "proofSize": "(rounded 7000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -373,7 +373,7 @@ exports[`assetHubKusama & peopleKusama > peopleKusama transfer KSM to assetHubKu
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9000)",
+        "proofSize": "(rounded 10000)",
         "refTime": "(rounded 300000000)",
       },
     },

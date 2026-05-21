@@ -30,7 +30,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > cancel scheduled task with w
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -133,7 +133,7 @@ exports[`Collectives Polkadot Scheduler E2E tests > schedule task with wrong ori
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

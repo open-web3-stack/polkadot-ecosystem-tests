@@ -50,7 +50,7 @@ export const peoplePolkadot = defineChain({
   initStorages: getInitStorages(custom.peoplePolkadot),
   properties: {
     addressEncoding: 0,
-    proxyBlockProvider: 'Local',
+    proxyBlockProvider: 'NonLocal',
     schedulerBlockProvider: 'NonLocal',
     asyncBacking: 'Enabled',
     feeExtractor: standardFeeExtractor,

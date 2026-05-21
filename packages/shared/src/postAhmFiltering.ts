@@ -1,5 +1,5 @@
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import { sha256AsU8a } from '@polkadot/util-crypto'
 
@@ -11,9 +11,7 @@ import { type TestConfig, testCallsViaForceBatch } from './helpers/index.js'
 export async function stakingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   // Create a `utility.forceBatch` with all staking extrinsics using garbage but well-formed arguments
   const batchCalls = [
     // call index 0
@@ -99,9 +97,7 @@ export async function stakingCallsFilteredTest<
 export async function vestingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -133,9 +129,7 @@ export async function vestingCallsFilteredTest<
 export async function referendaCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -172,9 +166,7 @@ export async function referendaCallsFilteredTest<
 export async function convictionVotingCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -204,9 +196,7 @@ export async function convictionVotingCallsFilteredTest<
 export async function preimageCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -231,9 +221,7 @@ export async function preimageCallsFilteredTest<
 export async function preimageCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -258,9 +246,7 @@ export async function preimageCallsNotFilteredTest<
 export async function nominationPoolsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -335,9 +321,7 @@ export async function nominationPoolsCallsFilteredTest<
 export async function bountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -375,9 +359,7 @@ export async function bountiesCallsFilteredTest<
 export async function childBountiesCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -407,9 +389,7 @@ export async function childBountiesCallsFilteredTest<
 export async function babeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -437,9 +417,7 @@ export async function babeCallsNotFilteredTest<
 export async function grandpaCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -460,9 +438,7 @@ export async function grandpaCallsNotFilteredTest<
 export async function beefyCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   // Beefy has 7 calls: indices 0-6 (from beefy/src/lib.rs)
@@ -494,9 +470,7 @@ export async function beefyCallsNotFilteredTest<
 export async function parasSlashingCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const batchCalls = [
     // call index 0 - report_dispute_lost_unsigned
     client.api.tx.parasSlashing.reportDisputeLostUnsigned({} as any, {} as any),
@@ -511,9 +485,7 @@ export async function parasSlashingCallsNotFilteredTest<
 export async function slotsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -534,9 +506,7 @@ export async function slotsCallsFilteredTest<
 export async function auctionsCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -557,9 +527,7 @@ export async function auctionsCallsFilteredTest<
 export async function crowdloanCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -580,9 +548,7 @@ export async function crowdloanCallsNotFilteredTest<
 export async function crowdloanCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -609,9 +575,7 @@ export async function crowdloanCallsFilteredTest<
 export async function schedulerCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -658,9 +622,7 @@ export async function schedulerCallsFilteredTest<
 export async function treasuryCallsFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -687,9 +649,7 @@ export async function treasuryCallsFilteredTest<
 export async function systemCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -720,9 +680,7 @@ export async function systemCallsNotFilteredTest<
 export async function stakingAhClientCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -743,9 +701,7 @@ export async function stakingAhClientCallsNotFilteredTest<
 export async function parasCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -796,9 +752,7 @@ export async function parasCallsNotFilteredTest<
 export async function coretimeCallsNotFilteredTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
 
   const batchCalls = [
@@ -820,7 +774,7 @@ export async function coretimeCallsNotFilteredTest<
  */
 export interface PostAhmTest {
   label: string
-  testFn: (chain: Chain<any, any>) => Promise<void>
+  testFn: (client: Client<any, any>) => Promise<void>
 }
 
 /**
@@ -854,20 +808,8 @@ export const commonUnfilteredTests: PostAhmTest[] = [
   { label: 'stakingAhClient calls are not filtered', testFn: stakingAhClientCallsNotFilteredTest },
   { label: 'paras calls are not filtered', testFn: parasCallsNotFilteredTest },
   { label: 'coretime calls are not filtered', testFn: coretimeCallsNotFilteredTest },
+  { label: 'preimage calls are not filtered', testFn: preimageCallsNotFilteredTest },
 ]
-
-/**
- * Chain-specific test variations.
- */
-export const preimageFilteredTest: PostAhmTest = {
-  label: 'preimage calls are filtered',
-  testFn: preimageCallsFilteredTest,
-}
-
-export const preimageNotFilteredTest: PostAhmTest = {
-  label: 'preimage calls are not filtered',
-  testFn: preimageCallsNotFilteredTest,
-}
 
 export function postAhmFilteringE2ETests<
   TCustom extends Record<string, unknown> | undefined,
@@ -878,9 +820,24 @@ export function postAhmFilteringE2ETests<
   filteredTests: PostAhmTest[],
   unfilteredTests: PostAhmTest[],
 ): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'describe',
@@ -888,7 +845,7 @@ export function postAhmFilteringE2ETests<
         children: filteredTests.map((test) => ({
           kind: 'test' as const,
           label: test.label,
-          testFn: async () => await test.testFn(chain),
+          testFn: async () => await test.testFn(client),
         })),
       },
       {
@@ -897,7 +854,7 @@ export function postAhmFilteringE2ETests<
         children: unfilteredTests.map((test) => ({
           kind: 'test' as const,
           label: test.label,
-          testFn: async () => await test.testFn(chain),
+          testFn: async () => await test.testFn(client),
         })),
       },
     ],

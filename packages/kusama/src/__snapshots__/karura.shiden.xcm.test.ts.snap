@@ -359,7 +359,7 @@ exports[`karura & shiden > karura transfer KSM to shiden > route chain xcm event
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",
@@ -789,7 +789,7 @@ exports[`karura & shiden > shiden transfer KSM to karura > route chain xcm event
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

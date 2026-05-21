@@ -142,7 +142,7 @@ exports[`bifrostPolkadot & hydration > bifrostPolkadot transfer DOT to hydration
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

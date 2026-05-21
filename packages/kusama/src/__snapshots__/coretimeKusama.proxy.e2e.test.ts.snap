@@ -512,7 +512,7 @@ exports[`Kusama Coretime Proxy full tests (includes call filtering) > Kusama Cor
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },

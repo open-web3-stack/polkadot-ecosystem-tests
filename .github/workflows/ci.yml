@@ -23,35 +23,27 @@ jobs:
     - run: yarn --immutable
     - run: yarn lint
 
-  ecosystem-tests:
-    name: "Tests (${{ matrix.network.name }})"
+  define-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 5
+    outputs:
+      networks: ${{ steps.networks.outputs.networks }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Generate network matrix
+        id: networks
+        run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
+
+  ecosystem-tests:
+    needs: define-matrix
+    name: "Tests (${{ matrix.network.name }}, shard ${{ matrix.shard }}/3)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        network:
-          - name: "polkadot"
-            chains:
-              - { chain: "polkadot", port: 9000, endpoint_var: "POLKADOT_ENDPOINT" }
-              - { chain: "assetHubPolkadot", port: 9001, endpoint_var: "ASSETHUBPOLKADOT_ENDPOINT" }
-              - { chain: "bridgeHubPolkadot", port: 9002, endpoint_var: "BRIDGEHUBPOLKADOT_ENDPOINT" }
-              - { chain: "collectivesPolkadot", port: 9003, endpoint_var: "COLLECTIVESPOLKADOT_ENDPOINT" }
-              - { chain: "coretimePolkadot", port: 9004, endpoint_var: "CORETIMEPOLKADOT_ENDPOINT" }
-              - { chain: "peoplePolkadot", port: 9005, endpoint_var: "PEOPLEPOLKADOT_ENDPOINT" }
-              - { chain: "acala", port: 9006, endpoint_var: "ACALA_ENDPOINT" }
-              - { chain: "hydration", port: 9007, endpoint_var: "HYDRATION_ENDPOINT" }
-              - { chain: "bifrostPolkadot", port: 9008, endpoint_var: "BIFROSTPOLKADOT_ENDPOINT" }
-          - name: "kusama"
-            chains:
-              - { chain: "kusama", port: 9010, endpoint_var: "KUSAMA_ENDPOINT" }
-              - { chain: "assetHubKusama", port: 9011, endpoint_var: "ASSETHUBKUSAMA_ENDPOINT" }
-              - { chain: "bridgeHubKusama", port: 9012, endpoint_var: "BRIDGEHUBKUSAMA_ENDPOINT" }
-              - { chain: "coretimeKusama", port: 9013, endpoint_var: "CORETIMEKUSAMA_ENDPOINT" }
-              - { chain: "peopleKusama", port: 9014, endpoint_var: "PEOPLEKUSAMA_ENDPOINT" }
-              - { chain: "encointerKusama", port: 9015, endpoint_var: "ENCOINTERKUSAMA_ENDPOINT" }
-              - { chain: "karura", port: 9016, endpoint_var: "KARURA_ENDPOINT" }
-              - { chain: "bifrostKusama", port: 9017, endpoint_var: "BIFROSTKUSAMA_ENDPOINT" }
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v5
 
@@ -63,21 +55,13 @@ jobs:
 
       - run: yarn --immutable
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Get Subway commit hash
-        id: subway-commit
-        run: echo "hash=$(git ls-remote https://github.com/AcalaNetwork/subway HEAD | cut -f1)" >> $GITHUB_OUTPUT
-
-      - name: Cache Subway binary
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: subway-binary-${{ steps.subway-commit.outputs.hash }}
-          save-if: ${{ github.ref == 'refs/heads/master' }}
-
       - name: Install Subway
-        run: cargo install --git https://github.com/AcalaNetwork/subway
+        run: |
+          docker create --name subway-extract acala/subway:v0.1.1
+          sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+          docker rm subway-extract
+          sudo chmod +x /usr/local/bin/subway
+          subway --version
 
       - name: Source known good block numbers
         run: |
@@ -139,8 +123,22 @@ jobs:
             echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
           done
 
-      - name: Run ${{ matrix.network.name }} tests
-        run: yarn test:${{ matrix.network.name }} --pool=threads --maxWorkers=3 --retry=3
+      # Reporters: verbose+github-actions keep live per-shard output and
+      # job-summary annotations; blob writes a binary report per shard that
+      # the merge-reports job below combines into a single unified summary.
+      # Blob filename includes (network, shard) so multi-network artifacts
+      # don't collide on merge-multiple download.
+      - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
+        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3 --reporter=verbose --reporter=github-actions --reporter=blob --outputFile=.vitest-reports/blob-${{ matrix.network.name }}-${{ matrix.shard }}.json
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.network.name }}-${{ matrix.shard }}
+          path: .vitest-reports/*
+          include-hidden-files: true
+          retention-days: 1
 
       - name: Cleanup Subway instances
         if: always()
@@ -155,6 +153,29 @@ jobs:
               tail -20 "$log" || true
             fi
           done
+
+  # Merges per-shard blob reports into one unified job summary so the run page
+  # shows a single set of test totals instead of one section per shard.
+  merge-reports:
+    needs: ecosystem-tests
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+      - run: yarn --immutable
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge reports
+        run: yarn vitest --merge-reports --reporter=github-actions --reporter=verbose
 
   all-passed:
     runs-on: ubuntu-latest
