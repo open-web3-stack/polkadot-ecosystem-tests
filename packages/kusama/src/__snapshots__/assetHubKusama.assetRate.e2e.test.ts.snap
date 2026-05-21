@@ -52,7 +52,7 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.create > rejects signed origin 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -113,7 +113,7 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.remove > rejects signed origin 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -176,7 +176,7 @@ exports[`Kusama Asset Hub Asset Rate > assetRate.update > rejects signed origin 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
