@@ -1,13 +1,12 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks, defaultAccounts } from '@e2e-test/networks'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 
 import { assert, expect } from 'vitest'
 
 import { checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
-import { setupNetworks } from './setup.js'
 import type { Client, RootTestTree } from './types.js'
 
 // USDT on Asset Hub (asset ID 1984), expressed as an XCM V4 versioned asset.
@@ -135,8 +134,7 @@ async function scheduleRootCall(client: Client<any, any>, call: SubmittableExtri
 export async function assetRateCreateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>) {
   const api = client.api
 
   // 1. Signed origin cannot create asset rate
@@ -203,8 +201,7 @@ export async function assetRateCreateTest<
 export async function assetRateUpdateTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>) {
   const api = client.api
 
   await client.dev.setStorage({
@@ -271,8 +268,7 @@ export async function assetRateUpdateTest<
 export async function assetRateRemoveTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
+>(client: Client<TCustom, TInitStorages>) {
   const api = client.api
 
   await client.dev.setStorage({
@@ -321,9 +317,24 @@ export function baseAssetRateE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'describe',
@@ -332,7 +343,7 @@ export function baseAssetRateE2ETests<
           {
             kind: 'test',
             label: 'rejects signed origin and creates a rate with root, rejecting duplicates',
-            testFn: async () => await assetRateCreateTest(chain),
+            testFn: async () => await assetRateCreateTest(client),
           },
         ],
       },
@@ -343,7 +354,7 @@ export function baseAssetRateE2ETests<
           {
             kind: 'test',
             label: 'rejects signed origin and updates an existing rate with root, rejecting unknown assets',
-            testFn: async () => await assetRateUpdateTest(chain),
+            testFn: async () => await assetRateUpdateTest(client),
           },
         ],
       },
@@ -354,7 +365,7 @@ export function baseAssetRateE2ETests<
           {
             kind: 'test',
             label: 'rejects signed origin and removes an existing rate with root, rejecting unknown assets',
-            testFn: async () => await assetRateRemoveTest(chain),
+            testFn: async () => await assetRateRemoveTest(client),
           },
         ],
       },
