@@ -1,0 +1,104 @@
+# Daily health probe over every RPC endpoint in `pet-chain-endpoints.json`.
+# Commits the new ranking directly to master if it differs from the current
+# order (same convention as `update-known-good.yml`).
+#
+# This workflow stacks three behaviors to deliver a "use the healthiest
+# endpoint" policy without any per-test or per-job change:
+#
+# 1. scripts/probe-endpoints.mjs probes each endpoint over a persistent
+#    WebSocket with sustained traffic (matching production traffic shape).
+# 2. scripts/apply-probe-ranking.mjs rewrites `pet-chain-endpoints.json`
+#    so that each chain's array is sorted by score (best first).
+# 3. Subway (when used, via `.github/subway-template.yml`) is configured
+#    with `shuffle_endpoints: false`, so it picks array[0] at startup.
+#    Chopsticks (when used directly, via @polkadot/rpc-provider) starts
+#    at array[0] too because `WsProvider` initialises with
+#    `#endpointIndex = -1` and `selectEndpointIndex` returns `(idx + 1) % N`.
+#
+# In both cases array[0] is the runtime preference and array[1..N-1] is
+# the failover ladder on stall/disconnect. The probe never filters; it
+# only reorders, so the ladder always has somewhere to escape to.
+#
+# Cadence: daily. Endpoint health drifts on the order of weeks, but a
+# single-day cadence keeps the latency between "an endpoint goes bad"
+# and "the JSON reflects it" bounded.
+
+name: Probe RPC endpoints
+
+on:
+  workflow_dispatch:
+    inputs:
+      samples:
+        description: 'RPC pings per endpoint (default 100)'
+        required: false
+        type: string
+      window_ms:
+        description: 'Wall-clock budget for the pings, in ms (default 10000)'
+        required: false
+        type: string
+      inflight:
+        description: 'Max concurrent pings per endpoint (default 4)'
+        required: false
+        type: string
+      chains:
+        description: 'Space-separated chain keys to probe (default: all)'
+        required: false
+        type: string
+  schedule:
+    - cron: '17 4 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  probe-and-rank:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+
+      - run: yarn --immutable
+
+      - name: Probe endpoints
+        env:
+          SAMPLES: ${{ inputs.samples }}
+          WINDOW_MS: ${{ inputs.window_ms }}
+          INFLIGHT: ${{ inputs.inflight }}
+          CHAINS: ${{ inputs.chains }}
+        run: node scripts/probe-endpoints.mjs
+
+      - name: Apply ranking
+        run: node scripts/apply-probe-ranking.mjs
+
+      - name: Upload probe report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: endpoint-probe
+          path: endpoint-probe.json
+          retention-days: 30
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/networks/src/pet-chain-endpoints.json
+          if ! git diff --cached --quiet; then
+            git commit -m "[ci skip] Re-rank RPC endpoints by health"
+            git push
+          else
+            echo "No changes to commit"
+          fi

@@ -8,11 +8,11 @@
  * @module
  */
 
-import type { Chain, Client } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks } from '@e2e-test/networks'
 
 import { checkSystemEvents, createXcmTransactSend, getXcmRoute, scheduleInlineCallWithOrigin } from './helpers/index.js'
-import { setupNetworks } from './setup.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
+
 /**
  * Test the process of whitelisting a call
  *
@@ -23,8 +23,7 @@ export async function fellowshipWhitelistCall<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesDest extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(destChain: Chain<TCustom, TInitStoragesDest>, collectivesChain: Chain<TCustom, TInitStoragesPara>) {
-  const [destClient, collectivesClient] = await setupNetworks(destChain, collectivesChain)
+>(destClient: Client<TCustom, TInitStoragesDest>, collectivesClient: Client<TCustom, TInitStoragesPara>) {
   /**
    * Example 32 byte call hash; value is not important for the test
    */
@@ -54,8 +53,8 @@ export async function fellowshipWhitelistCall<
  * @param requireWeightAtMost Optional reftime/proof size parameters that the extrinsic may require
  */
 export async function sendWhitelistCallViaXcmTransact(
-  destClient: Client,
-  collectivesClient: Client,
+  destClient: Client<any, any>,
+  collectivesClient: Client<any, any>,
   encodedChainCallData: `0x${string}`,
   requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
 ): Promise<any> {
@@ -98,14 +97,34 @@ export function baseCollectivesChainE2ETests<
   collectivesChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: { testSuiteName: string },
 ): RootTestTree {
+  let relayClient!: Client<TCustom, TInitStoragesRelay>
+  let collectivesClient!: Client<TCustom, TInitStoragesPara>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[relayClient, collectivesClient] = await createNetworks(relayChain, collectivesChain)
+      restoreSnapshot = captureSnapshot(relayClient, collectivesClient)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      for (const c of [relayClient, collectivesClient]) {
+        const blockNumber = (await c.api.rpc.chain.getHeader()).number.toNumber()
+        await c.dev.setHead(blockNumber)
+      }
+    },
+    afterAll: async () => {
+      for (const c of [relayClient, collectivesClient]) {
+        await c.api.disconnect().catch(() => {})
+        await c.teardown().catch(() => {})
+      }
+    },
     children: [
       {
         kind: 'test',
         label: 'whitelisting a call by fellowship',
-        testFn: async () => await fellowshipWhitelistCall(relayChain, collectivesChain),
+        testFn: async () => await fellowshipWhitelistCall(relayClient, collectivesClient),
       },
     ],
   }

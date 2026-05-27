@@ -127,7 +127,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer KSM to karura > tx ev
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -393,7 +393,7 @@ exports[`assetHubKusama & karura > assetHubKusama transfer USDT to karura > tx e
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -650,7 +650,7 @@ exports[`assetHubKusama & karura > karura transfer KSM to assetHubKusama > to ch
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 500000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",
@@ -820,7 +820,7 @@ exports[`assetHubKusama & karura > karura transfer KSM to assetHubKusama with li
       "success": false,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 500000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",
@@ -997,7 +997,7 @@ exports[`assetHubKusama & karura > karura transfer USDT to assetHubKusama > to c
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 500000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",

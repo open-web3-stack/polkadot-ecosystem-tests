@@ -41,6 +41,7 @@ exports[`Kusama Configuration > configuration tests > configuration test - can r
   "maxDownwardMessageSize": "(rounded 50000)",
   "maxHeadDataSize": "(rounded 20000)",
   "maxPovSize": "(rounded 10000000)",
+  "maxRelayParentSessionAge": 0,
   "maxUpwardMessageNumPerCandidate": "(rounded 100)",
   "maxUpwardMessageSize": "(rounded 70000)",
   "maxUpwardQueueCount": "(rounded 700000)",
@@ -57,7 +58,6 @@ exports[`Kusama Configuration > configuration tests > configuration test - can r
   "schedulerParams": {
     "groupRotationFrequency": 10,
     "lookahead": 5,
-    "maxAvailabilityTimeouts": 0,
     "maxValidatorsPerCore": 5,
     "numCores": "(rounded 100)",
     "onDemandBaseFee": 5000000000,
@@ -65,7 +65,6 @@ exports[`Kusama Configuration > configuration tests > configuration test - can r
     "onDemandQueueMaxSize": 500,
     "onDemandTargetQueueUtilization": "(rounded 300000000)",
     "parasAvailabilityPeriod": 10,
-    "ttl": 5,
   },
   "validationUpgradeCooldown": "(rounded 4000)",
   "validationUpgradeDelay": 600,

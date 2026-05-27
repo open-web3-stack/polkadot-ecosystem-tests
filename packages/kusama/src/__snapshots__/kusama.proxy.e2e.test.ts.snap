@@ -689,7 +689,7 @@ exports[`Kusama Proxy full tests (includes call filtering) > Kusama Proxy base t
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 600000000)",
         },
       },
     },

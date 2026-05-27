@@ -27,7 +27,7 @@ exports[`Kusama AssetHub remote proxy tests > register + remote_proxy_with_regis
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -52,7 +52,7 @@ exports[`Kusama AssetHub remote proxy tests > register + remote_proxy_with_regis
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -113,7 +113,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -138,7 +138,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -163,7 +163,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -188,7 +188,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -213,7 +213,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -238,7 +238,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -263,7 +263,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -288,7 +288,7 @@ exports[`Kusama AssetHub remote proxy tests > remote proxy (direct proof) > reje
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },

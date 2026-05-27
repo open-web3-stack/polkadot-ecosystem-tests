@@ -1,13 +1,12 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 import {
   type Client,
   type DescribeNode,
   type ProxyTypeMap,
   type RootTestTree,
   setupBalances,
-  setupNetworks,
   type TestNode,
 } from '@e2e-test/shared'
 
@@ -17,12 +16,20 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { PalletProxyProxyDefinition } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import type { HexString } from '@polkadot/util/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
 import BN from 'bn.js'
-import { blockProviderOffset, check, checkEvents, getBlockNumber, type TestConfig } from './helpers/index.js'
+import {
+  blockProviderOffset,
+  check,
+  checkEvents,
+  eventsFromAmortizedDryRunResult,
+  getBlockNumber,
+  type TestConfig,
+} from './helpers/index.js'
 
 /// -------
 /// Helpers
@@ -1217,15 +1224,13 @@ async function proxyCallFilteringSingleTestRunner<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(
-  chain: Chain<TCustom, TInitStorages>,
+  client: Client<TCustom, TInitStorages>,
   proxyType: string,
   proxyTypeIx: number,
   proxyAccount: KeyringPair,
   proxyTypeConfig: ProxyTypeConfig,
   testType: ProxyCallFilteringTestType = ProxyCallFilteringTestType.Permitted,
 ) {
-  const [client] = await setupNetworks(chain)
-
   const alice = testAccounts.alice
 
   // Add the proxy account, with the to-be-tested proxy type
@@ -1247,17 +1252,25 @@ async function proxyCallFilteringSingleTestRunner<
     },
   })
 
-  // Execute each proxy action in its own block and check its results immediately
-  for (const proxyAction of proxyActions) {
-    // Execute the proxy action
-    const proxyTx = client.api.tx.proxy.proxy(alice.address, proxyTypeIx, proxyAction.call)
-    const result = await sendTransaction(proxyTx.signAsync(proxyAccount))
+  // Same base nonce for every action: dryRunExtrinsicsAmortized rolls back nonce per call.
+  const proxyAccountInfo = await client.api.query.system.account(proxyAccount.address)
+  const baseNonce = proxyAccountInfo.nonce.toNumber()
 
-    // Advance to the next block to ensure events are processed
-    await client.dev.newBlock()
+  const signedExtrinsics = await Promise.all(
+    proxyActions.map((proxyAction) =>
+      client.api.tx.proxy
+        .proxy(alice.address, proxyTypeIx, proxyAction.call)
+        .signAsync(proxyAccount, { nonce: baseNonce })
+        .then((signed) => signed.toHex() as HexString),
+    ),
+  )
 
-    // Check the events for this specific call
-    const events = await client.api.query.system.events()
+  const dryRunResults = await client.chain.dryRunExtrinsicsAmortized(signedExtrinsics)
+
+  for (let i = 0; i < proxyActions.length; i++) {
+    const proxyAction = proxyActions[i]
+    const result = eventsFromAmortizedDryRunResult(client.api, dryRunResults[i].storageDiff)
+    const events = await result.events
     const proxyExecutedEvents = events.filter((record) => {
       const { event } = record
       return event.section === 'proxy' && event.method === 'ProxyExecuted'
@@ -1279,7 +1292,7 @@ async function proxyCallFilteringSingleTestRunner<
       if (error.isModule) {
         expect(
           client.api.errors.system.CallFiltered.is(error.asModule),
-          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${chain.name}`,
+          `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should be filtered for ${proxyType} proxy on ${client.config.name}`,
         ).toBe(true)
       }
     }
@@ -1291,7 +1304,7 @@ async function proxyCallFilteringSingleTestRunner<
         if (error.isModule) {
           expect(
             client.api.errors.system.CallFiltered.is(error.asModule),
-            `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should not be filtered for ${proxyType} proxy on ${chain.name}`,
+            `Call ${proxyAction.pallet}.${proxyAction.extrinsic} should not be filtered for ${proxyType} proxy on ${client.config.name}`,
           ).toBe(false)
         } else {
           // If the call fail but not due to filtering, the test may proceed.
@@ -1324,7 +1337,11 @@ async function proxyCallFilteringSingleTestRunner<
 function proxyCallFilteringTestTree<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testType: ProxyCallFilteringTestType, proxyCfg: ProxyTestConfig): DescribeNode {
+>(
+  getClient: () => Client<TCustom, TInitStorages>,
+  testType: ProxyCallFilteringTestType,
+  proxyCfg: ProxyTestConfig,
+): DescribeNode {
   const kr = testAccounts.keyring
 
   const proxyTypes = proxyCfg.proxyTypes
@@ -1339,7 +1356,7 @@ function proxyCallFilteringTestTree<
       label: `${testType === ProxyCallFilteringTestType.Permitted ? 'allowed' : 'forbidden'} proxy calls for ${proxyType}`,
       testFn: async () =>
         await proxyCallFilteringSingleTestRunner(
-          chain,
+          getClient(),
           proxyType,
           proxyTypeIx,
           proxyAccounts[proxyType],
@@ -1399,9 +1416,7 @@ export function createProxyConfig(proxyTypes: ProxyTypeMap, proxyTypeConfig?: Pr
 export async function addRemoveProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>, delay: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>, delay: number) {
   const alice = testAccounts.alice
   const kr = testAccounts.keyring
 
@@ -1443,7 +1458,10 @@ export async function addRemoveProxyTest<
 
   for (const proxy of proxies) {
     await check(proxy).toMatchObject({
-      delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
+      delegate: encodeAddress(
+        proxyAccounts[proxy.proxyType.toString()].address,
+        client.config.properties.addressEncoding,
+      ),
       proxyType: proxyIndicesToTypes[proxy.proxyType.toNumber()],
       delay: 0,
     })
@@ -1503,7 +1521,10 @@ export async function addRemoveProxyTest<
     await check(proxy)
       .redact({ removeKeys: /proxyType/ })
       .toMatchObject({
-        delegate: encodeAddress(proxyAccounts[proxy.proxyType.toString()].address, chain.properties.addressEncoding),
+        delegate: encodeAddress(
+          proxyAccounts[proxy.proxyType.toString()].address,
+          client.config.properties.addressEncoding,
+        ),
         delay: delay,
       })
   }
@@ -1522,7 +1543,7 @@ export async function addRemoveProxyTest<
   // Verify that each proxy removal emitted a ProxyRemoved event with correct data.
   // Note: `remove_all_proxy_delegates` emits `ProxyRemoved` events in the pallet source, but
   // Polkadot's runtime does not yet include this change. Only assert on Kusama chains for now.
-  if (chain.networkGroup === 'kusama') {
+  if ((client.config as any).networkGroup === 'kusama') {
     const events = await client.api.query.system.events()
     const proxyRemovedEvents = events.filter((record) => {
       const { event } = record
@@ -1534,15 +1555,15 @@ export async function addRemoveProxyTest<
     for (const record of proxyRemovedEvents) {
       assert(client.api.events.proxy.ProxyRemoved.is(record.event))
       const eventData = record.event.data
-      expect(eventData.delegator.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
+      expect(eventData.delegator.eq(encodeAddress(alice.address, client.config.properties.addressEncoding))).toBe(true)
       expect(eventData.delay.eq(delay)).toBe(true)
 
       const proxyType = eventData.proxyType.toString()
       const expectedDelegate = proxyAccounts[proxyType]
       expect(expectedDelegate, `Unexpected proxy type ${proxyType} in ProxyRemoved event`).toBeDefined()
-      expect(eventData.delegatee.eq(encodeAddress(expectedDelegate.address, chain.properties.addressEncoding))).toBe(
-        true,
-      )
+      expect(
+        eventData.delegatee.eq(encodeAddress(expectedDelegate.address, client.config.properties.addressEncoding)),
+      ).toBe(true)
     }
   }
 
@@ -1589,9 +1610,7 @@ export async function verifyPureProxy(
 export async function createKillPureProxyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
   const alice = testAccounts.alice
 
   // Create pure proxies
@@ -1653,7 +1672,7 @@ export async function createKillPureProxyTest<
     pureProxyAddresses.set(eventData.proxyType.toNumber(), eventData.pure.toString())
 
     // Confer event data vs. storage
-    await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
+    await verifyPureProxy(client, eventData, alice.address, client.config.properties.addressEncoding)
   }
 
   // Kill pure proxies
@@ -1661,7 +1680,7 @@ export async function createKillPureProxyTest<
   // To call `proxy.killPure`, the block number of `proxy.createPure` is required.
   // The current block number will have been the block in which the batch transaction containing all of the
   // `createPure` extrinsics were executed.
-  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
+  const currBlockNumber = await getBlockNumber(client.api, client.config.properties.proxyBlockProvider!)
 
   // For every pure proxy type, create a `proxy.proxy` call, containing a `proxy.killPure` extrinsic.
   // Note that in the case of pure proxies, the account which called `proxy.createPure` becomes the delegate,
@@ -1700,7 +1719,9 @@ export async function createKillPureProxyTest<
       expect(pureProxy[1].eq(0)).toBe(true)
     } else {
       expect(pureProxy[0].length).toBe(1)
-      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, chain.properties.addressEncoding))).toBe(true)
+      expect(pureProxy[0][0].delegate.eq(encodeAddress(alice.address, client.config.properties.addressEncoding))).toBe(
+        true,
+      )
 
       const proxyDepositBase = client.api.consts.proxy.proxyDepositBase
       const proxyDepositFactor = client.api.consts.proxy.proxyDepositFactor
@@ -1720,9 +1741,7 @@ export async function createKillPureProxyTest<
 export async function proxyCallTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -1781,9 +1800,7 @@ export async function proxyCallTest<
 export async function proxyForceTypeExactMatchOnlyTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyTypes: Record<string, number>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
 
@@ -1833,9 +1850,7 @@ export async function proxyForceTypeExactMatchOnlyTest<
 export async function proxyAnnouncementLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -1866,9 +1881,9 @@ export async function proxyAnnouncementLifecycleTest<
 
   await checkEvents(announcementEvents, 'proxy').toMatchSnapshot('events when Bob announces a proxy call')
 
-  const currBlockNumber = await getBlockNumber(client.api, chain.properties.proxyBlockProvider!)
+  const currBlockNumber = await getBlockNumber(client.api, client.config.properties.proxyBlockProvider!)
   const announcementObject = {
-    real: encodeAddress(alice.address, chain.properties.addressEncoding),
+    real: encodeAddress(alice.address, client.config.properties.addressEncoding),
     callHash: transferCall.method.hash.toHex(),
     height: currBlockNumber,
   }
@@ -1911,7 +1926,10 @@ export async function proxyAnnouncementLifecycleTest<
 
   await client.dev.newBlock()
 
-  const offset = blockProviderOffset(chain.properties.proxyBlockProvider!, (chain.properties as any).asyncBacking)
+  const offset = blockProviderOffset(
+    client.config.properties.proxyBlockProvider!,
+    (client.config.properties as any).asyncBacking,
+  )
 
   announcements = await client.api.query.proxy.announcements(bob.address)
   expect(announcements[0].length).toBe(1)
@@ -1964,9 +1982,7 @@ export async function proxyAnnouncementLifecycleTest<
 export async function pureProxyOwnershipChangeTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, proxyType: number) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>, proxyType: number) {
   const alice = testAccounts.alice
   const bob = testAccounts.bob
   const charlie = testAccounts.charlie
@@ -2001,7 +2017,7 @@ export async function pureProxyOwnershipChangeTest<
   const pureProxyAddress = eventData.pure.toString()
 
   // Verify the pure proxy was created correctly.
-  await verifyPureProxy(client, eventData, alice.address, chain.properties.addressEncoding)
+  await verifyPureProxy(client, eventData, alice.address, client.config.properties.addressEncoding)
 
   // Add funds to the pure proxy account.
   await setupBalances(client, [{ address: pureProxyAddress, amount: 300n * 10n ** 10n }])
@@ -2066,7 +2082,11 @@ export async function pureProxyOwnershipChangeTest<
 export function baseProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyTypes: Record<string, number>): RootTestTree {
+>(
+  getClient: () => Client<TCustom, TInitStorages>,
+  testConfig: TestConfig,
+  proxyTypes: Record<string, number>,
+): RootTestTree {
   return {
     kind: 'describe',
     label: `${testConfig.testSuiteName} base tests`,
@@ -2074,32 +2094,32 @@ export function baseProxyE2ETests<
       {
         kind: 'test',
         label: 'add proxies (with/without delay) to an account, and remove them',
-        testFn: async () => await addRemoveProxyTest(chain, proxyTypes, PROXY_DELAY),
+        testFn: async () => await addRemoveProxyTest(getClient(), proxyTypes, PROXY_DELAY),
       },
       {
         kind: 'test',
         label: 'create and kill pure proxies',
-        testFn: async () => await createKillPureProxyTest(chain, proxyTypes),
+        testFn: async () => await createKillPureProxyTest(getClient(), proxyTypes),
       },
       {
         kind: 'test',
         label: 'perform proxy call on behalf of delegator',
-        testFn: async () => await proxyCallTest(chain),
+        testFn: async () => await proxyCallTest(getClient()),
       },
       {
         kind: 'test',
         label: 'reject force_proxy_type superset (exact match required)',
-        testFn: async () => await proxyForceTypeExactMatchOnlyTest(chain, proxyTypes),
+        testFn: async () => await proxyForceTypeExactMatchOnlyTest(getClient(), proxyTypes),
       },
       {
         kind: 'test',
         label: 'proxy announcement lifecycle test',
-        testFn: async () => await proxyAnnouncementLifecycleTest(chain),
+        testFn: async () => await proxyAnnouncementLifecycleTest(getClient()),
       },
       {
         kind: 'test',
         label: 'pure proxy ownership change test',
-        testFn: async () => await pureProxyOwnershipChangeTest(chain, proxyTypes['Any']),
+        testFn: async () => await pureProxyOwnershipChangeTest(getClient(), proxyTypes['Any']),
       },
     ],
   }
@@ -2109,14 +2129,33 @@ export function fullProxyE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig, proxyCfg: ProxyTestConfig): RootTestTree {
-  const allowedFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Permitted, proxyCfg)
-  const forbiddenFilteringTests = proxyCallFilteringTestTree(chain, ProxyCallFilteringTestType.Forbidden, proxyCfg)
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
+  const allowedFilteringTests = proxyCallFilteringTestTree(() => client, ProxyCallFilteringTestType.Permitted, proxyCfg)
+  const forbiddenFilteringTests = proxyCallFilteringTestTree(
+    () => client,
+    ProxyCallFilteringTestType.Forbidden,
+    proxyCfg,
+  )
 
-  const baseTestTree = baseProxyE2ETests(chain, testConfig, proxyCfg.proxyTypes)
+  const baseTestTree = baseProxyE2ETests(() => client, testConfig, proxyCfg.proxyTypes)
 
   return {
     kind: 'describe' as const,
     label: `${testConfig.testSuiteName} full tests (includes call filtering)`,
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
     children: [baseTestTree, allowedFilteringTests, forbiddenFilteringTests],
   }
 }

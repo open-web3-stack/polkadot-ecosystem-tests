@@ -4,12 +4,12 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
 {
   "consumers": 0,
   "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "flags": 0,
+    "free": 10000000000000,
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 1,
+  "nonce": 0,
   "providers": 1,
   "sufficients": 0,
 }
@@ -30,81 +30,7 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > from chain hrmp messages 1`] = `
-[
-  {
-    "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "receiveTeleportedAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 1,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
-                    },
-                  ],
-                },
-                "parents": 0,
-              },
-            },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
-    ],
-    "recipient": 1004,
-  },
-]
-`;
+exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > from chain hrmp messages 1`] = `[]`;
 
 exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to peoplePolkadot > to chain xcm events 1`] = `
 [
@@ -116,8 +42,8 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 8000)",
-        "refTime": "(rounded 500000000)",
+        "proofSize": "(rounded 7000)",
+        "refTime": "(rounded 300000000)",
       },
     },
     "method": "Processed",
@@ -261,12 +187,12 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
 {
   "consumers": 0,
   "data": {
-    "flags": "0x80000000000000000000000000000000",
-    "free": "(rounded 9000000000000)",
+    "flags": 0,
+    "free": 10000000000000,
     "frozen": 0,
     "reserved": 0,
   },
-  "nonce": 1,
+  "nonce": 0,
   "providers": 1,
   "sufficients": 0,
 }
@@ -287,81 +213,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
 }
 `;
 
-exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `
-[
-  {
-    "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "receiveTeleportedAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 1,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-                        "network": null,
-                      },
-                    },
-                  ],
-                },
-                "parents": 0,
-              },
-            },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
-    ],
-    "recipient": 1000,
-  },
-]
-`;
+exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > from chain hrmp messages 1`] = `[]`;
 
 exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to assetHubPolkadot > to chain xcm events 1`] = `
 [
@@ -373,7 +225,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 9000)",
+        "proofSize": "(rounded 10000)",
         "refTime": "(rounded 300000000)",
       },
     },
@@ -391,7 +243,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 300000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

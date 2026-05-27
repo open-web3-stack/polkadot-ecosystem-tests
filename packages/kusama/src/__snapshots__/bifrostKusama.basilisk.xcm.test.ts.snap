@@ -212,7 +212,7 @@ exports[`bifrostKusama & basilisk > bifrostKusama transfer KSM to basilisk > rou
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 700000000)",
+        "refTime": "(rounded 600000000)",
       },
     },
     "method": "Processed",

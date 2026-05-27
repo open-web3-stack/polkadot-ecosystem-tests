@@ -188,7 +188,7 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool global config tes
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -299,7 +299,7 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool lifecycle test > 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -598,13 +598,6 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool slash and withdra
 [
   {
     "data": {
-      "amount": "(rounded 11000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
       "amount": 5000000000000,
     },
     "method": "Withdrawn",
@@ -645,13 +638,6 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool slash and withdra
     "method": "MemberRemoved",
     "section": "nominationPools",
   },
-  {
-    "data": {
-      "amount": "(rounded 11000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -678,13 +664,6 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
 
 exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: depositor withdrawUnbonded (pool dissolution) events 1`] = `
 [
-  {
-    "data": {
-      "amount": "(rounded 11000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
   {
     "data": {},
     "method": "StakerRemoved",
@@ -723,39 +702,9 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
     "section": "nominationPools",
   },
   {
-    "data": {
-      "amount": 100000000,
-    },
-    "method": "Thawed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": 100000000,
-      "from": "13UVJyLnbVp8c4FQeiGZeymE6AcgqZmVG7Kqw3hSLPGyY6Bv",
-      "to": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
     "data": {},
     "method": "Destroyed",
     "section": "nominationPools",
-  },
-  {
-    "data": {
-      "amount": "(rounded 2100000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 9100000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
   },
 ]
 `;
@@ -783,13 +732,6 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
 
 exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: member withdrawUnbonded events 1`] = `
 [
-  {
-    "data": {
-      "amount": "(rounded 11000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
   {
     "data": {
       "amount": 5000000000000,
@@ -821,13 +763,6 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
     },
     "method": "MemberRemoved",
     "section": "nominationPools",
-  },
-  {
-    "data": {
-      "amount": "(rounded 11000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
   },
 ]
 `;

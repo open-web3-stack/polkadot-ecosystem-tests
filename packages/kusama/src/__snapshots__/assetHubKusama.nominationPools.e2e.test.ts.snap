@@ -299,7 +299,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool lifecycle test > cl
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -598,13 +598,6 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool slash and withdraw 
 [
   {
     "data": {
-      "amount": "(rounded 75000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
-  {
-    "data": {
       "amount": 1000000000000,
     },
     "method": "Withdrawn",
@@ -645,13 +638,6 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool slash and withdraw 
     "method": "MemberRemoved",
     "section": "nominationPools",
   },
-  {
-    "data": {
-      "amount": "(rounded 75000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
 ]
 `;
 
@@ -678,13 +664,6 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
 
 exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: depositor withdrawUnbonded (pool dissolution) events 1`] = `
 [
-  {
-    "data": {
-      "amount": "(rounded 75000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
   {
     "data": {},
     "method": "StakerRemoved",
@@ -723,39 +702,9 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
     "section": "nominationPools",
   },
   {
-    "data": {
-      "amount": "(rounded 3300000)",
-    },
-    "method": "Thawed",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 3300000)",
-      "from": "F3opxRbN5ZavB4LTn2m25YteFgKi8ckBihRPv8bgALbPfHo",
-      "to": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Transfer",
-    "section": "balances",
-  },
-  {
     "data": {},
     "method": "Destroyed",
     "section": "nominationPools",
-  },
-  {
-    "data": {
-      "amount": "(rounded 14000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
-  },
-  {
-    "data": {
-      "amount": "(rounded 60000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
   },
 ]
 `;
@@ -783,13 +732,6 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
 
 exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded test > withdraw test: member withdrawUnbonded events 1`] = `
 [
-  {
-    "data": {
-      "amount": "(rounded 75000000)",
-    },
-    "method": "Withdraw",
-    "section": "balances",
-  },
   {
     "data": {
       "amount": 1000000000000,
@@ -821,13 +763,6 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pool withdraw unbonded t
     },
     "method": "MemberRemoved",
     "section": "nominationPools",
-  },
-  {
-    "data": {
-      "amount": "(rounded 75000000)",
-    },
-    "method": "Deposit",
-    "section": "balances",
   },
 ]
 `;
@@ -901,7 +836,7 @@ exports[`Kusama Asset Hub Nomination Pools > nomination pools update roles test 
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 600000000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },

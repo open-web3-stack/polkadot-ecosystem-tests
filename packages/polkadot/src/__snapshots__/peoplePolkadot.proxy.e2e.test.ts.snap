@@ -453,7 +453,7 @@ exports[`People Polkadot Proxy full tests (includes call filtering) > People Pol
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },
