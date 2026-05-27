@@ -81,6 +81,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.4.0#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.4.0-abeade0cda.patch":
+  version: 1.4.0
+  resolution: "@acala-network/chopsticks-utils@patch:@acala-network/chopsticks-utils@npm%3A1.4.0#~/.yarn/patches/@acala-network-chopsticks-utils-npm-1.4.0-abeade0cda.patch::version=1.4.0&hash=cb2edc"
+  dependencies:
+    "@acala-network/chopsticks": "npm:1.4.0"
+    "@acala-network/chopsticks-core": "npm:1.4.0"
+    "@polkadot-labs/hdkd": "npm:^0.0.19"
+    "@polkadot-labs/hdkd-helpers": "npm:^0.0.19"
+    "@polkadot/api": "npm:^16.4.1"
+    "@polkadot/api-base": "npm:^16.4.1"
+    "@polkadot/keyring": "npm:^14.0.1"
+    "@polkadot/types": "npm:^16.4.1"
+    "@polkadot/util": "npm:^14.0.1"
+    polkadot-api: "npm:^1.14.1"
+  checksum: 10c0/e3276c0bbe8ab4b8c2c366eee9595807f1fbaf0bd4e34c52ab65edb39c63d959254518549ab7fc41cc4e8be9dfb2573644506eddbff2e1500f36c7a6779ec325
+  languageName: node
+  linkType: hard
+
 "@acala-network/chopsticks@npm:1.4.0, @acala-network/chopsticks@npm:^1.4.0":
   version: 1.4.0
   resolution: "@acala-network/chopsticks@npm:1.4.0"
@@ -6322,8 +6340,8 @@ __metadata:
   linkType: hard
 
 "ws@npm:^8.18.0, ws@npm:^8.18.3, ws@npm:^8.19.0, ws@npm:^8.8.1":
-  version: 8.20.0
-  resolution: "ws@npm:8.20.0"
+  version: 8.20.1
+  resolution: "ws@npm:8.20.1"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -6332,7 +6350,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 10c0/956ac5f11738c914089b65878b9223692ace77337ba55379ae68e1ecbeae9b47a0c6eb9403688f609999a58c80d83d99865fe0029b229d308b08c1ef93d4ea14
+  checksum: 10c0/ce162433218399cdedeb76fd33363d4d86a7d910058d4e3c679dce08cea65d6da6b39f11baa4d7808d024cf46ed88f6a05c17611621aaad8fc5e62edacc30c5d
   languageName: node
   linkType: hard
 

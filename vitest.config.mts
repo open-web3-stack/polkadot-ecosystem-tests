@@ -20,6 +20,14 @@ export default defineConfig({
 		passWithNoTests: true,
 		retry: 1,
 		reporters: process.env.GITHUB_ACTIONS ? ['verbose', 'github-actions'] : ['default'],
+		// bifrostKusama is excluded: only Liebi public endpoints are configured,
+		// and the only currently-reachable host prunes the state CI needs.
+		exclude: [
+			'**/node_modules/**',
+			'**/.git/**',
+			'packages/kusama/src/bifrostKusama.*.test.ts',
+			'packages/kusama/src/karura.bifrostKusama.xcm.test.ts',
+		],
 	},
 	build: {
 		outDir: '../../dist',
