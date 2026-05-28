@@ -118,7 +118,7 @@ export async function paraReservingE2ETest<
   await client.dev.newBlock()
 
   // Assert reserve events
-  const unwantedFields = /Id/
+  const unwantedFields = /Id|para/
   await checkEvents(reserveEvent, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar reserve events')
@@ -234,7 +234,7 @@ export async function paraRegisteringE2ETest<
   )
   await client.dev.newBlock()
   await checkEvents(unreservedRegisterEvents, 'system').toMatchSnapshot('register para without reserving')
-  const unwantedFields = /Id/
+  const unwantedFields = /Id|para/
 
   // Reserve para in preparation for register tests
   await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
@@ -376,7 +376,7 @@ export async function paraDeregisteringE2ETest<
   await client.dev.newBlock()
 
   // Assert reserve events
-  const unwantedFields = /Id/
+  const unwantedFields = /Id|para/
   await checkEvents(reserveEvent, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar reserve events')
@@ -860,7 +860,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   )
   await client.dev.newBlock()
 
-  const unwantedFields = /Id/
+  const unwantedFields = /Id|para/
   await checkEvents(scheduleUpgradeBobEvents, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob schedule code upgrade failed')
