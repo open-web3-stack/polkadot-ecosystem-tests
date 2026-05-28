@@ -118,7 +118,7 @@ export async function paraReservingE2ETest<
   await client.dev.newBlock()
 
   // Assert reserve events
-  const unwantedFields = /Id|para/
+  const unwantedFields = /Id/
   await checkEvents(reserveEvent, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar reserve events')
@@ -234,7 +234,7 @@ export async function paraRegisteringE2ETest<
   )
   await client.dev.newBlock()
   await checkEvents(unreservedRegisterEvents, 'system').toMatchSnapshot('register para without reserving')
-  const unwantedFields = /Id|para/
+  const unwantedFields = /Id/
 
   // Reserve para in preparation for register tests
   await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.alice))
@@ -376,7 +376,7 @@ export async function paraDeregisteringE2ETest<
   await client.dev.newBlock()
 
   // Assert reserve events
-  const unwantedFields = /Id|para/
+  const unwantedFields = /Id/
   await checkEvents(reserveEvent, 'registrar')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('registrar reserve events')
@@ -860,7 +860,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   )
   await client.dev.newBlock()
 
-  const unwantedFields = /Id|para/
+  const unwantedFields = /Id/
   await checkEvents(scheduleUpgradeBobEvents, 'system')
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('bob schedule code upgrade failed')
@@ -872,7 +872,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   await client.dev.newBlock()
 
   await checkEvents(scheduleUpgradeAliceEvents, 'paras', 'system')
-    .redact({ removeKeys: unwantedFields })
+    .redact({ removeKeys: unwantedFields, redactKeys: /data/ })
     .toMatchSnapshot('alice schedule code upgrade success')
 
   const eventsAfterAliceUpgrade = await client.api.query.system.events()
@@ -924,7 +924,7 @@ export async function parasScheduleCodeUpgradeE2ETest<
   await client.dev.newBlock()
 
   await checkSystemEvents(client, 'paras')
-    .redact({ removeKeys: unwantedFields })
+    .redact({ removeKeys: unwantedFields, redactKeys: /data/ })
     .toMatchSnapshot('root schedule code upgrade success')
 
   const eventsAfterRootUpgrade = await client.api.query.system.events()
@@ -1003,7 +1003,7 @@ export async function parasSetCurrentHeadE2ETest<
   expect(headAfterAlice.toHex()).toBe(newHeadHex)
 
   await checkEvents(setHeadAliceEvents, 'paras')
-    .redact({ removeKeys: /Id/ })
+    .redact({ removeKeys: /Id/, redactKeys: /data/ })
     .toMatchSnapshot('alice set current head event')
 
   const eventsAfterAlice = await client.api.query.system.events()
@@ -1050,7 +1050,7 @@ export async function parasSetCurrentHeadE2ETest<
   expect(headAfterRoot.toHex()).toBe(u8aToHex(compactAddLength(updatedHeadRaw)))
 
   await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
-    .redact({ removeKeys: /Id/ })
+    .redact({ removeKeys: /Id/, redactKeys: /data/ })
     .toMatchSnapshot('root set current head event')
 
   const eventsAfterRoot = await client.api.query.system.events()
@@ -1076,7 +1076,7 @@ export async function parasSetCurrentHeadE2ETest<
   expect(headAfterPara.toHex()).toBe(u8aToHex(compactAddLength(paraHeadRaw)))
 
   await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
-    .redact({ removeKeys: /Id/ })
+    .redact({ removeKeys: /Id/, redactKeys: /data/ })
     .toMatchSnapshot('para set current head event')
 
   const eventsAfterPara = await client.api.query.system.events()
