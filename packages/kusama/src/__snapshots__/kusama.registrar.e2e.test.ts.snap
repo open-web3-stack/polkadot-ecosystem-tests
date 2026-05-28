@@ -404,31 +404,17 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > alice loc
 exports[`Kusama Registrar > pallet registrar - schedule code upgrade > alice schedule code upgrade success 1`] = `
 [
   {
-    "data": [
-      "(hash)",
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "PvfCheckStarted",
     "section": "paras",
   },
   {
-    "data": [
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "CodeUpgradeScheduled",
     "section": "paras",
   },
   {
-    "data": {
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
+    "data": "(redacted)",
     "method": "ExtrinsicSuccess",
     "section": "system",
   },
@@ -458,17 +444,12 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > bob sched
 exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
 [
   {
-    "data": [
-      "(hash)",
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "PvfCheckStarted",
     "section": "paras",
   },
   {
-    "data": [
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "CodeUpgradeScheduled",
     "section": "paras",
   },
@@ -503,9 +484,7 @@ exports[`Kusama Registrar > pallet registrar - set current head > alice locked s
 exports[`Kusama Registrar > pallet registrar - set current head > alice set current head event 1`] = `
 [
   {
-    "data": [
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "CurrentHeadUpdated",
     "section": "paras",
   },
@@ -535,9 +514,7 @@ exports[`Kusama Registrar > pallet registrar - set current head > bob set curren
 exports[`Kusama Registrar > pallet registrar - set current head > para set current head event 1`] = `
 [
   {
-    "data": [
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "CurrentHeadUpdated",
     "section": "paras",
   },
@@ -547,9 +524,7 @@ exports[`Kusama Registrar > pallet registrar - set current head > para set curre
 exports[`Kusama Registrar > pallet registrar - set current head > root set current head event 1`] = `
 [
   {
-    "data": [
-      "(rounded 3400)",
-    ],
+    "data": "(redacted)",
     "method": "CurrentHeadUpdated",
     "section": "paras",
   },
