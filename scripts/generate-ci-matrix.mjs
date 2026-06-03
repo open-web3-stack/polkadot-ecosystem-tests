@@ -37,7 +37,7 @@ const CHAIN_ORDER = {
 		'peoplePolkadot',
 		'acala',
 		'hydration',
-		// 'bifrostPolkadot', // disabled: liebi.com endpoints rate-limit CI (HTTP 429)
+		'bifrostPolkadot',
 	],
 	kusama: [
 		'kusama',
