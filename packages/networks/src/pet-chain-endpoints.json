@@ -7,8 +7,7 @@
     "wss://dot-rpc.stakeworld.io",
     "wss://rpc-polkadot.helixstreet.io",
     "wss://polkadot.api.onfinality.io/public-ws",
-    "wss://polkadot-rpc.publicnode.com",
-    "wss://polkadot.public.curie.radiumblock.co/ws"
+    "wss://polkadot-rpc.publicnode.com"
   ],
   "assetHubWestend": [
     "wss://asset-hub-westend-rpc.n.dwellir.com",
@@ -26,16 +25,14 @@
     "wss://bridge-hub-polkadot.dotters.network",
     "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
     "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/bridgehub",
-    "wss://bridgehub-polkadot.public.curie.radiumblock.co/ws"
+    "wss://dot-rpc.stakeworld.io/bridgehub"
   ],
   "collectivesPolkadot": [
     "wss://sys.ibp.network/collectives-polkadot",
     "wss://collectives-polkadot.dotters.network",
     "wss://rpc-collectives-polkadot.luckyfriday.io",
     "wss://collectives-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives.public.curie.radiumblock.co/ws"
+    "wss://dot-rpc.stakeworld.io/collectives"
   ],
   "coretimePolkadot": [
     "wss://sys.ibp.network/coretime-polkadot",
@@ -88,8 +85,7 @@
     "wss://asset-hub-kusama.dotters.network",
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
     "wss://asset-hub-kusama-rpc.n.dwellir.com",
-    "wss://ksm-rpc.stakeworld.io/assethub",
-    "wss://statemine.public.curie.radiumblock.co/ws"
+    "wss://ksm-rpc.stakeworld.io/assethub"
   ],
   "bridgeHubKusama": [
     "wss://sys.ibp.network/bridgehub-kusama",
