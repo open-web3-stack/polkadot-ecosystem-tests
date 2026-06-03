@@ -19,8 +19,7 @@
     "wss://asset-hub-polkadot.dotters.network",
     "wss://dot-rpc.stakeworld.io/assethub",
     "wss://rpc-asset-hub-polkadot.luckyfriday.io",
-    "wss://asset-hub-polkadot-rpc.n.dwellir.com",
-    "wss://statemint.public.curie.radiumblock.co/ws"
+    "wss://asset-hub-polkadot-rpc.n.dwellir.com"
   ],
   "bridgeHubPolkadot": [
     "wss://sys.ibp.network/bridgehub-polkadot",
