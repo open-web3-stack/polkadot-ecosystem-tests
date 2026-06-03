@@ -60,7 +60,7 @@
 		"dotenv": "^17.4.2",
 		"husky": "^9.1.7",
 		"lint-staged": "^17.0.7",
-		"tsx": "^4.21.0",
+		"tsx": "^4.22.4",
 		"unplugin-swc": "^1.5.9",
 		"vite-tsconfig-paths": "^6.1.1"
 	},
