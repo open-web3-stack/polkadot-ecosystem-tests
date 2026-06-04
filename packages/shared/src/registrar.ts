@@ -195,7 +195,7 @@ export async function paraReservingE2ETest<
 /**
  * Test the process of registering para;
  *
- *     1. asserting that cannot register para without resreving
+ *     1. asserting that cannot register para without reserving
  *
  *     2. asserting that non-manager cannot register para
  *
@@ -590,13 +590,13 @@ export async function parasRootRegistrationE2eTest<
  *
  *     1.1 asserting that non-owner cannot register swap
  *
- *     1.2 asserting that no swap event was emmited
+ *     1.2 asserting that no swap event was emitted
  *
  *     1.3 asserting that no pending swap stored
  *
  * 2. swapping two Parathreads
  *
- *     2.1 asserting that no swap event was emmited
+ *     2.1 asserting that no swap event was emitted
  *
  *     2.2 asserting that pending swap was stored
  *
@@ -604,7 +604,7 @@ export async function parasRootRegistrationE2eTest<
  *
  * 3. swapping a Parathread and a Parachain
  *
- *     3.1 asserting that Alice successfuly initiates swap
+ *     3.1 asserting that Alice successfully initiates swap
  *
  *     3.2 asserting that Bob successfully confirms swap
  *
@@ -612,7 +612,7 @@ export async function parasRootRegistrationE2eTest<
  *
  * 4. swapping a Parachain and a Parathread
  *
- *     4.1 asserting that Alice successfuly initiates swap
+ *     4.1 asserting that Alice successfully initiates swap
  *
  *     4.2 asserting that Bob successfully confirms swap
  *
@@ -620,7 +620,7 @@ export async function parasRootRegistrationE2eTest<
  *
  * 5. swapping a Parachain and a Parachain
  *
- *     5.1 asserting that Alice successfuly initiates swap
+ *     5.1 asserting that Alice successfully initiates swap
  *
  *     5.2 asserting that Bob successfully confirms swap
  *
