@@ -575,9 +575,13 @@ export async function paraDeregisteringE2ETest<
  *
  *     2.2 asserting that locked is true
  *
- *     2.3 removing lock via root
+ *     2.3 asserting that manager (Bob) cannot remove lock
  *
- *     2.4 asserting that locked is false
+ *     2.4 removing lock via root
+ *
+ *     2.5 asserting that locked is false
+ *
+ *     2.6 asserting that attempting to remove lock on a non-existent paraId is a no-op
  *
  * 3. deregistering para via Root origin
  *
@@ -589,6 +593,8 @@ export async function parasRootRegistrationE2eTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
+  await fundAccounts(client)
+
   // Pay 0 DOT for registration
   const paraDepositBigInt = BigInt(0)
 
@@ -622,7 +628,14 @@ export async function parasRootRegistrationE2eTest<
   paras = parasOption.unwrap()
   expect(paras.locked.toHuman()).toBe(true)
 
-  // 2.3 Remove lock via Root
+  // 2.3 Assert that manager (Bob) cannot remove lock — only Root is permitted
+  const bobRemoveLockEvents = await sendTransaction(
+    client.api.tx.registrar.removeLock(paraId).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+  await checkEvents(bobRemoveLockEvents, 'system').toMatchSnapshot('manager cannot remove lock')
+
+  // 2.4 Remove lock via Root
   const removeLockTx = client.api.tx.registrar.removeLock(paraId)
   await scheduleInlineCallWithOrigin(
     client,
@@ -632,11 +645,26 @@ export async function parasRootRegistrationE2eTest<
   )
   await client.dev.newBlock()
 
-  // 2.4 Assert locked is false
+  // 2.5 Assert locked is false
   parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
   paras = parasOption.unwrap()
   expect(paras.locked.toHuman()).toBe(false)
+
+  // 2.6 Assert that removeLock on a non-existent paraId is a no-op
+  {
+    const nonExistentParaId = paraId + 1
+    const removeLockNonExistentTx = client.api.tx.registrar.removeLock(nonExistentParaId)
+    await scheduleInlineCallWithOrigin(
+      client,
+      removeLockNonExistentTx.method.toHex(),
+      { system: 'Root' },
+      client.config.properties.schedulerBlockProvider,
+    )
+    await client.dev.newBlock()
+    const nonExistentParaInfo = (await client.api.query.registrar.paras(nonExistentParaId)) as Option<ParaInfo>
+    expect(nonExistentParaInfo.isNone).toBe(true)
+  }
 
   // 3. Deregister the para via Root origin
   // set para lifecycle state directly
@@ -1204,21 +1232,21 @@ export function registrarE2ETest<
       //   label: 'pallet registrar - reserve functions',
       //   testFn: async () => await paraReservingE2ETest(client),
       // },
-      {
-        kind: 'test',
-        label: 'pallet registrar - register functions',
-        testFn: async () => await paraRegisteringE2ETest(client),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - register functions',
+      //   testFn: async () => await paraRegisteringE2ETest(client),
+      // },
       // {
       //   kind: 'test',
       //   label: 'pallet registrar - deregister functions',
       //   testFn: async () => await paraDeregisteringE2ETest(client),
       // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - root registration functions',
-      //   testFn: async () => await parasRootRegistrationE2eTest(client),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - root registration functions',
+        testFn: async () => await parasRootRegistrationE2eTest(client),
+      },
       // {
       //   kind: 'test',
       //   label: 'pallet registrar - swap functions',

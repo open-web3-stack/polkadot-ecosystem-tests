@@ -448,6 +448,26 @@ exports[`Kusama Registrar > pallet registrar - reserve functions > registrar res
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - root registration functions > manager cannot remove lock 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
 [
   {
