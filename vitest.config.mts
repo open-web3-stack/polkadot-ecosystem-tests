@@ -27,7 +27,6 @@ export default defineConfig({
 			'**/.git/**',
 			'packages/kusama/src/bifrostKusama.*.test.ts',
 			'packages/kusama/src/karura.bifrostKusama.xcm.test.ts',
-			'packages/polkadot/src/acala.astar.xcm.test.ts',
 			'packages/polkadot/src/acala.bifrostPolkadot.xcm.test.ts',
 		],
 	},
