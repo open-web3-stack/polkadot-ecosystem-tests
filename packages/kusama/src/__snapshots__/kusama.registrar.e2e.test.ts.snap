@@ -224,6 +224,31 @@ exports[`Kusama Registrar > pallet registrar - register functions > cannot regis
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - register functions > cannot register para with insufficient balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 4,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - register functions > cannot register para with validation code < MIN_CODE_SIZE 1`] = `
 [
   {

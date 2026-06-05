@@ -219,6 +219,49 @@ export async function paraRegisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
+  // Assert that user with insufficient balance cannot register para
+  {
+    // Use charlie so nonce advances naturally without any post-transaction setStorage that
+    // would reset the nonce and cause pool-level rejection on the subsequent call.
+    const tmpParaDeposit = BigInt(client.api.consts.registrar.paraDeposit.toString())
+    // Fund charlie with paraDeposit + 100 DOT: enough to reserve and pay fees, but far below
+    // the additional registration deposit (dataDepositPerByte * maxCodeSize)
+    await client.dev.setStorage({
+      System: {
+        account: [
+          [
+            [devAccounts.charlie.address],
+            { providers: 1, data: { free: (tmpParaDeposit + BigInt(100e10)).toString() } },
+          ],
+        ],
+      },
+    })
+
+    await sendTransaction(client.api.tx.registrar.reserve().signAsync(devAccounts.charlie))
+    await client.dev.newBlock()
+
+    const tmpSysEvents = await client.api.query.system.events()
+    const [tmpResEvent] = tmpSysEvents.filter(
+      ({ event }) => event.section === 'registrar' && event.method === 'Reserved',
+    )
+    const tmpParaId = tmpResEvent.event.data[0].toString()
+
+    const insufficientBalanceEvents = await sendTransaction(
+      client.api.tx.registrar.register(tmpParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.charlie),
+    )
+    await client.dev.newBlock()
+    await checkEvents(insufficientBalanceEvents, 'system').toMatchSnapshot(
+      'cannot register para with insufficient balance',
+    )
+
+    // Remove the reservation so the subsequent tests are unaffected
+    await client.dev.setStorage({
+      Registrar: {
+        Paras: [[[tmpParaId], null]],
+      },
+    })
+  }
+
   await fundAccounts(client)
 
   const paraDeposit = client.api.consts.registrar.paraDeposit
