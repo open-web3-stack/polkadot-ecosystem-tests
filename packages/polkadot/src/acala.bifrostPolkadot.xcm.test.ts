@@ -6,7 +6,7 @@ import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/
 
 import { describe } from 'vitest'
 
-describe('acala & bifrostPolkadot', { skip: true }, async () => {
+describe('acala & bifrostPolkadot', async () => {
   const [acalaClient, bifrostPolkadotClient, assetHubPolkadotClient] = await setupNetworks(
     acala,
     bifrostPolkadot,
