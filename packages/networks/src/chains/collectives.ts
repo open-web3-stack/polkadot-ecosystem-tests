@@ -32,7 +32,7 @@ export const collectivesPolkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })

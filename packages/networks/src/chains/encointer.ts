@@ -29,7 +29,7 @@ export const encointerKusama = defineChain({
   properties: {
     addressEncoding: 2,
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })

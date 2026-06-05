@@ -1928,7 +1928,7 @@ export async function proxyAnnouncementLifecycleTest<
 
   const offset = blockProviderOffset(
     client.config.properties.proxyBlockProvider!,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   announcements = await client.api.query.proxy.announcements(bob.address)

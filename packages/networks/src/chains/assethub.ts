@@ -206,7 +206,7 @@ const assetHubProperties = (addressEncoding: number) =>
     addressEncoding,
     proxyBlockProvider: 'NonLocal',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 3,
     feeExtractor: standardFeeExtractor,
   }) as const
 
