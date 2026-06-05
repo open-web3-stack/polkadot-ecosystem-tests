@@ -195,31 +195,33 @@ export async function paraReservingE2ETest<
 /**
  * Test the process of registering para;
  *
- *     1. asserting that cannot register para without reserving
+ *     1. asserting that user with insufficient balance cannot register para
  *
- *     2. asserting that non-manager cannot register para
+ *     2. asserting that cannot register para without reserving
  *
- *     3. asserting that cannot register locked para
+ *     3. asserting that non-manager cannot register para
  *
- *     4. asserting that cannot register para when lifecycles entry with ID exists
+ *     4. asserting that cannot register locked para
  *
- *     5. asserting that cannot register para with validation code < MIN_CODE_SIZE
+ *     5. asserting that cannot register para when lifecycles entry with ID exists
  *
- *     6. asserting that cannot register para with validation code > MAX_CODE_SIZE
+ *     6. asserting that cannot register para with validation code < MIN_CODE_SIZE
  *
- *     7. asserting that cannot register para with genesis head > MAX_HEAD_DATA_SIZE
+ *     7. asserting that cannot register para with validation code > MAX_CODE_SIZE
  *
- *     8. asserting that register by alice was successful
+ *     8. asserting that cannot register para with genesis head > MAX_HEAD_DATA_SIZE
  *
- *     9. asserting that new reserved balance includes additional deposit from registration
+ *     9. asserting that register by alice was successful
  *
- *     10. asserting that alice cannot register para ID twice
+ *     10. asserting that new reserved balance includes additional deposit from registration
+ *
+ *     11. asserting that alice cannot register para ID twice
  */
 export async function paraRegisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>) {
-  // Assert that user with insufficient balance cannot register para
+  // 1. Assert that user with insufficient balance cannot register para
   {
     // Use charlie so nonce advances naturally without any post-transaction setStorage that
     // would reset the nonce and cause pool-level rejection on the subsequent call.
@@ -275,7 +277,7 @@ export async function paraRegisteringE2ETest<
 
   const nextFreeParaId = (await client.api.query.registrar.nextFreeParaId()).toString()
 
-  // 1. Assert that cannot register para without reserving
+  // 2. Assert that cannot register para without reserving
   const unreservedRegisterEvents = await sendTransaction(
     client.api.tx.registrar
       .register(nextFreeParaId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE)
@@ -296,14 +298,14 @@ export async function paraRegisteringE2ETest<
   const reserveEventData = resEvent.event.data
   const paraId = reserveEventData[0].toString()
 
-  // 2. Assert that non-manager cannot register para
+  // 3. Assert that non-manager cannot register para
   const nonOwnerRegisterEvents = await sendTransaction(
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.bob),
   )
   await client.dev.newBlock()
   await checkEvents(nonOwnerRegisterEvents, 'system').toMatchSnapshot('non-manager cannot register para')
 
-  // 3. Assert that cannot register Locked Para
+  // 4. Assert that cannot register Locked Para
   {
     // Lock the para by setting its info with locked = true
     const paraInfo = await client.api.query.registrar.paras(paraId)
@@ -334,7 +336,7 @@ export async function paraRegisteringE2ETest<
     },
   })
 
-  // 4. Assert that cannot register para when lifecycle entry exists
+  // 5. Assert that cannot register para when lifecycle entry exists
   const lifecycleRegisterEvents = await sendTransaction(
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
@@ -348,7 +350,7 @@ export async function paraRegisteringE2ETest<
     },
   })
 
-  // 5. Assert that cannot register para with validation code < MIN_CODE_SIZE
+  // 6. Assert that cannot register para with validation code < MIN_CODE_SIZE
   // Incomplete validation code with less than MIN_CODE_SIZE (9 bytes)
   const INCOMPLETE_VALIDATION_CODE = u8aToHex(new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]))
 
@@ -360,7 +362,7 @@ export async function paraRegisteringE2ETest<
     'cannot register para with validation code < MIN_CODE_SIZE',
   )
 
-  // 6. Assert that cannot register para with validation code > MAX_CODE_SIZE
+  // 7. Assert that cannot register para with validation code > MAX_CODE_SIZE
   // MAX_CODE_SIZE (5MB) exceeds MaxExtrinsicLength (~3.75MB), so the transaction pool rejects
   // the extrinsic before dispatch with exhaustsResources rather than returning block events.
   const MAX_CODE_SIZE = 5 * 1024 * 1024
@@ -372,7 +374,7 @@ export async function paraRegisteringE2ETest<
     ),
   ).rejects.toThrow('exhaustsResources')
 
-  // 7. Assert that cannot register para with genesis head > MAX_HEAD_DATA_SIZE
+  // 8. Assert that cannot register para with genesis head > MAX_HEAD_DATA_SIZE
   const MAX_HEAD_DATA_SIZE = 1 * 1024 * 1024
   const oversizedGenesisHead = u8aToHex(new Uint8Array(MAX_HEAD_DATA_SIZE + 1))
 
@@ -386,7 +388,7 @@ export async function paraRegisteringE2ETest<
     'cannot register para with genesis head > MAX_HEAD_DATA_SIZE',
   )
 
-  // 8. Assert register events
+  // 9. Assert register events
   const registerEvents = await sendTransaction(
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
@@ -408,11 +410,11 @@ export async function paraRegisteringE2ETest<
     encodeAddress(devAccounts.alice.address, client.config.properties.addressEncoding),
   )
 
-  // 9. Assert that the new reserved balance includes additional deposit from registration
+  // 10. Assert that the new reserved balance includes additional deposit from registration
   const aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
-  // 10. alice trying to register again with the same paraId should fail
+  // 11. alice trying to register again with the same paraId should fail
   const registerEventsDuplicate = await sendTransaction(
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
