@@ -947,6 +947,112 @@ export async function parasRegistrarSwapE2ETest<
 }
 
 /**
+ * Test the add_lock / remove_lock cycle from the perspective of the para manager.
+ *   - manager may call add_lock only when the para is unlocked
+ *   - manager is rejected with ParaLocked when the para is already locked
+ *   - only Root (or the para itself) may call remove_lock
+ *
+ * 1. registering a para with Bob as manager via Root
+ *
+ *     1.1 asserting Bob is set as manager
+ *
+ *     1.2 asserting the para starts unlocked
+ *
+ * 2. manager (Bob) adds lock while para is unlocked
+ *
+ *     2.1 asserting add_lock succeeds and system events match snapshot
+ *
+ *     2.2 asserting the para is now locked
+ *
+ * 3. manager (Bob) attempts add_lock on an already-locked para
+ *
+ *     3.1 asserting the call fails with ParaLocked
+ *
+ *     3.2 asserting the para remains locked
+ *
+ * 4. Root removes lock
+ *
+ *     4.1 asserting the para is unlocked again
+ *
+ * 5. manager (Bob) adds lock again after unlock (round-trip)
+ *
+ *     5.1 asserting add_lock succeeds after unlock
+ *
+ *     5.2 asserting the para is locked again
+ */
+export async function parasLockUnlockCycleE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  await fundAccounts(client)
+
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  // 1. Register a para with Bob as manager via Root
+  await forceRegisterParaViaRoot(client, devAccounts.bob.address, paraId)
+
+  // 1.1 Assert Bob is set as manager
+  let parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().manager.toString()).toBe(
+    encodeAddress(devAccounts.bob.address, client.config.properties.addressEncoding),
+  )
+
+  // 1.2 Assert the para starts unlocked
+  expect(parasOption.unwrap().locked.isEmpty).toBe(true)
+
+  // 2.1 Manager (Bob) can call add_lock when the para is unlocked
+  const bobAddLockEvents = await sendTransaction(client.api.tx.registrar.addLock(paraId).signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+  await checkEvents(bobAddLockEvents, 'system').toMatchSnapshot('manager add lock while unlocked')
+
+  // 2.2 Assert the para is now locked
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+
+  // 3.1 Manager (Bob) cannot call add_lock on an already-locked para — fails with ParaLocked
+  const bobAddLockLockedEvents = await sendTransaction(
+    client.api.tx.registrar.addLock(paraId).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+  await checkEvents(bobAddLockLockedEvents, 'system').toMatchSnapshot('manager add lock while already locked')
+
+  // 3.2 Assert the para is still locked
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+
+  // 4. Root removes the lock
+  const removeLockTx = client.api.tx.registrar.removeLock(paraId)
+  await scheduleInlineCallWithOrigin(
+    client,
+    removeLockTx.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert the para is unlocked again
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(false)
+
+  // 5.1 Manager (Bob) can call add_lock again after unlock (round-trip)
+  const bobAddLockRoundTripEvents = await sendTransaction(
+    client.api.tx.registrar.addLock(paraId).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+  await checkEvents(bobAddLockRoundTripEvents, 'system').toMatchSnapshot('manager add lock round-trip after unlock')
+
+  // 5.2 Assert the para is locked again
+  parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
+  expect(parasOption.isSome).toBe(true)
+  expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+}
+
+/**
  * Test the process of
  *
  * 1. asserting that non-owner (Bob) cannot schedule code upgrade
@@ -1249,10 +1355,15 @@ export function registrarE2ETest<
       //   label: 'pallet registrar - deregister functions',
       //   testFn: async () => await paraDeregisteringE2ETest(client),
       // },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - root registration functions',
+      //   testFn: async () => await parasRootRegistrationE2eTest(client),
+      // },
       {
         kind: 'test',
-        label: 'pallet registrar - root registration functions',
-        testFn: async () => await parasRootRegistrationE2eTest(client),
+        label: 'pallet registrar - add_lock / remove_lock cycle',
+        testFn: async () => await parasLockUnlockCycleE2ETest(client),
       },
       // {
       //   kind: 'test',
