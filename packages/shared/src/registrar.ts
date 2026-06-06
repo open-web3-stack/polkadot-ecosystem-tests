@@ -575,13 +575,15 @@ export async function paraDeregisteringE2ETest<
  *
  *     2.2 asserting that locked is true
  *
- *     2.3 asserting that manager (Bob) cannot remove lock
+ *     2.3 asserting that manager (Bob) cannot lock an already-locked para
  *
- *     2.4 removing lock via root
+ *     2.4 asserting that manager (Bob) cannot remove lock
  *
- *     2.5 asserting that locked is false
+ *     2.5 removing lock via root
  *
- *     2.6 asserting that attempting to remove lock on a non-existent paraId is a no-op
+ *     2.6 asserting that locked is false
+ *
+ *     2.7 asserting that attempting to remove lock on a non-existent paraId is a no-op
  *
  * 3. deregistering para via Root origin
  *
@@ -628,14 +630,19 @@ export async function parasRootRegistrationE2eTest<
   paras = parasOption.unwrap()
   expect(paras.locked.toHuman()).toBe(true)
 
-  // 2.3 Assert that manager (Bob) cannot remove lock — only Root is permitted
+  // 2.3 Assert that manager (Bob) cannot lock an already-locked para
+  const bobAddLockEvents = await sendTransaction(client.api.tx.registrar.addLock(paraId).signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+  await checkEvents(bobAddLockEvents, 'system').toMatchSnapshot('manager cannot lock an already-locked para')
+
+  // 2.4 Assert that manager (Bob) cannot remove lock — only Root is permitted
   const bobRemoveLockEvents = await sendTransaction(
     client.api.tx.registrar.removeLock(paraId).signAsync(devAccounts.bob),
   )
   await client.dev.newBlock()
   await checkEvents(bobRemoveLockEvents, 'system').toMatchSnapshot('manager cannot remove lock')
 
-  // 2.4 Remove lock via Root
+  // 2.5 Remove lock via Root
   const removeLockTx = client.api.tx.registrar.removeLock(paraId)
   await scheduleInlineCallWithOrigin(
     client,
@@ -645,13 +652,13 @@ export async function parasRootRegistrationE2eTest<
   )
   await client.dev.newBlock()
 
-  // 2.5 Assert locked is false
+  // 2.6 Assert locked is false
   parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
   paras = parasOption.unwrap()
   expect(paras.locked.toHuman()).toBe(false)
 
-  // 2.6 Assert that removeLock on a non-existent paraId is a no-op
+  // 2.7 Assert that removeLock on a non-existent paraId is a no-op
   {
     const nonExistentParaId = paraId + 1
     const removeLockNonExistentTx = client.api.tx.registrar.removeLock(nonExistentParaId)
