@@ -309,7 +309,7 @@ exports[`Kusama Registrar > pallet registrar - register functions > cannot regis
 [
   {
     "data": {
-      "account": "G4fjgJ611tmwTk7No8SddwZK3B4zYXK5hH9D1UUTKGihuf6",
+      "account": "F4kHxtHvXrPntqBYznvwbuGAd46ZVQpmUVqumvJG64ciFUQ",
     },
     "method": "NewAccount",
     "section": "system",
