@@ -1,5 +1,93 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Registrar > pallet registrar - add_lock / remove_lock cycle > add_lock on non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock round-trip after unlock 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock while already locked 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock while unlocked 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - deregister functions > alice deregister event 1`] = `
 [
   {
@@ -37,6 +125,31 @@ exports[`Polkadot Registrar > pallet registrar - deregister functions > cannot d
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 900000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - deregister functions > deregister non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
           "index": 70,
         },
       },
@@ -174,6 +287,88 @@ exports[`Polkadot Registrar > pallet registrar - register functions > cannot reg
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - register functions > cannot register para with genesis head > MAX_HEAD_DATA_SIZE 1`] = `
+[
+  {
+    "data": {
+      "account": "12dcw2zLV55dhmLc2FQwDsNWSmWBes9jWseqek7DSZxEEWxr",
+    },
+    "method": "NewAccount",
+    "section": "system",
+  },
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - register functions > cannot register para with insufficient balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 5,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - register functions > cannot register para with validation code < MIN_CODE_SIZE 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
           "index": 70,
         },
       },
@@ -366,6 +561,51 @@ exports[`Polkadot Registrar > pallet registrar - reserve functions > registrar r
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - root registration functions > manager cannot lock an already-locked para 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - root registration functions > manager cannot remove lock 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
 [
   {
@@ -441,6 +681,21 @@ exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > bob sch
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > para origin schedule code upgrade success 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": "(redacted)",
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
 [
   {
@@ -452,6 +707,31 @@ exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > root sc
     "data": "(redacted)",
     "method": "CodeUpgradeScheduled",
     "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - schedule code upgrade > schedule code upgrade for non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -531,6 +811,31 @@ exports[`Polkadot Registrar > pallet registrar - set current head > root set cur
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - set current head > set current head for non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 500000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - swap functions > cannot swap two parathreads 1`] = `
 [
   {
@@ -602,6 +907,31 @@ exports[`Polkadot Registrar > pallet registrar - swap functions > parathread par
     "data": {},
     "method": "Swapped",
     "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > swap non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
