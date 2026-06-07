@@ -444,6 +444,8 @@ export async function paraRegisteringE2ETest<
  *     5. asserting that reserved balance is removed after deregister
  *
  *     6. asserting that paras entry is gone
+ *
+ *     7. asserting that deregistering an already-deregistered (non-existent) para fails with NotRegistered
  */
 export async function paraDeregisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -559,6 +561,15 @@ export async function paraDeregisteringE2ETest<
   // 6. Assert paras entry is gone
   const parasOptionAfter = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOptionAfter.isSome).toBe(false)
+
+  // 7. Assert that deregistering an already-deregistered (non-existent) para fails with NotRegistered
+  const deregisterNotRegisteredEvents = await sendTransaction(
+    client.api.tx.registrar.deregister(paraId).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+  await checkEvents(deregisterNotRegisteredEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('deregister non-existent para fails with NotRegistered')
 }
 
 /**
@@ -749,6 +760,8 @@ export async function parasRootRegistrationE2eTest<
  *     5.2 asserting that Bob successfully confirms swap
  *
  *     5.3 asserting successful swap events
+ *
+ * 6. asserting that swapping a non-existent para ID fails with NotRegistered
  *
  */
 export async function parasRegistrarSwapE2ETest<
@@ -944,6 +957,16 @@ export async function parasRegistrarSwapE2ETest<
   assert(client.api.events.registrar.Swapped.is(chainChainSwapEvent.event))
   expect(chainChainSwapEvent.event.data[0].toString()).toBe(paraIdB.toString())
   expect(chainChainSwapEvent.event.data[1].toString()).toBe(paraIdA.toString())
+
+  // 6. Assert that swapping a non-existent para ID fails with NotRegistered
+  const nonExistentParaId = paraIdB + 1
+  const swapNotRegisteredEvents = await sendTransaction(
+    client.api.tx.registrar.swap(nonExistentParaId, paraIdB).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+  await checkEvents(swapNotRegisteredEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('swap non-existent para fails with NotRegistered')
 }
 
 /**
@@ -979,6 +1002,8 @@ export async function parasRegistrarSwapE2ETest<
  *     5.1 asserting add_lock succeeds after unlock
  *
  *     5.2 asserting the para is locked again
+ *
+ * 6. asserting that add_lock on a non-existent para fails with NotRegistered
  */
 export async function parasLockUnlockCycleE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1050,6 +1075,16 @@ export async function parasLockUnlockCycleE2ETest<
   parasOption = (await client.api.query.registrar.paras(paraId)) as Option<ParaInfo>
   expect(parasOption.isSome).toBe(true)
   expect(parasOption.unwrap().locked.toHuman()).toBe(true)
+
+  // 6. Assert that add_lock on a non-existent para fails with NotRegistered
+  const nonExistentParaId = paraId + 1
+  const addLockNotRegisteredEvents = await sendTransaction(
+    client.api.tx.registrar.addLock(nonExistentParaId).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+  await checkEvents(addLockNotRegisteredEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('add_lock on non-existent para fails with NotRegistered')
 }
 
 /**
@@ -1066,6 +1101,8 @@ export async function parasLockUnlockCycleE2ETest<
  * 5. asserting that Root can schedule a code upgrade even when locked
  *
  * 6. asserting that the para itself can schedule a code upgrade even when locked
+ *
+ * 7. asserting that scheduling a code upgrade for a non-existent para fails with NotRegistered
  *
  */
 export async function parasScheduleCodeUpgradeE2ETest<
@@ -1224,6 +1261,16 @@ export async function parasScheduleCodeUpgradeE2ETest<
   const upgradeRestrictionPara = (await client.api.query.paras.upgradeRestrictionSignal(paraIdC)) as Option<any>
   expect(upgradeRestrictionPara.isSome).toBe(true)
   expect(upgradeRestrictionPara.unwrap().isPresent).toBe(true)
+
+  // 7. Assert that scheduling a code upgrade for a non-existent para fails with NotRegistered
+  const nonExistentParaId = paraIdC + 1
+  const scheduleUpgradeNotRegisteredEvents = await sendTransaction(
+    client.api.tx.registrar.scheduleCodeUpgrade(nonExistentParaId, newValidationCode).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+  await checkEvents(scheduleUpgradeNotRegisteredEvents, 'system')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('schedule code upgrade for non-existent para fails with NotRegistered')
 }
 
 /**
@@ -1242,6 +1289,8 @@ export async function parasScheduleCodeUpgradeE2ETest<
  * 5. asserting that Root can set the current head even when locked
  *
  * 6. asserting that the para itself can set its own current head
+ *
+ * 7. asserting that setting the current head for a non-existent para fails with NotRegistered
  *
  */
 export async function parasSetCurrentHeadE2ETest<
@@ -1361,6 +1410,16 @@ export async function parasSetCurrentHeadE2ETest<
   )
   assert(client.api.events.paras.CurrentHeadUpdated.is(currentHeadUpdatedPara.event))
   expect(currentHeadUpdatedPara.event.data[0].toString()).toBe(paraId.toString())
+
+  // 7. Assert that setting the current head for a non-existent para fails with NotRegistered
+  const nonExistentParaId = paraId + 1
+  const setHeadNotRegisteredEvents = await sendTransaction(
+    client.api.tx.registrar.setCurrentHead(nonExistentParaId, newHead).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+  await checkEvents(setHeadNotRegisteredEvents, 'system')
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('set current head for non-existent para fails with NotRegistered')
 }
 
 export function registrarE2ETest<
