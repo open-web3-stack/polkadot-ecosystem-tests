@@ -1406,21 +1406,21 @@ export function registrarE2ETest<
       //   label: 'pallet registrar - root registration functions',
       //   testFn: async () => await parasRootRegistrationE2eTest(client),
       // },
-      {
-        kind: 'test',
-        label: 'pallet registrar - add_lock / remove_lock cycle',
-        testFn: async () => await parasLockUnlockCycleE2ETest(client),
-      },
+      // {
+      //   kind: 'test',
+      //   label: 'pallet registrar - add_lock / remove_lock cycle',
+      //   testFn: async () => await parasLockUnlockCycleE2ETest(client),
+      // },
       // {
       //   kind: 'test',
       //   label: 'pallet registrar - swap functions',
       //   testFn: async () => await parasRegistrarSwapE2ETest(client),
       // },
-      // {
-      //   kind: 'test',
-      //   label: 'pallet registrar - schedule code upgrade',
-      //   testFn: async () => await parasScheduleCodeUpgradeE2ETest(client),
-      // },
+      {
+        kind: 'test',
+        label: 'pallet registrar - schedule code upgrade',
+        testFn: async () => await parasScheduleCodeUpgradeE2ETest(client),
+      },
       // {
       //   kind: 'test',
       //   label: 'pallet registrar - set current head',
