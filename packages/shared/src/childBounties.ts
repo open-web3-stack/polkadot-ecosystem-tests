@@ -158,7 +158,7 @@ async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   const newLastSpendPeriodBlockNumber = match(client.config.properties.schedulerBlockProvider)

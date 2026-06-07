@@ -1030,7 +1030,7 @@ async function multisigAsStandardProxyAnnouncementWithDelayTest<
 
     const blockOffset = blockProviderOffset(
       client.config.properties.proxyBlockProvider!,
-      (client.config.properties as any).asyncBacking,
+      (client.config.properties as any).relayBlocksPerParaBlock,
     )
     proxyDelay -= blockOffset
 

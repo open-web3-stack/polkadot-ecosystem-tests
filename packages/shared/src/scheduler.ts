@@ -274,7 +274,7 @@ export async function cancelScheduledTaskBadOriginTest<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -334,7 +334,7 @@ export async function cancelNamedScheduledTaskBadOriginTest<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -400,7 +400,7 @@ export async function scheduledCallExecutes<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -478,7 +478,7 @@ export async function scheduledNamedCallExecutes<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -649,7 +649,7 @@ export async function cancelScheduledNamedTask<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -792,7 +792,7 @@ export async function cancelNamedTaskWithUnnamedCancellation<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let targetBlockNumber: number
   match(client.config.properties.schedulerBlockProvider)
@@ -917,7 +917,7 @@ export async function cancelNamedTask<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   // This is *not* the same timespan across relay/parachains, but it's irrelevant: what's necessary is a task far in
   // the future.
@@ -1100,7 +1100,7 @@ export async function scheduleTaskAfterDelay<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   // In case of non-local block providers, spans of blocks must be specified in terms of the nonlocal
   // provider.
@@ -1201,7 +1201,7 @@ export async function scheduleNamedTaskAfterDelay<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   // See above note in `scheduleTaskAfterDelay`
   const delay = 5 * offset
@@ -1301,7 +1301,7 @@ export async function scheduledOverweightCallFails<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   // Target block is two blocks in the future - see the notes about parachain scheduling differences.
@@ -1522,7 +1522,7 @@ export async function schedulePreimagedCall<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   // Target block number is two blocks in the future: if `n` is the most recent block, the task should be executed
   // at `n + 2`.
@@ -1686,7 +1686,7 @@ async function testPeriodicTask<
 ) {
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   // Manually schedule `scheduleTx` to run on the next block.
@@ -1840,7 +1840,7 @@ export async function schedulePeriodicTask<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   const delay = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => 2 * offset)
@@ -1878,7 +1878,7 @@ export async function scheduleNamedPeriodicTask<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   const delay = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => 2 * offset)
@@ -1933,7 +1933,7 @@ export async function schedulePriorityWeightedTasks<
   let currBlockNumber = initBlockNumber
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   let priorityTargetBlock: number
   match(client.config.properties.schedulerBlockProvider)
@@ -2165,7 +2165,7 @@ export async function scheduleWithRetryConfig<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   const period = 3 * offset
@@ -2326,7 +2326,7 @@ export async function scheduleNamedWithRetryConfig<
 
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   const period = 3 * offset
@@ -2534,7 +2534,7 @@ export async function scheduleToFullAgenda<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   const targetBlockNumber = initialBlockNumber + 1000 * offset
 
@@ -2614,7 +2614,7 @@ export async function retryReschedulingNamedTaskToFullAgenda<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   // ---------------------------------------------------
@@ -2759,7 +2759,7 @@ export async function retryReschedulingAnonymousTaskToFullAgenda<
   const initialBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   // ---------------------------------------------------

@@ -52,7 +52,7 @@ export const peoplePolkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'NonLocal',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
@@ -68,7 +68,7 @@ export const peopleKusama = defineChain({
     addressEncoding: 2,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })

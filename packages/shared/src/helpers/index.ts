@@ -104,9 +104,6 @@ export function objectCmp(
  */
 export type BlockProvider = 'Local' | 'NonLocal'
 
-/** Whether async backing is enabled or disabled on the querying parachain. */
-export type AsyncBacking = 'Enabled' | 'Disabled'
-
 /**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the list of extrinsics
  * in the next block.
@@ -524,26 +521,20 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
  *
  * * If on a relay chain, the output is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
  *   every block number is available.
- * * If on a parachain without AB, 1, with the same meaning as above.
- * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
- *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number. Also applies
- *   to vesting and treasury spend periods.
+ * * If on a parachain, `relayBlocksPerParaBlock` — the number of relay blocks that elapse per parachain block,
+ *   as configured via the chain's consensus parameters (e.g. `BLOCK_PROCESSING_VELOCITY`). Defaults to 1 if
+ *   not provided.
  *
  * @param blockProvider Whether the call is being scheduled on a relay or parachain.
- * @param asyncBacking Whether async backing is enabled on the parachain.
+ * @param relayBlocksPerParaBlock Relay blocks elapsed per parachain block; sourced from chain config.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function blockProviderOffset(blockProvider: BlockProvider, asyncBacking?: AsyncBacking): number {
+export function blockProviderOffset(blockProvider: BlockProvider, relayBlocksPerParaBlock?: number): number {
   if (blockProvider === 'Local') {
     return 1
   }
 
-  if (asyncBacking === 'Enabled') {
-    return 2
-  }
-
-  // On a parachain without async backing.
-  return 1
+  return relayBlocksPerParaBlock ?? 1
 }
 
 /**
@@ -584,7 +575,7 @@ export async function getReservedFunds(client: Client<any, any>, address: any): 
 
 /**
  * Configuration for tests.
- * Chain properties (addressEncoding, blockProvider, asyncBacking, etc.) are now
+ * Chain properties (addressEncoding, blockProvider, relayBlocksPerParaBlock, etc.) are now
  * provided by the chain definition and available via `chain.properties`.
  */
 export interface TestConfig {

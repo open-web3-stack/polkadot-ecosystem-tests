@@ -337,7 +337,7 @@ export const vestedTransferLockAction = <
   execute: async (client: Client<TCustom, TInitStorages>, alice: KeyringPair, amount: bigint): Promise<void> => {
     const offset = blockProviderOffset(
       client.config.properties.schedulerBlockProvider,
-      (client.config.properties as any).asyncBacking,
+      (client.config.properties as any).relayBlocksPerParaBlock,
     )
     const number = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
     const perBlock = client.api.consts.balances.existentialDeposit.toBigInt()

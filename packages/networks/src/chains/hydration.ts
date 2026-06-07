@@ -39,7 +39,7 @@ export const hydration = defineChain({
   properties: {
     addressEncoding: 0,
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
@@ -54,7 +54,7 @@ export const basilisk = defineChain({
   properties: {
     addressEncoding: 10041,
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })

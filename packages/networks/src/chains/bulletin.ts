@@ -48,7 +48,7 @@ export const bulletinPolkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'NonLocal',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
