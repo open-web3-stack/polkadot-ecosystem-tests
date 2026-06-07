@@ -971,9 +971,6 @@ export async function parasRegistrarSwapE2ETest<
 
 /**
  * Test the add_lock / remove_lock cycle from the perspective of the para manager.
- *   - manager may call add_lock only when the para is unlocked
- *   - manager is rejected with ParaLocked when the para is already locked
- *   - only Root (or the para itself) may call remove_lock
  *
  * 1. registering a para with Bob as manager via Root
  *
