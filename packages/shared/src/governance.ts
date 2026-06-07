@@ -474,13 +474,14 @@ export async function referendumLifecycleTest<
   let refPre = ongoingRefPostDecDep
   let refPost: PalletReferendaReferendumStatusConvictionVotingTally
 
+  const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   let iters: number
   match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
     .with('NonLocal', async () => {
-      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / 2
+      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock
     })
     .exhaustive()
 
@@ -805,7 +806,7 @@ export async function referendumLifecycleTest<
       expect(cancelledRef[0].toNumber()).toBe(blockNumber)
     })
     .with('NonLocal', async () => {
-      expect(cancelledRef[0].toNumber()).toBe(blockNumber - 2)
+      expect(cancelledRef[0].toNumber()).toBe(blockNumber - relayBlocksPerParaBlock)
     })
   // Check that the referendum's submission deposit was refunded to Alice
   expect(cancelledRef[1].unwrap().toJSON()).toEqual({
@@ -1072,13 +1073,14 @@ export async function referendumLifecycleKillTest<
 
   // The only information left from the killed referendum is the block number when it was killed.
   const blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
   match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       expect(killedRef.toNumber()).toBe(blockNumber)
     })
     .with('NonLocal', async () => {
-      expect(killedRef.toNumber()).toBe(blockNumber - 2)
+      expect(killedRef.toNumber()).toBe(blockNumber - relayBlocksPerParaBlock)
     })
 }
 
@@ -2056,13 +2058,14 @@ export async function referendumLifecycleDelegationTest<
   await client.dev.newBlock()
 
   // Advance to the start of the decision period
+  const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   let iters: number
   match(client.config.properties.schedulerBlockProvider)
     .with('Local', async () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
     .with('NonLocal', async () => {
-      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / 2
+      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock
     })
     .exhaustive()
 

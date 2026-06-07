@@ -92,7 +92,7 @@ export const acala = defineChain({
     addressEncoding: 10,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: acalaFeeExtractor,
   },
 })
@@ -108,7 +108,7 @@ export const karura = defineChain({
     addressEncoding: 8,
     proxyBlockProvider: 'Local',
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: acalaFeeExtractor,
   },
 })

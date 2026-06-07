@@ -46,7 +46,7 @@ async function testVestedTransfer<
   const currBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   // On KAH, the minimum vested amount is not divisible by 8 (it isn't even even :) ), so this multiplication is needed.
@@ -273,7 +273,7 @@ async function testForceVestedTransferAndRemoval<
   const currBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
 
   const locked = client.api.consts.vesting.minVestedTransfer.toNumber()
@@ -384,7 +384,7 @@ async function testMergeVestingSchedules<
   let currBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const offset = blockProviderOffset(
     client.config.properties.schedulerBlockProvider,
-    (client.config.properties as any).asyncBacking,
+    (client.config.properties as any).relayBlocksPerParaBlock,
   )
   const initialBlockNumber = currBlockNumber
 

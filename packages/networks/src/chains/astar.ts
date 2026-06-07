@@ -53,7 +53,7 @@ export const astar = defineChain({
   properties: {
     addressEncoding: 5,
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
@@ -68,7 +68,7 @@ export const shiden = defineChain({
   properties: {
     addressEncoding: 5,
     schedulerBlockProvider: 'Local',
-    asyncBacking: 'Enabled',
+    relayBlocksPerParaBlock: 2,
     feeExtractor: standardFeeExtractor,
   },
 })
