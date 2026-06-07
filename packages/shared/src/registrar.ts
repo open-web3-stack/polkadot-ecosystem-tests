@@ -1065,6 +1065,8 @@ export async function parasLockUnlockCycleE2ETest<
  *
  * 5. asserting that Root can schedule a code upgrade even when locked
  *
+ * 6. asserting that the para itself can schedule a code upgrade even when locked
+ *
  */
 export async function parasScheduleCodeUpgradeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -1077,6 +1079,9 @@ export async function parasScheduleCodeUpgradeE2ETest<
   )
   const rootValidationCode = u8aToHex(
     new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00]),
+  )
+  const paraValidationCode = u8aToHex(
+    new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00]),
   )
 
   const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
@@ -1178,6 +1183,47 @@ export async function parasScheduleCodeUpgradeE2ETest<
   const upgradeRestrictionRoot = (await client.api.query.paras.upgradeRestrictionSignal(paraIdB)) as Option<any>
   expect(upgradeRestrictionRoot.isSome).toBe(true)
   expect(upgradeRestrictionRoot.unwrap().isPresent).toBe(true)
+
+  // 6. Para origin can schedule a code upgrade even when para is locked
+  // Use a fresh para so the UpgradeRestrictionSignal from case 5 does not interfere.
+  const paraIdC = paraIdB + 1
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdC)
+  await addLockViaRoot(client, paraIdC)
+
+  const scheduleUpgradeParaTx = client.api.tx.registrar.scheduleCodeUpgrade(paraIdC, paraValidationCode)
+  await scheduleInlineCallWithOrigin(
+    client,
+    scheduleUpgradeParaTx.method.toHex(),
+    { ParachainsOrigin: { Parachain: paraIdC } },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, 'paras')
+    .redact({ removeKeys: unwantedFields, redactKeys: /data/ })
+    .toMatchSnapshot('para origin schedule code upgrade success')
+
+  const eventsAfterParaUpgrade = await client.api.query.system.events()
+  const dispatchedParaEvent = eventsAfterParaUpgrade.find(
+    ({ event }) => event.section === 'scheduler' && event.method === 'Dispatched',
+  )
+  assert(dispatchedParaEvent !== undefined, 'Expected scheduler.Dispatched event')
+  assert(client.api.events.scheduler.Dispatched.is(dispatchedParaEvent.event))
+  expect(dispatchedParaEvent.event.data.result.isOk).toBe(true)
+
+  const [codeUpgradeScheduledPara] = eventsAfterParaUpgrade.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(codeUpgradeScheduledPara.event))
+  expect(codeUpgradeScheduledPara.event.data[0].toString()).toBe(paraIdC.toString())
+
+  const futureCodeHashPara = (await client.api.query.paras.futureCodeHash(paraIdC)) as Option<any>
+  expect(futureCodeHashPara.isSome).toBe(true)
+  expect(futureCodeHashPara.unwrap().toHex()).toBe(blake2AsHex(hexToU8a(paraValidationCode)))
+
+  const upgradeRestrictionPara = (await client.api.query.paras.upgradeRestrictionSignal(paraIdC)) as Option<any>
+  expect(upgradeRestrictionPara.isSome).toBe(true)
+  expect(upgradeRestrictionPara.unwrap().isPresent).toBe(true)
 }
 
 /**
