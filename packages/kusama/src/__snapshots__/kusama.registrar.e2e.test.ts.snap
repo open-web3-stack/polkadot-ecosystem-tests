@@ -631,6 +631,21 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > bob sched
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > para origin schedule code upgrade success 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": "(redacted)",
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
 [
   {
