@@ -223,8 +223,6 @@ export async function paraRegisteringE2ETest<
 >(client: Client<TCustom, TInitStorages>) {
   // 1. Assert that user with insufficient balance cannot register para
   {
-    // Use charlie so nonce advances naturally without any post-transaction setStorage that
-    // would reset the nonce and cause pool-level rejection on the subsequent call.
     const tmpParaDeposit = BigInt(client.api.consts.registrar.paraDeposit.toString())
     // Fund charlie with paraDeposit + 100 DOT: enough to reserve and pay fees, but far below
     // the additional registration deposit (dataDepositPerByte * maxCodeSize)
