@@ -14,44 +14,172 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'yarn'
     - run: yarn --immutable
     - run: yarn lint
+
   define-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
-      tests: ${{ steps.tests.outputs.tests }}
+      networks: ${{ steps.networks.outputs.networks }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Define Tests
-        id: tests
-        run: |
-          echo tests=$(cd packages && ls */src/*.test.ts | jq -R -s -c 'split("\n")[:-1]') >> "$GITHUB_OUTPUT"
-  tests:
+      - uses: actions/checkout@v5
+      - name: Generate network matrix
+        id: networks
+        run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
+
+  ecosystem-tests:
     needs: define-matrix
-    timeout-minutes: 30
+    name: "Tests (${{ matrix.network.name }}, shard ${{ matrix.shard }}/3)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        tests: ${{ fromJSON(needs.define-matrix.outputs.tests) }}
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+
+      - run: yarn --immutable
+
+      - name: Install Subway
+        run: |
+          docker create --name subway-extract acala/subway:v0.1.1
+          sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+          docker rm subway-extract
+          sudo chmod +x /usr/local/bin/subway
+          subway --version
+
+      - name: Source known good block numbers
+        run: |
+          NETWORK_UPPER=$(echo "${{ matrix.network.name }}" | tr '[:lower:]' '[:upper:]')
+          ENV_FILE="KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env"
+          echo "Sourcing block numbers from $ENV_FILE"
+          cat "$ENV_FILE" >> $GITHUB_ENV
+
+      - name: Start all Subway instances
+        run: |
+          echo "Starting all Subway instances for ${{ matrix.network.name }}..."
+
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            CHAIN=$(echo $chain | jq -r '.chain')
+            PORT=$(echo $chain | jq -r '.port')
+
+            # Get endpoints from pet-chain-endpoints.json
+            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+
+            if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
+              echo "Error: No endpoints found for chain $CHAIN"
+              exit 1
+            fi
+
+            echo "Starting Subway for $CHAIN on port $PORT..."
+            sed -e "s/{{PORT}}/$PORT/g" -e "s|{{ENDPOINTS}}|$ENDPOINTS|g" .github/subway-template.yml > /tmp/subway-$PORT.yml
+            subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+            echo $! >> /tmp/subway.pids
+          done
+
+          echo "Waiting for all Subway instances to start..."
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            PORT=$(echo $chain | jq -r '.port')
+            timeout=60
+            elapsed=0
+            while [ $elapsed -lt $timeout ]; do
+              if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
+                echo "Subway on port $PORT started successfully!"
+                break
+              fi
+              sleep 1
+              elapsed=$((elapsed + 1))
+            done
+
+            if [ $elapsed -ge $timeout ]; then
+              echo "Timeout waiting for subway on port $PORT"
+              cat /tmp/subway-$PORT.log
+              exit 1
+            fi
+          done
+
+          echo "All Subway instances started successfully!"
+
+      - name: Set endpoint environment variables
+        run: |
+          echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+            ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+            PORT=$(echo $chain | jq -r '.port')
+            echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
+          done
+
+      # Reporters: verbose+github-actions keep live per-shard output and
+      # job-summary annotations; blob writes a binary report per shard that
+      # the merge-reports job below combines into a single unified summary.
+      # Blob filename includes (network, shard) so multi-network artifacts
+      # don't collide on merge-multiple download.
+      - name: Run ${{ matrix.network.name }} tests (shard ${{ matrix.shard }}/3)
+        run: yarn test:${{ matrix.network.name }} --pool=forks --maxWorkers=8 --retry=2 --shard=${{ matrix.shard }}/3 --reporter=verbose --reporter=github-actions --reporter=blob --outputFile=.vitest-reports/blob-${{ matrix.network.name }}-${{ matrix.shard }}.json
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.network.name }}-${{ matrix.shard }}
+          path: .vitest-reports/*
+          include-hidden-files: true
+          retention-days: 1
+
+      - name: Cleanup Subway instances
+        if: always()
+        run: |
+          if [ -f /tmp/subway.pids ]; then
+            cat /tmp/subway.pids | xargs kill || true
+          fi
+
+          for log in /tmp/subway-*.log; do
+            if [ -f "$log" ]; then
+              echo "=== $log ==="
+              tail -20 "$log" || true
+            fi
+          done
+
+  # Merges per-shard blob reports into one unified job summary so the run page
+  # shows a single set of test totals instead of one section per shard.
+  merge-reports:
+    needs: ecosystem-tests
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: setup node env
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'yarn'
-    - run: yarn --immutable
-    - run: yarn test packages/${{ matrix.tests }}
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+      - run: yarn --immutable
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge reports
+        run: yarn vitest --merge-reports --reporter=github-actions --reporter=verbose
+
   all-passed:
     runs-on: ubuntu-latest
-    needs: tests
+    needs: ecosystem-tests
     if: always()
     steps:
       - name: All tests ok

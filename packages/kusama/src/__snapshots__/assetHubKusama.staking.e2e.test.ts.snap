@@ -14,8 +14,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -39,8 +39,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -64,8 +64,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -89,8 +89,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -114,8 +114,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -139,8 +139,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -164,8 +164,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > chill other > chill oth
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 9000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -195,8 +195,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > force apply validator c
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 4000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -215,8 +215,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > modify validator count 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -235,8 +235,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > modify validator count 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -255,134 +255,13 @@ exports[`Kusama Asset Hub Staking > base staking tests > modify validator count 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with bad origin > events when setting invulnerables with bad staking admin origin 1`] = `
-[
-  {
-    "data": {
-      "id": null,
-      "result": {
-        "Err": "BadOrigin",
-      },
-      "task": "(redacted)",
-    },
-    "method": "Dispatched",
-    "section": "scheduler",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with bad origin > set invulnerables events with bad signed origin 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > alice funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 166666650000,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > alice funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 333333300000,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > balances slash events 1`] = `[]`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > bob funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > bob funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 333333300000,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > charlie funds post slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 0,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > charlie funds pre slash 1`] = `
-{
-  "flags": "0x80000000000000000000000000000000",
-  "free": "(redacted)",
-  "frozen": 0,
-  "reserved": 333333300000,
-}
-`;
-
-exports[`Kusama Asset Hub Staking > base staking tests > set invulnerables with root origin > staking slash events 1`] = `
-[
-  {
-    "data": {
-      "amount": "(rounded 170000000000)",
-      "staker": "D8ew585BL5H1ALhn4kmJoxhgqcgKDZLPc6xunJNv4mmrBns",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": "(rounded 330000000000)",
-      "staker": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
-    },
-    "method": "Slashed",
-    "section": "staking",
-  },
-  {
-    "data": {
-      "amount": "(rounded 330000000000)",
-      "staker": "D2oHoVDFJGy7iDYcY7fbm82CuNycWaSxCGpsQtLqkrE9JKf",
-    },
-    "method": "Slashed",
-    "section": "staking",
   },
 ]
 `;
@@ -396,8 +275,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > set minimum validator c
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 700000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },
@@ -416,8 +295,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > set staking configs > s
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 1000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 600000000)",
         },
       },
     },
@@ -436,7 +315,7 @@ exports[`Kusama Asset Hub Staking > base staking tests > set staking configs > s
         "paysFee": "Yes",
         "weight": {
           "proofSize": "(rounded 1000)",
-          "refTime": "(rounded 300000000)",
+          "refTime": "(rounded 200000000)",
         },
       },
     ],
@@ -475,8 +354,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > staking lifecycle > eve
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 10000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -525,7 +404,25 @@ exports[`Kusama Asset Hub Staking > base staking tests > staking lifecycle > nom
 ]
 `;
 
-exports[`Kusama Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `[]`;
+exports[`Kusama Asset Hub Staking > base staking tests > staking lifecycle > unbond events 1`] = `
+[
+  {
+    "data": {
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
+    },
+    "method": "Chilled",
+    "section": "staking",
+  },
+  {
+    "data": {
+      "amount": "(rounded 330000000000)",
+      "stash": "FQ3JxEebQJY23NumtMUU1k7YJrbyK6L8j4uK5VwKpeVqFnh",
+    },
+    "method": "Unbonded",
+    "section": "staking",
+  },
+]
+`;
 
 exports[`Kusama Asset Hub Staking > base staking tests > staking lifecycle > validate (blocked) events 1`] = `
 [
@@ -639,8 +536,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > test force unstaking of
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 10000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 1000000000)",
         },
       },
     },
@@ -664,8 +561,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > trying to become a vali
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 10000)",
-          "refTime": "(rounded 2000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 800000000)",
         },
       },
     },
@@ -689,8 +586,8 @@ exports[`Kusama Asset Hub Staking > base staking tests > trying to nominate with
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 10000000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 900000000)",
         },
       },
     },
@@ -703,7 +600,7 @@ exports[`Kusama Asset Hub Staking > base staking tests > trying to nominate with
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as admin > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -712,7 +609,7 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as ad
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as admin > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -721,7 +618,7 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as ad
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as admin > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -730,7 +627,7 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as ad
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as root > alice funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -739,7 +636,7 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as ro
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as root > bob funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -748,7 +645,7 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as ro
 exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash as root > charlie funds pre slash 1`] = `
 {
   "flags": "0x80000000000000000000000000000000",
-  "free": "(rounded 33200000000)",
+  "free": "(rounded 33300000000)",
   "frozen": 0,
   "reserved": "(rounded 333000000000)",
 }
@@ -763,8 +660,8 @@ exports[`Kusama Asset Hub Staking > slashing tests > cancel deferred slash with 
         "class": "Normal",
         "paysFee": "Yes",
         "weight": {
-          "proofSize": "(rounded 50000)",
-          "refTime": "(rounded 800000000)",
+          "proofSize": 0,
+          "refTime": "(rounded 400000000)",
         },
       },
     },

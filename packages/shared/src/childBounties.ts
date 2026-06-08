@@ -1,7 +1,7 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
+import type { Client } from '@e2e-test/shared'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { HexString } from '@polkadot/util/types'
@@ -153,12 +153,15 @@ async function getParentTotalChildBountiesCount(client: Client<any, any>, parent
  * Sets the treasury's last spend period block number to enable bounty funding
  * @param client - The chain client
  */
-async function setLastSpendPeriodBlockNumber(client: Client<any, any>, testConfig: TestConfig) {
+async function setLastSpendPeriodBlockNumber(client: Client<any, any>) {
   const spendPeriod = client.api.consts.treasury.spendPeriod
-  const currentBlock = await getBlockNumber(client.api, testConfig.blockProvider)
-  const offset = blockProviderOffset(testConfig)
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const offset = blockProviderOffset(
+    client.config.properties.schedulerBlockProvider,
+    (client.config.properties as any).relayBlocksPerParaBlock,
+  )
 
-  const newLastSpendPeriodBlockNumber = match(testConfig.blockProvider)
+  const newLastSpendPeriodBlockNumber = match(client.config.properties.schedulerBlockProvider)
     .with('Local', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset)
     .with('NonLocal', () => currentBlock - spendPeriod.toNumber() + TREASURY_SETUP_OFFSET * offset - offset)
     .exhaustive()
@@ -182,12 +185,13 @@ async function extractExtrinsicFailedEvent(client: Client<any, any>): Promise<an
   return ev
 }
 
-async function scheduleInlineCallWithOriginTreasurer(
-  client: Client<any, any>,
-  encodedCall: HexString,
-  testConfig: TestConfig,
-) {
-  await scheduleInlineCallWithOrigin(client, encodedCall, { Origins: 'Treasurer' }, testConfig.blockProvider)
+async function scheduleInlineCallWithOriginTreasurer(client: Client<any, any>, encodedCall: HexString) {
+  await scheduleInlineCallWithOrigin(
+    client,
+    encodedCall,
+    { Origins: 'Treasurer' },
+    client.config.properties.schedulerBlockProvider,
+  )
 }
 
 /// -------
@@ -210,12 +214,10 @@ async function scheduleInlineCallWithOriginTreasurer(
 export async function childBountyCreationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -243,7 +245,7 @@ export async function childBountyCreationTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -273,7 +275,7 @@ export async function childBountyCreationTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -345,8 +347,6 @@ export async function childBountyCreationTest<
   const childBounty = await getChildBounty(client, bountyIndex, childIndex)
   expect(childBounty).toBeTruthy()
   expect(childBounty.status.isAdded).toBe(true)
-
-  await client.teardown()
 }
 
 /**
@@ -366,12 +366,10 @@ export async function childBountyCreationTest<
 export async function childBountyAssigningAndAcceptingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -399,7 +397,7 @@ export async function childBountyAssigningAndAcceptingTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -429,7 +427,7 @@ export async function childBountyAssigningAndAcceptingTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -516,8 +514,6 @@ export async function childBountyAssigningAndAcceptingTest<
   // Verify child bounty status is Active
   const childBountyAfterCuratorAccepted = await getChildBounty(client, parentIndex, childIndex)
   expect(childBountyAfterCuratorAccepted.status.isActive).toBe(true)
-
-  await client.teardown()
 }
 
 /**
@@ -539,19 +535,17 @@ export async function childBountyAssigningAndAcceptingTest<
 export async function childBountyAwardingAndClaimingTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
 
   const description = 'Test bounty for awarding and claiming a child bounty'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Bob creates child bounty and assigns Charlie as child curator =====
 
@@ -645,8 +639,6 @@ export async function childBountyAwardingAndClaimingTest<
   // Verify child bounty is removed from storage
   const claimedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(claimedChildBounty).toBeNull()
-
-  await client.teardown()
 }
 
 /**
@@ -667,19 +659,17 @@ export async function childBountyAwardingAndClaimingTest<
 export async function childBountyClosureAndPayoutTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
 
   const description = 'Test bounty for child bounty closure'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Bob creates child bounty and assigns Charlie as child curator =====
 
@@ -759,8 +749,6 @@ export async function childBountyClosureAndPayoutTest<
   // Verify child bounties count decreased
   const childBountiesCount = await getParentChildBountiesCount(client, parentIndex)
   expect(childBountiesCount).toBe(0)
-
-  await client.teardown()
 }
 
 /**
@@ -782,19 +770,17 @@ export async function childBountyClosureAndPayoutTest<
 export async function childBountyRejectionAndCancellationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create parent bounty and make it active with Bob as curator =====
 
   const description = 'Test bounty for child bounty rejection and cancellation'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Bob creates child bounty and proposes Charlie as curator =====
 
@@ -887,8 +873,6 @@ export async function childBountyRejectionAndCancellationTest<
   // Verify child bounties count is 0
   const childBountiesCount = await getParentChildBountiesCount(client, parentIndex)
   expect(childBountiesCount).toBe(0)
-
-  await client.teardown()
 }
 
 /**
@@ -897,12 +881,7 @@ export async function childBountyRejectionAndCancellationTest<
 async function createActiveParentBountyWithCurator<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(
-  client: Client<TCustom, TInitStorages>,
-  testConfig: TestConfig,
-  description: string,
-  parentCuratorKeypair: KeyringPair,
-) {
+>(client: Client<TCustom, TInitStorages>, description: string, parentCuratorKeypair: KeyringPair) {
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
   const bountyValue = bountyValueMinimum.toBigInt() * BOUNTY_MULTIPLIER
 
@@ -920,7 +899,7 @@ async function createActiveParentBountyWithCurator<
 
   // Approve and fund the bounty
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -937,7 +916,7 @@ async function createActiveParentBountyWithCurator<
   // Assign and accept curator for parent bounty
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, parentCuratorKeypair.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -1028,12 +1007,10 @@ async function createActiveChildBountyWithCurator<
 export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1041,7 +1018,6 @@ export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
 
   const bountyIndex = await createActiveParentBountyWithCurator(
     client,
-    testConfig,
     'Test bounty for self-unassign refund',
     testAccounts.bob,
   )
@@ -1079,8 +1055,6 @@ export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
   // Verify child bounty status is back to Added
   const unassignedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(unassignedChildBounty.status.isAdded).toBe(true)
-
-  await client.teardown()
 }
 
 /**
@@ -1098,12 +1072,10 @@ export async function childBountyUnassignCuratorSelfUnassignRefundsDepositTest<
 export async function childBountyUnassignCuratorParentUnassignSlashesDepositTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1111,7 +1083,6 @@ export async function childBountyUnassignCuratorParentUnassignSlashesDepositTest
 
   const bountyIndex = await createActiveParentBountyWithCurator(
     client,
-    testConfig,
     'Test bounty for parent-unassign slash',
     testAccounts.bob,
   )
@@ -1148,8 +1119,6 @@ export async function childBountyUnassignCuratorParentUnassignSlashesDepositTest
 
   const unassignedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(unassignedChildBounty.status.isAdded).toBe(true)
-
-  await client.teardown()
 }
 
 /**
@@ -1168,12 +1137,10 @@ export async function childBountyUnassignCuratorParentUnassignSlashesDepositTest
 export async function childBountyUnassignCuratorPublicUserPrematureFailsTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1181,7 +1148,6 @@ export async function childBountyUnassignCuratorPublicUserPrematureFailsTest<
 
   const bountyIndex = await createActiveParentBountyWithCurator(
     client,
-    testConfig,
     'Test bounty for public user unassign premature',
     testAccounts.bob,
   )
@@ -1217,8 +1183,6 @@ export async function childBountyUnassignCuratorPublicUserPrematureFailsTest<
   const unassignedChildBounty = await getChildBounty(client, parentIndex, childIndex)
   expect(unassignedChildBounty).toBeTruthy()
   expect(unassignedChildBounty.status.isActive).toBe(true)
-
-  await client.teardown()
 }
 
 /**
@@ -1239,19 +1203,17 @@ export async function childBountyUnassignCuratorPublicUserPrematureFailsTest<
 export async function childBountyStorageVerificationTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create parent bounty and make it active =====
 
   const description = 'Test bounty for storage verification'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Create multiple child bounties and verify storage updates =====
 
@@ -1379,8 +1341,6 @@ export async function childBountyStorageVerificationTest<
   // ChildrenCuratorFees should remain the same after child bounty claim
   const childrenCuratorFeesAfterClaim = await client.api.query.childBounties.childrenCuratorFees(parentIndex1)
   expect(childrenCuratorFeesAfterClaim.toBigInt()).toBe(childCuratorFee1)
-
-  await client.teardown()
 }
 
 /**
@@ -1393,7 +1353,7 @@ export async function childBountyStorageVerificationTest<
 export function allUnassignChildBountyCuratorTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All unassign child bounty curator tests',
@@ -1401,17 +1361,17 @@ export function allUnassignChildBountyCuratorTests<
       {
         kind: 'test',
         label: 'child curator self-unassign refunds deposit',
-        testFn: async () => await childBountyUnassignCuratorSelfUnassignRefundsDepositTest(chain, testConfig),
+        testFn: async () => await childBountyUnassignCuratorSelfUnassignRefundsDepositTest(getClient()),
       },
       {
         kind: 'test',
         label: 'parent curator unassign slashes child curator deposit',
-        testFn: async () => await childBountyUnassignCuratorParentUnassignSlashesDepositTest(chain, testConfig),
+        testFn: async () => await childBountyUnassignCuratorParentUnassignSlashesDepositTest(getClient()),
       },
       {
         kind: 'test',
         label: 'public user unassign curator fails with Premature error',
-        testFn: async () => await childBountyUnassignCuratorPublicUserPrematureFailsTest(chain, testConfig),
+        testFn: async () => await childBountyUnassignCuratorPublicUserPrematureFailsTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -1424,7 +1384,7 @@ export function allUnassignChildBountyCuratorTests<
 export function allChildBountiesSuccessTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All child bounties success tests',
@@ -1432,34 +1392,34 @@ export function allChildBountiesSuccessTests<
       {
         kind: 'test',
         label: 'child bounty creation',
-        testFn: async () => await childBountyCreationTest(chain, testConfig),
+        testFn: async () => await childBountyCreationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'assigning and accepting a child bounty curator',
-        testFn: async () => await childBountyAssigningAndAcceptingTest(chain, testConfig),
+        testFn: async () => await childBountyAssigningAndAcceptingTest(getClient()),
       },
       {
         kind: 'test',
         label: 'awarding and claiming a child bounty',
-        testFn: async () => await childBountyAwardingAndClaimingTest(chain, testConfig),
+        testFn: async () => await childBountyAwardingAndClaimingTest(getClient()),
       },
       {
         kind: 'test',
         label: 'closure and payout of a child bounty',
-        testFn: async () => await childBountyClosureAndPayoutTest(chain, testConfig),
+        testFn: async () => await childBountyClosureAndPayoutTest(getClient()),
       },
       {
         kind: 'test',
         label: 'rejection by child curator and closure by parent curator of a child bounty',
-        testFn: async () => await childBountyRejectionAndCancellationTest(chain, testConfig),
+        testFn: async () => await childBountyRejectionAndCancellationTest(getClient()),
       },
       {
         kind: 'test',
         label: 'child bounty storage verification',
-        testFn: async () => await childBountyStorageVerificationTest(chain, testConfig),
+        testFn: async () => await childBountyStorageVerificationTest(getClient()),
       },
-      allUnassignChildBountyCuratorTests(chain, testConfig),
+      allUnassignChildBountyCuratorTests(getClient),
     ],
   } as RootTestTree
 }
@@ -1480,9 +1440,7 @@ export function allChildBountiesSuccessTests<
 export async function childBountyParentBountyNotActiveErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob'])
 
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
@@ -1525,8 +1483,6 @@ export async function childBountyParentBountyNotActiveErrorTest<
 
   assert(dispatchError.isModule)
   expect(client.api.errors.childBounties.ParentBountyNotActive.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1545,19 +1501,17 @@ export async function childBountyParentBountyNotActiveErrorTest<
 export async function childBountyInsufficientBountyBalanceErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create active parent bounty with a specific value =====
 
   const description = 'Test bounty with minimal value'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Attempt to create child bounty with value larger than parent bounty balance =====
 
@@ -1585,8 +1539,6 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.childBounties.InsufficientBountyBalance.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1605,19 +1557,17 @@ export async function childBountyInsufficientBountyBalanceErrorTest<
 export async function childBountyInvalidValueErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create active parent bounty =====
 
   const description = 'Test bounty for invalid value testing'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // ===== SECTION 2: Attempt to create child bounty with value below the minimum threshold =====
 
@@ -1646,8 +1596,6 @@ export async function childBountyInvalidValueErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.InvalidValue.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1666,19 +1614,17 @@ export async function childBountyInvalidValueErrorTest<
 export async function childBountyInvalidFeeErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create active parent bounty and add a child bounty =====
 
   const description = 'Test bounty for invalid fee testing'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // Create child bounty
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
@@ -1723,8 +1669,6 @@ export async function childBountyInvalidFeeErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.InvalidFee.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1743,19 +1687,17 @@ export async function childBountyInvalidFeeErrorTest<
 export async function childBountyUnexpectedStatusErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create active parent bounty and add a child bounty =====
 
   const description = 'Test bounty for unexpected status testing'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // Create child bounty
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
@@ -1794,8 +1736,6 @@ export async function childBountyUnexpectedStatusErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.UnexpectedStatus.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1815,19 +1755,17 @@ export async function childBountyUnexpectedStatusErrorTest<
 export async function childBountyPendingPayoutErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
   // ===== SECTION 1: Create active parent bounty and add a child bounty =====
 
   const description = 'Test bounty for pending payout testing'
-  const bountyIndex = await createActiveParentBountyWithCurator(client, testConfig, description, testAccounts.bob)
+  const bountyIndex = await createActiveParentBountyWithCurator(client, description, testAccounts.bob)
 
   // Create child bounty
   const bountyValueMinimum = client.api.consts.bounties.bountyValueMinimum
@@ -1899,8 +1837,6 @@ export async function childBountyPendingPayoutErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.PendingPayout.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -1919,12 +1855,10 @@ export async function childBountyPendingPayoutErrorTest<
 export async function childBountyRequireCuratorErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -1952,7 +1886,7 @@ export async function childBountyRequireCuratorErrorTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -1982,7 +1916,7 @@ export async function childBountyRequireCuratorErrorTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2035,8 +1969,6 @@ export async function childBountyRequireCuratorErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.RequireCurator.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -2055,12 +1987,10 @@ export async function childBountyRequireCuratorErrorTest<
 export async function childBountyTooManyChildBountiesErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2088,7 +2018,7 @@ export async function childBountyTooManyChildBountiesErrorTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2118,7 +2048,7 @@ export async function childBountyTooManyChildBountiesErrorTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2194,8 +2124,6 @@ export async function childBountyTooManyChildBountiesErrorTest<
   // ensure the parent child bounties count is same as before
   const parentChildBountiesCountAfter = await getParentChildBountiesCount(client, bountyIndex)
   expect(parentChildBountiesCountAfter).toBe(parentChildBountiesCount)
-
-  await client.teardown()
 }
 
 /**
@@ -2214,12 +2142,10 @@ export async function childBountyTooManyChildBountiesErrorTest<
 export async function childBountyReasonTooBigErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2247,7 +2173,7 @@ export async function childBountyReasonTooBigErrorTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2277,7 +2203,7 @@ export async function childBountyReasonTooBigErrorTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2330,8 +2256,6 @@ export async function childBountyReasonTooBigErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.ReasonTooBig.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -2350,12 +2274,10 @@ export async function childBountyReasonTooBigErrorTest<
 export async function childBountyProposingCuratorForInvalidIndexErrorTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig) {
-  const [client] = await setupNetworks(chain)
-
+>(client: Client<TCustom, TInitStorages>) {
   await setupTestAccounts(client, ['alice', 'bob', 'charlie', 'dave'])
 
-  await setLastSpendPeriodBlockNumber(client, testConfig)
+  await setLastSpendPeriodBlockNumber(client)
 
   await client.dev.newBlock()
 
@@ -2383,7 +2305,7 @@ export async function childBountyProposingCuratorForInvalidIndexErrorTest<
 
   // approve the bounty with origin Treasurer
   const approveBountyTx = client.api.tx.bounties.approveBounty(bountyIndex)
-  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, approveBountyTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2413,7 +2335,7 @@ export async function childBountyProposingCuratorForInvalidIndexErrorTest<
   const curatorFee = bountyValueMinimum.toBigInt() * CURATOR_FEE_MULTIPLIER
   // assign curator to the bounty
   const proposeCuratorTx = client.api.tx.bounties.proposeCurator(bountyIndex, testAccounts.bob.address, curatorFee)
-  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex(), testConfig)
+  await scheduleInlineCallWithOriginTreasurer(client, proposeCuratorTx.method.toHex())
 
   await client.dev.newBlock()
 
@@ -2492,8 +2414,6 @@ export async function childBountyProposingCuratorForInvalidIndexErrorTest<
   const dispatchError = ev.event.data.dispatchError
   assert(dispatchError.isModule)
   expect(client.api.errors.bounties.InvalidIndex.is(dispatchError.asModule)).toBeTruthy()
-
-  await client.teardown()
 }
 
 /**
@@ -2503,7 +2423,7 @@ export async function childBountyProposingCuratorForInvalidIndexErrorTest<
 export function allChildBountiesFailureTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+>(getClient: () => Client<TCustom, TInitStorages>): RootTestTree {
   return {
     kind: 'describe',
     label: 'All child bounties failure tests',
@@ -2511,56 +2431,56 @@ export function allChildBountiesFailureTests<
       {
         kind: 'test',
         label: 'create child bounty from non-active parent bounty throws ParentBountyNotActive error',
-        testFn: async () => await childBountyParentBountyNotActiveErrorTest(chain),
+        testFn: async () => await childBountyParentBountyNotActiveErrorTest(getClient()),
       },
       {
         kind: 'test',
         label:
           'create child bounty with value larger than parent bounty balance throws InsufficientBountyBalance error',
-        testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(chain, testConfig),
+        testFn: async () => await childBountyInsufficientBountyBalanceErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'create child bounty with value below minimum throws InvalidValue error',
-        testFn: async () => await childBountyInvalidValueErrorTest(chain, testConfig),
+        testFn: async () => await childBountyInvalidValueErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'propose curator with fee >= child bounty value throws InvalidFee error',
-        testFn: async () => await childBountyInvalidFeeErrorTest(chain, testConfig),
+        testFn: async () => await childBountyInvalidFeeErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'accept curator when child bounty is in Added status throws UnexpectedStatus error',
-        testFn: async () => await childBountyUnexpectedStatusErrorTest(chain, testConfig),
+        testFn: async () => await childBountyUnexpectedStatusErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'close child bounty in PendingPayout status throws PendingPayout error',
-        testFn: async () => await childBountyPendingPayoutErrorTest(chain, testConfig),
+        testFn: async () => await childBountyPendingPayoutErrorTest(getClient()),
       },
       {
         kind: 'test',
         label: 'non-curator trying to create child bounty throws RequireCurator error',
-        testFn: async () => await childBountyRequireCuratorErrorTest(chain, testConfig),
+        testFn: async () => await childBountyRequireCuratorErrorTest(getClient()),
       },
       {
         kind: 'test',
         label:
           'parent already has MaxActiveChildBountyCount child bounties, trying to create a new one throws TooManyChildBounties error',
-        testFn: async () => await childBountyTooManyChildBountiesErrorTest(chain, testConfig),
+        testFn: async () => await childBountyTooManyChildBountiesErrorTest(getClient()),
       },
       // ReasonTooBig
       {
         kind: 'test',
         label: 'child bounty description larger than MaximumReasonLength throws ReasonTooBig error',
-        testFn: async () => await childBountyReasonTooBigErrorTest(chain, testConfig),
+        testFn: async () => await childBountyReasonTooBigErrorTest(getClient()),
       },
       // InvalidIndex
       {
         kind: 'test',
         label: 'proposing curator for invalid child bounty index throws InvalidIndex error',
-        testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(chain, testConfig),
+        testFn: async () => await childBountyProposingCuratorForInvalidIndexErrorTest(getClient()),
       },
     ],
   } as RootTestTree
@@ -2574,9 +2494,24 @@ export function baseChildBountiesE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(chain: Chain<TCustom, TInitStorages>, testConfig: TestConfig): RootTestTree {
+  let client!: Client<TCustom, TInitStorages>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
-    children: [allChildBountiesSuccessTests(chain, testConfig), allChildBountiesFailureTests(chain, testConfig)],
+    beforeAll: async () => {
+      ;[client] = await createNetworks(chain)
+      restoreSnapshot = captureSnapshot(client)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
+      await client.dev.setHead(blockNumber)
+    },
+    afterAll: async () => {
+      await client.api.disconnect().catch(() => {})
+      await client.teardown().catch(() => {})
+    },
+    children: [allChildBountiesSuccessTests(() => client), allChildBountiesFailureTests(() => client)],
   }
 }

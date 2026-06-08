@@ -1,0 +1,59 @@
+extensions:
+  client:
+    endpoints: {{ENDPOINTS}}
+    # Use endpoints in the order they appear in `pet-chain-endpoints.json`,
+    # which the `.github/workflows/probe-endpoints.yml` workflow keeps sorted
+    # by ascending health score. Subway falls through to array[1..N-1] as
+    # the failover ladder on stall/disconnect via its existing rotation
+    # logic, so an initial bias toward array[0] doesn't sacrifice resilience.
+    shuffle_endpoints: false
+    # Heavy upstream queries (e.g. Acala storage at the pinned block) can take
+    # longer than Subway's default 30s per-upstream timeout. Without this,
+    # Subway cycles through the entire endpoint list before any single
+    # upstream has a chance to respond. Requires Subway >= v0.1.1
+    # (AcalaNetwork/subway#203).
+    request_timeout_seconds: 90
+  event_bus:
+  substrate_api:
+    stale_timeout_seconds: 180
+  telemetry:
+    provider: none
+  cache:
+    default_ttl_seconds: 3600
+    default_size: 1000
+  merge_subscription:
+    keep_alive_seconds: 120
+  server:
+    port: {{PORT}}
+    listen_address: '127.0.0.1'
+    max_connections: 2000
+    max_batch_size: 10
+    request_timeout_seconds: 120
+    http_methods:
+      - path: /health
+        method: system_health
+      - path: /liveness
+        method: chain_getBlockHash
+    cors: null
+  rate_limit:
+    connection:
+      burst: 100
+      period_secs: 1
+      jitter_up_to_millis: 100
+    ip:
+      burst: 1000
+      period_secs: 10
+      jitter_up_to_millis: 100
+    use_xff: false
+
+middlewares:
+  methods:
+    - response
+    - inject_params
+    - cache
+    - upstream
+  subscriptions:
+    - merge_subscription
+    - upstream
+
+rpcs: substrate

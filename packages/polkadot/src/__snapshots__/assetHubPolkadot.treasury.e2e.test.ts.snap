@@ -35,6 +35,18 @@ exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it fro
 ]
 `;
 
+exports[`Polkadot Asset Hub Treasury > Check treasury payouts which are already approved can be paid > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Treasury > Claim a spend > payout events 1`] = `
 [
   {

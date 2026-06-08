@@ -1,10 +1,14 @@
 import { polkadot } from '@e2e-test/networks/chains'
-import { postAhmFilteringE2ETests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
+import {
+  commonFilteredTests,
+  commonUnfilteredTests,
+  postAhmFilteringE2ETests,
+  registerTestTree,
+  type TestConfig,
+} from '@e2e-test/shared'
 
-const polkadotTestConfig: RelayTestConfig = {
+const polkadotTestConfig: TestConfig = {
   testSuiteName: 'Polkadot Post-AHM Filtering Tests',
-  addressEncoding: 0,
-  blockProvider: 'Local',
 }
 
-registerTestTree(postAhmFilteringE2ETests(polkadot, polkadotTestConfig))
+registerTestTree(postAhmFilteringE2ETests(polkadot, polkadotTestConfig, commonFilteredTests, commonUnfilteredTests))

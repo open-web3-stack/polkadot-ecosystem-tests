@@ -7,7 +7,7 @@ import type { ApiPromise } from '@polkadot/api'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { EventRecord } from '@polkadot/types/interfaces'
-import type { PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
+import type { FrameSystemAccountInfo, PalletStakingValidatorPrefs } from '@polkadot/types/lookup'
 import type { IsEvent } from '@polkadot/types/metadata/decorate/types'
 import type { AnyTuple, Codec, IEvent } from '@polkadot/types/types'
 import type { HexString } from '@polkadot/util/types'
@@ -104,8 +104,69 @@ export function objectCmp(
  */
 export type BlockProvider = 'Local' | 'NonLocal'
 
-/** Whether async backing is enabled or disabled on the querying parachain. */
-export type AsyncBacking = 'Enabled' | 'Disabled'
+/**
+ * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the list of extrinsics
+ * in the next block.
+ *
+ * The calls can be either inline calls or lookup calls, which in the latter case *must* have been noted
+ * in the storage of the chain's `preimage` pallet with a `notePreimage` extrinsic.
+ *
+ * @param blockProvider Whether the calls are being scheduled on a chain that uses a local or nonlocal block provider.
+ *        This chain's runtime *must* have the scheduler pallet available.
+ */
+export async function scheduleCallListWithOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  calls: {
+    call:
+      | { Inline: any }
+      | {
+          Lookup: {
+            hash: any
+            len: any
+          }
+        }
+    origin: any
+  }[],
+  blockProvider: BlockProvider = 'Local',
+) {
+  const scheduledBlock = await match(blockProvider)
+    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
+    .with('NonLocal', async () =>
+      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
+    )
+    .exhaustive()
+
+  await client.dev.setStorage({
+    Scheduler: {
+      agenda: [[[scheduledBlock], calls]],
+      incompleteSince: scheduledBlock,
+    },
+  })
+}
+
+/**
+ * Given a PJS client and a list of inline calls with the same origin, modify the `scheduler`
+ * pallet's `agenda` storage to execute the extrinsic in the next block.
+ */
+export async function scheduleInlineCallListWithSameOrigin(
+  client: {
+    api: ApiPromise
+    dev: {
+      setStorage: (values: StorageValues, blockHash?: string) => Promise<any>
+    }
+  },
+  encodedCall: HexString[],
+  origin: any,
+  blockProvider: BlockProvider = 'Local',
+) {
+  const callList = encodedCall.map((call) => ({ call: { Inline: call }, origin }))
+  await scheduleCallListWithOrigin(client, callList, blockProvider)
+}
 
 /**
  * Given a PJS client and a call, modify the `scheduler` pallet's `agenda` storage to execute the extrinsic in the next
@@ -135,28 +196,7 @@ export async function scheduleCallWithOrigin(
   origin: any,
   blockProvider: BlockProvider = 'Local',
 ) {
-  const scheduledBlock = await match(blockProvider)
-    .with('Local', async () => (await client.api.rpc.chain.getHeader()).number.toNumber() + 1)
-    .with('NonLocal', async () =>
-      ((await client.api.query.parachainSystem.lastRelayChainBlockNumber()) as any).toNumber(),
-    )
-    .exhaustive()
-
-  await client.dev.setStorage({
-    Scheduler: {
-      agenda: [
-        [
-          [scheduledBlock],
-          [
-            {
-              call,
-              origin: origin,
-            },
-          ],
-        ],
-      ],
-    },
-  })
+  await scheduleCallListWithOrigin(client, [{ call, origin }], blockProvider)
 }
 
 /**
@@ -202,7 +242,7 @@ export async function scheduleLookupCallWithOrigin(
  * @param dest MultiLocation destination to which the XCM message is to be sent
  * @param call Hex-encoded identity pallet extrinsic
  * @param origin Origin with which the extrinsic is to be executed at the location parachain
- * @param requireWeightAtMost Reftime/proof size parameters that `send::Transact` may require (only in XCM v4);
+ * @param fallbackMaxWeight Reftime/proof size parameters for `Transact` weight estimation (XCM v5);
  *        sensible defaults are given.
  */
 export function createXcmTransactSend(
@@ -215,11 +255,10 @@ export function createXcmTransactSend(
   dest: any,
   call: HexString,
   originKind: string,
-  requireWeightAtMost = { proofSize: '10000', refTime: '100000000' },
+  fallbackMaxWeight: { proofSize: string; refTime: string } | null = { proofSize: '10000', refTime: '100000000' },
 ) {
-  // The message being sent to the parachain, containing a call to be executed in the parachain:
   const message = {
-    V4: [
+    V5: [
       {
         UnpaidExecution: {
           weightLimit: 'Unlimited',
@@ -232,13 +271,13 @@ export function createXcmTransactSend(
             encoded: call,
           },
           originKind,
-          requireWeightAtMost,
+          fallbackMaxWeight: fallbackMaxWeight,
         },
       },
     ],
   }
 
-  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V4: dest }, message)
+  return (client.api.tx.xcmPallet || client.api.tx.polkadotXcm).send({ V5: dest }, message)
 }
 
 /**
@@ -366,6 +405,46 @@ export async function setValidatorsStorage(
   })
 }
 
+/// -------
+/// Fee extraction abstraction
+/// -------
+
+/**
+ * Normalized fee information extracted from a transaction fee payment event.
+ * Different runtimes emit different fee events, but tests only need these three fields.
+ */
+export interface FeeInfo {
+  who: string
+  actualFee: bigint
+  tip: bigint
+}
+
+/**
+ * Extracts fee payment information from the transaction fee event, itself from a list of system events.
+ * Different runtimes may have different fee event structures; thus, each chain can provide its own extractor.
+ */
+export type FeeExtractor = (events: EventRecord[], api: ApiPromise) => FeeInfo[]
+
+/**
+ * Default fee extractor for standard Substrate runtimes using `pallet-transaction-payment`.
+ * Handles the standard `TransactionFeePaid { who, actual_fee, tip }` event.
+ *
+ * This is the default used by `RelayTestConfig` and `ParaTestConfig` when no `feeExtractor` is provided.
+ */
+export const standardFeeExtractor: FeeExtractor = (events, api) => {
+  const results: FeeInfo[] = []
+  for (const { event } of events) {
+    if (api.events.transactionPayment.TransactionFeePaid.is(event)) {
+      results.push({
+        who: event.data.who.toString(),
+        actualFee: event.data.actualFee.toBigInt(),
+        tip: event.data.tip.toBigInt(),
+      })
+    }
+  }
+  return results
+}
+
 /**
  * Helper to track transaction fees paid by a set of accounts.
  *
@@ -374,27 +453,24 @@ export async function setValidatorsStorage(
  *
  * @param api - The API instance to query events
  * @param feeMap - Map from addresses to their cumulative paid fees
- * @param addressEncoding - The address encoding to use when setting/querying keys (addresses) in the map
+ * @param addressEncoding - SS58 address encoding for the chain
+ * @param feeExtractor - Fee extractor function for the chain
  * @returns Updated fee map with new fees added
  */
 export async function updateCumulativeFees(
   api: ApiPromise,
   feeMap: Map<string, bigint>,
   addressEncoding: number,
+  feeExtractor: FeeExtractor,
 ): Promise<Map<string, bigint>> {
   const events = await api.query.system.events()
+  const feeInfos = feeExtractor(events as unknown as EventRecord[], api)
 
-  for (const record of events) {
-    const { event } = record
-    if (event.section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
-      assert(api.events.transactionPayment.TransactionFeePaid.is(event))
-      const [who, actualFee, tip] = event.data
-      const address = encodeAddress(who.toString(), addressEncoding)
-      const totalFee = BigInt(actualFee.add(tip).toString())
-
-      const currentFee = feeMap.get(address) || 0n
-      feeMap.set(address, currentFee + totalFee)
-    }
+  for (const { who, actualFee, tip } of feeInfos) {
+    const address = encodeAddress(who, addressEncoding)
+    const totalFee = actualFee + tip
+    const currentFee = feeMap.get(address) || 0n
+    feeMap.set(address, currentFee + totalFee)
   }
   return feeMap
 }
@@ -445,26 +521,20 @@ export async function nextSchedulableBlockNum(api: ApiPromise, blockProvider: Bl
  *
  * * If on a relay chain, the output is 1 i.e. when injecting a task into the scheduler pallet's agenda storage,
  *   every block number is available.
- * * If on a parachain without AB, 1, with the same meaning as above.
- * * If on a parachain with AB, the offset is 2, because `parachainSystem.lastRelayChainBlockNumber` moves with a step
- *   size of 2, and thus, manually scheduled blocks can only be injected every other relay block number. Also applies
- *   to vesting and treasury spend periods.
+ * * If on a parachain, `relayBlocksPerParaBlock` — the number of relay blocks that elapse per parachain block,
+ *   as configured via the chain's consensus parameters (e.g. `BLOCK_PROCESSING_VELOCITY`). Defaults to 1 if
+ *   not provided.
  *
  * @param blockProvider Whether the call is being scheduled on a relay or parachain.
- * @param asyncBacking Whether async backing is enabled on the parachain.
+ * @param relayBlocksPerParaBlock Relay blocks elapsed per parachain block; sourced from chain config.
  * @returns The number of blocks to offset when scheduling tasks
  */
-export function blockProviderOffset(cfg: TestConfig): number {
-  if (cfg.blockProvider === 'Local') {
+export function blockProviderOffset(blockProvider: BlockProvider, relayBlocksPerParaBlock?: number): number {
+  if (blockProvider === 'Local') {
     return 1
   }
 
-  if (cfg.asyncBacking === 'Enabled') {
-    return 2
-  }
-
-  // On a parachain without async backing.
-  return 1
+  return relayBlocksPerParaBlock ?? 1
 }
 
 /**
@@ -488,34 +558,29 @@ export function sortAddressesByBytes(addresses: string[], addressEncoding: numbe
 }
 
 /**
- * Configuration for relay chain tests.
+ * Get the free funds of an account.
  */
-export interface RelayTestConfig {
-  testSuiteName: string
-  addressEncoding: number
-  blockProvider: 'Local'
-  chainEd?: ChainED
+export async function getFreeFunds(client: Client<any, any>, address: any): Promise<bigint> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.free.toBigInt()
 }
 
 /**
- * Configuration for parachain tests.
- * Async backing is relevant due to the step size of `parachainSystem.lastRelayChainBlockNumber`.
- *
- * Recall that with the AHM, the scheduler pallet's agenda will be keyed by this block number.
- * It is, then, relevant for tests to know whether AB is enabled.
+ * Get the reserved funds of an account.
  */
-export interface ParaTestConfig {
-  testSuiteName: string
-  addressEncoding: number
-  blockProvider: BlockProvider
-  asyncBacking: AsyncBacking
-  chainEd?: ChainED
+export async function getReservedFunds(client: Client<any, any>, address: any): Promise<bigint> {
+  const account = (await client.api.query.system.account(address)) as FrameSystemAccountInfo
+  return account.data.reserved.toBigInt()
 }
 
 /**
- * Union type for all test configurations, whether relay or parachain.
+ * Configuration for tests.
+ * Chain properties (addressEncoding, blockProvider, relayBlocksPerParaBlock, etc.) are now
+ * provided by the chain definition and available via `chain.properties`.
  */
-export type TestConfig = RelayTestConfig | ParaTestConfig
+export interface TestConfig {
+  testSuiteName: string
+}
 
 /**
  * Matcher for an event argument.
@@ -705,4 +770,23 @@ export async function testCallsViaForceBatch(
       }
     }
   }
+}
+
+/**
+ * Decode the `system.events` value from a `dryRunExtrinsicsAmortized` storageDiff.
+ *
+ * Returns an object shaped like the one `sendTransaction` returns (`{ events: Promise<Codec[]> }`)
+ * so it can be passed straight to `checkEvents`.
+ */
+export function eventsFromAmortizedDryRunResult(
+  api: ApiPromise,
+  storageDiff: [HexString, HexString | null][],
+): { events: Promise<EventRecord[]> } {
+  const eventsKey = api.query.system.events.key()
+  const entry = storageDiff.find(([k]) => k.toLowerCase() === eventsKey.toLowerCase())
+  const decoded =
+    entry && entry[1] !== null
+      ? (api.createType('Vec<FrameSystemEventRecord>', entry[1]) as unknown as EventRecord[])
+      : []
+  return { events: Promise.resolve(decoded) }
 }

@@ -11,10 +11,6 @@ import {
 
 const testCfg: TestConfig = {
   testSuiteName: 'Kusama Asset Hub Accounts',
-  addressEncoding: 2,
-  blockProvider: 'NonLocal',
-  asyncBacking: 'Enabled',
-  chainEd: 'LowEd',
 }
 
 // When testing liquidity restrictions on Asset Hubs, to simulate frozen funds, vesting is skipped due to AHM.

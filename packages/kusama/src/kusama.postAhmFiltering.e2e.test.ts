@@ -1,10 +1,14 @@
 import { kusama } from '@e2e-test/networks/chains'
-import { postAhmFilteringE2ETests, type RelayTestConfig, registerTestTree } from '@e2e-test/shared'
+import {
+  commonFilteredTests,
+  commonUnfilteredTests,
+  postAhmFilteringE2ETests,
+  registerTestTree,
+  type TestConfig,
+} from '@e2e-test/shared'
 
-const kusamaTestConfig: RelayTestConfig = {
+const kusamaTestConfig: TestConfig = {
   testSuiteName: 'Kusama Post-AHM Filtering Tests',
-  addressEncoding: 2,
-  blockProvider: 'Local',
 }
 
-registerTestTree(postAhmFilteringE2ETests(kusama, kusamaTestConfig))
+registerTestTree(postAhmFilteringE2ETests(kusama, kusamaTestConfig, commonFilteredTests, commonUnfilteredTests))

@@ -9,3 +9,8 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
+    ignore:
+      # Ignore biomejs updates
+      - dependency-name: "@biomejs/biome"
+      # Ignore all polkadot-js dependencies
+      - dependency-name: "@polkadot/*"

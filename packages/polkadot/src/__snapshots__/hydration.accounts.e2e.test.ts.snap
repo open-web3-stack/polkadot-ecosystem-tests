@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via multisig creation 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
+
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via proxy addition 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;
+
+exports[`Hydration Accounts > currency tests > liquidity restriction error: funds locked via manual reserve and manual lock, triggered via referendum submission 1`] = `"RPC payment validation rejected transaction due to insufficient funds"`;

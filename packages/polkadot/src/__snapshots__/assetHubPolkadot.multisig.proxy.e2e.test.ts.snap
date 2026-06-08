@@ -110,7 +110,7 @@ exports[`Polkadot AssetHub Multisig Proxy > success tests > 2-of-3 multisig with
       "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 10000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -143,7 +143,7 @@ exports[`Polkadot AssetHub Multisig Proxy > success tests > 2-of-3 multisig with
       "multisig": "(redacted)",
       "result": "Ok",
       "timepoint": {
-        "height": "(rounded 10000000)",
+        "height": "(redacted)",
         "index": 2,
       },
     },
@@ -171,7 +171,7 @@ exports[`Polkadot AssetHub Multisig Proxy > success tests > Cancel 2-of-3 multis
 [
   {
     "data": {
-      "approving": "15m8TJPjWNjk3ij8b1sVhrt8iPQo1aUD3TAKA7hQmJgg4c1J",
+      "approving": "(redacted)",
       "callHash": "(hash)",
       "multisig": "(redacted)",
     },

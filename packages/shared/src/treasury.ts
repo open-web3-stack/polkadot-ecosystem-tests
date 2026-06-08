@@ -1,7 +1,6 @@
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, testAccounts } from '@e2e-test/networks'
-import { type Client, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { FrameSupportTokensFungibleUnionOfNativeOrWithId, XcmVersionedLocation } from '@polkadot/types/lookup'
@@ -10,7 +9,7 @@ import type { Codec } from '@polkadot/types/types'
 import { assert, expect } from 'vitest'
 
 import { checkEvents, checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
-import type { RootTestTree } from './types.js'
+import type { Client, RootTestTree } from './types.js'
 
 /// -------
 /// Helpers
@@ -123,13 +122,17 @@ async function createSpendProposal<
 >(
   assetHubClient: Client<TCustom, TInitStoragesPara>,
   spendAmount: bigint,
-  testConfig: TestConfig,
   origin: string = SPEND_ORIGIN,
   validFrom: number | null = null,
 ) {
   const spendTx = assetHubClient.api.tx.treasury.spend(ASSET_KIND, spendAmount, BENEFICIARY_LOCATION, validFrom)
   const hexSpendTx = spendTx.method.toHex()
-  await scheduleInlineCallWithOrigin(assetHubClient, hexSpendTx, { Origins: origin }, testConfig.blockProvider)
+  await scheduleInlineCallWithOrigin(
+    assetHubClient,
+    hexSpendTx,
+    { Origins: origin },
+    assetHubClient.config.properties.schedulerBlockProvider,
+  )
 }
 
 /**
@@ -162,9 +165,7 @@ async function verifySystemEventAssetSpendApproved<
 export async function treasurySpendBasicTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
@@ -175,7 +176,7 @@ export async function treasurySpendBasicTest<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount, testConfig) // validFrom will default to null and the spend call will take current block number as validFrom block number
+  await createSpendProposal(assetHubClient, spendAmount) // validFrom will default to null and the spend call will take current block number as validFrom block number
 
   await assetHubClient.dev.newBlock()
 
@@ -198,8 +199,6 @@ export async function treasurySpendBasicTest<
   const validFrom = spendData.validFrom.toNumber()
   const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
   expect(spendData.expireAt.toNumber()).toBe(validFrom + payoutPeriod)
-
-  await assetHubClient.teardown()
 }
 
 /**
@@ -208,14 +207,14 @@ export async function treasurySpendBasicTest<
 async function voidApprovedSpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(assetHubClient: Client<TCustom, TInitStoragesPara>, spendIndex: number, testConfig: TestConfig) {
+>(assetHubClient: Client<TCustom, TInitStoragesPara>, spendIndex: number) {
   const removeApprovedSpendTx = assetHubClient.api.tx.treasury.voidSpend(spendIndex)
   const hexRemoveApprovedSpendTx = removeApprovedSpendTx.method.toHex()
   await scheduleInlineCallWithOrigin(
     assetHubClient,
     hexRemoveApprovedSpendTx,
     { Origins: REJECT_ORIGIN },
-    testConfig.blockProvider,
+    assetHubClient.config.properties.schedulerBlockProvider,
   )
 }
 
@@ -249,9 +248,7 @@ async function verifySystemEventAssetSpendVoided<
 export async function voidApprovedTreasurySpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
@@ -262,7 +259,7 @@ export async function voidApprovedTreasurySpendProposal<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount, testConfig)
+  await createSpendProposal(assetHubClient, spendAmount)
 
   await assetHubClient.dev.newBlock()
 
@@ -289,7 +286,7 @@ export async function voidApprovedTreasurySpendProposal<
   await assetHubClient.dev.newBlock()
 
   // Void the approved proposal
-  await voidApprovedSpendProposal(assetHubClient, spendIndex, testConfig)
+  await voidApprovedSpendProposal(assetHubClient, spendIndex)
 
   await assetHubClient.dev.newBlock()
 
@@ -299,8 +296,6 @@ export async function voidApprovedTreasurySpendProposal<
   // Verify the spend was removed from the storage
   const spendAfter = await assetHubClient.api.query.treasury.spends(spendIndex)
   expect(spendAfter.isNone).toBe(true)
-
-  await assetHubClient.teardown()
 }
 
 /**
@@ -341,9 +336,7 @@ async function verifyEventPaid(events: { events: Promise<Codec | Codec[]> }) {
 export async function claimTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
@@ -353,7 +346,7 @@ export async function claimTreasurySpend<
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount, testConfig)
+  await createSpendProposal(assetHubClient, spendAmount)
 
   await assetHubClient.dev.newBlock()
 
@@ -393,8 +386,6 @@ export async function claimTreasurySpend<
   const balanceAfter = await assetHubClient.api.query.system.account(testAccounts.alice.address)
   const balanceAmountAfter = balanceAfter.data.free.toBigInt()
   expect(balanceAmountAfter - balanceAmountBefore).toBeGreaterThan(0n)
-
-  await assetHubClient.teardown()
 }
 
 async function verifyEventSpendProcessed(events: { events: Promise<Codec | Codec[]> }) {
@@ -428,9 +419,7 @@ async function sendCheckStatusTx<
 export async function checkStatusOfTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
@@ -441,7 +430,7 @@ export async function checkStatusOfTreasurySpend<
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount, testConfig)
+  await createSpendProposal(assetHubClient, spendAmount)
 
   await assetHubClient.dev.newBlock()
 
@@ -495,8 +484,6 @@ export async function checkStatusOfTreasurySpend<
   // verify the spend is removed from the storage
   const spendAfterCheckStatus = await assetHubClient.api.query.treasury.spends(spendIndex)
   expect(spendAfterCheckStatus.isNone).toBe(true)
-
-  await assetHubClient.teardown()
 }
 
 /**
@@ -513,9 +500,7 @@ export async function checkStatusOfTreasurySpend<
 export async function proposeExpiredSpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
@@ -525,7 +510,7 @@ export async function proposeExpiredSpend<
   const currentBlockNumber = await assetHubClient.api.query.system.number()
   const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
   const validFrom = currentBlockNumber.toNumber() - payoutPeriod - 1 // subtracting any number to ensure that the spend is expired
-  await createSpendProposal(assetHubClient, spendAmount, testConfig, SPEND_ORIGIN, validFrom)
+  await createSpendProposal(assetHubClient, spendAmount, SPEND_ORIGIN, validFrom)
 
   await assetHubClient.dev.newBlock()
 
@@ -557,7 +542,6 @@ export async function proposeExpiredSpend<
   }
   // Ensure at least one error was SpendExpired
   assert(foundSpendExpiredError, 'Expected at least one Dispatched event to have a SpendExpired error')
-  await assetHubClient.teardown()
 }
 
 /**
@@ -573,16 +557,14 @@ export async function proposeExpiredSpend<
 export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(ahChain: Chain<TCustom, TInitStoragesPara>, testConfig: TestConfig) {
-  const [assetHubClient] = await setupNetworks(ahChain)
-
+>(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
   // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const largeSpendAmount = existentialDeposit * LARGE_SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, largeSpendAmount, testConfig, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
+  await createSpendProposal(assetHubClient, largeSpendAmount, SMALL_TIPPER_ORIGIN) // SmallTipper does not have permission to spend large amounts
 
   await assetHubClient.dev.newBlock()
 
@@ -616,8 +598,6 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
     foundInsufficientPermissionError,
     'Expected at least one Dispatched event to have a InsufficientPermission error',
   )
-
-  await assetHubClient.teardown()
 }
 
 /**
@@ -637,9 +617,7 @@ export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayChain: Chain<TCustom, TInitStoragesRelay>, ahChain: Chain<TCustom, TInitStoragesPara>) {
-  const [assetHubClient, relayClient] = await setupNetworks(ahChain, relayChain)
-
+>(relayClient: Client<TCustom, TInitStoragesRelay>, assetHubClient: Client<TCustom, TInitStoragesPara>) {
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
   // get all the spends
@@ -696,8 +674,6 @@ export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
     const spendAfterCheckStatus = await assetHubClient.api.query.treasury.spends(spendIndex)
     expect(spendAfterCheckStatus.isNone).toBe(true)
   }
-
-  await assetHubClient.teardown()
 }
 
 export function baseTreasuryE2ETests<
@@ -709,44 +685,64 @@ export function baseTreasuryE2ETests<
   ahChain: Chain<TCustom, TInitStoragesPara>,
   testConfig: TestConfig,
 ): RootTestTree {
+  let relayClient!: Client<TCustom, TInitStoragesRelay>
+  let assetHubClient!: Client<TCustom, TInitStoragesPara>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[relayClient, assetHubClient] = await createNetworks(relayChain, ahChain)
+      restoreSnapshot = captureSnapshot(relayClient, assetHubClient)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      for (const c of [relayClient, assetHubClient]) {
+        const blockNumber = (await c.api.rpc.chain.getHeader()).number.toNumber()
+        await c.dev.setHead(blockNumber)
+      }
+    },
+    afterAll: async () => {
+      for (const c of [relayClient, assetHubClient]) {
+        await c.api.disconnect().catch(() => {})
+        await c.teardown().catch(() => {})
+      }
+    },
     children: [
       {
         kind: 'test',
         label: 'Propose and approve a spend of treasury funds',
-        testFn: async () => await treasurySpendBasicTest(ahChain, testConfig),
+        testFn: async () => await treasurySpendBasicTest(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Void previously approved spend',
-        testFn: async () => await voidApprovedTreasurySpendProposal(ahChain, testConfig),
+        testFn: async () => await voidApprovedTreasurySpendProposal(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Claim a spend',
-        testFn: async () => await claimTreasurySpend(ahChain, testConfig),
+        testFn: async () => await claimTreasurySpend(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Check status of a spend and remove it from the storage if processed',
-        testFn: async () => await checkStatusOfTreasurySpend(ahChain, testConfig),
+        testFn: async () => await checkStatusOfTreasurySpend(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Proposing a expired spend emits SpendExpired error',
-        testFn: async () => await proposeExpiredSpend(ahChain, testConfig),
+        testFn: async () => await proposeExpiredSpend(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Smalltipper trying to spend more than the origin allows emits InsufficientPermission error',
-        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(ahChain, testConfig),
+        testFn: async () => await smalltipperTryingToSpendMoreThanTheOriginAllows(assetHubClient),
       },
       {
         kind: 'test',
         label: 'Check treasury payouts which are already approved can be paid',
-        testFn: async () => await checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid(relayChain, ahChain),
+        testFn: async () => await checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid(relayClient, assetHubClient),
       },
     ],
   }

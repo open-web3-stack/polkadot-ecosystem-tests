@@ -1,4 +1,4 @@
 import { kusama } from '@e2e-test/networks/chains'
 import { baseMultisigE2Etests, registerTestTree } from '@e2e-test/shared'
 
-registerTestTree(baseMultisigE2Etests(kusama, { testSuiteName: 'Kusama Multisig', addressEncoding: 2 }))
+registerTestTree(baseMultisigE2Etests(kusama, { testSuiteName: 'Kusama Multisig' }))

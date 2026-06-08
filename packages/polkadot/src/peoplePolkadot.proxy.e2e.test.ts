@@ -2,17 +2,14 @@ import { peoplePolkadot } from '@e2e-test/networks/chains'
 import {
   createProxyConfig,
   fullProxyE2ETests,
-  type ParaTestConfig,
   PeopleProxyTypes,
   type ProxyTestConfig,
   registerTestTree,
+  type TestConfig,
 } from '@e2e-test/shared'
 
-const testConfig: ParaTestConfig = {
+const testConfig: TestConfig = {
   testSuiteName: 'People Polkadot Proxy',
-  addressEncoding: 0,
-  blockProvider: 'Local',
-  asyncBacking: 'Disabled',
 }
 
 const peoplePolkadotProxyCfg: ProxyTestConfig = createProxyConfig(PeopleProxyTypes)

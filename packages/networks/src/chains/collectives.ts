@@ -1,4 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -20,9 +23,16 @@ const getInitStorages = (_config: typeof custom.collectivesPolkadot) => ({
 
 export const collectivesPolkadot = defineChain({
   name: 'collectivesPolkadot',
-  endpoint: 'wss://collectives-polkadot-rpc.n.dwellir.com',
+  endpoint: endpoints.collectivesPolkadot,
   paraId: 1001,
   networkGroup: 'polkadot',
   custom: custom.collectivesPolkadot,
   initStorages: getInitStorages(custom.collectivesPolkadot),
+  properties: {
+    addressEncoding: 0,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'Local',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
 })

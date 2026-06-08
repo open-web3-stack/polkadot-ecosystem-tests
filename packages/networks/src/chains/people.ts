@@ -1,4 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts, defaultAccountsSr25519, testAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -40,18 +43,32 @@ const getInitStorages = (_config: typeof custom.peoplePolkadot | typeof custom.p
 
 export const peoplePolkadot = defineChain({
   name: 'peoplePolkadot',
-  endpoint: 'wss://polkadot-people-rpc.polkadot.io',
+  endpoint: endpoints.peoplePolkadot,
   paraId: 1004,
   networkGroup: 'polkadot',
   custom: custom.peoplePolkadot,
   initStorages: getInitStorages(custom.peoplePolkadot),
+  properties: {
+    addressEncoding: 0,
+    proxyBlockProvider: 'NonLocal',
+    schedulerBlockProvider: 'NonLocal',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const peopleKusama = defineChain({
   name: 'peopleKusama',
-  endpoint: 'wss://kusama-people-rpc.polkadot.io',
+  endpoint: endpoints.peopleKusama,
   paraId: 1004,
   networkGroup: 'kusama',
   custom: custom.peopleKusama,
   initStorages: getInitStorages(custom.peopleKusama),
+  properties: {
+    addressEncoding: 2,
+    proxyBlockProvider: 'Local',
+    schedulerBlockProvider: 'NonLocal',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
 })

@@ -11,8 +11,8 @@
 import type { StorageValues } from '@acala-network/chopsticks'
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
-import { type Chain, defaultAccountsSr25519 } from '@e2e-test/networks'
-import { type RootTestTree, setupNetworks } from '@e2e-test/shared'
+import { type Chain, captureSnapshot, createNetworks, defaultAccountsSr25519 } from '@e2e-test/networks'
+import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import type { ApiPromise } from '@polkadot/api'
 import type { Option, u128 } from '@polkadot/types'
@@ -99,9 +99,7 @@ async function sendXcmFromRelayToPeople(
 export async function setIdentityThenRequestAndProvideJudgement<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>) {
-  const [peopleClient] = await setupNetworks(peopleChain)
-
+>(peopleClient: Client<TCustom, TInitStorages>) {
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
 
@@ -217,9 +215,7 @@ export async function setIdentityThenRequestAndProvideJudgement<
 export async function setIdentityRequestJudgementTwiceThenResetIdentity<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>) {
-  const [peopleClient] = await setupNetworks(peopleChain)
-
+>(peopleClient: Client<TCustom, TInitStorages>) {
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
 
@@ -354,9 +350,7 @@ export async function setIdentityRequestJudgementTwiceThenResetIdentity<
 export async function setIdentityThenRequesThenCancelThenClear<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>) {
-  const [peopleClient] = await setupNetworks(peopleChain)
-
+>(peopleClient: Client<TCustom, TInitStorages>) {
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
 
@@ -451,8 +445,8 @@ export async function setIdentityThenRequesThenCancelThenClear<
 export async function setIdentityThenAddSubsThenRemove<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(peopleChain: Chain<TCustom, TInitStorages>, addressEncoding: number) {
-  const [peopleClient] = await setupNetworks(peopleChain)
+>(peopleClient: Client<TCustom, TInitStorages>) {
+  const addressEncoding = peopleClient.config.properties.addressEncoding
 
   const querier = peopleClient.api.query
   const txApi = peopleClient.api.tx
@@ -593,12 +587,8 @@ export async function addRegistrarViaRelayAsRoot<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  relayChain: Chain<TCustom, TInitStoragesRelay>,
-  peopleChain: Chain<TCustom, TInitStoragesPara>,
-  addressEncoding: number,
-) {
-  const [relayClient, peopleClient] = await setupNetworks(relayChain, peopleChain)
+>(relayClient: Client<TCustom, TInitStoragesRelay>, peopleClient: Client<TCustom, TInitStoragesPara>) {
+  const addressEncoding = peopleClient.config.properties.addressEncoding
 
   /**
    * Executing extrinsic with wrong origin
@@ -732,39 +722,59 @@ export function basePeopleChainE2ETests<
 >(
   relayChain: Chain<TCustom, TInitStoragesRelay>,
   peopleChain: Chain<TCustom, TInitStoragesPara>,
-  testConfig: { testSuiteName: string; addressEncoding: number },
+  testConfig: { testSuiteName: string },
 ): RootTestTree {
+  let peopleClient!: Client<TCustom, TInitStoragesPara>
+  let relayClient!: Client<TCustom, TInitStoragesRelay>
+  let restoreSnapshot: () => Promise<void>
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
+    beforeAll: async () => {
+      ;[relayClient, peopleClient] = await createNetworks(relayChain, peopleChain)
+      restoreSnapshot = captureSnapshot(peopleClient, relayClient)
+    },
+    beforeEach: async () => {
+      await restoreSnapshot()
+      const peopleBlock = (await peopleClient.api.rpc.chain.getHeader()).number.toNumber()
+      await peopleClient.dev.setHead(peopleBlock)
+      const relayBlock = (await relayClient.api.rpc.chain.getHeader()).number.toNumber()
+      await relayClient.dev.setHead(relayBlock)
+    },
+    afterAll: async () => {
+      await peopleClient.api.disconnect().catch(() => {})
+      await peopleClient.teardown().catch(() => {})
+      await relayClient.api.disconnect().catch(() => {})
+      await relayClient.teardown().catch(() => {})
+    },
     children: [
       {
         kind: 'test',
         label: 'setting on-chain identity and requesting judgement should work',
-        testFn: async () => await setIdentityThenRequestAndProvideJudgement(peopleChain),
+        testFn: async () => await setIdentityThenRequestAndProvideJudgement(peopleClient),
       },
       {
         kind: 'test',
         label:
           'setting an on-chain identity, requesting 2 judgements, having 1 provided, and then resetting the identity should work',
-        testFn: async () => await setIdentityRequestJudgementTwiceThenResetIdentity(peopleChain),
+        testFn: async () => await setIdentityRequestJudgementTwiceThenResetIdentity(peopleClient),
       },
       {
         kind: 'test',
         label:
           'setting on-chain identity, requesting judgement, cancelling the request and then clearing the identity should work',
-        testFn: async () => await setIdentityThenRequesThenCancelThenClear(peopleChain),
+        testFn: async () => await setIdentityThenRequesThenCancelThenClear(peopleClient),
       },
       {
         kind: 'test',
         label:
           'setting on-chain identity, adding sub-identities, removing one, and having another remove itself should work',
-        testFn: async () => await setIdentityThenAddSubsThenRemove(peopleChain, testConfig.addressEncoding),
+        testFn: async () => await setIdentityThenAddSubsThenRemove(peopleClient),
       },
       {
         kind: 'test',
         label: 'adding a registrar as root from the relay chain works',
-        testFn: async () => await addRegistrarViaRelayAsRoot(relayChain, peopleChain, testConfig.addressEncoding),
+        testFn: async () => await addRegistrarViaRelayAsRoot(relayClient, peopleClient),
       },
     ],
   }

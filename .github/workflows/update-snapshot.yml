@@ -11,28 +11,122 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  update:
+  define-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 5
+    outputs:
+      networks: ${{ steps.networks.outputs.networks }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Generate network matrix
+        id: networks
+        run: echo "networks=$(node scripts/generate-ci-matrix.mjs)" >> "$GITHUB_OUTPUT"
+
+  update:
+    needs: define-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
-        network: [polkadot, kusama]
+        network: ${{ fromJSON(needs.define-matrix.outputs.networks) }}
     steps:
-    - uses: actions/checkout@v4
-    - name: setup node env
-      uses: actions/setup-node@v4
+    - uses: actions/checkout@v5
+
+    - name: Use Node.js
+      uses: actions/setup-node@v6
       with:
         node-version: 22.x
         cache: 'yarn'
+
     - run: yarn --immutable
-    - run: yarn update-known-good
-    - run: yarn test:${{ matrix.network }} -u
+
+    - name: Install Subway
+      run: |
+        docker create --name subway-extract acala/subway:v0.1.1
+        sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+        docker rm subway-extract
+        sudo chmod +x /usr/local/bin/subway
+        subway --version
+
+    - name: Update known good block numbers
+      run: yarn update-known-good
+
+    - name: Source known good block numbers
+      run: |
+        NETWORK_UPPER=$(echo "${{ matrix.network.name }}" | tr '[:lower:]' '[:upper:]')
+        ENV_FILE="KNOWN_GOOD_BLOCK_NUMBERS_${NETWORK_UPPER}.env"
+        echo "Sourcing block numbers from $ENV_FILE"
+        cat "$ENV_FILE" >> $GITHUB_ENV
+
+    - name: Start all Subway instances
+      run: |
+        echo "Starting all Subway instances for ${{ matrix.network.name }}..."
+
+        echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+          CHAIN=$(echo $chain | jq -r '.chain')
+          PORT=$(echo $chain | jq -r '.port')
+
+          # Get endpoints from pet-chain-endpoints.json
+          ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+
+          if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
+            echo "Error: No endpoints found for chain $CHAIN"
+            exit 1
+          fi
+
+          echo "Starting Subway for $CHAIN on port $PORT..."
+          sed -e "s/{{PORT}}/$PORT/g" -e "s|{{ENDPOINTS}}|$ENDPOINTS|g" .github/subway-template.yml > /tmp/subway-$PORT.yml
+          subway --config /tmp/subway-$PORT.yml > /tmp/subway-$PORT.log 2>&1 &
+          echo $! >> /tmp/subway.pids
+        done
+
+        echo "Waiting for all Subway instances to start..."
+        echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+          PORT=$(echo $chain | jq -r '.port')
+          timeout=60
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -sf http://127.0.0.1:$PORT/health > /dev/null 2>&1; then
+              echo "Subway on port $PORT started successfully!"
+              break
+            fi
+            sleep 1
+            elapsed=$((elapsed + 1))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "Timeout waiting for subway on port $PORT"
+            cat /tmp/subway-$PORT.log
+            exit 1
+          fi
+        done
+
+        echo "All Subway instances started successfully!"
+
+    - name: Set endpoint environment variables
+      run: |
+        echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
+          ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+          PORT=$(echo $chain | jq -r '.port')
+          echo "${ENDPOINT_VAR}=ws://localhost:${PORT}" >> $GITHUB_ENV
+        done
+
+    - name: Run Tests
+      run: yarn test:${{ matrix.network.name }} -u --pool=threads --maxWorkers=2 --retry=3
+
+    - name: Cleanup Subway instances
+      if: always()
+      run: |
+        if [ -f /tmp/subway.pids ]; then
+          cat /tmp/subway.pids | xargs kill || true
+        fi
+
     - name: Commit and Create PR
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
-          const { network } = context.payload.inputs || { network: '${{ matrix.network }}' };
+          const { network } = context.payload.inputs || { network: '${{ matrix.network.name }}' };
           const branchName = `update-snapshots-${network}-${context.sha.slice(0, 7)}`;
           const upperNetwork = network.toUpperCase();
 

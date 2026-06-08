@@ -1,4 +1,7 @@
+import { standardFeeExtractor } from '@e2e-test/shared'
+
 import { defineChain } from '../defineChain.js'
+import endpoints from '../pet-chain-endpoints.json' with { type: 'json' }
 import { defaultAccounts } from '../testAccounts.js'
 
 const custom = {
@@ -34,9 +37,6 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
       [['aca' in config ? config.aca : config.kar, defaultAccounts.alice.address], { balance: 20 * 1e12 }],
     ],
   },
-  Sudo: {
-    key: defaultAccounts.alice.address,
-  },
   PolkadotXcm: {
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers', 'supportedVersion'],
@@ -46,17 +46,29 @@ const getInitStorages = (config: typeof custom.astar | typeof custom.shiden) => 
 export const astar = defineChain({
   name: 'astar',
   paraId: 2006,
-  endpoint: 'wss://astar-rpc.n.dwellir.com',
+  endpoint: endpoints.astar,
   networkGroup: 'polkadot',
   custom: custom.astar,
   initStorages: getInitStorages(custom.astar),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
 })
 
 export const shiden = defineChain({
   name: 'shiden',
   paraId: 2007,
-  endpoint: 'wss://shiden-rpc.n.dwellir.com',
+  endpoint: endpoints.shiden,
   networkGroup: 'kusama',
   custom: custom.shiden,
   initStorages: getInitStorages(custom.shiden),
+  properties: {
+    addressEncoding: 5,
+    schedulerBlockProvider: 'Local',
+    relayBlocksPerParaBlock: 2,
+    feeExtractor: standardFeeExtractor,
+  },
 })
