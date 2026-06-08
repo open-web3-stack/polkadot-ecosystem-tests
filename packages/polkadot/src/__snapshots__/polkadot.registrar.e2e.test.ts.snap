@@ -881,6 +881,16 @@ exports[`Polkadot Registrar > pallet registrar - swap functions > non-owner cann
 ]
 `;
 
+exports[`Polkadot Registrar > pallet registrar - swap functions > para origin swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Polkadot Registrar > pallet registrar - swap functions > parachain parachain swap event 1`] = `
 [
   {
@@ -902,6 +912,16 @@ exports[`Polkadot Registrar > pallet registrar - swap functions > parachain para
 `;
 
 exports[`Polkadot Registrar > pallet registrar - swap functions > parathread parachain swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Polkadot Registrar > pallet registrar - swap functions > root swap event 1`] = `
 [
   {
     "data": {},
