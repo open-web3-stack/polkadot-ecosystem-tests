@@ -215,7 +215,7 @@ export async function paraReservingE2ETest<
  *
  *     10. asserting that new reserved balance includes additional deposit from registration
  *
- *     11. asserting that alice cannot register para ID twice
+ *     11. asserting that alice cannot register already registered para
  */
 export async function paraRegisteringE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -412,7 +412,7 @@ export async function paraRegisteringE2ETest<
   const aliceBalance = await client.api.query.system.account(devAccounts.alice.address)
   expect(aliceBalance.data.reserved.toString()).toBe((paraDepositBigInt + additionalNeeded).toString())
 
-  // 11. alice trying to register again with the same paraId should fail
+  // 11. alice trying to register an already registered para should fail
   const registerEventsDuplicate = await sendTransaction(
     client.api.tx.registrar.register(paraId, GENESIS_HEAD, MINIMAL_VALIDATION_CODE).signAsync(devAccounts.alice),
   )
@@ -759,7 +759,23 @@ export async function parasRootRegistrationE2eTest<
  *
  *     5.3 asserting successful swap events
  *
- * 6. asserting that swapping a non-existent para ID fails with NotRegistered
+ * 6. Root initiates and confirms a swap between two Parachains
+ *
+ *     6.1 asserting that Root successfully initiates swap
+ *
+ *     6.2 asserting that Root successfully confirms swap
+ *
+ *     6.3 asserting successful swap events
+ *
+ * 7. the paras themselves (via para origin) initiate and confirm a swap
+ *
+ *     7.1 asserting that para A successfully initiates swap
+ *
+ *     7.2 asserting that para B successfully confirms swap
+ *
+ *     7.3 asserting successful swap events
+ *
+ * 8. asserting that swapping a non-existent para ID fails with NotRegistered
  *
  */
 export async function parasRegistrarSwapE2ETest<
@@ -956,10 +972,110 @@ export async function parasRegistrarSwapE2ETest<
   expect(chainChainSwapEvent.event.data[0].toString()).toBe(paraIdB.toString())
   expect(chainChainSwapEvent.event.data[1].toString()).toBe(paraIdA.toString())
 
-  // 6. Assert that swapping a non-existent para ID fails with NotRegistered
-  const nonExistentParaId = paraIdB + 1
+  // 6. Root initiates and confirms a swap between two Parachains
+  // Use fresh paras so the pending-swap/lifecycle state from prior cases does not interfere.
+  const paraIdC = paraIdB + 1
+  const paraIdD = paraIdC + 1
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdC)
+  await forceRegisterParaViaRoot(client, devAccounts.bob.address, paraIdD)
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [
+        [[paraIdC], 'Parachain'],
+        [[paraIdD], 'Parachain'],
+      ],
+    },
+  })
+
+  // 6.1 Root initiates: C ↔ D
+  const swapRootInitiateTx = client.api.tx.registrar.swap(paraIdC, paraIdD)
+  await scheduleInlineCallWithOrigin(
+    client,
+    swapRootInitiateTx.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  const pendingSwapRoot = await client.api.query.registrar.pendingSwap(paraIdC)
+  expect(pendingSwapRoot.toString()).toBe(paraIdD.toString())
+
+  // 6.2 Root confirms: D ↔ C
+  const swapRootConfirmTx = client.api.tx.registrar.swap(paraIdD, paraIdC)
+  await scheduleInlineCallWithOrigin(
+    client,
+    swapRootConfirmTx.method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('root swap event')
+
+  // 6.3 Asserting swap events
+  const eventsAfterRootSwap = await client.api.query.system.events()
+  const [rootSwapEvent] = eventsAfterRootSwap.filter(
+    ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
+  )
+  assert(client.api.events.registrar.Swapped.is(rootSwapEvent.event))
+  expect(rootSwapEvent.event.data[0].toString()).toBe(paraIdD.toString())
+  expect(rootSwapEvent.event.data[1].toString()).toBe(paraIdC.toString())
+
+  // 7. The paras themselves (via para origin) initiate and confirm a swap
+  // Use fresh paras so the pending-swap/lifecycle state from prior cases does not interfere.
+  const paraIdE = paraIdD + 1
+  const paraIdF = paraIdE + 1
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdE)
+  await forceRegisterParaViaRoot(client, devAccounts.bob.address, paraIdF)
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [
+        [[paraIdE], 'Parachain'],
+        [[paraIdF], 'Parachain'],
+      ],
+    },
+  })
+
+  // 7.1 Para E initiates: E ↔ F
+  const swapParaInitiateTx = client.api.tx.registrar.swap(paraIdE, paraIdF)
+  await scheduleInlineCallWithOrigin(
+    client,
+    swapParaInitiateTx.method.toHex(),
+    { ParachainsOrigin: { Parachain: paraIdE } },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+  const pendingSwapPara = await client.api.query.registrar.pendingSwap(paraIdE)
+  expect(pendingSwapPara.toString()).toBe(paraIdF.toString())
+
+  // 7.2 Para F confirms: F ↔ E
+  const swapParaConfirmTx = client.api.tx.registrar.swap(paraIdF, paraIdE)
+  await scheduleInlineCallWithOrigin(
+    client,
+    swapParaConfirmTx.method.toHex(),
+    { ParachainsOrigin: { Parachain: paraIdF } },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'registrar', method: 'Swapped' })
+    .redact({ removeKeys: /Id/ })
+    .toMatchSnapshot('para origin swap event')
+
+  // 7.3 Asserting swap events
+  const eventsAfterParaSwap = await client.api.query.system.events()
+  const [paraSwapEvent] = eventsAfterParaSwap.filter(
+    ({ event }) => event.section === 'registrar' && event.method === 'Swapped',
+  )
+  assert(client.api.events.registrar.Swapped.is(paraSwapEvent.event))
+  expect(paraSwapEvent.event.data[0].toString()).toBe(paraIdF.toString())
+  expect(paraSwapEvent.event.data[1].toString()).toBe(paraIdE.toString())
+
+  // 8. Assert that swapping a non-existent para ID fails with NotRegistered
+  const nonExistentParaId = paraIdF + 1
   const swapNotRegisteredEvents = await sendTransaction(
-    client.api.tx.registrar.swap(nonExistentParaId, paraIdB).signAsync(devAccounts.alice),
+    client.api.tx.registrar.swap(nonExistentParaId, paraIdF).signAsync(devAccounts.alice),
   )
   await client.dev.newBlock()
   await checkEvents(swapNotRegisteredEvents, 'system')
