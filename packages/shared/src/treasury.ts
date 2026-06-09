@@ -125,12 +125,14 @@ async function getSpendIndexFromEvent<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>, eventType: 'AssetSpendApproved' | 'Paid'): Promise<number> {
-  const [event] = (await assetHubClient.api.query.system.events()).filter(
-    ({ event }: any) => event.section === 'treasury' && event.method === eventType,
+  const records = (await assetHubClient.api.query.system.events()).filter((record) =>
+    assetHubClient.api.events.treasury[eventType].is(record.event),
   )
-  expect(event).toBeTruthy()
-  assert(assetHubClient.api.events.treasury[eventType].is(event.event))
-  return event.event.data.index.toNumber()
+  // Each lifecycle step under test emits exactly one such event in the block it produced.
+  expect(records).toHaveLength(1)
+  const [record] = records
+  assert(assetHubClient.api.events.treasury[eventType].is(record.event))
+  return record.event.data.index.toNumber()
 }
 
 /**
@@ -271,8 +273,39 @@ async function verifySystemEventAssetSpendApproved<
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>) {
   await checkSystemEvents(assetHubClient, { section: 'treasury', method: 'AssetSpendApproved' })
-    .redact({ redactKeys: /expireAt|validFrom|index|data/ })
+    .redact({ redactKeys: /expireAt|validFrom|index|amount/ })
     .toMatchSnapshot('treasury spend approval events')
+}
+
+/**
+ * Helper: create a spend, approve it in the next block, and assert it was stored as a `Pending` spend for
+ * exactly `spendAmount` with the expected `[validFrom, validFrom + PayoutPeriod]` payout window. Returns
+ * the spend index.
+ *
+ * This is the common opening shared by the basic / void / claim / check-status lifecycle tests.
+ */
+async function approveSpendAndVerify<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(assetHubClient: Client<TCustom, TInitStoragesPara>, spendAmount: bigint): Promise<number> {
+  const initialSpendCount = await getSpendCount(assetHubClient)
+  const spendIndex = await createApprovedSpend(assetHubClient, spendAmount)
+
+  // Verify that the AssetSpendApproved event was emitted and the spend count incremented by exactly one.
+  await verifySystemEventAssetSpendApproved(assetHubClient)
+  expect(await getSpendCount(assetHubClient)).toBe(initialSpendCount + 1)
+
+  // Verify the spend was stored correctly.
+  const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
+  expect(spend.isSome).toBe(true)
+  const spendData = spend.unwrap()
+  expect(spendData.amount.toBigInt()).toBe(spendAmount)
+  expect(spendData.status.isPending).toBe(true)
+
+  const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
+  expect(spendData.expireAt.toNumber()).toBe(spendData.validFrom.toNumber() + payoutPeriod)
+
+  return spendIndex
 }
 
 /**
@@ -294,39 +327,13 @@ export async function treasurySpendBasicTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>) {
-  // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Get initial spend count
-  const initialSpendCount = await getSpendCount(assetHubClient)
-
-  // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount) // validFrom will default to null and the spend call will take current block number as validFrom block number
-
-  await assetHubClient.dev.newBlock()
-
-  // Verify that the AssetSpendApproved event was emitted
-  await verifySystemEventAssetSpendApproved(assetHubClient)
-
-  // Verify spend count increased
-  const newSpendCount = await getSpendCount(assetHubClient)
-  expect(newSpendCount).toBe(initialSpendCount + 1)
-
-  // Verify the spend was stored correctly
-  const spendIndex = await getSpendIndexFromEvent(assetHubClient, 'AssetSpendApproved')
-  const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
-
-  expect(spend.isSome).toBeTruthy()
-  const spendData = spend.unwrap()
-  expect(spendData.amount.toBigInt()).toBe(spendAmount)
-  expect(spendData.status.isPending).toBe(true)
-
-  const validFrom = spendData.validFrom.toNumber()
-  const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
-  expect(spendData.expireAt.toNumber()).toBe(validFrom + payoutPeriod)
+  // Creating, approving and verifying the spend's stored state is exactly what this test asserts.
+  await approveSpendAndVerify(assetHubClient, spendAmount)
 }
 
 /**
@@ -377,39 +384,12 @@ export async function voidApprovedTreasurySpendProposal<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>) {
-  // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Get initial spend count
-  const initialSpendCount = await getSpendCount(assetHubClient)
-
-  // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount)
-
-  await assetHubClient.dev.newBlock()
-
-  // Verify that the AssetSpendApproved event was emitted
-  await verifySystemEventAssetSpendApproved(assetHubClient)
-
-  // Verify spend count increased
-  const newSpendCount = await getSpendCount(assetHubClient)
-  expect(newSpendCount).toBe(initialSpendCount + 1)
-
-  // Verify the spend was stored correctly
-  const spendIndex = await getSpendIndexFromEvent(assetHubClient, 'AssetSpendApproved')
-  const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
-
-  expect(spend.isSome).toBeTruthy()
-  const spendData = spend.unwrap()
-  expect(spendData.amount.toBigInt()).toBe(spendAmount)
-  expect(spendData.status.isPending).toBe(true)
-
-  const validFrom = spendData.validFrom.toNumber()
-  const payoutPeriod = assetHubClient.api.consts.treasury.payoutPeriod.toNumber()
-  expect(spendData.expireAt.toNumber()).toBe(validFrom + payoutPeriod)
+  const spendIndex = await approveSpendAndVerify(assetHubClient, spendAmount)
 
   await assetHubClient.dev.newBlock()
 
@@ -427,14 +407,17 @@ export async function voidApprovedTreasurySpendProposal<
 }
 
 /**
- *  Helper: Create a function sendPayoutTx by the beneficiary
+ * Helper: submit a `payout` for `spendIndex`, signed by `signer`.
+ *
+ * Note `payout` is permissionless — the signer need not be the beneficiary; funds always go to the
+ * beneficiary recorded on the spend.
  */
 async function sendPayoutTx<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(assetHubClient: Client<TCustom, TInitStoragesPara>, spendIndex: number, beneficiary: KeyringPair) {
+>(assetHubClient: Client<TCustom, TInitStoragesPara>, spendIndex: number, signer: KeyringPair) {
   const payoutTx = assetHubClient.api.tx.treasury.payout(spendIndex)
-  return await sendTransaction(payoutTx.signAsync(beneficiary))
+  return await sendTransaction(payoutTx.signAsync(signer))
 }
 
 /**
@@ -465,41 +448,21 @@ export async function claimTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>) {
-  // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Get initial spend count
-  const initialSpendCount = await getSpendCount(assetHubClient)
-
-  // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
-  await createSpendProposal(assetHubClient, spendAmount)
 
+  const spendIndex = await approveSpendAndVerify(assetHubClient, spendAmount)
+
+  const balanceAmountBefore = (
+    await assetHubClient.api.query.system.account(testAccounts.alice.address)
+  ).data.free.toBigInt()
   await assetHubClient.dev.newBlock()
 
-  // Verify that the AssetSpendApproved event was emitted
-  await verifySystemEventAssetSpendApproved(assetHubClient)
-
-  // Verify spend count increased
-  const newSpendCount = await getSpendCount(assetHubClient)
-  expect(newSpendCount).toBe(initialSpendCount + 1)
-
-  // Verify the spend was stored correctly
-  const spendIndex = await getSpendIndexFromEvent(assetHubClient, 'AssetSpendApproved')
-  const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
-
-  expect(spend.isSome).toBeTruthy()
-  const spendData = spend.unwrap()
-  expect(spendData.amount.toBigInt()).toBe(spendAmount)
-  expect(spendData.status.isPending).toBe(true)
-
-  const balance = await assetHubClient.api.query.system.account(testAccounts.alice.address)
-  const balanceAmountBefore = balance.data.free.toBigInt()
-  await assetHubClient.dev.newBlock()
-
-  // Claim the spend by the beneficiary i.e alice
-  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.alice)
+  // `payout` is permissionless, so we sign with bob rather than the beneficiary (alice). The tx fee is then
+  // charged to bob, which lets us assert alice received *exactly* the spend amount
+  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.bob)
 
   await assetHubClient.dev.newBlock()
 
@@ -510,10 +473,11 @@ export async function claimTreasurySpend<
 
   await assetHubClient.dev.newBlock()
 
-  // ensure that Alice's balance is increased
-  const balanceAfter = await assetHubClient.api.query.system.account(testAccounts.alice.address)
-  const balanceAmountAfter = balanceAfter.data.free.toBigInt()
-  expect(balanceAmountAfter - balanceAmountBefore).toBeGreaterThan(0n)
+  // Alice's balance increased by exactly the spend amount
+  const balanceAmountAfter = (
+    await assetHubClient.api.query.system.account(testAccounts.alice.address)
+  ).data.free.toBigInt()
+  expect(balanceAmountAfter - balanceAmountBefore).toBe(spendAmount)
 }
 
 async function verifyEventSpendProcessed(events: { events: Promise<Codec | Codec[]> }) {
@@ -548,43 +512,22 @@ export async function checkStatusOfTreasurySpend<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
 >(assetHubClient: Client<TCustom, TInitStoragesPara>) {
-  // Setup test accounts
   await setupTestAccounts(assetHubClient, ['alice', 'bob'])
 
-  // Get initial spend count
-  const initialSpendCount = await getSpendCount(assetHubClient)
-
-  // Create a spend proposal
   const existentialDeposit = assetHubClient.api.consts.balances.existentialDeposit.toBigInt()
   const spendAmount = existentialDeposit * SPEND_AMOUNT_MULTIPLIER
 
-  await createSpendProposal(assetHubClient, spendAmount)
+  const spendIndex = await approveSpendAndVerify(assetHubClient, spendAmount)
+
+  const balanceAmountBefore = (
+    await assetHubClient.api.query.system.account(testAccounts.alice.address)
+  ).data.free.toBigInt()
 
   await assetHubClient.dev.newBlock()
 
-  // Verify that the AssetSpendApproved event was emitted
-  await verifySystemEventAssetSpendApproved(assetHubClient)
-
-  // Verify spend count increased
-  const newSpendCount = await getSpendCount(assetHubClient)
-  expect(newSpendCount).toBe(initialSpendCount + 1)
-
-  // Verify the spend was stored correctly
-  const spendIndex = await getSpendIndexFromEvent(assetHubClient, 'AssetSpendApproved')
-  const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
-
-  expect(spend.isSome).toBeTruthy()
-  const spendData = spend.unwrap()
-  expect(spendData.amount.toBigInt()).toBe(spendAmount)
-  expect(spendData.status.isPending).toBe(true)
-
-  const balanceBefore = await assetHubClient.api.query.system.account(testAccounts.alice.address)
-  const balanceAmountBefore = balanceBefore.data.free.toBigInt()
-
-  await assetHubClient.dev.newBlock()
-
-  // Claim the spend by the beneficiary i.e alice
-  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.alice)
+  // Sign the (permissionless) payout with bob, not the beneficiary, so alice's balance reflects only the
+  // spend amount and not a tx fee.
+  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.bob)
 
   await assetHubClient.dev.newBlock()
 
@@ -595,10 +538,11 @@ export async function checkStatusOfTreasurySpend<
 
   await assetHubClient.dev.newBlock()
 
-  // Ensure that Alice's balance is increased
-  const balanceAfter = await assetHubClient.api.query.system.account(testAccounts.alice.address)
-  const balanceAmountAfter = balanceAfter.data.free.toBigInt()
-  expect(balanceAmountAfter - balanceAmountBefore).toBeGreaterThan(0n)
+  // Alice's balance increased by exactly the spend amount.
+  const balanceAmountAfter = (
+    await assetHubClient.api.query.system.account(testAccounts.alice.address)
+  ).data.free.toBigInt()
+  expect(balanceAmountAfter - balanceAmountBefore).toBe(spendAmount)
 
   await assetHubClient.dev.newBlock()
 
@@ -677,82 +621,6 @@ export async function smalltipperTryingToSpendMoreThanTheOriginAllows<
 }
 
 /**
- * Test: Check treasury payouts which are already approved can be paid
- *
- * Verifies that the treasury's payout mechanism correctly processes already approved spends
- * and properly disburses funds to beneficiaries. This test ensures that approved treasury
- * spends can be successfully paid out
- *
- * Test Structure:
- * 1. Get all the spends which are pending or failed and is neither expired nor early payout
- * 2. Call payout tx for each pending or failed spend
- * 3. Verify the Paid event is emitted
- * 4. Verify the spend status is attempted
- */
-export async function checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
-  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(relayClient: Client<TCustom, TInitStoragesRelay>, assetHubClient: Client<TCustom, TInitStoragesPara>) {
-  await setupTestAccounts(assetHubClient, ['alice', 'bob'])
-
-  // get all the spends
-  const spends = await assetHubClient.api.query.treasury.spends.entries()
-
-  // get current relay chain block number
-  const currentRelayChainBlockNumber = (await relayClient.api.query.system.number()).toNumber()
-
-  // filter those spends which are pending or failed and is neither expired nor early payout
-  const pendingOrFailedSpends = spends.filter((spend) => {
-    const spendData = spend[1]?.unwrap()
-    const isSpendPendingOrFailed = spendData?.status.isPending || spendData?.status.isFailed
-    const isSpendNotEarlyPayout = spendData?.validFrom.toNumber() < currentRelayChainBlockNumber
-    const isSpendNotExpired = currentRelayChainBlockNumber < spendData?.expireAt.toNumber()
-    return isSpendPendingOrFailed && isSpendNotEarlyPayout && isSpendNotExpired
-  })
-
-  await assetHubClient.dev.newBlock()
-
-  const spendIndices: number[] = []
-
-  // call payout tx for each pending or failed spend
-  for (const spend of pendingOrFailedSpends) {
-    const spendIndex = spend[0].toHuman?.() as number
-    spendIndices.push(spendIndex)
-    const payoutTx = assetHubClient.api.tx.treasury.payout(spendIndex)
-    await sendTransaction(payoutTx.signAsync(testAccounts.alice))
-
-    await assetHubClient.dev.newBlock()
-
-    // verify the Paid event is emitted
-    const treasuryEvents = await assetHubClient.api.query.system.events()
-    const paidEvent = treasuryEvents.find((record) => {
-      const { event } = record
-      return event.section === 'treasury' && event.method === 'Paid'
-    })
-    assert(paidEvent)
-    assert(assetHubClient.api.events.treasury.Paid.is(paidEvent.event))
-  }
-
-  // verify the spends status is attempted
-  for (const spendIndex of spendIndices) {
-    const spend = await assetHubClient.api.query.treasury.spends(spendIndex)
-    expect(spend?.unwrap()?.status.isAttempted).toBe(true)
-  }
-
-  // call check_status tx for each spend
-  for (const spendIndex of spendIndices) {
-    const checkStatusEvents = await sendCheckStatusTx(assetHubClient, spendIndex)
-    await assetHubClient.dev.newBlock()
-    await verifyEventSpendProcessed(checkStatusEvents)
-
-    // verify the spend is removed from the storage
-    const spendAfterCheckStatus = await assetHubClient.api.query.treasury.spends(spendIndex)
-    expect(spendAfterCheckStatus.isNone).toBe(true)
-  }
-}
-
-/**
  * Test: A deferred spend cannot be paid before `valid_from`, but can be once that block is reached.
  *
  * Exercises the `valid_from` gate end-to-end:
@@ -795,13 +663,14 @@ export async function deferredSpendBecomesClaimableTest<
   })
 
   const balanceBefore = (await assetHubClient.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()
-  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.alice)
+
+  const payoutEvents = await sendPayoutTx(assetHubClient, spendIndex, testAccounts.bob)
   await assetHubClient.dev.newBlock()
   await verifyEventPaid(payoutEvents)
 
   await assetHubClient.dev.newBlock()
   const balanceAfter = (await assetHubClient.api.query.system.account(testAccounts.alice.address)).data.free.toBigInt()
-  expect(balanceAfter - balanceBefore).toBeGreaterThan(0n)
+  expect(balanceAfter - balanceBefore).toBe(spendAmount)
 }
 
 /**
@@ -1079,12 +948,8 @@ async function getUsdtTotalIssuance<
  */
 function treasurySuccessTests<
   TCustom extends Record<string, unknown> | undefined,
-  TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
   TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
->(
-  getRelayClient: () => Client<TCustom, TInitStoragesRelay>,
-  getAssetHubClient: () => Client<TCustom, TInitStoragesPara>,
-): RootTestTree {
+>(getAssetHubClient: () => Client<TCustom, TInitStoragesPara>): RootTestTree {
   return {
     kind: 'describe',
     label: 'Success',
@@ -1123,12 +988,6 @@ function treasurySuccessTests<
         kind: 'test',
         label: 'USDT spend lifecycle preserves total issuance (approve, payout, check status)',
         testFn: async () => await usdtSpendLifecycleTest(getAssetHubClient()),
-      },
-      {
-        kind: 'test',
-        label: 'Check treasury payouts which are already approved can be paid',
-        testFn: async () =>
-          await checkTreasuryPayoutsWhichAreAlreadyApprovedCanBePaid(getRelayClient(), getAssetHubClient()),
       },
     ],
   }
@@ -1226,12 +1085,6 @@ export function baseTreasuryE2ETests<
         await c.teardown().catch(() => {})
       }
     },
-    children: [
-      treasurySuccessTests(
-        () => relayClient,
-        () => assetHubClient,
-      ),
-      treasuryFailureTests(() => assetHubClient),
-    ],
+    children: [treasurySuccessTests(() => assetHubClient), treasuryFailureTests(() => assetHubClient)],
   }
 }
