@@ -105,7 +105,7 @@ exports[`Polkadot Asset Hub Treasury > Success > Propose and approve a spend of 
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > payout events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > payout events 1`] = `
 [
   {
     "data": {
@@ -118,7 +118,7 @@ exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, 
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > spend processed events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > spend processed events 1`] = `
 [
   {
     "data": {
@@ -130,7 +130,7 @@ exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, 
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > treasury spend approval events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",

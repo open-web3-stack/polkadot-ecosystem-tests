@@ -835,11 +835,16 @@ export async function checkStatusRemovesExpiredSpendTest<
 }
 
 /**
- * Test: Full lifecycle of a USDT (assets-pallet asset id 1984) spend.
+ * Test: Full lifecycle of a USDT (assets-pallet asset id 1984) spend, asserting total issuance is preserved.
  *
  * Mirrors the native lifecycle (approve → payout → check_status) but spends a non-native asset, asserting
  * the beneficiary's *assets-pallet* USDT balance increases. Setup ensures the treasury pot holds USDT and
  * that an asset-rate conversion exists (required by the pallet's `BalanceConverter` permission check).
+ *
+ * The AH treasury pays via `PayOverXcm`, so the payout runs through the XCM executor's fungible-deposit
+ * path. This test additionally asserts USDT **total issuance on Asset Hub is unchanged** across the payout,
+ * validating the imbalance-tracking introduced by polkadot-sdk#10384 (the beneficiary's credit is balanced
+ * by the treasury's debit, not an unaccounted mint). See `treasury_xcm_imbalance_test.md`.
  */
 export async function usdtSpendLifecycleTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -874,6 +879,11 @@ export async function usdtSpendLifecycleTest<
 
   const spendAmount = 100n * 1_000_000n // 100 USDT (6 decimals)
   const balanceBefore = await getUsdtBalance(assetHubClient, testAccounts.alice.address)
+  // Capture USDT total issuance before the payout. The AH treasury pays via `PayOverXcm`, so the payout
+  // runs through the XCM executor's fungible-deposit path — the code rewritten by polkadot-sdk#10384 to
+  // track imbalances in holding. A correct payout transfers USDT from the treasury to the beneficiary
+  // without changing the asset's total issuance.
+  const issuanceBefore = await getUsdtTotalIssuance(assetHubClient)
 
   // Approve the USDT spend.
   const spendIndex = await createApprovedSpend(assetHubClient, spendAmount, SPEND_ORIGIN, null, USDT_ASSET_KIND)
@@ -892,6 +902,11 @@ export async function usdtSpendLifecycleTest<
   await assetHubClient.dev.newBlock()
   const balanceAfter = await getUsdtBalance(assetHubClient, testAccounts.alice.address)
   expect(balanceAfter - balanceBefore).toBe(spendAmount)
+
+  // The XCM-executed payout must not change USDT total issuance on Asset Hub: the beneficiary's gain is
+  // matched by the treasury's loss, not by an unbalanced mint (validates polkadot-sdk#10384).
+  const issuanceAfter = await getUsdtTotalIssuance(assetHubClient)
+  expect(issuanceAfter).toBe(issuanceBefore)
 
   // Finalize: check_status removes the processed spend.
   const checkStatusEvents = await sendCheckStatusTx(assetHubClient, spendIndex)
@@ -1046,6 +1061,17 @@ export async function checkStatusNotAttemptedTest<
 }
 
 /**
+ * Helper: USDT (assets pallet) total issuance on Asset Hub, `0n` if the asset is absent.
+ */
+async function getUsdtTotalIssuance<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStoragesPara extends Record<string, Record<string, any>> | undefined,
+>(assetHubClient: Client<TCustom, TInitStoragesPara>): Promise<bigint> {
+  const asset = await assetHubClient.api.query.assets.asset(USDT_ASSET_ID)
+  return asset.isNone ? 0n : asset.unwrap().supply.toBigInt()
+}
+
+/**
  * Success-path sub-suite: the treasury spend lifecycle behaves as specified.
  *
  * Clients are passed as getter thunks so the shared `let`-bound clients (assigned in the root suite's
@@ -1095,7 +1121,7 @@ function treasurySuccessTests<
       },
       {
         kind: 'test',
-        label: 'USDT spend lifecycle (approve, payout, check status)',
+        label: 'USDT spend lifecycle preserves total issuance (approve, payout, check status)',
         testFn: async () => await usdtSpendLifecycleTest(getAssetHubClient()),
       },
       {
