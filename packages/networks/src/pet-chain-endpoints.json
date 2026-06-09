@@ -51,7 +51,9 @@
     "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
-    "wss://rpc.hydradx.cloud"
+    "wss://hydration-rpc.n.dwellir.com",
+    "wss://rpc.hydradx.cloud",
+    "wss://rpc.helikon.io/hydradx"
   ],
   "moonbeam": [
     "wss://wss.api.moonbeam.network"
