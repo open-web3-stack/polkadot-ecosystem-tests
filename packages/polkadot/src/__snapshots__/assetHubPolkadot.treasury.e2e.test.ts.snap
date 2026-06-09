@@ -1,6 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > payout events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Check status cleans up an expired, never-paid spend > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > payout events 1`] = `
 [
   {
     "data": {
@@ -13,7 +25,7 @@ exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it fro
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > spend processed events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > spend processed events 1`] = `
 [
   {
     "data": {
@@ -25,7 +37,7 @@ exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it fro
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it from the storage if processed > treasury spend approval events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",
@@ -35,7 +47,7 @@ exports[`Polkadot Asset Hub Treasury > Check status of a spend and remove it fro
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Check treasury payouts which are already approved can be paid > spend processed events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Check treasury payouts which are already approved can be paid > spend processed events 1`] = `
 [
   {
     "data": {
@@ -47,7 +59,7 @@ exports[`Polkadot Asset Hub Treasury > Check treasury payouts which are already 
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Claim a spend > payout events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Claim a spend > payout events 1`] = `
 [
   {
     "data": {
@@ -60,7 +72,7 @@ exports[`Polkadot Asset Hub Treasury > Claim a spend > payout events 1`] = `
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Claim a spend > treasury spend approval events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Claim a spend > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",
@@ -70,7 +82,20 @@ exports[`Polkadot Asset Hub Treasury > Claim a spend > treasury spend approval e
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Propose and approve a spend of treasury funds > treasury spend approval events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Deferred spend cannot be paid before valid_from but can be paid after > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Treasury > Success > Propose and approve a spend of treasury funds > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",
@@ -80,7 +105,32 @@ exports[`Polkadot Asset Hub Treasury > Propose and approve a spend of treasury f
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Void previously approved spend > treasury spend approval events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Treasury > Success > USDT spend lifecycle (approve, payout, check status) > treasury spend approval events 1`] = `
 [
   {
     "data": "(redacted)",
@@ -90,7 +140,17 @@ exports[`Polkadot Asset Hub Treasury > Void previously approved spend > treasury
 ]
 `;
 
-exports[`Polkadot Asset Hub Treasury > Void previously approved spend > treasury spend voided events 1`] = `
+exports[`Polkadot Asset Hub Treasury > Success > Void previously approved spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Treasury > Success > Void previously approved spend > treasury spend voided events 1`] = `
 [
   {
     "data": {
