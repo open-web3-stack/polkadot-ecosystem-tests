@@ -1,6 +1,5 @@
 {
   "description": "Canonical Snowbridge full halt / full resume governance preimages. Reviewed by the Polkadot Fellowship and executed against forked live chains by polkadot-ecosystem-tests. Verify an operator-generated preimage by comparing its hash against the matching hash here.",
-  "generatedWith": "@snowbridge/api 1.1.9",
   "generatedAt": "2026-06-11",
   "assetHubRuntime": {
     "specName": "statemint",
