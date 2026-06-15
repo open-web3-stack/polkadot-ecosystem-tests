@@ -201,12 +201,12 @@ const getInitStorages = (config: typeof custom.assetHubPolkadot | typeof custom.
   return baseStorages
 }
 
-const assetHubProperties = (addressEncoding: number) =>
+const assetHubProperties = (addressEncoding: number, relayBlocksPerParaBlock: number) =>
   ({
     addressEncoding,
     proxyBlockProvider: 'NonLocal',
     schedulerBlockProvider: 'NonLocal',
-    relayBlocksPerParaBlock: 2,
+    relayBlocksPerParaBlock,
     feeExtractor: standardFeeExtractor,
   }) as const
 
@@ -218,7 +218,7 @@ export const assetHubPolkadot = defineChain({
   networkGroup: 'polkadot',
   custom: custom.assetHubPolkadot,
   initStorages: getInitStorages(custom.assetHubPolkadot),
-  properties: assetHubProperties(0),
+  properties: assetHubProperties(0, 4),
 })
 
 // Asset Hub Kusama (SS58: 2)
@@ -229,7 +229,7 @@ export const assetHubKusama = defineChain({
   networkGroup: 'kusama',
   custom: custom.assetHubKusama,
   initStorages: getInitStorages(custom.assetHubKusama),
-  properties: assetHubProperties(2),
+  properties: assetHubProperties(2, 4),
 })
 
 // Asset Hub Westend (SS58: 42) — includes PSM and recovery init storages
@@ -240,5 +240,5 @@ export const assetHubWestend = defineChain({
   networkGroup: 'westend',
   custom: custom.assetHubWestend,
   initStorages: getAhwInitStorages(custom.assetHubWestend),
-  properties: assetHubProperties(42),
+  properties: assetHubProperties(42, 4),
 })
