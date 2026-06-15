@@ -62,6 +62,7 @@ describe('Snowbridge governance halt/resume preimage', async () => {
     })
     await sendTransaction(assetHub.api.tx.preimage.notePreimage(entry.callData).signAsync(defaultAccounts.alice))
     await assetHub.dev.newBlock()
+    // Preimage length in bytes: hex string minus the "0x" prefix, 2 chars per byte.
     const len = (entry.callData.length - 2) / 2
     await scheduleLookupCallWithOrigin(assetHub, { hash: entry.hash, len }, { system: 'Root' }, blockProvider)
     await assetHub.dev.newBlock()
