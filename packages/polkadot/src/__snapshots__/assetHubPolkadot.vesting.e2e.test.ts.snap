@@ -71,7 +71,7 @@ exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > ves
   {
     "data": {
       "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 210000000)",
+      "unvested": "(rounded 120000000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -92,7 +92,7 @@ exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > ves
   {
     "data": {
       "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 620000000)",
+      "unvested": "(rounded 340000000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -105,7 +105,7 @@ exports[`Polkadot Asset Hub Vesting > test merger of two vesting schedules > ves
   {
     "data": {
       "account": "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L",
-      "unvested": "(rounded 510000000)",
+      "unvested": "(rounded 120000000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",

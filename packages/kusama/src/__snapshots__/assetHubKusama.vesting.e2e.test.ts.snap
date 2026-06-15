@@ -71,7 +71,7 @@ exports[`Kusama Asset Hub Vesting > test merger of two vesting schedules > vesti
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 6900000)",
+      "unvested": "(rounded 3800000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -92,7 +92,7 @@ exports[`Kusama Asset Hub Vesting > test merger of two vesting schedules > vesti
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 21000000)",
+      "unvested": "(rounded 11000000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
@@ -105,7 +105,7 @@ exports[`Kusama Asset Hub Vesting > test merger of two vesting schedules > vesti
   {
     "data": {
       "account": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
-      "unvested": "(rounded 17000000)",
+      "unvested": "(rounded 3900000)",
     },
     "method": "VestingUpdated",
     "section": "vesting",
