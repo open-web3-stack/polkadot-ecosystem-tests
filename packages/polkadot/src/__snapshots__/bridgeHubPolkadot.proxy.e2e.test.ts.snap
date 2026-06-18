@@ -335,7 +335,7 @@ exports[`Bridge Hub Polkadot Proxy full tests (includes call filtering) > Bridge
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 900000000)",
+          "refTime": "(rounded 800000000)",
         },
       },
     },

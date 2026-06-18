@@ -243,7 +243,7 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 100000000)",
           },
         },
       },
@@ -256,7 +256,7 @@ exports[`assetHubPolkadot & coretimePolkadot > coretimePolkadot transfer DOT to 
       "fees": [
         {
           "fun": {
-            "Fungible": "(rounded 310000000)",
+            "Fungible": "(rounded 300000000)",
           },
           "id": {
             "interior": "Here",

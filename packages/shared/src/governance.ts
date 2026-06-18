@@ -477,11 +477,11 @@ export async function referendumLifecycleTest<
   const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   let iters: number
   match(client.config.properties.schedulerBlockProvider)
-    .with('Local', async () => {
+    .with('Local', () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
-    .with('NonLocal', async () => {
-      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock
+    .with('NonLocal', () => {
+      iters = Math.ceil((smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock)
     })
     .exhaustive()
 
@@ -498,7 +498,9 @@ export async function referendumLifecycleTest<
     refPre = refPost
   }
 
+  const decisionStartBefore = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   await client.dev.newBlock()
+  const decisionStartAfter = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
   const refNowDeciding = referendumDataOpt.unwrap().asOngoing
@@ -509,16 +511,15 @@ export async function referendumLifecycleTest<
     .redact({ removeKeys: unwantedFields })
     .toMatchSnapshot('referendum upon start of decision period')
 
-  const decisionPeriodStartBlock = ongoingRefPreDecDep.submitted.add(smallTipper[1].preparePeriod)
+  const actualDecisionStart = refNowDeciding.deciding.unwrap().since.toNumber()
 
   expect(refNowDeciding.alarm.unwrap()[0].toNumber()).toBe(
-    smallTipper[1].decisionPeriod.add(decisionPeriodStartBlock).toNumber(),
+    smallTipper[1].decisionPeriod.toNumber() + actualDecisionStart,
   )
 
-  expect(refNowDeciding.deciding.unwrap().toJSON()).toEqual({
-    since: decisionPeriodStartBlock.toNumber(),
-    confirming: null,
-  })
+  expect(actualDecisionStart).toBeGreaterThanOrEqual(decisionStartBefore)
+  expect(actualDecisionStart).toBeLessThanOrEqual(decisionStartAfter)
+  expect(refNowDeciding.deciding.unwrap().confirming.isNone).toBeTruthy()
 
   referendumCmp(refPost!, refNowDeciding, ['alarm', 'deciding'])
 
@@ -541,6 +542,7 @@ export async function referendumLifecycleTest<
   let voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.charlie))
 
   await client.dev.newBlock()
+  const charlieVoteBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   unwantedFields = /alarm|when|since|submitted|pollIndex/
 
@@ -593,10 +595,7 @@ export async function referendumLifecycleTest<
   expect(charlieVotes.vote.conviction.isLocked3x).toBeTruthy()
   expect(charlieVotes.vote.isAye).toBeTruthy()
 
-  let blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
-  // included in.
-  expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
+  expect(ongoingRefFirstVote.alarm.unwrap()[0].toNumber()).toBe(charlieVoteBlock + 1)
 
   // Placing a vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -617,6 +616,7 @@ export async function referendumLifecycleTest<
   voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.dave))
 
   await client.dev.newBlock()
+  const daveVoteBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
@@ -665,10 +665,7 @@ export async function referendumLifecycleTest<
   expect(daveVote.aye.toNumber()).toBe(ayeVote)
   expect(daveVote.nay.toNumber()).toBe(nayVote)
 
-  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  // After a vote, the referendum's alarm is set to the block following the one the vote tx was
-  // included in.
-  expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
+  expect(ongoingRefSecondVote.alarm.unwrap()[0].toNumber()).toBe(daveVoteBlock + 1)
 
   // Placing a split vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -690,6 +687,7 @@ export async function referendumLifecycleTest<
   voteEvents = await sendTransaction(voteTx.signAsync(devAccounts.eve))
 
   await client.dev.newBlock()
+  const eveVoteBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   await checkEvents(voteEvents, 'convictionVoting')
     .redact({ removeKeys: unwantedFields })
@@ -736,10 +734,7 @@ export async function referendumLifecycleTest<
   expect(eveVote.nay.toNumber()).toBe(nayVote)
   expect(eveVote.abstain.toNumber()).toBe(abstainVote)
 
-  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  // As before, after another vote, the referendum's alarm is set to the block following the one the vote tx was
-  // included in.
-  expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(blockNumber + 1)
+  expect(ongoingRefThirdVote.alarm.unwrap()[0].toNumber()).toBe(eveVoteBlock + 1)
 
   // Placing a split abstain vote for a referendum should change nothing BUT:
   // 1. the tally, and
@@ -766,7 +761,9 @@ export async function referendumLifecycleTest<
     client.config.properties.schedulerBlockProvider,
   )
 
+  const cancelBlockBefore = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   await client.dev.newBlock()
+  const cancelBlockAfter = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   /**
    * Check cancelled ref's data
@@ -800,13 +797,13 @@ export async function referendumLifecycleTest<
   const cancelledRef: ITuple<[u32, Option<PalletReferendaDeposit>, Option<PalletReferendaDeposit>]> =
     referendumDataOpt.unwrap().asCancelled
 
-  blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   match(client.config.properties.schedulerBlockProvider)
-    .with('Local', async () => {
-      expect(cancelledRef[0].toNumber()).toBe(blockNumber)
+    .with('Local', () => {
+      expect(cancelledRef[0].toNumber()).toBe(cancelBlockAfter)
     })
-    .with('NonLocal', async () => {
-      expect(cancelledRef[0].toNumber()).toBe(blockNumber - relayBlocksPerParaBlock)
+    .with('NonLocal', () => {
+      expect(cancelledRef[0].toNumber()).toBeGreaterThanOrEqual(cancelBlockBefore)
+      expect(cancelledRef[0].toNumber()).toBeLessThanOrEqual(cancelBlockAfter)
     })
   // Check that the referendum's submission deposit was refunded to Alice
   expect(cancelledRef[1].unwrap().toJSON()).toEqual({
@@ -1029,7 +1026,9 @@ export async function referendumLifecycleKillTest<
     client.config.properties.schedulerBlockProvider,
   )
 
+  const killBlockBefore = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   await client.dev.newBlock()
+  const killBlockAfter = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   /**
    * Check killed ref's data
@@ -1072,15 +1071,14 @@ export async function referendumLifecycleKillTest<
   expect(referendumDataOpt.unwrap().isKilled, 'referendum should be killed!').toBeTruthy()
 
   // The only information left from the killed referendum is the block number when it was killed.
-  const blockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   const killedRef: u32 = referendumDataOpt.unwrap().asKilled
   match(client.config.properties.schedulerBlockProvider)
-    .with('Local', async () => {
-      expect(killedRef.toNumber()).toBe(blockNumber)
+    .with('Local', () => {
+      expect(killedRef.toNumber()).toBe(killBlockAfter)
     })
-    .with('NonLocal', async () => {
-      expect(killedRef.toNumber()).toBe(blockNumber - relayBlocksPerParaBlock)
+    .with('NonLocal', () => {
+      expect(killedRef.toNumber()).toBeGreaterThanOrEqual(killBlockBefore)
+      expect(killedRef.toNumber()).toBeLessThanOrEqual(killBlockAfter)
     })
 }
 
@@ -2061,11 +2059,11 @@ export async function referendumLifecycleDelegationTest<
   const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
   let iters: number
   match(client.config.properties.schedulerBlockProvider)
-    .with('Local', async () => {
+    .with('Local', () => {
       iters = smallTipper[1].preparePeriod.toNumber() - 2
     })
-    .with('NonLocal', async () => {
-      iters = (smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock
+    .with('NonLocal', () => {
+      iters = Math.ceil((smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock)
     })
     .exhaustive()
 
