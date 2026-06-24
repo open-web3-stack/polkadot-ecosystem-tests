@@ -309,13 +309,6 @@ exports[`Polkadot Registrar > pallet registrar - register functions > cannot reg
 [
   {
     "data": {
-      "account": "14ZQ7PzpuvAEcez8TRayovTcaKWgCebyQcAG4YZqJfSNAP9T",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
       "dispatchError": {
         "Module": {
           "error": "0x04000000",

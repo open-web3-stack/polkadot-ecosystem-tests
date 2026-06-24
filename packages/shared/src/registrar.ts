@@ -376,13 +376,13 @@ export async function paraRegisteringE2ETest<
   const MAX_HEAD_DATA_SIZE = 1 * 1024 * 1024
   const oversizedGenesisHead = u8aToHex(new Uint8Array(MAX_HEAD_DATA_SIZE + 1))
 
-  const oversizedHeadEvents = await sendTransaction(
+  await sendTransaction(
     client.api.tx.registrar
       .register(paraId, oversizedGenesisHead, MINIMAL_VALIDATION_CODE)
       .signAsync(devAccounts.alice),
   )
   await client.dev.newBlock()
-  await checkEvents(oversizedHeadEvents, 'system').toMatchSnapshot(
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
     'cannot register para with genesis head > MAX_HEAD_DATA_SIZE',
   )
 

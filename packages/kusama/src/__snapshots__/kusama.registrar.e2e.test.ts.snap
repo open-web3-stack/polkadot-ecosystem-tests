@@ -309,13 +309,6 @@ exports[`Kusama Registrar > pallet registrar - register functions > cannot regis
 [
   {
     "data": {
-      "account": "F4kHxtHvXrPntqBYznvwbuGAd46ZVQpmUVqumvJG64ciFUQ",
-    },
-    "method": "NewAccount",
-    "section": "system",
-  },
-  {
-    "data": {
       "dispatchError": {
         "Module": {
           "error": "0x04000000",
