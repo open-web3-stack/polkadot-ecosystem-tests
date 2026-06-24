@@ -63,6 +63,7 @@ async function testVestedTransfer<
   const vestedTransferEvents = await sendTransaction(vestedTransferTx.signAsync(alice))
 
   await client.dev.newBlock()
+  const firstVestBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   await checkEvents(vestedTransferEvents, 'vesting').toMatchSnapshot('vest events')
 
@@ -78,9 +79,8 @@ async function testVestedTransfer<
   expect(vestingUpdatedEvent.account.toString()).toBe(
     encodeAddress(bob.address, client.config.properties.addressEncoding),
   )
-  // The vesting schedule began before the vested transfer, so two blocks' worth of unvesting should be deducted from
-  // the unvested amount in the event emitted in this block.
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 2 * offset)
+  const firstElapsed = firstVestBlock - (currBlockNumber - offset)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * firstElapsed)
 
   // The act of vesting does not change the `Vesting` storage item - to see how much was unlocked, events
   // must be queried.
@@ -104,6 +104,7 @@ async function testVestedTransfer<
   const vestOtherEvents = await sendTransaction(vestOtherTx.signAsync(alice))
 
   await client.dev.newBlock()
+  const secondVestBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   await checkEvents(vestOtherEvents, 'vesting').toMatchSnapshot('vest other events')
 
@@ -124,7 +125,8 @@ async function testVestedTransfer<
   expect(vestingUpdatedEvent.account.toString()).toBe(
     encodeAddress(bob.address, client.config.properties.addressEncoding),
   )
-  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * 3 * offset)
+  const secondElapsed = secondVestBlock - (currBlockNumber - offset)
+  expect(vestingUpdatedEvent.unvested.toNumber()).toBe(locked - perRelayBlock * secondElapsed)
 
   // Check Bob's free and frozen balances after Alice's vesting
 
@@ -134,33 +136,52 @@ async function testVestedTransfer<
 
   // As Bob advance his own vesting schedule
 
-  const vestTx = client.api.tx.vesting.vest()
-  const vestEvents = await sendTransaction(vestTx.signAsync(bob))
+  let vestEvents: Awaited<ReturnType<typeof sendTransaction>> | undefined
+  let finalEvents: FrameSystemEventRecord[] = []
+  let vestingEvents: FrameSystemEventRecord[] = []
+  let balanceWithdrawalEvents: FrameSystemEventRecord[] = []
+  let vestingCompletedEvent: any
+  let balEv: FrameSystemEventRecord | undefined
+  let totalVestWithdrawn = 0
 
-  await client.dev.newBlock()
+  for (let i = 0; i < 4; i++) {
+    const vestTx = client.api.tx.vesting.vest()
+    vestEvents = await sendTransaction(vestTx.signAsync(bob))
+    await client.dev.newBlock()
 
-  await checkEvents(vestEvents, 'vesting').toMatchSnapshot('vest events')
+    finalEvents = await client.api.query.system.events()
+    vestingEvents = []
+    balanceWithdrawalEvents = []
 
-  events = await client.api.query.system.events()
+    finalEvents.forEach((record) => {
+      const { event } = record
+      if (event.section === 'vesting') {
+        vestingEvents.push(record)
+      } else if (event.section === 'balances' && event.method === 'Withdraw') {
+        balanceWithdrawalEvents.push(record)
+      }
+    })
 
-  const vestingEvents: FrameSystemEventRecord[] = []
-  const balanceWithdrawalEvents: FrameSystemEventRecord[] = []
-
-  events.forEach((record) => {
-    const { event } = record
-    if (event.section === 'vesting') {
-      vestingEvents.push(record)
-    } else if (event.section === 'balances' && event.method === 'Withdraw') {
-      balanceWithdrawalEvents.push(record)
+    for (const record of balanceWithdrawalEvents) {
+      if (client.api.events.balances.Withdraw.is(record.event)) {
+        const withdrawal = record.event.data
+        if (withdrawal.who.toString() === encodeAddress(bob.address, client.config.properties.addressEncoding)) {
+          totalVestWithdrawn += withdrawal.amount.toNumber()
+        }
+      }
     }
-  })
 
-  // There should only have been one vesting event and one balance withdrawal event.
-  const [ev3] = vestingEvents
-  const [balEv] = balanceWithdrawalEvents
+    const completed = vestingEvents.find((record) => client.api.events.vesting.VestingCompleted.is(record.event))
+    if (completed) {
+      await checkEvents(vestEvents, 'vesting').toMatchSnapshot('vest events')
+      vestingCompletedEvent = completed.event.data
+      ;[balEv] = balanceWithdrawalEvents
+      break
+    }
+  }
 
-  assert(client.api.events.vesting.VestingCompleted.is(ev3.event))
-  const vestingCompletedEvent = ev3.event.data
+  assert(vestingCompletedEvent)
+  assert(balEv)
   expect(vestingCompletedEvent.account.toString()).toBe(
     encodeAddress(bob.address, client.config.properties.addressEncoding),
   )
@@ -176,10 +197,8 @@ async function testVestedTransfer<
     encodeAddress(bob.address, client.config.properties.addressEncoding),
   )
 
-  // Net of the fees from having called `vest` once, Bob's balance should the the vested amount, plus his initial
-  // balance.
   bobAccount = await client.api.query.system.account(bob.address)
-  expect(bobAccount.data.free.toNumber()).toBe(bobBalance + locked - balanceWithdrawalEvent.amount.toNumber())
+  expect(bobAccount.data.free.toNumber()).toBe(bobBalance + locked - totalVestWithdrawn)
   expect(bobAccount.data.frozen.toNumber()).toBe(0)
 }
 
@@ -427,7 +446,7 @@ async function testMergeVestingSchedules<
   await checkEvents(vestingEvents1, 'vesting').toMatchSnapshot('vesting events 1')
   await checkEvents(vestingEvents2, 'vesting').toMatchSnapshot('vesting events 2')
 
-  currBlockNumber += offset
+  currBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   // Check that two vesting schedules were created.
 
@@ -443,7 +462,7 @@ async function testMergeVestingSchedules<
 
   await client.dev.newBlock()
 
-  currBlockNumber += offset
+  currBlockNumber = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
 
   await checkEvents(mergeVestingEvents, 'vesting').toMatchSnapshot('vesting schedules merger events')
 
@@ -454,11 +473,16 @@ async function testMergeVestingSchedules<
   const mergedVestingSchedule = vestingBalance2.unwrap()[0]
   // Merging schedules will unlock hitherto unvested funds, so the locked amount is the sum of the two schedules'
   // locked amounts, minus the sum of the two schedules' unvested amounts.
-  const newLocked = locked1 + locked2 - (perBlock1 * 3 * offset + perBlock2 * 4 * offset)
+  const unlocked1 = perBlock1 * (currBlockNumber - (initialBlockNumber - offset))
+  const unlocked2 = perBlock2 * (currBlockNumber - (initialBlockNumber - offset * 2))
+  const newLocked = locked1 + locked2 - (unlocked1 + unlocked2)
   expect(mergedVestingSchedule.locked.toNumber()).toBe(newLocked)
 
   // The remainder of the merged schedule's duration should be the longest of the two schedules.
-  const blocksToUnlock = Math.max(blocksToUnlock1 - 3 * offset, blocksToUnlock2 - 4 * offset)
+  const blocksToUnlock = Math.max(
+    blocksToUnlock1 - (currBlockNumber - (initialBlockNumber - offset)),
+    blocksToUnlock2 - (currBlockNumber - (initialBlockNumber - offset * 2)),
+  )
   const newPerBlock = Math.floor(newLocked / blocksToUnlock)
   expect(mergedVestingSchedule.perBlock.toNumber()).toBe(newPerBlock)
   expect(mergedVestingSchedule.startingBlock.toNumber()).toBe(
