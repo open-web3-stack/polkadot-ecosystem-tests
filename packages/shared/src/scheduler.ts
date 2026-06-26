@@ -2931,9 +2931,9 @@ export function baseSchedulerE2ETests<
     label: testConfig.testSuiteName,
     beforeAll: async () => {
       ;[client] = await createNetworks(chain)
-      // The DAP pallet periodically mints inflation rewards (dap.IssuanceMinted), which changes
-      // total issuance unpredictably during block production on live forks. Push its next trigger
-      // far enough into the future that it won't fire during tests.
+      // Clear leftover scheduler agenda and DAP inflation state from the fork so they
+      // don't inject extra events or issuance changes into the test's block sequence.
+      await client.dev.setStorage({ Scheduler: { incompleteSince: null } })
       if (client.api.query.dap?.lastIssuanceTimestamp) {
         const farFuture = (await client.api.query.timestamp.now()).toNumber() + 365 * 24 * 3600 * 1000
         await client.dev.setStorage({ Dap: { lastIssuanceTimestamp: farFuture } })
