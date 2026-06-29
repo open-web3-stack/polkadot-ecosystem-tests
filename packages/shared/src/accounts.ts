@@ -4242,8 +4242,10 @@ export const accountsE2ETests = <
       }
     },
     afterAll: async () => {
-      await baseClient.api.disconnect().catch(() => {})
-      await baseClient.teardown().catch(() => {})
+      if (baseClient) {
+        await baseClient.api.disconnect().catch(() => {})
+        await baseClient.teardown().catch(() => {})
+      }
       if (relayClient) {
         await relayClient.api.disconnect().catch(() => {})
         await relayClient.teardown().catch(() => {})

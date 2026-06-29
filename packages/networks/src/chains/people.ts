@@ -52,7 +52,7 @@ export const peoplePolkadot = defineChain({
     addressEncoding: 0,
     proxyBlockProvider: 'NonLocal',
     schedulerBlockProvider: 'NonLocal',
-    relayBlocksPerParaBlock: 2,
+    relayBlocksPerParaBlock: 4,
     feeExtractor: standardFeeExtractor,
   },
 })

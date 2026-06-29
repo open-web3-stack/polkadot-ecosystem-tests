@@ -933,7 +933,14 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x07000000",
+            "index": 89,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1767,7 +1774,14 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x07000000",
+            "index": 89,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
@@ -1858,7 +1872,14 @@ exports[`Polkadot AssetHub Proxy full tests (includes call filtering) > filterin
 [
   {
     "data": {
-      "result": "Ok",
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x07000000",
+            "index": 89,
+          },
+        },
+      },
     },
     "method": "ProxyExecuted",
     "section": "proxy",
