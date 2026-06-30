@@ -28,6 +28,10 @@ import {
 /// Helpers
 /// -------
 
+// 100% expressed as a Perbill — used to uncap maxCommission in tests so that
+// commission-related assertions are not silently clamped by the chain.
+const PERBILL_100_PERCENT = 1_000_000_000
+
 /**
  * Locate the block number at which the current era ends.
  *
@@ -225,6 +229,9 @@ async function stakingLifecycleTest<
       // Min val bond + 1000 EDs for fees (to be safe)
       account: validators.map((v) => [[v.address], { providers: 1, data: { free: minValBond + ed * 1000n } }]),
     },
+    Staking: {
+      maxCommission: PERBILL_100_PERCENT,
+    },
   })
 
   ///
@@ -240,7 +247,6 @@ async function stakingLifecycleTest<
     await checkEvents(bondEvents, 'staking').toMatchSnapshot(`validator ${index} bond events`)
   }
 
-  // Use the network's minimum validator commission.
   const minValidatorCommission = await client.api.query.staking.minCommission()
 
   const eraNumberOpt = await client.api.query.staking.currentEra()
@@ -630,6 +636,9 @@ async function setMinCommission<
     System: {
       account: [[[alice.address], { providers: 1, data: { free: 100000e10 } }]],
     },
+    Staking: {
+      maxCommission: PERBILL_100_PERCENT,
+    },
   })
 
   const preMinCommission = (await client.api.query.staking.minCommission()).toNumber()
@@ -857,6 +866,9 @@ async function forceApplyValidatorCommissionTest<
         [[alice.address], { providers: 1, data: { free: (minValidatorBond * 15n) / 10n } }],
         [[bob.address], { providers: 1, data: { free: 100e10 } }],
       ],
+    },
+    Staking: {
+      maxCommission: PERBILL_100_PERCENT,
     },
   })
 
