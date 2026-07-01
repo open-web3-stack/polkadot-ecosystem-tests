@@ -1,0 +1,108 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Fellowship whitelists a call on Kusama Asset Hub over the bridge > fellowship whitelistCall reaches Kusama Asset Hub via the P↔K bridge > collectives sends fellowship whitelist xcm toward kusama 1`] = `
+[
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 1000,
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "message": [
+        {
+          "UnpaidExecution": {
+            "checkOrigin": null,
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "InitiateTransfer": {
+            "assets": [],
+            "destination": {
+              "interior": {
+                "X2": [
+                  {
+                    "GlobalConsensus": "Kusama",
+                  },
+                  {
+                    "Parachain": 1000,
+                  },
+                ],
+              },
+              "parents": 2,
+            },
+            "preserveOrigin": true,
+            "remoteFees": null,
+            "remoteXcm": [
+              {
+                "Transact": {
+                  "call": {
+                    "encoded": "0x5e000101010101010101010101010101010101010101010101010101010101010101",
+                  },
+                  "fallbackMaxWeight": null,
+                  "originKind": "Xcm",
+                },
+              },
+              {
+                "ExpectTransactStatus": "Success",
+              },
+            ],
+          },
+        },
+      ],
+      "messageId": "(redacted)",
+      "origin": {
+        "interior": {
+          "X2": [
+            {
+              "Plurality": {
+                "id": "Technical",
+                "part": "Voice",
+              },
+            },
+            {
+              "GeneralIndex": 3,
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+]
+`;
+
+exports[`Polkadot Fellowship whitelists a call on Kusama Asset Hub over the bridge > fellowship whitelistCall reaches Kusama Asset Hub via the P↔K bridge > kusama asset hub whitelists the call via the bridged fellowship origin 1`] = `
+[
+  {
+    "data": {
+      "callHash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    },
+    "method": "CallWhitelisted",
+    "section": "whitelist",
+  },
+  {
+    "data": {
+      "id": "(redacted)",
+      "origin": {
+        "Sibling": "(rounded 1000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 5000)",
+        "refTime": "(rounded 200000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+]
+`;
