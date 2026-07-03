@@ -190,17 +190,19 @@ These include:
     - `bypassConsistencyCheck` flag enabled → inconsistent values accepted unconditionally
      - Asserting that all configuration setters fail when called with a signed (non-Root) origin
 - E2E test suite for the Fellowship salary pallet on Polkadot Collectives:
-  - Full salary lifecycle: induct, register, payout via real extrinsics, with time
-    fast-forwarded by manipulating `fellowshipSalary.status.cycleStart`
-  - Salary status storage invariants across cycle transitions (cycle index, budget,
-    registration totals)
-  - Cross-chain payment: salary payout dispatches XCM from Collectives to Asset Hub,
-    verifying USDT delivery to an explicit beneficiary via `payoutOther`
+  - Full salary lifecycle: `induct` → `bump` → `register` → `payout`, verifying
+    claimant state transitions and XCM dispatch at each step
+  - Cycle status invariants: budget reset on `bump`, `totalRegistrations` accumulation
+    after `register`, `totalUnregisteredPaid` tracking after unregistered payout
+  - Cross-chain payment: `payout` dispatches XCM from Collectives to Asset Hub,
+    verifying USDT delivery to the member; `payoutOther` verifies delivery to an
+    explicit beneficiary
+  - Unregistered payout: a fellow who missed registration still receives payment from
+    the residual budget pot after all registered members are paid
+  - Proration: when total registrations exceed the cycle budget, individual payouts are
+    reduced proportionally
   - All salary amounts and period lengths read from live chain state
-    (`fellowshipCore.params()`, `fellowshipSalary` constants), not hardcoded
-  - Seeding strategy: prerequisite state (collective membership, claimant status when
-    not the subject of the test) is injected via Chopsticks storage manipulation; the
-    extrinsic under test is always exercised for real
+    (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
