@@ -188,7 +188,19 @@ These include:
     - Inconsistent base + inconsistent new value → accepted (recovery path)
     - Inconsistent base + consistent new value → accepted
     - `bypassConsistencyCheck` flag enabled → inconsistent values accepted unconditionally
-  - Asserting that all configuration setters fail when called with a signed (non-Root) origin
+     - Asserting that all configuration setters fail when called with a signed (non-Root) origin
+- E2E test suite for the Fellowship salary pallet on Polkadot Collectives:
+  - Full salary lifecycle: induct, register, payout via real extrinsics, with time
+    fast-forwarded by manipulating `fellowshipSalary.status.cycleStart`
+  - Salary status storage invariants across cycle transitions (cycle index, budget,
+    registration totals)
+  - Cross-chain payment: salary payout dispatches XCM from Collectives to Asset Hub,
+    verifying USDT delivery to an explicit beneficiary via `payoutOther`
+  - All salary amounts and period lengths read from live chain state
+    (`fellowshipCore.params()`, `fellowshipSalary` constants), not hardcoded
+  - Seeding strategy: prerequisite state (collective membership, claimant status when
+    not the subject of the test) is injected via Chopsticks storage manipulation; the
+    extrinsic under test is always exercised for real
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
