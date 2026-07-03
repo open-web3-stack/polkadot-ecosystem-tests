@@ -95,9 +95,9 @@ const HOLLAR_PASSIVE_SALARY = [
 
 /**
  * Current fellowship member counts per rank (as of 2026-07-03).
- * Index 0 = rank 1. Ranks 8-9 have no members.
+ * Index 0 = rank 1. Derived from cumulative memberCount (55, 35, 21, 11, 5, 2, 1, 0, 0).
  */
-const MEMBERS_PER_RANK = [55, 35, 21, 11, 5, 2, 1, 0, 0]
+const MEMBERS_PER_RANK = [20, 14, 10, 6, 3, 1, 1, 0, 0]
 const MAX_RANK = MEMBERS_PER_RANK.length
 
 /// ---------
