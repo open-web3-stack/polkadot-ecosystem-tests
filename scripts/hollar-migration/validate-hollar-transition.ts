@@ -52,8 +52,8 @@ const SALARY_SOVEREIGN = '13w7NdvSR1Af8xsQTArDtZmVvjE8XhWNdL4yed3iFHrUNCnS'
 const HOLLAR_DECIMALS = 18
 const HOLLAR_UNITS = 10n ** BigInt(HOLLAR_DECIMALS)
 
-/** Budget large enough to pay all test members without pro-rata reduction. */
-const HOLLAR_BUDGET = 1_000_000n * HOLLAR_UNITS
+/** Proposed budget from the migration referendum. */
+const HOLLAR_BUDGET = 400_000n * HOLLAR_UNITS
 
 /**
  * Post-migration active salaries by rank (index 0 = rank 1).
@@ -93,8 +93,12 @@ const HOLLAR_PASSIVE_SALARY = [
   8_333_333_333_333_333_333_333n,
 ]
 
-const MEMBERS_PER_RANK = 5
-const MAX_RANK = 9
+/**
+ * Current fellowship member counts per rank (as of 2026-07-03).
+ * Index 0 = rank 1. Ranks 8-9 have no members.
+ */
+const MEMBERS_PER_RANK = [55, 35, 21, 11, 5, 2, 1, 0, 0]
+const MAX_RANK = MEMBERS_PER_RANK.length
 
 /// ---------
 /// Helpers
@@ -143,7 +147,7 @@ interface TestMember {
  *    - seed 4 of 5 members per rank with DOT (for existential deposit)
  *    - leave 1 member per rank WITHOUT DOT to demonstrate XCM failure
  * 3. Set salary asset to Hollar via Parameters.parameters on Collectives
- * 4. Seed 45 test members on Collectives (5 per rank, ranks 1-9) with claimant state
+ * 4. Seed test members on Collectives (real distribution, ranks 1-7) with claimant state
  * 5. Bump to a new salary cycle
  * 6. Register all 45 members for salary
  * 7. Advance to payout window, then call payout for all members
@@ -168,21 +172,26 @@ async function main() {
     const members: TestMember[] = []
 
     for (let rank = 1; rank <= MAX_RANK; rank++) {
-      for (let i = 0; i < MEMBERS_PER_RANK; i++) {
+      const count = MEMBERS_PER_RANK[rank - 1]
+      for (let i = 0; i < count; i++) {
         members.push({
           signer: keyring.addFromUri(`//hollar_test_r${rank}_${i}`),
           rank,
           expectedSalary: HOLLAR_ACTIVE_SALARY[rank - 1],
-          hasDotOnAH: i !== 0,
+          hasDotOnAH: count === 1 || i !== 0,
         })
       }
     }
 
+    const activeRanks = MEMBERS_PER_RANK.filter((c) => c > 0).length
     const withDot = members.filter((m) => m.hasDotOnAH).length
     const withoutDot = members.filter((m) => !m.hasDotOnAH).length
-    console.log(`Test members: ${members.length} (${MEMBERS_PER_RANK} per rank, ranks 1-${MAX_RANK})`)
+    console.log(`Test members: ${members.length} (real distribution across ${activeRanks} ranks)`)
+    for (let rank = 1; rank <= MAX_RANK; rank++) {
+      if (MEMBERS_PER_RANK[rank - 1] > 0) console.log(`  Rank ${rank}: ${MEMBERS_PER_RANK[rank - 1]} members`)
+    }
     console.log(`  With DOT on AH: ${withDot}`)
-    console.log(`  Without DOT:    ${withoutDot} (1 per rank - expect XCM failure)`)
+    console.log(`  Without DOT:    ${withoutDot} (1 per active rank - expect XCM failure)`)
 
     // 1. Verify Hollar exists on Asset Hub (bridged from Hydration)
     console.log('\n--- 1. Checking Hollar on Asset Hub ---')
@@ -322,23 +331,39 @@ async function main() {
     await assetHubClient.dev.newBlock()
 
     // 8. Verify members WITH DOT received correct Hollar amount for their rank
+    //    When totalRegistrations > budget, payouts are prorated: (salary * budget) / totalRegistrations
+    const totalRegistrations = BigInt(statusAfterReg.totalRegistrations)
+    const prorated = totalRegistrations > HOLLAR_BUDGET
+    if (prorated) {
+      console.log(
+        `\n  ⚠ Budget oversubscribed: ${formatHollar(totalRegistrations)} registered vs ${formatHollar(HOLLAR_BUDGET)} budget`,
+      )
+      console.log(`    Payouts will be prorated to ${Number((HOLLAR_BUDGET * 10000n) / totalRegistrations) / 100}%`)
+    }
+
     console.log('\n=== 8. Results: Members WITH DOT ===')
     let passCount = 0
 
     for (let rank = 1; rank <= MAX_RANK; rank++) {
       const rankMembersWithDot = members.filter((m) => m.rank === rank && m.hasDotOnAH)
-      const expected = HOLLAR_ACTIVE_SALARY[rank - 1]
+      if (rankMembersWithDot.length === 0) continue
+      const fullSalary = HOLLAR_ACTIVE_SALARY[rank - 1]
+      const expected = prorated ? (fullSalary * HOLLAR_BUDGET) / totalRegistrations : fullSalary
       let allPass = true
 
       for (const m of rankMembersWithDot) {
         const received = await hollarBalance(ahApi, m.signer.address)
-        if (received !== expected) allPass = false
+        const diff = received > expected ? received - expected : expected - received
+        if (diff > HOLLAR_UNITS / 100n) allPass = false
       }
 
       const sampleReceived = await hollarBalance(ahApi, rankMembersWithDot[0].signer.address)
       if (allPass) passCount++
 
-      console.log(`  Rank ${rank}: ${formatHollar(sampleReceived)} / ${formatHollar(expected)} ${allPass ? '✓' : '✗'}`)
+      const label = prorated
+        ? `${formatHollar(sampleReceived)} / ${formatHollar(expected)} (prorated from ${formatHollar(fullSalary)})`
+        : `${formatHollar(sampleReceived)} / ${formatHollar(expected)}`
+      console.log(`  Rank ${rank}: ${label} ${allPass ? '✓' : '✗'}`)
     }
 
     // 9. Verify members WITHOUT DOT received nothing (XCM failed silently)
@@ -346,7 +371,8 @@ async function main() {
     let noDotFailures = 0
 
     for (let rank = 1; rank <= MAX_RANK; rank++) {
-      const noDotMember = members.find((m) => m.rank === rank && !m.hasDotOnAH)!
+      const noDotMember = members.find((m) => m.rank === rank && !m.hasDotOnAH)
+      if (!noDotMember) continue
       const expected = HOLLAR_ACTIVE_SALARY[rank - 1]
       const received = await hollarBalance(ahApi, noDotMember.signer.address)
 
@@ -360,9 +386,15 @@ async function main() {
 
     // 10. Verify sovereign balance: failed payouts did not drain the treasury
     const sovBalAfter = await hollarBalance(ahApi, SALARY_SOVEREIGN)
-    const expectedDrain = members.filter((m) => m.hasDotOnAH).reduce((sum, m) => sum + m.expectedSalary, 0n)
+    const expectedDrain = members
+      .filter((m) => m.hasDotOnAH)
+      .reduce((sum, m) => {
+        const salary = prorated ? (m.expectedSalary * HOLLAR_BUDGET) / totalRegistrations : m.expectedSalary
+        return sum + salary
+      }, 0n)
     const actualDrain = sovBalBefore - sovBalAfter
-    const treasuryCorrect = actualDrain === expectedDrain
+    const drainDiff = actualDrain > expectedDrain ? actualDrain - expectedDrain : expectedDrain - actualDrain
+    const treasuryCorrect = drainDiff <= (HOLLAR_UNITS / 100n) * BigInt(members.filter((m) => m.hasDotOnAH).length)
 
     console.log('\n=== 10. Treasury integrity ===')
     console.log(`  Sovereign before: ${formatHollar(sovBalBefore)}`)
@@ -371,14 +403,16 @@ async function main() {
       `  Drained:          ${formatHollar(actualDrain)} (expected ${formatHollar(expectedDrain)}) ${treasuryCorrect ? '✓' : '✗'}`,
     )
 
+    const ranksWithNoDotMembers = MEMBERS_PER_RANK.filter((c) => c > 1).length
+
     console.log('\n=== Summary ===')
-    console.log(`  With DOT:    ${passCount}/${MAX_RANK} ranks received correct Hollar`)
-    console.log(`  Without DOT: ${noDotFailures}/${MAX_RANK} ranks failed (expected - no ED)`)
+    console.log(`  With DOT:    ${passCount}/${activeRanks} ranks received correct Hollar`)
+    console.log(`  Without DOT: ${noDotFailures}/${ranksWithNoDotMembers} ranks failed (expected - no ED)`)
     console.log(
-      `  Treasury:    ${treasuryCorrect ? 'correct - failed payouts not drained' : 'WRONG - unexpected drain'} `,
+      `  Treasury:    ${treasuryCorrect ? 'correct - failed payouts not drained' : 'WRONG - unexpected drain'}`,
     )
 
-    const success = passCount === MAX_RANK && noDotFailures === MAX_RANK && treasuryCorrect
+    const success = passCount === activeRanks && noDotFailures === ranksWithNoDotMembers && treasuryCorrect
     console.log(`\n${success ? 'PASS' : 'FAIL'}: Hollar transfers succeed with DOT, fail without, treasury intact`)
     if (!success) process.exitCode = 1
   } finally {
