@@ -142,19 +142,19 @@ interface TestMember {
 /**
  * Validate the full Fellowship salary payout flow with Hollar as the salary asset.
  *
- * 1. Verify Hollar exists on Asset Hub (bridged from Hydration) and check isSufficient
- * 2. Seed the Fellowship Salary sovereign account with Hollar on Asset Hub
- *    - seed 4 of 5 members per rank with DOT (for existential deposit)
- *    - leave 1 member per rank WITHOUT DOT to demonstrate XCM failure
+ * Phase 1 — demonstrate isSufficient: false problem:
+ * 1. Verify Hollar exists on Asset Hub and check isSufficient
+ * 2. Seed sovereign Hollar balance; give DOT to all members EXCEPT 1 per rank
  * 3. Set salary asset to Hollar via Parameters.parameters on Collectives
- * 4. Seed test members on Collectives (real distribution, ranks 1-7) with claimant state
- * 5. Bump to a new salary cycle
- * 6. Register all 45 members for salary
- * 7. Advance to payout window, then call payout for all members
- *    - this triggers XCM TransferAsset from Collectives to Asset Hub
- * 8. Verify members WITH DOT received correct Hollar amount for their rank
- * 9. Verify members WITHOUT DOT received nothing (XCM failed silently)
- * 10. Verify sovereign balance: failed payouts did not drain the treasury
+ * 4. Seed test members on Collectives (real distribution, ranks 1-7)
+ * 5. Bump → register → payout cycle
+ * 6. Verify members with DOT received Hollar; members without DOT got nothing
+ * 7. Verify treasury integrity
+ *
+ * Phase 2 — fix with forceAssetStatus:
+ * 8. Call foreignAssets.forceAssetStatus to set isSufficient: true
+ * 9. Re-run the salary cycle for the previously-failed members (no DOT)
+ * 10. Verify they now receive Hollar without needing DOT
  */
 async function main() {
   console.log('=== Hollar Salary Migration Validation ===\n')
@@ -412,9 +412,113 @@ async function main() {
       `  Treasury:    ${treasuryCorrect ? 'correct - failed payouts not drained' : 'WRONG - unexpected drain'}`,
     )
 
-    const success = passCount === activeRanks && noDotFailures === ranksWithNoDotMembers && treasuryCorrect
-    console.log(`\n${success ? 'PASS' : 'FAIL'}: Hollar transfers succeed with DOT, fail without, treasury intact`)
-    if (!success) process.exitCode = 1
+    const phase1Pass = passCount === activeRanks && noDotFailures === ranksWithNoDotMembers && treasuryCorrect
+    console.log(
+      `\nPhase 1 ${phase1Pass ? 'PASS' : 'FAIL'}: Hollar transfers succeed with DOT, fail without, treasury intact`,
+    )
+    if (!phase1Pass) {
+      process.exitCode = 1
+      return
+    }
+
+    // =========================================================================
+    // Phase 2: Fix with forceAssetStatus → isSufficient: true
+    // =========================================================================
+
+    // 8. Simulate forceAssetStatus(isSufficient: true) — the proposed referendum call
+    console.log('\n--- 8. Making Hollar isSufficient (simulating forceAssetStatus) ---')
+    const currentAsset = (await ahApi.query.foreignAssets.asset(HOLLAR_LOCATION)).unwrap()
+    await assetHubClient.dev.setStorage({
+      ForeignAssets: {
+        asset: [
+          [
+            [HOLLAR_LOCATION],
+            {
+              ...currentAsset.toJSON(),
+              isSufficient: true,
+            },
+          ],
+        ],
+      },
+    })
+
+    const updatedAsset = (await ahApi.query.foreignAssets.asset(HOLLAR_LOCATION)).unwrap()
+    console.log(`  isSufficient: ${updatedAsset.isSufficient.isTrue ? 'YES ✓' : 'NO ✗ (fix failed)'}`)
+    if (!updatedAsset.isSufficient.isTrue) {
+      console.log('\nFAIL: could not set isSufficient')
+      process.exitCode = 1
+      return
+    }
+    console.log('  (In production: foreignAssets.forceAssetStatus via relay XCM referendum)')
+
+    // 9. Re-run salary cycle for the no-DOT members
+    console.log('\n--- 9. Re-running salary cycle for previously-failed members ---')
+    const noDotMembers = members.filter((m) => !m.hasDotOnAH)
+
+    const block2 = await currentBlock(collectivesClient)
+    await collectivesClient.dev.setStorage({
+      FellowshipSalary: {
+        claimant: noDotMembers.map((m) => [
+          [m.signer.address],
+          { lastActive: statusAfterBump.cycleIndex, status: { nothing: null } },
+        ]),
+        status: {
+          cycleIndex: statusAfterBump.cycleIndex + 1,
+          cycleStart: block2 - cyclePeriod - 1,
+          budget: HOLLAR_BUDGET.toString(),
+          totalRegistrations: '0',
+          totalUnregisteredPaid: '0',
+        },
+      },
+    })
+
+    await sendTransaction(cApi.tx.fellowshipSalary.bump().signAsync(noDotMembers[0].signer))
+    await collectivesClient.dev.newBlock()
+
+    for (const m of noDotMembers) {
+      await sendTransaction(cApi.tx.fellowshipSalary.register().signAsync(m.signer))
+    }
+    await collectivesClient.dev.newBlock()
+
+    const block3 = await currentBlock(collectivesClient)
+    const statusPhase2 = (await cApi.query.fellowshipSalary.status()).toJSON() as any
+    await collectivesClient.dev.setStorage({
+      FellowshipSalary: {
+        status: { ...statusPhase2, cycleStart: block3 - registrationPeriod - 1 },
+      },
+    })
+
+    for (const m of noDotMembers) {
+      await sendTransaction(cApi.tx.fellowshipSalary.payout().signAsync(m.signer))
+    }
+    await collectivesClient.dev.newBlock()
+    await assetHubClient.dev.newBlock()
+
+    // 10. Verify previously-failed members now received Hollar without DOT
+    console.log('\n=== 10. Results: Previously-failed members (no DOT, now sufficient) ===')
+    let phase2PassCount = 0
+
+    for (let rank = 1; rank <= MAX_RANK; rank++) {
+      const noDotMember = noDotMembers.find((m) => m.rank === rank)
+      if (!noDotMember) continue
+      const expected = HOLLAR_ACTIVE_SALARY[rank - 1]
+      const received = await hollarBalance(ahApi, noDotMember.signer.address)
+      const diff = received > expected ? received - expected : expected - received
+      const pass = diff <= HOLLAR_UNITS / 100n
+      if (pass) phase2PassCount++
+
+      console.log(`  Rank ${rank}: ${formatHollar(received)} / ${formatHollar(expected)} ${pass ? '✓' : '✗'}`)
+    }
+
+    console.log('\n=== Final Summary ===')
+    console.log(`  Phase 1: ${phase1Pass ? 'PASS' : 'FAIL'} — isSufficient: false blocks unfunded members`)
+    console.log(
+      `  Phase 2: ${phase2PassCount}/${ranksWithNoDotMembers} — forceAssetStatus(isSufficient: true) fixes it`,
+    )
+
+    const phase2Pass = phase2PassCount === ranksWithNoDotMembers
+    console.log(`\n${phase1Pass && phase2Pass ? 'PASS' : 'FAIL'}: forceAssetStatus resolves the isSufficient problem`)
+    if (!phase2Pass) process.exitCode = 1
   } finally {
     process.exit(process.exitCode ?? 0)
   }
