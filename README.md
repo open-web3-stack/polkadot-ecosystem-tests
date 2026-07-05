@@ -177,6 +177,10 @@ These include:
   - ceiling dynamics: per-asset and global debt ceilings, weight normalisation, interactions
     between assets at their respective ceilings
   - reserve integrity: minting within/exceeding global ceiling, debt accumulation, over-redemption
+- E2E test for cross-consensus bridge scenarios:
+  - Fellowship whitelists a call on Kusama Asset Hub over the Polkadot-Kusama bridge
+    (Collectives -> Asset Hub Polkadot -> Bridge Hub Polkadot -> Bridge Hub Kusama -> Asset Hub Kusama)
+  - Uses chopsticks' `connectBridgeHubs` to relay bridge messages between forked chains
 - E2E test suite for the `configuration` pallet on relay chains:
   - Scheduling configuration updates via Root origin across all parameter groups: core (code size, PoV size, upgrade cooldown/delay), scheduler (group rotation, availability period, lookahead, validators per core), dispute resolution, message queue (upward/downward queue limits), HRMP channel parameters, and advanced parameters (PVF voting TTL, async backing params, executor params, approval voting, node features)
   - Verifying that the pending config entry is scheduled for session index `currentIndex + 2`
