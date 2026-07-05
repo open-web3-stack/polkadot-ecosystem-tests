@@ -19,13 +19,16 @@ type BridgeHandle = Awaited<ReturnType<typeof connectBridgeHubs>>
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-// Wait until `api`'s tx pool holds a transaction (bounded by `timeoutMs`). `connectBridgeHubs` submits
-// the bridge delivery into the pool out of band, so polling lets the test build the applying block as
-// soon as it lands.
-const waitForPoolTx = async (api: ApiPromise, timeoutMs = 20_000) => {
+// connectBridgeHubs submits the bridge delivery tx out of band, so we poll until it lands in the
+// pool before building the block that applies it. Throws on timeout so failures point here
+// instead of producing a confusing snapshot mismatch downstream.
+const waitForPoolTx = async (api: ApiPromise, timeoutMs = 30_000) => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline && (await api.rpc.author.pendingExtrinsics()).length === 0) {
     await delay(200)
+  }
+  if ((await api.rpc.author.pendingExtrinsics()).length === 0) {
+    throw new Error(`No transaction appeared in the pool within ${timeoutMs}ms`)
   }
 }
 
