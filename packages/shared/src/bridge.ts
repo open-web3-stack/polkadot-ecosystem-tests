@@ -34,15 +34,18 @@ const waitForPoolTx = async (api: ApiPromise, timeoutMs = 30_000) => {
 
 /**
  * The Polkadot Technical Fellowship (on Collectives) whitelists a call on Kusama Asset Hub over the
- * P↔K bridge. Kusama Asset Hub maps the bridged Fellowship location
- * `[GlobalConsensus(Polkadot), Parachain(1001), Plurality{Technical,Voice}, GeneralIndex(rank)]` to its
- * whitelist origin.
+ * P↔K bridge. Collectives has no bridge router, so it routes through sibling Asset Hub Polkadot,
+ * which forwards over the bridge with `InitiateTransfer { preserveOrigin: true }` to re-anchor the
+ * Fellowship origin onto Kusama Asset Hub.
  *
  *   Collectives --HRMP--> Asset Hub Polkadot --bridge--> Bridge Hub Kusama --HRMP--> Asset Hub Kusama
  *
- * Collectives has no bridge router, so it routes through sibling Asset Hub Polkadot, which forwards over
- * the bridge with `InitiateTransfer { preserveOrigin: true }` to re-anchor the Fellowship origin onto
- * Kusama Asset Hub. The bridge hop is relayed by chopsticks' `connectBridgeHubs`.
+ * 1. Collectives sends `polkadotXcm.send` under Fellowship origin toward sibling Asset Hub Polkadot
+ * 2. Asset Hub Polkadot forwards via `InitiateTransfer` over the bridge to Kusama Asset Hub
+ * 3. Bridge Hub Polkadot exports the message; `connectBridgeHubs` relays it to Bridge Hub Kusama
+ * 4. Bridge Hub Kusama delivers via HRMP to Asset Hub Kusama
+ * 5. Asset Hub Kusama executes `whitelist.whitelistCall` under the bridged Fellowship origin
+ * 6. Assert `whitelist.CallWhitelisted` on Asset Hub Kusama
  */
 export function fellowshipWhitelistsCallOverBridge(
   collectivesChain: Chain,
@@ -144,29 +147,28 @@ export function fellowshipWhitelistsCallOverBridge(
             ],
           }
 
-          // Collectives sends it to sibling Asset Hub Polkadot under the Fellowship origin.
+          // 1. Collectives sends polkadotXcm.send under Fellowship origin toward Asset Hub Polkadot
           const send = collectives.api.tx.polkadotXcm
             .send({ V5: assetHubPolkadotDest }, xcmForAssetHubPolkadot)
             .method.toHex() as HexString
           await scheduleInlineCallWithOrigin(collectives, send, { FellowshipOrigins: 'Fellows' })
-
-          // HRMP between forked chains is delivered synchronously inside `dev.newBlock`, so the HRMP
-          // hops need no waiting; only the bridge hop is async.
           await collectives.dev.newBlock()
           await checkSystemEvents(collectives, 'polkadotXcm')
             .redact({ hash: false, redactKeys: /messageId/ })
             .toMatchSnapshot('collectives sends fellowship whitelist xcm toward kusama')
 
-          // Asset Hub Polkadot forwards over the bridge (export to Bridge Hub Polkadot's outbound lane).
+          // 2-3. Asset Hub Polkadot forwards via InitiateTransfer; Bridge Hub Polkadot exports
           await ahPolkadot.dev.newBlock()
           await bhPolkadot.dev.newBlock()
 
-          // The connector reacts to Bridge Hub Polkadot's head out of band and submits the delivery into
-          // Bridge Hub Kusama's pool; wait for it, then build the block that applies it.
+          // 4. Bridge Hub Kusama receives the delivery (connectBridgeHubs relays it async)
           await waitForPoolTx(bhKusama.api)
-          await bhKusama.dev.newBlock() // apply the delivery → HRMP to Kusama Asset Hub
-          await ahKusama.dev.newBlock() // Kusama Asset Hub executes whitelist.whitelistCall
+          await bhKusama.dev.newBlock()
 
+          // 5. Asset Hub Kusama executes whitelist.whitelistCall under the bridged Fellowship origin
+          await ahKusama.dev.newBlock()
+
+          // 6. Assert CallWhitelisted on Asset Hub Kusama
           await checkSystemEvents(ahKusama, 'whitelist', 'messageQueue')
             .redact({ hash: false, redactKeys: /id/ })
             .toMatchSnapshot('kusama asset hub whitelists the call via the bridged fellowship origin')
