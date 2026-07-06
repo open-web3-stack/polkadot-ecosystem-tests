@@ -41,7 +41,10 @@
     "wss://dot-rpc.stakeworld.io/people"
   ],
   "acala": [
-    "wss://rpc-acala.luckyfriday.io"
+    "wss://acala-rpc.n.dwellir.com",
+    "wss://acala-rpc.aca-api.network",
+    "wss://rpc-acala.luckyfriday.io",
+    "wss://acala-polkadot.api.onfinality.io/public-ws"
   ],
   "bifrostPolkadot": [
     "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
@@ -91,6 +94,7 @@
   ],
   "karura": [
     "wss://karura-rpc.n.dwellir.com",
+    "wss://karura-rpc.aca-api.network",
     "wss://rpc-karura.luckyfriday.io",
     "wss://karura.api.onfinality.io/public-ws"
   ],
