@@ -68,12 +68,7 @@ const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
 /// Types
 /// -------
 
-/**
- * Salary-related parameters read from `fellowshipCore.params()`.
- *
- * These arrays are runtime-configured by Fellowship rank and are consumed by the salary pallet when
- * determining registration amounts, promotion timing, and offboarding behavior.
- */
+/** Salary parameters from `fellowshipCore.params()`. */
 export interface FellowshipSalaryParams {
   activeSalary: bigint[]
   passiveSalary: bigint[]
@@ -82,12 +77,7 @@ export interface FellowshipSalaryParams {
   offboardTimeout: number
 }
 
-/**
- * Normalized salary runtime configuration assembled from storage and constants.
- *
- * This combines `fellowshipCore.params()` with `fellowshipSalary` constants so tests can reason about
- * windows and payout amounts using a single TypeScript shape.
- */
+/** Salary runtime config from storage and pallet constants. */
 export interface FellowshipSalaryRuntimeConfig {
   params: FellowshipSalaryParams
   registrationPeriod: number
@@ -96,12 +86,7 @@ export interface FellowshipSalaryRuntimeConfig {
   budget: bigint
 }
 
-/**
- * Decoded representation of `fellowshipSalary.status`, when present.
- *
- * The chain stores this as an optional status struct; the helper readers in this file map it into this
- * more ergonomic TypeScript object.
- */
+/** Decoded `fellowshipSalary.status` value. */
 export interface FellowshipSalaryStatus {
   cycleIndex: number
   cycleStart: number
@@ -110,12 +95,7 @@ export interface FellowshipSalaryStatus {
   totalUnregisteredPaid: bigint
 }
 
-/**
- * Decoded representation of `fellowshipSalary.claimant(address)`.
- *
- * The underlying runtime enum has three variants; this type flattens them into a discriminated union-like
- * object that is easier to assert on in tests.
- */
+/** Decoded `fellowshipSalary.claimant(address)` value. */
 export interface FellowshipSalaryClaimantState {
   lastActive: number
   kind: 'nothing' | 'registered' | 'attempted'
@@ -128,63 +108,33 @@ export interface FellowshipSalaryClaimantState {
 /// Internal helpers
 /// -------
 
-/**
- * Create a deterministic keypair for salary tests from a URI seed.
- *
- * Test-specific seeds such as `//salary_raw_member` produce isolated accounts whose addresses remain
- * stable across runs, making storage seeding and event assertions reproducible.
- */
+/** Create a deterministic keypair from a URI seed for salary tests. */
 function createSalaryTestMember(seed: string): KeyringPair {
   return testAccounts.keyring.createFromUri(seed)
 }
 
-/**
- * Assert that salary status exists and return the narrowed value.
- *
- * Many helpers require the salary cycle to have been initialized already, so this serves as a compact
- * assertion guard that turns a nullable read into a concrete status object.
- */
+/** Assert salary status exists; return the unwrapped value. */
 function requireSalaryStatus(status: FellowshipSalaryStatus | null): FellowshipSalaryStatus {
   assert(status !== null, 'Expected fellowship salary status to exist')
   return status
 }
 
-/**
- * Read the current chain head number.
- *
- * This tiny wrapper exists so cycle-window helpers can express their intent in salary-domain terms rather
- * than repeating the raw RPC call each time.
- */
+/** Read current chain head block number. */
 async function currentBlockNumber(client: Client<any, any>): Promise<number> {
   return (await client.api.rpc.chain.getHeader()).number.toNumber()
 }
 
-/**
- * Read the current block's system events.
- *
- * Salary helpers frequently submit one extrinsic and then inspect the produced events, so this keeps those
- * call sites terse and consistent.
- */
+/** Read current block system events. */
 async function systemEvents(client: Client<any, any>) {
   return await client.api.query.system.events()
 }
 
-/**
- * Check whether an event list contains an event matching a Polkadot.js event matcher.
- *
- * This is used for optional event families where the exact pallet can differ across runtimes, such as the
- * source-side XCM dispatch event emitted during salary payout.
- */
+/** Return whether events contain the matched event. */
 function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | undefined): boolean {
   return matcher ? events.some(({ event }) => matcher.is(event)) : false
 }
 
-/**
- * Assert that the salary payout source chain emitted an XCM dispatch signal.
- *
- * Depending on runtime wiring, the outbound dispatch can surface as either `xcmpQueue.XcmpMessageSent` or
- * `polkadotXcm.Sent`. This helper accepts either to prove the payout left Collectives toward Asset Hub.
- */
+/** Assert the source chain emitted an outbound XCM event. */
 function expectSourceChainXcmDispatch(client: Client<any, any>, events: any[]): void {
   expect(
     hasEvent(events, client.api.events.xcmpQueue?.XcmpMessageSent) ||
@@ -197,12 +147,7 @@ function expectSourceChainXcmDispatch(client: Client<any, any>, events: any[]): 
 /// Storage readers
 /// -------
 
-/**
- * Read the salary runtime configuration from live chain state.
- *
- * This pulls rank-dependent salary parameters from `fellowshipCore.params()` and combines them with the
- * `fellowshipSalary` pallet constants for registration period, payout period, and budget.
- */
+/** Read salary runtime config from live chain state. */
 export async function readSalaryRuntimeConfig(client: Client<any, any>): Promise<FellowshipSalaryRuntimeConfig> {
   const params = await (client.api.query as any).fellowshipCore.params()
   const paramsJson = params.toJSON() as {
@@ -231,12 +176,7 @@ export async function readSalaryRuntimeConfig(client: Client<any, any>): Promise
   }
 }
 
-/**
- * Read `fellowshipSalary.status` and map the optional chain value into a nullable TypeScript object.
- *
- * The runtime stores cycle status in an `Option`; tests generally want either a decoded object or `null`
- * without having to deal with codec wrappers.
- */
+/** Read `fellowshipSalary.status`; return `null` when absent. */
 export async function readSalaryStatus(client: Client<any, any>): Promise<FellowshipSalaryStatus | null> {
   const status = (await client.api.query.fellowshipSalary.status()) as any
   if (status.isNone) return null
@@ -251,12 +191,7 @@ export async function readSalaryStatus(client: Client<any, any>): Promise<Fellow
   }
 }
 
-/**
- * Read and decode a salary claimant entry for a given Fellowship member.
- *
- * The on-chain claimant status is a three-variant enum: no registration yet, currently registered, or a
- * payout attempt already recorded. This helper discriminates those variants into a test-friendly shape.
- */
+/** Read and decode `fellowshipSalary.claimant(address)`. */
 export async function readSalaryClaimant(
   client: Client<any, any>,
   address: string,
@@ -304,12 +239,7 @@ export async function readSalaryClaimant(
   }
 }
 
-/**
- * Return the active salary configured for a Fellowship rank.
- *
- * `pallet-core-fellowship` stores rank salaries in zero-indexed arrays even though ranks are one-indexed,
- * so rank `n` must be read from array slot `n - 1`.
- */
+/** Return active salary for the given Fellowship rank. */
 export function activeSalaryForRank(params: FellowshipSalaryParams, rank: number): bigint {
   expect(rank).toBeGreaterThan(0)
   expect(rank).toBeLessThanOrEqual(params.activeSalary.length)
@@ -319,12 +249,7 @@ export function activeSalaryForRank(params: FellowshipSalaryParams, rank: number
   return params.activeSalary[rank - 1]
 }
 
-/**
- * Read a Hollar balance from Asset Hub's `ForeignAssets` storage.
- *
- * Salary payouts land as the foreign asset at `HOLLAR_ASSET_LOCATION`, so tests query
- * `ForeignAssets.account(location, address)` and default to zero when no account exists.
- */
+/** Read Hollar balance from Asset Hub `ForeignAssets`. */
 export async function hollarBalance(assetHubClient: Client<any, any>, address: string): Promise<bigint> {
   const balance = (await assetHubClient.api.query.foreignAssets.account(HOLLAR_ASSET_LOCATION, address)) as any
   return balance.isSome ? (balance.unwrap() as any).balance.toBigInt() : 0n
@@ -334,13 +259,7 @@ export async function hollarBalance(assetHubClient: Client<any, any>, address: s
 /// Storage writers/seeders
 /// -------
 
-/**
- * Seed a fresh Dan-3 Fellowship member directly into the storages required by salary tests.
- *
- * This injects: a funded `System.account`, ranked-collective membership/indexing entries, and active
- * `FellowshipCore.member` state. Together these make the account look like a live Dan-3 Fellow without
- * having to exercise the full governance onboarding path in each test.
- */
+/** Seed a funded Dan-3 Fellowship member for salary tests. */
 export async function seedDan3SalaryMember(
   client: Client<any, any>,
   member: KeyringPair,
@@ -378,15 +297,10 @@ export async function seedDan3SalaryMember(
 }
 
 /**
- * Seed a member's salary claimant state directly into `fellowshipSalary.claimant`.
+ * Seed `fellowshipSalary.claimant` directly.
  *
- * Tests that do not exercise `induct()` or `register()` use this to place the claimant into the
- * required state without invoking the extrinsics under test. The claimant struct mirrors
- * `ClaimantStatus` from `pallet-salary/src/lib.rs`.
- *
- * @param lastActive   The cycle index the claimant last interacted in.
- * @param status       One of `'Nothing'`, `{ Registered: amount }`, or
- *                     `{ Attempted: { registered, id, amount } }`, matching the runtime enum.
+ * @param lastActive Cycle index of the claimant's last interaction.
+ * @param status Runtime claimant status variant.
  */
 export async function seedSalaryClaimant(
   client: Client<any, any>,
@@ -401,13 +315,7 @@ export async function seedSalaryClaimant(
   })
 }
 
-/**
- * Seed the salary sovereign's Hollar balance on Asset Hub.
- *
- * Salary payouts are funded out of the sovereign account via `ForeignAssets`, so tests preload that account
- * with enough Hollar to satisfy the expected payment flow. The asset metadata (accounts, supply) is also
- * updated to keep the storage consistent with the new account entry.
- */
+/** Seed the salary sovereign Hollar balance on Asset Hub. */
 export async function fundSalarySovereignHollar(assetHubClient: Client<any, any>, amount: bigint): Promise<void> {
   const assetInfo = (await assetHubClient.api.query.foreignAssets.asset(HOLLAR_ASSET_LOCATION)) as any
   const currentAccounts = assetInfo.isSome ? assetInfo.unwrap().accounts.toNumber() : 0
@@ -430,11 +338,7 @@ export async function fundSalarySovereignHollar(assetHubClient: Client<any, any>
   })
 }
 
-/**
- * Ensure a member has a DOT balance on Asset Hub for existential deposit.
- *
- * Required when Hollar is not a sufficient asset: XCM transfers to accounts without DOT will fail.
- */
+/** Ensure a member has DOT on Asset Hub for existential deposit. */
 export async function ensureMemberHasDotOnAssetHub(assetHubClient: Client<any, any>, address: string): Promise<void> {
   const ED = 10n ** 10n
   await assetHubClient.dev.setStorage({
@@ -448,12 +352,7 @@ export async function ensureMemberHasDotOnAssetHub(assetHubClient: Client<any, a
 /// Time manipulation
 /// -------
 
-/**
- * Ensure the salary cycle has been initialized, starting it if necessary.
- *
- * Live forks usually already have salary running, but older blocks may predate the first cycle. This helper
- * is intentionally idempotent so tests can call it unconditionally.
- */
+/** Ensure the salary cycle exists; call `init()` when needed. */
 export async function ensureSalaryCycleStarted(
   client: Client<any, any>,
   signer: KeyringPair,
@@ -469,12 +368,7 @@ export async function ensureSalaryCycleStarted(
   return requireSalaryStatus(await readSalaryStatus(client))
 }
 
-/**
- * Rewrite only the `cycleStart` field of the live salary status.
- *
- * Tests use this internal helper to move the chain logically into a different salary window while keeping
- * all other status fields unchanged and still exercising the real pallet extrinsics afterwards.
- */
+/** Rewrite `cycleStart` while preserving other salary status fields. */
 async function setSalaryCycleStart(client: Client<any, any>, cycleStart: number): Promise<FellowshipSalaryStatus> {
   const status = requireSalaryStatus(await readSalaryStatus(client))
 
@@ -493,21 +387,12 @@ async function setSalaryCycleStart(client: Client<any, any>, cycleStart: number)
   return requireSalaryStatus(await readSalaryStatus(client))
 }
 
-/**
- * Move the current salary cycle into its registration window.
- *
- * This is done by setting `cycleStart` equal to the current block, making the cycle appear freshly started.
- */
+/** Move the current salary cycle into the registration window. */
 export async function setSalaryCycleToRegistrationWindow(client: Client<any, any>): Promise<FellowshipSalaryStatus> {
   return await setSalaryCycleStart(client, await currentBlockNumber(client))
 }
 
-/**
- * Move the current salary cycle into its payout window.
- *
- * The helper rewinds `cycleStart` far enough that registration has elapsed, but the overall cycle has not yet
- * reached the next bump boundary.
- */
+/** Move the current salary cycle into the payout window. */
 export async function setSalaryCycleToPayoutWindow(
   client: Client<any, any>,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
@@ -516,12 +401,7 @@ export async function setSalaryCycleToPayoutWindow(
   return await setSalaryCycleStart(client, block - runtimeConfig.registrationPeriod - 1)
 }
 
-/**
- * Move the current salary cycle past its bump boundary.
- *
- * After this adjustment, the runtime should consider the cycle expired, allowing the real `bump()` extrinsic
- * to start the next cycle.
- */
+/** Move the current salary cycle past the bump boundary. */
 export async function setSalaryCycleToBumpWindow(
   client: Client<any, any>,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
@@ -530,12 +410,7 @@ export async function setSalaryCycleToBumpWindow(
   return await setSalaryCycleStart(client, block - runtimeConfig.cyclePeriod - 1)
 }
 
-/**
- * Advance to the next salary cycle using storage time manipulation plus the real `bump()` extrinsic.
- *
- * Tests first place the status into the bump window and then submit the actual pallet call so emitted events
- * and status transitions still reflect real runtime behavior.
- */
+/** Advance to the next salary cycle with storage edits plus `bump()`. */
 export async function bumpToNextSalaryCycle(
   client: Client<any, any>,
   signer: KeyringPair,
@@ -551,34 +426,21 @@ export async function bumpToNextSalaryCycle(
 /// Salary lifecycle operations
 /// -------
 
-/**
- * Submit `fellowshipSalary.induct()` for a Fellowship member and return the resulting system events.
- *
- * This is a thin wrapper around the real extrinsic so tests can express salary-lifecycle intent directly.
- */
+/** Submit `fellowshipSalary.induct()`; return system events. */
 export async function inductSalaryMember(client: Client<any, any>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.induct().signAsync(signer))
   await client.dev.newBlock()
   return await systemEvents(client)
 }
 
-/**
- * Submit `fellowshipSalary.register()` for a Fellowship member and return the resulting system events.
- *
- * Registration records the member's salary amount for the current cycle, based on the live runtime params.
- */
+/** Submit `fellowshipSalary.register()`; return system events. */
 export async function registerSalaryMember(client: Client<any, any>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.register().signAsync(signer))
   await client.dev.newBlock()
   return await systemEvents(client)
 }
 
-/**
- * Submit a salary payout extrinsic and return the resulting system events.
- *
- * When `beneficiary` is omitted this uses `payout()`, otherwise it uses `payoutOther(beneficiary)` to direct
- * the Asset Hub transfer to another account.
- */
+/** Submit `payout()` or `payoutOther()`; return system events. */
 export async function payoutSalaryMember(
   client: Client<any, any>,
   signer: KeyringPair,
@@ -593,12 +455,7 @@ export async function payoutSalaryMember(
   return await systemEvents(client)
 }
 
-/**
- * Advance Asset Hub by one block so an outbound salary XCM can be executed there.
- *
- * The source-side Collectives payout only queues the message; this helper produces the destination block in
- * which `messageQueue.Processed` and the resulting asset transfer should appear.
- */
+/** Advance Asset Hub one block to process queued salary XCM. */
 export async function processSalaryPayoutOnAssetHub(assetHubClient: Client<any, any>): Promise<any[]> {
   await assetHubClient.dev.newBlock()
   return await systemEvents(assetHubClient)
@@ -609,10 +466,15 @@ export async function processSalaryPayoutOnAssetHub(assetHubClient: Client<any, 
 /// -------
 
 /**
- * Exercise the full salary lifecycle against live runtime behavior, using direct storage seeding only for setup.
+ * Full salary lifecycle: induct → register → payout.
  *
- * The test covers member induction, cycle advancement, registration, payout dispatch from Collectives, and
- * final Hollar delivery to the beneficiary on Asset Hub.
+ * 1. Seed Dan-3 member on Collectives and fund salary sovereign on Asset Hub
+ * 2. Ensure the salary cycle is started
+ * 3. Induct the member
+ * 4. Bump to the next cycle
+ * 5. Register for salary
+ * 6. Move to payout window and call `payout()`
+ * 7. Process XCM on Asset Hub; verify Hollar balance increased
  */
 export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
   const api = collectivesClient.api
@@ -824,10 +686,14 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
 }
 
 /**
- * Verify that `fellowshipSalary.status` reflects the expected values across a full cycle transition.
+ * Verify salary status across a cycle transition.
  *
- * This focuses on storage-level invariants for cycle index, budget, registration totals, and paid totals
- * after induction, bump, registration, and payout.
+ * 1. Seed member and sovereign balances
+ * 2. Ensure the salary cycle is started
+ * 3. Seed inducted claimant state
+ * 4. Bump to next cycle; verify status reset
+ * 5. Register; verify `totalRegistrations`
+ * 6. Payout; verify `totalUnregisteredPaid` remains zero
  */
 export async function salaryStatusStorageTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
   const member = createSalaryTestMember('//salary_status_member')
@@ -869,10 +735,13 @@ export async function salaryStatusStorageTest(collectivesClient: Client<any, any
 }
 
 /**
- * Verify that a salary payout sent to an explicit beneficiary arrives on Asset Hub as Hollar.
+ * Verify `payoutOther()` delivers Hollar to an Asset Hub beneficiary.
  *
- * This covers the cross-chain path from Collectives `payoutOther` through outbound XCM dispatch and final
- * `pallet-assets` balance increase for the beneficiary.
+ * 1. Seed member, beneficiary ED, and sovereign Hollar
+ * 2. Ensure the salary cycle is started
+ * 3. Seed registered claimant state and move to payout window
+ * 4. Call `payoutOther(beneficiary)`; verify Collectives events
+ * 5. Process XCM on Asset Hub; verify `foreignAssets` transfer and beneficiary balance increase
  */
 export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   collectivesClient: Client<any, any>,
@@ -931,13 +800,15 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
 }
 
 /**
- * Verify that an unregistered fellow receives payment from the residual pot.
+ * Verify an unregistered fellow is paid from the residual pot.
  *
- * The salary pallet pays unregistered fellows `min(ideal_salary, pot)` where:
- * `pot = budget - total_registrations - total_unregistered_paid`
- *
- * This test seeds two fellows: one registers, one does not. The unregistered fellow should still
- * receive a payout from the remaining budget after registrations are accounted for.
+ * 1. Seed registered and unregistered fellows plus sovereign Hollar
+ * 2. Ensure the salary cycle is started; seed inducted claimant state
+ * 3. Bump to next cycle
+ * 4. Register only one fellow
+ * 5. Pay the registered fellow
+ * 6. Pay the unregistered fellow; verify `min(ideal_salary, pot)`
+ * 7. Verify `totalUnregisteredPaid`
  */
 export async function salaryUnregisteredPayoutTest(
   collectivesClient: Client<any, any>,
@@ -1007,13 +878,15 @@ export async function salaryUnregisteredPayoutTest(
 }
 
 /**
- * Verify that when registrations exceed budget, payouts are prorated.
+ * Verify payouts are prorated when registrations exceed budget.
  *
- * When `total_registrations > budget`, each registered fellow receives:
- * `(registered_amount * budget) / total_registrations`
- *
- * This test seeds multiple fellows whose combined salaries exceed the budget, then verifies
- * that payouts are scaled down proportionally.
+ * 1. Seed two fellows plus sovereign Hollar
+ * 2. Ensure the salary cycle is started; seed inducted claimant state
+ * 3. Bump to next cycle; override budget below total registrations
+ * 4. Register both fellows
+ * 5. Move to payout window
+ * 6. Pay each fellow; verify prorated amount
+ * 7. Verify total paid stays within budget
  */
 export async function salaryProrationTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
   const member1 = createSalaryTestMember('//salary_proration_member_1')
@@ -1103,12 +976,7 @@ export async function salaryProrationTest(collectivesClient: Client<any, any>, a
 /// Test tree builder
 /// -------
 
-/**
- * Build the base end-to-end salary test tree shared by network-specific suites.
- *
- * The returned tree wires together Collectives and Asset Hub clients, snapshot restoration, teardown,
- * and the individual salary test groups exported from this module.
- */
+/** Build the shared end-to-end salary test tree. */
 export function baseSalaryE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesCollectives extends Record<string, Record<string, any>> | undefined,
