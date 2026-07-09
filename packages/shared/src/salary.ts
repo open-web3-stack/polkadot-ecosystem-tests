@@ -111,11 +111,6 @@ export interface FellowshipSalaryClaimantState {
 /// Internal helpers
 /// -------
 
-/** Create a deterministic keypair from a URI seed for salary tests. */
-function createSalaryTestMember(seed: string): KeyringPair {
-  return testAccounts.keyring.createFromUri(seed)
-}
-
 /** Assert salary status exists; return the unwrapped value. */
 function requireSalaryStatus(status: FellowshipSalaryStatus | null): FellowshipSalaryStatus {
   assert(status !== null, 'Expected fellowship salary status to exist')
@@ -430,26 +425,6 @@ export async function bumpToNextSalaryCycle(
 /// Salary lifecycle operations
 /// -------
 
-/** Submit `fellowshipSalary.induct()`; return system events. */
-export async function inductSalaryMember<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
-  await sendTransaction(client.api.tx.fellowshipSalary.induct().signAsync(signer))
-  await client.dev.newBlock()
-  return await client.api.query.system.events()
-}
-
-/** Submit `fellowshipSalary.register()`; return system events. */
-export async function registerSalaryMember<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
-  await sendTransaction(client.api.tx.fellowshipSalary.register().signAsync(signer))
-  await client.dev.newBlock()
-  return await client.api.query.system.events()
-}
-
 /** Submit `payout()` or `payoutOther()`; return system events. */
 export async function payoutSalaryMember(client: AnyClient, signer: KeyringPair, beneficiary?: string): Promise<any[]> {
   const call = beneficiary
@@ -459,12 +434,6 @@ export async function payoutSalaryMember(client: AnyClient, signer: KeyringPair,
   await sendTransaction(call.signAsync(signer))
   await client.dev.newBlock()
   return await client.api.query.system.events()
-}
-
-/** Advance Asset Hub one block to process queued salary XCM. */
-export async function processSalaryPayoutOnAssetHub(assetHubClient: AnyClient): Promise<any[]> {
-  await assetHubClient.dev.newBlock()
-  return await assetHubClient.api.query.system.events()
 }
 
 /// -------
@@ -486,7 +455,7 @@ export async function processSalaryPayoutOnAssetHub(assetHubClient: AnyClient): 
  */
 export async function salaryLifecycleRawTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const api = collectivesClient.api
-  const member = createSalaryTestMember('//salary_raw_member')
+  const member = testAccounts.keyring.createFromUri('//salary_raw_member')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
@@ -706,7 +675,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
  * 6. Payout; verify `totalUnregisteredPaid` remains zero
  */
 export async function salaryStatusStorageTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
-  const member = createSalaryTestMember('//salary_status_member')
+  const member = testAccounts.keyring.createFromUri('//salary_status_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
@@ -738,7 +707,8 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
 
   /// 5. Register; verify `totalRegistrations`.
 
-  await registerSalaryMember(collectivesClient, member)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
   const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterRegister.totalUnregisteredPaid).toBe(0n)
@@ -766,8 +736,8 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   collectivesClient: AnyClient,
   assetHubClient: AnyClient,
 ) {
-  const member = createSalaryTestMember('//salary_cross_chain_member')
-  const beneficiary = createSalaryTestMember('//salary_cross_chain_beneficiary')
+  const member = testAccounts.keyring.createFromUri('//salary_cross_chain_member')
+  const beneficiary = testAccounts.keyring.createFromUri('//salary_cross_chain_beneficiary')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
@@ -813,8 +783,8 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
 
   /// 5. Process XCM on Asset Hub; verify transfer and beneficiary balance.
 
-  const assetHubEvents = await processSalaryPayoutOnAssetHub(assetHubClient)
-  assertExpectedEvents(assetHubEvents, [
+  await assetHubClient.dev.newBlock()
+  assertExpectedEvents(await assetHubClient.api.query.system.events(), [
     { type: assetHubClient.api.events.messageQueue.Processed },
     { type: assetHubClient.api.events.foreignAssets.Transferred },
   ])
@@ -835,8 +805,8 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
  * 7. Verify `totalUnregisteredPaid`
  */
 export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
-  const registeredMember = createSalaryTestMember('//salary_unregistered_test_registered')
-  const unregisteredMember = createSalaryTestMember('//salary_unregistered_test_unregistered')
+  const registeredMember = testAccounts.keyring.createFromUri('//salary_unregistered_test_registered')
+  const unregisteredMember = testAccounts.keyring.createFromUri('//salary_unregistered_test_unregistered')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
@@ -862,7 +832,8 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   /// 4. Register only one fellow.
 
-  await registerSalaryMember(collectivesClient, registeredMember)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(registeredMember))
+  await collectivesClient.dev.newBlock()
 
   const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
@@ -874,7 +845,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   const registeredBalanceBefore = await hollarBalance(assetHubClient, registeredMember.address)
   await payoutSalaryMember(collectivesClient, registeredMember)
-  await processSalaryPayoutOnAssetHub(assetHubClient)
+  await assetHubClient.dev.newBlock()
   const registeredBalanceAfter = await hollarBalance(assetHubClient, registeredMember.address)
   expect(registeredBalanceAfter - registeredBalanceBefore).toBe(expectedSalary)
 
@@ -885,7 +856,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   const unregisteredBalanceBefore = await hollarBalance(assetHubClient, unregisteredMember.address)
   await payoutSalaryMember(collectivesClient, unregisteredMember)
-  await processSalaryPayoutOnAssetHub(assetHubClient)
+  await assetHubClient.dev.newBlock()
   const unregisteredBalanceAfter = await hollarBalance(assetHubClient, unregisteredMember.address)
 
   expect(unregisteredBalanceAfter - unregisteredBalanceBefore).toBe(expectedUnregisteredPayout)
@@ -908,8 +879,8 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
  * 7. Verify total paid stays within budget
  */
 export async function salaryProrationTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
-  const member1 = createSalaryTestMember('//salary_proration_member_1')
-  const member2 = createSalaryTestMember('//salary_proration_member_2')
+  const member1 = testAccounts.keyring.createFromUri('//salary_proration_member_1')
+  const member2 = testAccounts.keyring.createFromUri('//salary_proration_member_2')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const salaryPerMember = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
@@ -950,8 +921,10 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   /// 4. Register both fellows.
 
-  await registerSalaryMember(collectivesClient, member1)
-  await registerSalaryMember(collectivesClient, member2)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member1))
+  await collectivesClient.dev.newBlock()
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member2))
+  await collectivesClient.dev.newBlock()
 
   const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   const totalRegistrations = statusAfterRegister.totalRegistrations
@@ -968,7 +941,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   const balance1Before = await hollarBalance(assetHubClient, member1.address)
   await payoutSalaryMember(collectivesClient, member1)
-  await processSalaryPayoutOnAssetHub(assetHubClient)
+  await assetHubClient.dev.newBlock()
   const balance1After = await hollarBalance(assetHubClient, member1.address)
 
   const received1 = balance1After - balance1Before
@@ -978,7 +951,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   const balance2Before = await hollarBalance(assetHubClient, member2.address)
   await payoutSalaryMember(collectivesClient, member2)
-  await processSalaryPayoutOnAssetHub(assetHubClient)
+  await assetHubClient.dev.newBlock()
   const balance2After = await hollarBalance(assetHubClient, member2.address)
 
   const received2 = balance2After - balance2Before
@@ -1004,7 +977,7 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
   collectivesClient: AnyClient,
   assetHubClient: AnyClient,
 ) {
-  const member = createSalaryTestMember('//salary_no_dot_member')
+  const member = testAccounts.keyring.createFromUri('//salary_no_dot_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
@@ -1023,7 +996,8 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
-  await registerSalaryMember(collectivesClient, member)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
   /// 3. Payout dispatches XCM from Collectives.
@@ -1040,7 +1014,7 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
 
   /// 5. Process XCM on Asset Hub — transfer fails silently, member gets nothing.
 
-  await processSalaryPayoutOnAssetHub(assetHubClient)
+  await assetHubClient.dev.newBlock()
   const memberBalance = await hollarBalance(assetHubClient, member.address)
   expect(memberBalance).toBe(0n)
 
