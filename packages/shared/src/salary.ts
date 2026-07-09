@@ -483,15 +483,17 @@ export async function processSalaryPayoutOnAssetHub(assetHubClient: AnyClient): 
 /// -------
 
 /**
- * Full salary lifecycle: induct → register → payout.
+ * Full salary lifecycle: `induct` → `register` → `payout`.
  *
- * 1. Seed Dan-3 member on Collectives and fund salary sovereign on Asset Hub
- * 2. Ensure the salary cycle is started
- * 3. Induct the member
- * 4. Bump to the next cycle
- * 5. Register for salary
- * 6. Move to payout window and call `payout()`
- * 7. Process XCM on Asset Hub; verify Hollar balance increased
+ * 1. Seed Dan-3 member on Collectives
+ * 2. Fund salary sovereign with Hollar on Asset Hub
+ * 3. Bootstrap salary cycle if needed
+ * 4. Induct the member
+ * 5. Bump to the next cycle
+ * 6. Register for salary
+ * 7. Move to payout window
+ * 8. Call `payout()` — paymaster dispatches XCM
+ * 9. Process XCM on Asset Hub; verify Hollar balance increased
  */
 export async function salaryLifecycleRawTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const api = collectivesClient.api
@@ -717,19 +719,24 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
+  /// 1. Seed member and sovereign balances.
+
   await seedDan3SalaryMember(collectivesClient, member)
   await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
+  /// 2. Ensure the salary cycle is started.
+
   await ensureSalaryCycleStarted(collectivesClient, member)
 
-  /// Induction does not touch `fellowshipSalary.status`, so it is seeded directly here rather
-  /// than invoked, leaving the test focused on the mutations made by `bump`, `register`, and `payout`.
+  /// 3. Seed inducted claimant state (induction doesn't touch status, so seed directly).
 
   const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
   const statusAfterInduct = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+
+  /// 4. Bump to next cycle; verify status reset.
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
   const statusAfterBump = requireSalaryStatus(await readSalaryStatus(collectivesClient))
@@ -738,10 +745,14 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
   expect(statusAfterBump.totalRegistrations).toBe(0n)
   expect(statusAfterBump.totalUnregisteredPaid).toBe(0n)
 
+  /// 5. Register; verify `totalRegistrations`.
+
   await registerSalaryMember(collectivesClient, member)
   const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterRegister.totalUnregisteredPaid).toBe(0n)
+
+  /// 6. Payout; verify `totalUnregisteredPaid` remains zero.
 
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
   await payoutSalaryMember(collectivesClient, member)
@@ -769,15 +780,17 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
+  /// 1. Seed member, beneficiary ED, and sovereign Hollar.
+
   await seedDan3SalaryMember(collectivesClient, member)
   await ensureMemberHasDotOnAssetHub(assetHubClient, beneficiary.address)
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
+  /// 2. Ensure the salary cycle is started.
+
   await ensureSalaryCycleStarted(collectivesClient, member)
 
-  /// Induction and registration are prerequisites, not the subject of this test. The claimant is
-  /// seeded into the `Registered` state directly so the payout XCM — the actual subject — can be
-  /// exercised in isolation.
+  /// 3. Seed registered claimant state and move to payout window.
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
   const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
@@ -786,10 +799,11 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   })
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
+  /// 4. Call `payoutOther(beneficiary)`; verify Collectives events.
+
   const balanceBefore = await hollarBalance(assetHubClient, beneficiary.address)
   const payoutEvents = await payoutSalaryMember(collectivesClient, member, beneficiary.address)
 
-  /// Re-encode addresses for event assertions (see SS58 note in salaryLifecycleRawTest)
   const addressEncoding = collectivesClient.config.properties.addressEncoding
   const memberAddress = encodeAddress(member.address, addressEncoding)
   const beneficiaryAddress = encodeAddress(beneficiary.address, addressEncoding)
@@ -805,6 +819,8 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
     },
   ])
   expectSourceChainXcmDispatch(collectivesClient, payoutEvents as any[])
+
+  /// 5. Process XCM on Asset Hub; verify transfer and beneficiary balance.
 
   const assetHubEvents = await processSalaryPayoutOnAssetHub(assetHubClient)
   assertExpectedEvents(assetHubEvents, [
@@ -834,25 +850,26 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
+  /// 1. Seed registered and unregistered fellows plus sovereign Hollar.
+
   await seedDan3SalaryMember(collectivesClient, registeredMember)
   await seedDan3SalaryMember(collectivesClient, unregisteredMember)
   await ensureMemberHasDotOnAssetHub(assetHubClient, registeredMember.address)
   await ensureMemberHasDotOnAssetHub(assetHubClient, unregisteredMember.address)
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
+  /// 2. Ensure the salary cycle is started; seed inducted claimant state.
+
   await ensureSalaryCycleStarted(collectivesClient, registeredMember)
-
-  /// Induct both members.
-
   const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
   await seedSalaryClaimant(collectivesClient, registeredMember.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, unregisteredMember.address, cycleIndex, { Nothing: null })
 
-  /// Bump to next cycle so they can register.
+  /// 3. Bump to next cycle.
 
   await bumpToNextSalaryCycle(collectivesClient, registeredMember, runtimeConfig)
 
-  /// Only the registered member registers.
+  /// 4. Register only one fellow.
 
   await registerSalaryMember(collectivesClient, registeredMember)
 
@@ -860,11 +877,9 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterRegister.totalUnregisteredPaid).toBe(0n)
 
-  /// Move to payout window.
-
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
-  /// Pay the registered member first.
+  /// 5. Pay the registered fellow.
 
   const registeredBalanceBefore = await hollarBalance(assetHubClient, registeredMember.address)
   await payoutSalaryMember(collectivesClient, registeredMember)
@@ -872,8 +887,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   const registeredBalanceAfter = await hollarBalance(assetHubClient, registeredMember.address)
   expect(registeredBalanceAfter - registeredBalanceBefore).toBe(expectedSalary)
 
-  /// Now pay the unregistered member. They should get `min(ideal_salary, pot)`.
-  /// pot = budget - total_registrations - total_unregistered_paid = budget - expectedSalary - 0
+  /// 6. Pay the unregistered fellow; verify `min(ideal_salary, pot)`.
 
   const pot = runtimeConfig.budget - expectedSalary
   const expectedUnregisteredPayout = expectedSalary < pot ? expectedSalary : pot
@@ -885,7 +899,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   expect(unregisteredBalanceAfter - unregisteredBalanceBefore).toBe(expectedUnregisteredPayout)
 
-  /// Verify total_unregistered_paid was updated.
+  /// 7. Verify `totalUnregisteredPaid`.
 
   const statusAfterUnregistered = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   expect(statusAfterUnregistered.totalUnregisteredPaid).toBe(expectedUnregisteredPayout)
@@ -909,7 +923,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const salaryPerMember = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
-  /// Create a scenario where total registrations exceed budget by seeding a very small budget.
+  /// 1. Seed two fellows plus sovereign Hollar.
 
   const smallBudget = salaryPerMember / 2n
 
@@ -919,15 +933,14 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   await ensureMemberHasDotOnAssetHub(assetHubClient, member2.address)
   await fundSalarySovereignHollar(assetHubClient, salaryPerMember * 2n)
 
+  /// 2. Ensure the salary cycle is started; seed inducted claimant state.
+
   await ensureSalaryCycleStarted(collectivesClient, member1)
-
-  /// Induct both members.
-
   const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
   await seedSalaryClaimant(collectivesClient, member1.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, member2.address, cycleIndex, { Nothing: null })
 
-  /// Bump to next cycle and override budget to be smaller than total registrations.
+  /// 3. Bump to next cycle; override budget below total registrations.
 
   await bumpToNextSalaryCycle(collectivesClient, member1, runtimeConfig)
 
@@ -944,7 +957,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
     },
   })
 
-  /// Both members register. Total registrations = 2 * salaryPerMember > smallBudget.
+  /// 4. Register both fellows.
 
   await registerSalaryMember(collectivesClient, member1)
   await registerSalaryMember(collectivesClient, member2)
@@ -954,11 +967,11 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   expect(totalRegistrations).toBe(salaryPerMember * 2n)
   expect(totalRegistrations).toBeGreaterThan(smallBudget)
 
-  /// Move to payout window.
+  /// 5. Move to payout window.
 
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
-  /// Pay member1. They should receive prorated amount: (salary * budget) / total_registrations.
+  /// 6. Pay each fellow; verify prorated amount: `(salary * budget) / total_registrations`.
 
   const expectedProrated = (salaryPerMember * smallBudget) / totalRegistrations
 
@@ -970,7 +983,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const received1 = balance1After - balance1Before
   expect(received1).toBe(expectedProrated)
 
-  /// Pay member2. They should also receive the same prorated amount.
+  /// Pay member2 — same prorated amount.
 
   const balance2Before = await hollarBalance(assetHubClient, member2.address)
   await payoutSalaryMember(collectivesClient, member2)
@@ -980,10 +993,70 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const received2 = balance2After - balance2Before
   expect(received2).toBe(expectedProrated)
 
-  /// Total paid should be <= small budget (may be slightly less due to integer division rounding).
+  /// 7. Verify total paid stays within budget.
 
   expect(received1 + received2).toBeLessThanOrEqual(smallBudget)
   expect(received1 + received2).toBeGreaterThanOrEqual(smallBudget - 2n)
+}
+
+/**
+ * Payout fails silently when Hollar is not sufficient and the recipient has no DOT on Asset Hub.
+ *
+ * 1. Seed a Dan-3 member on Collectives, fund sovereign with Hollar, do NOT seed member DOT on AH
+ * 2. Run through induct → bump → register → payout
+ * 3. Verify XCM was dispatched from Collectives (pallet thinks it paid)
+ * 4. Process XCM on Asset Hub — transfer fails silently
+ * 5. Verify member Hollar balance is still zero
+ * 6. Verify sovereign Hollar balance was NOT deducted
+ */
+export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
+  collectivesClient: AnyClient,
+  assetHubClient: AnyClient,
+) {
+  const member = createSalaryTestMember('//salary_no_dot_member')
+  const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+
+  /// 1. Seed member on Collectives, fund sovereign — deliberately skip ensureMemberHasDotOnAssetHub.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
+
+  const sovBefore = await hollarBalance(assetHubClient, SALARY_SOVEREIGN_ADDRESS)
+
+  await ensureSalaryCycleStarted(collectivesClient, member)
+
+  /// 2. Induct → bump → register → payout.
+
+  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+
+  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await registerSalaryMember(collectivesClient, member)
+  await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
+
+  /// 3. Payout dispatches XCM from Collectives.
+
+  const payoutEvents = await payoutSalaryMember(collectivesClient, member)
+  expectSourceChainXcmDispatch(collectivesClient, payoutEvents as any[])
+
+  /// 4. Claimant shows "attempted" — Collectives thinks it paid.
+
+  const claimant = await readSalaryClaimant(collectivesClient, member.address)
+  assert(claimant !== null)
+  expect(claimant.kind).toBe('attempted')
+  expect(claimant.attemptedAmount).toBe(expectedSalary)
+
+  /// 5. Process XCM on Asset Hub — transfer fails silently, member gets nothing.
+
+  await processSalaryPayoutOnAssetHub(assetHubClient)
+  const memberBalance = await hollarBalance(assetHubClient, member.address)
+  expect(memberBalance).toBe(0n)
+
+  /// 6. Sovereign balance unchanged — failed XCM does not drain funds.
+
+  const sovAfter = await hollarBalance(assetHubClient, SALARY_SOVEREIGN_ADDRESS)
+  expect(sovAfter).toBe(sovBefore)
 }
 
 /// -------
@@ -1029,60 +1102,35 @@ export function baseSalaryE2ETests<
     },
     children: [
       {
-        kind: 'describe',
-        label: 'salary lifecycle (raw)',
-        children: [
-          {
-            kind: 'test',
-            label: 'full salary cycle: induct → register → payout with XCM dispatch',
-            testFn: async () => await salaryLifecycleRawTest(collectivesClient, assetHubClient),
-          },
-        ],
+        kind: 'test',
+        label: 'full salary cycle: induct → register → payout with XCM dispatch',
+        testFn: async () => await salaryLifecycleRawTest(collectivesClient, assetHubClient),
       },
       {
-        kind: 'describe',
-        label: 'salary status storage',
-        children: [
-          {
-            kind: 'test',
-            label: 'cycle status reflects correct state after operations',
-            testFn: async () => await salaryStatusStorageTest(collectivesClient, assetHubClient),
-          },
-        ],
+        kind: 'test',
+        label: 'cycle status reflects correct state after operations',
+        testFn: async () => await salaryStatusStorageTest(collectivesClient, assetHubClient),
       },
       {
-        kind: 'describe',
-        label: 'cross-chain payment',
-        children: [
-          {
-            kind: 'test',
-            label: 'salary payout delivers Hollar to beneficiary on AssetHub',
-            testFn: async () =>
-              await salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(collectivesClient, assetHubClient),
-          },
-        ],
+        kind: 'test',
+        label: 'salary payout delivers Hollar to beneficiary on AssetHub',
+        testFn: async () =>
+          await salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(collectivesClient, assetHubClient),
       },
       {
-        kind: 'describe',
-        label: 'unregistered payout',
-        children: [
-          {
-            kind: 'test',
-            label: 'unregistered fellow receives payment from residual pot',
-            testFn: async () => await salaryUnregisteredPayoutTest(collectivesClient, assetHubClient),
-          },
-        ],
+        kind: 'test',
+        label: 'unregistered fellow receives payment from residual pot',
+        testFn: async () => await salaryUnregisteredPayoutTest(collectivesClient, assetHubClient),
       },
       {
-        kind: 'describe',
-        label: 'proration',
-        children: [
-          {
-            kind: 'test',
-            label: 'payouts are prorated when registrations exceed budget',
-            testFn: async () => await salaryProrationTest(collectivesClient, assetHubClient),
-          },
-        ],
+        kind: 'test',
+        label: 'payouts are prorated when registrations exceed budget',
+        testFn: async () => await salaryProrationTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'payout XCM fails silently when recipient has no DOT on Asset Hub',
+        testFn: async () => await salaryPayoutFailsWithoutDotOnAssetHubTest(collectivesClient, assetHubClient),
       },
     ],
   }
