@@ -199,7 +199,7 @@ These include:
   - Cycle status invariants: budget reset on `bump`, `totalRegistrations` accumulation
     after `register`, `totalUnregisteredPaid` tracking after unregistered payout
   - Cross-chain payment: `payout` dispatches XCM from Collectives to Asset Hub,
-    verifying USDT delivery to the member; `payoutOther` verifies delivery to an
+    verifying Hollar delivery to the member; `payoutOther` verifies delivery to an
     explicit beneficiary
   - Unregistered payout: a fellow who missed registration still receives payment from
     the residual budget pot after all registered members are paid
