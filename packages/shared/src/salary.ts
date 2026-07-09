@@ -10,6 +10,9 @@ import { assert, expect } from 'vitest'
 import { assertExpectedEvents, type TestConfig } from './helpers/index.js'
 import type { Client, RootTestTree } from './types.js'
 
+/** Shorthand — most salary helpers don't constrain the chain's custom config or init storages. */
+type AnyClient = Client<Record<string, unknown> | undefined, Record<string, Record<string, any>> | undefined>
+
 /// -------
 /// Constants
 /// -------
@@ -120,12 +123,15 @@ function requireSalaryStatus(status: FellowshipSalaryStatus | null): FellowshipS
 }
 
 /** Read current chain head block number. */
-async function currentBlockNumber(client: Client<any, any>): Promise<number> {
+async function currentBlockNumber<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>): Promise<number> {
   return (await client.api.rpc.chain.getHeader()).number.toNumber()
 }
 
 /** Read current block system events. */
-async function systemEvents(client: Client<any, any>) {
+async function systemEvents(client: AnyClient) {
   return await client.api.query.system.events()
 }
 
@@ -135,7 +141,7 @@ function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | unde
 }
 
 /** Assert the source chain emitted an outbound XCM event. */
-function expectSourceChainXcmDispatch(client: Client<any, any>, events: any[]): void {
+function expectSourceChainXcmDispatch(client: AnyClient, events: any[]): void {
   expect(
     hasEvent(events, client.api.events.xcmpQueue?.XcmpMessageSent) ||
       hasEvent(events, client.api.events.polkadotXcm?.Sent),
@@ -148,7 +154,10 @@ function expectSourceChainXcmDispatch(client: Client<any, any>, events: any[]): 
 /// -------
 
 /** Read salary runtime config from live chain state. */
-export async function readSalaryRuntimeConfig(client: Client<any, any>): Promise<FellowshipSalaryRuntimeConfig> {
+export async function readSalaryRuntimeConfig<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>): Promise<FellowshipSalaryRuntimeConfig> {
   const params = await (client.api.query as any).fellowshipCore.params()
   const paramsJson = params.toJSON() as {
     activeSalary: Array<number | string>
@@ -177,7 +186,10 @@ export async function readSalaryRuntimeConfig(client: Client<any, any>): Promise
 }
 
 /** Read `fellowshipSalary.status`; return `null` when absent. */
-export async function readSalaryStatus(client: Client<any, any>): Promise<FellowshipSalaryStatus | null> {
+export async function readSalaryStatus<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>): Promise<FellowshipSalaryStatus | null> {
   const status = (await client.api.query.fellowshipSalary.status()) as any
   if (status.isNone) return null
 
@@ -193,7 +205,7 @@ export async function readSalaryStatus(client: Client<any, any>): Promise<Fellow
 
 /** Read and decode `fellowshipSalary.claimant(address)`. */
 export async function readSalaryClaimant(
-  client: Client<any, any>,
+  client: AnyClient,
   address: string,
 ): Promise<FellowshipSalaryClaimantState | null> {
   const claimant = (await client.api.query.fellowshipSalary.claimant(address)) as any
@@ -250,7 +262,7 @@ export function activeSalaryForRank(params: FellowshipSalaryParams, rank: number
 }
 
 /** Read Hollar balance from Asset Hub `ForeignAssets`. */
-export async function hollarBalance(assetHubClient: Client<any, any>, address: string): Promise<bigint> {
+export async function hollarBalance(assetHubClient: AnyClient, address: string): Promise<bigint> {
   const balance = (await assetHubClient.api.query.foreignAssets.account(HOLLAR_ASSET_LOCATION, address)) as any
   return balance.isSome ? (balance.unwrap() as any).balance.toBigInt() : 0n
 }
@@ -261,7 +273,7 @@ export async function hollarBalance(assetHubClient: Client<any, any>, address: s
 
 /** Seed a funded Dan-3 Fellowship member for salary tests. */
 export async function seedDan3SalaryMember(
-  client: Client<any, any>,
+  client: AnyClient,
   member: KeyringPair,
   freeBalance: bigint = DEFAULT_SALARY_TEST_FREE_BALANCE,
 ): Promise<void> {
@@ -303,7 +315,7 @@ export async function seedDan3SalaryMember(
  * @param status Runtime claimant status variant.
  */
 export async function seedSalaryClaimant(
-  client: Client<any, any>,
+  client: AnyClient,
   memberAddress: string,
   lastActive: number,
   status: Record<string, unknown>,
@@ -316,7 +328,7 @@ export async function seedSalaryClaimant(
 }
 
 /** Seed the salary sovereign Hollar balance on Asset Hub. */
-export async function fundSalarySovereignHollar(assetHubClient: Client<any, any>, amount: bigint): Promise<void> {
+export async function fundSalarySovereignHollar(assetHubClient: AnyClient, amount: bigint): Promise<void> {
   const assetInfo = (await assetHubClient.api.query.foreignAssets.asset(HOLLAR_ASSET_LOCATION)) as any
   const currentAccounts = assetInfo.isSome ? assetInfo.unwrap().accounts.toNumber() : 0
   const currentSupply = assetInfo.isSome ? BigInt(assetInfo.unwrap().supply.toString()) : 0n
@@ -339,7 +351,7 @@ export async function fundSalarySovereignHollar(assetHubClient: Client<any, any>
 }
 
 /** Ensure a member has DOT on Asset Hub for existential deposit. */
-export async function ensureMemberHasDotOnAssetHub(assetHubClient: Client<any, any>, address: string): Promise<void> {
+export async function ensureMemberHasDotOnAssetHub(assetHubClient: AnyClient, address: string): Promise<void> {
   const ED = 10n ** 10n
   await assetHubClient.dev.setStorage({
     System: {
@@ -353,10 +365,10 @@ export async function ensureMemberHasDotOnAssetHub(assetHubClient: Client<any, a
 /// -------
 
 /** Ensure the salary cycle exists; call `init()` when needed. */
-export async function ensureSalaryCycleStarted(
-  client: Client<any, any>,
-  signer: KeyringPair,
-): Promise<FellowshipSalaryStatus> {
+export async function ensureSalaryCycleStarted<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<FellowshipSalaryStatus> {
   const status = await readSalaryStatus(client)
   if (status !== null) return status
 
@@ -369,7 +381,7 @@ export async function ensureSalaryCycleStarted(
 }
 
 /** Rewrite `cycleStart` while preserving other salary status fields. */
-async function setSalaryCycleStart(client: Client<any, any>, cycleStart: number): Promise<FellowshipSalaryStatus> {
+async function setSalaryCycleStart(client: AnyClient, cycleStart: number): Promise<FellowshipSalaryStatus> {
   const status = requireSalaryStatus(await readSalaryStatus(client))
 
   await client.dev.setStorage({
@@ -388,13 +400,16 @@ async function setSalaryCycleStart(client: Client<any, any>, cycleStart: number)
 }
 
 /** Move the current salary cycle into the registration window. */
-export async function setSalaryCycleToRegistrationWindow(client: Client<any, any>): Promise<FellowshipSalaryStatus> {
+export async function setSalaryCycleToRegistrationWindow<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>): Promise<FellowshipSalaryStatus> {
   return await setSalaryCycleStart(client, await currentBlockNumber(client))
 }
 
 /** Move the current salary cycle into the payout window. */
 export async function setSalaryCycleToPayoutWindow(
-  client: Client<any, any>,
+  client: AnyClient,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
 ): Promise<FellowshipSalaryStatus> {
   const block = await currentBlockNumber(client)
@@ -403,7 +418,7 @@ export async function setSalaryCycleToPayoutWindow(
 
 /** Move the current salary cycle past the bump boundary. */
 export async function setSalaryCycleToBumpWindow(
-  client: Client<any, any>,
+  client: AnyClient,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
 ): Promise<FellowshipSalaryStatus> {
   const block = await currentBlockNumber(client)
@@ -412,7 +427,7 @@ export async function setSalaryCycleToBumpWindow(
 
 /** Advance to the next salary cycle with storage edits plus `bump()`. */
 export async function bumpToNextSalaryCycle(
-  client: Client<any, any>,
+  client: AnyClient,
   signer: KeyringPair,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
 ): Promise<any[]> {
@@ -427,25 +442,27 @@ export async function bumpToNextSalaryCycle(
 /// -------
 
 /** Submit `fellowshipSalary.induct()`; return system events. */
-export async function inductSalaryMember(client: Client<any, any>, signer: KeyringPair): Promise<any[]> {
+export async function inductSalaryMember<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.induct().signAsync(signer))
   await client.dev.newBlock()
   return await systemEvents(client)
 }
 
 /** Submit `fellowshipSalary.register()`; return system events. */
-export async function registerSalaryMember(client: Client<any, any>, signer: KeyringPair): Promise<any[]> {
+export async function registerSalaryMember<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.register().signAsync(signer))
   await client.dev.newBlock()
   return await systemEvents(client)
 }
 
 /** Submit `payout()` or `payoutOther()`; return system events. */
-export async function payoutSalaryMember(
-  client: Client<any, any>,
-  signer: KeyringPair,
-  beneficiary?: string,
-): Promise<any[]> {
+export async function payoutSalaryMember(client: AnyClient, signer: KeyringPair, beneficiary?: string): Promise<any[]> {
   const call = beneficiary
     ? client.api.tx.fellowshipSalary.payoutOther(beneficiary)
     : client.api.tx.fellowshipSalary.payout()
@@ -456,7 +473,7 @@ export async function payoutSalaryMember(
 }
 
 /** Advance Asset Hub one block to process queued salary XCM. */
-export async function processSalaryPayoutOnAssetHub(assetHubClient: Client<any, any>): Promise<any[]> {
+export async function processSalaryPayoutOnAssetHub(assetHubClient: AnyClient): Promise<any[]> {
   await assetHubClient.dev.newBlock()
   return await systemEvents(assetHubClient)
 }
@@ -476,7 +493,7 @@ export async function processSalaryPayoutOnAssetHub(assetHubClient: Client<any, 
  * 6. Move to payout window and call `payout()`
  * 7. Process XCM on Asset Hub; verify Hollar balance increased
  */
-export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
+export async function salaryLifecycleRawTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const api = collectivesClient.api
   const member = createSalaryTestMember('//salary_raw_member')
 
@@ -695,7 +712,7 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
  * 5. Register; verify `totalRegistrations`
  * 6. Payout; verify `totalUnregisteredPaid` remains zero
  */
-export async function salaryStatusStorageTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
+export async function salaryStatusStorageTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const member = createSalaryTestMember('//salary_status_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
@@ -744,8 +761,8 @@ export async function salaryStatusStorageTest(collectivesClient: Client<any, any
  * 5. Process XCM on Asset Hub; verify `foreignAssets` transfer and beneficiary balance increase
  */
 export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
-  collectivesClient: Client<any, any>,
-  assetHubClient: Client<any, any>,
+  collectivesClient: AnyClient,
+  assetHubClient: AnyClient,
 ) {
   const member = createSalaryTestMember('//salary_cross_chain_member')
   const beneficiary = createSalaryTestMember('//salary_cross_chain_beneficiary')
@@ -810,10 +827,7 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
  * 6. Pay the unregistered fellow; verify `min(ideal_salary, pot)`
  * 7. Verify `totalUnregisteredPaid`
  */
-export async function salaryUnregisteredPayoutTest(
-  collectivesClient: Client<any, any>,
-  assetHubClient: Client<any, any>,
-) {
+export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const registeredMember = createSalaryTestMember('//salary_unregistered_test_registered')
   const unregisteredMember = createSalaryTestMember('//salary_unregistered_test_unregistered')
 
@@ -888,7 +902,7 @@ export async function salaryUnregisteredPayoutTest(
  * 6. Pay each fellow; verify prorated amount
  * 7. Verify total paid stays within budget
  */
-export async function salaryProrationTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
+export async function salaryProrationTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const member1 = createSalaryTestMember('//salary_proration_member_1')
   const member2 = createSalaryTestMember('//salary_proration_member_2')
 
