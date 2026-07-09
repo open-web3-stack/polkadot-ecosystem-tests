@@ -35,13 +35,15 @@ export const FELLOWSHIP_SALARY_PALLET_INDEX = 64
 // Rank 3 is chosen because it has a live salary configured and is simple to seed directly into storage.
 export const SALARY_MEMBER_RANK_DAN_3 = 3
 
-// The Asset Hub asset ID for the USDT instance paid by the salary pallet today.
-// Salary payout assertions query `pallet-assets` under this ID on Asset Hub.
-export const SALARY_USDT_ASSET_ID = 1984
+// The ForeignAssets location for Hollar on Asset Hub.
+// Hollar lives on Hydration (parachain 2034) with GeneralIndex 222.
+export const HOLLAR_ASSET_LOCATION = {
+  parents: 1,
+  interior: { X2: [{ Parachain: 2034 }, { GeneralIndex: 222 }] },
+} as const
 
-// Decimal base for USDT balances on Asset Hub.
-// Kept here for readability in tests that need to reason about human-sized USDT amounts.
-export const USDT_UNITS = 1_000_000n
+// Decimal base for Hollar balances on Asset Hub (18 decimals).
+export const HOLLAR_UNITS = 10n ** 18n
 
 // The validated XCM location of the Fellowship salary sovereign.
 // This corresponds to `(Parent, Parachain(1001), PalletInstance(64))`, i.e. the salary pallet on
@@ -318,13 +320,13 @@ export function activeSalaryForRank(params: FellowshipSalaryParams, rank: number
 }
 
 /**
- * Read a USDT balance from Asset Hub's `pallet-assets` storage.
+ * Read a Hollar balance from Asset Hub's `ForeignAssets` storage.
  *
- * Salary payouts currently land as the asset identified by `SALARY_USDT_ASSET_ID`, so these tests query
- * `Assets.account(assetId, address)` and default to zero when no account exists.
+ * Salary payouts land as the foreign asset at `HOLLAR_ASSET_LOCATION`, so tests query
+ * `ForeignAssets.account(location, address)` and default to zero when no account exists.
  */
-export async function usdtBalance(assetHubClient: Client<any, any>, address: string): Promise<bigint> {
-  const balance = (await assetHubClient.api.query.assets.account(SALARY_USDT_ASSET_ID, address)) as any
+export async function hollarBalance(assetHubClient: Client<any, any>, address: string): Promise<bigint> {
+  const balance = (await assetHubClient.api.query.foreignAssets.account(HOLLAR_ASSET_LOCATION, address)) as any
   return balance.isSome ? (balance.unwrap() as any).balance.toBigInt() : 0n
 }
 
@@ -400,15 +402,44 @@ export async function seedSalaryClaimant(
 }
 
 /**
- * Seed the salary sovereign's USDT balance on Asset Hub.
+ * Seed the salary sovereign's Hollar balance on Asset Hub.
  *
- * Salary payouts are funded out of the sovereign account via `pallet-assets`, so tests preload that account
- * with enough USDT to satisfy the expected payment flow.
+ * Salary payouts are funded out of the sovereign account via `ForeignAssets`, so tests preload that account
+ * with enough Hollar to satisfy the expected payment flow. The asset metadata (accounts, supply) is also
+ * updated to keep the storage consistent with the new account entry.
  */
-export async function fundSalarySovereignUsdt(assetHubClient: Client<any, any>, amount: bigint): Promise<void> {
+export async function fundSalarySovereignHollar(assetHubClient: Client<any, any>, amount: bigint): Promise<void> {
+  const assetInfo = (await assetHubClient.api.query.foreignAssets.asset(HOLLAR_ASSET_LOCATION)) as any
+  const currentAccounts = assetInfo.isSome ? assetInfo.unwrap().accounts.toNumber() : 0
+  const currentSupply = assetInfo.isSome ? BigInt(assetInfo.unwrap().supply.toString()) : 0n
+
   await assetHubClient.dev.setStorage({
-    Assets: {
-      account: [[[SALARY_USDT_ASSET_ID, SALARY_SOVEREIGN_ADDRESS], { balance: amount.toString() }]],
+    ForeignAssets: {
+      asset: [
+        [
+          [HOLLAR_ASSET_LOCATION],
+          {
+            ...(assetInfo.isSome ? assetInfo.unwrap().toJSON() : {}),
+            accounts: currentAccounts + 1,
+            supply: (currentSupply + amount).toString(),
+          },
+        ],
+      ],
+      account: [[[HOLLAR_ASSET_LOCATION, SALARY_SOVEREIGN_ADDRESS], { balance: amount.toString() }]],
+    },
+  })
+}
+
+/**
+ * Ensure a member has a DOT balance on Asset Hub for existential deposit.
+ *
+ * Required when Hollar is not a sufficient asset: XCM transfers to accounts without DOT will fail.
+ */
+export async function ensureMemberHasDotOnAssetHub(assetHubClient: Client<any, any>, address: string): Promise<void> {
+  const ED = 10n ** 10n
+  await assetHubClient.dev.setStorage({
+    System: {
+      account: [[[address], { providers: 1, data: { free: ED.toString(), frozen: 0, reserved: 0 } }]],
     },
   })
 }
@@ -581,7 +612,7 @@ export async function processSalaryPayoutOnAssetHub(assetHubClient: Client<any, 
  * Exercise the full salary lifecycle against live runtime behavior, using direct storage seeding only for setup.
  *
  * The test covers member induction, cycle advancement, registration, payout dispatch from Collectives, and
- * final USDT delivery to the beneficiary on Asset Hub.
+ * final Hollar delivery to the beneficiary on Asset Hub.
  */
 export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>, assetHubClient: Client<any, any>) {
   const api = collectivesClient.api
@@ -632,14 +663,11 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
   })
 
   ///
-  /// 2. Seed the validated salary sovereign account on Asset Hub with enough USDT for one payout.
+  /// 2. Seed the validated salary sovereign account on Asset Hub with enough Hollar for one payout.
   ///
 
-  await assetHubClient.dev.setStorage({
-    Assets: {
-      account: [[[SALARY_USDT_ASSET_ID, SALARY_SOVEREIGN_ADDRESS], { balance: runtimeConfig.budget.toString() }]],
-    },
-  })
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
 
   ///
   /// 3. Live Collectives forks already have salary running, but bootstrap `init()` if the forked
@@ -747,7 +775,7 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
     },
   })
 
-  const assetHubBalanceBefore = await usdtBalance(assetHubClient, member.address)
+  const assetHubBalanceBefore = await hollarBalance(assetHubClient, member.address)
 
   ///
   /// 8. Pay the salary. The paymaster dispatches XCM toward Asset Hub.
@@ -780,7 +808,7 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
   expect(claimantAfterPayout.attemptedPaymentId).not.toBeNull()
 
   ///
-  /// 9. Process the horizontal XCM on Asset Hub and verify the USDT transfer landed.
+  /// 9. Process the horizontal XCM on Asset Hub and verify the Hollar transfer landed.
   ///
 
   await assetHubClient.dev.newBlock()
@@ -788,10 +816,10 @@ export async function salaryLifecycleRawTest(collectivesClient: Client<any, any>
 
   assertExpectedEvents(assetHubEvents, [
     { type: assetHubClient.api.events.messageQueue.Processed },
-    { type: assetHubClient.api.events.assets.Transferred },
+    { type: assetHubClient.api.events.foreignAssets.Transferred },
   ])
 
-  const assetHubBalanceAfter = await usdtBalance(assetHubClient, member.address)
+  const assetHubBalanceAfter = await hollarBalance(assetHubClient, member.address)
   expect(assetHubBalanceAfter - assetHubBalanceBefore).toBe(expectedSalary)
 }
 
@@ -807,7 +835,8 @@ export async function salaryStatusStorageTest(collectivesClient: Client<any, any
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
   await seedDan3SalaryMember(collectivesClient, member)
-  await fundSalarySovereignUsdt(assetHubClient, runtimeConfig.budget)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   await ensureSalaryCycleStarted(collectivesClient, member)
 
@@ -840,12 +869,12 @@ export async function salaryStatusStorageTest(collectivesClient: Client<any, any
 }
 
 /**
- * Verify that a salary payout sent to an explicit beneficiary arrives on Asset Hub as USDT.
+ * Verify that a salary payout sent to an explicit beneficiary arrives on Asset Hub as Hollar.
  *
  * This covers the cross-chain path from Collectives `payoutOther` through outbound XCM dispatch and final
  * `pallet-assets` balance increase for the beneficiary.
  */
-export async function salaryPayoutDeliversUsdtToAssetHubBeneficiaryTest(
+export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   collectivesClient: Client<any, any>,
   assetHubClient: Client<any, any>,
 ) {
@@ -855,7 +884,8 @@ export async function salaryPayoutDeliversUsdtToAssetHubBeneficiaryTest(
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
   await seedDan3SalaryMember(collectivesClient, member)
-  await fundSalarySovereignUsdt(assetHubClient, runtimeConfig.budget)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, beneficiary.address)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   await ensureSalaryCycleStarted(collectivesClient, member)
 
@@ -870,7 +900,7 @@ export async function salaryPayoutDeliversUsdtToAssetHubBeneficiaryTest(
   })
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
-  const balanceBefore = await usdtBalance(assetHubClient, beneficiary.address)
+  const balanceBefore = await hollarBalance(assetHubClient, beneficiary.address)
   const payoutEvents = await payoutSalaryMember(collectivesClient, member, beneficiary.address)
 
   /// Re-encode addresses for event assertions (see SS58 note in salaryLifecycleRawTest)
@@ -893,10 +923,10 @@ export async function salaryPayoutDeliversUsdtToAssetHubBeneficiaryTest(
   const assetHubEvents = await processSalaryPayoutOnAssetHub(assetHubClient)
   assertExpectedEvents(assetHubEvents, [
     { type: assetHubClient.api.events.messageQueue.Processed },
-    { type: assetHubClient.api.events.assets.Transferred },
+    { type: assetHubClient.api.events.foreignAssets.Transferred },
   ])
 
-  const balanceAfter = await usdtBalance(assetHubClient, beneficiary.address)
+  const balanceAfter = await hollarBalance(assetHubClient, beneficiary.address)
   expect(balanceAfter - balanceBefore).toBe(expectedSalary)
 }
 
@@ -921,7 +951,9 @@ export async function salaryUnregisteredPayoutTest(
 
   await seedDan3SalaryMember(collectivesClient, registeredMember)
   await seedDan3SalaryMember(collectivesClient, unregisteredMember)
-  await fundSalarySovereignUsdt(assetHubClient, runtimeConfig.budget)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, registeredMember.address)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, unregisteredMember.address)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   await ensureSalaryCycleStarted(collectivesClient, registeredMember)
 
@@ -949,10 +981,10 @@ export async function salaryUnregisteredPayoutTest(
 
   /// Pay the registered member first.
 
-  const registeredBalanceBefore = await usdtBalance(assetHubClient, registeredMember.address)
+  const registeredBalanceBefore = await hollarBalance(assetHubClient, registeredMember.address)
   await payoutSalaryMember(collectivesClient, registeredMember)
   await processSalaryPayoutOnAssetHub(assetHubClient)
-  const registeredBalanceAfter = await usdtBalance(assetHubClient, registeredMember.address)
+  const registeredBalanceAfter = await hollarBalance(assetHubClient, registeredMember.address)
   expect(registeredBalanceAfter - registeredBalanceBefore).toBe(expectedSalary)
 
   /// Now pay the unregistered member. They should get `min(ideal_salary, pot)`.
@@ -961,10 +993,10 @@ export async function salaryUnregisteredPayoutTest(
   const pot = runtimeConfig.budget - expectedSalary
   const expectedUnregisteredPayout = expectedSalary < pot ? expectedSalary : pot
 
-  const unregisteredBalanceBefore = await usdtBalance(assetHubClient, unregisteredMember.address)
+  const unregisteredBalanceBefore = await hollarBalance(assetHubClient, unregisteredMember.address)
   await payoutSalaryMember(collectivesClient, unregisteredMember)
   await processSalaryPayoutOnAssetHub(assetHubClient)
-  const unregisteredBalanceAfter = await usdtBalance(assetHubClient, unregisteredMember.address)
+  const unregisteredBalanceAfter = await hollarBalance(assetHubClient, unregisteredMember.address)
 
   expect(unregisteredBalanceAfter - unregisteredBalanceBefore).toBe(expectedUnregisteredPayout)
 
@@ -996,7 +1028,9 @@ export async function salaryProrationTest(collectivesClient: Client<any, any>, a
 
   await seedDan3SalaryMember(collectivesClient, member1)
   await seedDan3SalaryMember(collectivesClient, member2)
-  await fundSalarySovereignUsdt(assetHubClient, salaryPerMember * 2n)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, member1.address)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, member2.address)
+  await fundSalarySovereignHollar(assetHubClient, salaryPerMember * 2n)
 
   await ensureSalaryCycleStarted(collectivesClient, member1)
 
@@ -1041,20 +1075,20 @@ export async function salaryProrationTest(collectivesClient: Client<any, any>, a
 
   const expectedProrated = (salaryPerMember * smallBudget) / totalRegistrations
 
-  const balance1Before = await usdtBalance(assetHubClient, member1.address)
+  const balance1Before = await hollarBalance(assetHubClient, member1.address)
   await payoutSalaryMember(collectivesClient, member1)
   await processSalaryPayoutOnAssetHub(assetHubClient)
-  const balance1After = await usdtBalance(assetHubClient, member1.address)
+  const balance1After = await hollarBalance(assetHubClient, member1.address)
 
   const received1 = balance1After - balance1Before
   expect(received1).toBe(expectedProrated)
 
   /// Pay member2. They should also receive the same prorated amount.
 
-  const balance2Before = await usdtBalance(assetHubClient, member2.address)
+  const balance2Before = await hollarBalance(assetHubClient, member2.address)
   await payoutSalaryMember(collectivesClient, member2)
   await processSalaryPayoutOnAssetHub(assetHubClient)
-  const balance2After = await usdtBalance(assetHubClient, member2.address)
+  const balance2After = await hollarBalance(assetHubClient, member2.address)
 
   const received2 = balance2After - balance2Before
   expect(received2).toBe(expectedProrated)
@@ -1140,9 +1174,9 @@ export function baseSalaryE2ETests<
         children: [
           {
             kind: 'test',
-            label: 'salary payout delivers USDT to beneficiary on AssetHub',
+            label: 'salary payout delivers Hollar to beneficiary on AssetHub',
             testFn: async () =>
-              await salaryPayoutDeliversUsdtToAssetHubBeneficiaryTest(collectivesClient, assetHubClient),
+              await salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(collectivesClient, assetHubClient),
           },
         ],
       },
