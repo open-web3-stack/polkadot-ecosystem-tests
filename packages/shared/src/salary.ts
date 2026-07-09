@@ -1018,6 +1018,70 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
   expect(sovAfter).toBe(sovBefore)
 }
 
+/**
+ * Verify payout uses the registered amount, not the member's current rank salary.
+ *
+ * 1. Seed a Dan-3 member, fund sovereign, ensure member has DOT on AH
+ * 2. Induct, bump, register at rank 3
+ * 3. Promote member to rank 4 (storage override)
+ * 4. Move to payout window and call `payout()`
+ * 5. Verify payout amount matches rank 3 salary, not rank 4
+ */
+export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
+  collectivesClient: AnyClient,
+  assetHubClient: AnyClient,
+) {
+  const member = testAccounts.keyring.createFromUri('//salary_promotion_member')
+  const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
+  const rank3Salary = activeSalaryForRank(runtimeConfig.params, 3)
+  const rank4Salary = activeSalaryForRank(runtimeConfig.params, 4)
+
+  /// 1. Seed a Dan-3 member, fund sovereign, ensure member has DOT on AH.
+
+  await seedDan3SalaryMember(collectivesClient, member)
+  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
+  await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
+
+  await ensureSalaryCycleStarted(collectivesClient, member)
+
+  /// 2. Induct, bump, register at rank 3.
+
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
+
+  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
+  await collectivesClient.dev.newBlock()
+
+  const claimantAfterReg = await readSalaryClaimant(collectivesClient, member.address)
+  assert(claimantAfterReg !== null)
+  expect(claimantAfterReg.kind).toBe('registered')
+  expect(claimantAfterReg.registeredAmount).toBe(rank3Salary)
+
+  /// 3. Promote member to rank 4 (storage override).
+
+  await collectivesClient.dev.setStorage({
+    FellowshipCollective: {
+      members: [[[member.address], { rank: 4 }]],
+    },
+  })
+
+  /// 4. Move to payout window and call `payout()`.
+
+  await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
+
+  const balanceBefore = await hollarBalance(assetHubClient, member.address)
+  await payoutSalaryMember(collectivesClient, member)
+  await assetHubClient.dev.newBlock()
+
+  /// 5. Verify payout amount matches rank 3 salary, not rank 4.
+
+  const balanceAfter = await hollarBalance(assetHubClient, member.address)
+  const received = balanceAfter - balanceBefore
+  expect(received).toBe(rank3Salary)
+  expect(received).not.toBe(rank4Salary)
+}
+
 /// -------
 /// Test tree builder
 /// -------
@@ -1090,6 +1154,11 @@ export function baseSalaryE2ETests<
         kind: 'test',
         label: 'payout XCM fails silently when recipient has no DOT on Asset Hub',
         testFn: async () => await salaryPayoutFailsWithoutDotOnAssetHubTest(collectivesClient, assetHubClient),
+      },
+      {
+        kind: 'test',
+        label: 'payout uses registered amount after mid-cycle promotion',
+        testFn: async () => await salaryPayoutUsesRegisteredAmountAfterPromotionTest(collectivesClient, assetHubClient),
       },
     ],
   }
