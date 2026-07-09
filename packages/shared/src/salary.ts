@@ -122,19 +122,6 @@ function requireSalaryStatus(status: FellowshipSalaryStatus | null): FellowshipS
   return status
 }
 
-/** Read current chain head block number. */
-async function currentBlockNumber<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>): Promise<number> {
-  return (await client.api.rpc.chain.getHeader()).number.toNumber()
-}
-
-/** Read current block system events. */
-async function systemEvents(client: AnyClient) {
-  return await client.api.query.system.events()
-}
-
 /** Return whether events contain the matched event. */
 function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | undefined): boolean {
   return matcher ? events.some(({ event }) => matcher.is(event)) : false
@@ -375,7 +362,9 @@ export async function ensureSalaryCycleStarted<
   await sendTransaction(client.api.tx.fellowshipSalary.init().signAsync(signer))
   await client.dev.newBlock()
 
-  assertExpectedEvents(await systemEvents(client), [{ type: client.api.events.fellowshipSalary.CycleStarted }])
+  assertExpectedEvents(await client.api.query.system.events(), [
+    { type: client.api.events.fellowshipSalary.CycleStarted },
+  ])
 
   return requireSalaryStatus(await readSalaryStatus(client))
 }
@@ -404,7 +393,7 @@ export async function setSalaryCycleToRegistrationWindow<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>): Promise<FellowshipSalaryStatus> {
-  return await setSalaryCycleStart(client, await currentBlockNumber(client))
+  return await setSalaryCycleStart(client, (await client.api.rpc.chain.getHeader()).number.toNumber())
 }
 
 /** Move the current salary cycle into the payout window. */
@@ -412,7 +401,7 @@ export async function setSalaryCycleToPayoutWindow(
   client: AnyClient,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
 ): Promise<FellowshipSalaryStatus> {
-  const block = await currentBlockNumber(client)
+  const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
   return await setSalaryCycleStart(client, block - runtimeConfig.registrationPeriod - 1)
 }
 
@@ -421,7 +410,7 @@ export async function setSalaryCycleToBumpWindow(
   client: AnyClient,
   runtimeConfig: FellowshipSalaryRuntimeConfig,
 ): Promise<FellowshipSalaryStatus> {
-  const block = await currentBlockNumber(client)
+  const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
   return await setSalaryCycleStart(client, block - runtimeConfig.cyclePeriod - 1)
 }
 
@@ -434,7 +423,7 @@ export async function bumpToNextSalaryCycle(
   await setSalaryCycleToBumpWindow(client, runtimeConfig)
   await sendTransaction(client.api.tx.fellowshipSalary.bump().signAsync(signer))
   await client.dev.newBlock()
-  return await systemEvents(client)
+  return await client.api.query.system.events()
 }
 
 /// -------
@@ -448,7 +437,7 @@ export async function inductSalaryMember<
 >(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.induct().signAsync(signer))
   await client.dev.newBlock()
-  return await systemEvents(client)
+  return await client.api.query.system.events()
 }
 
 /** Submit `fellowshipSalary.register()`; return system events. */
@@ -458,7 +447,7 @@ export async function registerSalaryMember<
 >(client: Client<TCustom, TInitStorages>, signer: KeyringPair): Promise<any[]> {
   await sendTransaction(client.api.tx.fellowshipSalary.register().signAsync(signer))
   await client.dev.newBlock()
-  return await systemEvents(client)
+  return await client.api.query.system.events()
 }
 
 /** Submit `payout()` or `payoutOther()`; return system events. */
@@ -469,13 +458,13 @@ export async function payoutSalaryMember(client: AnyClient, signer: KeyringPair,
 
   await sendTransaction(call.signAsync(signer))
   await client.dev.newBlock()
-  return await systemEvents(client)
+  return await client.api.query.system.events()
 }
 
 /** Advance Asset Hub one block to process queued salary XCM. */
 export async function processSalaryPayoutOnAssetHub(assetHubClient: AnyClient): Promise<any[]> {
   await assetHubClient.dev.newBlock()
-  return await systemEvents(assetHubClient)
+  return await assetHubClient.api.query.system.events()
 }
 
 /// -------
@@ -560,7 +549,9 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
     await sendTransaction(api.tx.fellowshipSalary.init().signAsync(member))
     await collectivesClient.dev.newBlock()
 
-    assertExpectedEvents(await systemEvents(collectivesClient), [{ type: api.events.fellowshipSalary.CycleStarted }])
+    assertExpectedEvents(await collectivesClient.api.query.system.events(), [
+      { type: api.events.fellowshipSalary.CycleStarted },
+    ])
     status = requireSalaryStatus(await readSalaryStatus(collectivesClient))
   }
 
@@ -577,7 +568,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   await sendTransaction(api.tx.fellowshipSalary.induct().signAsync(member))
   await collectivesClient.dev.newBlock()
 
-  const eventsAfterInduct = await systemEvents(collectivesClient)
+  const eventsAfterInduct = await collectivesClient.api.query.system.events()
   assertExpectedEvents(eventsAfterInduct, [
     { type: api.events.fellowshipSalary.Inducted, args: { who: memberAddress } },
   ])
@@ -592,7 +583,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   ///    one by editing `cycleStart` and then use the real `bump()` extrinsic.
   ///
 
-  const blockBeforeBump = await currentBlockNumber(collectivesClient)
+  const blockBeforeBump = (await collectivesClient.api.rpc.chain.getHeader()).number.toNumber()
   await collectivesClient.dev.setStorage({
     FellowshipSalary: {
       status: {
@@ -608,7 +599,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   await sendTransaction(api.tx.fellowshipSalary.bump().signAsync(member))
   await collectivesClient.dev.newBlock()
 
-  const eventsAfterBump = await systemEvents(collectivesClient)
+  const eventsAfterBump = await collectivesClient.api.query.system.events()
   assertExpectedEvents(eventsAfterBump, [{ type: api.events.fellowshipSalary.CycleStarted }])
 
   status = requireSalaryStatus(await readSalaryStatus(collectivesClient))
@@ -623,7 +614,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   await sendTransaction(api.tx.fellowshipSalary.register().signAsync(member))
   await collectivesClient.dev.newBlock()
 
-  const eventsAfterRegister = await systemEvents(collectivesClient)
+  const eventsAfterRegister = await collectivesClient.api.query.system.events()
   assertExpectedEvents(eventsAfterRegister, [
     {
       type: api.events.fellowshipSalary.Registered,
@@ -643,7 +634,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   /// 7. Enter the payout window by rewinding `cycleStart` past `registrationPeriod`.
   ///
 
-  const blockBeforePayout = await currentBlockNumber(collectivesClient)
+  const blockBeforePayout = (await collectivesClient.api.rpc.chain.getHeader()).number.toNumber()
   await collectivesClient.dev.setStorage({
     FellowshipSalary: {
       status: {
@@ -665,7 +656,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   await sendTransaction(api.tx.fellowshipSalary.payout().signAsync(member))
   await collectivesClient.dev.newBlock()
 
-  const eventsAfterPayout = await systemEvents(collectivesClient)
+  const eventsAfterPayout = await collectivesClient.api.query.system.events()
   assertExpectedEvents(eventsAfterPayout, [
     {
       type: api.events.fellowshipSalary.Paid,
@@ -693,7 +684,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   ///
 
   await assetHubClient.dev.newBlock()
-  const assetHubEvents = await systemEvents(assetHubClient)
+  const assetHubEvents = await assetHubClient.api.query.system.events()
 
   assertExpectedEvents(assetHubEvents, [
     { type: assetHubClient.api.events.messageQueue.Processed },
