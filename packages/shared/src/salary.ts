@@ -111,12 +111,6 @@ export interface FellowshipSalaryClaimantState {
 /// Internal helpers
 /// -------
 
-/** Assert salary status exists; return the unwrapped value. */
-function requireSalaryStatus(status: FellowshipSalaryStatus | null): FellowshipSalaryStatus {
-  assert(status !== null, 'Expected fellowship salary status to exist')
-  return status
-}
-
 /** Return whether events contain the matched event. */
 function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | undefined): boolean {
   return matcher ? events.some(({ event }) => matcher.is(event)) : false
@@ -361,12 +355,12 @@ export async function ensureSalaryCycleStarted<
     { type: client.api.events.fellowshipSalary.CycleStarted },
   ])
 
-  return requireSalaryStatus(await readSalaryStatus(client))
+  return (await readSalaryStatus(client))!
 }
 
 /** Rewrite `cycleStart` while preserving other salary status fields. */
 async function setSalaryCycleStart(client: AnyClient, cycleStart: number): Promise<FellowshipSalaryStatus> {
-  const status = requireSalaryStatus(await readSalaryStatus(client))
+  const status = (await readSalaryStatus(client))!
 
   await client.dev.setStorage({
     FellowshipSalary: {
@@ -380,7 +374,7 @@ async function setSalaryCycleStart(client: AnyClient, cycleStart: number): Promi
     },
   })
 
-  return requireSalaryStatus(await readSalaryStatus(client))
+  return (await readSalaryStatus(client))!
 }
 
 /** Move the current salary cycle into the registration window. */
@@ -521,7 +515,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
     assertExpectedEvents(await collectivesClient.api.query.system.events(), [
       { type: api.events.fellowshipSalary.CycleStarted },
     ])
-    status = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+    status = (await readSalaryStatus(collectivesClient))!
   }
 
   ///
@@ -571,7 +565,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   const eventsAfterBump = await collectivesClient.api.query.system.events()
   assertExpectedEvents(eventsAfterBump, [{ type: api.events.fellowshipSalary.CycleStarted }])
 
-  status = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  status = (await readSalaryStatus(collectivesClient))!
   expect(status.budget).toBe(runtimeConfig.budget)
   expect(status.totalRegistrations).toBe(0n)
   expect(status.totalUnregisteredPaid).toBe(0n)
@@ -596,7 +590,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   expect(claimantAfterRegister.kind).toBe('registered')
   expect(claimantAfterRegister.registeredAmount).toBe(expectedSalary)
 
-  status = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  status = (await readSalaryStatus(collectivesClient))!
   expect(status.totalRegistrations).toBe(expectedSalary)
 
   ///
@@ -691,15 +685,15 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
 
   /// 3. Seed inducted claimant state (induction doesn't touch status, so seed directly).
 
-  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
-  const statusAfterInduct = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterInduct = (await readSalaryStatus(collectivesClient))!
 
   /// 4. Bump to next cycle; verify status reset.
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
-  const statusAfterBump = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterBump = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterBump.cycleIndex).toBe(statusAfterInduct.cycleIndex + 1)
   expect(statusAfterBump.budget).toBe(runtimeConfig.budget)
   expect(statusAfterBump.totalRegistrations).toBe(0n)
@@ -709,7 +703,7 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
 
   await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member))
   await collectivesClient.dev.newBlock()
-  const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterRegister = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterRegister.totalUnregisteredPaid).toBe(0n)
 
@@ -718,7 +712,7 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
   await payoutSalaryMember(collectivesClient, member)
 
-  const statusAfterPayout = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterPayout = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterPayout.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterPayout.totalUnregisteredPaid).toBe(0n)
 }
@@ -754,7 +748,7 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   /// 3. Seed registered claimant state and move to payout window.
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
-  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, {
     Registered: expectedSalary.toString(),
   })
@@ -822,7 +816,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   /// 2. Ensure the salary cycle is started; seed inducted claimant state.
 
   await ensureSalaryCycleStarted(collectivesClient, registeredMember)
-  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, registeredMember.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, unregisteredMember.address, cycleIndex, { Nothing: null })
 
@@ -835,7 +829,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(registeredMember))
   await collectivesClient.dev.newBlock()
 
-  const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterRegister = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterRegister.totalRegistrations).toBe(expectedSalary)
   expect(statusAfterRegister.totalUnregisteredPaid).toBe(0n)
 
@@ -863,7 +857,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   /// 7. Verify `totalUnregisteredPaid`.
 
-  const statusAfterUnregistered = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterUnregistered = (await readSalaryStatus(collectivesClient))!
   expect(statusAfterUnregistered.totalUnregisteredPaid).toBe(expectedUnregisteredPayout)
 }
 
@@ -898,7 +892,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   /// 2. Ensure the salary cycle is started; seed inducted claimant state.
 
   await ensureSalaryCycleStarted(collectivesClient, member1)
-  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member1.address, cycleIndex, { Nothing: null })
   await seedSalaryClaimant(collectivesClient, member2.address, cycleIndex, { Nothing: null })
 
@@ -906,7 +900,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   await bumpToNextSalaryCycle(collectivesClient, member1, runtimeConfig)
 
-  const statusAfterBump = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterBump = (await readSalaryStatus(collectivesClient))!
   await collectivesClient.dev.setStorage({
     FellowshipSalary: {
       status: {
@@ -926,7 +920,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   await sendTransaction(collectivesClient.api.tx.fellowshipSalary.register().signAsync(member2))
   await collectivesClient.dev.newBlock()
 
-  const statusAfterRegister = requireSalaryStatus(await readSalaryStatus(collectivesClient))
+  const statusAfterRegister = (await readSalaryStatus(collectivesClient))!
   const totalRegistrations = statusAfterRegister.totalRegistrations
   expect(totalRegistrations).toBe(salaryPerMember * 2n)
   expect(totalRegistrations).toBeGreaterThan(smallBudget)
@@ -992,7 +986,7 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
 
   /// 2. Induct → bump → register → payout.
 
-  const cycleIndex = requireSalaryStatus(await readSalaryStatus(collectivesClient)).cycleIndex
+  const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
 
   await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
