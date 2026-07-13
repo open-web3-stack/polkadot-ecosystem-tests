@@ -41,10 +41,11 @@
     "wss://people-polkadot.api.onfinality.io/public-ws"
   ],
   "acala": [
+    "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc-1.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc.aca-api.network",
-    "wss://rpc-acala.luckyfriday.io",
-    "wss://acala-rpc.n.dwellir.com",
-    "wss://acala-polkadot.api.onfinality.io/public-ws"
+    "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
     "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
