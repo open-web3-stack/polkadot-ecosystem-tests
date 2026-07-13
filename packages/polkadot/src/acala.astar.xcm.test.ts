@@ -6,7 +6,8 @@ import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('acala & astar', async () => {
+// Disabled: RPC endpoint timeouts causing known-good update failures (2026-07-12, 2026-07-13)
+describe.skip('acala & astar', async () => {
   const [astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
 
   runXtokenstHorizontal('astar transfer ACA to acala', async () => {
