@@ -1,8 +1,8 @@
 {
   "polkadot": [
     "wss://dot-rpc.stakeworld.io",
-    "wss://polkadot-rpc.n.dwellir.com",
     "wss://rpc-polkadot.helixstreet.io",
+    "wss://polkadot-rpc.n.dwellir.com",
     "wss://rpc-polkadot.luckyfriday.io",
     "wss://polkadot.api.onfinality.io/public-ws"
   ],
@@ -52,8 +52,8 @@
     "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
-    "wss://hydration-rpc.n.dwellir.com",
-    "wss://rpc.hydradx.cloud"
+    "wss://rpc.hydradx.cloud",
+    "wss://hydration-rpc.n.dwellir.com"
   ],
   "moonbeam": [
     "wss://wss.api.moonbeam.network"
@@ -62,8 +62,8 @@
     "wss://astar-rpc.n.dwellir.com"
   ],
   "kusama": [
-    "wss://kusama-rpc.n.dwellir.com",
     "wss://rpc-kusama.luckyfriday.io",
+    "wss://kusama-rpc.n.dwellir.com",
     "wss://kusama.api.onfinality.io/public-ws"
   ],
   "assetHubKusama": [
