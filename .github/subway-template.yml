@@ -7,12 +7,12 @@ extensions:
     # the failover ladder on stall/disconnect via its existing rotation
     # logic, so an initial bias toward array[0] doesn't sacrifice resilience.
     shuffle_endpoints: false
-    # Heavy upstream queries (e.g. Acala storage at the pinned block) can take
-    # longer than Subway's default 30s per-upstream timeout. Without this,
-    # Subway cycles through the entire endpoint list before any single
-    # upstream has a chance to respond. Requires Subway >= v0.1.1
-    # (AcalaNetwork/subway#203).
-    request_timeout_seconds: 90
+    # Per-upstream request timeout. Subway retries the next endpoint on
+    # expiry, so this value × retry count must fit inside the server-level
+    # request_timeout_seconds below. 60s is generous for even the heaviest
+    # state queries while allowing ≥3 endpoint rotations within the 240s
+    # server ceiling. Requires Subway >= v0.1.1 (AcalaNetwork/subway#203).
+    request_timeout_seconds: 60
   event_bus:
   substrate_api:
     stale_timeout_seconds: 180
@@ -28,7 +28,7 @@ extensions:
     listen_address: '127.0.0.1'
     max_connections: 2000
     max_batch_size: 10
-    request_timeout_seconds: 120
+    request_timeout_seconds: 240
     http_methods:
       - path: /health
         method: system_health
