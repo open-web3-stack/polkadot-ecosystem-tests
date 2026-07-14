@@ -16,71 +16,74 @@ jobs:
       - name: Install ws
         run: npm install ws
 
-      - name: Test Acala endpoints directly (no subway)
-        run: |
-          node -e "
-          const WebSocket = require('ws');
-
-          function testWs(url, method, params) {
-            return new Promise((resolve) => {
-              const ws = new WebSocket(url);
-              const start = Date.now();
-              const timer = setTimeout(() => { ws.close(); resolve({status: 'TIMEOUT_15s', ms: Date.now()-start}); }, 15000);
-              ws.on('open', () => {
-                ws.send(JSON.stringify({jsonrpc:'2.0', method, params, id:1}));
-              });
-              ws.on('message', (data) => {
-                clearTimeout(timer);
-                ws.close();
-                const r = JSON.parse(data.toString());
-                resolve({status: r.result ? 'OK' : 'ERR', ms: Date.now()-start});
-              });
-              ws.on('error', (e) => { clearTimeout(timer); resolve({status: 'ERROR: ' + e.message, ms: Date.now()-start}); });
-            });
-          }
-
-          async function main() {
-            const block = 11553958;
-            const endpoints = [
-              'wss://acala-rpc-0.aca-api.network',
-              'wss://acala-rpc-1.aca-api.network',
-              'wss://acala-rpc-3.aca-api.network/ws',
-              'wss://acala-rpc.aca-api.network',
-              'wss://rpc-acala.luckyfriday.io',
-              'wss://dot-rpc.stakeworld.io',
-            ];
-
-            console.log('=== chain_getBlockHash(' + block + ') ===');
-            for (const ep of endpoints) {
-              const r = await testWs(ep, 'chain_getBlockHash', [block]);
-              console.log(ep.split('//')[1].padEnd(45), r.status.padEnd(15), r.ms + 'ms');
-            }
-
-            console.log('');
-            console.log('=== chain_getHeader (latest) ===');
-            for (const ep of endpoints) {
-              const r = await testWs(ep, 'chain_getHeader', []);
-              console.log(ep.split('//')[1].padEnd(45), r.status.padEnd(15), r.ms + 'ms');
-            }
-          }
-          main();
-          "
-
-      - name: Test through subway
+      - name: Install subway
         run: |
           docker create --name subway-extract acala/subway:v0.1.1
           sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
           docker rm subway-extract
           sudo chmod +x /usr/local/bin/subway
+          subway --version
 
-          cat > /tmp/subway-acala.yml << 'SCFG'
+      - name: Test with minimal subway config (no substrate_api, no cache)
+        run: |
+          cat > /tmp/subway-minimal.yml << 'SCFG'
           extensions:
             client:
               endpoints:
                 - wss://acala-rpc-0.aca-api.network
-                - wss://acala-rpc-1.aca-api.network
-                - wss://acala-rpc-3.aca-api.network/ws
-                - wss://acala-rpc.aca-api.network
+              shuffle_endpoints: false
+              request_timeout_seconds: 30
+            event_bus:
+            telemetry:
+              provider: none
+            server:
+              port: 9090
+              listen_address: '127.0.0.1'
+              max_connections: 100
+              request_timeout_seconds: 60
+              cors: null
+          middlewares:
+            methods:
+              - upstream
+            subscriptions:
+              - upstream
+          rpcs: substrate
+          SCFG
+
+          subway --config /tmp/subway-minimal.yml > /tmp/subway-minimal.log 2>&1 &
+          sleep 5
+
+          echo "=== Minimal subway (no cache, no substrate_api) ==="
+          node -e "
+          const WebSocket = require('ws');
+          const ws = new WebSocket('ws://localhost:9090');
+          const start = Date.now();
+          ws.on('open', () => {
+            console.log('Connected in ' + (Date.now()-start) + 'ms');
+            ws.send(JSON.stringify({jsonrpc:'2.0', method:'chain_getBlockHash', params:[11553958], id:1}));
+          });
+          ws.on('message', (data) => {
+            console.log('Response in ' + (Date.now()-start) + 'ms');
+            console.log(data.toString().substring(0,120));
+            ws.close();
+            process.exit(0);
+          });
+          ws.on('error', (e) => console.log('Error: ' + e.message));
+          setTimeout(() => { console.log('TIMEOUT 30s'); ws.close(); process.exit(1); }, 30000);
+          " || true
+
+          echo ""
+          echo "=== Minimal subway log ==="
+          cat /tmp/subway-minimal.log
+          kill %1 2>/dev/null || true
+
+      - name: Test with full subway config (matching CI)
+        run: |
+          cat > /tmp/subway-full.yml << 'SCFG'
+          extensions:
+            client:
+              endpoints:
+                - wss://acala-rpc-0.aca-api.network
                 - wss://rpc-acala.luckyfriday.io
               shuffle_endpoints: false
               request_timeout_seconds: 60
@@ -95,7 +98,7 @@ jobs:
             merge_subscription:
               keep_alive_seconds: 120
             server:
-              port: 9006
+              port: 9091
               listen_address: '127.0.0.1'
               max_connections: 2000
               max_batch_size: 10
@@ -128,30 +131,31 @@ jobs:
           rpcs: substrate
           SCFG
 
-          subway --config /tmp/subway-acala.yml > /tmp/subway.log 2>&1 &
+          subway --config /tmp/subway-full.yml > /tmp/subway-full.log 2>&1 &
           sleep 5
-          curl -sf http://127.0.0.1:9006/health && echo "Subway health: OK" || echo "Subway health: FAILED"
+          curl -sf http://127.0.0.1:9091/health && echo "Health: OK" || echo "Health: FAILED"
 
+          echo ""
+          echo "=== Full subway config ==="
           node -e "
           const WebSocket = require('ws');
-          const ws = new WebSocket('ws://localhost:9006');
+          const ws = new WebSocket('ws://localhost:9091');
           const start = Date.now();
           ws.on('open', () => {
-            console.log('Connected to subway in ' + (Date.now()-start) + 'ms');
+            console.log('Connected in ' + (Date.now()-start) + 'ms');
             ws.send(JSON.stringify({jsonrpc:'2.0', method:'chain_getBlockHash', params:[11553958], id:1}));
           });
           ws.on('message', (data) => {
-            console.log('Response through subway in ' + (Date.now()-start) + 'ms');
+            console.log('Response in ' + (Date.now()-start) + 'ms');
             console.log(data.toString().substring(0,120));
             ws.close();
             process.exit(0);
           });
-          ws.on('error', (e) => { console.log('Error: ' + e.message); });
-          setTimeout(() => { console.log('SUBWAY TIMEOUT after 90s'); ws.close(); process.exit(1); }, 90000);
-          "
+          ws.on('error', (e) => console.log('Error: ' + e.message));
+          setTimeout(() => { console.log('TIMEOUT 30s'); ws.close(); process.exit(1); }, 30000);
+          " || true
 
-          echo ''
-          echo '=== Subway log ==='
-          cat /tmp/subway.log
-
+          echo ""
+          echo "=== Full subway log ==="
+          cat /tmp/subway-full.log
           kill %1 2>/dev/null || true
