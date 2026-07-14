@@ -947,8 +947,11 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 /**
  * Payout succeeds without DOT on Asset Hub (Hollar is a sufficient asset).
  *
+ * Since Hollar was made a sufficient asset on Asset Hub, a beneficiary with no DOT for
+ * existential deposit can still hold it, so the payout XCM lands instead of failing.
+ *
  * 1. Seed a Dan-3 member on Collectives, do NOT seed member DOT on AH
- * 2. Induct, bump, register, payout
+ * 2. Bump, register, move to payout window, and call `payout()`
  * 3. Process XCM on Asset Hub
  * 4. Verify member received Hollar despite having no DOT
  * 5. Verify sovereign balance decreased

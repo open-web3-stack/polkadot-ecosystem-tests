@@ -205,6 +205,10 @@ These include:
     the residual budget pot after all registered members are paid
   - Proration: when total registrations exceed the cycle budget, individual payouts are
     reduced proportionally
+  - Sufficient-asset semantics: since the salary asset (Hollar) is now a sufficient asset
+    on Asset Hub, a member with no DOT for existential deposit still receives their payout
+  - Mid-cycle promotion: a payout uses the amount locked at registration time, not the
+    member's current rank if they were promoted after registering
   - All salary amounts and period lengths read from live chain state
     (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
 
