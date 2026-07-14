@@ -1,0 +1,157 @@
+name: Debug Acala endpoints
+
+on:
+  push:
+    branches: [fix-acala-subway-resilience]
+
+jobs:
+  test-endpoints:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install ws
+        run: npm install ws
+
+      - name: Test Acala endpoints directly (no subway)
+        run: |
+          node -e "
+          const WebSocket = require('ws');
+
+          function testWs(url, method, params) {
+            return new Promise((resolve) => {
+              const ws = new WebSocket(url);
+              const start = Date.now();
+              const timer = setTimeout(() => { ws.close(); resolve({status: 'TIMEOUT_15s', ms: Date.now()-start}); }, 15000);
+              ws.on('open', () => {
+                ws.send(JSON.stringify({jsonrpc:'2.0', method, params, id:1}));
+              });
+              ws.on('message', (data) => {
+                clearTimeout(timer);
+                ws.close();
+                const r = JSON.parse(data.toString());
+                resolve({status: r.result ? 'OK' : 'ERR', ms: Date.now()-start});
+              });
+              ws.on('error', (e) => { clearTimeout(timer); resolve({status: 'ERROR: ' + e.message, ms: Date.now()-start}); });
+            });
+          }
+
+          async function main() {
+            const block = 11553958;
+            const endpoints = [
+              'wss://acala-rpc-0.aca-api.network',
+              'wss://acala-rpc-1.aca-api.network',
+              'wss://acala-rpc-3.aca-api.network/ws',
+              'wss://acala-rpc.aca-api.network',
+              'wss://rpc-acala.luckyfriday.io',
+              'wss://dot-rpc.stakeworld.io',
+            ];
+
+            console.log('=== chain_getBlockHash(' + block + ') ===');
+            for (const ep of endpoints) {
+              const r = await testWs(ep, 'chain_getBlockHash', [block]);
+              console.log(ep.split('//')[1].padEnd(45), r.status.padEnd(15), r.ms + 'ms');
+            }
+
+            console.log('');
+            console.log('=== chain_getHeader (latest) ===');
+            for (const ep of endpoints) {
+              const r = await testWs(ep, 'chain_getHeader', []);
+              console.log(ep.split('//')[1].padEnd(45), r.status.padEnd(15), r.ms + 'ms');
+            }
+          }
+          main();
+          "
+
+      - name: Test through subway
+        run: |
+          docker create --name subway-extract acala/subway:v0.1.1
+          sudo docker cp subway-extract:/usr/local/bin/subway /usr/local/bin/subway
+          docker rm subway-extract
+          sudo chmod +x /usr/local/bin/subway
+
+          cat > /tmp/subway-acala.yml << 'SCFG'
+          extensions:
+            client:
+              endpoints:
+                - wss://acala-rpc-0.aca-api.network
+                - wss://acala-rpc-1.aca-api.network
+                - wss://acala-rpc-3.aca-api.network/ws
+                - wss://acala-rpc.aca-api.network
+                - wss://rpc-acala.luckyfriday.io
+              shuffle_endpoints: false
+              request_timeout_seconds: 60
+            event_bus:
+            substrate_api:
+              stale_timeout_seconds: 180
+            telemetry:
+              provider: none
+            cache:
+              default_ttl_seconds: 3600
+              default_size: 1000
+            merge_subscription:
+              keep_alive_seconds: 120
+            server:
+              port: 9006
+              listen_address: '127.0.0.1'
+              max_connections: 2000
+              max_batch_size: 10
+              request_timeout_seconds: 240
+              http_methods:
+                - path: /health
+                  method: system_health
+                - path: /liveness
+                  method: chain_getBlockHash
+              cors: null
+            rate_limit:
+              connection:
+                burst: 100
+                period_secs: 1
+                jitter_up_to_millis: 100
+              ip:
+                burst: 1000
+                period_secs: 10
+                jitter_up_to_millis: 100
+              use_xff: false
+          middlewares:
+            methods:
+              - response
+              - inject_params
+              - cache
+              - upstream
+            subscriptions:
+              - merge_subscription
+              - upstream
+          rpcs: substrate
+          SCFG
+
+          subway --config /tmp/subway-acala.yml > /tmp/subway.log 2>&1 &
+          sleep 5
+          curl -sf http://127.0.0.1:9006/health && echo "Subway health: OK" || echo "Subway health: FAILED"
+
+          node -e "
+          const WebSocket = require('ws');
+          const ws = new WebSocket('ws://localhost:9006');
+          const start = Date.now();
+          ws.on('open', () => {
+            console.log('Connected to subway in ' + (Date.now()-start) + 'ms');
+            ws.send(JSON.stringify({jsonrpc:'2.0', method:'chain_getBlockHash', params:[11553958], id:1}));
+          });
+          ws.on('message', (data) => {
+            console.log('Response through subway in ' + (Date.now()-start) + 'ms');
+            console.log(data.toString().substring(0,120));
+            ws.close();
+            process.exit(0);
+          });
+          ws.on('error', (e) => { console.log('Error: ' + e.message); });
+          setTimeout(() => { console.log('SUBWAY TIMEOUT after 90s'); ws.close(); process.exit(1); }, 90000);
+          "
+
+          echo ''
+          echo '=== Subway log ==='
+          cat /tmp/subway.log
+
+          kill %1 2>/dev/null || true
