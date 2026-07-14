@@ -303,7 +303,7 @@ export async function seedSalaryClaimant(
   })
 }
 
-/** Seed the salary sovereign Hollar balance on Asset Hub. */
+/** Seed the salary sovereign Hollar balance on Asset Hub for deterministic payout tests. */
 export async function fundSalarySovereignHollar(assetHubClient: AnyClient, amount: bigint): Promise<void> {
   const assetInfo = (await assetHubClient.api.query.foreignAssets.asset(HOLLAR_ASSET_LOCATION)) as any
   const currentAccounts = assetInfo.isSome ? assetInfo.unwrap().accounts.toNumber() : 0
@@ -322,16 +322,6 @@ export async function fundSalarySovereignHollar(assetHubClient: AnyClient, amoun
         ],
       ],
       account: [[[HOLLAR_ASSET_LOCATION, SALARY_SOVEREIGN_ADDRESS], { balance: amount.toString() }]],
-    },
-  })
-}
-
-/** Ensure a member has DOT on Asset Hub for existential deposit. */
-export async function ensureMemberHasDotOnAssetHub(assetHubClient: AnyClient, address: string): Promise<void> {
-  const ED = 10n ** 10n
-  await assetHubClient.dev.setStorage({
-    System: {
-      account: [[[address], { providers: 1, data: { free: ED.toString(), frozen: 0, reserved: 0 } }]],
     },
   })
 }
@@ -500,7 +490,6 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   ///
 
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
 
   ///
   /// 3. Live Collectives forks already have salary running, but bootstrap `init()` if the forked
@@ -676,7 +665,7 @@ export async function salaryStatusStorageTest(collectivesClient: AnyClient, asse
   /// 1. Seed member and sovereign balances.
 
   await seedDan3SalaryMember(collectivesClient, member)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
+
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   /// 2. Ensure the salary cycle is started.
@@ -738,7 +727,7 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   /// 1. Seed member, beneficiary ED, and sovereign Hollar.
 
   await seedDan3SalaryMember(collectivesClient, member)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, beneficiary.address)
+
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   /// 2. Ensure the salary cycle is started.
@@ -809,8 +798,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
 
   await seedDan3SalaryMember(collectivesClient, registeredMember)
   await seedDan3SalaryMember(collectivesClient, unregisteredMember)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, registeredMember.address)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, unregisteredMember.address)
+
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   /// 2. Ensure the salary cycle is started; seed inducted claimant state.
@@ -885,8 +873,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 
   await seedDan3SalaryMember(collectivesClient, member1)
   await seedDan3SalaryMember(collectivesClient, member2)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, member1.address)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, member2.address)
+
   await fundSalarySovereignHollar(assetHubClient, salaryPerMember * 2n)
 
   /// 2. Ensure the salary cycle is started; seed inducted claimant state.
@@ -958,16 +945,15 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
 }
 
 /**
- * Payout fails silently when Hollar is not sufficient and the recipient has no DOT on Asset Hub.
+ * Payout succeeds without DOT on Asset Hub (Hollar is a sufficient asset).
  *
- * 1. Seed a Dan-3 member on Collectives, fund sovereign with Hollar, do NOT seed member DOT on AH
- * 2. Run through induct → bump → register → payout
- * 3. Verify XCM was dispatched from Collectives (pallet thinks it paid)
- * 4. Process XCM on Asset Hub — transfer fails silently
- * 5. Verify member Hollar balance is still zero
- * 6. Verify sovereign Hollar balance was NOT deducted
+ * 1. Seed a Dan-3 member on Collectives, do NOT seed member DOT on AH
+ * 2. Induct, bump, register, payout
+ * 3. Process XCM on Asset Hub
+ * 4. Verify member received Hollar despite having no DOT
+ * 5. Verify sovereign balance decreased
  */
-export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
+export async function salaryPayoutSucceedsWithoutDotOnAssetHubTest(
   collectivesClient: AnyClient,
   assetHubClient: AnyClient,
 ) {
@@ -975,16 +961,17 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
   const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
 
-  /// 1. Seed member on Collectives, fund sovereign — deliberately skip ensureMemberHasDotOnAssetHub.
+  /// 1. Seed member on Collectives. No DOT on AH.
 
   await seedDan3SalaryMember(collectivesClient, member)
+
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   const sovBefore = await hollarBalance(assetHubClient, SALARY_SOVEREIGN_ADDRESS)
 
   await ensureSalaryCycleStarted(collectivesClient, member)
 
-  /// 2. Induct → bump → register → payout.
+  /// 2. Induct, bump, register, payout.
 
   const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
@@ -994,34 +981,28 @@ export async function salaryPayoutFailsWithoutDotOnAssetHubTest(
   await collectivesClient.dev.newBlock()
   await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
 
-  /// 3. Payout dispatches XCM from Collectives.
-
   const payoutEvents = await payoutSalaryMember(collectivesClient, member)
   expectSourceChainXcmDispatch(collectivesClient, payoutEvents as any[])
 
-  /// 4. Claimant shows "attempted" — Collectives thinks it paid.
-
-  const claimant = await readSalaryClaimant(collectivesClient, member.address)
-  assert(claimant !== null)
-  expect(claimant.kind).toBe('attempted')
-  expect(claimant.attemptedAmount).toBe(expectedSalary)
-
-  /// 5. Process XCM on Asset Hub — transfer fails silently, member gets nothing.
+  /// 3. Process XCM on Asset Hub.
 
   await assetHubClient.dev.newBlock()
-  const memberBalance = await hollarBalance(assetHubClient, member.address)
-  expect(memberBalance).toBe(0n)
 
-  /// 6. Sovereign balance unchanged — failed XCM does not drain funds.
+  /// 4. Verify member received Hollar despite having no DOT.
+
+  const memberBalance = await hollarBalance(assetHubClient, member.address)
+  expect(memberBalance).toBe(expectedSalary)
+
+  /// 5. Verify sovereign balance decreased.
 
   const sovAfter = await hollarBalance(assetHubClient, SALARY_SOVEREIGN_ADDRESS)
-  expect(sovAfter).toBe(sovBefore)
+  expect(sovAfter).toBe(sovBefore - expectedSalary)
 }
 
 /**
  * Verify payout uses the registered amount, not the member's current rank salary.
  *
- * 1. Seed a Dan-3 member, fund sovereign, ensure member has DOT on AH
+ * 1. Seed a Dan-3 member on Collectives
  * 2. Induct, bump, register at rank 3
  * 3. Promote member to rank 4 (storage override)
  * 4. Move to payout window and call `payout()`
@@ -1036,10 +1017,10 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
   const rank3Salary = activeSalaryForRank(runtimeConfig.params, 3)
   const rank4Salary = activeSalaryForRank(runtimeConfig.params, 4)
 
-  /// 1. Seed a Dan-3 member, fund sovereign, ensure member has DOT on AH.
+  /// 1. Seed a Dan-3 member on Collectives.
 
   await seedDan3SalaryMember(collectivesClient, member)
-  await ensureMemberHasDotOnAssetHub(assetHubClient, member.address)
+
   await fundSalarySovereignHollar(assetHubClient, runtimeConfig.budget)
 
   await ensureSalaryCycleStarted(collectivesClient, member)
@@ -1152,8 +1133,8 @@ export function baseSalaryE2ETests<
       },
       {
         kind: 'test',
-        label: 'payout XCM fails silently when recipient has no DOT on Asset Hub',
-        testFn: async () => await salaryPayoutFailsWithoutDotOnAssetHubTest(collectivesClient, assetHubClient),
+        label: 'payout succeeds without DOT on Asset Hub (Hollar is sufficient)',
+        testFn: async () => await salaryPayoutSucceedsWithoutDotOnAssetHubTest(collectivesClient, assetHubClient),
       },
       {
         kind: 'test',
