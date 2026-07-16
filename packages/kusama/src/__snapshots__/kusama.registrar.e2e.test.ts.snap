@@ -1,5 +1,93 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Registrar > pallet registrar - add_lock / remove_lock cycle > add_lock on non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock round-trip after unlock 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock while already locked 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - add_lock / remove_lock cycle > manager add lock while unlocked 1`] = `
+[
+  {
+    "data": {
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - deregister functions > alice deregister event 1`] = `
 [
   {
@@ -37,6 +125,31 @@ exports[`Kusama Registrar > pallet registrar - deregister functions > cannot der
       "dispatchError": {
         "Module": {
           "error": "0x07000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - deregister functions > deregister non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
           "index": 70,
         },
       },
@@ -174,6 +287,81 @@ exports[`Kusama Registrar > pallet registrar - register functions > cannot regis
       "dispatchError": {
         "Module": {
           "error": "0x01000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > cannot register para with genesis head > MAX_HEAD_DATA_SIZE 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x04000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > cannot register para with insufficient balance 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x02000000",
+          "index": 4,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 6000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - register functions > cannot register para with validation code < MIN_CODE_SIZE 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0c000000",
           "index": 70,
         },
       },
@@ -366,6 +554,51 @@ exports[`Kusama Registrar > pallet registrar - reserve functions > registrar res
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - root registration functions > manager cannot lock an already-locked para 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0a000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - root registration functions > manager cannot remove lock 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - root registration functions > root deregister event 1`] = `
 [
   {
@@ -441,6 +674,21 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > bob sched
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > para origin schedule code upgrade success 1`] = `
+[
+  {
+    "data": "(redacted)",
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": "(redacted)",
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root schedule code upgrade success 1`] = `
 [
   {
@@ -452,6 +700,31 @@ exports[`Kusama Registrar > pallet registrar - schedule code upgrade > root sche
     "data": "(redacted)",
     "method": "CodeUpgradeScheduled",
     "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - schedule code upgrade > schedule code upgrade for non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
@@ -531,6 +804,31 @@ exports[`Kusama Registrar > pallet registrar - set current head > root set curre
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - set current head > set current head for non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - swap functions > cannot swap two parathreads 1`] = `
 [
   {
@@ -576,6 +874,16 @@ exports[`Kusama Registrar > pallet registrar - swap functions > non-owner cannot
 ]
 `;
 
+exports[`Kusama Registrar > pallet registrar - swap functions > para origin swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
 exports[`Kusama Registrar > pallet registrar - swap functions > parachain parachain swap event 1`] = `
 [
   {
@@ -602,6 +910,41 @@ exports[`Kusama Registrar > pallet registrar - swap functions > parathread parac
     "data": {},
     "method": "Swapped",
     "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - swap functions > root swap event 1`] = `
+[
+  {
+    "data": {},
+    "method": "Swapped",
+    "section": "registrar",
+  },
+]
+`;
+
+exports[`Kusama Registrar > pallet registrar - swap functions > swap non-existent para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x00000000",
+          "index": 70,
+        },
+      },
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 10000)",
+          "refTime": "(rounded 2000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;

@@ -702,6 +702,16 @@ exports[`Polkadot Asset Hub Nomination Pools > nomination pool withdraw unbonded
     "section": "nominationPools",
   },
   {
+    "data": {
+      "amount": 0,
+      "reason": {
+        "Revive": "AddressMapping",
+      },
+    },
+    "method": "Released",
+    "section": "balances",
+  },
+  {
     "data": {},
     "method": "Destroyed",
     "section": "nominationPools",
