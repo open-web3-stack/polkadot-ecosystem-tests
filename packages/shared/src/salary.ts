@@ -2,6 +2,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import { encodeAddress } from '@polkadot/util-crypto'
 
@@ -66,6 +67,10 @@ export const SALARY_SOVEREIGN_ADDRESS = '13w7NdvSR1Af8xsQTArDtZmVvjE8XhWNdL4yed3
 // Default free balance given to synthetic Fellowship members created for salary tests.
 // It is intentionally generous so fees never interfere with the salary lifecycle assertions.
 const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
+
+// An XCM query id the paymaster will never have recorded. Used to drive `check_payment` into its
+// `PaymentStatus::Unknown` branch so the `Inconclusive` error path can be exercised.
+const SALARY_UNKNOWN_PAYMENT_ID = 999_999
 
 /// -------
 /// Types
@@ -1078,7 +1083,7 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
  */
 async function expectSalaryExtrinsicError(
   client: AnyClient,
-  tx: any,
+  tx: SubmittableExtrinsic<'promise'>,
   signer: KeyringPair,
   errorName: string,
 ): Promise<void> {
@@ -1151,6 +1156,7 @@ export async function salaryInductFailureTest(collectivesClient: AnyClient, _ass
  * 2. Registering before induction fails with `NotInducted`
  * 3. Induct, then register successfully in the current cycle
  * 4. Registering again in the same cycle fails with `NoClaim`
+ * 5. In a fresh cycle, registering past the registration window fails with `TooLate`
  */
 export async function salaryRegisterFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
   const api = collectivesClient.api
@@ -1179,13 +1185,22 @@ export async function salaryRegisterFailureTest(collectivesClient: AnyClient, _a
   /// 4. Re-registering in the same cycle trips `last_active < cycle_index` → `NoClaim`.
 
   await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.register(), member, 'NoClaim')
+
+  /// 5. Bump to a fresh cycle, then move past the registration window so `register` is `TooLate`.
+  ///    Rewinding `cycleStart` past `registrationPeriod` puts `now` beyond the registration cutoff.
+
+  await bumpToNextSalaryCycle(collectivesClient, member, runtimeConfig)
+  await setSalaryCycleToPayoutWindow(collectivesClient, runtimeConfig)
+
+  await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.register(), member, 'TooLate')
 }
 
 /**
- * `bump` rejects when called before the cycle boundary.
+ * `bump` rejects before the cycle boundary and when no cycle exists.
  *
- * 1. Ensure the cycle exists, seeded fresh so `cycleStart` is in the future relative to the boundary
+ * 1. Ensure the cycle exists, then push `cycleStart` into the future so the boundary is unmet
  * 2. Calling `bump` before `cycleStart + cyclePeriod` fails with `NotYet`
+ * 3. Remove the salary `status`, then `bump` fails with `NotStarted`
  */
 export async function salaryBumpFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
   const api = collectivesClient.api
@@ -1212,6 +1227,11 @@ export async function salaryBumpFailureTest(collectivesClient: AnyClient, _asset
   /// 2. `now < cycle_start` means the cycle has not elapsed → `NotYet`.
 
   await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.bump(), member, 'NotYet')
+
+  /// 3. Clear the salary `status` entirely; with no cycle, `Status::get` is `None` → `NotStarted`.
+
+  await collectivesClient.dev.setStorage({ FellowshipSalary: { status: null } })
+  await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.bump(), member, 'NotStarted')
 }
 
 /**
@@ -1320,8 +1340,10 @@ export async function salaryCheckPaymentSuccessTest(collectivesClient: AnyClient
  * `check_payment` rejects the ineligible cases.
  *
  * 1. Seed member + ensure cycle; calling before induction fails with `NotInducted`
- * 2. Induct into the current cycle with a `Nothing` claim; `check_payment` finds no attempted
- *    payment → `NoClaim`
+ * 2. Induct into the current cycle with a `Nothing` claim; the non-`Attempted` arm → `NoClaim`
+ * 3. Seed an `Attempted` claim from a previous cycle; the cycle guard → `NotCurrent`
+ * 4. Seed an `Attempted` claim in the current cycle with an unresolvable payment id; the
+ *    paymaster reports an unknown status → `Inconclusive`
  */
 export async function salaryCheckPaymentFailureTest(collectivesClient: AnyClient, _assetHubClient: AnyClient) {
   const api = collectivesClient.api
@@ -1339,6 +1361,19 @@ export async function salaryCheckPaymentFailureTest(collectivesClient: AnyClient
   const cycleIndex = (await readSalaryStatus(collectivesClient))!.cycleIndex
   await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, { Nothing: null })
   await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.checkPayment(), member, 'NoClaim')
+
+  /// 3. An `Attempted` claim whose `lastActive` predates the current cycle trips the
+  ///    `last_active == cycle_index` guard → `NotCurrent`.
+
+  const staleAttempt = { Attempted: { registered: null, id: SALARY_UNKNOWN_PAYMENT_ID, amount: '1000000000000000000' } }
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex - 1, staleAttempt)
+  await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.checkPayment(), member, 'NotCurrent')
+
+  /// 4. An `Attempted` claim in the current cycle whose payment id the paymaster cannot resolve
+  ///    yields `PaymentStatus::Unknown`, hitting the catch-all arm → `Inconclusive`.
+
+  await seedSalaryClaimant(collectivesClient, member.address, cycleIndex, staleAttempt)
+  await expectSalaryExtrinsicError(collectivesClient, api.tx.fellowshipSalary.checkPayment(), member, 'Inconclusive')
 }
 
 /// -------
