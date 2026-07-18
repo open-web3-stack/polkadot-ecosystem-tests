@@ -17,6 +17,12 @@ const custom = {
   },
 }
 
+// Shared across Hydration and Basilisk. `MultiTransactionPayment.on_initialize` iterates every
+// AcceptedCurrencies entry and writes an AcceptedCurrencyPrice per entry, each block. Against a
+// fork that is a large batch of remote getKeysPaged calls per block, the bulk of the RPC traffic
+// that makes bootstrap sensitive to transient upstream stalls. The fee-currency data is unused by
+// these tests, so elide both maps; an exact-prefix removal lets the runtime iteration resolve
+// locally instead of walking the upstream endpoint.
 const getInitStorages = (config: typeof custom.hydration | typeof custom.basilisk) => ({
   System: {
     Account: [[[defaultAccountsSr25519.alice.address], { providers: 1, data: { free: 10n ** 18n } }]],
@@ -27,7 +33,19 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
       [[defaultAccounts.alice.address, config.dai], { free: 100n * 10n ** 18n }],
     ],
   },
+  MultiTransactionPayment: {
+    $removePrefix: ['acceptedCurrencies', 'acceptedCurrencyPrice'],
+  },
 })
+
+const hydrationInitStorages = {
+  ...getInitStorages(custom.hydration),
+  // Hydration-only (Basilisk has no Omnipool): its block hooks iterate the Assets map each block,
+  // ~21 remote getKeysPaged calls per block. Unused by the transfer tests, so elide it.
+  Omnipool: {
+    $removePrefix: ['assets'],
+  },
+}
 
 export const hydration = defineChain({
   name: 'hydration',
@@ -35,7 +53,7 @@ export const hydration = defineChain({
   endpoint: endpoints.hydration,
   networkGroup: 'polkadot',
   custom: custom.hydration,
-  initStorages: getInitStorages(custom.hydration),
+  initStorages: hydrationInitStorages,
   properties: {
     addressEncoding: 0,
     schedulerBlockProvider: 'Local',
