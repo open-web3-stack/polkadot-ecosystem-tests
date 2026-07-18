@@ -79,14 +79,27 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers'],
   },
-  // Incentives.on_initialize iterates the reward pools each block, walking Rewards.PoolInfos and
-  // Incentives.IncentiveRewardAmounts from the upstream RPC. Neither is needed by the XCM transfer
-  // tests, so elide them to cut per-block remote getKeysPaged traffic during fork bootstrap.
+  // The Acala/Karura block hooks iterate several large maps every block, each iteration step
+  // becoming a remote getKeysPaged against the fork's upstream RPC. None of these are needed by
+  // the tests, so elide them to cut the per-block traffic that makes bootstrap flaky:
+  //   - Incentives.on_initialize      -> Rewards.PoolInfos, Incentives.IncentiveRewardAmounts
+  //   - DexOracle.on_initialize       -> DexOracle.AveragePrices
+  //   - IdleScheduler.on_idle         -> IdleScheduler.Tasks
+  //   - AuctionManager (Auction map)  -> Auction.AuctionEndTime
   Rewards: {
     $removePrefix: ['poolInfos'],
   },
   Incentives: {
     $removePrefix: ['incentiveRewardAmounts'],
+  },
+  DexOracle: {
+    $removePrefix: ['averagePrices'],
+  },
+  IdleScheduler: {
+    $removePrefix: ['tasks'],
+  },
+  Auction: {
+    $removePrefix: ['auctionEndTime'],
   },
 })
 
