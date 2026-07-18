@@ -79,6 +79,15 @@ const getInitStorages = (config: typeof custom.acala | typeof custom.karura) => 
     // avoid sending xcm version change notifications to makes things faster
     $removePrefix: ['versionNotifyTargets', 'versionNotifiers'],
   },
+  // Incentives.on_initialize iterates the reward pools each block, walking Rewards.PoolInfos and
+  // Incentives.IncentiveRewardAmounts from the upstream RPC. Neither is needed by the XCM transfer
+  // tests, so elide them to cut per-block remote getKeysPaged traffic during fork bootstrap.
+  Rewards: {
+    $removePrefix: ['poolInfos'],
+  },
+  Incentives: {
+    $removePrefix: ['incentiveRewardAmounts'],
+  },
 })
 
 export const acala = defineChain({

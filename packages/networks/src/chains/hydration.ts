@@ -36,6 +36,11 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
   MultiTransactionPayment: {
     $removePrefix: ['acceptedCurrencies', 'acceptedCurrencyPrice'],
   },
+  // Omnipool block hooks iterate the Assets map each block; it is unused by the transfer tests
+  // and eliding it removes another ~21 remote getKeysPaged calls per block.
+  Omnipool: {
+    $removePrefix: ['assets'],
+  },
 })
 
 export const hydration = defineChain({
