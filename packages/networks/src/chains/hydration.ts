@@ -27,6 +27,15 @@ const getInitStorages = (config: typeof custom.hydration | typeof custom.basilis
       [[defaultAccounts.alice.address, config.dai], { free: 100n * 10n ** 18n }],
     ],
   },
+  // MultiTransactionPayment.on_initialize iterates every AcceptedCurrencies entry (~91 on
+  // Hydration) and writes an AcceptedCurrencyPrice per entry, each block. Against a fork that is
+  // ~184 remote getKeysPaged calls per block, the bulk of the RPC traffic that makes bootstrap
+  // sensitive to transient upstream stalls. The fee-currency data is unused by these tests, so
+  // elide both maps; an exact-prefix removal lets the runtime iteration resolve locally instead
+  // of walking the upstream endpoint.
+  MultiTransactionPayment: {
+    $removePrefix: ['acceptedCurrencies', 'acceptedCurrencyPrice'],
+  },
 })
 
 export const hydration = defineChain({
