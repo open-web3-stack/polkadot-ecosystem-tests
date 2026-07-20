@@ -192,15 +192,18 @@ async function assertSignedExtrinsicError<
 }
 
 /**
- * Helper: Backdate (or postdate) the timing fields of an approved spend by rewriting its `Spends` storage
+ * Helper: backdate (or postdate) the timing fields of an approved spend by rewriting its `Spends` storage
  * entry in place.
  *
  * The pallet derives `now` from its configured `BlockNumberProvider`, and a spend can only be claimed once
- * `now >= valid_from` and before `now > expire_at`. Reaching those bounds organically would require
- * advancing up to a whole `PayoutPeriod` of blocks (slow and provider-dependent). Instead we read the spend
- * back — its own `validFrom`/`expireAt` are already expressed in the provider's units — and overwrite just
- * the timing fields, leaving `asset_kind`/`beneficiary`/`amount`/`status` untouched. This is the same
- * read-modify-write-via-`dev_setStorage` technique used elsewhere (e.g. `upgrade.ts`).
+ * `now >= valid_from` and before `now > expire_at`.
+ *
+ * Reaching those bounds organically would require
+ * advancing up to a whole `PayoutPeriod` of blocks (slow and provider-dependent).
+ *
+ * Instead, the spend is read back - its own `validFrom`/`expireAt` fields are already expressed in the provider's units - and only the timing fields are overwritten, leaving `asset_kind`/`beneficiary`/`amount`/`status` untouched.
+ *
+ * This is the same read-modify-write-via-`dev_setStorage` technique used elsewhere (e.g. `upgrade.ts`).
  */
 async function setSpendTiming<
   TCustom extends Record<string, unknown> | undefined,
