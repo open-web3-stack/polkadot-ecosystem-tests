@@ -1,14 +1,24 @@
+import type { Client } from '@e2e-test/networks'
 import { defaultAccounts } from '@e2e-test/networks'
 import { acala, assetHubPolkadot, moonbeam } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
-import { describe } from 'vitest'
+import { beforeAll, describe } from 'vitest'
 
-describe('acala & moonbeam', { skip: true }, async () => {
+// Skipped: Acala fork setup intermittently times out (RpcError -32603), flaking CI. See #660.
+// Network setup lives in beforeAll so that describe.skip actually prevents it from running (an
+// async describe factory would run at collection time regardless of skip).
+describe.skip('acala & moonbeam', () => {
   // TODO: until we figured out how to query balances on Moonbeam again
-  const [acalaClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(acala, moonbeam, assetHubPolkadot)
+  let acalaClient: Client
+  let moonbeamClient: Client
+  let assetHubPolkadotClient: Client
+
+  beforeAll(async () => {
+    ;[acalaClient, moonbeamClient, assetHubPolkadotClient] = await setupNetworks(acala, moonbeam, assetHubPolkadot)
+  })
 
   const acalaDot = acala.custom.dot
   const moonbeamDot = moonbeam.custom.dot
