@@ -1,13 +1,23 @@
+import type { Client } from '@e2e-test/networks'
 import { defaultAccounts } from '@e2e-test/networks'
 import { acala, assetHubPolkadot, astar } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
 import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
-import { describe } from 'vitest'
+import { beforeAll, describe } from 'vitest'
 
-describe('acala & astar', async () => {
-  const [astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
+// Skipped: Acala fork setup intermittently times out (RpcError -32603), flaking CI. See #660.
+// Network setup lives in beforeAll so that describe.skip actually prevents it from running (an
+// async describe factory would run at collection time regardless of skip).
+describe.skip('acala & astar', () => {
+  let astarClient: Client
+  let acalaClient: Client
+  let assetHubPolkadotClient: Client
+
+  beforeAll(async () => {
+    ;[astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
+  })
 
   runXtokenstHorizontal('astar transfer ACA to acala', async () => {
     return {
