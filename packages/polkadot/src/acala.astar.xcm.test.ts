@@ -6,7 +6,8 @@ import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 import { describe } from 'vitest'
 
-describe('acala & astar', async () => {
+// Skipped: Acala fork setup intermittently times out (RpcError -32603), flaking CI. See #660.
+describe.skip('acala & astar', async () => {
   const [astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
 
   runXtokenstHorizontal('astar transfer ACA to acala', async () => {

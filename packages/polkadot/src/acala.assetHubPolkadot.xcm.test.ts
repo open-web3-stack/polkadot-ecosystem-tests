@@ -6,7 +6,8 @@ import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/
 
 import { describe } from 'vitest'
 
-describe('acala & assetHubPolkadot', async () => {
+// Skipped: Acala fork setup intermittently times out (RpcError -32603), flaking CI. See #660.
+describe.skip('acala & assetHubPolkadot', async () => {
   const [assetHubPolkadotClient, acalaClient] = await setupNetworks(assetHubPolkadot, acala)
 
   const acalaDOT = acala.custom.dot
