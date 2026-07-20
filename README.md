@@ -209,6 +209,13 @@ These include:
     on Asset Hub, a member with no DOT for existential deposit still receives their payout
   - Mid-cycle promotion: a payout uses the amount locked at registration time, not the
     member's current rank if they were promoted after registering
+  - Dispatchable failure paths: `induct` (`NotMember`, `AlreadyInducted`), `register`
+    (`NotInducted`, `NoClaim`, `TooLate`), `bump` (`NotYet`, `NotStarted`), `payout`
+    (`NotInducted`, `TooEarly`), and `init` (`AlreadyStarted`)
+  - `check_payment`: confirms a successful payout resets the claimant to `Nothing`, and
+    rejects the ineligible cases (`NotInducted`, `NoClaim`, `NotCurrent`, `Inconclusive`)
+  - Account swap: exchanging a fellow's account migrates their salary claimant and emits
+    the `Swapped` event
   - All salary amounts and period lengths read from live chain state
     (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
 
