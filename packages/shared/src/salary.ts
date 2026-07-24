@@ -7,6 +7,12 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
+import {
+  COLLECTIVES_PARA_ID,
+  DEFAULT_SALARY_TEST_FREE_BALANCE,
+  SALARY_MEMBER_RANK_DAN_3,
+  seedFellowshipMembers,
+} from './fellowship.js'
 import { assertExpectedEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { Client, RootTestTree } from './types.js'
 
@@ -17,26 +23,16 @@ type AnyClient = Client<Record<string, unknown> | undefined, Record<string, Reco
 /// Constants
 /// -------
 
-// The Collectives parachain ID on Polkadot.
-// This is the parachain in which the Fellowship salary pallet is deployed, and is used to build the
-// cross-chain location of the salary sovereign.
-export const COLLECTIVES_PARA_ID = 1001
-
-// The pallet index for `pallet-ranked-collective` in the Collectives runtime.
-// This is used when directly seeding Fellowship membership storage for focused salary tests.
-export const FELLOWSHIP_COLLECTIVE_PALLET_INDEX = 60
-
-// The pallet index for `pallet-core-fellowship` in the Collectives runtime.
-// This identifies the pallet that stores active Fellowship member state used by salary eligibility checks.
-export const FELLOWSHIP_CORE_PALLET_INDEX = 63
+export {
+  COLLECTIVES_PARA_ID,
+  FELLOWSHIP_COLLECTIVE_PALLET_INDEX,
+  FELLOWSHIP_CORE_PALLET_INDEX,
+  SALARY_MEMBER_RANK_DAN_3,
+} from './fellowship.js'
 
 // The pallet index for `pallet-salary-fellowship` in the Collectives runtime.
 // Together with the Collectives parachain ID, this determines the salary sovereign XCM location.
 export const FELLOWSHIP_SALARY_PALLET_INDEX = 64
-
-// The Dan-3 Fellowship rank used throughout these tests.
-// Rank 3 is chosen because it has a live salary configured and is simple to seed directly into storage.
-export const SALARY_MEMBER_RANK_DAN_3 = 3
 
 // The ForeignAssets location for Hollar on Asset Hub.
 // Hollar lives on Hydration (parachain 2034) with GeneralIndex 222.
@@ -62,10 +58,6 @@ export const SALARY_SOVEREIGN_LOCATION = {
 // Source-backed by the Asset Hub runtime XCM configuration tests in
 // `asset-hub-polkadot/src/xcm_config.rs`, where the location/account derivation is validated.
 export const SALARY_SOVEREIGN_ADDRESS = '13w7NdvSR1Af8xsQTArDtZmVvjE8XhWNdL4yed3iFHrUNCnS'
-
-// Default free balance given to synthetic Fellowship members created for salary tests.
-// It is intentionally generous so fees never interfere with the salary lifecycle assertions.
-const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
 
 // An XCM query id the paymaster will never have recorded. Used to drive `check_payment` into its
 // `PaymentStatus::Unknown` branch so the `Inconclusive` error path can be exercised.
@@ -257,35 +249,7 @@ export async function seedDan3SalaryMember(
   member: KeyringPair,
   freeBalance: bigint = DEFAULT_SALARY_TEST_FREE_BALANCE,
 ): Promise<void> {
-  await client.dev.setStorage({
-    System: {
-      account: [[[member.address], { providers: 1, data: { free: freeBalance, frozen: 0, reserved: 0 } }]],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(client, [{ pair: member, rank: SALARY_MEMBER_RANK_DAN_3 }], freeBalance)
 }
 
 /**
@@ -412,37 +376,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   /// 1. Seed a fresh Dan-3 Fellowship member directly into the ranked collective/core storage.
   ///
 
-  await collectivesClient.dev.setStorage({
-    System: {
-      account: [
-        [[member.address], { providers: 1, data: { free: DEFAULT_SALARY_TEST_FREE_BALANCE, frozen: 0, reserved: 0 } }],
-      ],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(collectivesClient, [{ pair: member, rank: SALARY_MEMBER_RANK_DAN_3 }])
 
   ///
   /// 2. Seed the validated salary sovereign account on Asset Hub with enough Hollar for one payout.
