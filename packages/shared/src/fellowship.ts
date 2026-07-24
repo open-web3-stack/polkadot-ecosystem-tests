@@ -41,6 +41,11 @@ export const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
 /**
  * Relocate the first scheduled call matching `verifier` to the next schedulable block, so it runs
  * immediately instead of at its originally scheduled (future) block.
+ *
+ * Only the matching entry is moved: its source slot is replaced with `None` (preserving the
+ * indices of any sibling tasks in that block), and it is appended to the destination block's
+ * existing agenda. On a live fork the agenda holds unrelated governance tasks, so moving the whole
+ * vector (or overwriting the destination) would fast-forward or clobber them.
  */
 async function moveScheduledCallToNextBlock(
   client: AnyClient,
@@ -49,35 +54,53 @@ async function moveScheduledCallToNextBlock(
 ): Promise<void> {
   const nextBlockNumber = await nextSchedulableBlockNum(client.api, blockProvider)
   const agenda = await client.api.query.scheduler.agenda.entries()
-  let found = false
 
-  for (const agendaEntry of agenda) {
-    for (const scheduledEntry of agendaEntry[1]) {
-      if (scheduledEntry.isSome && verifier(scheduledEntry.unwrap().call)) {
-        found = true
+  const agendaVecType = client.api.query.scheduler.agenda.creator.meta.type.asMap.value
+  const vecType = client.api.registry.lookup.getTypeDef(agendaVecType).type
 
-        await client.api.rpc('dev_setStorage', [
-          [agendaEntry[0]],
-          [client.api.query.scheduler.agenda.key(nextBlockNumber), agendaEntry[1].toHex()],
-        ])
+  for (const [sourceKey, sourceTasks] of agenda) {
+    const sourceArray = [...sourceTasks]
+    const matchIndex = sourceArray.findIndex((task) => task.isSome && verifier(task.unwrap().call))
+    if (matchIndex === -1) {
+      continue
+    }
 
-        if (scheduledEntry.unwrap().maybeId.isSome) {
-          const id = scheduledEntry.unwrap().maybeId.unwrap().toHex()
-          const lookup = await client.api.query.scheduler.lookup(id)
+    const matched = sourceArray[matchIndex].unwrap()
 
-          if (lookup.isSome) {
-            const lookupKey = client.api.query.scheduler.lookup.key(id)
-            const lookupMeta = client.api.query.scheduler.lookup.creator.meta
-            const lookupValueType = client.api.registry.lookup.getTypeDef(lookupMeta.type.asMap.value).type
-            const fastLookup = client.api.registry.createType(lookupValueType, [nextBlockNumber, 0])
-            await client.api.rpc('dev_setStorage', [[lookupKey, fastLookup.toHex()]])
-          }
-        }
+    // Append the matched task to the destination block's existing agenda; blank only the matched
+    // source slot with `None` so sibling tasks keep their original indices.
+    const destArray = [...(await client.api.query.scheduler.agenda(nextBlockNumber))]
+    const appendedIndex = destArray.length
+    destArray.push(sourceArray[matchIndex])
+
+    const newSourceArray = sourceArray.map((task, i) => (i === matchIndex ? null : task))
+
+    await client.api.rpc('dev_setStorage', [
+      [sourceKey, client.api.registry.createType(vecType, newSourceArray).toHex()],
+      [
+        client.api.query.scheduler.agenda.key(nextBlockNumber),
+        client.api.registry.createType(vecType, destArray).toHex(),
+      ],
+    ])
+
+    // If the task is named, point its lookup at the real destination (block, appended index).
+    if (matched.maybeId.isSome) {
+      const id = matched.maybeId.unwrap().toHex()
+      const lookup = await client.api.query.scheduler.lookup(id)
+      if (lookup.isSome) {
+        const lookupKey = client.api.query.scheduler.lookup.key(id)
+        const lookupValueType = client.api.registry.lookup.getTypeDef(
+          client.api.query.scheduler.lookup.creator.meta.type.asMap.value,
+        ).type
+        const fastLookup = client.api.registry.createType(lookupValueType, [nextBlockNumber, appendedIndex])
+        await client.api.rpc('dev_setStorage', [[lookupKey, fastLookup.toHex()]])
       }
     }
+
+    return
   }
 
-  assert(found, 'No scheduled call found')
+  assert(false, 'No scheduled call found')
 }
 
 async function findSubmittedReferendumIndex(
@@ -112,7 +135,17 @@ async function findSubmittedReferendumIndex(
 /// Storage writers/seeders
 /// -------
 
-/** Seed funded Fellowship members directly into ranked-collective and core-fellowship storage. */
+/**
+ * Seed funded Fellowship members directly into ranked-collective and core-fellowship storage.
+ *
+ * Seeded members are appended to the live collective rather than replacing it: for each rank tier
+ * the existing `memberCount` is read and new members are indexed at `liveCount, liveCount + 1, ...`.
+ * This keeps the real electorate (and the ranked-collective index invariants that a later member
+ * removal relies on) intact, and means referendum support is measured against the full membership.
+ * Consequently a passing referendum must be fast-forwarded to the end of its decision period, where
+ * the Fellows track support requirement has decayed to its 0% floor; a single seeded aye does not
+ * clear support mid-curve against the real electorate.
+ */
 export async function seedFellowshipMembers(
   client: AnyClient,
   members: { pair: KeyringPair; rank: number }[],
@@ -127,16 +160,18 @@ export async function seedFellowshipMembers(
   const idToIndex: Array<[[number, string], number]> = []
   const indexToId: Array<[[number, number], string]> = []
 
-  // A member of rank R belongs to the collective at every rank tier 0..R, so it is counted and
-  // indexed in each of those tiers.
+  // A member of rank R belongs to the collective at every rank tier 0..R, so it is appended to and
+  // counted in each of those tiers, starting at the live member count for that tier.
   for (let rank = 0; rank <= maxRank; rank++) {
     const membersAtRank = members.filter((member) => member.rank >= rank)
-    memberCount.push([[rank], membersAtRank.length])
+    const liveCount = ((await client.api.query.fellowshipCollective.memberCount(rank)) as any).toNumber()
 
-    for (const [index, member] of membersAtRank.entries()) {
+    for (const [offset, member] of membersAtRank.entries()) {
+      const index = liveCount + offset
       idToIndex.push([[rank, member.pair.address], index])
       indexToId.push([[rank, index], member.pair.address])
     }
+    memberCount.push([[rank], liveCount + membersAtRank.length])
   }
 
   await client.dev.setStorage({

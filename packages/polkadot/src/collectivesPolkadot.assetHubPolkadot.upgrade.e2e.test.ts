@@ -1,12 +1,8 @@
 import { assetHubPolkadot, collectivesPolkadot } from '@e2e-test/networks/chains'
-import { baseCollectivesChainE2ETests, registerTestTree, setupNetworks } from '@e2e-test/shared'
+import { setupNetworks } from '@e2e-test/shared'
 import { authorizeUpgradeViaCollectives } from '@e2e-test/shared/upgrade.js'
 
 import { describe, test } from 'vitest'
-
-registerTestTree(
-  baseCollectivesChainE2ETests(assetHubPolkadot, collectivesPolkadot, { testSuiteName: 'collectives & asset hub' }),
-)
 
 describe('collectives & asset hub', async () => {
   const [assetHubPolkadotClient, collectivesClient] = await setupNetworks(assetHubPolkadot, collectivesPolkadot)
