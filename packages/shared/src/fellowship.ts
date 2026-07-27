@@ -220,6 +220,7 @@ export async function submitFellowshipReferendum(
   call: SubmittableExtrinsic<'promise'>,
   track: { FellowshipOrigins: string } | { Origins: string },
   proposer: KeyringPair,
+  onBlock?: () => Promise<void>,
 ): Promise<number> {
   /**
    * 1. Clear stale preimages, fund the proposer, and note the proposal preimage
@@ -253,6 +254,7 @@ export async function submitFellowshipReferendum(
   await client.dev.newBlock()
 
   const referendumIndex = await findSubmittedReferendumIndex(client, preimageHash, preimageLength)
+  await onBlock?.()
 
   /**
    * 3. Place the decision deposit so the referendum can enter deciding
@@ -260,6 +262,7 @@ export async function submitFellowshipReferendum(
 
   await sendTransaction(client.api.tx.fellowshipReferenda.placeDecisionDeposit(referendumIndex).signAsync(proposer))
   await client.dev.newBlock()
+  await onBlock?.()
 
   return referendumIndex
 }
@@ -273,6 +276,10 @@ export async function submitFellowshipReferendum(
  * 2. Cast real aye votes from the seeded Fellowship members
  * 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
  * 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
+ *
+ * Returns the poll index and the `fellowshipReferenda`/`fellowshipCollective` lifecycle events
+ * accumulated across the submit, vote, and confirmation blocks, so callers can snapshot the real
+ * referendum path.
  */
 export async function passFellowshipReferendum(
   client: AnyClient,
@@ -281,17 +288,26 @@ export async function passFellowshipReferendum(
     track: { FellowshipOrigins: string } | { Origins: string }
     voters: KeyringPair[]
   },
-): Promise<number> {
+): Promise<{ referendumIndex: number; lifecycleEvents: any[] }> {
   const blockProvider = client.config.properties.schedulerBlockProvider
 
   assert(opts.voters.length > 0, 'passFellowshipReferendum requires at least one seeded fellow to submit and vote')
   const proposer = opts.voters[0]
 
+  const lifecycleEvents: any[] = []
+  const collectLifecycle = async () => {
+    for (const { event } of await client.api.query.system.events()) {
+      if (event.section === 'fellowshipReferenda' || event.section === 'fellowshipCollective') {
+        lifecycleEvents.push({ section: event.section, method: event.method, data: event.data.toJSON() })
+      }
+    }
+  }
+
   /**
    * 1. Submit the referendum and place its decision deposit
    */
 
-  const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer)
+  const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer, collectLifecycle)
 
   /**
    * 2. Cast real aye votes from the seeded Fellowship members
@@ -302,6 +318,7 @@ export async function passFellowshipReferendum(
     await sendTransaction(collective.vote(referendumIndex, true).signAsync(voter))
   }
   await client.dev.newBlock()
+  await collectLifecycle()
 
   /**
    * 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
@@ -371,6 +388,8 @@ export async function passFellowshipReferendum(
   })
   await client.dev.newBlock()
 
+  await collectLifecycle()
+
   const postNudgeInfo = (await client.api.query.fellowshipReferenda.referendumInfoFor(referendumIndex)) as any
   assert(postNudgeInfo.isSome, `referendum ${referendumIndex} disappeared after nudging`)
   assert(
@@ -387,6 +406,7 @@ export async function passFellowshipReferendum(
   })
 
   await client.dev.newBlock()
+  await collectLifecycle()
 
-  return referendumIndex
+  return { referendumIndex, lifecycleEvents }
 }
