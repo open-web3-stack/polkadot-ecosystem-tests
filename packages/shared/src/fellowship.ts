@@ -11,9 +11,6 @@ import {
   nextSchedulableBlockNum,
   scheduleInlineCallWithOrigin,
 } from './helpers/index.js'
-import type { Client } from './types.js'
-
-type AnyClient = Client<Record<string, unknown> | undefined, Record<string, Record<string, any>> | undefined>
 
 /// -------
 /// Constants
@@ -48,7 +45,7 @@ export const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
  * vector (or overwriting the destination) would fast-forward or clobber them.
  */
 async function moveScheduledCallToNextBlock(
-  client: AnyClient,
+  client: any,
   blockProvider: BlockProvider,
   verifier: (call: any) => boolean,
 ): Promise<void> {
@@ -104,7 +101,7 @@ async function moveScheduledCallToNextBlock(
 }
 
 async function findSubmittedReferendumIndex(
-  client: AnyClient,
+  client: any,
   preimageHash: `0x${string}`,
   preimageLength: number,
 ): Promise<number> {
@@ -147,7 +144,7 @@ async function findSubmittedReferendumIndex(
  * clear support mid-curve against the real electorate.
  */
 export async function seedFellowshipMembers(
-  client: AnyClient,
+  client: any,
   members: { pair: KeyringPair; rank: number }[],
   freeBalance: bigint = DEFAULT_SALARY_TEST_FREE_BALANCE,
 ): Promise<void> {
@@ -199,7 +196,7 @@ export async function seedFellowshipMembers(
  * It is exposed as `fellowshipCollective` on the Collectives runtime (a `pallet_ranked_collective`
  * instance) and as `rankedCollective` on some other runtimes.
  */
-export function fellowshipCollectiveTx(client: AnyClient) {
+export function fellowshipCollectiveTx(client: any) {
   const collective = client.api.tx.fellowshipCollective ?? client.api.tx.rankedCollective
   assert(collective, 'no fellowship/ranked collective pallet found')
   return collective
@@ -216,7 +213,7 @@ export function fellowshipCollectiveTx(client: AnyClient) {
  * 3. Place the decision deposit so the referendum can enter deciding
  */
 export async function submitFellowshipReferendum(
-  client: AnyClient,
+  client: any,
   call: SubmittableExtrinsic<'promise'>,
   track: { FellowshipOrigins: string } | { Origins: string },
   proposer: KeyringPair,
@@ -282,7 +279,7 @@ export async function submitFellowshipReferendum(
  * referendum path.
  */
 export async function passFellowshipReferendum(
-  client: AnyClient,
+  client: any,
   call: SubmittableExtrinsic<'promise'>,
   opts: {
     track: { FellowshipOrigins: string } | { Origins: string }

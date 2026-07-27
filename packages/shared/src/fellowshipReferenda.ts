@@ -54,7 +54,7 @@ function geometricVotes(excessRank: number): number {
  * Fellowship voice. This mirrors the cross-chain shape that the destination's `WhitelistOrigin`
  * (`EnsureXcm<IsFellowshipVoice>`) accepts.
  */
-function buildWhitelistViaXcm(destClient: Client<any, any>, collectivesClient: Client<any, any>, callHash: HexString) {
+function buildWhitelistViaXcm(destClient: any, collectivesClient: any, callHash: HexString) {
   const whitelistCall = destClient.api.tx.whitelist.whitelistCall(callHash).method.toHex() as HexString
   const dest = getXcmRoute(collectivesClient.config, destClient.config)
   return createXcmTransactSend(collectivesClient, dest, whitelistCall, 'Xcm', {
@@ -77,10 +77,7 @@ function buildWhitelistViaXcm(destClient: Client<any, any>, collectivesClient: C
  *   Fellowship voice (e.g. Asset Hub or the relay).
  * @param collectivesClient The Collectives chain hosting the Fellowship.
  */
-export async function fellowshipWhitelistViaReferendum(
-  destClient: Client<any, any>,
-  collectivesClient: Client<any, any>,
-) {
+export async function fellowshipWhitelistViaReferendum(destClient: any, collectivesClient: any) {
   const keyring = new Keyring({ type: 'sr25519' })
   const fellow = keyring.addFromUri('//fellowship_referenda_fellow')
 
@@ -142,7 +139,7 @@ export async function fellowshipWhitelistViaReferendum(
  * 2. Open a Fellows-track referendum on a harmless remark
  * 3. Check the rank-2 member's vote is rejected with `RankTooLow`
  */
-export async function rankTooLowCannotVote(collectivesClient: Client<any, any>) {
+export async function rankTooLowCannotVote(collectivesClient: any) {
   const keyring = new Keyring({ type: 'sr25519' })
   const proposer = keyring.addFromUri('//fellowship_referenda_proposer')
   const lowRankMember = keyring.addFromUri('//fellowship_referenda_low_rank')
@@ -199,7 +196,7 @@ export async function rankTooLowCannotVote(collectivesClient: Client<any, any>) 
  * 3. The rank-3 member votes aye; the rank-5 member votes nay
  * 4. Check the tally reflects geometric weights over the excess rank above the track minimum
  */
-export async function geometricVoteWeightAggregation(collectivesClient: Client<any, any>) {
+export async function geometricVoteWeightAggregation(collectivesClient: any) {
   const keyring = new Keyring({ type: 'sr25519' })
   const rank3 = keyring.addFromUri('//fellowship_referenda_rank3')
   const rank5 = keyring.addFromUri('//fellowship_referenda_rank5')
