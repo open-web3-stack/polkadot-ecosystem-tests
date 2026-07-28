@@ -69,13 +69,14 @@ async function skipIfRecentRealUpgrade(client: Client, ctx?: { skip: (reason?: s
   }
 }
 
-// Verifies that `schedule_code_upgrade` rejects with `OverlappingUpgrades` when
-// `parachainSystem.pendingValidationCode` is already set.
+// Only runs when `pendingValidationCode` is actually non-empty on-chain (i.e. the main upgrade
+// test was skipped). Verifies the barrier is real: `applyAuthorizedUpgrade` fails with
+// `OverlappingUpgrades`.
 //
 // Steps:
-// 1. Force `pendingValidationCode` to non-empty via `dev.setStorage`
-// 2. Authorize and apply an upgrade to the current WASM
-// 3. Assert the apply extrinsic fails (the pending code blocks `schedule_code_upgrade`)
+// 1. Check `pendingValidationCode` — skip if empty (no overlapping upgrade in progress)
+// 2. Set `AuthorizedUpgrade` to the current WASM hash via `dev.setStorage`
+// 3. Call `applyAuthorizedUpgrade` and assert it fails with `OverlappingUpgrades`
 export async function upgradeBlockedByOverlappingUpgradeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -87,46 +88,50 @@ export async function upgradeBlockedByOverlappingUpgradeTests<
 
   const [client] = await createNetworks(chain)
   try {
+    // Given: pendingValidationCode is non-empty on the live chain
+    const pendingCode = await client.api.query.parachainSystem.pendingValidationCode()
+    if (pendingCode.isEmpty) {
+      ctx?.skip?.(`No pending validation code on ${client.config.name}, nothing to test`)
+      return
+    }
+
     const alice = devAccounts.alice
     const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
     const currentWasmHash = client.api.registry.hash(currentWasm)
 
-    // Given: pendingValidationCode is non-empty (simulates an in-flight upgrade)
     await client.dev.setStorage({
       System: {
         account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
-      },
-      ParachainSystem: {
-        pendingValidationCode: '0x00',
+        authorizedUpgrade: { codeHash: currentWasmHash.toHex(), checkVersion: false },
       },
     })
 
-    // When: authorize and attempt to apply an upgrade
-    const authorizeTx = client.api.tx.system.authorizeUpgradeWithoutChecks(currentWasmHash)
-    await sendTransaction(authorizeTx.signAsync(alice))
-    await client.dev.newBlock()
-
+    // When: apply the pre-authorized upgrade against real pending code
     const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
     await sendTransaction(applyTx.signAsync(alice))
     await client.dev.newBlock()
 
-    // Then: the extrinsic fails because schedule_code_upgrade rejects with OverlappingUpgrades
+    // Then: schedule_code_upgrade rejects with OverlappingUpgrades
     const events = await client.api.query.system.events()
     const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
-    assert(failed, 'Expected applyAuthorizedUpgrade to fail with OverlappingUpgrades')
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail')
+    const dispatchError = (failed.event.data as any).dispatchError
+    const decoded = client.api.registry.findMetaError(dispatchError.asModule)
+    assert.equal(decoded.name, 'OverlappingUpgrades')
   } finally {
     await client.api.disconnect().catch(() => {})
     await client.teardown().catch(() => {})
   }
 }
 
-// Verifies that `schedule_code_upgrade` rejects with `ProhibitedByPolkadot` when
-// `parachainSystem.upgradeRestrictionSignal` is set (relay chain cooldown after a recent upgrade).
+// Only runs when `upgradeRestrictionSignal` is set on-chain (i.e. the main upgrade test was
+// skipped due to a recent runtime upgrade). Verifies the barrier is real:
+// `applyAuthorizedUpgrade` fails with `ProhibitedByPolkadot`.
 //
 // Steps:
-// 1. Force `upgradeRestrictionSignal` to `Present` via `dev.setStorage`
-// 2. Authorize and apply an upgrade to the current WASM
-// 3. Assert the apply extrinsic fails (the restriction signal blocks `schedule_code_upgrade`)
+// 1. Check `upgradeRestrictionSignal` — skip if absent (no relay chain cooldown)
+// 2. Set `AuthorizedUpgrade` to the current WASM hash via `dev.setStorage`
+// 3. Call `applyAuthorizedUpgrade` and assert it fails with `ProhibitedByPolkadot`
 export async function upgradeBlockedByRestrictionSignalTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -138,33 +143,36 @@ export async function upgradeBlockedByRestrictionSignalTests<
 
   const [client] = await createNetworks(chain)
   try {
+    // Given: upgradeRestrictionSignal is set on the live chain
+    const restrictionSignal = (await client.api.query.parachainSystem.upgradeRestrictionSignal()) as Option<any>
+    if (restrictionSignal.isNone) {
+      ctx?.skip?.(`No upgrade restriction signal on ${client.config.name}, nothing to test`)
+      return
+    }
+
     const alice = devAccounts.alice
     const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
     const currentWasmHash = client.api.registry.hash(currentWasm)
 
-    // Given: upgradeRestrictionSignal is Present (simulates post-upgrade relay chain cooldown)
     await client.dev.setStorage({
       System: {
         account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
-      },
-      ParachainSystem: {
-        upgradeRestrictionSignal: 'Present',
+        authorizedUpgrade: { codeHash: currentWasmHash.toHex(), checkVersion: false },
       },
     })
 
-    // When: authorize and attempt to apply an upgrade
-    const authorizeTx = client.api.tx.system.authorizeUpgradeWithoutChecks(currentWasmHash)
-    await sendTransaction(authorizeTx.signAsync(alice))
-    await client.dev.newBlock()
-
+    // When: apply the pre-authorized upgrade under the real restriction signal
     const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
     await sendTransaction(applyTx.signAsync(alice))
     await client.dev.newBlock()
 
-    // Then: the extrinsic fails because schedule_code_upgrade rejects with ProhibitedByPolkadot
+    // Then: schedule_code_upgrade rejects with ProhibitedByPolkadot
     const events = await client.api.query.system.events()
     const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
-    assert(failed, 'Expected applyAuthorizedUpgrade to fail with ProhibitedByPolkadot')
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail')
+    const dispatchError = (failed.event.data as any).dispatchError
+    const decoded = client.api.registry.findMetaError(dispatchError.asModule)
+    assert.equal(decoded.name, 'ProhibitedByPolkadot')
   } finally {
     await client.api.disconnect().catch(() => {})
     await client.teardown().catch(() => {})
@@ -719,7 +727,6 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
-    await skipIfRecentRealUpgrade(governanceClient, ctx)
     await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
@@ -839,7 +846,6 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
-    await skipIfRecentRealUpgrade(governanceClient, ctx)
     await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
