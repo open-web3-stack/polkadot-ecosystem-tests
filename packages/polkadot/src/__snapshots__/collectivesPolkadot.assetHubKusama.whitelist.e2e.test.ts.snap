@@ -97,7 +97,7 @@ exports[`Polkadot Fellowship whitelists a call on Kusama Asset Hub over the brid
       },
       "success": true,
       "weightUsed": {
-        "proofSize": "(rounded 5000)",
+        "proofSize": "(rounded 9000)",
         "refTime": "(rounded 200000000)",
       },
     },
