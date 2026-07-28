@@ -10,6 +10,7 @@ import {
 import { type RootTestTree, sendWhitelistCallViaXcmTransact } from '@e2e-test/shared'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { Option } from '@polkadot/types'
 import type { IU8a } from '@polkadot/types/types'
 import { bufferToU8a, compactAddLength } from '@polkadot/util'
 import type { HexString } from '@polkadot/util/types'
@@ -53,6 +54,17 @@ async function skipIfRealUpgradePending(client: Client, ctx?: { skip: (reason?: 
   if (!pendingCode.isEmpty) {
     ctx?.skip?.(
       `Skipping: real runtime upgrade already pending on ${client.config.name} (parachainSystem.pendingValidationCode is non-empty)`,
+    )
+  }
+}
+
+async function skipIfRecentRealUpgrade(client: Client, ctx?: { skip: (reason?: string) => void }) {
+  if (client.config.isRelayChain) return
+
+  const restrictionSignal = (await client.api.query.parachainSystem.upgradeRestrictionSignal()) as Option<any>
+  if (restrictionSignal.isSome) {
+    ctx?.skip?.(
+      `Skipping: relay chain upgrade restriction active on ${client.config.name} (parachainSystem.upgradeRestrictionSignal is set)`,
     )
   }
 }
@@ -605,6 +617,8 @@ export async function authorizeUpgradeWithoutChecksViaRootReferendumTests<
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+    await skipIfRecentRealUpgrade(governanceClient, ctx)
+    await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
     if (toBeUpgradedChain.isRelayChain) {
@@ -723,6 +737,8 @@ export async function authorizeUpgradeWithoutChecksViaWhitelistedCallerReferendu
   try {
     await skipIfRealUpgradePending(governanceClient, ctx)
     await skipIfRealUpgradePending(toBeUpgradedClient, ctx)
+    await skipIfRecentRealUpgrade(governanceClient, ctx)
+    await skipIfRecentRealUpgrade(toBeUpgradedClient, ctx)
 
     let expectedEvents: ExpectedEvents = []
     if (toBeUpgradedChain.isRelayChain) {
