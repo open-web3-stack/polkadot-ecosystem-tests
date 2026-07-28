@@ -58,9 +58,13 @@ async function skipIfRealUpgradePending(client: Client, ctx?: { skip: (reason?: 
   }
 }
 
+// The restriction signal lives in the relay chain state proof, not parachain storage.
+// on_finalize kills it every block; set_validation_data re-injects it from the proof on the next.
+// At the fork point the storage is always None, so we produce one block to let the inherent run.
 async function skipIfRecentRealUpgrade(client: Client, ctx?: { skip: (reason?: string) => void }) {
   if (client.config.isRelayChain) return
 
+  await client.dev.newBlock()
   const restrictionSignal = (await client.api.query.parachainSystem.upgradeRestrictionSignal()) as Option<any>
   if (restrictionSignal.isSome) {
     ctx?.skip?.(
