@@ -69,6 +69,108 @@ async function skipIfRecentRealUpgrade(client: Client, ctx?: { skip: (reason?: s
   }
 }
 
+// Verifies that `schedule_code_upgrade` rejects with `OverlappingUpgrades` when
+// `parachainSystem.pendingValidationCode` is already set.
+//
+// Steps:
+// 1. Force `pendingValidationCode` to non-empty via `dev.setStorage`
+// 2. Authorize and apply an upgrade to the current WASM
+// 3. Assert the apply extrinsic fails (the pending code blocks `schedule_code_upgrade`)
+export async function upgradeBlockedByOverlappingUpgradeTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, ctx?: { skip: (reason?: string) => void }) {
+  if (chain.isRelayChain) {
+    ctx?.skip?.('Only relevant for parachains')
+    return
+  }
+
+  const [client] = await createNetworks(chain)
+  try {
+    const alice = devAccounts.alice
+    const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
+    const currentWasmHash = client.api.registry.hash(currentWasm)
+
+    // Given: pendingValidationCode is non-empty (simulates an in-flight upgrade)
+    await client.dev.setStorage({
+      System: {
+        account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
+      },
+      ParachainSystem: {
+        pendingValidationCode: '0x00',
+      },
+    })
+
+    // When: authorize and attempt to apply an upgrade
+    const authorizeTx = client.api.tx.system.authorizeUpgradeWithoutChecks(currentWasmHash)
+    await sendTransaction(authorizeTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+    await sendTransaction(applyTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    // Then: the extrinsic fails because schedule_code_upgrade rejects with OverlappingUpgrades
+    const events = await client.api.query.system.events()
+    const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail with OverlappingUpgrades')
+  } finally {
+    await client.api.disconnect().catch(() => {})
+    await client.teardown().catch(() => {})
+  }
+}
+
+// Verifies that `schedule_code_upgrade` rejects with `ProhibitedByPolkadot` when
+// `parachainSystem.upgradeRestrictionSignal` is set (relay chain cooldown after a recent upgrade).
+//
+// Steps:
+// 1. Force `upgradeRestrictionSignal` to `Present` via `dev.setStorage`
+// 2. Authorize and apply an upgrade to the current WASM
+// 3. Assert the apply extrinsic fails (the restriction signal blocks `schedule_code_upgrade`)
+export async function upgradeBlockedByRestrictionSignalTests<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(chain: Chain<TCustom, TInitStorages>, ctx?: { skip: (reason?: string) => void }) {
+  if (chain.isRelayChain) {
+    ctx?.skip?.('Only relevant for parachains')
+    return
+  }
+
+  const [client] = await createNetworks(chain)
+  try {
+    const alice = devAccounts.alice
+    const currentWasm = bufferToU8a(Buffer.from((await client.chain.head.wasm).slice(2), 'hex'))
+    const currentWasmHash = client.api.registry.hash(currentWasm)
+
+    // Given: upgradeRestrictionSignal is Present (simulates post-upgrade relay chain cooldown)
+    await client.dev.setStorage({
+      System: {
+        account: [[[alice.address], { providers: 1, data: { free: 100000 * 1e10 } }]],
+      },
+      ParachainSystem: {
+        upgradeRestrictionSignal: 'Present',
+      },
+    })
+
+    // When: authorize and attempt to apply an upgrade
+    const authorizeTx = client.api.tx.system.authorizeUpgradeWithoutChecks(currentWasmHash)
+    await sendTransaction(authorizeTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    const applyTx = client.api.tx.system.applyAuthorizedUpgrade(compactAddLength(currentWasm))
+    await sendTransaction(applyTx.signAsync(alice))
+    await client.dev.newBlock()
+
+    // Then: the extrinsic fails because schedule_code_upgrade rejects with ProhibitedByPolkadot
+    const events = await client.api.query.system.events()
+    const failed = events.find((r) => client.api.events.system.ExtrinsicFailed.is(r.event))
+    assert(failed, 'Expected applyAuthorizedUpgrade to fail with ProhibitedByPolkadot')
+  } finally {
+    await client.api.disconnect().catch(() => {})
+    await client.teardown().catch(() => {})
+  }
+}
+
 type AuthorizeUpgradeFn = (codeHash: string | Uint8Array<ArrayBufferLike>) => SubmittableExtrinsic<'promise'>
 type ExpectedEvents = Parameters<typeof assertExpectedEvents>[1]
 
@@ -807,6 +909,16 @@ export function governanceChainSelfUpgradeViaRootReferendumSuite<
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
         testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, governanceChain),
       },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,
+        testFn: async (ctx) => await upgradeBlockedByOverlappingUpgradeTests(governanceChain, ctx),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by relay chain upgrade restriction signal`,
+        testFn: async (ctx) => await upgradeBlockedByRestrictionSignalTests(governanceChain, ctx),
+      },
     ],
   }
 }
@@ -856,6 +968,16 @@ export function governanceChainUpgradesOtherChainViaRootReferendumSuite<
         kind: 'test',
         label: `authorize_upgrade doesnt allow upgrade to the same wasm (via Root referendum)`,
         testFn: async () => await authorizeUpgradeViaRootReferendumTests(governanceChain, toBeUpgradedChain),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,
+        testFn: async (ctx) => await upgradeBlockedByOverlappingUpgradeTests(toBeUpgradedChain, ctx),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by relay chain upgrade restriction signal`,
+        testFn: async (ctx) => await upgradeBlockedByRestrictionSignalTests(toBeUpgradedChain, ctx),
       },
     ],
   }
