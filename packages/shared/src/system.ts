@@ -21,6 +21,7 @@ import {
   type TestConfig,
 } from './helpers/index.js'
 import type { RootTestTree } from './types.js'
+import { upgradeBlockedByOverlappingUpgradeTests, upgradeBlockedByRestrictionSignalTests } from './upgrade.js'
 
 type SetCodeFn = (code: Uint8Array | HexString) => SubmittableExtrinsic<'promise'>
 type AuthorizeUpgradeFn = (codeHash: string | Uint8Array<ArrayBufferLike>) => SubmittableExtrinsic<'promise'>
@@ -112,6 +113,7 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
+    ctx?: { skip: (reason?: string) => void }
   },
 ) {
   const alice = devAccounts.alice
@@ -141,6 +143,26 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
 
   await toBeUpgradedClient.dev.newBlock({ count: 1 })
   const eventsAfterFirstBlock = await toBeUpgradedClient.api.query.system.events()
+
+  // ProhibitedByPolkadot: the restriction signal lives in the relay chain state proof, not
+  // parachain storage. on_finalize kills it, so it's unreadable after the block — but
+  // set_validation_data re-injects it during execution. Detect it from the dispatch error.
+  const applyFailed = eventsAfterFirstBlock.find((r: any) =>
+    toBeUpgradedClient.api.events.system.ExtrinsicFailed.is(r.event),
+  )
+  if (applyFailed) {
+    const dispatchError = (applyFailed.event.data as any).dispatchError
+    if (dispatchError.isModule) {
+      const decoded = toBeUpgradedClient.api.registry.findMetaError(dispatchError.asModule)
+      if (decoded.name === 'ProhibitedByPolkadot') {
+        params.ctx?.skip?.(
+          `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
+        )
+        return
+      }
+    }
+  }
+
   await toBeUpgradedClient.dev.newBlock({ count: 1 })
   const eventsAfterSecondBlock = await toBeUpgradedClient.api.query.system.events()
 
@@ -520,6 +542,7 @@ export async function authorizeUpgradeWithoutChecksViaRemoteSchedulerTests<
 >(
   governanceClient: Client<TCustomRelay, TInitStoragesRelay>,
   toBeUpgradedClient: Client<TCustomPara, TInitStoragesPara>,
+  ctx?: { skip: (reason?: string) => void },
 ) {
   let expectedEvents: ExpectedEvents = []
   if (toBeUpgradedClient.config.isRelayChain) {
@@ -534,6 +557,7 @@ export async function authorizeUpgradeWithoutChecksViaRemoteSchedulerTests<
   return runAuthorizeUpgradeScenarioViaRemoteScheduler(governanceClient, toBeUpgradedClient, {
     call: toBeUpgradedClient.api.tx.system.authorizeUpgradeWithoutChecks,
     expectedAfterApply: () => expectedEvents,
+    ctx,
   })
 }
 
@@ -769,8 +793,8 @@ export function systemE2ETestsViaRemoteScheduler<
       {
         kind: 'test',
         label: `authorize_upgrade_without_checks allows upgrade to the same wasm (via ${governanceChain.name})`,
-        testFn: async () =>
-          await authorizeUpgradeWithoutChecksViaRemoteSchedulerTests(governanceClient, toBeUpgradedClient),
+        testFn: async (ctx) =>
+          await authorizeUpgradeWithoutChecksViaRemoteSchedulerTests(governanceClient, toBeUpgradedClient, ctx),
       },
       {
         kind: 'test',
@@ -791,6 +815,16 @@ export function systemE2ETestsViaRemoteScheduler<
         kind: 'test',
         label: `expecting set_code to fail as sending WASM from relay to para should exceed XCM limits (via ${governanceChain.name})`,
         testFn: async () => await setCodeViaRemoteSchedulerTests(governanceClient, toBeUpgradedClient),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by overlapping pending validation code`,
+        testFn: async (ctx) => await upgradeBlockedByOverlappingUpgradeTests(toBeUpgradedChain, ctx),
+      },
+      {
+        kind: 'test',
+        label: `applyAuthorizedUpgrade blocked by relay chain upgrade restriction signal`,
+        testFn: async (ctx) => await upgradeBlockedByRestrictionSignalTests(toBeUpgradedChain, ctx),
       },
     ],
   }
