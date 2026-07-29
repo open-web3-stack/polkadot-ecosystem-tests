@@ -226,7 +226,7 @@ exports[`assetHubPolkadot & collectivesPolkadot > collectivesPolkadot transfer D
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 300000000)",
+        "refTime": "(rounded 400000000)",
       },
     },
     "method": "Processed",

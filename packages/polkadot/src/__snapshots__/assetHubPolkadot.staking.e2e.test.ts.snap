@@ -196,7 +196,7 @@ exports[`Polkadot Asset Hub Staking > base staking tests > force apply validator
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 400000000)",
         },
       },
     },

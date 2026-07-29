@@ -71,15 +71,22 @@ jobs:
           cat "$ENV_FILE" >> $GITHUB_ENV
 
       - name: Start all Subway instances
+        env:
+          ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
         run: |
           echo "Starting all Subway instances for ${{ matrix.network.name }}..."
 
           echo '${{ toJSON(matrix.network.chains) }}' | jq -c '.[]' | while read chain; do
             CHAIN=$(echo $chain | jq -r '.chain')
             PORT=$(echo $chain | jq -r '.port')
+            ENDPOINT_VAR=$(echo $chain | jq -r '.endpoint_var')
+            ENDPOINT_OVERRIDE="${!ENDPOINT_VAR:-}"
 
-            # Get endpoints from pet-chain-endpoints.json
-            ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+            if [ -n "$ENDPOINT_OVERRIDE" ]; then
+              ENDPOINTS=$(jq -cn --arg endpoint "$ENDPOINT_OVERRIDE" '[$endpoint]')
+            else
+              ENDPOINTS=$(jq -c ".$CHAIN" packages/networks/src/pet-chain-endpoints.json)
+            fi
 
             if [ "$ENDPOINTS" = "null" ] || [ -z "$ENDPOINTS" ]; then
               echo "Error: No endpoints found for chain $CHAIN"
