@@ -7,9 +7,6 @@ import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/
 
 import { beforeAll, describe } from 'vitest'
 
-// Skipped: Acala fork setup intermittently times out (RpcError -32603), flaking CI. See #660.
-// Network setup lives in beforeAll so that describe.skip actually prevents it from running (an
-// async describe factory would run at collection time regardless of skip).
 describe.skip('acala & moonbeam', () => {
   // TODO: until we figured out how to query balances on Moonbeam again
   let acalaClient: Client

@@ -169,7 +169,7 @@ exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > tx 
 
 exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > balance on from chain 1`] = `
 {
-  "free": 9000000000000,
+  "free": 8000000000000,
   "frozen": 0,
   "reserved": 0,
 }
@@ -180,12 +180,12 @@ exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with 
   "consumers": 0,
   "data": {
     "flags": "0x80000000000000000000000000000000",
-    "free": 0,
+    "free": "(rounded 1000000000000)",
     "frozen": 0,
     "reserved": 0,
   },
   "nonce": 0,
-  "providers": 0,
+  "providers": 1,
   "sufficients": 0,
 }
 `;
