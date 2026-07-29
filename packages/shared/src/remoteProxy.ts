@@ -56,16 +56,27 @@ async function buildSyntheticProxyProof(
 }
 
 /**
- * Replace the most recent relay state root in the pallet's `BlockToRoot` storage with a synthetic one.
+ * Insert a synthetic relay state root into the pallet's `BlockToRoot` storage, keyed at the
+ * actual relay parent block.
  *
  * The pallet stores a bounded vector of `(relay_block, state_root)` pairs that it uses to verify
- * incoming proofs. This function reads the current entries, swaps the state root of the last entry
- * with the given `trieRootHash`, and writes the result back via `dev.setStorage`.
+ * incoming proofs. This function replaces the vector's last entry with
+ * `(parachainSystem.lastRelayChainBlockNumber, trieRootHash)` and writes the result back via
+ * `dev.setStorage`.
+ *
+ * The entry is keyed at the actual relay parent rather than the last stored `BlockToRoot` key
+ * because the two can diverge on-chain: with multiple parachain blocks per relay block, the
+ * bounded vector saturates with entries younger than the pallet's pruning cutoff, and its silent
+ * `try_push` failure lets the stored keys lag the true relay parent (observed up to 6 blocks on
+ * Kusama Asset Hub). An anchor keyed at a lagged block gets pruned when the next Chopsticks block
+ * advances the relay parent, and the extrinsic then fails with `UnknownProofAnchorBlock`. Keying
+ * at the true relay parent keeps the anchor inside the pruning window regardless of lag.
  *
  * Raw storage injection is necessary because `BlockToRoot` is keyed by a generic pallet instance
  * parameter, which the high-level `dev.setStorage({ PalletName: ... })` API does not support.
  *
- * @returns The relay block number whose root was replaced (to be used as the proof's anchor block).
+ * @returns The relay block number the synthetic root was keyed at (to be used as the proof's
+ * anchor block).
  */
 async function injectSyntheticRoot(
   client: { api: any; dev: any },
@@ -81,11 +92,14 @@ async function injectSyntheticRoot(
 
   assert(blockToRoot.length > 0, 'BlockToRoot should not be empty after building a block')
 
-  const lastRelayBlock = blockToRoot[blockToRoot.length - 1][0]
-
-  const updatedBlockToRoot = blockToRoot.map(([block, hash]) =>
-    block === lastRelayBlock ? [block, trieRootHash] : [block, hash],
+  const lastRelayBlock = (await client.api.query.parachainSystem.lastRelayChainBlockNumber()).toNumber()
+  const lastStoredBlock = blockToRoot[blockToRoot.length - 1][0]
+  assert(
+    lastRelayBlock >= lastStoredBlock,
+    `BlockToRoot last entry (${lastStoredBlock}) is ahead of the relay parent (${lastRelayBlock})`,
   )
+
+  const updatedBlockToRoot = [...blockToRoot.slice(0, -1), [lastRelayBlock, trieRootHash] as [number, string]]
 
   const encodedEntries = updatedBlockToRoot.map(([block, hash]) =>
     u8aConcat(new Uint8Array(new Uint32Array([block as number]).buffer), hexToU8a(hash as string)),

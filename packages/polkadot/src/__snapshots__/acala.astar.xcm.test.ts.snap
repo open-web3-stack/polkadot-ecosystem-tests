@@ -126,6 +126,13 @@ exports[`acala & astar > acala transfer ACA to astar > to chain xcm events 1`] =
 [
   {
     "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "XcmpMessageSent",
+    "section": "xcmpQueue",
+  },
+  {
+    "data": {
       "id": "(hash)",
       "origin": {
         "Sibling": 2000,
@@ -372,6 +379,13 @@ exports[`acala & astar > acala transfer DOT to astar > to chain xcm events 1`] =
 [
   {
     "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "XcmpMessageSent",
+    "section": "xcmpQueue",
+  },
+  {
+    "data": {
       "id": "(hash)",
       "origin": {
         "Sibling": 1000,
@@ -380,6 +394,21 @@ exports[`acala & astar > acala transfer DOT to astar > to chain xcm events 1`] =
       "weightUsed": {
         "proofSize": "(rounded 9000)",
         "refTime": "(rounded 900000000)",
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": 2000,
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": "(rounded 3000)",
+        "refTime": "(rounded 30000000)",
       },
     },
     "method": "Processed",
@@ -810,6 +839,28 @@ exports[`acala & astar > astar transfer DOT to acala > to chain xcm events 1`] =
       "weightUsed": {
         "proofSize": 0,
         "refTime": 1000000000,
+      },
+    },
+    "method": "Processed",
+    "section": "messageQueue",
+  },
+  {
+    "data": {
+      "messageHash": "(hash)",
+    },
+    "method": "XcmpMessageSent",
+    "section": "xcmpQueue",
+  },
+  {
+    "data": {
+      "id": "(hash)",
+      "origin": {
+        "Sibling": "(rounded 2000)",
+      },
+      "success": true,
+      "weightUsed": {
+        "proofSize": 0,
+        "refTime": 200000000,
       },
     },
     "method": "Processed",

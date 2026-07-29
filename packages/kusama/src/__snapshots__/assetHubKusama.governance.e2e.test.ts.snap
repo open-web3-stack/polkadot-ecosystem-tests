@@ -638,7 +638,7 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 900000000)",
         },
       },
     },
