@@ -2,7 +2,7 @@
 
 exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > balance on from chain 1`] = `
 {
-  "free": 9000000000000,
+  "free": 8000000000000,
   "frozen": 0,
   "reserved": 0,
 }
@@ -110,7 +110,7 @@ exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > to 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 400000000)",
+        "refTime": "(rounded 500000000)",
       },
     },
     "method": "Processed",
@@ -169,7 +169,7 @@ exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot > tx 
 
 exports[`acala & assetHubPolkadot > acala transfer DOT to assetHubPolkadot with limited weight > balance on from chain 1`] = `
 {
-  "free": 8000000000000,
+  "free": 6000000000000,
   "frozen": 0,
   "reserved": 0,
 }
@@ -456,7 +456,7 @@ exports[`acala & assetHubPolkadot > acala transfer ETH to assetHubPolkadot > to 
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 600000000)",
+        "refTime": "(rounded 700000000)",
       },
     },
     "method": "Processed",
@@ -726,7 +726,7 @@ exports[`acala & assetHubPolkadot > acala transfer USDT to assetHubPolkadot > to
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 400000000)",
+        "refTime": "(rounded 500000000)",
       },
     },
     "method": "Processed",
@@ -838,7 +838,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer DOT to acala > tx 
 
 exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > balance on from chain 1`] = `
 {
-  "balance": 900000000000000000,
+  "balance": 800000000000000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -975,7 +975,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > tx 
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
@@ -1120,7 +1120,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > tx 
 
 exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > balance on from chain 1`] = `
 {
-  "balance": 999000000,
+  "balance": 998000000,
   "extra": null,
   "reason": {
     "consumer": null,
@@ -1261,7 +1261,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > tx
         "Complete": {
           "used": {
             "proofSize": "(rounded 6000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 300000000)",
           },
         },
       },
