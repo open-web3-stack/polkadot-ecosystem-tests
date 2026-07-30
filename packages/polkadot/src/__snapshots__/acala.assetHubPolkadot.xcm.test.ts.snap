@@ -849,7 +849,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > bal
 
 exports[`acala & assetHubPolkadot > assetHubPolkadot transfer ETH to acala > balance on to chain 1`] = `
 {
-  "free": "(rounded 200000000000000000)",
+  "free": "(rounded 100000000000000000)",
   "frozen": 0,
   "reserved": 0,
 }
@@ -1131,7 +1131,7 @@ exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > ba
 
 exports[`acala & assetHubPolkadot > assetHubPolkadot transfer USDT to acala > balance on to chain 1`] = `
 {
-  "free": "(rounded 2000000)",
+  "free": "(rounded 999000)",
   "frozen": 0,
   "reserved": 0,
 }
