@@ -800,7 +800,16 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
       "beneficiary": {
         "V4": {
           "accountId": {
-            "interior": "Here",
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
             "parents": "0",
           },
           "location": {
