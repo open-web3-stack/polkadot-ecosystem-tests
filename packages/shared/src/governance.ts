@@ -2448,7 +2448,23 @@ export async function referendumPassingLifecycleTest<
   expect(referendumDataOpt.unwrap().isApproved, 'referendum should be `Approved` after confirming').toBe(true)
 
   // 8. Verify the referendum's enactment actually dispatches `treasury.spend`
-  await client.dev.newBlock()
+  //
+  // `schedule_enactment`, called in the same block as `injectConfirmedPassing` clamps the scheduled block to `now + track.minEnactmentPeriod`
+  // We use this logic to obtain the value and advance the chain.
+  const minEnactmentPeriod = smallTipper[1].minEnactmentPeriod.toNumber()
+  let enactmentIters: number
+  match(client.config.properties.schedulerBlockProvider)
+    .with('Local', () => {
+      enactmentIters = minEnactmentPeriod
+    })
+    .with('NonLocal', () => {
+      enactmentIters = Math.ceil(minEnactmentPeriod / relayBlocksPerParaBlock)
+    })
+    .exhaustive()
+
+  for (let i = 0; i < enactmentIters!; i++) {
+    await client.dev.newBlock()
+  }
 
   await checkSystemEvents(client, { section: 'treasury', method: 'AssetSpendApproved' })
     .redact({ redactKeys: /expireAt|validFrom|index/, number: false })
