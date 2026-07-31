@@ -5,13 +5,11 @@ import type { Client, DescribeNode, RootTestTree } from '@e2e-test/shared'
 
 import type { Option, u32 } from '@polkadot/types'
 import type {
-  FrameSupportTokensFungibleUnionOfNativeOrWithId,
   PalletConvictionVotingVoteCasting,
   PalletConvictionVotingVoteVoting,
   PalletReferendaDeposit,
   PalletReferendaReferendumInfoConvictionVotingTally,
   PalletReferendaReferendumStatusConvictionVotingTally,
-  XcmVersionedLocation,
 } from '@polkadot/types/lookup'
 import type { ITuple } from '@polkadot/types/types'
 import { encodeAddress } from '@polkadot/util-crypto'
@@ -2339,21 +2337,19 @@ export async function referendumPassingLifecycleTest<
   const spendAmount = 1_000n
   const beneficiary = {
     v4: {
-      parents: 0,
-      interior: { x1: [{ accountId32: { network: null, id: devAccounts.bob.addressRaw } }] },
+      location: { parents: 0, interior: 'Here' },
+      accountId: {
+        parents: 0,
+        interior: { x1: [{ accountId32: { network: null, id: devAccounts.bob.addressRaw } }] },
+      },
     },
-  } as unknown as XcmVersionedLocation
+  }
 
   const submissionTx = client.api.tx.referenda.submit(
     { Origins: 'SmallTipper' } as any,
     {
       Inline: client.api.tx.treasury
-        .spend(
-          USDT_ASSET_KIND as unknown as FrameSupportTokensFungibleUnionOfNativeOrWithId,
-          spendAmount,
-          beneficiary,
-          null,
-        )
+        .spend(USDT_ASSET_KIND as any, spendAmount, beneficiary as any, null)
         .method.toHex(),
     },
     { After: 1 },
