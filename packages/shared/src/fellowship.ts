@@ -188,18 +188,6 @@ export async function seedFellowshipMembers(
 }
 
 /**
- * Resolve the ranked-collective pallet tx section.
- *
- * It is exposed as `fellowshipCollective` on the Collectives runtime (a `pallet_ranked_collective`
- * instance) and as `rankedCollective` on some other runtimes.
- */
-export function fellowshipCollectiveTx(client: any) {
-  const collective = client.api.tx.fellowshipCollective ?? client.api.tx.rankedCollective
-  assert(collective, 'no fellowship/ranked collective pallet found')
-  return collective
-}
-
-/**
  * Submit a Fellowship referendum and place its decision deposit, returning the poll index.
  *
  * The Fellowship referenda `SubmitOrigin` requires a rank-3+ member, so `proposer` must be a
@@ -297,9 +285,8 @@ export async function passFellowshipReferendum(
 
   // 2. Cast real aye votes from the seeded Fellowship members
 
-  const collective = fellowshipCollectiveTx(client)
   for (const voter of opts.voters) {
-    await sendTransaction(collective.vote(referendumIndex, true).signAsync(voter))
+    await sendTransaction(client.api.tx.fellowshipCollective.vote(referendumIndex, true).signAsync(voter))
   }
   await client.dev.newBlock()
   await collectLifecycle()

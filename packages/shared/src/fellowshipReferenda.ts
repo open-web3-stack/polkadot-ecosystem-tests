@@ -20,12 +20,7 @@ import type { HexString } from '@polkadot/util/types'
 
 import { assert, expect } from 'vitest'
 
-import {
-  fellowshipCollectiveTx,
-  passFellowshipReferendum,
-  seedFellowshipMembers,
-  submitFellowshipReferendum,
-} from './fellowship.js'
+import { passFellowshipReferendum, seedFellowshipMembers, submitFellowshipReferendum } from './fellowship.js'
 import {
   assertExpectedEvents,
   checkSystemEvents,
@@ -153,8 +148,9 @@ export async function rankTooLowCannotVote(collectivesClient: any) {
 
   // 3. Check the rank-2 member's vote is rejected with `RankTooLow`
 
-  const collective = fellowshipCollectiveTx(collectivesClient)
-  await sendTransaction(collective.vote(referendumIndex, true).signAsync(lowRankMember))
+  await sendTransaction(
+    collectivesClient.api.tx.fellowshipCollective.vote(referendumIndex, true).signAsync(lowRankMember),
+  )
   await collectivesClient.dev.newBlock()
 
   assertExpectedEvents(await collectivesClient.api.query.system.events(), [
@@ -204,9 +200,8 @@ export async function geometricVoteWeightAggregation(collectivesClient: any) {
 
   // 3. The rank-3 member votes aye; the rank-5 member votes nay
 
-  const collective = fellowshipCollectiveTx(collectivesClient)
-  await sendTransaction(collective.vote(referendumIndex, true).signAsync(rank3))
-  await sendTransaction(collective.vote(referendumIndex, false).signAsync(rank5))
+  await sendTransaction(collectivesClient.api.tx.fellowshipCollective.vote(referendumIndex, true).signAsync(rank3))
+  await sendTransaction(collectivesClient.api.tx.fellowshipCollective.vote(referendumIndex, false).signAsync(rank5))
   await collectivesClient.dev.newBlock()
 
   // 4. Check the tally reflects geometric weights over the excess rank above the Fellows track
