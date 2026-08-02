@@ -12,9 +12,9 @@ import {
   scheduleInlineCallWithOrigin,
 } from './helpers/index.js'
 
-/// -------
+/// ---------
 /// Constants
-/// -------
+/// ---------
 
 // The Collectives parachain ID on Polkadot.
 export const COLLECTIVES_PARA_ID = 1001
@@ -25,15 +25,12 @@ export const FELLOWSHIP_COLLECTIVE_PALLET_INDEX = 60
 // The pallet index for `pallet-core-fellowship` in the Collectives runtime.
 export const FELLOWSHIP_CORE_PALLET_INDEX = 63
 
-// The Dan-3 Fellowship rank used throughout salary-oriented fellowship tests.
-export const SALARY_MEMBER_RANK_DAN_3 = 3
-
 // Default free balance given to synthetic Fellowship members created in focused tests.
 export const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
 
-/// -------
+/// ----------------
 /// Internal helpers
-/// -------
+/// ----------------
 
 /**
  * Relocate the first scheduled call matching `verifier` to the next schedulable block, so it runs
@@ -128,9 +125,9 @@ async function findSubmittedReferendumIndex(
   return matchingIndices[0]
 }
 
-/// -------
+/// -----------------------
 /// Storage writers/seeders
-/// -------
+/// -----------------------
 
 /**
  * Seed funded Fellowship members directly into ranked-collective and core-fellowship storage.
