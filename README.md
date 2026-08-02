@@ -218,6 +218,25 @@ These include:
     the `Swapped` event
   - All salary amounts and period lengths read from live chain state
     (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
+- E2E test suite for the Fellowship referenda pallet on Polkadot Collectives:
+  - Real referendum flow, not a faked `Fellows` origin: seed rank-3 fellows into the
+    live collective, `fellowshipReferenda.submit`, place the decision deposit, cast
+    real `fellowshipCollective.vote` ayes, and fast-forward via storage surgery on the
+    referendum clock (backdate the decision period, relocate the scheduler alarm and
+    enactment task). The tally is real; only time is edited
+  - Cross-chain whitelist: the enacted referendum sends an XCM `Transact` from
+    Collectives to Asset Hub Polkadot, exercising the genuine
+    `WhitelistOrigin = EnsureXcm<IsFellowshipVoice>` path and asserting
+    `whitelist.CallWhitelisted` on the destination
+  - Referendum lifecycle snapshot: `Submitted` → `DecisionDepositPlaced` → `Voted` →
+    `Confirmed` captured across the primitive's blocks and asserted on
+  - Rank gating: a rank-2 member voting on the Fellows (rank-3) track is rejected with
+    `RankTooLow`
+  - Geometric vote weight: with mixed-rank voters, the tally reflects
+    `v*(v+1)/2` (where `v = rank − trackMinRank + 1`) rather than one-member-one-vote
+  - Merge-based seeding preserves the real electorate: new members are appended at
+    the live `memberCount` per tier, keeping the ranked-collective index invariants
+    intact so live members and their (rank, index) slots are untouched
 
 The intent behind these end-to-end tests is to cover the basic behavior of relay chains' and system
 parachains' runtimes.
