@@ -219,9 +219,7 @@ export async function submitFellowshipReferendum(
   proposer: KeyringPair,
   onBlock?: () => Promise<void>,
 ): Promise<number> {
-  /**
-   * 1. Clear stale preimages, fund the proposer, and note the proposal preimage
-   */
+  // 1. Clear stale preimages, fund the proposer, and note the proposal preimage
 
   await client.dev.setStorage({
     Preimage: {
@@ -239,9 +237,7 @@ export async function submitFellowshipReferendum(
   await sendTransaction(client.api.tx.preimage.notePreimage(preimageCall.toHex()).signAsync(proposer))
   await client.dev.newBlock()
 
-  /**
-   * 2. Submit the referendum and recover its poll index from the matching event
-   */
+  // 2. Submit the referendum and recover its poll index from the matching event
 
   await sendTransaction(
     client.api.tx.fellowshipReferenda
@@ -253,9 +249,7 @@ export async function submitFellowshipReferendum(
   const referendumIndex = await findSubmittedReferendumIndex(client, preimageHash, preimageLength)
   await onBlock?.()
 
-  /**
-   * 3. Place the decision deposit so the referendum can enter deciding
-   */
+  // 3. Place the decision deposit so the referendum can enter deciding
 
   await sendTransaction(client.api.tx.fellowshipReferenda.placeDecisionDeposit(referendumIndex).signAsync(proposer))
   await client.dev.newBlock()
@@ -300,15 +294,11 @@ export async function passFellowshipReferendum(
     }
   }
 
-  /**
-   * 1. Submit the referendum and place its decision deposit
-   */
+  // 1. Submit the referendum and place its decision deposit
 
   const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer, collectLifecycle)
 
-  /**
-   * 2. Cast real aye votes from the seeded Fellowship members
-   */
+  // 2. Cast real aye votes from the seeded Fellowship members
 
   const collective = fellowshipCollectiveTx(client)
   for (const voter of opts.voters) {
@@ -317,9 +307,7 @@ export async function passFellowshipReferendum(
   await client.dev.newBlock()
   await collectLifecycle()
 
-  /**
-   * 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
-   */
+  // 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
 
   const referendumInfo = (await client.api.query.fellowshipReferenda.referendumInfoFor(referendumIndex)) as any
   assert(referendumInfo.isSome, `referendum ${referendumIndex} not found after submission, deposit, and voting`)
@@ -365,9 +353,7 @@ export async function passFellowshipReferendum(
     blockProvider,
   )
 
-  /**
-   * 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
-   */
+  // 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
 
   const callHash = ongoing.proposal.isLookup
     ? ongoing.proposal.asLookup.hash.toHex()

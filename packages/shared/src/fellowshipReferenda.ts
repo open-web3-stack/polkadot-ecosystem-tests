@@ -84,15 +84,11 @@ export async function fellowshipWhitelistViaReferendum(destClient: any, collecti
   // A dummy 32-byte call hash to whitelist; its exact value is not important for the test.
   const callHash: HexString = '0x0101010101010101010101010101010101010101010101010101010101010101'
 
-  /**
-   * 1. Seed a controllable rank-3 fellow who can submit and vote on the Fellows track
-   */
+  // 1. Seed a controllable rank-3 fellow who can submit and vote on the Fellows track
 
   await seedFellowshipMembers(collectivesClient, [{ pair: fellow, rank: FELLOWS_RANK }])
 
-  /**
-   * 2. Run a real Fellowship referendum whose enacted proposal whitelists the call on the destination
-   */
+  // 2. Run a real Fellowship referendum whose enacted proposal whitelists the call on the destination
 
   const proposal = buildWhitelistViaXcm(destClient, collectivesClient, callHash)
   const { lifecycleEvents } = await passFellowshipReferendum(collectivesClient, proposal, {
@@ -100,25 +96,19 @@ export async function fellowshipWhitelistViaReferendum(destClient: any, collecti
     voters: [fellow],
   })
 
-  /**
-   * 3. Check the referendum lifecycle: submission, the real ranked-collective vote, and confirmation
-   */
+  // 3. Check the referendum lifecycle: submission, the real ranked-collective vote, and confirmation
 
   expect(lifecycleEvents.map((e) => `${e.section}.${e.method}`)).toMatchSnapshot(
     'collectives fellowship referendum lifecycle events',
   )
 
-  /**
-   * 4. Check the enacted proposal emits the outbound XCM on Collectives
-   */
+  // 4. Check the enacted proposal emits the outbound XCM on Collectives
 
   await checkSystemEvents(collectivesClient, 'polkadotXcm')
     .redact({ hash: false, redactKeys: /messageId/ })
     .toMatchSnapshot('collectives sends fellowship whitelist xcm to the destination')
 
-  /**
-   * 5. Check the destination whitelists the call under the bridged Fellowship voice
-   */
+  // 5. Check the destination whitelists the call under the bridged Fellowship voice
 
   await destClient.dev.newBlock()
   await checkSystemEvents(destClient, 'whitelist', 'messageQueue')
@@ -144,18 +134,14 @@ export async function rankTooLowCannotVote(collectivesClient: any) {
   const proposer = keyring.addFromUri('//fellowship_referenda_proposer')
   const lowRankMember = keyring.addFromUri('//fellowship_referenda_low_rank')
 
-  /**
-   * 1. Seed a rank-3 proposer (who can open the referendum) and a rank-2 member (who cannot vote)
-   */
+  // 1. Seed a rank-3 proposer (who can open the referendum) and a rank-2 member (who cannot vote)
 
   await seedFellowshipMembers(collectivesClient, [
     { pair: proposer, rank: FELLOWS_RANK },
     { pair: lowRankMember, rank: FELLOWS_RANK - 1 },
   ])
 
-  /**
-   * 2. Open a Fellows-track referendum on a harmless remark
-   */
+  // 2. Open a Fellows-track referendum on a harmless remark
 
   const remark = collectivesClient.api.tx.system.remark('rank-gating')
   const referendumIndex = await submitFellowshipReferendum(
@@ -165,9 +151,7 @@ export async function rankTooLowCannotVote(collectivesClient: any) {
     proposer,
   )
 
-  /**
-   * 3. Check the rank-2 member's vote is rejected with `RankTooLow`
-   */
+  // 3. Check the rank-2 member's vote is rejected with `RankTooLow`
 
   const collective = fellowshipCollectiveTx(collectivesClient)
   await sendTransaction(collective.vote(referendumIndex, true).signAsync(lowRankMember))
@@ -201,18 +185,14 @@ export async function geometricVoteWeightAggregation(collectivesClient: any) {
   const rank3 = keyring.addFromUri('//fellowship_referenda_rank3')
   const rank5 = keyring.addFromUri('//fellowship_referenda_rank5')
 
-  /**
-   * 1. Seed two fellows at different ranks (3 and 5)
-   */
+  // 1. Seed two fellows at different ranks (3 and 5)
 
   await seedFellowshipMembers(collectivesClient, [
     { pair: rank3, rank: 3 },
     { pair: rank5, rank: 5 },
   ])
 
-  /**
-   * 2. Open a Fellows-track referendum on a harmless remark
-   */
+  // 2. Open a Fellows-track referendum on a harmless remark
 
   const remark = collectivesClient.api.tx.system.remark('geometric-weight')
   const referendumIndex = await submitFellowshipReferendum(
@@ -222,19 +202,15 @@ export async function geometricVoteWeightAggregation(collectivesClient: any) {
     rank3,
   )
 
-  /**
-   * 3. The rank-3 member votes aye; the rank-5 member votes nay
-   */
+  // 3. The rank-3 member votes aye; the rank-5 member votes nay
 
   const collective = fellowshipCollectiveTx(collectivesClient)
   await sendTransaction(collective.vote(referendumIndex, true).signAsync(rank3))
   await sendTransaction(collective.vote(referendumIndex, false).signAsync(rank5))
   await collectivesClient.dev.newBlock()
 
-  /**
-   * 4. Check the tally reflects geometric weights over the excess rank above the track minimum:
-   *    the rank-3 aye contributes weight(0) and the rank-5 nay contributes weight(2)
-   */
+  // 4. Check the tally reflects geometric weights over the excess rank above the Fellows track
+  //    minimum: the rank-3 aye contributes weight(0) and the rank-5 nay contributes weight(2)
 
   const info = (await collectivesClient.api.query.fellowshipReferenda.referendumInfoFor(referendumIndex)) as any
   assert(info.isSome && info.unwrap().isOngoing, `referendum ${referendumIndex} not ongoing after voting`)
