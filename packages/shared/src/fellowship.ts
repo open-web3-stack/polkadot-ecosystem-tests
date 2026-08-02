@@ -132,13 +132,9 @@ async function findSubmittedReferendumIndex(
 /**
  * Seed funded Fellowship members directly into ranked-collective and core-fellowship storage.
  *
- * Seeded members are appended to the live collective rather than replacing it: for each rank tier
+ * Seeded members are appended to the live collective, not swapped in for it: for each rank tier
  * the existing `memberCount` is read and new members are indexed at `liveCount, liveCount + 1, ...`.
- * This keeps the real electorate (and the ranked-collective index invariants that a later member
- * removal relies on) intact, and means referendum support is measured against the full membership.
- * Consequently a passing referendum must be fast-forwarded to the end of its decision period, where
- * the Fellows track support requirement has decayed to its 0% floor; a single seeded aye does not
- * clear support mid-curve against the real electorate.
+ * The real electorate and the ranked-collective per-tier index invariants are left intact.
  */
 export async function seedFellowshipMembers(
   client: any,
@@ -247,6 +243,11 @@ export async function submitFellowshipReferendum(
  * Submit, vote on, fast-forward, and enact a Fellowship referendum without waiting real time.
  *
  * Real votes are cast into the live ranked collective tally. Only the referendum clock is edited.
+ *
+ * Support is measured against the full merged electorate (see `seedFellowshipMembers`), so the
+ * referendum is fast-forwarded to the end of its decision period, where the Fellows track support
+ * requirement has decayed to its 0% floor. A single seeded aye clears support only there, not
+ * mid-curve.
  *
  * 1. Submit the referendum and place its decision deposit (see `submitFellowshipReferendum`)
  * 2. Cast real aye votes from the seeded Fellowship members
