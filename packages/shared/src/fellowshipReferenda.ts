@@ -30,9 +30,6 @@ import {
 } from './helpers/index.js'
 import type { Client, RootTestTree } from './types.js'
 
-// The Fellows track requires a rank-3 member to submit and vote.
-const FELLOWS_RANK = 3
-
 /**
  * Geometric vote weight for a ranked-collective vote: `v*(v+1)/2` with `v = excess + 1`, where
  * `excess = rank - trackMinRank` (see `pallet_ranked_collective::{rank_to_votes, Geometric}`).
@@ -84,7 +81,7 @@ export async function fellowshipWhitelistViaReferendum(destClient: any, collecti
 
   // 1. Seed a controllable rank-3 fellow who can submit and vote on the Fellows track
 
-  await seedFellowshipMembers(collectivesClient, [{ pair: fellow, rank: FELLOWS_RANK }])
+  await seedFellowshipMembers(collectivesClient, [{ pair: fellow, rank: 3 }])
 
   // 2. Run a real Fellowship referendum whose enacted proposal whitelists the call on the destination
 
@@ -129,8 +126,8 @@ export async function rankTooLowCannotVote(collectivesClient: any) {
   // 1. Seed a rank-3 proposer (who can open the referendum) and a rank-2 member (who cannot vote)
 
   await seedFellowshipMembers(collectivesClient, [
-    { pair: proposer, rank: FELLOWS_RANK },
-    { pair: lowRankMember, rank: FELLOWS_RANK - 1 },
+    { pair: proposer, rank: 3 },
+    { pair: lowRankMember, rank: 2 },
   ])
 
   // 2. Open a Fellows-track referendum on a harmless remark
@@ -208,8 +205,8 @@ export async function geometricVoteWeightAggregation(collectivesClient: any) {
   assert(info.isSome && info.unwrap().isOngoing, `referendum ${referendumIndex} not ongoing after voting`)
   const tally = info.unwrap().asOngoing.tally.toJSON() as { ayes: number; nays: number; bareAyes: number }
 
-  expect(tally.ayes).toBe(geometricVotes(3 - FELLOWS_RANK))
-  expect(tally.nays).toBe(geometricVotes(5 - FELLOWS_RANK))
+  expect(tally.ayes).toBe(geometricVotes(0))
+  expect(tally.nays).toBe(geometricVotes(2))
   // `bareAyes` counts heads, not weight: one aye voter.
   expect(tally.bareAyes).toBe(1)
 }
