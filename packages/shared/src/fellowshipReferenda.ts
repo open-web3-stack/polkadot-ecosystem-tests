@@ -62,11 +62,14 @@ function buildWhitelistViaXcm(destClient: any, collectivesClient: any, callHash:
  * Whitelist a call on the destination chain via a real, fast-forwarded Fellowship referendum on
  * Collectives.
  *
+ * The Fellowship-side referendum lifecycle (Submitted, DecisionDepositPlaced, Voted, Confirmed)
+ * is asserted inside `passFellowshipReferendum` block-by-block, so this test focuses on the
+ * cross-chain effect.
+ *
  * 1. Seed a controllable rank-3 fellow who can submit and vote on the Fellows track
  * 2. Run a real Fellowship referendum whose enacted proposal whitelists the call on the destination
- * 3. Check the referendum lifecycle: submission, the real ranked-collective vote, and confirmation
- * 4. Check the enacted proposal emits the outbound XCM on Collectives
- * 5. Check the destination whitelists the call under the bridged Fellowship voice
+ * 3. Check the enacted proposal emits the outbound XCM on Collectives
+ * 4. Check the destination whitelists the call under the bridged Fellowship voice
  *
  * @param destClient The chain hosting the whitelist pallet whose `WhitelistOrigin` accepts the
  *   Fellowship voice (e.g. Asset Hub or the relay).
@@ -86,24 +89,18 @@ export async function fellowshipWhitelistViaReferendum(destClient: any, collecti
   // 2. Run a real Fellowship referendum whose enacted proposal whitelists the call on the destination
 
   const proposal = buildWhitelistViaXcm(destClient, collectivesClient, callHash)
-  const { lifecycleEvents } = await passFellowshipReferendum(collectivesClient, proposal, {
+  await passFellowshipReferendum(collectivesClient, proposal, {
     track: { FellowshipOrigins: 'Fellows' },
     voters: [fellow],
   })
 
-  // 3. Check the referendum lifecycle: submission, the real ranked-collective vote, and confirmation
-
-  expect(lifecycleEvents.map((e) => `${e.section}.${e.method}`)).toMatchSnapshot(
-    'collectives fellowship referendum lifecycle events',
-  )
-
-  // 4. Check the enacted proposal emits the outbound XCM on Collectives
+  // 3. Check the enacted proposal emits the outbound XCM on Collectives
 
   await checkSystemEvents(collectivesClient, 'polkadotXcm')
     .redact({ hash: false, redactKeys: /messageId/ })
     .toMatchSnapshot('collectives sends fellowship whitelist xcm to the destination')
 
-  // 5. Check the destination whitelists the call under the bridged Fellowship voice
+  // 4. Check the destination whitelists the call under the bridged Fellowship voice
 
   await destClient.dev.newBlock()
   await checkSystemEvents(destClient, 'whitelist', 'messageQueue')

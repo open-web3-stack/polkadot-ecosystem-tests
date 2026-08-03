@@ -1,14 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Polkadot Fellowship referenda > whitelist a call via a real fellowship referendum > collectives fellowship referendum lifecycle events 1`] = `
-[
-  "fellowshipReferenda.Submitted",
-  "fellowshipReferenda.DecisionDepositPlaced",
-  "fellowshipCollective.Voted",
-  "fellowshipReferenda.Confirmed",
-]
-`;
-
 exports[`Polkadot Fellowship referenda > whitelist a call via a real fellowship referendum > collectives sends fellowship whitelist xcm to the destination 1`] = `
 [
   {

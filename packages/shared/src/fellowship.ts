@@ -2,10 +2,12 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
+import { u8aToHex } from '@polkadot/util'
 
 import { assert } from 'vitest'
 
 import {
+  assertExpectedEvents,
   type BlockProvider,
   getBlockNumber,
   nextSchedulableBlockNum,
@@ -198,7 +200,6 @@ export async function submitFellowshipReferendum(
   call: SubmittableExtrinsic<'promise'>,
   track: { FellowshipOrigins: string } | { Origins: string },
   proposer: KeyringPair,
-  onBlock?: () => Promise<void>,
 ): Promise<number> {
   // 1. Clear stale preimages, fund the proposer, and note the proposal preimage
 
@@ -218,7 +219,8 @@ export async function submitFellowshipReferendum(
   await sendTransaction(client.api.tx.preimage.notePreimage(preimageCall.toHex()).signAsync(proposer))
   await client.dev.newBlock()
 
-  // 2. Submit the referendum and recover its poll index from the matching event
+  // 2. Submit the referendum, recover its poll index from the matching event, and assert the
+  // Submitted event carries the expected track and lookup proposal.
 
   await sendTransaction(
     client.api.tx.fellowshipReferenda
@@ -228,13 +230,49 @@ export async function submitFellowshipReferendum(
   await client.dev.newBlock()
 
   const referendumIndex = await findSubmittedReferendumIndex(client, preimageHash, preimageLength)
-  await onBlock?.()
 
-  // 3. Place the decision deposit so the referendum can enter deciding
+  const submitEvents = await client.api.query.system.events()
+  assertExpectedEvents(submitEvents, [
+    { type: client.api.events.fellowshipReferenda.Submitted, args: { index: referendumIndex } },
+  ])
+  // Scrutinize the Submitted event's payload via `data.toJSON()` positional access. Typed indexed
+  // access into the `Bounded` proposal wrapper mis-decodes the lookup hash under PJS, so we read
+  // the raw JSON tuple `[index, track, proposal]` instead.
+  const submitJson = submitEvents
+    .filter(({ event }: any) => client.api.events.fellowshipReferenda.Submitted.is(event))
+    .map(({ event }: any) => event.data.toJSON())
+    .find((data: any) => data[0] === referendumIndex)
+  assert(submitJson, `Submitted event for index ${referendumIndex} not found in event JSON`)
+  const submittedProposal = submitJson[2].lookup
+  assert(submittedProposal, `Submitted event proposal is not a Lookup for referendum ${referendumIndex}`)
+  assert(
+    submittedProposal.hash === preimageHash,
+    `Submitted proposal hash ${submittedProposal.hash} != expected ${preimageHash}`,
+  )
+  assert(
+    submittedProposal.len === preimageLength,
+    `Submitted proposal len ${submittedProposal.len} != expected ${preimageLength}`,
+  )
+
+  // 3. Place the decision deposit so the referendum can enter deciding, and assert the pallet
+  // records the deposit against our proposer.
 
   await sendTransaction(client.api.tx.fellowshipReferenda.placeDecisionDeposit(referendumIndex).signAsync(proposer))
   await client.dev.newBlock()
-  await onBlock?.()
+
+  // Match the depositor by public key: chain events render `AccountId` under the runtime's SS58
+  // prefix (0 for Polkadot), while `KeyringPair.address` uses the keyring's default (42), so a
+  // direct string compare fails despite identical accounts.
+  const proposerPubKey = u8aToHex(proposer.publicKey)
+  assertExpectedEvents(await client.api.query.system.events(), [
+    {
+      type: client.api.events.fellowshipReferenda.DecisionDepositPlaced,
+      args: {
+        index: referendumIndex,
+        who: (who: any) => u8aToHex((who as any).toU8a?.() ?? who) === proposerPubKey,
+      },
+    },
+  ])
 
   return referendumIndex
 }
@@ -249,14 +287,13 @@ export async function submitFellowshipReferendum(
  * requirement has decayed to its 0% floor. A single seeded aye clears support only there, not
  * mid-curve.
  *
+ * Asserts each lifecycle event as it is emitted: `Submitted` and `DecisionDepositPlaced` in
+ * `submitFellowshipReferendum`, then `Voted` and `Confirmed` here.
+ *
  * 1. Submit the referendum and place its decision deposit (see `submitFellowshipReferendum`)
  * 2. Cast real aye votes from the seeded Fellowship members
  * 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
  * 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
- *
- * Returns the poll index and the `fellowshipReferenda`/`fellowshipCollective` lifecycle events
- * accumulated across the submit, vote, and confirmation blocks, so callers can snapshot the real
- * referendum path.
  */
 export async function passFellowshipReferendum(
   client: any,
@@ -265,32 +302,38 @@ export async function passFellowshipReferendum(
     track: { FellowshipOrigins: string } | { Origins: string }
     voters: KeyringPair[]
   },
-): Promise<{ referendumIndex: number; lifecycleEvents: any[] }> {
+): Promise<number> {
   const blockProvider = client.config.properties.schedulerBlockProvider
 
   assert(opts.voters.length > 0, 'passFellowshipReferendum requires at least one seeded fellow to submit and vote')
   const proposer = opts.voters[0]
 
-  const lifecycleEvents: any[] = []
-  const collectLifecycle = async () => {
-    for (const { event } of await client.api.query.system.events()) {
-      if (event.section === 'fellowshipReferenda' || event.section === 'fellowshipCollective') {
-        lifecycleEvents.push({ section: event.section, method: event.method, data: event.data.toJSON() })
-      }
-    }
-  }
-
   // 1. Submit the referendum and place its decision deposit
 
-  const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer, collectLifecycle)
+  const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer)
 
-  // 2. Cast real aye votes from the seeded Fellowship members
+  // 2. Cast real aye votes from the seeded Fellowship members, and assert one Voted event per
+  // voter carrying that voter's address and an Aye vote against our referendum index.
 
   for (const voter of opts.voters) {
     await sendTransaction(client.api.tx.fellowshipCollective.vote(referendumIndex, true).signAsync(voter))
   }
   await client.dev.newBlock()
-  await collectLifecycle()
+
+  assertExpectedEvents(
+    await client.api.query.system.events(),
+    opts.voters.map((voter) => {
+      const voterPubKey = u8aToHex(voter.publicKey)
+      return {
+        type: client.api.events.fellowshipCollective.Voted,
+        args: {
+          poll: referendumIndex,
+          who: (who: any) => u8aToHex((who as any).toU8a?.() ?? who) === voterPubKey,
+          vote: (vote: any) => vote.isAye,
+        },
+      }
+    }),
+  )
 
   // 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
 
@@ -356,7 +399,10 @@ export async function passFellowshipReferendum(
   })
   await client.dev.newBlock()
 
-  await collectLifecycle()
+  // Assert the runtime confirmed our poll (not some other live-fork referendum in the same block).
+  assertExpectedEvents(await client.api.query.system.events(), [
+    { type: client.api.events.fellowshipReferenda.Confirmed, args: { index: referendumIndex } },
+  ])
 
   const postNudgeInfo = (await client.api.query.fellowshipReferenda.referendumInfoFor(referendumIndex)) as any
   assert(postNudgeInfo.isSome, `referendum ${referendumIndex} disappeared after nudging`)
@@ -374,7 +420,6 @@ export async function passFellowshipReferendum(
   })
 
   await client.dev.newBlock()
-  await collectLifecycle()
 
-  return { referendumIndex, lifecycleEvents }
+  return referendumIndex
 }
