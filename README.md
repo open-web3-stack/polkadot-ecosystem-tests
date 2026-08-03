@@ -219,10 +219,10 @@ These include:
   - All salary amounts and period lengths read from live chain state
     (`fellowshipCore.params`, `fellowshipSalary` constants), not hardcoded
 - E2E test suite for the Fellowship referenda pallet on Polkadot Collectives:
-  - Real referendum flow, not a faked `Fellows` origin: seed rank-3 fellows into the
-    live collective, `fellowshipReferenda.submit`, place the decision deposit, cast
-    real `fellowshipCollective.vote` ayes, and fast-forward via storage surgery on the
-    referendum clock (backdate the decision period, relocate the scheduler alarm and
+  - Full referendum lifecycle driven end to end: seed rank-3 fellows into the live
+    collective, `fellowshipReferenda.submit`, place the decision deposit, cast real
+    `fellowshipCollective.vote` ayes, and fast-forward the referendum clock via
+    storage surgery (backdate the decision period, relocate the scheduler alarm and
     enactment task). The tally is real; only time is edited
   - Cross-chain whitelist: the enacted referendum sends an XCM `Transact` from
     Collectives to Asset Hub Polkadot, exercising the genuine
