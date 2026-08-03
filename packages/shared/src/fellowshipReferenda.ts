@@ -258,7 +258,6 @@ export function fellowshipReferendaE2ETests<
       {
         kind: 'test',
         label: 'whitelist a call via a real fellowship referendum',
-        flags: { timeout: 120_000 },
         testFn: async () => await fellowshipWhitelistViaReferendum(destClient, collectivesClient),
       },
       {
@@ -268,13 +267,11 @@ export function fellowshipReferendaE2ETests<
           {
             kind: 'test',
             label: 'a member below the track rank cannot vote',
-            flags: { timeout: 120_000 },
             testFn: async () => await rankTooLowCannotVote(collectivesClient),
           },
           {
             kind: 'test',
             label: 'vote weight is geometric in rank',
-            flags: { timeout: 120_000 },
             testFn: async () => await geometricVoteWeightAggregation(collectivesClient),
           },
         ],
