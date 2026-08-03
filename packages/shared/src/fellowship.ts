@@ -6,13 +6,7 @@ import { u8aToHex } from '@polkadot/util'
 
 import { assert } from 'vitest'
 
-import {
-  assertExpectedEvents,
-  type BlockProvider,
-  getBlockNumber,
-  nextSchedulableBlockNum,
-  scheduleInlineCallWithOrigin,
-} from './helpers/index.js'
+import { assertExpectedEvents, type BlockProvider, getBlockNumber, nextSchedulableBlockNum } from './helpers/index.js'
 
 /// ---------
 /// Constants
@@ -201,12 +195,9 @@ export async function submitFellowshipReferendum(
   track: { FellowshipOrigins: string } | { Origins: string },
   proposer: KeyringPair,
 ): Promise<number> {
-  // 1. Clear stale preimages, fund the proposer, and note the proposal preimage
+  // 1. Fund the proposer and note the proposal preimage (skip if already noted).
 
   await client.dev.setStorage({
-    Preimage: {
-      $removePrefix: ['preimageFor', 'statusFor', 'requestStatusFor'],
-    },
     System: {
       account: [[[proposer.address], { providers: 1, data: { free: 100_000n * 10n ** 10n, frozen: 0, reserved: 0 } }]],
     },
@@ -216,8 +207,11 @@ export async function submitFellowshipReferendum(
   const preimageHash = preimageCall.hash.toHex() as `0x${string}`
   const preimageLength = preimageCall.encodedLength
 
-  await sendTransaction(client.api.tx.preimage.notePreimage(preimageCall.toHex()).signAsync(proposer))
-  await client.dev.newBlock()
+  const existingPreimageStatus = (await client.api.query.preimage.requestStatusFor(preimageHash)) as any
+  if (existingPreimageStatus.isNone) {
+    await sendTransaction(client.api.tx.preimage.notePreimage(preimageCall.toHex()).signAsync(proposer))
+    await client.dev.newBlock()
+  }
 
   // 2. Submit the referendum, recover its poll index from the matching event, and assert the
   // Submitted event carries the expected track and lookup proposal.
@@ -374,14 +368,30 @@ export async function passFellowshipReferendum(
 
   await client.api.rpc('dev_setStorage', [[referendumKey, injectedReferendum.toHex()]])
 
-  await scheduleInlineCallWithOrigin(
-    client,
-    client.api.tx.fellowshipReferenda.nudgeReferendum(referendumIndex).method.toHex(),
-    { system: 'Root' },
-    blockProvider,
-  )
+  // Append a Root-origin nudge for our referendum to the next schedulable block's agenda,
+  // preserving any tasks the live fork has already scheduled there.
+  const nudgeBlockNumber = await nextSchedulableBlockNum(client.api, blockProvider)
+  const nudgeCall = { Inline: client.api.tx.fellowshipReferenda.nudgeReferendum(referendumIndex).method.toHex() }
+  const nudgeScheduled = {
+    maybeId: null,
+    priority: 128,
+    call: nudgeCall,
+    maybePeriodic: null,
+    origin: { system: 'Root' },
+  }
+  const nudgeAgendaVecType = client.api.registry.lookup.getTypeDef(
+    client.api.query.scheduler.agenda.creator.meta.type.asMap.value,
+  ).type
+  const existingNudgeAgenda = [...(await client.api.query.scheduler.agenda(nudgeBlockNumber))]
+  existingNudgeAgenda.push(nudgeScheduled as any)
+  await client.api.rpc('dev_setStorage', [
+    [
+      client.api.query.scheduler.agenda.key(nudgeBlockNumber),
+      client.api.registry.createType(nudgeAgendaVecType, existingNudgeAgenda).toHex(),
+    ],
+  ])
 
-  // 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
+  // 4. Advance one block to execute the nudge, then relocate the enactment task forward.
 
   const callHash = ongoing.proposal.isLookup
     ? ongoing.proposal.asLookup.hash.toHex()
@@ -389,14 +399,6 @@ export async function passFellowshipReferendum(
       ? client.api.registry.hash(ongoing.proposal.asInline).toHex()
       : ongoing.proposal.asLegacy.hash.toHex()
 
-  await moveScheduledCallToNextBlock(client, blockProvider, (scheduledCall) => {
-    if (!scheduledCall.isInline) {
-      return false
-    }
-
-    const callData = client.api.createType('Call', scheduledCall.asInline.toHex())
-    return callData.method === 'nudgeReferendum' && (callData.args[0] as any).toNumber() === referendumIndex
-  })
   await client.dev.newBlock()
 
   // Assert the runtime confirmed our poll (not some other live-fork referendum in the same block).
