@@ -159,8 +159,9 @@ export async function rankTooLowCannotVote(collectivesClient: any) {
 }
 
 /**
- * Vote weight in the ranked collective is geometric in rank: a single higher-rank aye contributes
- * `v*(v+1)/2` votes (`v = rank + 1`), so it can outweigh several lower-rank ayes.
+ * Vote weight in the ranked collective is geometric in the voter's rank above the track minimum:
+ * a single higher-rank vote contributes `v*(v+1)/2` votes (`v = rank - trackMinRank + 1`), so it
+ * can outweigh several lower-rank votes.
  *
  * This votes with members of different ranks and checks the poll tally reflects the summed
  * geometric weights rather than a one-member-one-vote count.

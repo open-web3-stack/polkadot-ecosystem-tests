@@ -185,9 +185,9 @@ export async function seedFellowshipMembers(
  * The Fellowship referenda `SubmitOrigin` requires a rank-3+ member, so `proposer` must be a
  * seeded fellow rather than a generic dev account.
  *
- * 1. Clear stale preimages, fund the proposer, and note the proposal preimage
- * 2. Submit the referendum and recover its poll index from the matching event
- * 3. Place the decision deposit so the referendum can enter deciding
+ * 1. Fund the proposer and note the proposal preimage (unless already noted)
+ * 2. Submit the referendum, recover its poll index, and assert the Submitted event's payload
+ * 3. Place the decision deposit and assert the DecisionDepositPlaced event
  */
 export async function submitFellowshipReferendum(
   client: any,
@@ -225,19 +225,16 @@ export async function submitFellowshipReferendum(
 
   const referendumIndex = await findSubmittedReferendumIndex(client, preimageHash, preimageLength)
 
+  // Scrutinize the Submitted event's payload for our index, track, and lookup proposal. We read the
+  // raw JSON tuple `[index, track, proposal]` rather than typed indexed access, because PJS
+  // mis-decodes the `Bounded` proposal wrapper's lookup hash.
   const submitEvents = await client.api.query.system.events()
-  assertExpectedEvents(submitEvents, [
-    { type: client.api.events.fellowshipReferenda.Submitted, args: { index: referendumIndex } },
-  ])
-  // Scrutinize the Submitted event's payload via `data.toJSON()` positional access. Typed indexed
-  // access into the `Bounded` proposal wrapper mis-decodes the lookup hash under PJS, so we read
-  // the raw JSON tuple `[index, track, proposal]` instead.
-  const submitJson = submitEvents
+  const submittedTuple = submitEvents
     .filter(({ event }: any) => client.api.events.fellowshipReferenda.Submitted.is(event))
-    .map(({ event }: any) => event.data.toJSON())
-    .find((data: any) => data[0] === referendumIndex)
-  assert(submitJson, `Submitted event for index ${referendumIndex} not found in event JSON`)
-  const submittedProposal = submitJson[2].lookup
+    .map(({ event }: any) => event.data.toJSON() as [number, number, { lookup?: { hash: string; len: number } }])
+    .find((data) => data[0] === referendumIndex)
+  assert(submittedTuple, `Submitted event for referendum ${referendumIndex} not found`)
+  const submittedProposal = submittedTuple[2].lookup
   assert(submittedProposal, `Submitted event proposal is not a Lookup for referendum ${referendumIndex}`)
   assert(
     submittedProposal.hash === preimageHash,
@@ -286,8 +283,8 @@ export async function submitFellowshipReferendum(
  *
  * 1. Submit the referendum and place its decision deposit (see `submitFellowshipReferendum`)
  * 2. Cast real aye votes from the seeded Fellowship members
- * 3. Backdate timing-only referendum fields, preserving the real tally, then schedule a nudge
- * 4. Move the nudge and enactment tasks to the next block so approval and execution are immediate
+ * 3. Backdate timing-only referendum fields, preserving the real tally, then append a nudge
+ * 4. Execute the nudge to confirm the poll, then relocate the enactment task so it runs immediately
  */
 export async function passFellowshipReferendum(
   client: any,
@@ -307,7 +304,7 @@ export async function passFellowshipReferendum(
   const referendumIndex = await submitFellowshipReferendum(client, call, opts.track, proposer)
 
   // 2. Cast real aye votes from the seeded Fellowship members, and assert one Voted event per
-  // voter carrying that voter's address and an Aye vote against our referendum index.
+  // voter carrying that voter's public key and an Aye vote against our referendum index.
 
   for (const voter of opts.voters) {
     await sendTransaction(client.api.tx.fellowshipCollective.vote(referendumIndex, true).signAsync(voter))

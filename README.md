@@ -228,8 +228,9 @@ These include:
     Collectives to Asset Hub Polkadot, exercising the genuine
     `WhitelistOrigin = EnsureXcm<IsFellowshipVoice>` path and asserting
     `whitelist.CallWhitelisted` on the destination
-  - Referendum lifecycle snapshot: `Submitted` → `DecisionDepositPlaced` → `Voted` →
-    `Confirmed` captured across the primitive's blocks and asserted on
+  - Referendum lifecycle assertions: `Submitted`, `DecisionDepositPlaced`, `Voted`, and
+    `Confirmed` are each checked at the block they emit, scrutinizing event fields (poll
+    index, proposal hash/length, depositor and voter by public key, Aye vote)
   - Rank gating: a rank-2 member voting on the Fellows (rank-3) track is rejected with
     `RankTooLow`
   - Geometric vote weight: with mixed-rank voters, the tally reflects
