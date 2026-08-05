@@ -63,7 +63,7 @@ Override per chain: `<NETWORK>_BLOCK_NUMBER`, `<NETWORK>_WASM`, `<NETWORK>_ENDPO
 
 ## Caveats
 
-- `client.dev.newBlock()` takes 1-10s. Block throughput is ~1-10 blocks/s locally, so scenarios needing many blocks (referenda confirmation, unbonding) are impractical without storage surgery.
+- `client.dev.newBlock()` takes 1-10s each, so under 1 block/s locally. Scenarios needing many blocks (referenda confirmation, unbonding) are impractical without storage surgery.
 - Use `.redact()` for volatile values or snapshots go flaky.
 - Renaming or removing a test leaves obsolete snapshots: delete the `__snapshots__` entry and run `yarn test -u`.
 - `await chain.pause()` to inspect state via Polkadot.js Apps (port in stdout).
