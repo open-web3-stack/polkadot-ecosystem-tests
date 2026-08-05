@@ -53,7 +53,7 @@ File names: `<a>.<b>.xcm.test.ts` for XCM, `<chain>.<suite>.e2e.test.ts` for E2E
 - `scheduleInlineCallWithOrigin()`: privileged calls via the scheduler
 - `createXcmTransactSend()`: XCM Transact to a parachain
 - `check()`, `checkEvents()`, `checkSystemEvents()`: snapshot helpers with `.redact()`
-- `assertExpectedEvents()`: typed event assertion with per-field matchers (see rule 4)
+- `assertExpectedEvents()`: one way to satisfy rule 4; suites also assert fields directly with `event.<T>.is(...)`, `dispatchError.asModule`, and `expect()`
 - Accounts: `defaultAccounts`, `defaultAccountsSr25519`, `testAccounts` from `@e2e-test/networks`
 
 ## Environment
