@@ -11,6 +11,14 @@ Guidance for working in this repo. Read the rules before writing code.
 5. Clarity over abstraction. Do not add helpers that hide what a test does. Mild repetition that keeps intent legible beats a clever helper that muddles it.
 6. Validate before you claim. Confirm against runtime source, live chain, or a fork run. Never assert from memory or one possibly-stale read.
 
+## Authoring tests
+
+`staking.ts`, `multisig.ts`, `proxy.ts`, and `scheduler.ts` are the reference suites. Read them before writing a new one.
+
+- Coverage: for a pallet, exercise its dispatchables, the events they emit, and their error paths. Test the failure cases (bad origin, wrong state, ineligible caller), not just the happy path.
+- Documentation: give each test function a docstring that names what it checks and enumerates the flow as numbered steps. Then repeat those step markers as comments through the body, next to the code each step describes, so the flow reads top to bottom.
+- Wording: clear and simple. See rule 3.
+
 ## Overview
 
 Automated test suite for Polkadot/Kusama, powered by [Chopsticks](https://github.com/AcalaNetwork/chopsticks). Tests XCM transfers and end-to-end scenarios for relay chains and system parachains.
