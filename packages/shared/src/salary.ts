@@ -7,36 +7,26 @@ import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
+import { COLLECTIVES_PARA_ID, DEFAULT_SALARY_TEST_FREE_BALANCE, seedFellowshipMembers } from './fellowship.js'
 import { assertExpectedEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
 import type { Client, RootTestTree } from './types.js'
 
 /** Shorthand — most salary helpers don't constrain the chain's custom config or init storages. */
 type AnyClient = Client<Record<string, unknown> | undefined, Record<string, Record<string, any>> | undefined>
 
-/// -------
+/// ---------
 /// Constants
-/// -------
+/// ---------
 
-// The Collectives parachain ID on Polkadot.
-// This is the parachain in which the Fellowship salary pallet is deployed, and is used to build the
-// cross-chain location of the salary sovereign.
-export const COLLECTIVES_PARA_ID = 1001
-
-// The pallet index for `pallet-ranked-collective` in the Collectives runtime.
-// This is used when directly seeding Fellowship membership storage for focused salary tests.
-export const FELLOWSHIP_COLLECTIVE_PALLET_INDEX = 60
-
-// The pallet index for `pallet-core-fellowship` in the Collectives runtime.
-// This identifies the pallet that stores active Fellowship member state used by salary eligibility checks.
-export const FELLOWSHIP_CORE_PALLET_INDEX = 63
+export {
+  COLLECTIVES_PARA_ID,
+  FELLOWSHIP_COLLECTIVE_PALLET_INDEX,
+  FELLOWSHIP_CORE_PALLET_INDEX,
+} from './fellowship.js'
 
 // The pallet index for `pallet-salary-fellowship` in the Collectives runtime.
 // Together with the Collectives parachain ID, this determines the salary sovereign XCM location.
 export const FELLOWSHIP_SALARY_PALLET_INDEX = 64
-
-// The Dan-3 Fellowship rank used throughout these tests.
-// Rank 3 is chosen because it has a live salary configured and is simple to seed directly into storage.
-export const SALARY_MEMBER_RANK_DAN_3 = 3
 
 // The ForeignAssets location for Hollar on Asset Hub.
 // Hollar lives on Hydration (parachain 2034) with GeneralIndex 222.
@@ -63,17 +53,13 @@ export const SALARY_SOVEREIGN_LOCATION = {
 // `asset-hub-polkadot/src/xcm_config.rs`, where the location/account derivation is validated.
 export const SALARY_SOVEREIGN_ADDRESS = '13w7NdvSR1Af8xsQTArDtZmVvjE8XhWNdL4yed3iFHrUNCnS'
 
-// Default free balance given to synthetic Fellowship members created for salary tests.
-// It is intentionally generous so fees never interfere with the salary lifecycle assertions.
-const DEFAULT_SALARY_TEST_FREE_BALANCE = 1_000n * 10n ** 10n
-
 // An XCM query id the paymaster will never have recorded. Used to drive `check_payment` into its
 // `PaymentStatus::Unknown` branch so the `Inconclusive` error path can be exercised.
 const SALARY_UNKNOWN_PAYMENT_ID = 999_999
 
-/// -------
+/// -----
 /// Types
-/// -------
+/// -----
 
 /** Salary parameters from `fellowshipCore.params()`. */
 export interface FellowshipSalaryParams {
@@ -111,9 +97,9 @@ export interface FellowshipSalaryClaimantState {
   attemptedAmount: bigint | null
 }
 
-/// -------
+/// ----------------
 /// Internal helpers
-/// -------
+/// ----------------
 
 /** Return whether events contain the matched event. */
 function hasEvent(events: any[], matcher: { is: (event: any) => boolean } | undefined): boolean {
@@ -129,9 +115,9 @@ function expectSourceChainXcmDispatch(client: AnyClient, events: any[]): void {
   ).toBe(true)
 }
 
-/// -------
+/// ---------------
 /// Storage readers
-/// -------
+/// ---------------
 
 /** Read salary runtime config from live chain state. */
 export async function readSalaryRuntimeConfig<
@@ -247,9 +233,9 @@ export async function hollarBalance(assetHubClient: AnyClient, address: string):
   return balance.isSome ? (balance.unwrap() as any).balance.toBigInt() : 0n
 }
 
-/// -------
+/// -----------------------
 /// Storage writers/seeders
-/// -------
+/// -----------------------
 
 /** Seed a funded Dan-3 Fellowship member for salary tests. */
 export async function seedDan3SalaryMember(
@@ -257,35 +243,7 @@ export async function seedDan3SalaryMember(
   member: KeyringPair,
   freeBalance: bigint = DEFAULT_SALARY_TEST_FREE_BALANCE,
 ): Promise<void> {
-  await client.dev.setStorage({
-    System: {
-      account: [[[member.address], { providers: 1, data: { free: freeBalance, frozen: 0, reserved: 0 } }]],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(client, [{ pair: member, rank: 3 }], freeBalance)
 }
 
 /**
@@ -330,9 +288,9 @@ export async function fundSalarySovereignHollar(assetHubClient: AnyClient, amoun
   })
 }
 
-/// -------
+/// -----------------
 /// Time manipulation
-/// -------
+/// -----------------
 
 /** Rewrite `cycleStart` while preserving other salary status fields. */
 async function setSalaryCycleStart(client: AnyClient, cycleStart: number): Promise<FellowshipSalaryStatus> {
@@ -379,9 +337,9 @@ export async function setSalaryCycleToBumpWindow(
   return await setSalaryCycleStart(client, block - runtimeConfig.cyclePeriod - 1)
 }
 
-/// -------
+/// --------------
 /// Test functions
-/// -------
+/// --------------
 
 /**
  * Full salary lifecycle: `induct` → `register` → `payout`.
@@ -401,7 +359,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   const member = testAccounts.keyring.createFromUri('//salary_raw_member')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
   const liveStatusBefore = await readSalaryStatus(collectivesClient)
 
   if (liveStatusBefore !== null) {
@@ -412,37 +370,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
   /// 1. Seed a fresh Dan-3 Fellowship member directly into the ranked collective/core storage.
   ///
 
-  await collectivesClient.dev.setStorage({
-    System: {
-      account: [
-        [[member.address], { providers: 1, data: { free: DEFAULT_SALARY_TEST_FREE_BALANCE, frozen: 0, reserved: 0 } }],
-      ],
-    },
-    FellowshipCollective: {
-      members: [[[member.address], { rank: SALARY_MEMBER_RANK_DAN_3 }]],
-      memberCount: [
-        [[0], 1],
-        [[1], 1],
-        [[2], 1],
-        [[3], 1],
-      ],
-      idToIndex: [
-        [[0, member.address], 0],
-        [[1, member.address], 0],
-        [[2, member.address], 0],
-        [[3, member.address], 0],
-      ],
-      indexToId: [
-        [[0, 0], member.address],
-        [[1, 0], member.address],
-        [[2, 0], member.address],
-        [[3, 0], member.address],
-      ],
-    },
-    FellowshipCore: {
-      member: [[[member.address], { isActive: true, lastPromotion: 0, lastProof: 0 }]],
-    },
-  })
+  await seedFellowshipMembers(collectivesClient, [{ pair: member, rank: 3 }])
 
   ///
   /// 2. Seed the validated salary sovereign account on Asset Hub with enough Hollar for one payout.
@@ -619,7 +547,7 @@ export async function salaryLifecycleRawTest(collectivesClient: AnyClient, asset
 export async function salaryStatusStorageTest(collectivesClient: AnyClient, assetHubClient: AnyClient) {
   const member = testAccounts.keyring.createFromUri('//salary_status_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member and sovereign balances.
 
@@ -691,7 +619,7 @@ export async function salaryPayoutDeliversHollarToAssetHubBeneficiaryTest(
   const member = testAccounts.keyring.createFromUri('//salary_cross_chain_member')
   const beneficiary = testAccounts.keyring.createFromUri('//salary_cross_chain_beneficiary')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member, beneficiary ED, and sovereign Hollar.
 
@@ -773,7 +701,7 @@ export async function salaryUnregisteredPayoutTest(collectivesClient: AnyClient,
   const unregisteredMember = testAccounts.keyring.createFromUri('//salary_unregistered_test_unregistered')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed registered and unregistered fellows plus sovereign Hollar.
 
@@ -858,7 +786,7 @@ export async function salaryProrationTest(collectivesClient: AnyClient, assetHub
   const member2 = testAccounts.keyring.createFromUri('//salary_proration_member_2')
 
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const salaryPerMember = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const salaryPerMember = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed two fellows plus sovereign Hollar.
 
@@ -965,7 +893,7 @@ export async function salaryPayoutSucceedsWithoutDotOnAssetHubTest(
 ) {
   const member = testAccounts.keyring.createFromUri('//salary_no_dot_member')
   const runtimeConfig = await readSalaryRuntimeConfig(collectivesClient)
-  const expectedSalary = activeSalaryForRank(runtimeConfig.params, SALARY_MEMBER_RANK_DAN_3)
+  const expectedSalary = activeSalaryForRank(runtimeConfig.params, 3)
 
   /// 1. Seed member on Collectives. No DOT on AH.
 
@@ -1092,9 +1020,9 @@ export async function salaryPayoutUsesRegisteredAmountAfterPromotionTest(
   expect(received).not.toBe(rank4Salary)
 }
 
-/// -------
+/// --------------------
 /// Failure-path helpers
-/// -------
+/// --------------------
 
 /**
  * Assert that the given block events contain a `system.ExtrinsicFailed` carrying the named
@@ -1114,9 +1042,9 @@ function assertSalaryError(client: AnyClient, events: any[], errorName: string):
   expect(matcher.is(dispatchError.asModule), `expected fellowshipSalary.${errorName}`).toBe(true)
 }
 
-/// -------
+/// ---------------------------
 /// Failure-path test functions
-/// -------
+/// ---------------------------
 
 /**
  * `induct` rejects a non-member and a double induction.
@@ -1356,9 +1284,9 @@ export async function salaryInitFailureTest(collectivesClient: AnyClient, _asset
   assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'AlreadyStarted')
 }
 
-/// -------
+/// ----------------------------
 /// check_payment test functions
-/// -------
+/// ----------------------------
 
 /**
  * `check_payment` confirms a successful payout and clears the claimant.
@@ -1475,9 +1403,9 @@ export async function salaryCheckPaymentFailureTest(collectivesClient: AnyClient
   assertSalaryError(collectivesClient, await collectivesClient.api.query.system.events(), 'Inconclusive')
 }
 
-/// -------
+/// ---------------------------
 /// Swapped event test function
-/// -------
+/// ---------------------------
 
 /**
  * The salary claimant migrates when a Fellowship member swaps accounts.
@@ -1528,9 +1456,9 @@ export async function salarySwappedOnMemberExchangeTest(collectivesClient: AnyCl
   expect(await readSalaryClaimant(collectivesClient, newMember.address)).not.toBeNull()
 }
 
-/// -------
+/// -----------------
 /// Test tree builder
-/// -------
+/// -----------------
 
 /** Build the shared end-to-end salary test tree. */
 export function baseSalaryE2ETests<
