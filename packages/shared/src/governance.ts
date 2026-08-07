@@ -1272,18 +1272,17 @@ async function injectConfirmedPassing(
 
   /**
    * 2. Backdate the referendum so `elapsedBlocks` of the decision period have elapsed by the next
-   *    block, and set `confirming` to end on that same block.
+   *    block, and set `confirming`'s deadline a full `confirmPeriod` before that same block.
    *
    * `currentBlock` is read via `client.config.properties.schedulerBlockProvider`, not the
    * parachain's own local header: on Asset Hub, `pallet_referenda`/`pallet_scheduler` are both
    * configured with `RelaychainDataProvider`, so the block number they actually compare against
    * is the relay chain's, not the parachain's local block count.
-   *
-   * Next block's provider-relative number: currentBlock + 1
    */
   const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  const confirmDeadline = currentBlock + 1
-  const decidingSince = confirmDeadline - elapsedBlocks
+  const nextBlock = currentBlock + 1
+  const decidingSince = nextBlock - elapsedBlocks
+  const confirmDeadline = nextBlock - confirmPeriod
   const newSubmitted = decidingSince - prepPeriod
 
   await client.dev.setStorage({
@@ -1303,7 +1302,7 @@ async function injectConfirmedPassing(
               deciding: { since: decidingSince, confirming: confirmDeadline },
               tally: { ayes: tally.ayes.toString(), nays: tally.nays.toString(), support: tally.support.toString() },
               inQueue: ongoing.inQueue,
-              alarm: [confirmDeadline, [confirmDeadline, 0]],
+              alarm: [nextBlock, [nextBlock, 0]],
             },
           },
         ],
