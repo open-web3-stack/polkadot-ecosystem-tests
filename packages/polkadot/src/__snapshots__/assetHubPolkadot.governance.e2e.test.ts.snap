@@ -719,3 +719,111 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
   },
 ]
 `;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > USDT native conversion rate created 1`] = `
+[
+  {
+    "data": {
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+        },
+      },
+      "rate": 1000000000000000000,
+    },
+    "method": "AssetRateCreated",
+    "section": "assetRate",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > treasury spend approved via referendum enactment 1`] = `
+[
+  {
+    "data": {
+      "amount": "1,000",
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": "50",
+                },
+                {
+                  "GeneralIndex": "1,984",
+                },
+              ],
+            },
+            "parents": "0",
+          },
+          "location": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": "50",
+                },
+                {
+                  "GeneralIndex": "1,984",
+                },
+              ],
+            },
+            "parents": "0",
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": "0",
+          },
+          "location": {
+            "interior": "Here",
+            "parents": "0",
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;

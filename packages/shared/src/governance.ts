@@ -21,9 +21,12 @@ import {
   check,
   checkEvents,
   checkSystemEvents,
+  computeMinimumPassingTally,
+  elapsedToPerbill,
   expectPjsEqual,
   getBlockNumber,
   objectCmp,
+  type PassingTally,
   scheduleInlineCallWithOrigin,
 } from './helpers/index.js'
 
@@ -50,6 +53,21 @@ export interface GovernanceTestConfig {
 /// -------
 
 const devAccounts = defaultAccountsSr25519
+
+// USDT on Asset Hub (asset ID 1984, Assets pallet instance 50), expressed as an XCM V4 versioned
+// asset - same shape in`assetRate.ts`.
+const USDT_ASSET_KIND = {
+  v4: {
+    location: { parents: 0, interior: { x2: [{ palletInstance: 50 }, { generalIndex: 1984 }] } },
+    assetId: { parents: 0, interior: { x2: [{ palletInstance: 50 }, { generalIndex: 1984 }] } },
+  },
+}
+
+// FixedU128 representation of 1.0 (1 * 10^18): an arbitrary but functional 1:1 conversion rate.
+// `treasury.spend`'s origin spend-cap check converts the requested asset amount into a
+// native-equivalent value via `pallet_asset_rate`, and no rate is pre-configured in the chain's
+// base state, so one has to be created before a `treasury.spend` proposal on this asset can enact.
+const USDT_NATIVE_RATE = '1000000000000000000'
 
 /**
  * Compare the selected properties of two referenda.
@@ -1216,6 +1234,94 @@ async function injectDecisionPeriodEnd(
 }
 
 /**
+ * Fast-forward a referendum straight to the final instant of its confirmation period via storage
+ * injection, using `computeMinimumPassingTally` to construct a tally that genuinely clears both
+ * of the track's approval/support curves at `elapsedBlocks` blocks into the decision period
+ * (since `deciding.since`).
+ *
+ * `elapsedBlocks` is taken as a block count, not a `Perbill` fraction, so the caller's intended
+ * elapsed time and the backdated `deciding.since` agree exactly - only the curve-math step
+ * downstream (`computeMinimumPassingTally`) needs to convert it to a fraction, and rounding there
+ * can only make the resulting tally *more* conservative, never invalidate `elapsedBlocks` itself.
+ *
+ * 1. computing a tally that clears both curves at `elapsedBlocks`
+ * 2. backdating `submitted`/`deciding.since` so that many blocks of the decision period have
+ *    elapsed, and setting `deciding.confirming` to end on the next block
+ * 3. scheduling a `nudgeReferendum` call via the scheduler
+ */
+async function injectConfirmedPassing(
+  client: Client<any, any>,
+  referendumIndex: number,
+  ongoing: PalletReferendaReferendumStatusConvictionVotingTally,
+  track: (typeof client.api.consts.referenda.tracks)[number],
+  elapsedBlocks: number,
+): Promise<PassingTally> {
+  const decisionPeriod = track[1].decisionPeriod.toNumber()
+  const prepPeriod = track[1].preparePeriod.toNumber()
+  const confirmPeriod = track[1].confirmPeriod.toNumber()
+
+  assert(
+    elapsedBlocks >= confirmPeriod,
+    `elapsedBlocks must cover at least the confirm period (${confirmPeriod} of ${decisionPeriod} blocks) for confirming to have been running this long`,
+  )
+
+  // 1. Compute a tally that clears both of the track's curves at `elapsedBlocks`
+  const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
+  const elapsedPerbill = elapsedToPerbill(BigInt(elapsedBlocks), BigInt(decisionPeriod))
+  const tally = computeMinimumPassingTally(track[1], elapsedPerbill, totalIssuance)
+
+  /**
+   * 2. Backdate the referendum so `elapsedBlocks` of the decision period have elapsed by the next
+   *    block, and set `confirming`'s deadline a full `confirmPeriod` before that same block.
+   *
+   * `currentBlock` is read via `client.config.properties.schedulerBlockProvider`, not the
+   * parachain's own local header: on Asset Hub, `pallet_referenda`/`pallet_scheduler` are both
+   * configured with `RelaychainDataProvider`, so the block number they actually compare against
+   * is the relay chain's, not the parachain's local block count.
+   */
+  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
+  const nextBlock = currentBlock + 1
+  const decidingSince = nextBlock - elapsedBlocks
+  const confirmDeadline = nextBlock - confirmPeriod
+  const newSubmitted = decidingSince - prepPeriod
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [referendumIndex],
+          {
+            Ongoing: {
+              track: ongoing.track,
+              origin: ongoing.origin,
+              proposal: ongoing.proposal,
+              enactment: ongoing.enactment,
+              submitted: newSubmitted,
+              submissionDeposit: ongoing.submissionDeposit,
+              decisionDeposit: ongoing.decisionDeposit,
+              deciding: { since: decidingSince, confirming: confirmDeadline },
+              tally: { ayes: tally.ayes.toString(), nays: tally.nays.toString(), support: tally.support.toString() },
+              inQueue: ongoing.inQueue,
+              alarm: [nextBlock, [nextBlock, 0]],
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  // 3. Schedule a nudge for the next block so the runtime evaluates the referendum
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.referenda.nudgeReferendum(referendumIndex).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+
+  return tally
+}
+
+/**
  * Post-rejection verification:
  * 1. checking that the `Rejected` event was emitted
  * 2. checking the rejected referendum's data
@@ -2177,6 +2283,194 @@ export async function referendumLifecycleDelegationTest<
   expect(bobAccount.data.frozen.toNumber()).toBe(delegationAmount)
 }
 
+/**
+ * Test the process of a referendum actually passing and being enacted:
+ * 1. creating a native conversion rate for USDT via the scheduler
+ *
+ *    (`treasury.spend`'s origin spend-cap check needs one to convert the requested asset amount
+ *    into a native-equivalent value, and none is pre-configured in the chain's base state)
+ * 2. submitting a referendum for a treasury spend of USDT - a non-native asset, unlike
+ *    `spendLocal` which only ever pays out the chain's native currency
+ * 3. placing its decision deposit
+ * 4. awaiting the end of the preparation period
+ * 5. casting a vote (too small on its own to satisfy the track's curves this early on)
+ * 6. fast-forwarding to the final instant of the confirmation period via storage injection, with
+ *    a tally computed (via `computeMinimumPassingTally`) to genuinely clear both of the track's
+ *    curves
+ * 7. verifying the referendum emits `Confirmed` with that same tally, and becomes `Approved`
+ * 8. verifying the referendum's enactment actually dispatches `treasury.spend`, emitting
+ *    `AssetSpendApproved`
+ */
+export async function referendumPassingLifecycleTest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  // Fund test accounts not already provisioned in the test chain spec.
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.bob.address], { providers: 1, data: { free: 10e10 } }],
+        [[devAccounts.charlie.address], { providers: 1, data: { free: 10e10 } }],
+      ],
+    },
+  })
+
+  const referendaTracks = client.api.consts.referenda.tracks
+  const smallTipper = referendaTracks.find((track) => track[1].name.toString().startsWith('small_tipper'))!
+
+  // 1. Create a native conversion rate for USDT
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.assetRate.create(USDT_ASSET_KIND as any, USDT_NATIVE_RATE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'assetRate', method: 'AssetRateCreated' })
+    .redact()
+    .toMatchSnapshot('USDT native conversion rate created')
+
+  /**
+   * 2. Submit a new referendum spending USDT (a non-native asset) from the treasury
+   *
+   * The spend amount is deliberately tiny so it clears the SmallTipper track's spend-origin cap
+   * regardless of the (arbitrary) conversion rate set above - the point of this test is the
+   * referendum lifecycle, not stress-testing spend-limit boundaries.
+   */
+  const spendAmount = 1_000n
+  const beneficiary = {
+    v4: {
+      location: { parents: 0, interior: 'Here' },
+      accountId: {
+        parents: 0,
+        interior: { x1: [{ accountId32: { network: null, id: devAccounts.bob.addressRaw } }] },
+      },
+    },
+  }
+
+  const submissionTx = client.api.tx.referenda.submit(
+    { Origins: 'SmallTipper' } as any,
+    {
+      Inline: client.api.tx.treasury
+        .spend(USDT_ASSET_KIND as any, spendAmount, beneficiary as any, null)
+        .method.toHex(),
+    },
+    { After: 1 },
+  )
+  await sendTransaction(submissionTx.signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  const submitEvents = await client.api.query.system.events()
+  const submittedOnTrack = submitEvents.filter(
+    ({ event }) =>
+      client.api.events.referenda.Submitted.is(event) && event.data[1].toNumber() === smallTipper[0].toNumber(),
+  )
+  assert(
+    submittedOnTrack.length === 1,
+    `expected 1 Submitted event on small_tipper track, got ${submittedOnTrack.length}`,
+  )
+  assert(client.api.events.referenda.Submitted.is(submittedOnTrack[0].event))
+  const referendumIndex = submittedOnTrack[0].event.data[0].toNumber()
+
+  // 3. Place decision deposit
+  const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
+  await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
+  await client.dev.newBlock()
+
+  // 4. Wait for the preparation period to elapse
+  const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
+  let iters: number
+  match(client.config.properties.schedulerBlockProvider)
+    .with('Local', () => {
+      iters = smallTipper[1].preparePeriod.toNumber() - 2
+    })
+    .with('NonLocal', () => {
+      iters = Math.ceil((smallTipper[1].preparePeriod.toNumber() - 2) / relayBlocksPerParaBlock)
+    })
+    .exhaustive()
+
+  for (let i = 0; i < iters!; i++) {
+    await client.dev.newBlock()
+  }
+
+  await client.dev.newBlock()
+
+  /**
+   * 5. Cast a vote
+   *
+   * A single modest aye vote exercises the real extrinsic/event path, but is nowhere near enough
+   * on its own to clear the track's curves this early in the decision period (support is a tiny
+   * fraction of total issuance) - passing is what step 6's injected tally is responsible for.
+   */
+  const voteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
+    Standard: { vote: { aye: true, conviction: 'None' }, balance: 1e10 },
+  })
+  await sendTransaction(voteTx.signAsync(devAccounts.charlie))
+  await client.dev.newBlock()
+
+  let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
+  const referendumData = referendumDataOpt.unwrap()
+  assert(referendumData.isOngoing, 'referendum should still be deciding after a single, curve-insufficient vote')
+  const ongoingPostVote = referendumData.asOngoing
+  assert(ongoingPostVote.deciding.isSome, 'referendum should have entered its decision period by now')
+  expect(
+    ongoingPostVote.deciding.unwrap().confirming.isNone,
+    'a single small vote should not yet clear the curves',
+  ).toBe(true)
+
+  // 6. Fast-forward to the final instant of the confirmation period
+  const passingTally = await injectConfirmedPassing(
+    client,
+    referendumIndex,
+    ongoingPostVote,
+    smallTipper,
+    smallTipper[1].confirmPeriod.toNumber(),
+  )
+  await client.dev.newBlock()
+
+  // 7. Verify the referendum emits `Confirmed` with that same tally, and becomes `Approved`
+  const confirmEvents = await client.api.query.system.events()
+  const confirmedEvent = confirmEvents.find(
+    ({ event }) => client.api.events.referenda.Confirmed.is(event) && event.data[0].toNumber() === referendumIndex,
+  )
+  assert(confirmedEvent, 'referendum should emit `Confirmed` once its injected tally clears the curves')
+  assert(client.api.events.referenda.Confirmed.is(confirmedEvent.event))
+  const [, confirmedTally] = confirmedEvent.event.data
+  expect(confirmedTally.ayes.toBigInt()).toBe(passingTally.ayes)
+  expect(confirmedTally.nays.toBigInt()).toBe(passingTally.nays)
+  expect(confirmedTally.support.toBigInt()).toBe(passingTally.support)
+
+  referendumDataOpt = await client.api.query.referenda.referendumInfoFor(referendumIndex)
+  assert(referendumDataOpt.isSome, "referendum's data cannot be `None`")
+  expect(referendumDataOpt.unwrap().isApproved, 'referendum should be `Approved` after confirming').toBe(true)
+
+  // 8. Verify the referendum's enactment actually dispatches `treasury.spend`
+  //
+  // `schedule_enactment`, called in the same block as `injectConfirmedPassing` clamps the scheduled block to `now + track.minEnactmentPeriod`
+  // We use this logic to obtain the value and advance the chain.
+  const minEnactmentPeriod = smallTipper[1].minEnactmentPeriod.toNumber()
+  let enactmentIters: number
+  match(client.config.properties.schedulerBlockProvider)
+    .with('Local', () => {
+      enactmentIters = minEnactmentPeriod
+    })
+    .with('NonLocal', () => {
+      enactmentIters = Math.ceil(minEnactmentPeriod / relayBlocksPerParaBlock)
+    })
+    .exhaustive()
+
+  for (let i = 0; i < enactmentIters!; i++) {
+    await client.dev.newBlock()
+  }
+
+  await checkSystemEvents(client, { section: 'treasury', method: 'AssetSpendApproved' })
+    .redact({ redactKeys: /expireAt|validFrom|index/, number: false })
+    .toMatchSnapshot('treasury spend approved via referendum enactment')
+}
+
 export function baseGovernanceE2ETests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
@@ -2219,6 +2513,12 @@ export function baseGovernanceE2ETests<
             label:
               'referendum lifecycle test 3 - submission, decision deposit, vote delegation, vote, and delegation removal should all work',
             testFn: async () => await referendumLifecycleDelegationTest(client),
+          },
+          {
+            kind: 'test',
+            label:
+              'referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work',
+            testFn: async () => await referendumPassingLifecycleTest(client),
           },
           {
             kind: 'describe',
