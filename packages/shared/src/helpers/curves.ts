@@ -107,6 +107,10 @@ export function curveDelay(curve: PalletReferendaCurve, y: bigint): bigint {
       const ceilB = ceil.toBigInt()
       if (y < floorB) return PERBILL_ONE
       if (y > ceilB) return 0n
+      // A constant curve (`ceil === floor`) only reaches here when `y` equals that constant.
+      // `saturating_div` saturates an undefined (zero-denominator) division to `one`, which
+      // `.saturating_mul(length)` then collapses back down to exactly `length`.
+      if (ceilB === floorB) return lengthB
       const ratio = ceilDiv((ceilB - y) * PERBILL_ONE, ceilB - floorB)
       return floorDiv(ratio * lengthB, PERBILL_ONE)
     })
