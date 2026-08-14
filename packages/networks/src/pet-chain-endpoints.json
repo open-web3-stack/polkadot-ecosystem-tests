@@ -56,6 +56,9 @@
     "wss://hydration-rpc.n.dwellir.com"
   ],
   "moonbeam": [
+    "wss://moonbeam-rpc.n.dwellir.com",
+    "wss://moonbeam-rpc.publicnode.com",
+    "wss://moonbeam.api.onfinality.io/public-ws",
     "wss://wss.api.moonbeam.network"
   ],
   "astar": [
@@ -108,6 +111,9 @@
     "wss://basilisk-rpc.n.dwellir.com"
   ],
   "moonriver": [
+    "wss://moonriver-rpc.n.dwellir.com",
+    "wss://moonriver-rpc.publicnode.com",
+    "wss://moonriver.api.onfinality.io/public-ws",
     "wss://wss.api.moonriver.moonbeam.network"
   ],
   "shiden": [
