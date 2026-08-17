@@ -35,6 +35,7 @@ const CHAIN_ORDER = {
 		'collectivesPolkadot',
 		'coretimePolkadot',
 		'peoplePolkadot',
+		'bulletinPolkadot',
 		'acala',
 		'astar',
 		'hydration',
