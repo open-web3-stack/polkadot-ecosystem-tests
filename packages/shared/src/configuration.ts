@@ -958,7 +958,7 @@ export async function configurationConsistencyMatrixTest<
       configuration: {
         activeConfig: {
           ...activeConfigJson,
-          maxCodeSize: 3_145_729, // one above MAX_CODE_SIZE — inconsistent but safe for block production
+          maxCodeSize: 5_242_881, // one above MAX_CODE_SIZE: inconsistent but safe for block production
         },
       },
     })
@@ -966,7 +966,7 @@ export async function configurationConsistencyMatrixTest<
   const restoreActiveConfig = () => client.dev.setStorage({ configuration: { activeConfig: activeConfigJson } })
 
   // Hard-limit boundary values (each is max_allowed + 1)
-  const improperMaxCodeSize = 3_145_729 // > MAX_CODE_SIZE (3,145,728)
+  const improperMaxCodeSize = 5_242_881 // > MAX_CODE_SIZE (5,242,880)
   const improperMaxHeadDataSize = 1_048_577 // > MAX_HEAD_DATA_SIZE (1,048,576)
   const improperMaxPovSize = 16_777_217 // > POV_SIZE_HARD_LIMIT (16,777,216)
   const improperMaxUpwardMessageSize = 131_073 // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
