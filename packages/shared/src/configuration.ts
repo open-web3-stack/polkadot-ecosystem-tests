@@ -394,7 +394,7 @@ export async function configurationTest<
 
 /**
  * Schedules `calls` twice with Root origin and asserts the resulting pending config is
- * identical both times — i.e., re-scheduling the same calls is idempotent.
+ * identical both times. Re-scheduling the same calls is idempotent.
  */
 async function assertIdempotent(
   client: Client<any, any>,
@@ -414,7 +414,7 @@ async function assertIdempotent(
 
 /**
  * Verifies that scheduling the same configuration change twice leaves the pending config
- * unchanged — i.e., the second scheduling is idempotent and does not alter any field
+ * unchanged. The second scheduling is idempotent and does not alter any field
  * that was not explicitly set. Covers all call groups.
  */
 export async function configurationIdempotencyTest<
@@ -518,7 +518,7 @@ export async function configurationIdempotencyTest<
 }
 
 /**
- * Verifies that scheduling a value Y and then Z for the same field results in Z —
+ * Verifies that scheduling a value Y and then Z for the same field results in Z:
  * i.e., later scheduled values overwrite earlier ones and the intermediate value Y
  * is not preserved. Covers all call groups.
  */
@@ -932,10 +932,10 @@ export async function configurationSameBlockMergeTest<
 /**
  * Exercises the full 2×2 consistency-check matrix:
  *
- *   Case 1 — Consistent base + inconsistent new → rejected (InvalidNewValue)
- *   Case 2 — Inconsistent base + inconsistent new → accepted (recovery path)
- *   Case 3 — Inconsistent base + consistent new → accepted
- *   Case 4 — Bypass flag on → inconsistent value accepted unconditionally
+ *   Case 1. Consistent base + inconsistent new → rejected (InvalidNewValue)
+ *   Case 2. Inconsistent base + inconsistent new → accepted (recovery path)
+ *   Case 3. Inconsistent base + consistent new → accepted
+ *   Case 4. Bypass flag on → inconsistent value accepted unconditionally
  *
  * All possible consistency violations are tested in Cases 1, 2, and 4.
  */

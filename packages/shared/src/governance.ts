@@ -168,7 +168,7 @@ export async function missingDecisionDepositTest<
   })
 
   /**
-   * 2. Check the referendum's data — decision deposit should be absent
+   * 2. Check the referendum's data. The decision deposit should be absent
    */
 
   let referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
@@ -1261,7 +1261,7 @@ async function verifyRejection(
   expect(rejectedRef[2].isSome, 'decision deposit should be present after rejection').toBe(true)
 
   /**
-   * 3. Refund the decision deposit — this should succeed for rejected referenda
+   * 3. Refund the decision deposit. This should succeed for rejected referenda
    */
 
   const refundDecisionTx = client.api.tx.referenda.refundDecisionDeposit(referendumIndex)
@@ -1273,7 +1273,7 @@ async function verifyRejection(
     .toMatchSnapshot(`decision deposit refund after rejection (${scenarioLabel}) - ${trackLabel}`)
 
   /**
-   * 4. Attempt to refund the submission deposit — this should fail with `BadStatus`
+   * 4. Attempt to refund the submission deposit. This should fail with `BadStatus`
    */
 
   const refundSubmissionTx = client.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
@@ -1753,7 +1753,7 @@ export async function overflowPromotionViaRejectionTest<
    *
    * Backdating `deciding.since` so the decision period has elapsed by the next block.
    * A nay-only tally is injected because `Perbill::from_rational(0, 0)` returns 100 %
-   * in Substrate — an empty tally would pass approval and enter confirmation instead.
+   * in Substrate. An empty tally would pass approval and enter confirmation instead.
    */
 
   const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
