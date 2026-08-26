@@ -394,7 +394,7 @@ export async function configurationTest<
 
 /**
  * Schedules `calls` twice with Root origin and asserts the resulting pending config is
- * identical both times — i.e., re-scheduling the same calls is idempotent.
+ * identical both times. Re-scheduling the same calls is idempotent.
  */
 async function assertIdempotent(
   client: Client<any, any>,
@@ -414,7 +414,7 @@ async function assertIdempotent(
 
 /**
  * Verifies that scheduling the same configuration change twice leaves the pending config
- * unchanged — i.e., the second scheduling is idempotent and does not alter any field
+ * unchanged. The second scheduling is idempotent and does not alter any field
  * that was not explicitly set. Covers all call groups.
  */
 export async function configurationIdempotencyTest<
@@ -518,7 +518,7 @@ export async function configurationIdempotencyTest<
 }
 
 /**
- * Verifies that scheduling a value Y and then Z for the same field results in Z —
+ * Verifies that scheduling a value Y and then Z for the same field results in Z:
  * i.e., later scheduled values overwrite earlier ones and the intermediate value Y
  * is not preserved. Covers all call groups.
  */
@@ -932,10 +932,10 @@ export async function configurationSameBlockMergeTest<
 /**
  * Exercises the full 2×2 consistency-check matrix:
  *
- *   Case 1 — Consistent base + inconsistent new → rejected (InvalidNewValue)
- *   Case 2 — Inconsistent base + inconsistent new → accepted (recovery path)
- *   Case 3 — Inconsistent base + consistent new → accepted
- *   Case 4 — Bypass flag on → inconsistent value accepted unconditionally
+ *   Case 1. Consistent base + inconsistent new → rejected (InvalidNewValue)
+ *   Case 2. Inconsistent base + inconsistent new → accepted (recovery path)
+ *   Case 3. Inconsistent base + consistent new → accepted
+ *   Case 4. Bypass flag on → inconsistent value accepted unconditionally
  *
  * All possible consistency violations are tested in Cases 1, 2, and 4.
  */
@@ -958,7 +958,7 @@ export async function configurationConsistencyMatrixTest<
       configuration: {
         activeConfig: {
           ...activeConfigJson,
-          maxCodeSize: 3_145_729, // one above MAX_CODE_SIZE — inconsistent but safe for block production
+          maxCodeSize: 5_242_881, // one above MAX_CODE_SIZE: inconsistent but safe for block production
         },
       },
     })
@@ -966,7 +966,7 @@ export async function configurationConsistencyMatrixTest<
   const restoreActiveConfig = () => client.dev.setStorage({ configuration: { activeConfig: activeConfigJson } })
 
   // Hard-limit boundary values (each is max_allowed + 1)
-  const improperMaxCodeSize = 3_145_729 // > MAX_CODE_SIZE (3,145,728)
+  const improperMaxCodeSize = 5_242_881 // > MAX_CODE_SIZE (5,242,880)
   const improperMaxHeadDataSize = 1_048_577 // > MAX_HEAD_DATA_SIZE (1,048,576)
   const improperMaxPovSize = 16_777_217 // > POV_SIZE_HARD_LIMIT (16,777,216)
   const improperMaxUpwardMessageSize = 131_073 // > MAX_UPWARD_MESSAGE_SIZE_BOUND (131,072)
