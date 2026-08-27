@@ -1931,10 +1931,17 @@ async function verifyQueuedRemovalKeepsDecidingCount(
   const { overflowIndex } = await setupOverflow(client, trackConfig)
 
   /**
-   * 5. Record the count while the overflow is queued
+   * 5. Record the count, and the overflow's tally, while the overflow is queued
    */
 
   const countBefore = ((await client.api.query.referenda.decidingCount(trackConfig.trackId)) as any).toNumber()
+
+  const queuedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
+    (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
+  assert(queuedOpt.isSome)
+  const queued = queuedOpt.unwrap()
+  assert(queued.isOngoing, 'overflow should be ongoing before it is removed')
+  const queuedOngoing = queued.asOngoing
 
   /**
    * 6. Remove the queued overflow with a Root-origin call via the scheduler
@@ -1951,6 +1958,28 @@ async function verifyQueuedRemovalKeepsDecidingCount(
   )
 
   await client.dev.newBlock()
+
+  const removalEvents = await client.api.query.system.events()
+  const removalEvent = removalEvents.find(({ event }) =>
+    removal === 'kill'
+      ? client.api.events.referenda.Killed.is(event) && event.data[0].toNumber() === overflowIndex
+      : client.api.events.referenda.Cancelled.is(event) && event.data[0].toNumber() === overflowIndex,
+  )
+  assert(removalEvent, `referenda.${removal === 'kill' ? 'Killed' : 'Cancelled'} should be emitted for the overflow`)
+
+  if (removal === 'kill') {
+    assert(client.api.events.referenda.Killed.is(removalEvent.event))
+    expect(removalEvent.event.data.index.toNumber()).toBe(overflowIndex)
+    expect(removalEvent.event.data.tally.toJSON()).toEqual(queuedOngoing.tally.toJSON())
+  } else {
+    assert(client.api.events.referenda.Cancelled.is(removalEvent.event))
+    expect(removalEvent.event.data.index.toNumber()).toBe(overflowIndex)
+    expect(removalEvent.event.data.tally.toJSON()).toEqual(queuedOngoing.tally.toJSON())
+  }
+
+  await checkSystemEvents(client, { section: 'referenda', method: removal === 'kill' ? 'Killed' : 'Cancelled' })
+    .redact({ redactKeys: /index/ })
+    .toMatchSnapshot(`referendum ${removal}ed while queued on track ${trackConfig.trackId}`)
 
   const removedOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     (await client.api.query.referenda.referendumInfoFor(overflowIndex)) as any
@@ -1984,9 +2013,9 @@ async function verifyQueuedRemovalKeepsDecidingCount(
 /**
  * Test that killing a queued referendum leaves the track's `DecidingCount` untouched:
  * 1–4. shared setup (submit both refs, queue the overflow)
- * 5. recording `DecidingCount` while the overflow is queued
- * 6. killing the queued overflow with a Root-origin call via the scheduler
- * 7. verifying the count is unchanged and matches the referenda deciding on the track
+ * 5. recording `DecidingCount` and the overflow's tally while the overflow is queued
+ * 6. killing the queued overflow with a Root-origin call via the scheduler, and checking `Killed`
+ * 7. verifying `DecidingCount` still holds the value recorded in step 5
  */
 export async function killQueuedKeepsDecidingCountTest<
   TCustom extends Record<string, unknown> | undefined,
@@ -2002,9 +2031,10 @@ export async function killQueuedKeepsDecidingCountTest<
 /**
  * Test that cancelling a queued referendum leaves the track's `DecidingCount` untouched:
  * 1–4. shared setup (submit both refs, queue the overflow)
- * 5. recording `DecidingCount` while the overflow is queued
- * 6. cancelling the queued overflow with a Root-origin call via the scheduler
- * 7. verifying the count is unchanged and matches the referenda deciding on the track
+ * 5. recording `DecidingCount` and the overflow's tally while the overflow is queued
+ * 6. cancelling the queued overflow with a Root-origin call via the scheduler, and checking
+ *    `Cancelled`
+ * 7. verifying `DecidingCount` still holds the value recorded in step 5
  */
 export async function cancelQueuedKeepsDecidingCountTest<
   TCustom extends Record<string, unknown> | undefined,
