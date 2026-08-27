@@ -186,7 +186,7 @@ export async function missingDecisionDepositTest<
   })
 
   /**
-   * 2. Check the referendum's data — decision deposit should be absent
+   * 2. Check the referendum's data. The decision deposit should be absent
    */
 
   let referendumDataOpt = (await client.api.query.referenda.referendumInfoFor(
@@ -1367,7 +1367,7 @@ async function verifyRejection(
   expect(rejectedRef[2].isSome, 'decision deposit should be present after rejection').toBe(true)
 
   /**
-   * 3. Refund the decision deposit — this should succeed for rejected referenda
+   * 3. Refund the decision deposit. This should succeed for rejected referenda
    */
 
   const refundDecisionTx = client.api.tx.referenda.refundDecisionDeposit(referendumIndex)
@@ -1379,7 +1379,7 @@ async function verifyRejection(
     .toMatchSnapshot(`decision deposit refund after rejection (${scenarioLabel}) - ${trackLabel}`)
 
   /**
-   * 4. Attempt to refund the submission deposit — this should fail with `BadStatus`
+   * 4. Attempt to refund the submission deposit. This should fail with `BadStatus`
    */
 
   const refundSubmissionTx = client.api.tx.referenda.refundSubmissionDeposit(referendumIndex)
@@ -1859,7 +1859,7 @@ export async function overflowPromotionViaRejectionTest<
    *
    * Backdating `deciding.since` so the decision period has elapsed by the next block.
    * A nay-only tally is injected because `Perbill::from_rational(0, 0)` returns 100 %
-   * in Substrate — an empty tally would pass approval and enter confirmation instead.
+   * in Substrate. An empty tally would pass approval and enter confirmation instead.
    */
 
   const block = (await client.api.rpc.chain.getHeader()).number.toNumber()
@@ -1918,18 +1918,64 @@ export async function overflowPromotionViaRejectionTest<
 /**
  * Test that the overflow referendum is promoted after the blocker is killed:
  * 1–4. shared setup (submit both refs, queue the overflow)
- * 5. killing the blocker with a Root-origin call via the scheduler
- * 6. verifying the blocker is killed and the overflow is promoted to deciding
+ * 5. putting the blocker into its decision period, so its kill frees track capacity
+ * 6. killing the blocker with a Root-origin call via the scheduler
+ * 7. verifying the blocker is killed and the overflow is promoted to deciding
  */
 export async function overflowPromotionViaKillTest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(client: Client<TCustom, TInitStorages>, trackConfig: GovernanceTrackConfig) {
   const ctx = await setupOverflow(client, trackConfig)
-  const { blockerIndex, overflowIndex, maxDeciding } = ctx
+  const { blockerIndex, blockerOngoing, overflowIndex, maxDeciding, prepPeriod } = ctx
 
   /**
-   * 5. Kill the blocker with a Root-origin call via the scheduler
+   * 5. Put the blocker into its decision period
+   *
+   * `kill` only calls `note_one_fewer_deciding` when the referendum it removes was deciding:
+   *
+   * ```
+   * if status.deciding.is_some() {
+   *     Self::note_one_fewer_deciding(status.track);
+   * }
+   * ```
+   *
+   * `setupOverflow` fills the track by writing `DecidingCount`, which leaves the blocker itself
+   * with `deciding: None`. Killing it in that state frees no capacity, so the queued overflow
+   * stays queued and step 7 fails. Injecting `deciding` makes the kill release the slot the
+   * blocker occupies in `DecidingCount`.
+   */
+
+  const blockerBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blockerDecidingSince = blockerBlock + 1
+
+  await client.dev.setStorage({
+    Referenda: {
+      ReferendumInfoFor: [
+        [
+          [blockerIndex],
+          {
+            Ongoing: {
+              track: blockerOngoing.track,
+              origin: blockerOngoing.origin,
+              proposal: blockerOngoing.proposal,
+              enactment: blockerOngoing.enactment,
+              submitted: blockerDecidingSince - prepPeriod,
+              submissionDeposit: blockerOngoing.submissionDeposit,
+              decisionDeposit: blockerOngoing.decisionDeposit,
+              deciding: { since: blockerDecidingSince, confirming: null },
+              tally: blockerOngoing.tally,
+              inQueue: false,
+              alarm: blockerOngoing.alarm,
+            },
+          },
+        ],
+      ],
+    },
+  })
+
+  /**
+   * 6. Kill the blocker with a Root-origin call via the scheduler
    */
 
   const schedulerBlock =
@@ -1957,7 +2003,7 @@ export async function overflowPromotionViaKillTest<
   expect(blockerResultOpt.unwrap().isKilled, 'blocker should have been killed').toBe(true)
 
   /**
-   * 6. Verify the overflow was promoted
+   * 7. Verify the overflow was promoted
    */
 
   await client.dev.newBlock()
