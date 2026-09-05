@@ -45,6 +45,40 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 }
 `;
 
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 34 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > big_spender > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 34 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - referendum_killer 1`] = `
 [
   {
@@ -90,6 +124,40 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
 }
 `;
 
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 21 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > referendum_killer > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 21 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > insufficient approval rejection > decision deposit refund after rejection (insufficient approval) - root 1`] = `
 [
   {
@@ -133,6 +201,40 @@ exports[`Kusama Asset Hub Governance > referenda tests > negative execution flow
   },
   "topics": [],
 }
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > cancelling a queued referendum keeps DecidingCount > referendum canceled while queued on track 0 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Cancelled",
+    "section": "referenda",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > negative execution flows > root > track capacity overflow > killing a queued referendum keeps DecidingCount > referendum killed while queued on track 0 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "tally": {
+        "ayes": 0,
+        "nays": 0,
+        "support": 0,
+      },
+    },
+    "method": "Killed",
+    "section": "referenda",
+  },
+]
 `;
 
 exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test - submission, decision deposit, various voting should all work > cancelling referendum with signed origin 1`] = `
