@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Westend Asset Hub PSM > Circuit breaker and privilege > MintingDisabled — mint stopped, redeem allowed > minting disabled: AssetStatusUpdated event 1`] = `
+exports[`Polkadot Asset Hub PSM > Circuit breaker and privilege > MintingDisabled — mint stopped, redeem allowed > minting disabled: AssetStatusUpdated event 1`] = `
 [
   {
     "data": {
@@ -38,7 +38,7 @@ exports[`Westend Asset Hub PSM > Circuit breaker and privilege > MintingDisabled
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Debt ceilings > setMaxDebt below outstanding debt — minting paused, redeems work > lower ceiling: MaxDebtUpdated event 1`] = `
+exports[`Polkadot Asset Hub PSM > Debt ceilings > setMaxDebt below outstanding debt — minting paused, redeems work > lower ceiling: MaxDebtUpdated event 1`] = `
 [
   {
     "data": {
@@ -64,7 +64,7 @@ exports[`Westend Asset Hub PSM > Debt ceilings > setMaxDebt below outstanding de
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Debt ceilings > zero ceiling weight — external closed, remainder reweighted > zero weight: AssetCeilingWeightUpdated event 1`] = `
+exports[`Polkadot Asset Hub PSM > Debt ceilings > zero ceiling weight — external closed, remainder reweighted > zero weight: AssetCeilingWeightUpdated event 1`] = `
 [
   {
     "data": {
@@ -75,7 +75,7 @@ exports[`Westend Asset Hub PSM > Debt ceilings > zero ceiling weight — externa
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 31000)",
+              "GeneralIndex": "(rounded 1300)",
             },
           ],
         },
@@ -103,7 +103,7 @@ exports[`Westend Asset Hub PSM > Debt ceilings > zero ceiling weight — externa
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Decimal scaling > higher-decimal external — debt scaled down, redemption scaled up > high decimal mint: Minted event 1`] = `
+exports[`Polkadot Asset Hub PSM > Decimal scaling > higher-decimal external — debt scaled down, redemption scaled up > high decimal mint: Minted event 1`] = `
 [
   {
     "data": {
@@ -111,14 +111,21 @@ exports[`Westend Asset Hub PSM > Decimal scaling > higher-decimal external — d
         "interior": {
           "X2": [
             {
-              "Parachain": "(rounded 2000)",
+              "GlobalConsensus": {
+                "Ethereum": {
+                  "chainId": 1,
+                },
+              },
             },
             {
-              "GeneralIndex": "(rounded 220)",
+              "AccountKey20": {
+                "key": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                "network": null,
+              },
             },
           ],
         },
-        "parents": 1,
+        "parents": 2,
       },
       "externalConsumed": 20000000000000000000,
       "internalAsset": {
@@ -136,7 +143,7 @@ exports[`Westend Asset Hub PSM > Decimal scaling > higher-decimal external — d
       },
       "internalFee": 100000,
       "internalReceived": "(rounded 20000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Minted",
     "section": "psm",
@@ -144,7 +151,7 @@ exports[`Westend Asset Hub PSM > Decimal scaling > higher-decimal external — d
 ]
 `;
 
-exports[`Westend Asset Hub PSM > External asset management > addExternalAsset — decimals snapshotted, external counted > add external: ExternalAssetAdded event 1`] = `
+exports[`Polkadot Asset Hub PSM > External asset management > addExternalAsset — decimals snapshotted, external counted > add external: ExternalAssetAdded event 1`] = `
 [
   {
     "data": {
@@ -181,19 +188,19 @@ exports[`Westend Asset Hub PSM > External asset management > addExternalAsset �
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM as internal asset owner — instance recorded, deposit held > create PSM: PsmCreated event 1`] = `
+exports[`Polkadot Asset Hub PSM > Instance lifecycle > create PSM as internal asset owner — instance recorded, deposit held > create PSM: PsmCreated event 1`] = `
 [
   {
     "data": {
       "emergencyAdmin": {
         "system": {
-          "Signed": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+          "Signed": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
         },
       },
-      "feeDestination": "5GbiMDM8uCwfa75C2XT2xo9dL3hQ2UprvT2zNxALLg4rPe1V",
+      "feeDestination": "15Y1VYcCkzD91e5hzAW36wynBfh3inNzzwmUYF9gtm6NZwzi",
       "fullAdmin": {
         "system": {
-          "Signed": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+          "Signed": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
         },
       },
       "internalAsset": {
@@ -217,14 +224,14 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM as internal ass
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM with zero minimum swap — ZeroMinSwapAmount > zero min swap: ExtrinsicFailed 1`] = `
+exports[`Polkadot Asset Hub PSM > Instance lifecycle > create PSM with zero minimum swap — ZeroMinSwapAmount > zero min swap: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
       "dispatchError": {
         "Module": {
           "error": "0x04000000",
-          "index": 65,
+          "index": 56,
         },
       },
       "dispatchInfo": {
@@ -232,7 +239,7 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM with zero minim
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 500000000)",
+          "refTime": "(rounded 700000000)",
         },
       },
     },
@@ -242,7 +249,7 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM with zero minim
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Instance lifecycle > remove PSM with approved externals — blocked, then succeeds once withdrawn > remove PSM: PsmRemoved event 1`] = `
+exports[`Polkadot Asset Hub PSM > Instance lifecycle > remove PSM with approved externals — blocked, then succeeds once withdrawn > remove PSM: PsmRemoved event 1`] = `
 [
   {
     "data": {
@@ -266,7 +273,7 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > remove PSM with approved e
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Swaps > mint — collateral to reserve, internal to caller, fee to destination > mint: Minted event 1`] = `
+exports[`Polkadot Asset Hub PSM > Swaps > mint — collateral to reserve, internal to caller, fee to destination > mint: Minted event 1`] = `
 [
   {
     "data": {
@@ -299,7 +306,7 @@ exports[`Westend Asset Hub PSM > Swaps > mint — collateral to reserve, interna
       },
       "internalFee": 5000000,
       "internalReceived": "(rounded 1000000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Minted",
     "section": "psm",
@@ -307,7 +314,7 @@ exports[`Westend Asset Hub PSM > Swaps > mint — collateral to reserve, interna
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Swaps > redeem — reserve released, debt reduced by burned amount > redeem: Redeemed event 1`] = `
+exports[`Polkadot Asset Hub PSM > Swaps > redeem — reserve released, debt reduced by burned amount > redeem: Redeemed event 1`] = `
 [
   {
     "data": {
@@ -340,7 +347,7 @@ exports[`Westend Asset Hub PSM > Swaps > redeem — reserve released, debt reduc
       },
       "internalConsumed": 500000000,
       "internalFee": 2500000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "who": "1ZLR63GQkKph3XmxzziZ1RrPsL6CrJJ1izhgR1mzMaoHZJA",
     },
     "method": "Redeemed",
     "section": "psm",

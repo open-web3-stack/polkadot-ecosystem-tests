@@ -3,39 +3,78 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 import type { Client, RootTestTree } from '@e2e-test/shared'
 
-import { encodeAddress } from '@polkadot/util-crypto'
+import { stringToU8a, u8aConcat } from '@polkadot/util'
+import { blake2AsU8a, encodeAddress } from '@polkadot/util-crypto'
 
-import { expect } from 'vitest'
+import { assert, expect } from 'vitest'
 
-import { checkSystemEvents, scheduleInlineCallWithOrigin, type TestConfig } from './helpers/index.js'
+import { checkSystemEvents, type TestConfig } from './helpers/index.js'
 
 /// -------
 /// Constants
 /// -------
 
-const UNIT = 1_000_000n // 1 token in 6-decimal precision (pUSD / USDT)
-export const USDX_UNIT = 100n // 1 token in 2-decimal precision (USDX)
-export const DAI_UNIT = 10n ** 18n // 1 token in 18-decimal precision (DAI)
+/** 1 token of a 6-decimal asset (the internal stablecoin, USDT and USDC). */
+const UNIT = 1_000_000n
 
-const MIN_SWAP = 100n * UNIT // minimum swap enforced by the PSM pallet
+/** Minimum swap the suite configures on the PSM it creates, in internal units. */
+const MIN_SWAP = 10n * UNIT
 
-const SYNTHETIC_ASSET_ID = 9999 // test-only asset injected via Chopsticks storage overrides
+/** Debt ceiling the suite configures on the PSM it creates, in internal units. */
+const MAX_DEBT = 10_000n * UNIT
 
-/** XCM V5 Location for a local Assets pallet asset — PSM pallet keys changed from u32 to StagingXcmV5Location. */
-const assetLocation = (assetId: number) => ({
-  parents: 0,
-  interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: assetId }] },
-})
+/**
+ * Ceiling weight given to each of the two 6-decimal externals at setup.
+ *
+ * The pallet normalises weights against the sum of weights on the same instance, so two
+ * externals at 50% each land on `MAX_DEBT / 2` apiece.
+ */
+const HALF_WEIGHT = 500_000
+
+/** Per-asset ceiling implied by `MAX_DEBT` and two equal `HALF_WEIGHT` externals. */
+const ASSET_CEILING = MAX_DEBT / 2n
+
+/**
+ * Minting and redemption fee the pallet falls back to when no fee was ever set for a pair.
+ * Expressed in parts per million, matching `Permill`.
+ */
+const DEFAULT_FEE = 5_000
+
+/** `max_fee` that accepts whatever fee the instance has configured (100%, in parts per million). */
+const ANY_FEE = 1_000_000
+
+/**
+ * Native-token balance for the accounts the suite signs with. Large enough to cover the
+ * instance creation deposit, whose size is a runtime parameter rather than a pallet constant,
+ * on chains with up to 12 decimals.
+ */
+const NATIVE_ENDOWMENT = 100_000n * 10n ** 12n
+
+/** External balance handed to each swapping account, comfortably above every ceiling in use. */
+const EXTERNAL_ENDOWMENT = 50_000n * UNIT
 
 /**
  * PSM-specific test parameters.
  *
- * These are separated from chain config because they describe the test scenario,
- * not the chain itself.
+ * Kept separate from the chain definition because they describe the test scenario rather than
+ * the chain. The suite creates its own PSM instance, so the only chain-derived requirement is
+ * that `internalAssetId` is free and the external assets exist.
  */
 export interface PsmTestConfig extends TestConfig {
-  psmStableAssetId: number
-  psmInsuranceFundAccountRaw: string
+  /** Unused local `Assets` id. The suite injects a 6-decimal internal stablecoin under it. */
+  internalAssetId: number
+  /** Local `Assets` id of a 6-decimal external, used as the primary external throughout. */
+  primaryExternalId: number
+  /** Local `Assets` id of a second 6-decimal external, used for per-asset ceiling tests. */
+  secondaryExternalId: number
+  /**
+   * A `ForeignAssets` entry whose decimals differ from the internal asset's, used to exercise
+   * decimal scaling and the foreign half of the PSM's asset union.
+   */
+  foreignExternal: {
+    location: Record<string, any>
+    decimals: number
+  }
 }
 
 const devAccounts = testAccounts
@@ -44,1887 +83,1210 @@ const devAccounts = testAccounts
 /// Helpers
 /// -------
 
-/** Query asset balance, returning `0n` when no entry exists. */
-async function assetBalance(api: Client<any, any>['api'], assetId: number, address: string): Promise<bigint> {
-  const entry = await api.query.assets.account(assetId, address)
+/**
+ * XCM location of an asset held in the local `Assets` pallet, as the PSM's asset union
+ * resolves it. The PSM keys every map by location rather than by numeric id.
+ */
+const assetLocation = (assetId: number) => ({
+  parents: 0,
+  interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: assetId }] },
+})
+
+/**
+ * Reserve account holding a PSM instance's external collateral.
+ *
+ * Mirrors the pallet's own derivation: `blake2_256` over the pallet-id type tag `modl`, the
+ * pallet id `py/pegsm`, and the SCALE-encoded internal asset location. Derived here rather than
+ * read from storage because the pallet exposes it only as a computed value.
+ */
+function psmReserveAccount(client: Client<any, any>, internalLocation: Record<string, any>): string {
+  const encodedLocation = client.api.createType('StagingXcmV5Location', internalLocation).toU8a()
+  const entropy = blake2AsU8a(u8aConcat(stringToU8a('modl'), stringToU8a('py/pegsm'), encodedLocation), 256)
+  return encodeAddress(entropy, client.config.properties.addressEncoding)
+}
+
+/** Balance of a local `Assets` asset, returning `0n` when the account holds no entry. */
+async function assetBalance(client: Client<any, any>, assetId: number, address: string): Promise<bigint> {
+  const entry = await client.api.query.assets.account(assetId, address)
   return entry.isSome ? entry.unwrap().balance.toBigInt() : 0n
 }
 
-/** Query PSM debt for a given external asset. */
-async function psmDebt(api: Client<any, any>['api'], location: any): Promise<bigint> {
-  return ((await (api.query as any).psm.psmDebt(location)) as any).toBigInt()
+/** Balance of a `ForeignAssets` asset, returning `0n` when the account holds no entry. */
+async function foreignAssetBalance(
+  client: Client<any, any>,
+  location: Record<string, any>,
+  address: string,
+): Promise<bigint> {
+  const entry = (await client.api.query.foreignAssets.account(location, address)) as any
+  return entry.isSome ? entry.unwrap().balance.toBigInt() : 0n
+}
+
+/** Debt a PSM instance has minted against one external, in internal units. */
+async function psmDebt(
+  client: Client<any, any>,
+  internalLocation: Record<string, any>,
+  externalLocation: Record<string, any>,
+): Promise<bigint> {
+  return ((await (client.api.query as any).psm.psmDebt(internalLocation, externalLocation)) as any).toBigInt()
 }
 
 /**
- * Compute the per-asset ceiling using the same formula as the pallet:
- *   max_asset_debt = max_psm_debt * (asset_weight / total_weight_sum)
- * where max_psm_debt = MaxPsmDebtOfTotal * MaximumIssuance.
- */
-async function maxAssetDebt(api: Client<any, any>['api'], location: any, maximumIssuance: bigint): Promise<bigint> {
-  const maxPsmDebtOfTotal: bigint = ((await (api.query as any).psm.maxPsmDebtOfTotal()) as any).toBigInt()
-  const maxPsmDebt = (maxPsmDebtOfTotal * maximumIssuance) / 1_000_000n
-
-  const assetWeight: bigint = ((await (api.query as any).psm.assetCeilingWeight(location)) as any).toBigInt()
-  if (assetWeight === 0n) return 0n
-
-  const allWeights = await (api.query as any).psm.assetCeilingWeight.entries()
-  const totalWeight: bigint = (allWeights as any[]).reduce(
-    (acc: bigint, [, v]: [any, any]) => acc + (v as any).toBigInt(),
-    0n,
-  )
-  if (totalWeight === 0n) return 0n
-
-  return (maxPsmDebt * assetWeight) / totalWeight
-}
-
-/// -------
-/// Tests — Core swaps
-/// -------
-
-/**
- * Mint USDT via the PSM and verify the resulting pUSD credit, debt tracking,
- * and fee distribution to the insurance fund.
+ * Assert that the last block's only extrinsic failed with a specific PSM error.
  *
- * 1. Record alice's pUSD balance and the insurance fund's pUSD balance before the swap
- * 2. Mint MIN_SWAP (100 UNIT) of USDT into pUSD
- * 3. Verify the Minted event contains correct who, assetId, externalAmount, received, and fee
- * 4. Verify alice's pUSD balance increased
- * 5. Verify psmDebt for USDT equals the minted external amount
- * 6. Verify the insurance fund's pUSD balance increased from the collected fee
+ * `errorName` is looked up on the runtime's own error metadata, so a renamed or removed
+ * variant fails the test rather than silently matching nothing.
  */
-async function mintUsdtToPusd<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId, psmInsuranceFundAccountRaw } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, client.config.properties.addressEncoding)
-
-  const alice = devAccounts.alice
-  const mintAmount = MIN_SWAP
-
-  // 1. Record balances
-  const pUsdBefore = await assetBalance(client.api, psmStableAssetId, alice.address)
-  const insuranceBefore = await assetBalance(client.api, psmStableAssetId, insuranceFund)
-
-  // 2. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), mintAmount)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Minted event
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('mint USDT: Minted event')
-
+async function expectPsmError(client: Client<any, any>, errorName: string): Promise<void> {
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const mintedData = mintedRecord!.event.data as any
-  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(mintedData.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect(mintedData.externalAmount.toBigInt()).toBe(mintAmount)
-  expect(mintedData.received.toBigInt()).toBeGreaterThan(0n)
-  expect(mintedData.fee.toBigInt()).toBeGreaterThanOrEqual(0n)
+  const failure = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  assert(failure, 'expected an ExtrinsicFailed event')
+  assert(client.api.events.system.ExtrinsicFailed.is(failure.event))
 
-  // 4. pUSD received
-  const pUsdAfter = await assetBalance(client.api, psmStableAssetId, alice.address)
-  expect(pUsdAfter - pUsdBefore).toBeGreaterThan(0n)
+  const { dispatchError } = failure.event.data
+  assert(dispatchError.isModule, `expected a module error, got ${dispatchError.type}`)
 
-  // 5. Debt check
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBe(mintAmount)
-
-  // 6. Insurance fund
-  const insuranceAfter = await assetBalance(client.api, psmStableAssetId, insuranceFund)
-  expect(insuranceAfter - insuranceBefore).toBeGreaterThan(0n)
+  const psmErrors = (client.api.errors as any).psm
+  assert(psmErrors[errorName], `runtime has no psm error named ${errorName}`)
+  expect(psmErrors[errorName].is(dispatchError.asModule)).toBe(true)
 }
 
-/**
- * Mint USDT then redeem the received pUSD, validating that a round-trip
- * conversion preserves value accounting. The mint fee plus pUSD received
- * must equal the original external amount.
- *
- * 1. Mint 10x MIN_SWAP of USDT, verify Minted event, check received + fee == externalAmount
- * 2. Redeem the minted pUSD (amount taken from the Minted event), verify Redeemed event fields
- * 3. Verify alice's USDT balance increased after the redeem
- */
-async function mintThenRedeem<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-
-  const alice = devAccounts.alice
-
-  const swapAmount = 10n * MIN_SWAP
-
-  // 1. Mint, verify Minted event
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), swapAmount)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'mint then redeem: Minted event',
-  )
-
-  const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const mintedData = mintedRecord!.event.data as any
-  const received = mintedData.received.toBigInt()
-  const mintFee = mintedData.fee.toBigInt()
-  expect(received + mintFee).toBe(swapAmount)
-  expect(received).toBe(swapAmount - mintFee)
-
-  // 2. Redeem minted pUSD, verify Redeemed event
-  const usdtBefore = await assetBalance(client.api, psmPrimaryId, alice.address)
-  const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), received)
-  await sendTransaction(redeemCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-    'mint then redeem: Redeemed event',
-  )
-
-  const redeemEvents = await client.api.query.system.events()
-  const redeemedRecord = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
-  expect(redeemedRecord).toBeDefined()
-  const redeemedData = redeemedRecord!.event.data as any
-  expect(redeemedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(redeemedData.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect(redeemedData.paid.toBigInt()).toBe(received)
-  expect(redeemedData.externalReceived.toBigInt()).toBeGreaterThan(0n)
-  expect(redeemedData.fee.toBigInt()).toBeGreaterThanOrEqual(0n)
-
-  // 3. USDT increased
-  const usdtAfter = await assetBalance(client.api, psmPrimaryId, alice.address)
-  expect(usdtAfter - usdtBefore).toBeGreaterThan(0n)
-}
-
-/**
- * Minting an amount below the pallet-enforced minimum (MIN_SWAP) must fail.
- *
- * 1. Submit a mint of 1 unit of USDT, below the MIN_SWAP threshold of 100 UNIT
- * 2. Verify the block contains an ExtrinsicFailed event
- */
-async function mintBelowMinSwapFails<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-
-  const alice = devAccounts.alice
-  const tinyAmount = 1n
-
-  // 1. Submit mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), tinyAmount)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. ExtrinsicFailed event
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'mint below MIN_SWAP: ExtrinsicFailed',
-  )
-
+/** Assert that the last block's only extrinsic failed with `BadOrigin`. */
+async function expectBadOrigin(client: Client<any, any>): Promise<void> {
   const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-}
+  const failure = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  assert(failure, 'expected an ExtrinsicFailed event')
+  assert(client.api.events.system.ExtrinsicFailed.is(failure.event))
 
-/// -------
-/// Tests — Asset lifecycle
-/// -------
-
-/**
- * Register a new external asset via addExternalAsset without setting a ceiling
- * weight. Minting against it must fail because the effective ceiling is zero.
- *
- * 1. Add external asset SYNTHETIC_ASSET_ID via Root origin
- * 2. Attempt to mint MIN_SWAP of asset SYNTHETIC_ASSET_ID
- * 3. Verify the mint failed with an ExtrinsicFailed event
- */
-async function addAssetWithZeroCeiling<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const alice = devAccounts.alice
-
-  // 1. Add asset
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(SYNTHETIC_ASSET_ID))
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetAdded' }).toMatchSnapshot(
-    'add asset zero ceiling: ExternalAssetAdded event',
-  )
-  const addedEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'ExternalAssetAdded',
-  )
-  expect(addedEvt).toBeDefined()
-  expect((addedEvt!.event.data as any).assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
-
-  // 2. Try mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(SYNTHETIC_ASSET_ID), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Mint failed
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'add asset zero ceiling: mint ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
+  expect(failure.event.data.dispatchError.isBadOrigin).toBe(true)
 }
 
 /**
- * Register a new external asset, assign a non-zero ceiling weight, provision
- * it in the Assets pallet, and mint against it. Exercises the full asset
- * onboarding flow from governance to first swap.
+ * Inject the assets the suite swaps with, without creating a PSM.
  *
- * 1. Add external asset SYNTHETIC_ASSET_ID via Root origin
- * 2. Set ceiling weight to 100_000 for asset SYNTHETIC_ASSET_ID
- * 3. Create asset SYNTHETIC_ASSET_ID in the Assets pallet and fund alice with 1000 UNIT
- * 4. Mint MIN_SWAP of asset SYNTHETIC_ASSET_ID
- * 5. Verify the Minted event contains who, assetId SYNTHETIC_ASSET_ID, externalAmount, and received > 0
+ * The internal stablecoin does not exist on the forked chain, so it is written directly into
+ * the `Assets` pallet with alice as owner: the runtime's create origin admits the internal
+ * asset's owner, which lets the suite create its PSM from a plain signed origin. Balances and
+ * DOT endowments are storage writes rather than transfers so that no block is spent on setup.
  */
-async function addAssetThenSetCeiling<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const alice = devAccounts.alice
+async function injectAssets(client: Client<any, any>, testConfig: PsmTestConfig): Promise<void> {
+  const { internalAssetId, primaryExternalId, secondaryExternalId, foreignExternal } = testConfig
+  const { alice, bob, charlie, dave } = devAccounts
 
-  // 1. Create asset with matching decimals before registering with PSM
   await client.dev.setStorage({
+    System: {
+      account: [
+        // A consumer reference lets alice hold non-sufficient assets such as bridged DAI;
+        // without it the assets pallet refuses to transfer from the injected account.
+        [[alice.address], { providers: 1, consumers: 1, data: { free: NATIVE_ENDOWMENT } }],
+        [[bob.address], { providers: 1, data: { free: NATIVE_ENDOWMENT } }],
+        [[charlie.address], { providers: 1, data: { free: NATIVE_ENDOWMENT } }],
+        [[dave.address], { providers: 1, data: { free: NATIVE_ENDOWMENT } }],
+      ],
+    },
     Assets: {
       asset: [
         [
-          [SYNTHETIC_ASSET_ID],
+          [internalAssetId],
           {
             owner: alice.address,
             issuer: alice.address,
             admin: alice.address,
             freezer: alice.address,
-            supply: 1000e6,
+            supply: 0,
             deposit: 0,
             minBalance: 1,
             isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
+            accounts: 0,
+            sufficients: 0,
             approvals: 0,
             status: 'Live',
           },
         ],
       ],
       metadata: [
-        [[SYNTHETIC_ASSET_ID], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }],
+        [[internalAssetId], { deposit: 0, name: 'Polkadot USD', symbol: 'pUSD', decimals: 6, isFrozen: false }],
       ],
-      account: [[[SYNTHETIC_ASSET_ID, alice.address], { balance: 1000e6 }]],
+      account: [
+        [[primaryExternalId, alice.address], { balance: EXTERNAL_ENDOWMENT }],
+        [[primaryExternalId, bob.address], { balance: EXTERNAL_ENDOWMENT }],
+        [[secondaryExternalId, alice.address], { balance: EXTERNAL_ENDOWMENT }],
+      ],
     },
   })
 
-  // 2. Add asset
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(SYNTHETIC_ASSET_ID))
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  // The foreign external is a real, thinly-issued asset on the forked chain, so handing alice a
+  // balance out of thin air would leave her holding more than its total issuance and desync the
+  // account counters. Its details are read back and rewritten with an issuance and account count
+  // that cover the injected holding, keeping the asset internally consistent.
+  const foreignDetails = (await (client.api.query.foreignAssets.asset(foreignExternal.location) as any)).unwrap()
+  const foreignEndowment = 100n * 10n ** BigInt(foreignExternal.decimals)
+
+  await client.dev.setStorage({
+    ForeignAssets: {
+      asset: [
+        [
+          [foreignExternal.location],
+          {
+            ...foreignDetails.toJSON(),
+            supply: foreignDetails.supply.toBigInt() + foreignEndowment,
+            accounts: foreignDetails.accounts.toNumber() + 1,
+          },
+        ],
+      ],
+      account: [
+        [
+          [foreignExternal.location, alice.address],
+          { balance: foreignEndowment, status: 'Liquid', reason: 'Consumer' },
+        ],
+      ],
+    },
+  })
+}
+
+/**
+ * Create the PSM the majority of the suite operates on, in a single block.
+ *
+ * Alice owns the internal asset, so she can create the instance and is set as its `full_admin`;
+ * bob is set as `emergency_admin` and dave as the fee destination, which keeps privilege and
+ * fee-accrual assertions free of the balances the swapping accounts move. Both 6-decimal
+ * externals are approved and given equal ceiling weight.
+ */
+async function createPsmInstance(client: Client<any, any>, testConfig: PsmTestConfig): Promise<void> {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  const setup = client.api.tx.utility.batchAll([
+    psm.createPsm(
+      internal,
+      { system: { Signed: alice.address } },
+      { system: { Signed: bob.address } },
+      dave.address,
+      MAX_DEBT,
+      MIN_SWAP,
+    ),
+    psm.addExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.addExternalAsset(internal, assetLocation(secondaryExternalId)),
+    psm.setAssetCeilingWeight(internal, assetLocation(primaryExternalId), HALF_WEIGHT),
+    psm.setAssetCeilingWeight(internal, assetLocation(secondaryExternalId), HALF_WEIGHT),
+  ])
+
+  await sendTransaction(setup.signAsync(alice))
   await client.dev.newBlock()
 
-  // 3. Set ceiling
-  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(SYNTHETIC_ASSET_ID), 100_000)
-  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  const events = await client.api.query.system.events()
+  assert(
+    events.find(({ event }) => client.api.events.utility.BatchCompleted.is(event)),
+    'PSM setup batch did not complete',
+  )
+}
+
+/// -------
+/// Tests - Instance lifecycle
+/// -------
+
+/**
+ * Create a PSM from the internal asset's owner and verify the instance is recorded and paid for.
+ *
+ * 1. Create the PSM as alice, who owns the internal asset
+ * 2. Verify the PsmCreated event carries the admins, fee destination and debt ceiling
+ * 3. Verify the Psm entry stores the ceiling, minimum swap and snapshotted internal decimals
+ * 4. Verify the PsmAdmin entry stores both admin origins
+ * 5. Verify a creation deposit was placed on hold against alice
+ */
+async function createPsmAsAssetOwner(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  const reservedBefore = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+
+  // 1. Create the PSM as the internal asset's owner
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. PsmCreated event
+  await checkSystemEvents(client, { section: 'psm', method: 'PsmCreated' }).toMatchSnapshot(
+    'create PSM: PsmCreated event',
+  )
+
+  const events = await client.api.query.system.events()
+  const created = events.find(({ event }) => event.section === 'psm' && event.method === 'PsmCreated')
+  assert(created)
+  const createdData = created.event.data as any
+  expect(createdData.internalAsset.eq(internal)).toBe(true)
+  expect(createdData.feeDestination.toString()).toBe(
+    encodeAddress(dave.address, client.config.properties.addressEncoding),
+  )
+  expect(createdData.maxDebt.toBigInt()).toBe(MAX_DEBT)
+
+  // 3. Psm storage entry
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.isSome).toBe(true)
+  const psmInfo = info.unwrap()
+  expect(psmInfo.maxDebt.toBigInt()).toBe(MAX_DEBT)
+  expect(psmInfo.minSwapAmount.toBigInt()).toBe(MIN_SWAP)
+  expect(psmInfo.internalDecimals.toNumber()).toBe(6)
+  expect(psmInfo.externalCount.toNumber()).toBe(0)
+
+  // 4. PsmAdmin storage entry
+  const admin = await (client.api.query as any).psm.psmAdmin(internal)
+  expect(admin.isSome).toBe(true)
+  const adminInfo = admin.unwrap()
+  expect(adminInfo.fullAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
+  expect(adminInfo.emergencyAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(bob.address, client.config.properties.addressEncoding),
+  )
+
+  // 5. Creation deposit held from the creator
+  const reservedAfter = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+  expect(reservedAfter).toBeGreaterThan(reservedBefore)
+}
+
+/**
+ * A zero minimum swap is rejected, since it would admit swaps that round to nothing.
+ *
+ * 1. Attempt to create the PSM with a zero minimum swap
+ * 2. Verify the call failed with ZeroMinSwapAmount
+ * 3. Verify no instance was recorded
+ */
+async function createPsmZeroMinSwapFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  // 1. Create with a zero minimum swap
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    0,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. ZeroMinSwapAmount
+  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
+    'zero min swap: ExtrinsicFailed',
+  )
+  await expectPsmError(client, 'ZeroMinSwapAmount')
+
+  // 3. No instance recorded
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+}
+
+/**
+ * An account that does not own the internal asset cannot create a PSM for it.
+ *
+ * 1. Attempt to create the PSM as charlie, who owns nothing
+ * 2. Verify the call failed with BadOrigin
+ * 3. Verify no instance was recorded
+ */
+async function createPsmByNonOwnerFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, charlie, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  // 1. Create as a non-owner
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 2. BadOrigin
+  await expectBadOrigin(client)
+
+  // 3. No instance recorded
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+}
+
+/**
+ * A second PSM cannot be created for an internal asset that already has one.
+ *
+ * 1. Create the PSM and approve its externals
+ * 2. Attempt to create a second PSM for the same internal asset
+ * 3. Verify the call failed with PsmAlreadyExists
+ */
+async function createPsmTwiceFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  // 1. First instance
+  await createPsmInstance(client, testConfig)
+
+  // 2. Second instance for the same internal asset
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. PsmAlreadyExists
+  await expectPsmError(client, 'PsmAlreadyExists')
+}
+
+/**
+ * A PSM cannot be dismantled while it still has approved externals, and can be once they are
+ * withdrawn.
+ *
+ * 1. Create the PSM with two approved externals
+ * 2. Attempt removal, and verify it failed with PsmHasApprovedExternals
+ * 3. Remove both externals
+ * 4. Remove the PSM, and verify the PsmRemoved event
+ * 5. Verify both the Psm and PsmAdmin entries are gone and the deposit was returned
+ */
+async function removePsmRequiresNoExternals(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with two externals
+  const reservedBefore = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+  await createPsmInstance(client, testConfig)
+  const reservedWithPsm = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+  expect(reservedWithPsm).toBeGreaterThan(reservedBefore)
+
+  // 2. Removal blocked while externals remain
+  await sendTransaction(psm.removePsm(internal).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'PsmHasApprovedExternals')
+  expect((await (client.api.query as any).psm.psm(internal)).isSome).toBe(true)
+
+  // 3. Withdraw both externals
+  const withdraw = client.api.tx.utility.batchAll([
+    psm.removeExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.removeExternalAsset(internal, assetLocation(secondaryExternalId)),
+  ])
+  await sendTransaction(withdraw.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. Removal now succeeds
+  await sendTransaction(psm.removePsm(internal).signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'PsmRemoved' }).toMatchSnapshot(
+    'remove PSM: PsmRemoved event',
+  )
+  const events = await client.api.query.system.events()
+  const removed = events.find(({ event }) => event.section === 'psm' && event.method === 'PsmRemoved')
+  assert(removed)
+  expect((removed.event.data as any).internalAsset.eq(internal)).toBe(true)
+
+  // 5. Instance state cleared and deposit refunded
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+  expect((await (client.api.query as any).psm.psmAdmin(internal)).isNone).toBe(true)
+  const reservedAfter = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+  expect(reservedAfter).toBe(reservedBefore)
+}
+
+/// -------
+/// Tests - External asset management
+/// -------
+
+/**
+ * Approving an external records its decimals and counts it against the instance.
+ *
+ * 1. Create a bare PSM with no externals
+ * 2. Approve the primary external
+ * 3. Verify the ExternalAssetAdded event
+ * 4. Verify the ExternalAssets entry snapshots the external's decimals and starts fully enabled
+ * 5. Verify the instance's external count incremented
+ */
+async function addExternalAssetRecordsDecimals(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Bare instance
+  const createCall = psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Approve the external
+  await sendTransaction(psm.addExternalAsset(internal, external).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. ExternalAssetAdded event
+  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetAdded' }).toMatchSnapshot(
+    'add external: ExternalAssetAdded event',
+  )
+  const events = await client.api.query.system.events()
+  const added = events.find(({ event }) => event.section === 'psm' && event.method === 'ExternalAssetAdded')
+  assert(added)
+  const addedData = added.event.data as any
+  expect(addedData.internalAsset.eq(internal)).toBe(true)
+  expect(addedData.externalAsset.eq(external)).toBe(true)
+
+  // 4. Decimals snapshot, enabled by default
+  const entry = await (client.api.query as any).psm.externalAssets(internal, external)
+  expect(entry.isSome).toBe(true)
+  expect(entry.unwrap().decimals.toNumber()).toBe(6)
+  expect(entry.unwrap().status.isAllEnabled).toBe(true)
+
+  // 5. External count
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.unwrap().externalCount.toNumber()).toBe(1)
+}
+
+/**
+ * The same external cannot be approved twice on one instance.
+ *
+ * 1. Create the PSM, which already approves the primary external
+ * 2. Approve the primary external again
+ * 3. Verify the call failed with AssetAlreadyApproved
+ */
+async function addExternalAssetTwiceFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+
+  // 1. Instance with the primary external already approved
+  await createPsmInstance(client, testConfig)
+
+  // 2. Approve it a second time
+  const addCall = (client.api.tx as any).psm.addExternalAsset(
+    assetLocation(internalAssetId),
+    assetLocation(primaryExternalId),
+  )
+  await sendTransaction(addCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. AssetAlreadyApproved
+  await expectPsmError(client, 'AssetAlreadyApproved')
+}
+
+/**
+ * An external that does not exist on chain cannot be approved.
+ *
+ * 1. Create the PSM
+ * 2. Approve an asset id that has no entry in the assets pallet
+ * 3. Verify the call failed with AssetDoesNotExist
+ */
+async function addNonexistentExternalFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice } = devAccounts
+
+  // 1. Instance
+  await createPsmInstance(client, testConfig)
+
+  // 2. Approve an unregistered asset id
+  const missingAssetId = 4_294_967_000
+  expect((await client.api.query.assets.asset(missingAssetId)).isNone).toBe(true)
+  const addCall = (client.api.tx as any).psm.addExternalAsset(
+    assetLocation(internalAssetId),
+    assetLocation(missingAssetId),
+  )
+  await sendTransaction(addCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. AssetDoesNotExist
+  await expectPsmError(client, 'AssetDoesNotExist')
+}
+
+/**
+ * An external carrying debt cannot be withdrawn, since doing so would strand the collateral.
+ *
+ * 1. Create the PSM and mint against the primary external
+ * 2. Attempt to remove that external
+ * 3. Verify the call failed with AssetHasDebt and the external is still approved
+ */
+async function removeExternalWithDebtFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance carrying debt
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, external)).toBe(100n * UNIT)
+
+  // 2. Attempt removal
+  await sendTransaction(psm.removeExternalAsset(internal, external).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. AssetHasDebt, external untouched
+  await expectPsmError(client, 'AssetHasDebt')
+  expect((await (client.api.query as any).psm.externalAssets(internal, external)).isSome).toBe(true)
+}
+
+/// -------
+/// Tests - Swaps
+/// -------
+
+/**
+ * Mint the internal stablecoin against a 6-decimal external and verify every balance the swap
+ * touches.
+ *
+ * 1. Create the PSM and record the balances the mint will move
+ * 2. Mint 1000 units of the primary external
+ * 3. Verify the Minted event reports the external consumed, internal received and fee
+ * 4. Verify the fee is the pallet's default rate applied to the internal equivalent
+ * 5. Verify alice paid the external and received the internal minus the fee
+ * 6. Verify the external landed in the instance's reserve account
+ * 7. Verify the fee was minted to the instance's fee destination
+ * 8. Verify the instance's debt grew by the full internal equivalent, fee included
+ */
+async function mintAgainstExternal(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+
+  // 1. Setup and balance snapshot
+  await createPsmInstance(client, testConfig)
+  const reserve = psmReserveAccount(client, internal)
+
+  const externalBefore = await assetBalance(client, primaryExternalId, alice.address)
+  const internalBefore = await assetBalance(client, internalAssetId, alice.address)
+  const reserveBefore = await assetBalance(client, primaryExternalId, reserve)
+  const feeDestBefore = await assetBalance(client, internalAssetId, dave.address)
+
+  // 2. Mint
+  const mintAmount = 1_000n * UNIT
+  const mintCall = (client.api.tx as any).psm.mint(internal, external, mintAmount, ANY_FEE)
+  await sendTransaction(mintCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Minted event
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('mint: Minted event')
+
+  const events = await client.api.query.system.events()
+  const minted = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
+  assert(minted)
+  const mintedData = minted.event.data as any
+  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(mintedData.internalAsset.eq(internal)).toBe(true)
+  expect(mintedData.externalAsset.eq(external)).toBe(true)
+  expect(mintedData.externalConsumed.toBigInt()).toBe(mintAmount)
+
+  // 4. Fee is the default rate on the internal equivalent, which is 1:1 at equal decimals
+  const expectedFee = (mintAmount * BigInt(DEFAULT_FEE)) / 1_000_000n
+  const expectedReceived = mintAmount - expectedFee
+  expect(mintedData.internalFee.toBigInt()).toBe(expectedFee)
+  expect(mintedData.internalReceived.toBigInt()).toBe(expectedReceived)
+
+  // 5. Caller's balances
+  expect(await assetBalance(client, primaryExternalId, alice.address)).toBe(externalBefore - mintAmount)
+  expect(await assetBalance(client, internalAssetId, alice.address)).toBe(internalBefore + expectedReceived)
+
+  // 6. Reserve holds the collateral
+  expect(await assetBalance(client, primaryExternalId, reserve)).toBe(reserveBefore + mintAmount)
+
+  // 7. Fee destination
+  expect(await assetBalance(client, internalAssetId, dave.address)).toBe(feeDestBefore + expectedFee)
+
+  // 8. Debt tracks the gross internal equivalent
+  expect(await psmDebt(client, internal, external)).toBe(mintAmount)
+}
+
+/**
+ * Redeem the internal stablecoin back into the external and verify the reserve unwinds.
+ *
+ * 1. Create the PSM and mint to build a reserve
+ * 2. Redeem 500 internal units
+ * 3. Verify the Redeemed event reports the internal consumed, external received and fee
+ * 4. Verify alice received the external net of the redemption fee
+ * 5. Verify the reserve shrank by exactly what alice received
+ * 6. Verify the debt fell by the internal amount burned, excluding the fee
+ */
+async function redeemBackToExternal(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Setup with a funded reserve
+  await createPsmInstance(client, testConfig)
+  const reserve = psmReserveAccount(client, internal)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  const debtBefore = await psmDebt(client, internal, external)
+  const externalBefore = await assetBalance(client, primaryExternalId, alice.address)
+  const reserveBefore = await assetBalance(client, primaryExternalId, reserve)
+
+  // 2. Redeem
+  const redeemAmount = 500n * UNIT
+  await sendTransaction(psm.redeem(internal, external, redeemAmount, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Redeemed event
+  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot('redeem: Redeemed event')
+
+  const events = await client.api.query.system.events()
+  const redeemed = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
+  assert(redeemed)
+  const redeemedData = redeemed.event.data as any
+  expect(redeemedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+  expect(redeemedData.internalAsset.eq(internal)).toBe(true)
+  expect(redeemedData.externalAsset.eq(external)).toBe(true)
+
+  const expectedFee = (redeemAmount * BigInt(DEFAULT_FEE)) / 1_000_000n
+  const expectedExternalOut = redeemAmount - expectedFee
+  expect(redeemedData.internalFee.toBigInt()).toBe(expectedFee)
+  expect(redeemedData.externalReceived.toBigInt()).toBe(expectedExternalOut)
+  expect(redeemedData.internalConsumed.toBigInt()).toBe(redeemAmount)
+
+  // 4. Caller received the external
+  expect(await assetBalance(client, primaryExternalId, alice.address)).toBe(externalBefore + expectedExternalOut)
+
+  // 5. Reserve released exactly that amount
+  expect(await assetBalance(client, primaryExternalId, reserve)).toBe(reserveBefore - expectedExternalOut)
+
+  // 6. Debt falls by the burned amount, which excludes the fee
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore - expectedExternalOut)
+}
+
+/**
+ * Swaps below the instance's minimum are rejected.
+ *
+ * 1. Create the PSM
+ * 2. Mint an amount one unit under the configured minimum swap
+ * 3. Verify the call failed with BelowMinimumSwap and no debt was recorded
+ */
+async function mintBelowMinimumFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+
+  // 1. Instance
+  await createPsmInstance(client, testConfig)
+
+  // 2. Mint just under the minimum
+  const mintCall = (client.api.tx as any).psm.mint(internal, external, MIN_SWAP - 1n, ANY_FEE)
+  await sendTransaction(mintCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BelowMinimumSwap
+  await expectPsmError(client, 'BelowMinimumSwap')
+  expect(await psmDebt(client, internal, external)).toBe(0n)
+}
+
+/**
+ * A caller who will not accept the instance's configured fee has the swap rejected rather than
+ * silently overpaying.
+ *
+ * 1. Create the PSM, whose pairs carry the pallet's default fee
+ * 2. Mint while capping the acceptable fee below that default
+ * 3. Verify the call failed with FeeTooHigh
+ * 4. Verify the same mint succeeds once the cap admits the configured fee
+ */
+async function mintAboveMaxFeeFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance carrying the default fee
+  await createPsmInstance(client, testConfig)
+
+  // 2. Mint with too tight a fee cap
+  await sendTransaction(psm.mint(internal, external, 100n * UNIT, DEFAULT_FEE - 1).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. FeeTooHigh
+  await expectPsmError(client, 'FeeTooHigh')
+  expect(await psmDebt(client, internal, external)).toBe(0n)
+
+  // 4. Accepting the configured fee lets the same mint through
+  await sendTransaction(psm.mint(internal, external, 100n * UNIT, DEFAULT_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, external)).toBe(100n * UNIT)
+}
+
+/**
+ * An external that was never approved cannot be swapped, even when it exists on chain.
+ *
+ * 1. Create a PSM approving only the primary external
+ * 2. Mint against the secondary external
+ * 3. Verify the call failed with UnsupportedAsset
+ */
+async function mintUnapprovedExternalFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance approving one external only
+  const setup = client.api.tx.utility.batchAll([
+    psm.createPsm(
+      internal,
+      { system: { Signed: alice.address } },
+      { system: { Signed: bob.address } },
+      dave.address,
+      MAX_DEBT,
+      MIN_SWAP,
+    ),
+    psm.addExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.setAssetCeilingWeight(internal, assetLocation(primaryExternalId), HALF_WEIGHT),
+  ])
+  await sendTransaction(setup.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Mint against the unapproved external
+  const mintCall = psm.mint(internal, assetLocation(secondaryExternalId), 100n * UNIT, ANY_FEE)
+  await sendTransaction(mintCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. UnsupportedAsset
+  await expectPsmError(client, 'UnsupportedAsset')
+}
+
+/**
+ * Swapping against an internal asset with no instance is rejected.
+ *
+ * 1. Mint against an internal asset for which no PSM was created
+ * 2. Verify the call failed with PsmNotFound
+ */
+async function mintWithoutInstanceFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  // 1. Mint with no instance present
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+  const mintCall = (client.api.tx as any).psm.mint(internal, assetLocation(primaryExternalId), 100n * UNIT, ANY_FEE)
+  await sendTransaction(mintCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. PsmNotFound
+  await expectPsmError(client, 'PsmNotFound')
+}
+
+/// -------
+/// Tests - Debt ceilings
+/// -------
+
+/**
+ * An external can be minted up to its normalised share of the instance ceiling, and no further.
+ *
+ * 1. Create the PSM, giving both externals equal weight and so half the ceiling each
+ * 2. Mint the primary external exactly up to its share
+ * 3. Verify the debt sits on the ceiling
+ * 4. Attempt one more minimum-sized mint and verify it failed with ExceedsMaxPsmDebt
+ * 5. Verify the debt is unchanged
+ */
+async function perAssetCeilingIsEnforced(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with two equally weighted externals
+  await createPsmInstance(client, testConfig)
+
+  // 2. Mint up to the per-asset ceiling
+  await sendTransaction(psm.mint(internal, external, ASSET_CEILING, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Debt is exactly at the ceiling
+  expect(await psmDebt(client, internal, external)).toBe(ASSET_CEILING)
+
+  // 4. One more swap breaches it
+  await sendTransaction(psm.mint(internal, external, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'ExceedsMaxPsmDebt')
+
+  // 5. Debt unchanged
+  expect(await psmDebt(client, internal, external)).toBe(ASSET_CEILING)
+}
+
+/**
+ * Zeroing an external's weight closes it for minting and hands its share to the remaining
+ * externals.
+ *
+ * 1. Create the PSM with both externals equally weighted
+ * 2. Zero the secondary external's weight and verify the AssetCeilingWeightUpdated event
+ * 3. Verify minting the zero-weighted external fails with ExceedsMaxPsmDebt
+ * 4. Verify the primary external now absorbs the whole instance ceiling
+ */
+async function zeroWeightClosesExternal(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const primary = assetLocation(primaryExternalId)
+  const secondary = assetLocation(secondaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with two equally weighted externals
+  await createPsmInstance(client, testConfig)
+
+  // 2. Zero the secondary weight
+  await sendTransaction(psm.setAssetCeilingWeight(internal, secondary, 0).signAsync(alice))
   await client.dev.newBlock()
 
   await checkSystemEvents(client, { section: 'psm', method: 'AssetCeilingWeightUpdated' }).toMatchSnapshot(
-    'add asset then set ceiling: AssetCeilingWeightUpdated event',
+    'zero weight: AssetCeilingWeightUpdated event',
   )
-  const ceilingEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'AssetCeilingWeightUpdated',
-  )
-  expect(ceilingEvt).toBeDefined()
-  expect((ceilingEvt!.event.data as any).assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
-  expect((ceilingEvt!.event.data as any).newValue.toNumber()).toBe(100_000)
-
-  // 4. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(SYNTHETIC_ASSET_ID), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 5. externalDecimals populated, internalDecimals correct
-  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(SYNTHETIC_ASSET_ID))
-  expect(extDec.unwrap().toNumber()).toBe(6)
-  const intDec = await (client.api.query as any).psm.internalDecimals()
-  expect(intDec.unwrap().toNumber()).toBe(6)
-
-  // 6. Minted event
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'add asset then set ceiling: Minted event',
-  )
-
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(data.assetId.eq(assetLocation(SYNTHETIC_ASSET_ID))).toBe(true)
-  expect(data.externalAmount.toBigInt()).toBe(MIN_SWAP)
-  expect(data.received.toBigInt()).toBeGreaterThan(0n)
+  const updated = events.find(({ event }) => event.section === 'psm' && event.method === 'AssetCeilingWeightUpdated')
+  assert(updated)
+  const updatedData = updated.event.data as any
+  expect(updatedData.externalAsset.eq(secondary)).toBe(true)
+  expect(updatedData.newValue.toNumber()).toBe(0)
+
+  // 3. The zero-weighted external can no longer be minted
+  await sendTransaction(psm.mint(internal, secondary, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'ExceedsMaxPsmDebt')
+
+  // 4. The remaining external absorbs the full ceiling
+  await sendTransaction(psm.mint(internal, primary, MAX_DEBT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, primary)).toBe(MAX_DEBT)
 }
 
 /**
- * Remove an external asset from the PSM after its debt has been zeroed.
- * The pallet requires zero outstanding debt before allowing removal.
+ * Lowering the instance ceiling below outstanding debt pauses minting without clawing anything
+ * back, and redemptions still unwind the position.
  *
- * 1. Force the USDT psmDebt to zero via setStorage
- * 2. Remove the external asset via Root origin
- * 3. Verify the externalAssets entry for USDT is None
+ * 1. Create the PSM and mint against the primary external
+ * 2. Drop the instance ceiling to a fraction of the outstanding debt
+ * 3. Verify the MaxDebtUpdated event reports the old and new ceilings
+ * 4. Verify the outstanding debt is untouched
+ * 5. Verify further minting fails with ExceedsMaxPsmDebt
+ * 6. Verify redeeming still works and reduces the debt
  */
-async function removeAssetWithZeroDebt<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
+async function loweringCeilingPausesMinting(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
 
-  // 1. Force debt zero
-  await client.dev.setStorage({
-    Psm: {
-      psmDebt: [[[assetLocation(psmPrimaryId)], 0]],
-    },
-  })
+  // 1. Instance carrying debt
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
+  expect(debtBefore).toBe(1_000n * UNIT)
 
-  // 2. Remove asset
-  const removeCall = (client.api.tx as any).psm.removeExternalAsset(assetLocation(psmPrimaryId))
-  await scheduleInlineCallWithOrigin(client, removeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  // 2. Drop the ceiling below the outstanding debt
+  await sendTransaction(psm.setMaxDebt(internal, 100n * UNIT).signAsync(alice))
   await client.dev.newBlock()
 
-  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetRemoved' }).toMatchSnapshot(
-    'remove asset: ExternalAssetRemoved event',
+  // 3. MaxDebtUpdated event
+  await checkSystemEvents(client, { section: 'psm', method: 'MaxDebtUpdated' }).toMatchSnapshot(
+    'lower ceiling: MaxDebtUpdated event',
   )
-  const removedEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'ExternalAssetRemoved',
-  )
-  expect(removedEvt).toBeDefined()
-  expect((removedEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-
-  // 3. Asset removed, externalDecimals cleared
-  const assetStatus = await (client.api.query as any).psm.externalAssets(assetLocation(psmPrimaryId))
-  expect(assetStatus.isNone).toBe(true)
-  const extDec = await (client.api.query as any).psm.externalDecimals(assetLocation(psmPrimaryId))
-  expect(extDec.isNone).toBe(true)
-}
-
-/**
- * Verify that per-asset fee configuration resets to the pallet default
- * (5_000 = 0.5%) after an asset is removed and re-added. The custom fee
- * set before removal must not persist.
- *
- * 1. Set a custom minting fee of 30_000 (3%) for USDT via Root origin
- * 2. Zero the USDT psmDebt via setStorage to allow removal
- * 3. Remove USDT via removeExternalAsset, then re-add it via addExternalAsset
- * 4. Verify the minting fee for USDT returned to the default of 5_000
- */
-async function feeResetsAfterRemoveAndReAdd<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-
-  // 1. Set fee
-  const setFeeCall = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 30_000)
-  await scheduleInlineCallWithOrigin(client, setFeeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'MintingFeeUpdated' }).toMatchSnapshot(
-    'fee reset: MintingFeeUpdated event',
-  )
-  const mintFeeEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'MintingFeeUpdated',
-  )
-  expect(mintFeeEvt).toBeDefined()
-  expect((mintFeeEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect((mintFeeEvt!.event.data as any).newValue.toNumber()).toBe(30_000)
-
-  // 2. Zero debt
-  await client.dev.setStorage({
-    Psm: {
-      psmDebt: [[[assetLocation(psmPrimaryId)], 0]],
-    },
-  })
-
-  // 3. Remove and re-add
-  const removeCall = (client.api.tx as any).psm.removeExternalAsset(assetLocation(psmPrimaryId))
-  await scheduleInlineCallWithOrigin(client, removeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(psmPrimaryId))
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 4. Fee reset
-  const mintingFee = await (client.api.query as any).psm.mintingFee(assetLocation(psmPrimaryId))
-  expect(mintingFee.toBigInt()).toBe(5_000n)
-}
-
-/**
- * Attempt to remove an external asset while it has outstanding debt. The
- * pallet must reject the removal, leaving the asset entry intact.
- *
- * 1. Mint MIN_SWAP of USDT to create non-zero debt
- * 2. Verify psmDebt for USDT is positive
- * 3. Attempt removeExternalAsset for USDT via Root origin
- * 4. Verify the externalAssets entry for USDT still exists
- */
-async function removeAssetBlockedByDebt<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Debt positive
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBeGreaterThan(0n)
-
-  // 3. Try remove
-  const removeCall = (client.api.tx as any).psm.removeExternalAsset(assetLocation(psmPrimaryId))
-  await scheduleInlineCallWithOrigin(client, removeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 4. Asset exists
-  const assetStatus = await (client.api.query as any).psm.externalAssets(assetLocation(psmPrimaryId))
-  expect(assetStatus.isSome).toBe(true)
-}
-
-/**
- * Register an asset in the PSM, set a non-default minting fee, then mint
- * against it. Confirms that the fee applies to the subsequent mint.
- *
- * 1. Create asset 9998 in the Assets pallet and fund alice with 1000 UNIT
- * 2. Add asset 9998 and set its ceiling weight to 100_000
- * 3. Set a minting fee of 30_000 (3%) for asset 9998 via Root origin
- * 4. Mint 1000 UNIT of asset 9998
- * 5. Verify the Minted event contains who, assetId 9998, externalAmount, and received > 0
- * 6. Verify alice received less than 975 UNIT of pUSD, confirming the 3% fee was applied
- */
-async function setFeeBeforeAddingAsset<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const alice = devAccounts.alice
-  const newAssetId = 9998
-
-  // 1. Create asset with matching decimals before registering with PSM
-  await client.dev.setStorage({
-    Assets: {
-      asset: [
-        [
-          [newAssetId],
-          {
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-            supply: 1000e6,
-            deposit: 0,
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-          },
-        ],
-      ],
-      metadata: [[[newAssetId], { deposit: 0, name: 'Test Asset', symbol: 'TST', decimals: 6, isFrozen: false }]],
-      account: [[[newAssetId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-
-  // 2. Add asset and ceiling
-  const addCall = (client.api.tx as any).psm.addExternalAsset(assetLocation(newAssetId))
-  await scheduleInlineCallWithOrigin(client, addCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const ceilingCall = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(newAssetId), 100_000)
-  await scheduleInlineCallWithOrigin(client, ceilingCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. Set fee
-  const setFeeCall = (client.api.tx as any).psm.setMintingFee(assetLocation(newAssetId), 30_000)
-  await scheduleInlineCallWithOrigin(client, setFeeCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const pUsdBefore = await assetBalance(client.api, psmStableAssetId, alice.address)
-
-  // 4. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(newAssetId), 1000n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 5. Minted event
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'set fee before add: Minted event',
-  )
-
   const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const mintedData = mintedRecord!.event.data as any
-  expect(mintedData.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(mintedData.assetId.eq(assetLocation(newAssetId))).toBe(true)
-  expect(mintedData.externalAmount.toBigInt()).toBe(1000n * UNIT)
-  expect(mintedData.received.toBigInt()).toBeGreaterThan(0n)
+  const updated = events.find(({ event }) => event.section === 'psm' && event.method === 'MaxDebtUpdated')
+  assert(updated)
+  const updatedData = updated.event.data as any
+  expect(updatedData.oldValue.toBigInt()).toBe(MAX_DEBT)
+  expect(updatedData.newValue.toBigInt()).toBe(100n * UNIT)
 
-  // 6. Fee reflected
-  const pUsdAfter = await assetBalance(client.api, psmStableAssetId, alice.address)
-  const received = pUsdAfter - pUsdBefore
-  expect(received).toBeLessThan(975n * UNIT)
+  // 4. Debt is not clawed back
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+
+  // 5. Minting is paused
+  await sendTransaction(psm.mint(internal, external, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'ExceedsMaxPsmDebt')
+
+  // 6. Redemption still unwinds the position
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, external)).toBeLessThan(debtBefore)
 }
 
 /// -------
-/// Tests — Circuit breaker
+/// Tests - Circuit breaker and privilege
 /// -------
 
 /**
- * When an asset's status is set to MintingDisabled, new mints must fail while
- * redemptions continue to work. This allows governance to halt inflows without
- * trapping existing pUSD holders.
+ * The intermediate breaker level stops minting while leaving redemptions open, so holders can
+ * still exit.
  *
- * 1. Mint 500 UNIT of USDT to create redeemable pUSD
- * 2. Set USDT status to MintingDisabled via Root origin
- * 3. Attempt a new mint of MIN_SWAP, verify it fails with ExtrinsicFailed
- * 4. Redeem MIN_SWAP of pUSD, verify the Redeemed event with correct who, assetId, paid, and externalReceived
+ * 1. Create the PSM and mint to build a position
+ * 2. Set the external's breaker to MintingDisabled, and verify the AssetStatusUpdated event
+ * 3. Verify minting fails with MintingStopped
+ * 4. Verify redeeming still succeeds and reduces the debt
  */
-async function mintingDisabledBlocksMintAllowsRedeem<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
+async function mintingDisabledStopsMintOnly(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
 
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
+  // 1. Instance carrying a position
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
   await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
 
-  // 2. Disable minting
-  const disableCall = (client.api.tx as any).psm.setAssetStatus(assetLocation(psmPrimaryId), 'MintingDisabled')
-  await scheduleInlineCallWithOrigin(client, disableCall.method.toHex(), { system: 'Root' }, 'NonLocal')
+  // 2. Halt minting
+  await sendTransaction(psm.setAssetStatus(internal, external, 'MintingDisabled').signAsync(alice))
   await client.dev.newBlock()
 
   await checkSystemEvents(client, { section: 'psm', method: 'AssetStatusUpdated' }).toMatchSnapshot(
-    'MintingDisabled: AssetStatusUpdated event',
-  )
-  const statusEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'AssetStatusUpdated',
-  )
-  expect(statusEvt).toBeDefined()
-  expect((statusEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect((statusEvt!.event.data as any).status.toString()).toBe('MintingDisabled')
-
-  // 3. Mint fails
-  const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall2.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'MintingDisabled: mint ExtrinsicFailed',
-  )
-
-  const failEvents = await client.api.query.system.events()
-  const failRecord = failEvents.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-
-  // 4. Redeem works
-  const pUsd = await assetBalance(client.api, psmStableAssetId, alice.address)
-  if (pUsd >= MIN_SWAP) {
-    const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-    await sendTransaction(redeemCall.signAsync(alice))
-    await client.dev.newBlock()
-
-    await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-      'MintingDisabled: Redeemed event',
-    )
-
-    const events = await client.api.query.system.events()
-    const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
-    expect(redeemedRecord).toBeDefined()
-    const data = redeemedRecord!.event.data as any
-    expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-    expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-    expect(data.paid.toBigInt()).toBe(MIN_SWAP)
-    expect(data.externalReceived.toBigInt()).toBeGreaterThan(0n)
-  }
-}
-
-/**
- * When an asset's status is set to AllDisabled, both minting and redemption
- * must fail. This is the full circuit breaker for an asset.
- *
- * 1. Set USDT status to AllDisabled via Root origin
- * 2. Attempt a mint of MIN_SWAP, verify ExtrinsicFailed
- * 3. If alice holds sufficient pUSD, attempt a redeem of MIN_SWAP, verify ExtrinsicFailed
- */
-async function allDisabledBlocksBoth<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Disable all
-  const disableCall = (client.api.tx as any).psm.setAssetStatus(assetLocation(psmPrimaryId), 'AllDisabled')
-  await scheduleInlineCallWithOrigin(client, disableCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Mint fails
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'AllDisabled: mint ExtrinsicFailed',
-  )
-
-  let events = await client.api.query.system.events()
-  let failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-
-  // 3. Redeem fails
-  const pUsd = await assetBalance(client.api, psmStableAssetId, alice.address)
-  if (pUsd >= MIN_SWAP) {
-    const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-    await sendTransaction(redeemCall.signAsync(alice))
-    await client.dev.newBlock()
-
-    await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-      'AllDisabled: redeem ExtrinsicFailed',
-    )
-
-    events = await client.api.query.system.events()
-    failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-    expect(failRecord).toBeDefined()
-  }
-}
-
-/**
- * Toggling an asset to MintingDisabled must not change its debt. Debt is only
- * modified by actual mint and redeem operations, not by status changes.
- * Redemption while minting is disabled must still reduce debt normally.
- *
- * 1. Mint 500 UNIT of USDT to create debt
- * 2. Verify psmDebt for USDT is positive after the mint
- * 3. Set USDT status to MintingDisabled via Root origin
- * 4. Verify psmDebt is unchanged after the status toggle
- * 5. Redeem MIN_SWAP of pUSD and verify psmDebt decreased below the post-mint level
- */
-async function mintingDisabledDebtUnchangedRedeemReduces<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Debt after mint
-  const debtAfterMint = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtAfterMint).toBeGreaterThan(0n)
-
-  // 3. Disable minting
-  const disableCall = (client.api.tx as any).psm.setAssetStatus(assetLocation(psmPrimaryId), 'MintingDisabled')
-  await scheduleInlineCallWithOrigin(client, disableCall.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 4. Debt unchanged
-  const debtAfterDisable = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtAfterDisable).toBe(debtAfterMint)
-
-  // 5. Redeem decreases debt
-  const pUsd = await assetBalance(client.api, psmStableAssetId, alice.address)
-  if (pUsd >= MIN_SWAP) {
-    const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-    await sendTransaction(redeemCall.signAsync(alice))
-    await client.dev.newBlock()
-
-    const debtAfterRedeem = await psmDebt(client.api, assetLocation(psmPrimaryId))
-    expect(debtAfterRedeem).toBeLessThan(debtAfterMint)
-  }
-}
-
-/**
- * The setMintingFee extrinsic requires Root origin. A signed call from a
- * regular account must fail with a bad-origin dispatch error.
- *
- * 1. Submit setMintingFee(USDT, 10_000) signed by alice
- * 2. Verify the block contains an ExtrinsicFailed event
- */
-async function signedSetMintingFeeFails<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Submit signed
-  const setFeeCall = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 10_000)
-  await sendTransaction(setFeeCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Bad origin
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'signed setMintingFee: ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-}
-
-/// -------
-/// Tests — Value conservation
-/// -------
-
-/**
- * With non-zero minting and redemption fees, a mint-then-redeem cycle must
- * increase the insurance fund's pUSD balance. The fees collected from both
- * operations are deposited into the insurance fund account.
- *
- * 1. Set minting fee to 10_000 (1%) and redemption fee to 10_000 (1%) via Root origin
- * 2. Record the insurance fund's pUSD balance
- * 3. Mint MIN_SWAP of USDT, extract received from the Minted event, then redeem that amount
- * 4. Verify the insurance fund's pUSD balance increased
- */
-async function mintRedeemInsuranceFundGain<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId, psmInsuranceFundAccountRaw } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const insuranceFund = encodeAddress(psmInsuranceFundAccountRaw, client.config.properties.addressEncoding)
-  const alice = devAccounts.alice
-
-  // 1. Set fees
-  const setMintFee = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 10_000)
-  await scheduleInlineCallWithOrigin(client, setMintFee.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-  const setRedeemFee = (client.api.tx as any).psm.setRedemptionFee(assetLocation(psmPrimaryId), 10_000)
-  await scheduleInlineCallWithOrigin(client, setRedeemFee.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'RedemptionFeeUpdated' }).toMatchSnapshot(
-    'insurance fund gain: RedemptionFeeUpdated event',
-  )
-  const redeemFeeEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'RedemptionFeeUpdated',
-  )
-  expect(redeemFeeEvt).toBeDefined()
-  expect((redeemFeeEvt!.event.data as any).assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect((redeemFeeEvt!.event.data as any).newValue.toNumber()).toBe(10_000)
-
-  // 2. Record balance
-  const insuranceBefore = await assetBalance(client.api, psmStableAssetId, insuranceFund)
-
-  // 3. Mint, extract received from event, redeem it
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'insurance fund gain: Minted event',
-  )
-
-  const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const received = (mintedRecord!.event.data as any).received.toBigInt()
-
-  if (received > 0n) {
-    const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), received)
-    await sendTransaction(redeemCall.signAsync(alice))
-    await client.dev.newBlock()
-  }
-
-  // 4. Insurance increased
-  const insuranceAfter = await assetBalance(client.api, psmStableAssetId, insuranceFund)
-  expect(insuranceAfter - insuranceBefore).toBeGreaterThan(0n)
-}
-
-/**
- * When a minting fee is applied, redeeming all received pUSD does not fully
- * retire the debt. The fee portion was sent to the insurance fund but the
- * debt was recorded against the full external amount, leaving a residual.
- *
- * 1. Set minting fee to 10_000 (1%) for USDT via Root origin
- * 2. Mint 1000 UNIT of USDT, extract received from the Minted event, redeem that amount
- * 3. Verify psmDebt for USDT is still positive after the full redeem
- */
-async function mintRedeemResidualDebt<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Set fee
-  const setMintFee = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 10_000)
-  await scheduleInlineCallWithOrigin(client, setMintFee.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Mint, extract received from event, redeem it
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 1000n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('residual debt: Minted event')
-
-  const mintEvents = await client.api.query.system.events()
-  const mintedRecord = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const received = (mintedRecord!.event.data as any).received.toBigInt()
-
-  if (received > 0n) {
-    const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), received)
-    await sendTransaction(redeemCall.signAsync(alice))
-    await client.dev.newBlock()
-  }
-
-  // 3. Residual debt
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBeGreaterThan(0n)
-}
-
-/**
- * Attempting to redeem more pUSD than the PSM holds in external reserves
- * must fail. This prevents the pallet from issuing unbacked external tokens.
- *
- * 1. Mint 500 UNIT of USDT as alice to establish reserves
- * 2. Give bob 2x the current psmDebt in pUSD via setStorage
- * 3. Bob attempts to redeem debt + MIN_SWAP, which exceeds the reserve
- * 4. Verify the redemption failed with an ExtrinsicFailed event
- */
-async function redeemExceedingReserveFails<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-  const bob = devAccounts.bob
-
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Fund Bob
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-
-  const bobPusd = debt * 2n
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmStableAssetId, bob.address], { balance: Number(bobPusd) }]],
-    },
-  })
-
-  // 3. Over-redeem
-  const redeemAmount = debt + MIN_SWAP
-  const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), redeemAmount)
-  await sendTransaction(redeemCall.signAsync(bob))
-  await client.dev.newBlock()
-
-  // 4. Redemption failed
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'redeem exceeding reserve: ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-}
-
-/**
- * Compare mint output under different fee levels to verify that a higher
- * fee produces less pUSD for the same input amount.
- *
- * 1. Set minting fee to 0 for USDT, mint 500 UNIT, record pUSD received
- * 2. Set minting fee to 50_000 (5%) for USDT, refill USDT balance, mint 500 UNIT, record pUSD received
- * 3. Verify the 5% fee mint produced less pUSD than the zero-fee mint
- */
-async function feeImpactOnMintOutput<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Zero fee
-  const setZeroFee = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 0)
-  await scheduleInlineCallWithOrigin(client, setZeroFee.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const pUsdBefore1 = await assetBalance(client.api, psmStableAssetId, alice.address)
-
-  const mintCall1 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall1.signAsync(alice))
-  await client.dev.newBlock()
-
-  const pUsdAfter1 = await assetBalance(client.api, psmStableAssetId, alice.address)
-  const received0Pct = pUsdAfter1 - pUsdBefore1
-
-  // 2. 5% fee
-  const set5PctFee = (client.api.tx as any).psm.setMintingFee(assetLocation(psmPrimaryId), 50_000)
-  await scheduleInlineCallWithOrigin(client, set5PctFee.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-
-  const pUsdBefore2 = await assetBalance(client.api, psmStableAssetId, alice.address)
-
-  const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall2.signAsync(alice))
-  await client.dev.newBlock()
-
-  const pUsdAfter2 = await assetBalance(client.api, psmStableAssetId, alice.address)
-  const received5Pct = pUsdAfter2 - pUsdBefore2
-
-  // 3. Higher fee reduced
-  expect(received5Pct).toBeLessThan(received0Pct)
-}
-
-/// -------
-/// Tests — Ceiling dynamics
-/// -------
-
-/**
- * Verify the global debt ceiling lifecycle: lowering it blocks further minting,
- * and raising it re-enables minting. Governance can dynamically throttle total
- * pUSD supply without touching individual asset configurations.
- *
- * 1. Mint 500 UNIT of USDT to establish baseline debt
- * 2. Set maxPsmDebt to 0 via Root, attempt another mint, verify it fails
- * 3. Redeem MIN_SWAP of pUSD to partially reduce debt
- * 4. Restore maxPsmDebt to 500_000 via Root, mint 200 UNIT, verify Minted event
- */
-async function maxDebtBlocksMintRestoreAllows<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Mint 500 UNIT
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Lower maxPsmDebt, verify mint fails
-  const setMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(0)
-  await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'MaxPsmDebtOfTotalUpdated' }).toMatchSnapshot(
-    'set max debt: MaxPsmDebtOfTotalUpdated event',
-  )
-  const maxDebtEvt = (await client.api.query.system.events()).find(
-    ({ event }) => event.section === 'psm' && event.method === 'MaxPsmDebtOfTotalUpdated',
-  )
-  expect(maxDebtEvt).toBeDefined()
-  expect((maxDebtEvt!.event.data as any).newValue.toNumber()).toBe(0)
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall2.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'max debt blocks mint: ExtrinsicFailed',
-  )
-
-  let events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-
-  // 3. Redeem partial
-  await await assetBalance(client.api, psmStableAssetId, alice.address)
-
-  // 4. Restore maxPsmDebt, verify mint succeeds
-  const restoreMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(500_000)
-  await scheduleInlineCallWithOrigin(client, restoreMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintCall3 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 200n * UNIT)
-  await sendTransaction(mintCall3.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'max debt restore: Minted event',
-  )
-
-  events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect(data.externalAmount.toBigInt()).toBe(200n * UNIT)
-}
-
-/**
- * Verify that the global debt ceiling applies across multiple external assets.
- * Minting two different assets should both contribute to the total debt
- * constrained by maxPsmDebt.
- *
- * 1. Set maxPsmDebt to 10_000 via Root origin and fund alice with 1000 UNIT of USDT
- * 2. Mint MIN_SWAP of USDT, then mint MIN_SWAP of USDX
- * 3. Verify the sum of psmDebt for USDT and USDX is positive
- */
-async function globalDebtAcrossMultipleAssets<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Set max debt
-  const setMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(10_000)
-  await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmUsdxId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-
-  // 2. Mint both
-  const mintUsdt = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), MIN_SWAP)
-  await sendTransaction(mintUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Total debt positive
-  const debtUsdt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  const debtUsdx = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(debtUsdt + debtUsdx).toBeGreaterThan(0n)
-}
-
-/**
- * Zeroing one asset's ceiling weight must not prevent minting a different
- * asset whose ceiling is intact. Per-asset ceiling weights are independent.
- *
- * 1. Set USDT ceiling weight to 0 via Root origin
- * 2. Mint 500 UNIT of USDT, verify the Minted event with correct who, assetId, and externalAmount
- * 3. Verify psmDebt for USDT equals 500 UNIT
- */
-async function zeroedCeilingWeightAllowsOtherAsset<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Zero USDX ceiling
-  const setCeiling = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(psmUsdxId), 0)
-  await scheduleInlineCallWithOrigin(client, setCeiling.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Mint USDT
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'zeroed ceiling other asset: Minted event',
-  )
-
-  const events = await client.api.query.system.events()
-  const mintedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
-  expect(mintedRecord).toBeDefined()
-  const data = mintedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect(data.externalAmount.toBigInt()).toBe(500n * UNIT)
-
-  // 3. Debt amount
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBe(500n * UNIT)
-}
-
-/**
- * Mint USDT to its exact per-asset ceiling and verify that the USDX ceiling
- * is unaffected. USDX must remain fully mintable after USDT fills its allocation.
- *
- * The test derives both ceilings dynamically from PSM storage to avoid
- * sensitivity to governance parameter changes.
- *
- * 1. Compute per-asset ceilings from storage and fund alice to each ceiling amount
- * 2. Mint USDT to exactly its ceiling; verify Minted event and debt equals ceiling
- * 3. Verify USDX ceiling is unchanged
- * 4. Mint USDX to exactly its ceiling; verify Minted event and debt equals ceiling
- */
-async function usdtAtCeilingDoesNotConsumeUsdxCeiling<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Compute per-asset ceilings and fund alice accordingly
-  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
-  const usdtCeiling = await maxAssetDebt(client.api, assetLocation(psmPrimaryId), WAH_MAXIMUM_ISSUANCE)
-  const usdxCeiling = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
-
-  expect(usdtCeiling).toBeGreaterThan(0n)
-  expect(usdxCeiling).toBeGreaterThan(0n)
-
-  await client.dev.setStorage({
-    Assets: {
-      asset: [
-        [
-          [psmPrimaryId],
-          {
-            supply: Number(usdtCeiling),
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-        [
-          [psmUsdxId],
-          {
-            supply: Number(usdxCeiling / 10_000n),
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-      ],
-      account: [
-        [[psmPrimaryId, alice.address], { balance: Number(usdtCeiling) }],
-        [[psmUsdxId, alice.address], { balance: Number(usdxCeiling / 10_000n) }],
-      ],
-    },
-  })
-
-  // 2. Mint USDT to ceiling
-  const mintUsdt = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), usdtCeiling)
-  await sendTransaction(mintUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('usdt at ceiling: Minted event')
-
-  const debtUsdt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtUsdt).toBe(usdtCeiling)
-
-  // 3. USDX ceiling unchanged
-  const usdxCeilingAfter = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
-  expect(usdxCeilingAfter).toBe(usdxCeiling)
-
-  // 4. Mint USDX to ceiling
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), usdxCeiling / 10_000n)
-  await sendTransaction(mintUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot('usdx at ceiling: Minted event')
-
-  const debtUsdx = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(debtUsdx).toBe(usdxCeiling)
-}
-
-/**
- * Mint both USDT and USDX to their respective per-asset ceilings and verify
- * that the sum of debts equals the global ceiling exactly.
- *
- * 1. Compute per-asset ceilings and global ceiling from storage; fund alice accordingly
- * 2. Mint USDT to its ceiling, then USDX to its ceiling
- * 3. Verify total psmDebt equals max_psm_debt
- */
-async function bothAssetsToCeilingFillsGlobalCeiling<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Derive ceilings from storage and fund alice accordingly
-  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
-  const usdtCeiling = await maxAssetDebt(client.api, assetLocation(psmPrimaryId), WAH_MAXIMUM_ISSUANCE)
-  const usdxCeiling = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
-  await client.dev.setStorage({
-    Assets: {
-      asset: [
-        [
-          [psmPrimaryId],
-          {
-            supply: Number(usdtCeiling),
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-        [
-          [psmUsdxId],
-          {
-            supply: Number(usdxCeiling / 10_000n),
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-      ],
-      account: [
-        [[psmPrimaryId, alice.address], { balance: Number(usdtCeiling) }],
-        [[psmUsdxId, alice.address], { balance: Number(usdxCeiling / 10_000n) }],
-      ],
-    },
-  })
-
-  // 2. Mint both to ceiling
-  const mintUsdt = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), usdtCeiling)
-  await sendTransaction(mintUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), usdxCeiling / 10_000n)
-  await sendTransaction(mintUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Per-asset debts equal their respective ceilings
-  const debtUsdt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  const debtUsdx = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(debtUsdt).toBe(usdtCeiling)
-  expect(debtUsdx).toBe(usdxCeiling)
-}
-
-/// -------
-/// Tests — Reserve integrity
-/// -------
-
-/**
- * Minting within the global debt ceiling must succeed and increase debt.
- * A conservative maxPsmDebt still allows mints that fit below it.
- *
- * 1. Set maxPsmDebt to 5_000 via Root origin
- * 2. Mint 200 UNIT of USDT
- * 3. Verify psmDebt for USDT is positive
- */
-async function mintWithinCeiling<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Set max debt
-  const setMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(5_000)
-  await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 2. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 200n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Debt increased
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBeGreaterThan(0n)
-}
-
-/**
- * Verify that reserve protection applies regardless of which account initiates
- * the redemption. Bob, who did not mint, receives excess pUSD via setStorage
- * and attempts to redeem more than the PSM holds in reserves.
- *
- * 1. Alice mints 500 UNIT of USDT to establish reserves
- * 2. Give bob 2x the current psmDebt in pUSD via setStorage
- * 3. Bob attempts to redeem debt + MIN_SWAP, which exceeds the reserve
- * 4. Verify the redemption failed with an ExtrinsicFailed event
- */
-async function bobRedeemExceedingReserveFails<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, testConfig: PsmTestConfig) {
-  const { psmStableAssetId } = testConfig
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-  const bob = devAccounts.bob
-
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-
-  // 2. Fund Bob
-  const bobPusd = debt * 2n
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmStableAssetId, bob.address], { balance: Number(bobPusd) }]],
-    },
-  })
-
-  // 3. Bob over-redeem
-  const redeemAmount = debt + MIN_SWAP
-  const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), redeemAmount)
-  await sendTransaction(redeemCall.signAsync(bob))
-  await client.dev.newBlock()
-
-  // 4. Failure event
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'bob over-redeem: ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-}
-
-/**
- * Multiple consecutive mints of the same asset must accumulate debt additively.
- * After two mints, the total debt must exceed the amount of the first mint alone.
- *
- * 1. Mint 500 UNIT of USDT
- * 2. Refill alice's USDT balance to 1000 UNIT via setStorage, then mint 200 UNIT more
- * 3. Verify psmDebt for USDT exceeds 500 UNIT
- */
-async function consecutiveMintsAccumulateDebt<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. First mint
-  const mintCall1 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall1.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Refill and mint
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 200n * UNIT)
-  await sendTransaction(mintCall2.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 3. Debt accumulated
-  const debt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debt).toBeGreaterThan(500n * UNIT)
-}
-
-/**
- * A standard partial redemption within the reserve limit must succeed and emit
- * a Redeemed event with the correct fields.
- *
- * 1. Mint 500 UNIT of USDT to build reserves
- * 2. Redeem MIN_SWAP of pUSD, verify the Redeemed event contains who, assetId, paid == MIN_SWAP, and externalReceived > 0
- */
-async function healthyRedeemSucceeds<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Mint
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Redeem
-  const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(redeemCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-    'healthy redeem: Redeemed event',
-  )
-
-  const events = await client.api.query.system.events()
-  const redeemedRecord = events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
-  expect(redeemedRecord).toBeDefined()
-  const data = redeemedRecord!.event.data as any
-  expect(data.who.toString()).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
-  expect(data.assetId.eq(assetLocation(psmPrimaryId))).toBe(true)
-  expect(data.paid.toBigInt()).toBe(MIN_SWAP)
-  expect(data.externalReceived.toBigInt()).toBeGreaterThan(0n)
-}
-
-/**
- * Set an existing asset's ceiling weight to 0 while its circuit breaker is
- * AllEnabled. Minting must still fail because the effective per-asset ceiling
- * is zero regardless of the circuit breaker status.
- *
- * 1. Verify USDT is an approved asset with a non-zero ceiling weight
- * 2. Set USDT ceiling weight to 0 via Root origin
- * 3. Attempt to mint MIN_SWAP of USDT, verify ExtrinsicFailed
- */
-async function zeroCeilingBlocksMintDespiteAllEnabled<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Verify non-zero ceiling
-  const ceilingBefore = await (client.api.query as any).psm.assetCeilingWeight(assetLocation(psmPrimaryId))
-  expect(ceilingBefore.toBigInt()).toBeGreaterThan(0n)
-
-  // 2. Zero the ceiling
-  const setCeiling = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(psmPrimaryId), 0)
-  await scheduleInlineCallWithOrigin(client, setCeiling.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. Mint fails
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  const failRecord = events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
-  expect(failRecord).toBeDefined()
-}
-
-/**
- * Set maxPsmDebt to 0 after minting both USDT and USDX. Mints of both assets
- * must fail, but redeems of both must still succeed. The global ceiling blocks
- * new inflows without trapping existing pUSD holders in either asset.
- *
- * 1. Fund alice with USDX, mint 500 UNIT of USDT and 500 UNIT of USDX
- * 2. Set maxPsmDebt to 0 via Root origin
- * 3. Attempt to mint MIN_SWAP of USDT, verify ExtrinsicFailed
- * 4. Attempt to mint MIN_SWAP of USDX, verify ExtrinsicFailed
- * 5. Redeem MIN_SWAP of pUSD via USDT, verify Redeemed event
- * 6. Redeem MIN_SWAP of pUSD via USDX, verify Redeemed event
- */
-async function zeroMaxDebtBlocksBothAssetsRedeemsWork<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Fund USDX and mint both
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmUsdxId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-
-  const mintUsdt = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), 500n * USDX_UNIT)
-  await sendTransaction(mintUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  // 2. Zero maxPsmDebt
-  const setMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(0)
-  await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. USDT mint fails
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintUsdt2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintUsdt2.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'zero maxDebt: USDT mint ExtrinsicFailed',
-  )
-  let events = await client.api.query.system.events()
-  expect(events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))).toBeDefined()
-
-  // 4. USDX mint fails
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmUsdxId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintUsdx2 = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), MIN_SWAP)
-  await sendTransaction(mintUsdx2.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'zero maxDebt: USDX mint ExtrinsicFailed',
-  )
-  events = await client.api.query.system.events()
-  expect(events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))).toBeDefined()
-
-  // 5. USDT redeem works
-  const redeemUsdt = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(redeemUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-    'zero maxDebt: USDT Redeemed event',
-  )
-  events = await client.api.query.system.events()
-  expect(events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
-
-  // 6. USDX redeem works
-  const redeemUsdx = (client.api.tx as any).psm.redeem(assetLocation(psmUsdxId), MIN_SWAP)
-  await sendTransaction(redeemUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-    'zero maxDebt: USDX Redeemed event',
-  )
-  events = await client.api.query.system.events()
-  expect(events.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
-}
-
-/**
- * Two assets both configured with equal ceiling weights. Normalization must
- * give both equal shares: minting equal amounts from each must produce equal
- * debt. Zeroing one asset's weight must block that asset while leaving the
- * other operational.
- *
- * Note: numerical ceiling boundary tests require a runtime with finite
- * MaximumIssuance. The current runtime uses Balance::MAX, making all non-zero
- * ceilings effectively unlimited.
- *
- * 1. Set both USDT and USDX weights to 750_000 (75%), fund both
- * 2. Mint 300 UNIT of USDT and 300 UNIT of USDX, verify both debts are equal
- * 3. Zero USDX's weight via Root origin
- * 4. Attempt to mint more USDX, verify ExtrinsicFailed
- * 5. Mint more USDT, verify it succeeds (USDT retains its ceiling)
- */
-async function normalizedCeilingWeightEnforcement<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId, usdxIndex: psmUsdxId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Set equal weights, fund both
-  const setUsdtWeight = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(psmPrimaryId), 750_000)
-  await scheduleInlineCallWithOrigin(client, setUsdtWeight.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  const setUsdxWeight = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(psmUsdxId), 750_000)
-  await scheduleInlineCallWithOrigin(client, setUsdxWeight.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  await client.dev.setStorage({
-    Assets: {
-      account: [
-        [[psmPrimaryId, alice.address], { balance: 10000e6 }],
-        [[psmUsdxId, alice.address], { balance: 10000e6 }],
-      ],
-    },
-  })
-
-  // 2. Mint equal amounts, verify equal debt
-  const mintUsdt = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 300n * UNIT)
-  await sendTransaction(mintUsdt.signAsync(alice))
-  await client.dev.newBlock()
-
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), 300n * USDX_UNIT)
-  await sendTransaction(mintUsdx.signAsync(alice))
-  await client.dev.newBlock()
-
-  const usdtDebt = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  const usdxDebt = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(usdtDebt).toBe(300n * UNIT)
-  expect(usdxDebt).toBe(300n * UNIT)
-
-  // 3. Zero USDX weight
-  const zeroUsdxWeight = (client.api.tx as any).psm.setAssetCeilingWeight(assetLocation(psmUsdxId), 0)
-  await scheduleInlineCallWithOrigin(client, zeroUsdxWeight.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 4. USDX mint fails
-  const mintUsdxMore = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), MIN_SWAP)
-  await sendTransaction(mintUsdxMore.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'normalized ceiling: USDX zero-weight mint ExtrinsicFailed',
-  )
-
-  const events = await client.api.query.system.events()
-  expect(events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))).toBeDefined()
-
-  // 5. USDT mint still works
-  const mintUsdtMore = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintUsdtMore.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
-    'normalized ceiling: USDT still mintable',
-  )
-
-  const mintEvents = await client.api.query.system.events()
-  expect(mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')).toBeDefined()
-}
-
-/**
- * Mint to establish debt, then zero the global ceiling. Verify minting is
- * blocked, debt is unchanged by the status change, and redeems still reduce
- * debt normally.
- *
- * Note: numerical ceiling boundary tests (mint up to exact limit) require a
- * runtime with finite MaximumIssuance. The current runtime uses Balance::MAX.
- *
- * 1. Mint 500 UNIT of USDT, verify debt is positive
- * 2. Set maxPsmDebt to 0 via Root origin
- * 3. Verify debt is unchanged after the ceiling change
- * 4. Attempt to mint MIN_SWAP, verify ExtrinsicFailed
- * 5. Redeem MIN_SWAP of pUSD, verify Redeemed event and debt decreased
- */
-async function maxDebtZeroCeilingDebtUnchangedRedeemsWork<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdtIndex: psmPrimaryId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
-
-  // 1. Mint and verify debt
-  const mintCall = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), 500n * UNIT)
-  await sendTransaction(mintCall.signAsync(alice))
-  await client.dev.newBlock()
-
-  const debtAfterMint = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtAfterMint).toBe(500n * UNIT)
-
-  // 2. Zero the ceiling
-  const setMaxDebt = (client.api.tx as any).psm.setMaxPsmDebt(0)
-  await scheduleInlineCallWithOrigin(client, setMaxDebt.method.toHex(), { system: 'Root' }, 'NonLocal')
-  await client.dev.newBlock()
-
-  // 3. Debt unchanged
-  const debtAfterZero = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtAfterZero).toBe(debtAfterMint)
-
-  // 4. Mint fails
-  await client.dev.setStorage({
-    Assets: {
-      account: [[[psmPrimaryId, alice.address], { balance: 1000e6 }]],
-    },
-  })
-  const mintCall2 = (client.api.tx as any).psm.mint(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(mintCall2.signAsync(alice))
-  await client.dev.newBlock()
-
-  await checkSystemEvents(client, { section: 'system', method: 'ExtrinsicFailed' }).toMatchSnapshot(
-    'maxDebt zero: mint ExtrinsicFailed',
+    'minting disabled: AssetStatusUpdated event',
   )
   const events = await client.api.query.system.events()
-  expect(events.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))).toBeDefined()
+  const statusUpdated = events.find(({ event }) => event.section === 'psm' && event.method === 'AssetStatusUpdated')
+  assert(statusUpdated)
+  expect((statusUpdated.event.data as any).status.isMintingDisabled).toBe(true)
 
-  // 5. Redeem works, debt decreases
-  const redeemCall = (client.api.tx as any).psm.redeem(assetLocation(psmPrimaryId), MIN_SWAP)
-  await sendTransaction(redeemCall.signAsync(alice))
+  // 3. Minting is refused
+  await sendTransaction(psm.mint(internal, external, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'MintingStopped')
+
+  // 4. Redemption still works
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, external)).toBeLessThan(debtBefore)
+}
+
+/**
+ * The top breaker level stops both directions.
+ *
+ * 1. Create the PSM and mint to build a position
+ * 2. Set the external's breaker to AllDisabled
+ * 3. Verify minting fails with MintingStopped
+ * 4. Verify redeeming fails with AllSwapsStopped and the debt is unchanged
+ */
+async function allDisabledStopsBothDirections(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance carrying a position
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
+
+  // 2. Halt everything
+  await sendTransaction(psm.setAssetStatus(internal, external, 'AllDisabled').signAsync(alice))
   await client.dev.newBlock()
 
-  await checkSystemEvents(client, { section: 'psm', method: 'Redeemed' }).toMatchSnapshot(
-    'maxDebt zero: Redeemed event',
-  )
-  const redeemEvents = await client.api.query.system.events()
-  expect(redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')).toBeDefined()
+  // 3. Minting refused
+  await sendTransaction(psm.mint(internal, external, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'MintingStopped')
 
-  const debtAfterRedeem = await psmDebt(client.api, assetLocation(psmPrimaryId))
-  expect(debtAfterRedeem).toBeLessThan(debtAfterMint)
+  // 4. Redemption refused, debt untouched
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'AllSwapsStopped')
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+}
+
+/**
+ * The emergency admin may trip the breaker but may not touch economic parameters.
+ *
+ * 1. Create the PSM, whose emergency admin is bob
+ * 2. Have bob set the breaker, and verify it took effect
+ * 3. Have bob lower the debt ceiling, and verify it failed with InsufficientPrivilege
+ * 4. Verify the ceiling is unchanged
+ */
+async function emergencyAdminIsLimitedToBreaker(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { bob } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with bob as emergency admin
+  await createPsmInstance(client, testConfig)
+
+  // 2. Bob may trip the breaker
+  await sendTransaction(psm.setAssetStatus(internal, external, 'MintingDisabled').signAsync(bob))
+  await client.dev.newBlock()
+  const entry = await (client.api.query as any).psm.externalAssets(internal, external)
+  expect(entry.unwrap().status.isMintingDisabled).toBe(true)
+
+  // 3. Bob may not move the ceiling
+  await sendTransaction(psm.setMaxDebt(internal, 1n * UNIT).signAsync(bob))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'InsufficientPrivilege')
+
+  // 4. Ceiling unchanged
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.unwrap().maxDebt.toBigInt()).toBe(MAX_DEBT)
+}
+
+/**
+ * An account holding neither admin role cannot administer the instance at all.
+ *
+ * 1. Create the PSM, whose admins are alice and bob
+ * 2. Have charlie try to trip the breaker
+ * 3. Verify the call failed with BadOrigin rather than a privilege error
+ * 4. Verify the external is still fully enabled
+ */
+async function nonAdminCannotAdminister(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { charlie } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+
+  // 1. Instance administered by alice and bob
+  await createPsmInstance(client, testConfig)
+
+  // 2. Charlie attempts to trip the breaker
+  const statusCall = (client.api.tx as any).psm.setAssetStatus(internal, external, 'AllDisabled')
+  await sendTransaction(statusCall.signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. BadOrigin, since charlie matches neither stored admin origin
+  await expectBadOrigin(client)
+
+  // 4. Breaker untouched
+  const entry = await (client.api.query as any).psm.externalAssets(internal, external)
+  expect(entry.unwrap().status.isAllEnabled).toBe(true)
 }
 
 /// ----------
-/// Test Trees
+/// Tests - Decimal scaling
 /// ----------
 
-async function multiDecimalMintRedeem<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
+/**
+ * An external with more decimals than the internal asset is scaled down on mint and back up on
+ * redeem.
+ *
+ * 1. Create the PSM and approve the higher-decimal foreign external alongside the others
+ * 2. Mint 20 whole units of it
+ * 3. Verify the debt is the internal-scaled equivalent rather than the raw external amount
+ * 4. Redeem half of that debt and verify the external returned is scaled back up
+ */
+async function higherDecimalExternalScales(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, foreignExternal } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = foreignExternal.location
+  const psm = (client.api.tx as any).psm
 
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), 300n * USDX_UNIT)
-  await sendTransaction(mintUsdx.signAsync(alice))
+  // 1. Approve the foreign external and give it weight
+  await createPsmInstance(client, testConfig)
+  const approve = client.api.tx.utility.batchAll([
+    psm.addExternalAsset(internal, external),
+    psm.setAssetCeilingWeight(internal, external, HALF_WEIGHT),
+  ])
+  await sendTransaction(approve.signAsync(alice))
   await client.dev.newBlock()
 
-  const usdxDebt = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(usdxDebt).toBe(300n * UNIT)
+  const approveEvents = await client.api.query.system.events()
+  assert(
+    approveEvents.find(({ event }) => client.api.events.utility.BatchCompleted.is(event)),
+    'approving the higher-decimal external did not complete',
+  )
 
-  const redeemUsdx = (client.api.tx as any).psm.redeem(assetLocation(psmUsdxId), 100n * UNIT)
-  await sendTransaction(redeemUsdx.signAsync(alice))
+  const externalUnit = 10n ** BigInt(foreignExternal.decimals)
+  const scale = externalUnit / UNIT
+
+  // 2. Mint 20 whole units of the foreign external
+  const mintAmount = 20n * externalUnit
+  await sendTransaction(psm.mint(internal, external, mintAmount, ANY_FEE).signAsync(alice))
   await client.dev.newBlock()
 
-  const usdxDebtAfter = await psmDebt(client.api, assetLocation(psmUsdxId))
-  expect(usdxDebtAfter).toBeGreaterThan(0n)
-  expect(usdxDebtAfter).toBeLessThan(300n * UNIT)
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
+    'high decimal mint: Minted event',
+  )
 
-  const redeemEvents = await client.api.query.system.events()
-  const redeemed = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
-  expect(redeemed).toBeDefined()
-  const redeemData = redeemed!.event.data as any
-  expect(redeemData.externalReceived.toBigInt()).toBeGreaterThan(0n)
+  // 3. Debt is denominated in internal units
+  const expectedDebt = mintAmount / scale
+  expect(await psmDebt(client, internal, external)).toBe(expectedDebt)
 
-  await client.dev.setStorage({
-    Assets: { account: [[[psmDaiId, alice.address], { balance: DAI_UNIT }]] },
-  })
-  const mintDai = (client.api.tx as any).psm.mint(assetLocation(psmDaiId), DAI_UNIT)
-  await sendTransaction(mintDai.signAsync(alice))
+  const externalBefore = await foreignAssetBalance(client, external, alice.address)
+
+  // 4. Redeem half, and confirm the external returned is scaled back up
+  const redeemAmount = expectedDebt / 2n
+  await sendTransaction(psm.redeem(internal, external, redeemAmount, ANY_FEE).signAsync(alice))
   await client.dev.newBlock()
 
-  const daiDebt = await psmDebt(client.api, assetLocation(psmDaiId))
-  expect(daiDebt).toBe(UNIT)
-
-  const redeemDai = (client.api.tx as any).psm.redeem(assetLocation(psmDaiId), UNIT)
-  await sendTransaction(redeemDai.signAsync(alice))
-  await client.dev.newBlock()
-
-  const daiDebtAfter = await psmDebt(client.api, assetLocation(psmDaiId))
-  expect(daiDebtAfter).toBeLessThan(UNIT)
+  const expectedFee = (redeemAmount * BigInt(DEFAULT_FEE)) / 1_000_000n
+  const expectedExternalOut = (redeemAmount - expectedFee) * scale
+  expect(await foreignAssetBalance(client, external, alice.address)).toBe(externalBefore + expectedExternalOut)
 }
 
-async function multiDecimalCeilings<
-  TCustom extends Record<string, unknown> | undefined,
-  TInitStorages extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStorages>, _testConfig: PsmTestConfig) {
-  const { usdxIndex: psmUsdxId, daiIndex: psmDaiId } = (client.config as any).custom as any
-  const alice = devAccounts.alice
+/**
+ * A swap too small to survive scaling into the internal asset is rejected rather than
+ * transferring nothing.
+ *
+ * 1. Create the PSM and approve the higher-decimal foreign external
+ * 2. Mint an amount that scales down to zero internal units
+ * 3. Verify the call failed with AmountTooSmallAfterConversion
+ */
+async function dustSwapIsRejected(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, foreignExternal } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = foreignExternal.location
+  const psm = (client.api.tx as any).psm
 
-  const WAH_MAXIMUM_ISSUANCE = 50_000_000n * UNIT
-  const usdxCeiling = await maxAssetDebt(client.api, assetLocation(psmUsdxId), WAH_MAXIMUM_ISSUANCE)
-  const daiCeiling = await maxAssetDebt(client.api, assetLocation(psmDaiId), WAH_MAXIMUM_ISSUANCE)
-
-  expect(usdxCeiling).toBeGreaterThan(0n)
-  expect(daiCeiling).toBeGreaterThan(0n)
-
-  const usdxExternal = usdxCeiling / 10_000n // pUSD units → USDX units (÷ 10^(6-2))
-  const daiExternal = daiCeiling * 1_000_000_000_000n // pUSD units → DAI units  (× 10^(18-6))
-
-  await client.dev.setStorage({
-    Assets: {
-      asset: [
-        [
-          [psmUsdxId],
-          {
-            supply: Number(usdxExternal),
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-        [
-          [psmDaiId],
-          {
-            supply: daiExternal,
-            minBalance: 1,
-            isSufficient: true,
-            accounts: 1,
-            sufficients: 1,
-            approvals: 0,
-            status: 'Live',
-            deposit: 0,
-            owner: alice.address,
-            issuer: alice.address,
-            admin: alice.address,
-            freezer: alice.address,
-          },
-        ],
-      ],
-      account: [
-        [[psmUsdxId, alice.address], { balance: Number(usdxExternal) }],
-        [[psmDaiId, alice.address], { balance: daiExternal }],
-      ],
-    },
-  })
-
-  const mintUsdx = (client.api.tx as any).psm.mint(assetLocation(psmUsdxId), usdxExternal)
-  await sendTransaction(mintUsdx.signAsync(alice))
+  // 1. Approve the foreign external
+  await createPsmInstance(client, testConfig)
+  const approve = client.api.tx.utility.batchAll([
+    psm.addExternalAsset(internal, external),
+    psm.setAssetCeilingWeight(internal, external, HALF_WEIGHT),
+  ])
+  await sendTransaction(approve.signAsync(alice))
   await client.dev.newBlock()
 
-  const mintDai = (client.api.tx as any).psm.mint(assetLocation(psmDaiId), daiExternal)
-  await sendTransaction(mintDai.signAsync(alice))
+  const approveEvents = await client.api.query.system.events()
+  assert(
+    approveEvents.find(({ event }) => client.api.events.utility.BatchCompleted.is(event)),
+    'approving the higher-decimal external did not complete',
+  )
+
+  // 2. Mint an amount below one internal unit's worth
+  const scale = 10n ** BigInt(foreignExternal.decimals) / UNIT
+  await sendTransaction(psm.mint(internal, external, scale - 1n, ANY_FEE).signAsync(alice))
   await client.dev.newBlock()
 
-  const debtUsdx = await psmDebt(client.api, assetLocation(psmUsdxId))
-  const debtDai = await psmDebt(client.api, assetLocation(psmDaiId))
-  expect(debtUsdx).toBe(usdxCeiling)
-  expect(debtDai).toBe(daiCeiling)
+  // 3. AmountTooSmallAfterConversion
+  await expectPsmError(client, 'AmountTooSmallAfterConversion')
 }
+
+/// ----------
+/// Test tree
+/// ----------
 
 export function psmE2ETests<
   TCustom extends Record<string, unknown> | undefined,
@@ -1932,6 +1294,7 @@ export function psmE2ETests<
 >(chain: Chain<TCustom, TInitStorages>, testConfig: PsmTestConfig): RootTestTree {
   let client!: Client<TCustom, TInitStorages>
   let restoreSnapshot: () => Promise<void>
+
   return {
     kind: 'describe',
     label: testConfig.testSuiteName,
@@ -1943,6 +1306,9 @@ export function psmE2ETests<
       await restoreSnapshot()
       const blockNumber = (await client.api.rpc.chain.getHeader()).number.toNumber()
       await client.dev.setHead(blockNumber)
+      // Every test starts from assets present but no PSM, so instance creation is itself
+      // under test rather than assumed.
+      await injectAssets(client, testConfig)
     },
     afterAll: async () => {
       await client.api.disconnect().catch(() => {})
@@ -1951,203 +1317,157 @@ export function psmE2ETests<
     children: [
       {
         kind: 'describe',
-        label: 'Core swaps',
+        label: 'Instance lifecycle',
         children: [
           {
             kind: 'test',
-            label: 'mint USDT to pUSD — pUSD received > 0, debt equals mint amount, fee to insurance fund',
-            testFn: () => mintUsdtToPusd(client, testConfig),
+            label: 'create PSM as internal asset owner — instance recorded, deposit held',
+            testFn: () => createPsmAsAssetOwner(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'mint then redeem — USDT returned > 0',
-            testFn: () => mintThenRedeem(client, testConfig),
+            label: 'create PSM with zero minimum swap — ZeroMinSwapAmount',
+            testFn: () => createPsmZeroMinSwapFails(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'mint below MIN_SWAP fails',
-            testFn: () => mintBelowMinSwapFails(client, testConfig),
+            label: 'create PSM as non-owner — BadOrigin',
+            testFn: () => createPsmByNonOwnerFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'create PSM twice for one internal asset — PsmAlreadyExists',
+            testFn: () => createPsmTwiceFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'remove PSM with approved externals — blocked, then succeeds once withdrawn',
+            testFn: () => removePsmRequiresNoExternals(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Asset lifecycle',
+        label: 'External asset management',
         children: [
           {
             kind: 'test',
-            label: 'addExternalAsset with zero ceiling — mint fails',
-            testFn: () => addAssetWithZeroCeiling(client, testConfig),
+            label: 'addExternalAsset — decimals snapshotted, external counted',
+            testFn: () => addExternalAssetRecordsDecimals(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'addExternalAsset then setCeiling — mint succeeds',
-            testFn: () => addAssetThenSetCeiling(client, testConfig),
+            label: 'addExternalAsset twice — AssetAlreadyApproved',
+            testFn: () => addExternalAssetTwiceFails(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'zero debt then removeExternalAsset — asset is None',
-            testFn: () => removeAssetWithZeroDebt(client, testConfig),
+            label: 'addExternalAsset for unregistered asset — AssetDoesNotExist',
+            testFn: () => addNonexistentExternalFails(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'set custom fee, remove, re-add — fee resets to default',
-            testFn: () => feeResetsAfterRemoveAndReAdd(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint creates debt, removeExternalAsset blocked — asset still present',
-            testFn: () => removeAssetBlockedByDebt(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'setMintingFee before adding asset — 3% fee applied on mint',
-            testFn: () => setFeeBeforeAddingAsset(client, testConfig),
+            label: 'removeExternalAsset while carrying debt — AssetHasDebt',
+            testFn: () => removeExternalWithDebtFails(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Circuit breaker',
+        label: 'Swaps',
         children: [
           {
             kind: 'test',
-            label: 'MintingDisabled — mint fails, redeem succeeds',
-            testFn: () => mintingDisabledBlocksMintAllowsRedeem(client, testConfig),
+            label: 'mint — collateral to reserve, internal to caller, fee to destination',
+            testFn: () => mintAgainstExternal(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'AllDisabled — both mint and redeem fail',
-            testFn: () => allDisabledBlocksBoth(client, testConfig),
+            label: 'redeem — reserve released, debt reduced by burned amount',
+            testFn: () => redeemBackToExternal(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'MintingDisabled — debt unchanged, redeem reduces debt',
-            testFn: () => mintingDisabledDebtUnchangedRedeemReduces(client, testConfig),
+            label: 'mint below minimum swap — BelowMinimumSwap',
+            testFn: () => mintBelowMinimumFails(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'signed setMintingFee without root fails',
-            testFn: () => signedSetMintingFeeFails(client, testConfig),
+            label: 'mint with fee cap below configured fee — FeeTooHigh',
+            testFn: () => mintAboveMaxFeeFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'mint unapproved external — UnsupportedAsset',
+            testFn: () => mintUnapprovedExternalFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'mint without an instance — PsmNotFound',
+            testFn: () => mintWithoutInstanceFails(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Value conservation',
+        label: 'Debt ceilings',
         children: [
           {
             kind: 'test',
-            label: 'set 1% fees, mint and redeem all — insurance fund gain > 0',
-            testFn: () => mintRedeemInsuranceFundGain(client, testConfig),
+            label: 'mint to normalised per-asset ceiling — further mint ExceedsMaxPsmDebt',
+            testFn: () => perAssetCeilingIsEnforced(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'set 1% mint fee, mint 1000, redeem all pUSD — residual debt > 0',
-            testFn: () => mintRedeemResidualDebt(client, testConfig),
+            label: 'zero ceiling weight — external closed, remainder reweighted',
+            testFn: () => zeroWeightClosesExternal(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'Bob redeems more than reserve — ExtrinsicFailed',
-            testFn: () => redeemExceedingReserveFails(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'fee 0% mint vs fee 5% mint — higher fee yields less pUSD',
-            testFn: () => feeImpactOnMintOutput(client, testConfig),
+            label: 'setMaxDebt below outstanding debt — minting paused, redeems work',
+            testFn: () => loweringCeilingPausesMinting(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Ceiling dynamics',
+        label: 'Circuit breaker and privilege',
         children: [
           {
             kind: 'test',
-            label: 'mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint',
-            testFn: () => maxDebtBlocksMintRestoreAllows(client, testConfig),
+            label: 'MintingDisabled — mint stopped, redeem allowed',
+            testFn: () => mintingDisabledStopsMintOnly(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'setMaxPsmDebt(10_000), fund USDX, mint USDT and USDX — total debt > 0',
-            testFn: () => globalDebtAcrossMultipleAssets(client, testConfig),
+            label: 'AllDisabled — both directions stopped',
+            testFn: () => allDisabledStopsBothDirections(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'setAssetCeilingWeight(USDX, 0) — mint USDT succeeds, debt equals amount',
-            testFn: () => zeroedCeilingWeightAllowsOtherAsset(client, testConfig),
+            label: 'emergency admin sets breaker but not ceiling — InsufficientPrivilege',
+            testFn: () => emergencyAdminIsLimitedToBreaker(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'setAssetCeilingWeight(USDT, 0) — mint fails despite AllEnabled circuit breaker',
-            testFn: () => zeroCeilingBlocksMintDespiteAllEnabled(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'both assets at 75% weight — normalized to 50/50, enforced at boundary',
-            testFn: () => normalizedCeilingWeightEnforcement(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work',
-            testFn: () => zeroMaxDebtBlocksBothAssetsRedeemsWork(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt',
-            testFn: () => maxDebtZeroCeilingDebtUnchangedRedeemsWork(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint USDT to ceiling — USDX ceiling unaffected, USDX fully mintable',
-            testFn: () => usdtAtCeilingDoesNotConsumeUsdxCeiling(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint both assets to per-asset ceilings — each debt equals its ceiling',
-            testFn: () => bothAssetsToCeilingFillsGlobalCeiling(client, testConfig),
+            label: 'account holding neither admin role — BadOrigin',
+            testFn: () => nonAdminCannotAdminister(client, testConfig),
           },
         ],
       },
       {
         kind: 'describe',
-        label: 'Decimal conversion',
+        label: 'Decimal scaling',
         children: [
           {
             kind: 'test',
-            label: 'mint and redeem USDX and DAI — debt and received match decimal-scaled amounts',
-            testFn: () => multiDecimalMintRedeem(client, testConfig),
+            label: 'higher-decimal external — debt scaled down, redemption scaled up',
+            testFn: () => higherDecimalExternalScales(client, testConfig),
           },
           {
             kind: 'test',
-            label: 'USDX and DAI at per-asset ceilings — each debt equals its ceiling',
-            testFn: () => multiDecimalCeilings(client, testConfig),
-          },
-        ],
-      },
-      {
-        kind: 'describe',
-        label: 'Reserve integrity',
-        children: [
-          {
-            kind: 'test',
-            label: 'setMaxPsmDebt(5_000), mint 200 — debt > 0',
-            testFn: () => mintWithinCeiling(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint 500, give Bob 2x debt pUSD, Bob redeems debt plus MIN_SWAP — ExtrinsicFailed',
-            testFn: () => bobRedeemExceedingReserveFails(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint 500 then mint 200 more — debt > 500 UNIT',
-            testFn: () => consecutiveMintsAccumulateDebt(client, testConfig),
-          },
-          {
-            kind: 'test',
-            label: 'mint 500, redeem MIN_SWAP — Redeemed event',
-            testFn: () => healthyRedeemSucceeds(client, testConfig),
+            label: 'swap that scales to zero internal units — AmountTooSmallAfterConversion',
+            testFn: () => dustSwapIsRejected(client, testConfig),
           },
         ],
       },
