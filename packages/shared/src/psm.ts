@@ -4,11 +4,11 @@ import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-
 import type { Client, RootTestTree } from '@e2e-test/shared'
 
 import { stringToU8a, u8aConcat } from '@polkadot/util'
-import { blake2AsU8a, encodeAddress } from '@polkadot/util-crypto'
+import { blake2AsHex, blake2AsU8a, encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
 
-import { checkSystemEvents, type TestConfig } from './helpers/index.js'
+import { checkSystemEvents, scheduleCallWithOrigin, type TestConfig } from './helpers/index.js'
 
 /// -------
 /// Constants
@@ -1340,6 +1340,72 @@ async function createPsmForMissingAssetFails(client: Client<any, any>, _testConf
 }
 
 /**
+ * Root creates a PSM without paying the deposit a signed owner would.
+ *
+ * The runtime's create origin admits either the internal asset's owner, who is charged a
+ * deposit, or Root, which is not. The call is too large to travel in the scheduler's inline
+ * form, whose encoded bound is 128 bytes, so it is noted as a preimage and scheduled by lookup;
+ * scheduling it inline would leave an agenda entry the runtime cannot decode, which is silently
+ * discarded rather than dispatched.
+ *
+ * 1. Note the creation call as a preimage
+ * 2. Schedule it by lookup with a Root origin
+ * 3. Verify the scheduler dispatched it successfully
+ * 4. Verify the instance was recorded and no deposit was charged to the named admin
+ * 5. Verify the named full admin, not Root, administers the instance
+ */
+async function createPsmByRootTakesNoDeposit(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  const encoded = createCall.method.toHex()
+
+  // 1. Note the call as a preimage
+  await sendTransaction(client.api.tx.preimage.notePreimage(encoded).signAsync(alice))
+  await client.dev.newBlock()
+
+  const reservedBefore = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+
+  // 2. Schedule by lookup under a Root origin
+  await scheduleCallWithOrigin(
+    client,
+    { Lookup: { hash: blake2AsHex(encoded, 256), len: (encoded.length - 2) / 2 } },
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3. Dispatched without error
+  const events = await client.api.query.system.events()
+  const dispatched = events.find(({ event }) => client.api.events.scheduler.Dispatched.is(event))
+  assert(dispatched, 'the scheduler did not dispatch the creation call')
+  assert(client.api.events.scheduler.Dispatched.is(dispatched.event))
+  expect(dispatched.event.data.result.isOk).toBe(true)
+
+  // 4. Instance recorded, no deposit charged
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.isSome).toBe(true)
+  expect(info.unwrap().maxDebt.toBigInt()).toBe(MAX_DEBT)
+  const reservedAfter = (await client.api.query.system.account(alice.address)).data.reserved.toBigInt()
+  expect(reservedAfter).toBe(reservedBefore)
+
+  // 5. The named admin administers the instance
+  await sendTransaction((client.api.tx as any).psm.setMaxDebt(internal, 1_000n * UNIT).signAsync(alice))
+  await client.dev.newBlock()
+  const updated = await (client.api.query as any).psm.psm(internal)
+  expect(updated.unwrap().maxDebt.toBigInt()).toBe(1_000n * UNIT)
+}
+
+/**
  * An owner who cannot cover the creation deposit does not get an instance.
  *
  * 1. Strip alice's free balance to just above existential, leaving nothing for the deposit
@@ -2167,6 +2233,11 @@ export function psmE2ETests<
             kind: 'test',
             label: 'create PSM as internal asset owner — instance recorded, deposit held',
             testFn: () => createPsmAsAssetOwner(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'create PSM by root — no deposit taken, named admin administers',
+            testFn: () => createPsmByRootTakesNoDeposit(client, testConfig),
           },
           {
             kind: 'test',
