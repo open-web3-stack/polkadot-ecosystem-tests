@@ -75,6 +75,12 @@ export interface PsmTestConfig extends TestConfig {
     location: Record<string, any>
     decimals: number
   }
+  /**
+   * Further existing assets, approved only to reach the pallet's cap on approved externals.
+   * They are never swapped, so their economics are irrelevant; they need only exist on chain.
+   * Enough entries must be supplied that, with the three above, the cap can be exceeded.
+   */
+  capFillerExternals: Record<string, any>[]
 }
 
 const devAccounts = testAccounts
@@ -616,6 +622,12 @@ async function addNonexistentExternalFails(client: Client<any, any>, testConfig:
 
   // 3. AssetDoesNotExist
   await expectPsmError(client, 'AssetDoesNotExist')
+
+  // 4. The external was not approved
+  expect(
+    (await (client.api.query as any).psm.externalAssets(assetLocation(internalAssetId), assetLocation(missingAssetId)))
+      .isNone,
+  ).toBe(true)
 }
 
 /**
@@ -1284,6 +1296,838 @@ async function dustSwapIsRejected(client: Client<any, any>, testConfig: PsmTestC
   await expectPsmError(client, 'AmountTooSmallAfterConversion')
 }
 
+/// -------
+/// Tests - Instance creation
+/// -------
+
+/**
+ * A PSM cannot be created over an internal asset that does not exist.
+ *
+ * The rejection is `BadOrigin` rather than the pallet's `AssetDoesNotExist`, because the create
+ * origin resolves the asset's owner first and a missing asset has none, so no signed caller can
+ * satisfy it. `AssetDoesNotExist` is therefore reachable on this call only through an origin
+ * that bypasses the ownership check.
+ *
+ * 1. Pick an asset id with no entry in the assets pallet
+ * 2. Attempt to create a PSM keyed by it
+ * 3. Verify the call was refused with BadOrigin
+ * 4. Verify no instance was recorded
+ */
+async function createPsmForMissingAssetFails(client: Client<any, any>, _testConfig: PsmTestConfig) {
+  const { alice, bob, dave } = devAccounts
+
+  // 1. An unregistered asset id
+  const missingAssetId = 4_294_967_001
+  expect((await client.api.query.assets.asset(missingAssetId)).isNone).toBe(true)
+
+  // 2. Create a PSM over it
+  const createCall = (client.api.tx as any).psm.createPsm(
+    assetLocation(missingAssetId),
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BadOrigin, since the asset has no owner to match against
+  await expectBadOrigin(client)
+
+  // 4. No instance recorded
+  expect((await (client.api.query as any).psm.psm(assetLocation(missingAssetId))).isNone).toBe(true)
+}
+
+/**
+ * An owner who cannot cover the creation deposit does not get an instance.
+ *
+ * 1. Strip alice's free balance to just above existential, leaving nothing for the deposit
+ * 2. Attempt to create the PSM
+ * 3. Verify no instance was recorded
+ */
+async function createPsmWithoutDepositFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+
+  // 1. Leave alice unable to fund the deposit
+  await client.dev.setStorage({
+    System: { account: [[[alice.address], { providers: 1, consumers: 1, data: { free: 2n * 10n ** 10n } }]] },
+  })
+
+  // 2. Attempt creation
+  const createCall = (client.api.tx as any).psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. No instance recorded
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+}
+
+/// -------
+/// Tests - Instance removal
+/// -------
+
+/**
+ * Removal is refused to an account holding neither admin role.
+ *
+ * 1. Create the PSM and withdraw its externals so only the admin check can fail
+ * 2. Attempt removal as charlie
+ * 3. Verify BadOrigin and that the instance survives
+ */
+async function removePsmByNonAdminFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, charlie } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with no approved externals
+  await createPsmInstance(client, testConfig)
+  const withdraw = client.api.tx.utility.batchAll([
+    psm.removeExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.removeExternalAsset(internal, assetLocation(secondaryExternalId)),
+  ])
+  await sendTransaction(withdraw.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Removal by a stranger
+  await sendTransaction(psm.removePsm(internal).signAsync(charlie))
+  await client.dev.newBlock()
+
+  // 3. BadOrigin, instance intact
+  await expectBadOrigin(client)
+  expect((await (client.api.query as any).psm.psm(internal)).isSome).toBe(true)
+}
+
+/**
+ * The emergency admin cannot dismantle the instance it guards.
+ *
+ * 1. Create the PSM and withdraw its externals
+ * 2. Attempt removal as the emergency admin
+ * 3. Verify InsufficientPrivilege and that the instance survives
+ */
+async function removePsmByEmergencyAdminFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, bob } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with no approved externals
+  await createPsmInstance(client, testConfig)
+  const withdraw = client.api.tx.utility.batchAll([
+    psm.removeExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.removeExternalAsset(internal, assetLocation(secondaryExternalId)),
+  ])
+  await sendTransaction(withdraw.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Removal by the emergency admin
+  await sendTransaction(psm.removePsm(internal).signAsync(bob))
+  await client.dev.newBlock()
+
+  // 3. InsufficientPrivilege, instance intact
+  await expectPsmError(client, 'InsufficientPrivilege')
+  expect((await (client.api.query as any).psm.psm(internal)).isSome).toBe(true)
+}
+
+/**
+ * Removing an instance twice fails, since the second attempt finds no admin record to check.
+ *
+ * 1. Create the PSM, withdraw its externals and remove it
+ * 2. Attempt removal a second time
+ * 3. Verify PsmNotFound
+ */
+async function removePsmTwiceFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Create, empty and remove
+  await createPsmInstance(client, testConfig)
+  const teardown = client.api.tx.utility.batchAll([
+    psm.removeExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.removeExternalAsset(internal, assetLocation(secondaryExternalId)),
+    psm.removePsm(internal),
+  ])
+  await sendTransaction(teardown.signAsync(alice))
+  await client.dev.newBlock()
+  expect((await (client.api.query as any).psm.psm(internal)).isNone).toBe(true)
+
+  // 2. Remove again
+  await sendTransaction(psm.removePsm(internal).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. PsmNotFound
+  await expectPsmError(client, 'PsmNotFound')
+}
+
+/// -------
+/// Tests - Redemption rejections
+/// -------
+
+/**
+ * Redemptions below the instance minimum are rejected, mirroring the mint side.
+ *
+ * 1. Create the PSM and mint so a position exists to redeem against
+ * 2. Redeem one unit under the minimum swap
+ * 3. Verify BelowMinimumSwap and that the debt is untouched
+ */
+async function redeemBelowMinimumFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Position to redeem against
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
+
+  // 2. Redeem under the minimum
+  await sendTransaction(psm.redeem(internal, external, MIN_SWAP - 1n, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. BelowMinimumSwap, debt untouched
+  await expectPsmError(client, 'BelowMinimumSwap')
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+}
+
+/**
+ * A redeemer who will not accept the configured redemption fee is rejected rather than charged.
+ *
+ * 1. Create the PSM and mint so a position exists
+ * 2. Redeem with a fee cap below the pallet's default rate
+ * 3. Verify FeeTooHigh and that the debt is untouched
+ * 4. Verify the same redemption succeeds once the cap admits the configured fee
+ */
+async function redeemAboveMaxFeeFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Position to redeem against
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
+
+  // 2. Too tight a fee cap
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, DEFAULT_FEE - 1).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. FeeTooHigh, debt untouched
+  await expectPsmError(client, 'FeeTooHigh')
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+
+  // 4. Accepting the configured fee lets it through
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, DEFAULT_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, external)).toBeLessThan(debtBefore)
+}
+
+/**
+ * Redeeming into an external that was never approved is rejected.
+ *
+ * 1. Create a PSM approving only the primary external, and mint against it
+ * 2. Redeem naming the secondary external
+ * 3. Verify UnsupportedAsset
+ */
+async function redeemUnapprovedExternalFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance approving one external, carrying debt
+  const setup = client.api.tx.utility.batchAll([
+    psm.createPsm(
+      internal,
+      { system: { Signed: alice.address } },
+      { system: { Signed: bob.address } },
+      dave.address,
+      MAX_DEBT,
+      MIN_SWAP,
+    ),
+    psm.addExternalAsset(internal, assetLocation(primaryExternalId)),
+    psm.setAssetCeilingWeight(internal, assetLocation(primaryExternalId), HALF_WEIGHT),
+  ])
+  await sendTransaction(setup.signAsync(alice))
+  await client.dev.newBlock()
+  await sendTransaction(psm.mint(internal, assetLocation(primaryExternalId), 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Redeem into the unapproved external
+  await sendTransaction(psm.redeem(internal, assetLocation(secondaryExternalId), 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. UnsupportedAsset
+  await expectPsmError(client, 'UnsupportedAsset')
+}
+
+/**
+ * A redemption larger than the debt an external carries is refused, so one external's reserve
+ * cannot be drained through a claim it never backed.
+ *
+ * 1. Create the PSM and mint a modest position against the primary external
+ * 2. Hand bob more of the internal asset than that position is worth
+ * 3. Have bob redeem beyond the recorded debt
+ * 4. Verify InsufficientReserve and that the debt and reserve are untouched
+ */
+async function redeemBeyondDebtFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, bob } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Modest position
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 500n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const debtBefore = await psmDebt(client, internal, external)
+  const reserve = psmReserveAccount(client, internal)
+  const reserveBefore = await assetBalance(client, primaryExternalId, reserve)
+
+  // 2. Bob holds more internal asset than the position backs
+  await client.dev.setStorage({
+    Assets: { account: [[[internalAssetId, bob.address], { balance: 5_000n * UNIT }]] },
+  })
+
+  // 3. Bob redeems past the recorded debt
+  await sendTransaction(psm.redeem(internal, external, 2_000n * UNIT, ANY_FEE).signAsync(bob))
+  await client.dev.newBlock()
+
+  // 4. InsufficientReserve, nothing moved
+  await expectPsmError(client, 'InsufficientReserve')
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+  expect(await assetBalance(client, primaryExternalId, reserve)).toBe(reserveBefore)
+}
+
+/// -------
+/// Tests - Fee configuration
+/// -------
+
+/**
+ * The minting fee is configurable per pair and changes what a mint pays out.
+ *
+ * 1. Create the PSM and raise the minting fee to 5%
+ * 2. Verify the MintingFeeUpdated event carries the old and new rates
+ * 3. Mint, and verify the fee charged matches the new rate rather than the default
+ * 4. Verify the fee reached the instance's fee destination
+ */
+async function mintingFeeIsConfigurable(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Raise the fee
+  await createPsmInstance(client, testConfig)
+  const newFee = 50_000
+  await sendTransaction(psm.setMintingFee(internal, external, newFee).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. MintingFeeUpdated event
+  await checkSystemEvents(client, { section: 'psm', method: 'MintingFeeUpdated' }).toMatchSnapshot(
+    'minting fee: MintingFeeUpdated event',
+  )
+  const events = await client.api.query.system.events()
+  const updated = events.find(({ event }) => event.section === 'psm' && event.method === 'MintingFeeUpdated')
+  assert(updated)
+  const updatedData = updated.event.data as any
+  expect(updatedData.oldValue.toNumber()).toBe(DEFAULT_FEE)
+  expect(updatedData.newValue.toNumber()).toBe(newFee)
+
+  // 3. Mint pays the new rate
+  const feeDestBefore = await assetBalance(client, internalAssetId, dave.address)
+  const mintAmount = 1_000n * UNIT
+  await sendTransaction(psm.mint(internal, external, mintAmount, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  const mintEvents = await client.api.query.system.events()
+  const minted = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
+  assert(minted)
+  const expectedFee = (mintAmount * BigInt(newFee)) / 1_000_000n
+  expect((minted.event.data as any).internalFee.toBigInt()).toBe(expectedFee)
+
+  // 4. Fee destination credited
+  expect(await assetBalance(client, internalAssetId, dave.address)).toBe(feeDestBefore + expectedFee)
+}
+
+/**
+ * The redemption fee is configurable per pair and changes what a redemption returns.
+ *
+ * 1. Create the PSM, mint a position, and raise the redemption fee to 5%
+ * 2. Verify the RedemptionFeeUpdated event carries the old and new rates
+ * 3. Redeem, and verify the fee charged matches the new rate
+ */
+async function redemptionFeeIsConfigurable(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Position, then raise the fee
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 2_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  const newFee = 50_000
+  await sendTransaction(psm.setRedemptionFee(internal, external, newFee).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. RedemptionFeeUpdated event
+  await checkSystemEvents(client, { section: 'psm', method: 'RedemptionFeeUpdated' }).toMatchSnapshot(
+    'redemption fee: RedemptionFeeUpdated event',
+  )
+  const events = await client.api.query.system.events()
+  const updated = events.find(({ event }) => event.section === 'psm' && event.method === 'RedemptionFeeUpdated')
+  assert(updated)
+  const updatedData = updated.event.data as any
+  expect(updatedData.oldValue.toNumber()).toBe(DEFAULT_FEE)
+  expect(updatedData.newValue.toNumber()).toBe(newFee)
+
+  // 3. Redemption charges the new rate
+  const redeemAmount = 500n * UNIT
+  await sendTransaction(psm.redeem(internal, external, redeemAmount, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  const redeemEvents = await client.api.query.system.events()
+  const redeemed = redeemEvents.find(({ event }) => event.section === 'psm' && event.method === 'Redeemed')
+  assert(redeemed)
+  expect((redeemed.event.data as any).internalFee.toBigInt()).toBe((redeemAmount * BigInt(newFee)) / 1_000_000n)
+}
+
+/**
+ * Fees cannot be set for a pair the instance never approved.
+ *
+ * 1. Create a PSM approving only the primary external
+ * 2. Set a minting fee naming the secondary external
+ * 3. Verify AssetNotApproved
+ */
+async function feeForUnapprovedExternalFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance approving one external
+  const setup = client.api.tx.utility.batchAll([
+    psm.createPsm(
+      internal,
+      { system: { Signed: alice.address } },
+      { system: { Signed: bob.address } },
+      dave.address,
+      MAX_DEBT,
+      MIN_SWAP,
+    ),
+    psm.addExternalAsset(internal, assetLocation(primaryExternalId)),
+  ])
+  await sendTransaction(setup.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. Fee for the unapproved external
+  await sendTransaction(psm.setMintingFee(internal, assetLocation(secondaryExternalId), 10_000).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. AssetNotApproved
+  await expectPsmError(client, 'AssetNotApproved')
+}
+
+/// -------
+/// Tests - Admin reassignment
+/// -------
+
+/**
+ * Reassigning the full admin moves every administrative power to the new origin and strips the
+ * old one.
+ *
+ * 1. Create the PSM with alice as full admin
+ * 2. Reassign the full admin to charlie, and verify the FullAdminChanged event
+ * 3. Verify charlie can now set the debt ceiling
+ * 4. Verify alice can no longer, and is refused with BadOrigin
+ */
+async function fullAdminReassignmentMovesPower(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, charlie } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with alice as full admin
+  await createPsmInstance(client, testConfig)
+
+  // 2. Hand the role to charlie
+  await sendTransaction(psm.setFullAdmin(internal, { system: { Signed: charlie.address } }).signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'FullAdminChanged' }).toMatchSnapshot(
+    'full admin: FullAdminChanged event',
+  )
+  const events = await client.api.query.system.events()
+  const changed = events.find(({ event }) => event.section === 'psm' && event.method === 'FullAdminChanged')
+  assert(changed)
+  const changedData = changed.event.data as any
+  expect(changedData.oldAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
+  expect(changedData.newAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(charlie.address, client.config.properties.addressEncoding),
+  )
+
+  // 3. Charlie now administers
+  await sendTransaction(psm.setMaxDebt(internal, 4_000n * UNIT).signAsync(charlie))
+  await client.dev.newBlock()
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.unwrap().maxDebt.toBigInt()).toBe(4_000n * UNIT)
+
+  // 4. Alice is locked out
+  await sendTransaction(psm.setMaxDebt(internal, 1n * UNIT).signAsync(alice))
+  await client.dev.newBlock()
+  await expectBadOrigin(client)
+  const unchanged = await (client.api.query as any).psm.psm(internal)
+  expect(unchanged.unwrap().maxDebt.toBigInt()).toBe(4_000n * UNIT)
+}
+
+/**
+ * Reassigning the emergency admin moves the breaker power and strips the old holder.
+ *
+ * 1. Create the PSM with bob as emergency admin
+ * 2. Reassign the emergency role to charlie, and verify the EmergencyAdminChanged event
+ * 3. Verify charlie can trip the breaker
+ * 4. Verify bob can no longer, and is refused with BadOrigin
+ */
+async function emergencyAdminReassignmentMovesPower(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, bob, charlie } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with bob as emergency admin
+  await createPsmInstance(client, testConfig)
+
+  // 2. Hand the emergency role to charlie
+  await sendTransaction(psm.setEmergencyAdmin(internal, { system: { Signed: charlie.address } }).signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'EmergencyAdminChanged' }).toMatchSnapshot(
+    'emergency admin: EmergencyAdminChanged event',
+  )
+  const events = await client.api.query.system.events()
+  const changed = events.find(({ event }) => event.section === 'psm' && event.method === 'EmergencyAdminChanged')
+  assert(changed)
+  expect((changed.event.data as any).newAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(charlie.address, client.config.properties.addressEncoding),
+  )
+
+  // 3. Charlie can trip the breaker
+  await sendTransaction(psm.setAssetStatus(internal, external, 'MintingDisabled').signAsync(charlie))
+  await client.dev.newBlock()
+  const entry = await (client.api.query as any).psm.externalAssets(internal, external)
+  expect(entry.unwrap().status.isMintingDisabled).toBe(true)
+
+  // 4. Bob is locked out
+  await sendTransaction(psm.setAssetStatus(internal, external, 'AllDisabled').signAsync(bob))
+  await client.dev.newBlock()
+  await expectBadOrigin(client)
+  const stillMintingDisabled = await (client.api.query as any).psm.externalAssets(internal, external)
+  expect(stillMintingDisabled.unwrap().status.isMintingDisabled).toBe(true)
+}
+
+/// -------
+/// Tests - External asset bounds
+/// -------
+
+/**
+ * An instance accepts no more approved externals than the pallet's cap allows.
+ *
+ * 1. Create the PSM, which already approves two externals
+ * 2. Approve further externals up to the cap reported by the runtime
+ * 3. Verify the instance's external count sits exactly on the cap
+ * 4. Approve one more, and verify TooManyAssets
+ */
+async function externalApprovalsAreCapped(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, foreignExternal, capFillerExternals } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with two externals already approved
+  await createPsmInstance(client, testConfig)
+  const cap = ((client.api.consts as any).psm.maxExternals as any).toNumber()
+
+  // 2. Fill up to the cap
+  const queue = [foreignExternal.location, ...capFillerExternals]
+  const toFill = queue.slice(0, cap - 2)
+  const fill = client.api.tx.utility.batchAll(toFill.map((loc) => psm.addExternalAsset(internal, loc)))
+  await sendTransaction(fill.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. Sitting exactly on the cap
+  const info = await (client.api.query as any).psm.psm(internal)
+  expect(info.unwrap().externalCount.toNumber()).toBe(cap)
+
+  // 4. One more is refused
+  const surplus = queue[cap - 2]
+  await sendTransaction(psm.addExternalAsset(internal, surplus).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'TooManyAssets')
+}
+
+/**
+ * Withdrawing an external clears the configuration attached to it, so a later re-approval starts
+ * from the pallet's defaults rather than inheriting stale settings.
+ *
+ * 1. Create the PSM and give the primary external a non-default fee and ceiling weight
+ * 2. Withdraw the external, and verify the ExternalAssetRemoved event
+ * 3. Verify its fee, weight, status and debt rows are gone
+ * 4. Re-approve it, and verify the fee is back to the pallet default
+ */
+async function removingExternalWipesConfiguration(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Non-default configuration
+  await createPsmInstance(client, testConfig)
+  const configure = client.api.tx.utility.batchAll([
+    psm.setMintingFee(internal, external, 70_000),
+    psm.setAssetCeilingWeight(internal, external, 250_000),
+  ])
+  await sendTransaction(configure.signAsync(alice))
+  await client.dev.newBlock()
+  expect(((await (client.api.query as any).psm.mintingFee(internal, external)) as any).toNumber()).toBe(70_000)
+
+  // 2. Withdraw it
+  await sendTransaction(psm.removeExternalAsset(internal, external).signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'ExternalAssetRemoved' }).toMatchSnapshot(
+    'remove external: ExternalAssetRemoved event',
+  )
+  const events = await client.api.query.system.events()
+  const removed = events.find(({ event }) => event.section === 'psm' && event.method === 'ExternalAssetRemoved')
+  assert(removed)
+  expect((removed.event.data as any).externalAsset.eq(external)).toBe(true)
+
+  // 3. Per-external rows cleared
+  expect((await (client.api.query as any).psm.externalAssets(internal, external)).isNone).toBe(true)
+  expect(((await (client.api.query as any).psm.assetCeilingWeight(internal, external)) as any).toNumber()).toBe(0)
+  expect(await psmDebt(client, internal, external)).toBe(0n)
+
+  // 4. Re-approval starts from the default fee
+  await sendTransaction(psm.addExternalAsset(internal, external).signAsync(alice))
+  await client.dev.newBlock()
+  expect(((await (client.api.query as any).psm.mintingFee(internal, external)) as any).toNumber()).toBe(DEFAULT_FEE)
+}
+
+/**
+ * Swaps stop if an external's decimals diverge from the snapshot taken when it was approved,
+ * rather than silently converting at the wrong scale.
+ *
+ * 1. Create the PSM, which snapshots the primary external's decimals on approval
+ * 2. Rewrite that asset's metadata to declare different decimals
+ * 3. Attempt a mint, and verify DecimalsMismatch
+ * 4. Verify no debt was recorded
+ */
+async function divergentDecimalsBlockSwaps(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+
+  // 1. Approval snapshots decimals
+  await createPsmInstance(client, testConfig)
+  const snapshotted = (await (client.api.query as any).psm.externalAssets(internal, external))
+    .unwrap()
+    .decimals.toNumber()
+  expect(snapshotted).toBe(6)
+
+  // 2. Live metadata now disagrees
+  await client.dev.setStorage({
+    Assets: {
+      metadata: [
+        [[primaryExternalId], { deposit: 0, name: 'Tether USD', symbol: 'USDt', decimals: 8, isFrozen: false }],
+      ],
+    },
+  })
+
+  // 3. Mint is refused
+  await sendTransaction((client.api.tx as any).psm.mint(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'DecimalsMismatch')
+
+  // 4. No debt recorded
+  expect(await psmDebt(client, internal, external)).toBe(0n)
+}
+
+/// -------
+/// Tests - Aggregate ceiling
+/// -------
+
+/**
+ * The instance-wide ceiling binds even when an external's own normalised ceiling would still
+ * allow more, which is reachable once weights are re-cut after minting.
+ *
+ * 1. Create the PSM and mint both externals up to their equal halves of the ceiling
+ * 2. Zero the secondary external's weight, handing the primary the whole normalised ceiling
+ * 3. Verify the primary's debt is now below its own ceiling, so only the aggregate can bind
+ * 4. Mint again, and verify ExceedsMaxPsmDebt
+ */
+async function aggregateCeilingBindsAfterReweighting(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const primary = assetLocation(primaryExternalId)
+  const secondary = assetLocation(secondaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Fill both halves
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, primary, ASSET_CEILING, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await sendTransaction(psm.mint(internal, secondary, ASSET_CEILING, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  expect(await psmDebt(client, internal, primary)).toBe(ASSET_CEILING)
+  expect(await psmDebt(client, internal, secondary)).toBe(ASSET_CEILING)
+
+  // 2. Re-cut the weights in the primary's favour
+  await sendTransaction(psm.setAssetCeilingWeight(internal, secondary, 0).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 3. The primary now sits below its own ceiling, which is the whole instance ceiling
+  expect(await psmDebt(client, internal, primary)).toBeLessThan(MAX_DEBT)
+
+  // 4. The aggregate still binds
+  await sendTransaction(psm.mint(internal, primary, MIN_SWAP, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  await expectPsmError(client, 'ExceedsMaxPsmDebt')
+}
+
+/// ----------
+/// Tests - Stale administrator after ownership transfer
+/// ----------
+
+/**
+ * A PSM's administrator is recorded when the instance is created and is never re-derived from
+ * the internal asset's current owner, so transferring the asset does not transfer control of the
+ * PSM attached to it.
+ *
+ * The creation gate admits the internal asset's owner, on the stated grounds that minting through
+ * a PSM bypasses the asset's issuer check. That predicate is evaluated once. Authorisation for
+ * every administrative call afterwards compares the caller against the stored origins, so the
+ * account that created the instance keeps full control of an asset it no longer owns, and the new
+ * owner cannot administer or dismantle the instance at all.
+ *
+ * The acquirer is deliberately an account holding no role on the instance, so the refusals below
+ * are the pallet denying the current owner outright rather than a privilege tier being applied.
+ *
+ * 1. Create the PSM as alice, the internal asset's owner, naming herself full admin
+ * 2. Transfer ownership of the internal asset to charlie
+ * 3. Have charlie take the remaining asset roles, the handover a new owner would perform
+ * 4. Verify alice can no longer mint the asset directly, so the assets pallet considers her revoked
+ * 5. Verify alice nonetheless still passes the PSM's admin check
+ * 6. Verify bob, the current owner, is refused by every administrative call including removal
+ * 7. Verify alice can still mint the internal asset through the PSM, raising its total issuance
+ */
+async function staleAdminSurvivesOwnershipTransfer(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, charlie } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Alice owns the internal asset and creates the instance over it
+  await createPsmInstance(client, testConfig)
+  const ownerBefore = (await client.api.query.assets.asset(internalAssetId)).unwrap().owner.toString()
+  expect(ownerBefore).toBe(encodeAddress(alice.address, client.config.properties.addressEncoding))
+
+  // 2. Ownership moves to bob
+  await sendTransaction(client.api.tx.assets.transferOwnership(internalAssetId, charlie.address).signAsync(alice))
+  await client.dev.newBlock()
+
+  const details = (await client.api.query.assets.asset(internalAssetId)).unwrap()
+  expect(details.owner.toString()).toBe(encodeAddress(charlie.address, client.config.properties.addressEncoding))
+
+  // 3. Bob takes the issuer, admin and freezer roles, completing the handover
+  await sendTransaction(
+    client.api.tx.assets.setTeam(internalAssetId, charlie.address, charlie.address, charlie.address).signAsync(charlie),
+  )
+  await client.dev.newBlock()
+
+  const afterHandover = (await client.api.query.assets.asset(internalAssetId)).unwrap()
+  expect(afterHandover.issuer.toString()).toBe(encodeAddress(charlie.address, client.config.properties.addressEncoding))
+
+  // 4. The assets pallet now refuses alice, confirming the handover took effect
+  await sendTransaction(client.api.tx.assets.mint(internalAssetId, alice.address, 1_000n * UNIT).signAsync(alice))
+  await client.dev.newBlock()
+
+  const directMintEvents = await client.api.query.system.events()
+  const directMintFailure = directMintEvents.find(({ event }) => client.api.events.system.ExtrinsicFailed.is(event))
+  assert(directMintFailure, 'alice should no longer be able to mint the asset directly')
+  assert(client.api.events.system.ExtrinsicFailed.is(directMintFailure.event))
+  const directMintError = directMintFailure.event.data.dispatchError
+  assert(directMintError.isModule)
+  expect(client.api.errors.assets.NoPermission.is(directMintError.asModule)).toBe(true)
+
+  // 5. The PSM still recognises alice as its full admin
+  const adminRecord = await (client.api.query as any).psm.psmAdmin(internal)
+  expect(adminRecord.unwrap().fullAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
+
+  await sendTransaction(psm.setMaxDebt(internal, 9_000n * UNIT).signAsync(alice))
+  await client.dev.newBlock()
+  const reconfigured = await (client.api.query as any).psm.psm(internal)
+  expect(reconfigured.unwrap().maxDebt.toBigInt()).toBe(9_000n * UNIT)
+
+  // 6. The current owner is refused, and has no way to dismantle the instance
+  await sendTransaction(psm.setMaxDebt(internal, 1n * UNIT).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectBadOrigin(client)
+
+  await sendTransaction(psm.removePsm(internal).signAsync(charlie))
+  await client.dev.newBlock()
+  await expectBadOrigin(client)
+  expect((await (client.api.query as any).psm.psm(internal)).isSome).toBe(true)
+
+  // 7. Alice still mints the asset through the PSM, which does not consult the issuer
+  const supplyBefore = (await client.api.query.assets.asset(internalAssetId)).unwrap().supply.toBigInt()
+
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  await checkSystemEvents(client, { section: 'psm', method: 'Minted' }).toMatchSnapshot(
+    'stale admin: Minted event after ownership transfer',
+  )
+  const mintEvents = await client.api.query.system.events()
+  const minted = mintEvents.find(({ event }) => event.section === 'psm' && event.method === 'Minted')
+  assert(minted, 'the former owner should still be able to mint through the PSM')
+  expect((minted.event.data as any).who.toString()).toBe(
+    encodeAddress(alice.address, client.config.properties.addressEncoding),
+  )
+
+  const supplyAfter = (await client.api.query.assets.asset(internalAssetId)).unwrap().supply.toBigInt()
+  expect(supplyAfter).toBeGreaterThan(supplyBefore)
+}
+
 /// ----------
 /// Test tree
 /// ----------
@@ -1341,8 +2185,33 @@ export function psmE2ETests<
           },
           {
             kind: 'test',
+            label: 'create PSM over an unregistered asset — BadOrigin, no owner to match',
+            testFn: () => createPsmForMissingAssetFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'create PSM without funds for the deposit — no instance recorded',
+            testFn: () => createPsmWithoutDepositFails(client, testConfig),
+          },
+          {
+            kind: 'test',
             label: 'remove PSM with approved externals — blocked, then succeeds once withdrawn',
             testFn: () => removePsmRequiresNoExternals(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'remove PSM as non-admin — BadOrigin',
+            testFn: () => removePsmByNonAdminFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'remove PSM as emergency admin — InsufficientPrivilege',
+            testFn: () => removePsmByEmergencyAdminFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'remove PSM twice — PsmNotFound',
+            testFn: () => removePsmTwiceFails(client, testConfig),
           },
         ],
       },
@@ -1367,8 +2236,23 @@ export function psmE2ETests<
           },
           {
             kind: 'test',
+            label: 'addExternalAsset beyond the cap — TooManyAssets',
+            testFn: () => externalApprovalsAreCapped(client, testConfig),
+          },
+          {
+            kind: 'test',
             label: 'removeExternalAsset while carrying debt — AssetHasDebt',
             testFn: () => removeExternalWithDebtFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'removeExternalAsset — per-external configuration wiped, re-approval defaults',
+            testFn: () => removingExternalWipesConfiguration(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'external decimals diverge from snapshot — DecimalsMismatch',
+            testFn: () => divergentDecimalsBlockSwaps(client, testConfig),
           },
         ],
       },
@@ -1406,6 +2290,63 @@ export function psmE2ETests<
             label: 'mint without an instance — PsmNotFound',
             testFn: () => mintWithoutInstanceFails(client, testConfig),
           },
+          {
+            kind: 'test',
+            label: 'redeem below minimum swap — BelowMinimumSwap',
+            testFn: () => redeemBelowMinimumFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'redeem with fee cap below configured fee — FeeTooHigh',
+            testFn: () => redeemAboveMaxFeeFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'redeem into unapproved external — UnsupportedAsset',
+            testFn: () => redeemUnapprovedExternalFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'redeem beyond the debt an external carries — InsufficientReserve',
+            testFn: () => redeemBeyondDebtFails(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Fee configuration',
+        children: [
+          {
+            kind: 'test',
+            label: 'setMintingFee — event emitted, new rate charged to fee destination',
+            testFn: () => mintingFeeIsConfigurable(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'setRedemptionFee — event emitted, new rate charged on redemption',
+            testFn: () => redemptionFeeIsConfigurable(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'set fee for unapproved external — AssetNotApproved',
+            testFn: () => feeForUnapprovedExternalFails(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Admin reassignment',
+        children: [
+          {
+            kind: 'test',
+            label: 'setFullAdmin — power moves to the new origin, old one locked out',
+            testFn: () => fullAdminReassignmentMovesPower(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'setEmergencyAdmin — breaker power moves, old holder locked out',
+            testFn: () => emergencyAdminReassignmentMovesPower(client, testConfig),
+          },
         ],
       },
       {
@@ -1426,6 +2367,11 @@ export function psmE2ETests<
             kind: 'test',
             label: 'setMaxDebt below outstanding debt — minting paused, redeems work',
             testFn: () => loweringCeilingPausesMinting(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'aggregate ceiling binds after reweighting — ExceedsMaxPsmDebt',
+            testFn: () => aggregateCeilingBindsAfterReweighting(client, testConfig),
           },
         ],
       },
@@ -1468,6 +2414,17 @@ export function psmE2ETests<
             kind: 'test',
             label: 'swap that scales to zero internal units — AmountTooSmallAfterConversion',
             testFn: () => dustSwapIsRejected(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Stale administrator after ownership transfer',
+        children: [
+          {
+            kind: 'test',
+            label: 'former owner keeps full admin and mint; current owner cannot administer or remove',
+            testFn: () => staleAdminSurvivesOwnershipTransfer(client, testConfig),
           },
         ],
       },

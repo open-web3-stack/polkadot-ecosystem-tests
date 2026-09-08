@@ -1,5 +1,73 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Westend Asset Hub PSM > Admin reassignment > setEmergencyAdmin — breaker power moves, old holder locked out > emergency admin: EmergencyAdminChanged event 1`] = `
+[
+  {
+    "data": {
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newAdmin": {
+        "system": {
+          "Signed": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+        },
+      },
+      "oldAdmin": {
+        "system": {
+          "Signed": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+        },
+      },
+    },
+    "method": "EmergencyAdminChanged",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Admin reassignment > setFullAdmin — power moves to the new origin, old one locked out > full admin: FullAdminChanged event 1`] = `
+[
+  {
+    "data": {
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newAdmin": {
+        "system": {
+          "Signed": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+        },
+      },
+      "oldAdmin": {
+        "system": {
+          "Signed": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+        },
+      },
+    },
+    "method": "FullAdminChanged",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Circuit breaker and privilege > MintingDisabled — mint stopped, redeem allowed > minting disabled: AssetStatusUpdated event 1`] = `
 [
   {
@@ -181,6 +249,121 @@ exports[`Westend Asset Hub PSM > External asset management > addExternalAsset �
 ]
 `;
 
+exports[`Westend Asset Hub PSM > External asset management > removeExternalAsset — per-external configuration wiped, re-approval defaults > remove external: ExternalAssetRemoved event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "ExternalAssetRemoved",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Fee configuration > setMintingFee — event emitted, new rate charged to fee destination > minting fee: MintingFeeUpdated event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "5.00%",
+      "oldValue": "0.50%",
+    },
+    "method": "MintingFeeUpdated",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Fee configuration > setRedemptionFee — event emitted, new rate charged on redemption > redemption fee: RedemptionFeeUpdated event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "5.00%",
+      "oldValue": "0.50%",
+    },
+    "method": "RedemptionFeeUpdated",
+    "section": "psm",
+  },
+]
+`;
+
 exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM as internal asset owner — instance recorded, deposit held > create PSM: PsmCreated event 1`] = `
 [
   {
@@ -261,6 +444,47 @@ exports[`Westend Asset Hub PSM > Instance lifecycle > remove PSM with approved e
       },
     },
     "method": "PsmRemoved",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Stale administrator after ownership transfer > former owner keeps full admin and mint; current owner cannot administer or remove > stale admin: Minted event after ownership transfer 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "externalConsumed": 1000000000,
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalFee": 5000000,
+      "internalReceived": "(rounded 1000000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
     "section": "psm",
   },
 ]

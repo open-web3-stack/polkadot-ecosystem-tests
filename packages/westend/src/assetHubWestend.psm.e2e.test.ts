@@ -16,6 +16,21 @@ const testCfg: PsmTestConfig = {
     location: { parents: 1, interior: { X2: [{ Parachain: 2034 }, { GeneralIndex: 222 }] } },
     decimals: 18,
   },
+  // Approved only to reach the cap on approved externals; never swapped, so their economics do
+  // not matter. Bridged ether and WETH from Sepolia, and Mythos.
+  capFillerExternals: [
+    { parents: 2, interior: { X1: [{ GlobalConsensus: { Ethereum: { chainId: 11155111 } } }] } },
+    {
+      parents: 2,
+      interior: {
+        X2: [
+          { GlobalConsensus: { Ethereum: { chainId: 11155111 } } },
+          { AccountKey20: { network: null, key: '0xfff9976782d46cc05630d1f6ebab18b2324d6b14' } },
+        ],
+      },
+    },
+    { parents: 1, interior: { X1: [{ Parachain: 3368 }] } },
+  ],
 }
 
 registerTestTree(psmE2ETests(assetHubWestend, testCfg))
