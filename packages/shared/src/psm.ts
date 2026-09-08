@@ -2194,6 +2194,212 @@ async function staleAdminSurvivesOwnershipTransfer(client: Client<any, any>, tes
   expect(supplyAfter).toBeGreaterThan(supplyBefore)
 }
 
+/// -------
+/// Tests - Conversion and state guards
+/// -------
+
+/**
+ * An external whose decimals sit further from the internal asset's than the pallet permits is
+ * refused at approval, before any swap can attempt the conversion.
+ *
+ * 1. Declare the internal asset with decimals far above the external's
+ * 2. Create the PSM, which snapshots those decimals
+ * 3. Approve the 6-decimal external, a gap of 25 places
+ * 4. Verify DecimalsRangeExceeded and that the external was not approved
+ */
+async function decimalsGapBeyondRangeRejected(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Internal asset declares 31 decimals against the external's 6
+  await client.dev.setStorage({
+    Assets: {
+      metadata: [
+        [[internalAssetId], { deposit: 0, name: 'Polkadot USD', symbol: 'pUSD', decimals: 31, isFrozen: false }],
+      ],
+    },
+  })
+
+  // 2. Creation snapshots the internal decimals
+  const createCall = psm.createPsm(
+    internal,
+    { system: { Signed: alice.address } },
+    { system: { Signed: bob.address } },
+    dave.address,
+    MAX_DEBT,
+    MIN_SWAP,
+  )
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+  expect((await (client.api.query as any).psm.psm(internal)).unwrap().internalDecimals.toNumber()).toBe(31)
+
+  // 3. Approve the external, a gap of 25 places
+  await sendTransaction(psm.addExternalAsset(internal, external).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. DecimalsRangeExceeded, external not approved
+  await expectPsmError(client, 'DecimalsRangeExceeded')
+  expect((await (client.api.query as any).psm.externalAssets(internal, external)).isNone).toBe(true)
+}
+
+/**
+ * A swap whose scaled amount does not fit the balance type is refused rather than wrapping.
+ *
+ * With the widest decimal gap the pallet accepts, scaling multiplies by ten to the twenty-fourth,
+ * so a large enough external amount overflows a 128-bit balance.
+ *
+ * 1. Declare the internal asset at the top of the permitted decimal range for a 6-decimal external
+ * 2. Create the PSM and approve that external
+ * 3. Hand the caller an external balance large enough that scaling it overflows
+ * 4. Mint, and verify ConversionOverflow with no debt recorded
+ */
+async function conversionOverflowRejected(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice, bob, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. A gap of exactly 24 decimal places, the widest the pallet approves
+  await client.dev.setStorage({
+    Assets: {
+      metadata: [
+        [[internalAssetId], { deposit: 0, name: 'Polkadot USD', symbol: 'pUSD', decimals: 30, isFrozen: false }],
+      ],
+    },
+  })
+
+  // 2. Instance over that pair
+  const setup = client.api.tx.utility.batchAll([
+    psm.createPsm(
+      internal,
+      { system: { Signed: alice.address } },
+      { system: { Signed: bob.address } },
+      dave.address,
+      MAX_DEBT,
+      MIN_SWAP,
+    ),
+    psm.addExternalAsset(internal, external),
+    psm.setAssetCeilingWeight(internal, external, HALF_WEIGHT),
+  ])
+  await sendTransaction(setup.signAsync(alice))
+  await client.dev.newBlock()
+  const events = await client.api.query.system.events()
+  assert(
+    events.find(({ event }) => client.api.events.utility.BatchCompleted.is(event)),
+    'setup did not complete',
+  )
+
+  // 3. An external balance whose scaled value exceeds a 128-bit balance
+  const overflowing = 500_000_000_000_000n
+  const externalDetails = (await client.api.query.assets.asset(primaryExternalId)).unwrap()
+  await client.dev.setStorage({
+    Assets: {
+      asset: [
+        [[primaryExternalId], { ...externalDetails.toJSON(), supply: externalDetails.supply.toBigInt() + overflowing }],
+      ],
+      account: [[[primaryExternalId, alice.address], { balance: overflowing }]],
+    },
+  })
+
+  // 4. Mint overflows the conversion
+  await sendTransaction(psm.mint(internal, external, overflowing, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  await expectPsmError(client, 'ConversionOverflow')
+  expect(await psmDebt(client, internal, external)).toBe(0n)
+}
+
+/**
+ * An instance carrying debt cannot be dismantled, even with no external approved.
+ *
+ * The two conditions cannot both arise from the dispatchables, since an external can only be
+ * withdrawn once its own debt is zero and withdrawal clears its debt row. The guard is therefore
+ * a backstop against debt rows outliving their external, and this drives it directly.
+ *
+ * 1. Create the PSM and withdraw every approved external
+ * 2. Leave a debt row behind for a withdrawn external
+ * 3. Attempt removal
+ * 4. Verify PsmHasDebt and that the instance survives
+ */
+async function removePsmWithOrphanedDebtFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId, secondaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with no approved externals
+  await createPsmInstance(client, testConfig)
+  const withdraw = client.api.tx.utility.batchAll([
+    psm.removeExternalAsset(internal, external),
+    psm.removeExternalAsset(internal, assetLocation(secondaryExternalId)),
+  ])
+  await sendTransaction(withdraw.signAsync(alice))
+  await client.dev.newBlock()
+  expect((await (client.api.query as any).psm.psm(internal)).unwrap().externalCount.toNumber()).toBe(0)
+
+  // 2. A debt row outliving its external
+  await client.dev.setStorage({ Psm: { psmDebt: [[[internal, external], 500n * UNIT]] } })
+  expect(await psmDebt(client, internal, external)).toBe(500n * UNIT)
+
+  // 3. Attempt removal
+  await sendTransaction(psm.removePsm(internal).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. PsmHasDebt, instance intact
+  await expectPsmError(client, 'PsmHasDebt')
+  expect((await (client.api.query as any).psm.psm(internal)).isSome).toBe(true)
+}
+
+/**
+ * A redemption stops rather than part-paying when the reserve holds less than the tracked debt
+ * says it should.
+ *
+ * Debt and reserve move together through the dispatchables, so this too is a backstop. Draining
+ * the reserve behind the pallet's back drives it, and confirms the redemption is refused outright
+ * rather than transferring whatever remains.
+ *
+ * 1. Create the PSM and mint, funding the reserve
+ * 2. Empty the reserve's external balance, leaving the debt untouched
+ * 3. Redeem within the recorded debt
+ * 4. Verify the swap was refused by the pallet's reserve guard and the caller received nothing
+ */
+async function redeemAgainstDrainedReserveFails(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId, primaryExternalId } = testConfig
+  const { alice } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const external = assetLocation(primaryExternalId)
+  const psm = (client.api.tx as any).psm
+
+  // 1. Instance with a funded reserve
+  await createPsmInstance(client, testConfig)
+  await sendTransaction(psm.mint(internal, external, 1_000n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+  const reserve = psmReserveAccount(client, internal)
+  expect(await assetBalance(client, primaryExternalId, reserve)).toBe(1_000n * UNIT)
+  const debtBefore = await psmDebt(client, internal, external)
+
+  // 2. Drain the reserve without touching the debt
+  await client.dev.setStorage({
+    Assets: { account: [[[primaryExternalId, reserve], { balance: 0 }]] },
+  })
+  expect(await assetBalance(client, primaryExternalId, reserve)).toBe(0n)
+
+  // 3. Redeem within the recorded debt
+  const externalBefore = await assetBalance(client, primaryExternalId, alice.address)
+  await sendTransaction(psm.redeem(internal, external, 100n * UNIT, ANY_FEE).signAsync(alice))
+  await client.dev.newBlock()
+
+  // 4. Refused by the reserve guard, nothing paid out, debt untouched
+  await expectPsmError(client, 'Unexpected')
+  expect(await assetBalance(client, primaryExternalId, alice.address)).toBe(externalBefore)
+  expect(await psmDebt(client, internal, external)).toBe(debtBefore)
+}
+
 /// ----------
 /// Test tree
 /// ----------
@@ -2485,6 +2691,32 @@ export function psmE2ETests<
             kind: 'test',
             label: 'swap that scales to zero internal units — AmountTooSmallAfterConversion',
             testFn: () => dustSwapIsRejected(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: 'Conversion and state guards',
+        children: [
+          {
+            kind: 'test',
+            label: 'decimal gap beyond the permitted range — DecimalsRangeExceeded',
+            testFn: () => decimalsGapBeyondRangeRejected(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'scaled amount exceeding the balance type — ConversionOverflow',
+            testFn: () => conversionOverflowRejected(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'debt row outliving its external — PsmHasDebt blocks removal',
+            testFn: () => removePsmWithOrphanedDebtFails(client, testConfig),
+          },
+          {
+            kind: 'test',
+            label: 'reserve drained below tracked debt — redemption refused outright',
+            testFn: () => redeemAgainstDrainedReserveFails(client, testConfig),
           },
         ],
       },
