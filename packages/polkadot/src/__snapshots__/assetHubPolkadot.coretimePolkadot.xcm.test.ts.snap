@@ -60,7 +60,7 @@ exports[`assetHubPolkadot & coretimePolkadot > assetHubPolkadot transfer DOT to 
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 200000000)",
+            "refTime": "(rounded 400000000)",
           },
         },
       },
