@@ -60,7 +60,7 @@ exports[`assetHubPolkadot & peoplePolkadot > assetHubPolkadot transfer DOT to pe
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 400000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },
@@ -243,7 +243,7 @@ exports[`assetHubPolkadot & peoplePolkadot > peoplePolkadot transfer DOT to asse
         "Complete": {
           "used": {
             "proofSize": "(rounded 4000)",
-            "refTime": "(rounded 100000000)",
+            "refTime": "(rounded 200000000)",
           },
         },
       },

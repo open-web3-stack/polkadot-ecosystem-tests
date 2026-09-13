@@ -360,7 +360,7 @@ exports[`bifrostPolkadot & assetHubPolkadot > bifrostPolkadot transfer DOT to as
       "success": true,
       "weightUsed": {
         "proofSize": "(rounded 10000)",
-        "refTime": "(rounded 900000000)",
+        "refTime": "(rounded 700000000)",
       },
     },
     "method": "Processed",
