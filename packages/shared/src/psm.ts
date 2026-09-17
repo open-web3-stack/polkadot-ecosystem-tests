@@ -1816,6 +1816,67 @@ async function feeForUnapprovedExternalFails(client: Client<any, any>, testConfi
 }
 
 /// -------
+/// Tests - `None` origin admin
+/// -------
+
+/**
+ * A PSM can be created with the system `None` origin as its admin, and that instance is then
+ * administered by whoever authors the block. The pool rejects unsigned PSM calls, but a block
+ * author does not submit through the pool, and `pre_dispatch` admits calls from pallets that
+ * do not implement `validate_unsigned`, so a bare extrinsic reaches dispatch with `None`.
+ *
+ * `newBlock({ transactions })` takes the same path: chopsticks builds the block from the
+ * supplied extrinsics instead of the pool, which is the collator's position.
+ *
+ * 1. Create the PSM with the `None` origin as both admins
+ * 2. Verify PsmAdmin recorded the `None` origin
+ * 3. Author a block carrying a bare setMaxDebt, bypassing the pool
+ * 4. Verify the ceiling moved, so the unsigned call held full admin privilege
+ * 5. Author a block carrying a bare setFullAdmin, handing the instance to charlie
+ * 6. Verify a signed stranger is still refused, so `None` is the authority, not everyone
+ */
+async function noneOriginAdminIsExercisedByTheBlockAuthor(client: Client<any, any>, testConfig: PsmTestConfig) {
+  const { internalAssetId } = testConfig
+  const { alice, charlie, dave } = devAccounts
+  const internal = assetLocation(internalAssetId)
+  const psm = (client.api.tx as any).psm
+
+  const raisedCeiling = MAX_DEBT * 2n
+
+  // 1. Create with the `None` origin holding both admin slots
+  const createCall = psm.createPsm(internal, { system: 'None' }, { system: 'None' }, dave.address, MAX_DEBT, MIN_SWAP)
+  await sendTransaction(createCall.signAsync(alice))
+  await client.dev.newBlock()
+
+  // 2. The origin is recorded as stored authority
+  const admin = await (client.api.query as any).psm.psmAdmin(internal)
+  expect(admin.isSome).toBe(true)
+  expect(admin.unwrap().fullAdmin.asSystem.isNone).toBe(true)
+  expect(admin.unwrap().emergencyAdmin.asSystem.isNone).toBe(true)
+
+  // 3. A bare extrinsic, included by the author rather than the pool
+  await client.dev.newBlock({ transactions: [psm.setMaxDebt(internal, raisedCeiling).toHex()] })
+
+  // 4. The unsigned call carried full admin privilege
+  const raised = await (client.api.query as any).psm.psm(internal)
+  expect(raised.unwrap().maxDebt.toBigInt()).toBe(raisedCeiling)
+
+  // 5. The same route hands the instance to an account the author controls
+  await client.dev.newBlock({
+    transactions: [psm.setFullAdmin(internal, { system: { Signed: charlie.address } }).toHex()],
+  })
+  const reassigned = await (client.api.query as any).psm.psmAdmin(internal)
+  expect(reassigned.unwrap().fullAdmin.asSystem.asSigned.toString()).toBe(
+    encodeAddress(charlie.address, client.config.properties.addressEncoding),
+  )
+
+  // 6. Signed strangers remain excluded throughout
+  await sendTransaction(psm.setMaxDebt(internal, MAX_DEBT).signAsync(alice))
+  await client.dev.newBlock()
+  await expectBadOrigin(client)
+}
+
+/// -------
 /// Tests - Admin reassignment
 /// -------
 
@@ -2607,6 +2668,17 @@ export function psmE2ETests<
             kind: 'test',
             label: 'set fee for unapproved external — AssetNotApproved',
             testFn: () => feeForUnapprovedExternalFails(client, testConfig),
+          },
+        ],
+      },
+      {
+        kind: 'describe',
+        label: '`None` origin admin',
+        children: [
+          {
+            kind: 'test',
+            label: 'PSM admin set to the `None` origin — administered by the block author',
+            testFn: () => noneOriginAdminIsExercisedByTheBlockAuthor(client, testConfig),
           },
         ],
       },
