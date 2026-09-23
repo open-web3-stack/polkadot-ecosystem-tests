@@ -20,111 +20,113 @@ exports[`bifrostPolkadot & hydration > bifrostPolkadot transfer DOT to hydration
 [
   {
     "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "withdrawAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 500000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositReserveAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 1,
-                },
-              },
-              "dest": {
-                "interior": {
-                  "x1": [
-                    {
-                      "parachain": 2034,
-                    },
-                  ],
-                },
-                "parents": 1,
-              },
-              "xcm": [
+      "ConcatenatedOpaqueVersionedXcm",
+      [
+        {
+          "v5": [
+            {
+              "withdrawAsset": [
                 {
-                  "buyExecution": {
-                    "fees": {
-                      "fun": {
-                        "fungible": 500000000000,
-                      },
-                      "id": {
-                        "interior": {
-                          "here": null,
-                        },
-                        "parents": 1,
-                      },
-                    },
-                    "weightLimit": {
-                      "unlimited": null,
-                    },
+                  "fun": {
+                    "fungible": 1000000000000,
                   },
-                },
-                {
-                  "depositAsset": {
-                    "assets": {
-                      "wild": {
-                        "allCounted": 2,
-                      },
+                  "id": {
+                    "interior": {
+                      "here": null,
                     },
-                    "beneficiary": {
-                      "interior": {
-                        "x1": [
-                          {
-                            "accountId32": {
-                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                              "network": null,
-                            },
-                          },
-                        ],
-                      },
-                      "parents": 0,
-                    },
+                    "parents": 1,
                   },
                 },
               ],
             },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
+            {
+              "clearOrigin": null,
+            },
+            {
+              "buyExecution": {
+                "fees": {
+                  "fun": {
+                    "fungible": 500000000000,
+                  },
+                  "id": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+                "weightLimit": {
+                  "unlimited": null,
+                },
+              },
+            },
+            {
+              "depositReserveAsset": {
+                "assets": {
+                  "wild": {
+                    "allCounted": 1,
+                  },
+                },
+                "dest": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "parachain": 2034,
+                      },
+                    ],
+                  },
+                  "parents": 1,
+                },
+                "xcm": [
+                  {
+                    "buyExecution": {
+                      "fees": {
+                        "fun": {
+                          "fungible": 500000000000,
+                        },
+                        "id": {
+                          "interior": {
+                            "here": null,
+                          },
+                          "parents": 1,
+                        },
+                      },
+                      "weightLimit": {
+                        "unlimited": null,
+                      },
+                    },
+                  },
+                  {
+                    "depositAsset": {
+                      "assets": {
+                        "wild": {
+                          "allCounted": 2,
+                        },
+                      },
+                      "beneficiary": {
+                        "interior": {
+                          "x1": [
+                            {
+                              "accountId32": {
+                                "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                                "network": null,
+                              },
+                            },
+                          ],
+                        },
+                        "parents": 0,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              "setTopic": "(redacted)",
+            },
+          ],
+        },
+      ],
     ],
     "recipient": 1000,
   },

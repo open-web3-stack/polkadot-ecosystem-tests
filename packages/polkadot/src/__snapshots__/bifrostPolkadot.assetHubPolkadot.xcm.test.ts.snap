@@ -27,72 +27,74 @@ exports[`bifrostPolkadot & assetHubPolkadot > assetHubPolkadot transfer DOT to b
 [
   {
     "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "reserveAssetDeposited": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
+      "ConcatenatedOpaqueVersionedXcm",
+      [
+        {
+          "v5": [
+            {
+              "reserveAssetDeposited": [
+                {
+                  "fun": {
+                    "fungible": 1000000000000,
                   },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 2,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": null,
-                      },
+                  "id": {
+                    "interior": {
+                      "here": null,
                     },
-                  ],
+                    "parents": 1,
+                  },
                 },
-                "parents": 0,
+              ],
+            },
+            {
+              "clearOrigin": null,
+            },
+            {
+              "buyExecution": {
+                "fees": {
+                  "fun": {
+                    "fungible": 1000000000000,
+                  },
+                  "id": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+                "weightLimit": {
+                  "unlimited": null,
+                },
               },
             },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
+            {
+              "depositAsset": {
+                "assets": {
+                  "wild": {
+                    "allCounted": 2,
+                  },
+                },
+                "beneficiary": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                          "network": null,
+                        },
+                      },
+                    ],
+                  },
+                  "parents": 0,
+                },
+              },
+            },
+            {
+              "setTopic": "(redacted)",
+            },
+          ],
+        },
+      ],
     ],
     "recipient": 2030,
   },
@@ -277,72 +279,74 @@ exports[`bifrostPolkadot & assetHubPolkadot > bifrostPolkadot transfer DOT to as
 [
   {
     "data": [
-      "ConcatenatedVersionedXcm",
-      {
-        "v5": [
-          {
-            "withdrawAsset": [
-              {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
+      "ConcatenatedOpaqueVersionedXcm",
+      [
+        {
+          "v5": [
+            {
+              "withdrawAsset": [
+                {
+                  "fun": {
+                    "fungible": 1000000000000,
                   },
-                  "parents": 1,
-                },
-              },
-            ],
-          },
-          {
-            "clearOrigin": null,
-          },
-          {
-            "buyExecution": {
-              "fees": {
-                "fun": {
-                  "fungible": 1000000000000,
-                },
-                "id": {
-                  "interior": {
-                    "here": null,
-                  },
-                  "parents": 1,
-                },
-              },
-              "weightLimit": {
-                "unlimited": null,
-              },
-            },
-          },
-          {
-            "depositAsset": {
-              "assets": {
-                "wild": {
-                  "allCounted": 2,
-                },
-              },
-              "beneficiary": {
-                "interior": {
-                  "x1": [
-                    {
-                      "accountId32": {
-                        "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                        "network": null,
-                      },
+                  "id": {
+                    "interior": {
+                      "here": null,
                     },
-                  ],
+                    "parents": 1,
+                  },
                 },
-                "parents": 0,
+              ],
+            },
+            {
+              "clearOrigin": null,
+            },
+            {
+              "buyExecution": {
+                "fees": {
+                  "fun": {
+                    "fungible": 1000000000000,
+                  },
+                  "id": {
+                    "interior": {
+                      "here": null,
+                    },
+                    "parents": 1,
+                  },
+                },
+                "weightLimit": {
+                  "unlimited": null,
+                },
               },
             },
-          },
-          {
-            "setTopic": "(redacted)",
-          },
-        ],
-      },
+            {
+              "depositAsset": {
+                "assets": {
+                  "wild": {
+                    "allCounted": 2,
+                  },
+                },
+                "beneficiary": {
+                  "interior": {
+                    "x1": [
+                      {
+                        "accountId32": {
+                          "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                          "network": null,
+                        },
+                      },
+                    ],
+                  },
+                  "parents": 0,
+                },
+              },
+            },
+            {
+              "setTopic": "(redacted)",
+            },
+          ],
+        },
+      ],
     ],
     "recipient": 1000,
   },
