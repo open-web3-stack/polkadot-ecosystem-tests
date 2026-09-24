@@ -1980,7 +1980,7 @@ export async function childBountyRequireCuratorErrorTest<
  *
  * Test structure:
  * 1. Create active parent bounty and child bounty
- * 2. Set parent child bounties count to exceed maxActiveChildBountyCount
+ * 2. Set parent child bounties count to maxActiveChildBountyCount
  * 3. Attempt to create child bounty after setting parent child bounties count to `maxActiveChildBountyCount`
  * 4. Verify the transaction fails with `TooManyChildBounties` error
  */
@@ -2080,7 +2080,7 @@ export async function childBountyTooManyChildBountiesErrorTest<
 
   await client.dev.newBlock()
 
-  // ===== SECTION 2: Set parent child bounties count to exceed maxActiveChildBountyCount =====
+  // ===== SECTION 2: Set parent child bounties count to maxActiveChildBountyCount =====
 
   const maxActiveChildBountyCount = client.api.consts.childBounties.maxActiveChildBountyCount.toNumber()
 
@@ -2093,7 +2093,8 @@ export async function childBountyTooManyChildBountiesErrorTest<
 
   await client.dev.newBlock()
 
-  // ensure the parent child bounties count is greater than maxActiveChildBountyCount
+  // ensure the parent child bounties count equals maxActiveChildBountyCount, which is the point
+  // the runtime starts rejecting new child bounties
   const parentChildBountiesCount = await getParentChildBountiesCount(client, bountyIndex)
   expect(parentChildBountiesCount).toBe(maxActiveChildBountyCount)
 
