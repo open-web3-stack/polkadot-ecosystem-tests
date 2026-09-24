@@ -17,6 +17,8 @@ import { assert, expect } from 'vitest'
 import { match } from 'ts-pattern'
 import type { Client } from '../types.js'
 
+export * from './curves.js'
+
 const { check, checkEvents, checkHrmp, checkSystemEvents, checkUmp } = setupCheck({
   expectFn: (x: any) => ({
     toMatchSnapshot(msg?: string): void {
