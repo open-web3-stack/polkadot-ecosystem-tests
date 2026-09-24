@@ -134,6 +134,7 @@ interface ProxyActionBuilder {
   // a proxy of type A can only remove proxies of type B such that B ≤ A; in other words, the action needs
   // to be given an appropriate proxy type to remove.
   buildProxyRemovalAction(proxyType?: number): ProxyAction[]
+  buildProxyAdditionAction(proxyType?: number): ProxyAction[]
 
   buildSlotsAction(): ProxyAction[]
   buildSocietyAction(): ProxyAction[]
@@ -670,6 +671,29 @@ class ProxyActionBuilderImpl<
     return proxyRemoveProxyCalls
   }
 
+  /**
+   * `pallet_proxy` rejects `add_proxy` when the proxy type of the caller is not a superset of
+   * the requested type. A caller must therefore pass a type that suits the proxy type under
+   * test: a dominated type for an allow list, and a type that is not dominated for a
+   * disallow list.
+   */
+  buildProxyAdditionAction(proxyType?: number): ProxyAction[] {
+    if (proxyType === undefined) {
+      throw new Error('proxy addition action builder requires proxyType')
+    }
+
+    const proxyAddProxyCalls: ProxyAction[] = []
+    if (this.client.api.tx.proxy) {
+      proxyAddProxyCalls.push({
+        pallet: 'proxy',
+        extrinsic: 'add_proxy',
+        call: this.client.api.tx.proxy.addProxy(testAccounts.eve.address, proxyType!, 0),
+      })
+    }
+
+    return proxyAddProxyCalls
+  }
+
   buildSlotsAction(): ProxyAction[] {
     const slotsCalls: ProxyAction[] = []
     if (this.client.api.tx.slots) {
@@ -816,6 +840,15 @@ class ProxyActionBuilderImpl<
  * those of relay and system parachains.
  * Chains can use this as a starting point and override specific proxy types as needed.
  */
+/**
+ * `Any` and `NonTransfer` hold the same index on every network in `proxyTypes.ts`. Other proxy
+ * types do not, so a chain must pass its own index for those.
+ */
+const CANONICAL_PROXY_TYPE_INDEX = {
+  Any: 0,
+  NonTransfer: 1,
+}
+
 export const defaultProxyTypeConfig: ProxyTypeConfig = {
   Any: {
     buildAllowedActions: (builder) => [
@@ -842,11 +875,19 @@ export const defaultProxyTypeConfig: ProxyTypeConfig = {
       ...builder.buildMultisigAction(),
       ...builder.buildNominationPoolsAction(),
       ...builder.buildProxyAction(),
+      // `NonTransfer` is a superset of itself, so it may add a proxy of its own type.
+      ...builder.buildProxyAdditionAction(CANONICAL_PROXY_TYPE_INDEX.NonTransfer),
       ...builder.buildStakingAction(),
       ...builder.buildSystemRemarkAction(),
       ...builder.buildUtilityAction(),
     ],
-    buildDisallowedActions: (builder) => [...builder.buildBalancesAction(), ...builder.buildVestingAction()],
+    buildDisallowedActions: (builder) => [
+      ...builder.buildBalancesAction(),
+      ...builder.buildVestingAction(),
+      // `NonTransfer` must not add an `Any` proxy. An `Any` proxy can move funds, which
+      // `NonTransfer` cannot do.
+      ...builder.buildProxyAdditionAction(CANONICAL_PROXY_TYPE_INDEX.Any),
+    ],
   },
 
   CancelProxy: {
