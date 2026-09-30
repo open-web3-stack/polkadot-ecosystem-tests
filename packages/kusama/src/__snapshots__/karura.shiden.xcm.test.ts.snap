@@ -574,70 +574,137 @@ exports[`karura & shiden > shiden transfer KAR to karura > tx events 1`] = `
 [
   {
     "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000000000,
-          },
-          "id": {
-            "interior": {
-              "X2": [
-                {
-                  "Parachain": 2000,
-                },
-                {
-                  "GeneralKey": {
-                    "data": "(hash)",
-                    "length": 2,
-                  },
-                },
-              ],
-            },
-            "parents": 1,
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 5000)",
+            "refTime": "(rounded 500000000)",
           },
         },
-      ],
-      "dest": {
+      },
+    },
+    "method": "Attempted",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "fees": [],
+      "paying": {
         "interior": {
-          "X2": [
-            {
-              "Parachain": 2000,
-            },
+          "X1": [
             {
               "AccountId32": {
                 "id": "(hash)",
-                "network": null,
+                "network": "Kusama",
               },
+            },
+          ],
+        },
+        "parents": 0,
+      },
+    },
+    "method": "FeesPaid",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "destination": {
+        "interior": {
+          "X1": [
+            {
+              "Parachain": 2000,
             },
           ],
         },
         "parents": 1,
       },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000000000,
-        },
-        "id": {
-          "interior": {
-            "X2": [
-              {
-                "Parachain": 2000,
+      "message": [
+        {
+          "WithdrawAsset": [
+            {
+              "fun": {
+                "Fungible": 1000000000000,
               },
-              {
-                "GeneralKey": {
-                  "data": "(hash)",
-                  "length": 2,
+              "id": {
+                "interior": {
+                  "X1": [
+                    {
+                      "GeneralKey": {
+                        "data": "(hash)",
+                        "length": 2,
+                      },
+                    },
+                  ],
                 },
+                "parents": 0,
               },
-            ],
-          },
-          "parents": 1,
+            },
+          ],
         },
+        "ClearOrigin",
+        {
+          "BuyExecution": {
+            "fees": {
+              "fun": {
+                "Fungible": 1000000000000,
+              },
+              "id": {
+                "interior": {
+                  "X1": [
+                    {
+                      "GeneralKey": {
+                        "data": "(hash)",
+                        "length": 2,
+                      },
+                    },
+                  ],
+                },
+                "parents": 0,
+              },
+            },
+            "weightLimit": "Unlimited",
+          },
+        },
+        {
+          "DepositAsset": {
+            "assets": {
+              "Wild": {
+                "AllCounted": 1,
+              },
+            },
+            "beneficiary": {
+              "interior": {
+                "X1": [
+                  {
+                    "AccountId32": {
+                      "id": "(hash)",
+                      "network": null,
+                    },
+                  },
+                ],
+              },
+              "parents": 0,
+            },
+          },
+        },
+      ],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Kusama",
+              },
+            },
+          ],
+        },
+        "parents": 0,
       },
-      "sender": "Z2kDhBaTFjDS4eyFK26rBVTsy5EQUfHxgcvsYeQ95N73hh9",
     },
-    "method": "TransferredAssets",
-    "section": "xTokens",
+    "method": "Sent",
+    "section": "polkadotXcm",
   },
 ]
 `;
@@ -748,7 +815,7 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
                   "depositAsset": {
                     "assets": {
                       "wild": {
-                        "allCounted": 1,
+                        "allCounted": 2,
                       },
                     },
                     "beneficiary": {
@@ -822,46 +889,48 @@ exports[`karura & shiden > shiden transfer KSM to karura > tx events 1`] = `
 [
   {
     "data": {
-      "assets": [
-        {
-          "fun": {
-            "Fungible": 1000000000000,
-          },
-          "id": {
-            "interior": "Here",
-            "parents": 1,
-          },
-        },
-      ],
-      "dest": {
+      "destination": {
         "interior": {
-          "X2": [
+          "X1": [
             {
-              "Parachain": 2000,
-            },
-            {
-              "AccountId32": {
-                "id": "(hash)",
-                "network": null,
-              },
+              "Parachain": 1000,
             },
           ],
         },
         "parents": 1,
       },
-      "fee": {
-        "fun": {
-          "Fungible": 1000000000000,
+      "message": [],
+      "messageId": "(hash)",
+      "origin": {
+        "interior": {
+          "X1": [
+            {
+              "AccountId32": {
+                "id": "(hash)",
+                "network": "Kusama",
+              },
+            },
+          ],
         },
-        "id": {
-          "interior": "Here",
-          "parents": 1,
+        "parents": 0,
+      },
+    },
+    "method": "Sent",
+    "section": "polkadotXcm",
+  },
+  {
+    "data": {
+      "outcome": {
+        "Complete": {
+          "used": {
+            "proofSize": "(rounded 9000)",
+            "refTime": "(rounded 800000000)",
+          },
         },
       },
-      "sender": "Z2kDhBaTFjDS4eyFK26rBVTsy5EQUfHxgcvsYeQ95N73hh9",
     },
-    "method": "TransferredAssets",
-    "section": "xTokens",
+    "method": "Attempted",
+    "section": "polkadotXcm",
   },
 ]
 `;

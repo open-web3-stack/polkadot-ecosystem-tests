@@ -24,6 +24,21 @@ const custom = {
     sdn: { Concrete: { parents: 0, interior: 'Here' } },
     kar: 18446744073709551618n,
     usdt: 4294969280n,
+
+    // Locations of the assets above, as Shiden's `xcAssetConfig` records them. The XCM pallet
+    // takes locations, while the assets pallet takes the ids above.
+    xcmKsm: { Concrete: { parents: 1, interior: 'Here' } },
+    xcmKar: {
+      Concrete: {
+        parents: 1,
+        interior: {
+          X2: [
+            { Parachain: 2000 },
+            { GeneralKey: { length: 2, data: '0x0080000000000000000000000000000000000000000000000000000000000000' } },
+          ],
+        },
+      },
+    },
   },
 }
 
