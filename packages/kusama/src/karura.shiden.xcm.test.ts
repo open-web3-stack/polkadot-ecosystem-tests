@@ -9,28 +9,12 @@ import { describe } from 'vitest'
 describe('karura & shiden', async () => {
   const [shidenClient, karuraClient, assetHubKusamaClient] = await setupNetworks(shiden, karura, assetHubKusama)
 
-  // Shiden removed `xTokens`, so its transfers go through the XCM pallet. Karura keeps
-  // `xTokens`, so the transfers in the other direction are unchanged.
-  runXcmPalletHorizontal('shiden transfer KAR to karura', async () => {
-    return {
-      fromChain: shidenClient,
-      toChain: karuraClient,
-      fromBalance: query.assets(shiden.custom.kar),
-      toBalance: query.balances,
-      tx: tx.xcmPallet.transferAssetsV3(shiden.custom.xcmKar, 1e12, tx.xcmPallet.parachainV3(1, karura.paraId!)),
-    }
-  })
-
-  runXtokenstHorizontal('karura transfer KAR to shiden', async () => {
-    return {
-      fromChain: karuraClient,
-      toChain: shidenClient,
-      fromBalance: query.balances,
-      toBalance: query.assets(shiden.custom.kar),
-      tx: tx.xtokens.transfer(karura.custom.kar, 1e12, tx.xtokens.parachainV3(shiden.paraId!)),
-    }
-  })
-
+  // Shiden and Karura have no HRMP channel between them, so KAR cannot move directly in either
+  // direction. Both chains keep a channel to Kusama Asset Hub, so KSM still moves between them
+  // with the Asset Hub as its reserve.
+  //
+  // Shiden removed `xTokens`, so its transfers go through the XCM pallet. Karura keeps `xTokens`,
+  // so the transfers in the other direction use it.
   runXcmPalletHorizontal('shiden transfer KSM to karura', async () => {
     return {
       fromChain: shidenClient,
