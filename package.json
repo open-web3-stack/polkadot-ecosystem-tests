@@ -56,7 +56,7 @@
 		"@types/lodash": "^4.17.24",
 		"@types/node": "^26.1.0",
 		"@vitest/ui": "^4.1.10",
-		"dotenv": "^17.4.2",
+		"dotenv": "^18.0.4",
 		"husky": "^9.1.7",
 		"lint-staged": "^17.6.0",
 		"tsx": "^4.23.15",
