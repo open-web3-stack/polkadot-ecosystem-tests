@@ -55,16 +55,23 @@ const IS_NEW_LOGIC_FLAG = '0x80000000000000000000000000000000'
 // The DAP pallet on AssetHub periodically mints inflation rewards (`dap.IssuanceMinted`).
 // When the Chopsticks fork point crosses a DAP payout boundary, one or more blocks in the
 // test sequence will carry a mint that changes total issuance independently of the operation
-// under test. This helper reads the minted amount from the current block's events so callers
-// can subtract it from the observed issuance delta before asserting operation-specific effects.
-async function getDapIssuance(api: ApiPromise): Promise<bigint> {
+// under test. This helper adds up the amounts minted in every block after `sinceBlock`, so a
+// caller can subtract them from the issuance delta it observes. A mint can land in any block of
+// the sequence, so reading only the latest block misses it.
+async function getDapIssuance(api: ApiPromise, sinceBlock: number): Promise<bigint> {
+  const head = (await api.rpc.chain.getHeader()).number.toNumber()
   let dapMint = 0n
-  const events = await api.query.system.events()
-  for (const { event } of events) {
-    if (event.section === 'dap' && event.method === 'IssuanceMinted') {
-      dapMint += (event.data as any)[0].toBigInt()
+
+  for (let height = sinceBlock + 1; height <= head; height++) {
+    const hash = await api.rpc.chain.getBlockHash(height)
+    const events = await api.query.system.events.at(hash)
+    for (const { event } of events) {
+      if (event.section === 'dap' && event.method === 'IssuanceMinted') {
+        dapMint += (event.data as any)[0].toBigInt()
+      }
     }
   }
+
   return dapMint
 }
 
@@ -2965,6 +2972,7 @@ async function forceSetBalanceSuccessTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
 
   // 2. Force set Alice's balance to 101 ED
@@ -3012,7 +3020,7 @@ async function forceSetBalanceSuccessTest<
   expect(aliceAccountFinal.data.free.toBigInt()).toBe(newBalance)
 
   // Verify total issuance increased by the expected amount
-  const dapMint = await getDapIssuance(baseClient.api)
+  const dapMint = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await baseClient.api.query.balances.totalIssuance()
   const actualIssuanceIncrease = finalTotalIssuance.toBigInt() - initialTotalIssuance.toBigInt() - dapMint
   expect(actualIssuanceIncrease).toBe(expectedIssuanceIncrease)
@@ -3040,8 +3048,9 @@ async function forceSetBalanceSuccessTest<
   expect(balanceSetEventData.free.toBigInt()).toBe(newBalance)
 
   // Check new total issuance
+  const dapMintFinal = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
-  expect(newTotalIssuance.toBigInt()).toBe(initialTotalIssuance.toBigInt() + expectedIssuanceIncrease)
+  expect(newTotalIssuance.toBigInt() - dapMintFinal).toBe(initialTotalIssuance.toBigInt() + expectedIssuanceIncrease)
 
   // Verify Alice is still alive
   expect(await isAccountReaped(baseClient, alice.address)).toBe(false)
@@ -3072,6 +3081,7 @@ async function forceSetBalanceBelowEdTest<
   expect(aliceAccountInitial.data.free.toBigInt()).toBe(initialBalance)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await baseClient.api.query.balances.totalIssuance()
 
   // 2. Force set Alice's balance to ED - 1 (below existential deposit)
@@ -3157,7 +3167,7 @@ async function forceSetBalanceBelowEdTest<
   )
 
   // Check new total issuance
-  const dapMint2 = await getDapIssuance(baseClient.api)
+  const dapMint2 = await getDapIssuance(baseClient.api, initialTotalIssuanceBlock)
   const newTotalIssuance = await baseClient.api.query.balances.totalIssuance()
   expect(newTotalIssuance.toBigInt() - dapMint2).toBe(initialTotalIssuance.toBigInt() - initialBalance)
 }
@@ -3211,6 +3221,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
     paraId = (parachainInfo as any).toNumber()
   }
 
+  const issuanceBeforeBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const issuanceBefore = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
 
   // 1. Try to increase total issuance by 0
@@ -3274,7 +3285,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   })
   expect(issuanceEvent).toBeUndefined()
 
-  const dapMint1 = await getDapIssuance(baseClient.api)
+  const dapMint1 = await getDapIssuance(baseClient.api, issuanceBeforeBlock)
   const issuanceAfter = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
   expect(issuanceAfter - dapMint1).toBe(issuanceBefore)
 
@@ -3337,7 +3348,7 @@ async function forceAdjustTotalIssuanceZeroDeltaTest<
   })
   expect(issuanceEvent).toBeUndefined()
 
-  const dapMint2 = await getDapIssuance(baseClient.api)
+  const dapMint2 = await getDapIssuance(baseClient.api, issuanceBeforeBlock)
   const issuanceAfter2 = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
   expect(issuanceAfter2 - dapMint2).toBe(issuanceBefore)
 }
@@ -3364,6 +3375,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
 
   // 1. Get initial total issuance
 
+  const initialIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const initialIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
 
   // 2. Increase total issuance by 1
@@ -3403,7 +3415,8 @@ async function forceAdjustTotalIssuanceSuccessTest<
 
   // 3. Verify the increase worked
 
-  const dapMintIncrease = await getDapIssuance(baseClient.api)
+  const dapMintIncrease = await getDapIssuance(baseClient.api, initialIssuanceBlock)
+  const afterIncreaseIssuanceBlock = (await baseClient.api.rpc.chain.getHeader()).number.toNumber()
   const afterIncreaseIssuance = (await baseClient.api.query.balances.totalIssuance()).toBigInt()
   expect(afterIncreaseIssuance - dapMintIncrease).toBe(initialIssuance + increaseDelta)
 
@@ -3453,7 +3466,7 @@ async function forceAdjustTotalIssuanceSuccessTest<
 
   // 5. Verify the decrease worked
 
-  const dapMintDecrease = await getDapIssuance(baseClient.api)
+  const dapMintDecrease = await getDapIssuance(baseClient.api, afterIncreaseIssuanceBlock)
   const finalIssuance = await baseClient.api.query.balances.totalIssuance()
   const finalIssuanceBigInt = finalIssuance.toBigInt()
   expect(finalIssuanceBigInt - dapMintDecrease).toBe(afterIncreaseIssuance - decreaseDelta)
@@ -3495,6 +3508,7 @@ async function burnTestBaseCase<
   const cumulativeFees = new Map<string, bigint>()
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
   // 2. Alice burns 500 ED of her own
@@ -3526,7 +3540,7 @@ async function burnTestBaseCase<
   expect(aliceAccountAfterBurn.data.free.toBigInt()).toBe(expectedBalanceAfterBurn)
 
   // Check total issuance decreased by burn amount (fees are not included)
-  const dapMintBurn = await getDapIssuance(client.api)
+  const dapMintBurn = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   const tiDelta = initialTotalIssuance.toBigInt() - (totalIssuanceAfterBurn.toBigInt() - dapMintBurn)
   if (client.config.isRelayChain) {
@@ -3569,6 +3583,7 @@ async function burnTestWithReaping<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
 
   const cumulativeFees = new Map<string, bigint>()
@@ -3627,7 +3642,7 @@ async function burnTestWithReaping<
   expect(dustLostEventData.amount.toBigInt()).toBe(existentialDeposit - 1n)
 
   // 4. Verify that the total issuance is decreased by the amount burned
-  const dapMintReap = await getDapIssuance(client.api)
+  const dapMintReap = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   const isBifrost = client.config.name.includes('bifrost')
   const reapingFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
@@ -3665,6 +3680,7 @@ async function burnKeepAliveTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
@@ -3721,7 +3737,7 @@ async function burnKeepAliveTest<
 
   // 6. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
-  const dapMintKeepAlive = await getDapIssuance(client.api)
+  const dapMintKeepAlive = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const keepAliveFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const keepAliveTI = finalTotalIssuance.toBigInt() - dapMintKeepAlive
@@ -3764,6 +3780,7 @@ async function burnWithDepositTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and consumer count
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   expect(aliceAccountInitial.consumers.toNumber()).toBe(0)
@@ -3843,7 +3860,7 @@ async function burnWithDepositTest<
 
   // 5. Verify that total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
 
-  const dapMintDeposit = await getDapIssuance(client.api)
+  const dapMintDeposit = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const depositFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const depositTI = finalTotalIssuance.toBigInt() - dapMintDeposit
@@ -3896,6 +3913,7 @@ async function burnDoubleAttemptTest<
   expect(await isAccountReaped(client, alice.address)).toBe(false)
 
   // Query initial total issuance and Alice's initial balance
+  const initialTotalIssuanceBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
   const initialTotalIssuance = await client.api.query.balances.totalIssuance()
   const aliceAccountInitial = await client.api.query.system.account(alice.address)
   const aliceInitialBalance = aliceAccountInitial.data.free.toBigInt()
@@ -3969,7 +3987,7 @@ async function burnDoubleAttemptTest<
   // 5. Verify total issuance is unchanged (see polkadot-sdk#9986 for relay-chain author-drop case)
   // Two transactions: each fee goes through ration(80,20) independently, so we check per-fee drops.
 
-  const dapMintDouble = await getDapIssuance(client.api)
+  const dapMintDouble = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const finalTotalIssuance = await client.api.query.balances.totalIssuance()
   const doubleFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
   const singleFee = doubleFee / 2n
