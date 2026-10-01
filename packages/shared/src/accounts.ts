@@ -9,6 +9,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Vec } from '@polkadot/types'
 import type { FrameSystemEventRecord } from '@polkadot/types/lookup'
 import type { ISubmittableResult } from '@polkadot/types/types'
+import type { u128 } from '@polkadot/types-codec'
 import { encodeAddress } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
@@ -59,6 +60,12 @@ const IS_NEW_LOGIC_FLAG = '0x80000000000000000000000000000000'
 // caller can subtract them from the issuance delta it observes. A mint can land in any block of
 // the sequence, so reading only the latest block misses it.
 async function getDapIssuance(api: ApiPromise, sinceBlock: number): Promise<bigint> {
+  // Only some chains have the DAP pallet.
+  const issuanceMinted = api.events.dap?.IssuanceMinted
+  if (issuanceMinted === undefined) {
+    return 0n
+  }
+
   const head = (await api.rpc.chain.getHeader()).number.toNumber()
   let dapMint = 0n
 
@@ -66,8 +73,11 @@ async function getDapIssuance(api: ApiPromise, sinceBlock: number): Promise<bigi
     const hash = await api.rpc.chain.getBlockHash(height)
     const events = await api.query.system.events.at(hash)
     for (const { event } of events) {
-      if (event.section === 'dap' && event.method === 'IssuanceMinted') {
-        dapMint += (event.data as any)[0].toBigInt()
+      if (issuanceMinted.is(event)) {
+        // `IssuanceMinted` carries `total_minted` then `elapsed_millis`. The DAP pallet is not
+        // in the augmented types, so the balance needs its concrete type.
+        const [totalMinted] = event.data
+        dapMint += (totalMinted as u128).toBigInt()
       }
     }
   }
