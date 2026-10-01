@@ -2,7 +2,6 @@
   "polkadot": [
     "wss://rpc-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io",
-    "wss://polkadot.api.onfinality.io/public-ws",
     "wss://rpc-polkadot.helixstreet.io",
     "wss://polkadot-rpc.n.dwellir.com"
   ],
@@ -26,7 +25,6 @@
     "wss://dot-rpc.stakeworld.io/collectives"
   ],
   "coretimePolkadot": [
-    "wss://coretime-polkadot.api.onfinality.io/public-ws",
     "wss://rpc-coretime-polkadot.luckyfriday.io",
     "wss://coretime-polkadot-rpc.n.dwellir.com",
     "wss://dot-rpc.stakeworld.io/coretime"
@@ -35,7 +33,6 @@
     "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
-    "wss://people-polkadot.api.onfinality.io/public-ws",
     "wss://rpc-people-polkadot.luckyfriday.io",
     "wss://people-polkadot-rpc.n.dwellir.com",
     "wss://dot-rpc.stakeworld.io/people"
@@ -57,7 +54,6 @@
   ],
   "moonbeam": [
     "wss://moonbeam-rpc.n.dwellir.com",
-    "wss://moonbeam.api.onfinality.io/public-ws",
     "wss://moonbeam-rpc.publicnode.com",
     "wss://wss.api.moonbeam.network"
   ],
@@ -65,7 +61,6 @@
     "wss://astar-rpc.n.dwellir.com"
   ],
   "kusama": [
-    "wss://kusama.api.onfinality.io/public-ws",
     "wss://rpc-kusama.luckyfriday.io",
     "wss://kusama-rpc.n.dwellir.com"
   ],
@@ -82,14 +77,12 @@
   "coretimeKusama": [
     "wss://rpc-coretime-kusama.luckyfriday.io",
     "wss://coretime-kusama-rpc.n.dwellir.com",
-    "wss://ksm-rpc.stakeworld.io/coretime",
-    "wss://coretime-kusama.api.onfinality.io/public-ws"
+    "wss://ksm-rpc.stakeworld.io/coretime"
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
     "wss://people-kusama-rpc.n.dwellir.com",
     "wss://ksm-rpc.stakeworld.io/people",
-    "wss://people-kusama.api.onfinality.io/public-ws",
     "wss://rpc-people-kusama.helixstreet.io"
   ],
   "encointerKusama": [
@@ -99,8 +92,7 @@
   "karura": [
     "wss://karura-rpc.aca-api.network",
     "wss://rpc-karura.luckyfriday.io",
-    "wss://karura-rpc.n.dwellir.com",
-    "wss://karura.api.onfinality.io/public-ws"
+    "wss://karura-rpc.n.dwellir.com"
   ],
   "bifrostKusama": [
     "wss://hk.bifrost-rpc.liebi.com/ws",
@@ -111,7 +103,6 @@
     "wss://rpc.basilisk.cloud"
   ],
   "moonriver": [
-    "wss://moonriver.api.onfinality.io/public-ws",
     "wss://moonriver-rpc.n.dwellir.com",
     "wss://moonriver-rpc.publicnode.com",
     "wss://wss.api.moonriver.moonbeam.network"
