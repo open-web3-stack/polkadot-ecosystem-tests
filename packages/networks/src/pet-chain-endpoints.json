@@ -2,8 +2,8 @@
   "polkadot": [
     "wss://rpc-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io",
-    "wss://polkadot-rpc.n.dwellir.com",
-    "wss://rpc-polkadot.helixstreet.io"
+    "wss://rpc-polkadot.helixstreet.io",
+    "wss://polkadot-rpc.n.dwellir.com"
   ],
   "assetHubWestend": [
     "wss://westend-asset-hub-rpc.polkadot.io",
@@ -38,19 +38,19 @@
     "wss://people-polkadot-rpc.n.dwellir.com"
   ],
   "acala": [
-    "wss://rpc-acala.luckyfriday.io",
     "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc-0.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws"
+    "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
-    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
-    "wss://hk.p.bifrost-rpc.liebi.com/ws"
+    "wss://hk.p.bifrost-rpc.liebi.com/ws",
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
   ],
   "hydration": [
-    "wss://hydration-rpc.n.dwellir.com",
-    "wss://rpc.hydradx.cloud"
+    "wss://rpc.hydradx.cloud",
+    "wss://hydration-rpc.n.dwellir.com"
   ],
   "moonbeam": [
     "wss://moonbeam-rpc.n.dwellir.com",
@@ -90,13 +90,13 @@
     "wss://encointer-kusama-rpc.n.dwellir.com"
   ],
   "karura": [
-    "wss://rpc-karura.luckyfriday.io",
     "wss://karura-rpc.aca-api.network",
-    "wss://karura-rpc.n.dwellir.com"
+    "wss://karura-rpc.n.dwellir.com",
+    "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://hk.bifrost-rpc.liebi.com/ws",
-    "wss://bifrost-rpc.liebi.com/ws"
+    "wss://bifrost-rpc.liebi.com/ws",
+    "wss://hk.bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",
