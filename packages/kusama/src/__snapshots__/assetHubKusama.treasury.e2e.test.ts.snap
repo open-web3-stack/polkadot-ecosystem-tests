@@ -1,0 +1,350 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Kusama Asset Hub Treasury > Success > Check status cleans up an expired, never-paid spend > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Check status of a spend and remove it from the storage if processed > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(redacted)",
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Claim a spend > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Claim a spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(redacted)",
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Deferred spend cannot be paid before valid_from but can be paid after > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Propose and approve a spend of treasury funds > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(redacted)",
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > payout events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+      "paymentId": "(redacted)",
+    },
+    "method": "Paid",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > spend processed events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "SpendProcessed",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > USDT spend lifecycle preserves total issuance (approve, payout, check status) > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(redacted)",
+      "assetKind": {
+        "V4": {
+          "assetId": {
+            "interior": {
+              "X2": [
+                {
+                  "PalletInstance": 50,
+                },
+                {
+                  "GeneralIndex": "(rounded 2000)",
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Void previously approved spend > treasury spend approval events 1`] = `
+[
+  {
+    "data": {
+      "amount": "(redacted)",
+      "assetKind": {
+        "V5": {
+          "assetId": {
+            "interior": "Here",
+            "parents": 1,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "beneficiary": {
+        "V4": {
+          "accountId": {
+            "interior": {
+              "X1": [
+                {
+                  "AccountId32": {
+                    "id": "(hash)",
+                    "network": null,
+                  },
+                },
+              ],
+            },
+            "parents": 0,
+          },
+          "location": {
+            "interior": "Here",
+            "parents": 0,
+          },
+        },
+      },
+      "expireAt": "(redacted)",
+      "index": "(redacted)",
+      "validFrom": "(redacted)",
+    },
+    "method": "AssetSpendApproved",
+    "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Treasury > Success > Void previously approved spend > treasury spend voided events 1`] = `
+[
+  {
+    "data": {
+      "index": "(redacted)",
+    },
+    "method": "AssetSpendVoided",
+    "section": "treasury",
+  },
+]
+`;
