@@ -1,13 +1,13 @@
 {
   "polkadot": [
-    "wss://dot-rpc.stakeworld.io",
     "wss://rpc-polkadot.luckyfriday.io",
+    "wss://dot-rpc.stakeworld.io",
     "wss://polkadot-rpc.n.dwellir.com",
     "wss://rpc-polkadot.helixstreet.io"
   ],
   "assetHubWestend": [
-    "wss://westend-asset-hub-rpc.polkadot.io",
-    "wss://asset-hub-westend-rpc.n.dwellir.com"
+    "wss://asset-hub-westend-rpc.n.dwellir.com",
+    "wss://westend-asset-hub-rpc.polkadot.io"
   ],
   "assetHubPolkadot": [
     "wss://dot-rpc.stakeworld.io/assethub",
@@ -21,13 +21,13 @@
   ],
   "collectivesPolkadot": [
     "wss://rpc-collectives-polkadot.luckyfriday.io",
-    "wss://collectives-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/collectives"
+    "wss://dot-rpc.stakeworld.io/collectives",
+    "wss://collectives-polkadot-rpc.n.dwellir.com"
   ],
   "coretimePolkadot": [
     "wss://rpc-coretime-polkadot.luckyfriday.io",
-    "wss://coretime-polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io/coretime"
+    "wss://dot-rpc.stakeworld.io/coretime",
+    "wss://coretime-polkadot-rpc.n.dwellir.com"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
@@ -40,8 +40,8 @@
   "acala": [
     "wss://acala-rpc-0.aca-api.network",
     "wss://acala-rpc.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc-1.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
@@ -66,8 +66,8 @@
   ],
   "assetHubKusama": [
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
-    "wss://ksm-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-kusama-rpc.n.dwellir.com"
+    "wss://asset-hub-kusama-rpc.n.dwellir.com",
+    "wss://ksm-rpc.stakeworld.io/assethub"
   ],
   "bridgeHubKusama": [
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",
@@ -76,13 +76,13 @@
   ],
   "coretimeKusama": [
     "wss://rpc-coretime-kusama.luckyfriday.io",
-    "wss://ksm-rpc.stakeworld.io/coretime",
-    "wss://coretime-kusama-rpc.n.dwellir.com"
+    "wss://coretime-kusama-rpc.n.dwellir.com",
+    "wss://ksm-rpc.stakeworld.io/coretime"
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
-    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://ksm-rpc.stakeworld.io/people",
+    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://rpc-people-kusama.helixstreet.io"
   ],
   "encointerKusama": [
