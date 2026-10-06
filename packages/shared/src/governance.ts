@@ -1236,15 +1236,19 @@ async function injectDecisionPeriodEnd(
 /**
  * Fast-forward a referendum straight to the final instant of its confirmation period via storage
  * injection, using `computeMinimumPassingTally` to construct a tally that genuinely clears both
- * of the track's approval/support curves at `elapsedBlocks` blocks into the decision period
- * (since `deciding.since`).
+ * of the track's approval/support curves for the whole confirmation window.
+ *
+ * The window ends on the next block, `elapsedBlocks` blocks after `deciding.since`, and so starts
+ * `elapsedBlocks - confirmPeriod` blocks after it. The runtime rechecks `is_passing` on every
+ * nudge and aborts confirmation if it fails, and both curves only decrease over time, so the
+ * tally is computed at the window's start, the strictest point in it.
  *
  * `elapsedBlocks` is taken as a block count, not a `Perbill` fraction, so the caller's intended
  * elapsed time and the backdated `deciding.since` agree exactly - only the curve-math step
  * downstream (`computeMinimumPassingTally`) needs to convert it to a fraction, and rounding there
  * can only make the resulting tally *more* conservative, never invalidate `elapsedBlocks` itself.
  *
- * 1. computing a tally that clears both curves at `elapsedBlocks`
+ * 1. computing a tally that clears both curves at `elapsedBlocks - confirmPeriod`
  * 2. backdating `submitted`/`deciding.since` so that many blocks of the decision period have
  *    elapsed, and setting `deciding.confirming` to end on the next block
  * 3. scheduling a `nudgeReferendum` call via the scheduler
@@ -1265,14 +1269,18 @@ async function injectConfirmedPassing(
     `elapsedBlocks must cover at least the confirm period (${confirmPeriod} of ${decisionPeriod} blocks) for confirming to have been running this long`,
   )
 
-  // 1. Compute a tally that clears both of the track's curves at `elapsedBlocks`
+  // 1. Compute a tally that clears both of the track's curves from the start of the confirmation window
   const totalIssuance = (await client.api.query.balances.totalIssuance()).toBigInt()
-  const elapsedPerbill = elapsedToPerbill(BigInt(elapsedBlocks), BigInt(decisionPeriod))
+  const elapsedPerbill = elapsedToPerbill(BigInt(elapsedBlocks - confirmPeriod), BigInt(decisionPeriod))
   const tally = computeMinimumPassingTally(track[1], elapsedPerbill, totalIssuance)
 
   /**
    * 2. Backdate the referendum so `elapsedBlocks` of the decision period have elapsed by the next
-   *    block, and set `confirming`'s deadline a full `confirmPeriod` before that same block.
+   *    block, and set `confirming` to end on that same block.
+   *
+   * `confirming` holds the block confirmation ends, which the runtime only ever writes as the
+   * block confirmation started plus `confirmPeriod`. Ending it on the next block puts the start at
+   * `decidingSince + elapsedBlocks - confirmPeriod`, never before `decidingSince`.
    *
    * `currentBlock` is read via `client.config.properties.schedulerBlockProvider`, not the
    * parachain's own local header: on Asset Hub, `pallet_referenda`/`pallet_scheduler` are both
@@ -1282,7 +1290,7 @@ async function injectConfirmedPassing(
   const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
   const nextBlock = currentBlock + 1
   const decidingSince = nextBlock - elapsedBlocks
-  const confirmDeadline = nextBlock - confirmPeriod
+  const confirmDeadline = decidingSince + elapsedBlocks
   const newSubmitted = decidingSince - prepPeriod
 
   await client.dev.setStorage({
