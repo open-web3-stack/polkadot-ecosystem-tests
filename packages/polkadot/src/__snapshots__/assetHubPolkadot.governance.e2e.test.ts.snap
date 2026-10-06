@@ -762,6 +762,19 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
 ]
 `;
 
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > decision deposit placed for referendum 1`] = `
+[
+  {
+    "data": {
+      "amount": 10000000000,
+      "who": "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > treasury spend approved via referendum enactment 1`] = `
 [
   {
@@ -824,6 +837,28 @@ exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle 
     },
     "method": "AssetSpendApproved",
     "section": "treasury",
+  },
+]
+`;
+
+exports[`Polkadot Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > vote cast for referendum 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(rounded 2000)",
+      "vote": {
+        "Standard": {
+          "balance": 10000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "14Gjs1TD93gnwEBfDMHoCgsuf1s2TVKUP6Z1qKmAZnZ8cW5q",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
   },
 ]
 `;

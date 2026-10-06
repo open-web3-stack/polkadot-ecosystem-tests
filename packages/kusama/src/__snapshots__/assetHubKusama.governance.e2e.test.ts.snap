@@ -762,6 +762,19 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
 ]
 `;
 
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > decision deposit placed for referendum 1`] = `
+[
+  {
+    "data": {
+      "amount": "(rounded 33000000000)",
+      "who": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+    },
+    "method": "DecisionDepositPlaced",
+    "section": "referenda",
+  },
+]
+`;
+
 exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > treasury spend approved via referendum enactment 1`] = `
 [
   {
@@ -824,6 +837,28 @@ exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle te
     },
     "method": "AssetSpendApproved",
     "section": "treasury",
+  },
+]
+`;
+
+exports[`Kusama Asset Hub Governance > referenda tests > referendum lifecycle test 4 - submission, decision deposit, voting, and a passing outcome (with enactment) should all work > vote cast for referendum 1`] = `
+[
+  {
+    "data": {
+      "pollIndex": "(rounded 670)",
+      "vote": {
+        "Standard": {
+          "balance": 10000000000,
+          "vote": {
+            "conviction": "None",
+            "vote": "Aye",
+          },
+        },
+      },
+      "who": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+    },
+    "method": "Voted",
+    "section": "convictionVoting",
   },
 ]
 `;
