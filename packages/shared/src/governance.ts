@@ -2492,14 +2492,14 @@ export async function referendumPassingLifecycleTest<
     'a single small vote should not yet clear the curves',
   ).toBe(true)
 
-  // 6. Fast-forward to the final instant of the confirmation period
-  const passingTally = await injectConfirmedPassing(
-    client,
-    referendumIndex,
-    ongoingPostVote,
-    smallTipper,
-    smallTipper[1].confirmPeriod.toNumber(),
-  )
+  /**
+   * 6. Fast-forward to the final instant of the confirmation period
+   *
+   * The referendum is placed one day (14400 six-second blocks) into its decision period. The
+   * support curve falls steeply early on, so this keeps the injected support near 1% of total
+   * issuance, a plausible turnout for a small tip.
+   */
+  const passingTally = await injectConfirmedPassing(client, referendumIndex, ongoingPostVote, smallTipper, 14400)
   await client.dev.newBlock()
 
   // 7. Verify the referendum emits `Confirmed` with that same tally, and becomes `Approved`
