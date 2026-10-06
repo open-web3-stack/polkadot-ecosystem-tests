@@ -25,6 +25,7 @@ import {
   elapsedToPerbill,
   expectPjsEqual,
   getBlockNumber,
+  nextSchedulableBlockNum,
   objectCmp,
   type PassingTally,
   scheduleInlineCallWithOrigin,
@@ -1275,21 +1276,20 @@ async function injectConfirmedPassing(
   const tally = computeMinimumPassingTally(track[1], elapsedPerbill, totalIssuance)
 
   /**
-   * 2. Backdate the referendum so `elapsedBlocks` of the decision period have elapsed by the next
-   *    block, and set `confirming` to end on that same block.
+   * 2. Backdate the referendum so `elapsedBlocks` of the decision period have elapsed by the block
+   *    the nudge runs at, and set `confirming` to end on that same block.
    *
    * `confirming` holds the block confirmation ends, which the runtime only ever writes as the
-   * block confirmation started plus `confirmPeriod`. Ending it on the next block puts the start at
-   * `decidingSince + elapsedBlocks - confirmPeriod`, never before `decidingSince`.
+   * block confirmation started plus `confirmPeriod`. Ending it on the nudge block puts the start
+   * at `decidingSince + elapsedBlocks - confirmPeriod`, never before `decidingSince`.
    *
-   * `currentBlock` is read via `client.config.properties.schedulerBlockProvider`, not the
-   * parachain's own local header: on Asset Hub, `pallet_referenda`/`pallet_scheduler` are both
-   * configured with `RelaychainDataProvider`, so the block number they actually compare against
-   * is the relay chain's, not the parachain's local block count.
+   * `nudgeBlock` is the block number `pallet_referenda` sees as `now` when the nudge runs. On
+   * Asset Hub, `pallet_referenda`/`pallet_scheduler` are both configured with
+   * `RelaychainDataProvider`, so this is a relay chain block number, and the next parachain block
+   * still reads the current `lastRelayChainBlockNumber` as `now`, not one past it.
    */
-  const currentBlock = await getBlockNumber(client.api, client.config.properties.schedulerBlockProvider)
-  const nextBlock = currentBlock + 1
-  const decidingSince = nextBlock - elapsedBlocks
+  const nudgeBlock = await nextSchedulableBlockNum(client.api, client.config.properties.schedulerBlockProvider)
+  const decidingSince = nudgeBlock - elapsedBlocks
   const confirmDeadline = decidingSince + elapsedBlocks
   const newSubmitted = decidingSince - prepPeriod
 
@@ -1310,7 +1310,7 @@ async function injectConfirmedPassing(
               deciding: { since: decidingSince, confirming: confirmDeadline },
               tally: { ayes: tally.ayes.toString(), nays: tally.nays.toString(), support: tally.support.toString() },
               inQueue: ongoing.inQueue,
-              alarm: [nextBlock, [nextBlock, 0]],
+              alarm: [nudgeBlock, [nudgeBlock, 0]],
             },
           },
         ],
