@@ -2421,8 +2421,13 @@ export async function referendumPassingLifecycleTest<
 
   // 3. Place decision deposit
   const decisionDepTx = client.api.tx.referenda.placeDecisionDeposit(referendumIndex)
-  await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
+  const decisionDepositEvent = await sendTransaction(decisionDepTx.signAsync(devAccounts.bob))
   await client.dev.newBlock()
+
+  let unwantedFields = /index/
+  await checkEvents(decisionDepositEvent, 'referenda')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('decision deposit placed for referendum')
 
   // 4. Wait for the preparation period to elapse
   const relayBlocksPerParaBlock = (client.config.properties as any).relayBlocksPerParaBlock ?? 1
@@ -2442,6 +2447,13 @@ export async function referendumPassingLifecycleTest<
 
   await client.dev.newBlock()
 
+  const events = await client.api.query.system.events()
+  const decisionStartedEvents = events.filter((record) => {
+    const { event } = record
+    return event.section === 'referenda' && event.method === 'DecisionStarted'
+  })
+  expect(decisionStartedEvents.length).toBe(1)
+
   /**
    * 5. Cast a vote
    *
@@ -2452,8 +2464,13 @@ export async function referendumPassingLifecycleTest<
   const voteTx = client.api.tx.convictionVoting.vote(referendumIndex, {
     Standard: { vote: { aye: true, conviction: 'None' }, balance: 1e10 },
   })
-  await sendTransaction(voteTx.signAsync(devAccounts.charlie))
+  const votedEvent = await sendTransaction(voteTx.signAsync(devAccounts.charlie))
   await client.dev.newBlock()
+
+  unwantedFields = /index/
+  await checkEvents(votedEvent, 'convictionVoting')
+    .redact({ removeKeys: unwantedFields })
+    .toMatchSnapshot('vote cast for referendum')
 
   let referendumDataOpt: Option<PalletReferendaReferendumInfoConvictionVotingTally> =
     await client.api.query.referenda.referendumInfoFor(referendumIndex)
