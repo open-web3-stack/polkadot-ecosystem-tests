@@ -45,7 +45,7 @@
 	"packageManager": "yarn@4.14.1",
 	"dependencies": {
 		"@e2e-test/networks": "workspace:*",
-		"@swc/core": "^1.16.1",
+		"@swc/core": "^1.16.2",
 		"lodash": "^4.18.1",
 		"ts-pattern": "^5.9.0",
 		"typescript": "^6.0.3",
@@ -56,11 +56,11 @@
 		"@types/lodash": "^4.17.24",
 		"@types/node": "^26.1.0",
 		"@vitest/ui": "^4.1.10",
-		"dotenv": "^17.4.2",
+		"dotenv": "^18.0.4",
 		"husky": "^9.1.7",
-		"lint-staged": "^17.2.0",
-		"tsx": "^4.23.12",
-		"unplugin-swc": "^1.5.9",
+		"lint-staged": "^17.6.0",
+		"tsx": "^4.23.15",
+		"unplugin-swc": "^2.0.0",
 		"vite-tsconfig-paths": "^6.1.1"
 	},
 	"lint-staged": {

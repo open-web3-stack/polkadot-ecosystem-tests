@@ -1634,6 +1634,11 @@ async function setupOverflow(client: Client<any, any>, trackConfig: GovernanceTr
         [[devAccounts.bob.address], { providers: 1, data: { free: (decisionDeposit * 10n).toString() } }],
       ],
     },
+    // The forked chain can already hold referenda in this track's queue. They would take
+    // the free slot before the overflow referendum below, so the queue starts empty.
+    Referenda: {
+      trackQueue: [[[trackConfig.trackId], []]],
+    },
   })
 
   /**
