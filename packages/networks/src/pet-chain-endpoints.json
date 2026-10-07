@@ -16,13 +16,13 @@
   ],
   "bridgeHubPolkadot": [
     "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/bridgehub",
-    "wss://bridge-hub-polkadot-rpc.n.dwellir.com"
+    "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/bridgehub"
   ],
   "collectivesPolkadot": [
     "wss://rpc-collectives-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives-polkadot-rpc.n.dwellir.com"
+    "wss://collectives-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/collectives"
   ],
   "coretimePolkadot": [
     "wss://rpc-coretime-polkadot.luckyfriday.io",
@@ -34,14 +34,14 @@
   ],
   "peoplePolkadot": [
     "wss://rpc-people-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/people",
-    "wss://people-polkadot-rpc.n.dwellir.com"
+    "wss://people-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/people"
   ],
   "acala": [
-    "wss://acala-rpc.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-0.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws",
+    "wss://acala-rpc.aca-api.network",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
@@ -81,8 +81,8 @@
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
-    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://ksm-rpc.stakeworld.io/people",
+    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://rpc-people-kusama.helixstreet.io"
   ],
   "encointerKusama": [
@@ -95,8 +95,8 @@
     "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://hk.bifrost-rpc.liebi.com/ws",
-    "wss://bifrost-rpc.liebi.com/ws"
+    "wss://bifrost-rpc.liebi.com/ws",
+    "wss://hk.bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",
