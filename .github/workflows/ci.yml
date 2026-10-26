@@ -176,7 +176,7 @@ jobs:
           cache: 'yarn'
       - run: yarn --immutable
       - name: Download blob reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: .vitest-reports
           pattern: blob-report-*
