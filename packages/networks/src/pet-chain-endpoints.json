@@ -6,8 +6,8 @@
     "wss://rpc-polkadot.helixstreet.io"
   ],
   "assetHubWestend": [
-    "wss://asset-hub-westend-rpc.n.dwellir.com",
-    "wss://westend-asset-hub-rpc.polkadot.io"
+    "wss://westend-asset-hub-rpc.polkadot.io",
+    "wss://asset-hub-westend-rpc.n.dwellir.com"
   ],
   "assetHubPolkadot": [
     "wss://rpc-asset-hub-polkadot.luckyfriday.io",
@@ -39,14 +39,14 @@
   ],
   "acala": [
     "wss://acala-rpc-1.aca-api.network",
-    "wss://acala-rpc.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
+    "wss://acala-rpc.aca-api.network",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
-    "wss://hk.p.bifrost-rpc.liebi.com/ws",
-    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
     "wss://hydration-rpc.n.dwellir.com",
@@ -66,8 +66,8 @@
   ],
   "assetHubKusama": [
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
-    "wss://asset-hub-kusama-rpc.n.dwellir.com",
-    "wss://ksm-rpc.stakeworld.io/assethub"
+    "wss://ksm-rpc.stakeworld.io/assethub",
+    "wss://asset-hub-kusama-rpc.n.dwellir.com"
   ],
   "bridgeHubKusama": [
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",
@@ -76,14 +76,14 @@
   ],
   "coretimeKusama": [
     "wss://rpc-coretime-kusama.luckyfriday.io",
-    "wss://coretime-kusama-rpc.n.dwellir.com",
-    "wss://ksm-rpc.stakeworld.io/coretime"
+    "wss://ksm-rpc.stakeworld.io/coretime",
+    "wss://coretime-kusama-rpc.n.dwellir.com"
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
     "wss://people-kusama-rpc.n.dwellir.com",
-    "wss://ksm-rpc.stakeworld.io/people",
-    "wss://rpc-people-kusama.helixstreet.io"
+    "wss://rpc-people-kusama.helixstreet.io",
+    "wss://ksm-rpc.stakeworld.io/people"
   ],
   "encointerKusama": [
     "wss://rpc-encointer-kusama.luckyfriday.io",
@@ -95,8 +95,8 @@
     "wss://rpc-karura.luckyfriday.io"
   ],
   "bifrostKusama": [
-    "wss://hk.bifrost-rpc.liebi.com/ws",
-    "wss://bifrost-rpc.liebi.com/ws"
+    "wss://bifrost-rpc.liebi.com/ws",
+    "wss://hk.bifrost-rpc.liebi.com/ws"
   ],
   "basilisk": [
     "wss://rpc.basilisk.cloud",
