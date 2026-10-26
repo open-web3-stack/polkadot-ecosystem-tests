@@ -46,7 +46,7 @@ jobs:
           ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
         run: yarn update-known-good
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS
           path: |
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload failed chains
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: failed-chains-${{ matrix.network.name }}-${{ matrix.shard }}
           path: failed-chains.json
