@@ -3655,8 +3655,9 @@ async function burnTestWithReaping<
   const dapMintReap = await getDapIssuance(client.api, initialTotalIssuanceBlock)
   const totalIssuanceAfterBurn = await client.api.query.balances.totalIssuance()
   const isBifrost = client.config.name.includes('bifrost')
+  const dustRoutedToDap = !!(client.api.events as any).dap?.IssuanceMinted
   const reapingFee = cumulativeFees.get(encodeAddress(alice.address, client.config.properties.addressEncoding))!
-  const expectedDecrease = isBifrost ? burnAmount : burnAmount + (existentialDeposit - 1n)
+  const expectedDecrease = isBifrost || dustRoutedToDap ? burnAmount : burnAmount + (existentialDeposit - 1n)
   const tiAfter = totalIssuanceAfterBurn.toBigInt() - dapMintReap
   const tiExpect = initialTotalIssuance.toBigInt() - expectedDecrease
   if (client.config.isRelayChain) {
