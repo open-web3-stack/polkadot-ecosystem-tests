@@ -38,8 +38,8 @@
     "wss://people-polkadot-rpc.n.dwellir.com"
   ],
   "acala": [
-    "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-3.aca-api.network/ws",
+    "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-0.aca-api.network",
     "wss://acala-rpc.aca-api.network",
     "wss://rpc-acala.luckyfriday.io"
@@ -76,8 +76,8 @@
   ],
   "coretimeKusama": [
     "wss://rpc-coretime-kusama.luckyfriday.io",
-    "wss://ksm-rpc.stakeworld.io/coretime",
-    "wss://coretime-kusama-rpc.n.dwellir.com"
+    "wss://coretime-kusama-rpc.n.dwellir.com",
+    "wss://ksm-rpc.stakeworld.io/coretime"
   ],
   "peopleKusama": [
     "wss://rpc-people-kusama.luckyfriday.io",
