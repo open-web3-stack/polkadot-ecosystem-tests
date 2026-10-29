@@ -1,47 +1,47 @@
 {
   "polkadot": [
-    "wss://rpc-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io",
     "wss://polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io",
+    "wss://rpc-polkadot.luckyfriday.io",
     "wss://rpc-polkadot.helixstreet.io"
   ],
   "assetHubWestend": [
-    "wss://asset-hub-westend-rpc.n.dwellir.com",
-    "wss://westend-asset-hub-rpc.polkadot.io"
+    "wss://westend-asset-hub-rpc.polkadot.io",
+    "wss://asset-hub-westend-rpc.n.dwellir.com"
   ],
   "assetHubPolkadot": [
-    "wss://rpc-asset-hub-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-polkadot-rpc.n.dwellir.com"
+    "wss://asset-hub-polkadot-rpc.n.dwellir.com",
+    "wss://rpc-asset-hub-polkadot.luckyfriday.io"
   ],
   "bridgeHubPolkadot": [
-    "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/bridgehub",
-    "wss://bridge-hub-polkadot-rpc.n.dwellir.com"
+    "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
+    "wss://rpc-bridge-hub-polkadot.luckyfriday.io"
   ],
   "collectivesPolkadot": [
-    "wss://rpc-collectives-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives-polkadot-rpc.n.dwellir.com"
+    "wss://collectives-polkadot-rpc.n.dwellir.com",
+    "wss://rpc-collectives-polkadot.luckyfriday.io"
   ],
   "coretimePolkadot": [
-    "wss://rpc-coretime-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/coretime",
-    "wss://coretime-polkadot-rpc.n.dwellir.com"
+    "wss://coretime-polkadot-rpc.n.dwellir.com",
+    "wss://rpc-coretime-polkadot.luckyfriday.io"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
-    "wss://rpc-people-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/people",
-    "wss://people-polkadot-rpc.n.dwellir.com"
+    "wss://people-polkadot-rpc.n.dwellir.com",
+    "wss://rpc-people-polkadot.luckyfriday.io"
   ],
   "acala": [
-    "wss://acala-rpc-1.aca-api.network",
-    "wss://acala-rpc-3.aca-api.network/ws",
-    "wss://acala-rpc-0.aca-api.network",
     "wss://acala-rpc.aca-api.network",
+    "wss://acala-rpc-1.aca-api.network",
+    "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc-3.aca-api.network/ws",
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
@@ -53,6 +53,7 @@
     "wss://rpc.hydradx.cloud"
   ],
   "moonbeam": [
+    "wss://moonbeam.api.onfinality.io/public-ws",
     "wss://moonbeam-rpc.n.dwellir.com",
     "wss://moonbeam-rpc.publicnode.com",
     "wss://wss.api.moonbeam.network"
@@ -61,33 +62,33 @@
     "wss://astar-rpc.n.dwellir.com"
   ],
   "kusama": [
-    "wss://rpc-kusama.luckyfriday.io",
-    "wss://kusama-rpc.n.dwellir.com"
+    "wss://kusama-rpc.n.dwellir.com",
+    "wss://rpc-kusama.luckyfriday.io"
   ],
   "assetHubKusama": [
-    "wss://rpc-asset-hub-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-kusama-rpc.n.dwellir.com"
+    "wss://asset-hub-kusama-rpc.n.dwellir.com",
+    "wss://rpc-asset-hub-kusama.luckyfriday.io"
   ],
   "bridgeHubKusama": [
-    "wss://rpc-bridge-hub-kusama.luckyfriday.io",
     "wss://bridge-hub-kusama-rpc.n.dwellir.com",
+    "wss://rpc-bridge-hub-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/bridgehub"
   ],
   "coretimeKusama": [
-    "wss://rpc-coretime-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/coretime",
-    "wss://coretime-kusama-rpc.n.dwellir.com"
+    "wss://coretime-kusama-rpc.n.dwellir.com",
+    "wss://rpc-coretime-kusama.luckyfriday.io"
   ],
   "peopleKusama": [
-    "wss://rpc-people-kusama.luckyfriday.io",
-    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://rpc-people-kusama.helixstreet.io",
+    "wss://people-kusama-rpc.n.dwellir.com",
+    "wss://rpc-people-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/people"
   ],
   "encointerKusama": [
-    "wss://rpc-encointer-kusama.luckyfriday.io",
-    "wss://encointer-kusama-rpc.n.dwellir.com"
+    "wss://encointer-kusama-rpc.n.dwellir.com",
+    "wss://rpc-encointer-kusama.luckyfriday.io"
   ],
   "karura": [
     "wss://karura-rpc.aca-api.network",
@@ -103,6 +104,8 @@
     "wss://basilisk-rpc.n.dwellir.com"
   ],
   "moonriver": [
+    "wss://moonriver.unitedbloc.com",
+    "wss://moonriver.api.onfinality.io/public-ws",
     "wss://moonriver-rpc.n.dwellir.com",
     "wss://moonriver-rpc.publicnode.com",
     "wss://wss.api.moonriver.moonbeam.network"
