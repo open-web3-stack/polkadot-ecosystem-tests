@@ -1,46 +1,46 @@
 {
   "polkadot": [
-    "wss://polkadot-rpc.n.dwellir.com",
-    "wss://dot-rpc.stakeworld.io",
     "wss://rpc-polkadot.luckyfriday.io",
+    "wss://dot-rpc.stakeworld.io",
+    "wss://polkadot-rpc.n.dwellir.com",
     "wss://rpc-polkadot.helixstreet.io"
   ],
   "assetHubWestend": [
-    "wss://westend-asset-hub-rpc.polkadot.io",
-    "wss://asset-hub-westend-rpc.n.dwellir.com"
+    "wss://asset-hub-westend-rpc.n.dwellir.com",
+    "wss://westend-asset-hub-rpc.polkadot.io"
   ],
   "assetHubPolkadot": [
     "wss://dot-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-polkadot-rpc.n.dwellir.com",
-    "wss://rpc-asset-hub-polkadot.luckyfriday.io"
+    "wss://rpc-asset-hub-polkadot.luckyfriday.io",
+    "wss://asset-hub-polkadot-rpc.n.dwellir.com"
   ],
   "bridgeHubPolkadot": [
+    "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/bridgehub",
-    "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
-    "wss://rpc-bridge-hub-polkadot.luckyfriday.io"
+    "wss://bridge-hub-polkadot-rpc.n.dwellir.com"
   ],
   "collectivesPolkadot": [
+    "wss://rpc-collectives-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives-polkadot-rpc.n.dwellir.com",
-    "wss://rpc-collectives-polkadot.luckyfriday.io"
+    "wss://collectives-polkadot-rpc.n.dwellir.com"
   ],
   "coretimePolkadot": [
+    "wss://rpc-coretime-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/coretime",
-    "wss://coretime-polkadot-rpc.n.dwellir.com",
-    "wss://rpc-coretime-polkadot.luckyfriday.io"
+    "wss://coretime-polkadot-rpc.n.dwellir.com"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
+    "wss://rpc-people-polkadot.luckyfriday.io",
     "wss://dot-rpc.stakeworld.io/people",
-    "wss://people-polkadot-rpc.n.dwellir.com",
-    "wss://rpc-people-polkadot.luckyfriday.io"
+    "wss://people-polkadot-rpc.n.dwellir.com"
   ],
   "acala": [
-    "wss://acala-rpc.aca-api.network",
     "wss://acala-rpc-1.aca-api.network",
     "wss://acala-rpc-0.aca-api.network",
+    "wss://acala-rpc.aca-api.network",
     "wss://acala-rpc-3.aca-api.network/ws",
     "wss://rpc-acala.luckyfriday.io"
   ],
@@ -62,33 +62,33 @@
     "wss://astar-rpc.n.dwellir.com"
   ],
   "kusama": [
-    "wss://kusama-rpc.n.dwellir.com",
-    "wss://rpc-kusama.luckyfriday.io"
+    "wss://rpc-kusama.luckyfriday.io",
+    "wss://kusama-rpc.n.dwellir.com"
   ],
   "assetHubKusama": [
+    "wss://rpc-asset-hub-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-kusama-rpc.n.dwellir.com",
-    "wss://rpc-asset-hub-kusama.luckyfriday.io"
+    "wss://asset-hub-kusama-rpc.n.dwellir.com"
   ],
   "bridgeHubKusama": [
-    "wss://bridge-hub-kusama-rpc.n.dwellir.com",
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",
+    "wss://bridge-hub-kusama-rpc.n.dwellir.com",
     "wss://ksm-rpc.stakeworld.io/bridgehub"
   ],
   "coretimeKusama": [
+    "wss://rpc-coretime-kusama.luckyfriday.io",
     "wss://ksm-rpc.stakeworld.io/coretime",
-    "wss://coretime-kusama-rpc.n.dwellir.com",
-    "wss://rpc-coretime-kusama.luckyfriday.io"
+    "wss://coretime-kusama-rpc.n.dwellir.com"
   ],
   "peopleKusama": [
-    "wss://rpc-people-kusama.helixstreet.io",
-    "wss://people-kusama-rpc.n.dwellir.com",
     "wss://rpc-people-kusama.luckyfriday.io",
+    "wss://people-kusama-rpc.n.dwellir.com",
+    "wss://rpc-people-kusama.helixstreet.io",
     "wss://ksm-rpc.stakeworld.io/people"
   ],
   "encointerKusama": [
-    "wss://encointer-kusama-rpc.n.dwellir.com",
-    "wss://rpc-encointer-kusama.luckyfriday.io"
+    "wss://rpc-encointer-kusama.luckyfriday.io",
+    "wss://encointer-kusama-rpc.n.dwellir.com"
   ],
   "karura": [
     "wss://karura-rpc.aca-api.network",
@@ -104,8 +104,8 @@
     "wss://basilisk-rpc.n.dwellir.com"
   ],
   "moonriver": [
-    "wss://moonriver.unitedbloc.com",
     "wss://moonriver.api.onfinality.io/public-ws",
+    "wss://moonriver.unitedbloc.com",
     "wss://moonriver-rpc.n.dwellir.com",
     "wss://moonriver-rpc.publicnode.com",
     "wss://wss.api.moonriver.moonbeam.network"
