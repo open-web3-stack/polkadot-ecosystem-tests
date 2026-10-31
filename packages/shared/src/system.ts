@@ -47,6 +47,7 @@ async function runAuthorizeUpgradeScenario(
   params: {
     call: AuthorizeUpgradeFn
     expectedAfterApply: (hash: IU8a) => ExpectedEvents
+    ctx?: { skip: (reason?: string) => void }
   },
 ) {
   const alice = devAccounts.alice
@@ -85,6 +86,26 @@ async function runAuthorizeUpgradeScenario(
     const eventsAfterFirstBlock = await client.api.query.system.events()
     await client.dev.newBlock({ count: 1 })
     const eventsAfterSecondBlock = await client.api.query.system.events()
+
+    // ProhibitedByPolkadot: the relay chain forbids a code upgrade while another one for this
+    // parachain is in flight. The restriction signal lives in the relay chain state proof, so it
+    // is only visible here as the dispatch error of the failed `applyAuthorizedUpgrade`.
+    for (const events of [eventsAfterFirstBlock, eventsAfterSecondBlock]) {
+      const applyFailed = events.find((r: any) => client.api.events.system.ExtrinsicFailed.is(r.event))
+      if (applyFailed) {
+        const dispatchError = (applyFailed.event.data as any).dispatchError
+        if (
+          dispatchError.isModule &&
+          client.api.registry.findMetaError(dispatchError.asModule).name === 'ProhibitedByPolkadot'
+        ) {
+          params.ctx?.skip?.(
+            `Skipping: relay chain upgrade restriction active on ${client.config.name} (ProhibitedByPolkadot)`,
+          )
+          return
+        }
+      }
+    }
+
     assertExpectedEvents(
       eventsAfterFirstBlock.concat(eventsAfterSecondBlock),
       params.expectedAfterApply(currentWasmHash),
@@ -147,24 +168,32 @@ async function runAuthorizeUpgradeScenarioViaRemoteScheduler(
   // ProhibitedByPolkadot: the restriction signal lives in the relay chain state proof, not
   // parachain storage. on_finalize kills it, so it's unreadable after the block — but
   // set_validation_data re-injects it during execution. Detect it from the dispatch error.
-  const applyFailed = eventsAfterFirstBlock.find((r: any) =>
-    toBeUpgradedClient.api.events.system.ExtrinsicFailed.is(r.event),
-  )
-  if (applyFailed) {
+  const prohibitedByPolkadot = (events: any): boolean => {
+    const applyFailed = events.find((r: any) => toBeUpgradedClient.api.events.system.ExtrinsicFailed.is(r.event))
+    if (!applyFailed) return false
     const dispatchError = (applyFailed.event.data as any).dispatchError
-    if (dispatchError.isModule) {
-      const decoded = toBeUpgradedClient.api.registry.findMetaError(dispatchError.asModule)
-      if (decoded.name === 'ProhibitedByPolkadot') {
-        params.ctx?.skip?.(
-          `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
-        )
-        return
-      }
-    }
+    if (!dispatchError.isModule) return false
+    return toBeUpgradedClient.api.registry.findMetaError(dispatchError.asModule).name === 'ProhibitedByPolkadot'
+  }
+
+  if (prohibitedByPolkadot(eventsAfterFirstBlock)) {
+    params.ctx?.skip?.(
+      `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
+    )
+    return
   }
 
   await toBeUpgradedClient.dev.newBlock({ count: 1 })
   const eventsAfterSecondBlock = await toBeUpgradedClient.api.query.system.events()
+
+  // When governance acts from a remote chain, the XCM lands a block later, so the failed apply
+  // can surface in the second block instead of the first.
+  if (prohibitedByPolkadot(eventsAfterSecondBlock)) {
+    params.ctx?.skip?.(
+      `Skipping: relay chain upgrade restriction active on ${toBeUpgradedClient.config.name} (ProhibitedByPolkadot)`,
+    )
+    return
+  }
 
   assertExpectedEvents(eventsAfterFirstBlock.concat(eventsAfterSecondBlock), params.expectedAfterApply(currentWasmHash))
 }
@@ -465,8 +494,9 @@ export async function setCodeWithoutChecksTests<
 export async function authorizeUpgradeTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(client: Client<TCustom, TInitStoragesRelay>, ctx?: { skip: (reason?: string) => void }) {
   return runAuthorizeUpgradeScenario(client, {
+    ctx,
     call: client.api.tx.system.authorizeUpgrade,
     expectedAfterApply: (hash) => [
       {
@@ -486,7 +516,7 @@ export async function authorizeUpgradeTests<
 export async function authorizeUpgradeWithoutChecksTests<
   TCustom extends Record<string, unknown> | undefined,
   TInitStoragesRelay extends Record<string, Record<string, any>> | undefined,
->(client: Client<TCustom, TInitStoragesRelay>) {
+>(client: Client<TCustom, TInitStoragesRelay>, ctx?: { skip: (reason?: string) => void }) {
   let expectedEvents: ExpectedEvents = []
   if (client.config.isRelayChain) {
     expectedEvents = [{ type: client.api.events.system.CodeUpdated }]
@@ -499,6 +529,7 @@ export async function authorizeUpgradeWithoutChecksTests<
   }
 
   return runAuthorizeUpgradeScenario(client, {
+    ctx,
     call: client.api.tx.system.authorizeUpgradeWithoutChecks,
     expectedAfterApply: () => expectedEvents,
   })
@@ -660,12 +691,12 @@ export function systemE2ETests<
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeWithoutChecksTests(client),
+        testFn: async (ctx) => await authorizeUpgradeWithoutChecksTests(client, ctx),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade doesnt allow upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeTests(client),
+        testFn: async (ctx) => await authorizeUpgradeTests(client, ctx),
       },
       {
         kind: 'test',
@@ -724,12 +755,12 @@ export function systemE2ETestsForParaWithScheduler<
       {
         kind: 'test',
         label: 'authorize_upgrade_without_checks allows upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeWithoutChecksTests(client),
+        testFn: async (ctx) => await authorizeUpgradeWithoutChecksTests(client, ctx),
       },
       {
         kind: 'test',
         label: 'authorize_upgrade doesnt allow upgrade to the same wasm',
-        testFn: async () => await authorizeUpgradeTests(client),
+        testFn: async (ctx) => await authorizeUpgradeTests(client, ctx),
       },
       {
         kind: 'test',
