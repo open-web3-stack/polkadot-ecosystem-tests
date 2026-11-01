@@ -3,7 +3,7 @@ import { defaultAccounts } from '@e2e-test/networks'
 import { acala, assetHubPolkadot, astar } from '@e2e-test/networks/chains'
 import { setupNetworks } from '@e2e-test/shared'
 import { query, tx } from '@e2e-test/shared/api'
-import { runXtokenstHorizontal } from '@e2e-test/shared/xcm'
+import { runXcmPalletHorizontal, runXtokenstHorizontal } from '@e2e-test/shared/xcm'
 
 import { beforeAll, describe } from 'vitest'
 
@@ -16,13 +16,36 @@ describe('acala & astar', () => {
     ;[astarClient, acalaClient, assetHubPolkadotClient] = await setupNetworks(astar, acala, assetHubPolkadot)
   })
 
-  runXtokenstHorizontal('astar transfer ACA to acala', async () => {
+  // Astar removed `xTokens` in runtime 2500, so its transfers go through the XCM pallet. Acala
+  // keeps `xTokens`, so the transfers in the other direction use it.
+  runXcmPalletHorizontal('astar transfer ACA to acala', async () => {
     return {
       fromChain: astarClient,
       toChain: acalaClient,
       fromBalance: query.assets(astar.custom.aca),
       toBalance: query.balances,
-      tx: tx.xtokens.transfer(astar.custom.aca, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      // ACA's location, as Astar's `xcAssetConfig` records it. The XCM pallet takes locations,
+      // while the assets pallet takes the numeric id.
+      tx: tx.xcmPallet.transferAssetsV3(
+        {
+          Concrete: {
+            parents: 1,
+            interior: {
+              X2: [
+                { Parachain: acala.paraId! },
+                {
+                  GeneralKey: {
+                    length: 2,
+                    data: '0x0000000000000000000000000000000000000000000000000000000000000000',
+                  },
+                },
+              ],
+            },
+          },
+        },
+        1e12,
+        tx.xcmPallet.parachainV3(1, acala.paraId!),
+      ),
     }
   })
 
@@ -36,7 +59,7 @@ describe('acala & astar', () => {
     }
   })
 
-  runXtokenstHorizontal('astar transfer DOT to acala', async () => {
+  runXcmPalletHorizontal('astar transfer DOT to acala', async () => {
     return {
       fromChain: astarClient,
       toChain: acalaClient,
@@ -44,7 +67,15 @@ describe('acala & astar', () => {
       toAccount: defaultAccounts.bob,
       fromBalance: query.assets(astar.custom.dot),
       toBalance: query.tokens(acala.custom.dot),
-      tx: tx.xtokens.transfer(astar.custom.dot, 1e12, tx.xtokens.parachainV3(acala.paraId!)),
+      // DOT's reserve is neither Astar nor Acala, so the transfer names Polkadot Asset Hub as a
+      // remote reserve. `transferAssets` does not accept a remote reserve.
+      tx: tx.xcmPallet.transferAssetsUsingType(
+        tx.xcmPallet.parachainV4(1, acala.paraId!),
+        [{ id: { parents: 1, interior: 'Here' }, fun: { Fungible: 1e12 } }],
+        { RemoteReserve: { V4: { parents: 1, interior: { X1: [{ Parachain: assetHubPolkadot.paraId }] } } } } as any,
+        { parents: 1, interior: 'Here' },
+        { RemoteReserve: { V4: { parents: 1, interior: { X1: [{ Parachain: assetHubPolkadot.paraId }] } } } } as any,
+      ),
     }
   })
 
