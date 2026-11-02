@@ -182,7 +182,7 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
       - name: Merge reports
-        run: yarn vitest --merge-reports --reporter=github-actions --reporter=verbose
+        run: yarn vitest --merge-reports .vitest-reports --reporter=github-actions --reporter=verbose
 
   all-passed:
     runs-on: ubuntu-latest
