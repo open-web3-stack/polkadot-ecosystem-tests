@@ -2078,19 +2078,14 @@ function negativeFlowsForTrack(getClient: () => Client<any, any>, trackConfig: G
             label: 'promotion via kill',
             testFn: async () => await overflowPromotionViaKillTest(getClient(), trackConfig),
           },
-          // Polkadot and Kusama Asset Hub still decrement `DecidingCount` when a queued referendum
-          // is removed. These two tests assert the corrected behaviour, so they fail against the
-          // live runtimes and are skipped until both chains carry the fix. Remove `flags` then.
           {
             kind: 'test' as const,
             label: 'killing a queued referendum keeps DecidingCount',
-            flags: { skip: true },
             testFn: async () => await killQueuedKeepsDecidingCountTest(getClient(), trackConfig),
           },
           {
             kind: 'test' as const,
             label: 'cancelling a queued referendum keeps DecidingCount',
-            flags: { skip: true },
             testFn: async () => await cancelQueuedKeepsDecidingCountTest(getClient(), trackConfig),
           },
         ],
