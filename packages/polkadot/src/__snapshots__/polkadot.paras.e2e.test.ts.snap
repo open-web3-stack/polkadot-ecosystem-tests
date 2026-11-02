@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Paras > pallet paras - force set current code > root force set current code on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current code > root force set current code on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current code > signed force set current code fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
