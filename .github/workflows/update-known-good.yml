@@ -46,7 +46,7 @@ jobs:
           ACALA_ENDPOINT: ${{ secrets.ACALA_ENDPOINT }}
         run: yarn update-known-good
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS
           path: |
@@ -79,7 +79,7 @@ jobs:
       - run: yarn --immutable
 
       - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: KNOWN_GOOD_BLOCK_NUMBERS
 
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload failed chains
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: failed-chains-${{ matrix.network.name }}-${{ matrix.shard }}
           path: failed-chains.json
@@ -222,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
     steps:
-    - uses: actions/create-github-app-token@v1
+    - uses: actions/create-github-app-token@v3
       id: app-token
       with:
         app-id: ${{ secrets.GH_APP_ID }}
@@ -231,7 +231,7 @@ jobs:
       with:
         token: ${{ steps.app-token.outputs.token }}
     - name: Download KNOWN_GOOD_BLOCK_NUMBERS artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: KNOWN_GOOD_BLOCK_NUMBERS
     - name: Commit and push changes
@@ -256,7 +256,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download failed chains artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: failed-chains
           pattern: failed-chains-*

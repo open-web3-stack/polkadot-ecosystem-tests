@@ -1,24 +1,169 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: AssetCeilingWeightUpdated event 1`] = `
+exports[`Westend Asset Hub PSM > Admin reassignment > setEmergencyAdmin — breaker power moves, old holder locked out > emergency admin: EmergencyAdminChanged event 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 10000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
         "parents": 0,
       },
-      "newValue": "10.00%",
-      "oldValue": "0.00%",
+      "newAdmin": {
+        "system": {
+          "Signed": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+        },
+      },
+      "oldAdmin": {
+        "system": {
+          "Signed": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
+        },
+      },
+    },
+    "method": "EmergencyAdminChanged",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Admin reassignment > setFullAdmin — power moves to the new origin, old one locked out > full admin: FullAdminChanged event 1`] = `
+[
+  {
+    "data": {
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newAdmin": {
+        "system": {
+          "Signed": "5CXBdV9LcwG3N4Q6qqJchom24K6joqmGVpS5UkcPMxdjQKi7",
+        },
+      },
+      "oldAdmin": {
+        "system": {
+          "Signed": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+        },
+      },
+    },
+    "method": "FullAdminChanged",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Circuit breaker and privilege > MintingDisabled — mint stopped, redeem allowed > minting disabled: AssetStatusUpdated event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "status": "MintingDisabled",
+    },
+    "method": "AssetStatusUpdated",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Debt ceilings > setMaxDebt below outstanding debt — minting paused, redeems work > lower ceiling: MaxDebtUpdated event 1`] = `
+[
+  {
+    "data": {
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": 100000000,
+      "oldValue": 10000000000,
+    },
+    "method": "MaxDebtUpdated",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Debt ceilings > zero ceiling weight — external closed, remainder reweighted > zero weight: AssetCeilingWeightUpdated event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 31000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "0.00%",
+      "oldValue": "50.00%",
     },
     "method": "AssetCeilingWeightUpdated",
     "section": "psm",
@@ -26,26 +171,39 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeil
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeiling — mint succeeds > add asset then set ceiling: Minted event 1`] = `
+exports[`Westend Asset Hub PSM > Decimal scaling > higher-decimal external — debt scaled down, redemption scaled up > high decimal mint: Minted event 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "Parachain": "(rounded 2000)",
+            },
+            {
+              "GeneralIndex": "(rounded 220)",
+            },
+          ],
+        },
+        "parents": 1,
+      },
+      "externalConsumed": 20000000000000000000,
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 10000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
         "parents": 0,
       },
-      "externalAmount": 100000000,
-      "fee": 500000,
-      "received": "(rounded 100000000)",
+      "internalFee": 100000,
+      "internalReceived": "(rounded 20000000)",
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Minted",
@@ -54,18 +212,31 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset then setCeil
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ceiling — mint fails > add asset zero ceiling: ExternalAssetAdded event 1`] = `
+exports[`Westend Asset Hub PSM > External asset management > addExternalAsset — decimals snapshotted, external counted > add external: ExternalAssetAdded event 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "externalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 10000)",
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
@@ -78,36 +249,11 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ce
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Asset lifecycle > addExternalAsset with zero ceiling — mint fails > add asset zero ceiling: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > External asset management > removeExternalAsset — per-external configuration wiped, re-approval defaults > remove external: ExternalAssetRemoved event 1`] = `
 [
   {
     "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x02000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Asset lifecycle > set custom fee, remove, re-add — fee resets to default > fee reset: MintingFeeUpdated event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
+      "externalAsset": {
         "interior": {
           "X2": [
             {
@@ -120,55 +266,14 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > set custom fee, remove, re-ad
         },
         "parents": 0,
       },
-      "newValue": "3.00%",
-      "oldValue": "0.50%",
-    },
-    "method": "MintingFeeUpdated",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Asset lifecycle > setMintingFee before adding asset — 3% fee applied on mint > set fee before add: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 10000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 1000000000,
-      "fee": 30000000,
-      "received": 970000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Asset lifecycle > zero debt then removeExternalAsset — asset is None > remove asset: ExternalAssetRemoved event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
@@ -181,11 +286,11 @@ exports[`Westend Asset Hub PSM > Asset lifecycle > zero debt then removeExternal
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDT still mintable 1`] = `
+exports[`Westend Asset Hub PSM > Fee configuration > setMintingFee — event emitted, new rate charged to fee destination > minting fee: MintingFeeUpdated event 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "externalAsset": {
         "interior": {
           "X2": [
             {
@@ -198,72 +303,33 @@ exports[`Westend Asset Hub PSM > Ceiling dynamics > both assets at 75% weight �
         },
         "parents": 0,
       },
-      "externalAmount": 100000000,
-      "fee": 500000,
-      "received": "(rounded 100000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "newValue": "5.00%",
+      "oldValue": "0.50%",
     },
-    "method": "Minted",
+    "method": "MintingFeeUpdated",
     "section": "psm",
   },
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Ceiling dynamics > both assets at 75% weight — normalized to 50/50, enforced at boundary > normalized ceiling: USDX zero-weight mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Fee configuration > setRedemptionFee — event emitted, new rate charged on redemption > redemption fee: RedemptionFeeUpdated event 1`] = `
 [
   {
     "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt blocks mint: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > max debt restore: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
+      "externalAsset": {
         "interior": {
           "X2": [
             {
@@ -276,324 +342,65 @@ exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) b
         },
         "parents": 0,
       },
-      "externalAmount": 200000000,
-      "fee": 1000000,
-      "received": "(rounded 200000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, setMaxPsmDebt(1) blocks mint, restore allows mint > set max debt: MaxPsmDebtOfTotalUpdated event 1`] = `
-[
-  {
-    "data": {
-      "newValue": "0.00%",
-      "oldValue": "50.00%",
-    },
-    "method": "MaxPsmDebtOfTotalUpdated",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: Redeemed event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 2000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
         "parents": 0,
       },
-      "externalReceived": "(rounded 100000000)",
-      "fee": 500000,
-      "paid": 100000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "newValue": "5.00%",
+      "oldValue": "0.50%",
     },
-    "method": "Redeemed",
+    "method": "RedemptionFeeUpdated",
     "section": "psm",
   },
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint 500, zero maxPsmDebt — debt unchanged, mint blocked, redeem reduces debt > maxDebt zero: mint ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM as internal asset owner — instance recorded, deposit held > create PSM: PsmCreated event 1`] = `
 [
   {
     "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
+      "emergencyAdmin": {
+        "system": {
+          "Signed": "5ERJmjwMhsB63Jfr72jRySZyg2kWiz5vfnrAb4AQdxGY5TAW",
         },
       },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
+      "feeDestination": "5GbiMDM8uCwfa75C2XT2xo9dL3hQ2UprvT2zNxALLg4rPe1V",
+      "fullAdmin": {
+        "system": {
+          "Signed": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
         },
       },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint USDT to ceiling — USDX ceiling unaffected, USDX fully mintable > usdt at ceiling: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 2000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
         "parents": 0,
       },
-      "externalAmount": 5000000000000,
-      "fee": 25000000000,
-      "received": "(rounded 5000000000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+      "maxDebt": 10000000000,
     },
-    "method": "Minted",
+    "method": "PsmCreated",
     "section": "psm",
   },
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Ceiling dynamics > mint USDT to ceiling — USDX ceiling unaffected, USDX fully mintable > usdx at ceiling: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 1300)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": "(rounded 380000000)",
-      "fee": "(rounded 19000000000)",
-      "received": "(rounded 3700000000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDT, 0) — mint fails despite AllEnabled circuit breaker > zero ceiling blocks mint despite AllEnabled: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setAssetCeilingWeight(USDX, 0) — mint USDT succeeds, debt equals amount > zeroed ceiling other asset: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 500000000,
-      "fee": 2500000,
-      "received": "(rounded 500000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT Redeemed event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalReceived": "(rounded 100000000)",
-      "fee": 500000,
-      "paid": 100000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Redeemed",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDT mint ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDX Redeemed event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 1300)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalReceived": "(rounded 10000)",
-      "fee": 500000,
-      "paid": 100000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Redeemed",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Ceiling dynamics > setMaxPsmDebt(0) after minting both assets — mints blocked, redeems work > zero maxDebt: USDX mint ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x01000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: mint ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x03000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and redeem fail > AllDisabled: redeem ExtrinsicFailed 1`] = `
+exports[`Westend Asset Hub PSM > Instance lifecycle > create PSM with zero minimum swap — ZeroMinSwapAmount > zero min swap: ExtrinsicFailed 1`] = `
 [
   {
     "data": {
@@ -608,7 +415,7 @@ exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and
         "paysFee": "Yes",
         "weight": {
           "proofSize": 0,
-          "refTime": "(rounded 800000000)",
+          "refTime": "(rounded 500000000)",
         },
       },
     },
@@ -618,36 +425,35 @@ exports[`Westend Asset Hub PSM > Circuit breaker > AllDisabled — both mint and
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: AssetStatusUpdated event 1`] = `
+exports[`Westend Asset Hub PSM > Instance lifecycle > remove PSM with approved externals — blocked, then succeeds once withdrawn > remove PSM: PsmRemoved event 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "internalAsset": {
         "interior": {
           "X2": [
             {
               "PalletInstance": 50,
             },
             {
-              "GeneralIndex": "(rounded 2000)",
+              "GeneralIndex": "(rounded 50000000)",
             },
           ],
         },
         "parents": 0,
       },
-      "status": "MintingDisabled",
     },
-    "method": "AssetStatusUpdated",
+    "method": "PsmRemoved",
     "section": "psm",
   },
 ]
 `;
 
-exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: Redeemed event 1`] = `
+exports[`Westend Asset Hub PSM > Stale administrator after ownership transfer > former owner keeps full admin and mint; current owner cannot administer or remove > stale admin: Minted event after ownership transfer 1`] = `
 [
   {
     "data": {
-      "assetId": {
+      "externalAsset": {
         "interior": {
           "X2": [
             {
@@ -660,326 +466,107 @@ exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fail
         },
         "parents": 0,
       },
-      "externalReceived": "(rounded 100000000)",
-      "fee": 500000,
-      "paid": 100000000,
+      "externalConsumed": 1000000000,
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalFee": 5000000,
+      "internalReceived": "(rounded 1000000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Swaps > mint — collateral to reserve, internal to caller, fee to destination > mint: Minted event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "externalConsumed": 1000000000,
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalFee": 5000000,
+      "internalReceived": "(rounded 1000000000)",
+      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
+    },
+    "method": "Minted",
+    "section": "psm",
+  },
+]
+`;
+
+exports[`Westend Asset Hub PSM > Swaps > redeem — reserve released, debt reduced by burned amount > redeem: Redeemed event 1`] = `
+[
+  {
+    "data": {
+      "externalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 2000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "externalReceived": "(rounded 500000000)",
+      "internalAsset": {
+        "interior": {
+          "X2": [
+            {
+              "PalletInstance": 50,
+            },
+            {
+              "GeneralIndex": "(rounded 50000000)",
+            },
+          ],
+        },
+        "parents": 0,
+      },
+      "internalConsumed": 500000000,
+      "internalFee": 2500000,
       "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
     },
     "method": "Redeemed",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Circuit breaker > MintingDisabled — mint fails, redeem succeeds > MintingDisabled: mint ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x03000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Circuit breaker > signed setMintingFee without root fails > signed setMintingFee: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 400000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Core swaps > mint USDT to pUSD — pUSD received > 0, debt equals mint amount, fee to insurance fund > mint USDT: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 100000000,
-      "fee": 500000,
-      "received": "(rounded 100000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Core swaps > mint below MIN_SWAP fails > mint below MIN_SWAP: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x02000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 1000000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Core swaps > mint then redeem — USDT returned > 0 > mint then redeem: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 1000000000,
-      "fee": 5000000,
-      "received": "(rounded 1000000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Core swaps > mint then redeem — USDT returned > 0 > mint then redeem: Redeemed event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalReceived": "(rounded 990000000)",
-      "fee": "(rounded 5000000)",
-      "paid": "(rounded 1000000000)",
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Redeemed",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Reserve integrity > mint 500, give Bob 2x debt pUSD, Bob redeems debt plus MIN_SWAP — ExtrinsicFailed > bob over-redeem: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Reserve integrity > mint 500, redeem MIN_SWAP — Redeemed event > healthy redeem: Redeemed event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalReceived": "(rounded 100000000)",
-      "fee": 500000,
-      "paid": 100000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Redeemed",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Value conservation > Bob redeems more than reserve — ExtrinsicFailed > redeem exceeding reserve: ExtrinsicFailed 1`] = `
-[
-  {
-    "data": {
-      "dispatchError": {
-        "Module": {
-          "error": "0x00000000",
-          "index": 65,
-        },
-      },
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": 0,
-          "refTime": "(rounded 800000000)",
-        },
-      },
-    },
-    "method": "ExtrinsicFailed",
-    "section": "system",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Value conservation > set 1% fees, mint and redeem all — insurance fund gain > 0 > insurance fund gain: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 100000000,
-      "fee": 1000000,
-      "received": 99000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Value conservation > set 1% fees, mint and redeem all — insurance fund gain > 0 > insurance fund gain: RedemptionFeeUpdated event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "newValue": "1.00%",
-      "oldValue": "0.50%",
-    },
-    "method": "RedemptionFeeUpdated",
-    "section": "psm",
-  },
-]
-`;
-
-exports[`Westend Asset Hub PSM > Value conservation > set 1% mint fee, mint 1000, redeem all pUSD — residual debt > 0 > residual debt: Minted event 1`] = `
-[
-  {
-    "data": {
-      "assetId": {
-        "interior": {
-          "X2": [
-            {
-              "PalletInstance": 50,
-            },
-            {
-              "GeneralIndex": "(rounded 2000)",
-            },
-          ],
-        },
-        "parents": 0,
-      },
-      "externalAmount": 1000000000,
-      "fee": 10000000,
-      "received": 990000000,
-      "who": "5Cd3GknCYy4MFWXG1MwiQrbhYFLSWYk9wEGDX82RSGZH739w",
-    },
-    "method": "Minted",
     "section": "psm",
   },
 ]

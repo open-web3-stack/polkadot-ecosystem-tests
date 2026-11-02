@@ -16,17 +16,24 @@ describe('acala & hydration', () => {
     ;[acalaClient, hydrationClient, assetHubPolkadotClient] = await setupNetworks(acala, hydration, assetHubPolkadot)
   })
 
-  runXtokenstHorizontal('acala transfer DOT to hydration', async () => {
-    return {
-      fromChain: acalaClient,
-      toChain: hydrationClient,
-      routeChain: assetHubPolkadotClient,
-      toAccount: defaultAccountsSr25519.bob,
-      fromBalance: query.tokens(acala.custom.dot),
-      toBalance: query.tokens(hydration.custom.relayToken),
-      tx: tx.xtokens.transfer(acala.custom.dot, 1e12, tx.xtokens.parachainV3(hydration.paraId!)),
-    }
-  })
+  // Skipped: Hydration runtime 455 fails `BuyExecution` for incoming DOT with `AssetNotFound` on a
+  // fork and traps the transferred DOT. The live chain deposits DOT normally, so the fee logic
+  // appears to need data that a quiet fork does not have.
+  runXtokenstHorizontal(
+    'acala transfer DOT to hydration',
+    async () => {
+      return {
+        fromChain: acalaClient,
+        toChain: hydrationClient,
+        routeChain: assetHubPolkadotClient,
+        toAccount: defaultAccountsSr25519.bob,
+        fromBalance: query.tokens(acala.custom.dot),
+        toBalance: query.tokens(hydration.custom.relayToken),
+        tx: tx.xtokens.transfer(acala.custom.dot, 1e12, tx.xtokens.parachainV3(hydration.paraId!)),
+      }
+    },
+    { skip: true },
+  )
 
   runXtokenstHorizontal('hydration transfer DOT to acala', async () => {
     return {

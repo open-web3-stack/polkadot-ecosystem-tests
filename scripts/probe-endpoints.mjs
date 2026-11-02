@@ -31,13 +31,25 @@ const ENDPOINTS = JSON.parse(
 	fs.readFileSync(path.join(REPO_ROOT, 'packages/networks/src/pet-chain-endpoints.json'), 'utf8'),
 )
 
-const SAMPLES = Number(process.env.SAMPLES ?? 100)
-const WINDOW_MS = Number(process.env.WINDOW_MS ?? 10_000)
-const INFLIGHT = Number(process.env.INFLIGHT ?? 4)
-const CONNECT_TIMEOUT_MS = Number(process.env.CONNECT_TIMEOUT_MS ?? 10_000)
-const RPC_TIMEOUT_MS = Number(process.env.RPC_TIMEOUT_MS ?? 5_000)
+// A workflow that forwards an unset `workflow_dispatch` input sets the variable to
+// the empty string, not to nothing at all. `??` accepts that empty string, and
+// `Number('')` is 0, which would silently turn the probe off: zero pings means zero
+// successes, and every endpoint then scores Infinity and keeps its current rank.
+// Treat blank and non-numeric values as absent so the defaults below apply.
+const numEnv = (name, fallback) => {
+	const raw = process.env[name]
+	if (raw === undefined || String(raw).trim() === '') return fallback
+	const n = Number(raw)
+	return Number.isFinite(n) ? n : fallback
+}
+
+const SAMPLES = numEnv('SAMPLES', 100)
+const WINDOW_MS = numEnv('WINDOW_MS', 10_000)
+const INFLIGHT = numEnv('INFLIGHT', 4)
+const CONNECT_TIMEOUT_MS = numEnv('CONNECT_TIMEOUT_MS', 10_000)
+const RPC_TIMEOUT_MS = numEnv('RPC_TIMEOUT_MS', 5_000)
 const CHAINS_FILTER = (process.env.CHAINS ?? '').trim().split(/\s+/).filter(Boolean)
-const CHAIN_CONCURRENCY = Math.max(1, Number(process.env.CHAIN_CONCURRENCY ?? 1))
+const CHAIN_CONCURRENCY = Math.max(1, numEnv('CHAIN_CONCURRENCY', 1))
 const KEEP_PROBE_LOG = ['1', 'true', 'yes'].includes(String(process.env.KEEP_PROBE_LOG ?? '').toLowerCase())
 
 const blockNumbers = (() => {
@@ -305,7 +317,10 @@ async function probeChain(chain, endpoints) {
 	const blockNumber = chainKeyToBlock(chain)
 	const results = await Promise.all(endpoints.map((e) => probeEndpoint(e, blockNumber)))
 	for (const r of results) r._score = score(r)
-	results.sort((a, b) => a._score - b._score)
+	// Subtracting two Infinity scores yields NaN, which `sort` reads as "equal" and
+	// which leaves every endpoint on its current rank. Compare instead of subtract so
+	// that a run where nothing could be reached still produces a deterministic order.
+	results.sort((a, b) => (a._score === b._score ? 0 : a._score < b._score ? -1 : 1))
 	return { chain, blockNumber, results }
 }
 
