@@ -58,7 +58,7 @@ async function forceRegisterParaViaRoot(client: Client<any, any>, manager: strin
 }
 
 /**
- * Engine ID under which the relay chain deposits its consensus logs in block header digests (`b"POL1"`).
+ * Engine ID under which the relay chain deposits its consensus logs in the block digest (`b"POL1"`).
  */
 const POLKADOT_ENGINE_ID = '0x504f4c31'
 
@@ -204,7 +204,9 @@ export async function parasForceSetCurrentCodeE2ETest<
   expect(pruningEntries.length).toBe(1)
   expect(pruningEntries[0][1].toNumber()).toBe(replacedAt)
 
-  // 2.8 Assert that the block digest carries a ParaUpgradeCode consensus log
+  // 2.8 Assert that the block digest carries a ParaUpgradeCode consensus log.
+  // Chopsticks does not copy runtime-deposited logs into the block header, so read them from `System::Digest`,
+  // which keeps the digest of the latest block until the next block is initialized.
   const expectedLog = u8aToHex(
     u8aConcat(
       new Uint8Array([CONSENSUS_LOG_PARA_UPGRADE_CODE]),
@@ -212,7 +214,7 @@ export async function parasForceSetCurrentCodeE2ETest<
       hexToU8a(newCodeHash),
     ),
   )
-  const consensusLogs = header.digest.logs
+  const consensusLogs = (await client.api.query.system.digest()).logs
     .filter((log) => log.isConsensus && log.asConsensus[0].toHex() === POLKADOT_ENGINE_ID)
     .map((log) => log.asConsensus[1].toHex())
   expect(consensusLogs).toContain(expectedLog)
@@ -258,7 +260,7 @@ export async function parasForceSetCurrentCodeE2ETest<
   const unregisteredPruning = (await client.api.query.paras.pastCodePruning()) as Vec<ITuple<[u32, u32]>>
   expect(unregisteredPruning.filter(([id]) => id.toNumber() === unregisteredParaId).length).toBe(0)
 
-  // 3.5 Assert that the block digest carries a ParaUpgradeCode consensus log
+  // 3.5 Assert that the block digest carries a ParaUpgradeCode consensus log, read from `System::Digest`
   const expectedUnregisteredLog = u8aToHex(
     u8aConcat(
       new Uint8Array([CONSENSUS_LOG_PARA_UPGRADE_CODE]),
@@ -266,7 +268,7 @@ export async function parasForceSetCurrentCodeE2ETest<
       hexToU8a(newCodeHash),
     ),
   )
-  const unregisteredConsensusLogs = unregisteredHeader.digest.logs
+  const unregisteredConsensusLogs = (await client.api.query.system.digest()).logs
     .filter((log) => log.isConsensus && log.asConsensus[0].toHex() === POLKADOT_ENGINE_ID)
     .map((log) => log.asConsensus[1].toHex())
   expect(unregisteredConsensusLogs).toContain(expectedUnregisteredLog)
