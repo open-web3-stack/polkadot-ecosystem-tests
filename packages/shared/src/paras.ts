@@ -166,7 +166,10 @@ export async function parasForceSetCurrentCodeE2ETest<
   await client.dev.newBlock()
 
   // 1.1 Assert that a signed caller fails with BadOrigin
-  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force set current code fails with BadOrigin')
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force set current code fails with BadOrigin')
 
   // 1.2 Assert that the current code hash is unchanged
   expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
@@ -340,7 +343,10 @@ export async function parasForceSetCurrentHeadE2ETest<
   await client.dev.newBlock()
 
   // 1.1 Assert that a signed caller fails with BadOrigin
-  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force set current head fails with BadOrigin')
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force set current head fails with BadOrigin')
 
   // 1.2 Assert that the head is unchanged
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
@@ -469,7 +475,10 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
   await client.dev.newBlock()
 
   // 1.1 Assert that a signed caller fails with BadOrigin
-  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force schedule code upgrade fails with BadOrigin')
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force schedule code upgrade fails with BadOrigin')
 
   // 1.2 Assert that no upgrade is pending
   expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).isNone).toBe(true)
@@ -1033,7 +1042,10 @@ export async function parasForceNoteNewHeadE2ETest<
   await client.dev.newBlock()
 
   // 1.1 Assert that a signed caller fails with BadOrigin
-  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force note new head fails with BadOrigin')
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force note new head fails with BadOrigin')
 
   // 1.2 Assert that the head, most recent context and go-ahead signal are unchanged
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
