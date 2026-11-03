@@ -43,3 +43,47 @@ exports[`Kusama Paras > pallet paras - force set current code > signed force set
   },
 ]
 `;
+
+exports[`Kusama Paras > pallet paras - force set current head > root force set current head on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force set current head > root force set current head on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force set current head > signed force set current head fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 7000)",
+          "refTime": "(rounded 600000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
