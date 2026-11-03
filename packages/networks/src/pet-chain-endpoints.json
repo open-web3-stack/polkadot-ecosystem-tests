@@ -16,26 +16,26 @@
   ],
   "bridgeHubPolkadot": [
     "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/bridgehub",
-    "wss://bridge-hub-polkadot-rpc.n.dwellir.com"
+    "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/bridgehub"
   ],
   "collectivesPolkadot": [
     "wss://rpc-collectives-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/collectives",
-    "wss://collectives-polkadot-rpc.n.dwellir.com"
+    "wss://collectives-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/collectives"
   ],
   "coretimePolkadot": [
     "wss://rpc-coretime-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/coretime",
-    "wss://coretime-polkadot-rpc.n.dwellir.com"
+    "wss://coretime-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/coretime"
   ],
   "bulletinPolkadot": [
     "wss://bulletin-rpc.polkadot.io"
   ],
   "peoplePolkadot": [
     "wss://rpc-people-polkadot.luckyfriday.io",
-    "wss://dot-rpc.stakeworld.io/people",
-    "wss://people-polkadot-rpc.n.dwellir.com"
+    "wss://people-polkadot-rpc.n.dwellir.com",
+    "wss://dot-rpc.stakeworld.io/people"
   ],
   "acala": [
     "wss://acala-rpc-0.aca-api.network",
@@ -45,12 +45,12 @@
     "wss://rpc-acala.luckyfriday.io"
   ],
   "bifrostPolkadot": [
-    "wss://hk.p.bifrost-rpc.liebi.com/ws",
-    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
+    "wss://eu.bifrost-polkadot-rpc.liebi.com/ws",
+    "wss://hk.p.bifrost-rpc.liebi.com/ws"
   ],
   "hydration": [
-    "wss://rpc.hydradx.cloud",
-    "wss://hydration-rpc.n.dwellir.com"
+    "wss://hydration-rpc.n.dwellir.com",
+    "wss://rpc.hydradx.cloud"
   ],
   "moonbeam": [
     "wss://moonbeam.api.onfinality.io/public-ws",
@@ -67,8 +67,8 @@
   ],
   "assetHubKusama": [
     "wss://rpc-asset-hub-kusama.luckyfriday.io",
-    "wss://ksm-rpc.stakeworld.io/assethub",
-    "wss://asset-hub-kusama-rpc.n.dwellir.com"
+    "wss://asset-hub-kusama-rpc.n.dwellir.com",
+    "wss://ksm-rpc.stakeworld.io/assethub"
   ],
   "bridgeHubKusama": [
     "wss://rpc-bridge-hub-kusama.luckyfriday.io",
