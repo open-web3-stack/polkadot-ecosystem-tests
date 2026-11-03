@@ -5,7 +5,9 @@ import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-
 import type { Bytes, Option, u32, Vec } from '@polkadot/types'
 import type { H256 } from '@polkadot/types/interfaces'
 import type {
+  PolkadotPrimitivesV8UpgradeGoAhead,
   PolkadotPrimitivesV8UpgradeRestriction,
+  PolkadotRuntimeCommonParasRegistrarParaInfo,
   PolkadotRuntimeParachainsConfigurationHostConfiguration,
   PolkadotRuntimeParachainsParasParaPastCodeMeta,
   PolkadotRuntimeParachainsParasPvfCheckActiveVoteState,
@@ -960,12 +962,348 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
 }
 
 /**
- * Test `paras.force_note_new_head`.
+ * Test `paras.force_note_new_head`, which notes a new head for a para as if it had been executed in the context of
+ * the current block, when the para has no pending upgrade.
+ *
+ * Polkadot and Kusama configure the registrar as the paras pallet's `OnNewHead` hook. It locks a registered para
+ * whose lock is not yet set, so that its manager can no longer act on it.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the para's head, most recent context and go-ahead signal are unchanged
+ *
+ * 2. Root origin, on a registered para with no pending upgrade and an `Abort` go-ahead signal
+ *
+ *     2.1 asserting the `NewHeadNoted` event
+ *
+ *     2.2 asserting that the para's head is the new head
+ *
+ *     2.3 asserting that the para's most recent context is the current block
+ *
+ *     2.4 asserting that the `Abort` go-ahead signal is cleared
+ *
+ *     2.5 asserting that the registrar locks the para
+ *
+ *     2.6 asserting that the para's current code is unchanged
+ *
+ * 3. Root origin, on an unregistered para
+ *
+ *     3.1 asserting the `NewHeadNoted` event
+ *
+ *     3.2 asserting that the para's head and most recent context are set
+ *
+ *     3.3 asserting that the registrar does not create an entry for the para
  */
 export async function parasForceNoteNewHeadE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newHead = u8aToHex(new Uint8Array([0x01, 0x02, 0x03]))
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  // A freshly registered para has no head or context until onboarding, and its registrar lock is unset
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).isNone).toBe(true)
+  const paraInfoBefore = (
+    (await client.api.query.registrar.paras(paraId)) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>
+  ).unwrap()
+  expect(paraInfoBefore.locked.isNone).toBe(true)
+
+  // The relay chain sets an `Abort` go-ahead signal when it rejects a para's upgrade. Setting it directly here lets the
+  // test observe that noting a head with no pending upgrade clears it.
+  await client.dev.setStorage({
+    Paras: {
+      upgradeGoAheadSignal: [[[paraId], 'Abort']],
+    },
+  })
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.forceNoteNewHead(paraId, newHead).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force note new head fails with BadOrigin')
+
+  // 1.2 Assert that the head, most recent context and go-ahead signal are unchanged
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.paras.upgradeGoAheadSignal(paraId)) as Option<PolkadotPrimitivesV8UpgradeGoAhead>).unwrap()
+      .isAbort,
+  ).toBe(true)
+
+  // 2. Root origin, on a registered para with no pending upgrade
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceNoteNewHead(paraId, newHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The scheduled call runs in the block just built, which is the context the head is noted in
+  const notedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 2.1 Assert the NewHeadNoted event
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force note new head on registered para')
+
+  const rootEvents = await client.api.query.system.events()
+  const rootParasEvents = rootEvents.filter(({ event }) => event.section === 'paras')
+  expect(rootParasEvents.length).toBe(1)
+  assert(client.api.events.paras.NewHeadNoted.is(rootParasEvents[0].event))
+  expect(rootParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
+
+  // 2.2 Assert that the head is the new head
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
+
+  // 2.3 Assert that the most recent context is the current block
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(notedAt)
+
+  // 2.4 Assert that the Abort go-ahead signal is cleared
+  expect(
+    ((await client.api.query.paras.upgradeGoAheadSignal(paraId)) as Option<PolkadotPrimitivesV8UpgradeGoAhead>).isNone,
+  ).toBe(true)
+
+  // 2.5 Assert that the registrar locks the para, leaving its manager and deposit as they were
+  const paraInfoAfter = (
+    (await client.api.query.registrar.paras(paraId)) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>
+  ).unwrap()
+  expect(paraInfoAfter.locked.unwrap().isTrue).toBe(true)
+  expect(paraInfoAfter.manager.toString()).toBe(paraInfoBefore.manager.toString())
+  expect(paraInfoAfter.deposit.toString()).toBe(paraInfoBefore.deposit.toString())
+
+  // 2.6 Assert that the current code is unchanged
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
+
+  // 3. Root origin, on an unregistered para
+  expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).isNone).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceNoteNewHead(unregisteredParaId, newHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const unregisteredNotedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 3.1 Assert the NewHeadNoted event
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force note new head on unregistered para')
+
+  const unregisteredEvents = await client.api.query.system.events()
+  const unregisteredParasEvents = unregisteredEvents.filter(({ event }) => event.section === 'paras')
+  expect(unregisteredParasEvents.length).toBe(1)
+  assert(client.api.events.paras.NewHeadNoted.is(unregisteredParasEvents[0].event))
+  expect(unregisteredParasEvents[0].event.data[0].toString()).toBe(unregisteredParaId.toString())
+
+  // 3.2 Assert that the head and most recent context are set, even though the para is not registered
+  expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
+  expect(
+    ((await client.api.query.paras.mostRecentContext(unregisteredParaId)) as Option<u32>).unwrap().toNumber(),
+  ).toBe(unregisteredNotedAt)
+
+  // 3.3 Assert that the registrar does not create an entry for the para
+  expect(
+    (
+      (await client.api.query.registrar.paras(
+        unregisteredParaId,
+      )) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>
+    ).isNone,
+  ).toBe(true)
+}
+
+/**
+ * Test `paras.force_note_new_head` on a para with an upgrade pending under the go-ahead signal strategy. Noting a head
+ * in a context at or past the upgrade's expected block applies the upgrade.
+ *
+ * Only parachain candidate inclusion schedules upgrades under this strategy, so the pending upgrade is written to
+ * storage directly: the future code hash, the expected block, and the `GoAhead` signal.
+ *
+ * 1. Root origin, noting a head before the upgrade's expected block
+ *
+ *     1.1 asserting the `NewHeadNoted` event
+ *
+ *     1.2 asserting that the para's head and most recent context are set
+ *
+ *     1.3 asserting that the pending upgrade and its go-ahead signal are unchanged
+ *
+ *     1.4 asserting that the para's current code is unchanged
+ *
+ * 2. Root origin, noting a head at or past the upgrade's expected block
+ *
+ *     2.1 asserting that only the `NewHeadNoted` event is emitted
+ *
+ *     2.2 asserting that the para's head and most recent context are set
+ *
+ *     2.3 asserting that the pending upgrade and its go-ahead signal are cleared
+ *
+ *     2.4 asserting that the para's current code hash is the new code's hash
+ *
+ *     2.5 asserting that the old code hash is recorded as past code at the expected block
+ *
+ *     2.6 asserting that the replacement is noted in the para's past code metadata and scheduled for pruning
+ *
+ *     2.7 asserting that the block digest carries a `ParaUpgradeCode` consensus log
+ */
+export async function parasForceNoteNewHeadWithUpgradeE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const firstHead = u8aToHex(new Uint8Array([0x01, 0x02, 0x03]))
+  const secondHead = u8aToHex(new Uint8Array([0x04, 0x05, 0x06]))
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  // Write an upgrade pending well past the current block
+  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const futureExpectedAt = currentBlock + 1000
+  await client.dev.setStorage({
+    Paras: {
+      futureCodeHash: [[[paraId], newCodeHash]],
+      futureCodeUpgrades: [[[paraId], futureExpectedAt]],
+      upgradeGoAheadSignal: [[[paraId], 'GoAhead']],
+    },
+  })
+
+  // 1. Root origin, noting a head before the upgrade's expected block
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceNoteNewHead(paraId, firstHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const firstNotedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 1.1 Assert the NewHeadNoted event
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force note new head before upgrade is due')
+
+  const firstEvents = await client.api.query.system.events()
+  const firstParasEvents = firstEvents.filter(({ event }) => event.section === 'paras')
+  expect(firstParasEvents.length).toBe(1)
+  assert(client.api.events.paras.NewHeadNoted.is(firstParasEvents[0].event))
+  expect(firstParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
+
+  // 1.2 Assert that the head and most recent context are set
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(firstHead)
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
+    firstNotedAt,
+  )
+
+  // 1.3 Assert that the pending upgrade and its go-ahead signal are unchanged
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
+  expect(((await client.api.query.paras.futureCodeUpgrades(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
+    futureExpectedAt,
+  )
+  expect(
+    ((await client.api.query.paras.upgradeGoAheadSignal(paraId)) as Option<PolkadotPrimitivesV8UpgradeGoAhead>).unwrap()
+      .isGoAhead,
+  ).toBe(true)
+
+  // 1.4 Assert that the current code is unchanged
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
+
+  // 2. Move the upgrade's expected block to the current block, so that the next noted head is at or past it
+  const dueExpectedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await client.dev.setStorage({
+    Paras: {
+      futureCodeUpgrades: [[[paraId], dueExpectedAt]],
+    },
+  })
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceNoteNewHead(paraId, secondHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const secondNotedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 2.1 Assert that only the NewHeadNoted event is emitted; applying the upgrade does not emit `CurrentCodeUpdated`
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force note new head applies due upgrade')
+
+  const secondEvents = await client.api.query.system.events()
+  const secondParasEvents = secondEvents.filter(({ event }) => event.section === 'paras')
+  expect(secondParasEvents.length).toBe(1)
+  assert(client.api.events.paras.NewHeadNoted.is(secondParasEvents[0].event))
+  expect(secondParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
+
+  // 2.2 Assert that the head and most recent context are set
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(secondHead)
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
+    secondNotedAt,
+  )
+
+  // 2.3 Assert that the pending upgrade and its go-ahead signal are cleared
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
+  expect(((await client.api.query.paras.futureCodeUpgrades(paraId)) as Option<u32>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.paras.upgradeGoAheadSignal(paraId)) as Option<PolkadotPrimitivesV8UpgradeGoAhead>).isNone,
+  ).toBe(true)
+
+  // 2.4 Assert that the current code hash is the new code's hash
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
+
+  // 2.5 Assert that the old code hash is recorded as past code at the expected block, not the block it was applied in
+  const pastCodeHash = (await client.api.query.paras.pastCodeHash([paraId, dueExpectedAt])) as Option<H256>
+  expect(pastCodeHash.unwrap().toHex()).toBe(oldCodeHash)
+
+  // 2.6 Assert that the replacement is noted in the past code metadata, and pruning is counted from the block it
+  // was applied in
+  const pastCodeMeta = (await client.api.query.paras.pastCodeMeta(
+    paraId,
+  )) as PolkadotRuntimeParachainsParasParaPastCodeMeta
+  expect(pastCodeMeta.upgradeTimes.length).toBe(1)
+  expect(pastCodeMeta.upgradeTimes[0].expectedAt.toNumber()).toBe(dueExpectedAt)
+  expect(pastCodeMeta.upgradeTimes[0].activatedAt.toNumber()).toBe(secondNotedAt)
+
+  const pastCodePruning = (await client.api.query.paras.pastCodePruning()) as Vec<ITuple<[u32, u32]>>
+  const pruningEntries = pastCodePruning.filter(([id]) => id.toNumber() === paraId)
+  expect(pruningEntries.length).toBe(1)
+  expect(pruningEntries[0][1].toNumber()).toBe(secondNotedAt)
+
+  // 2.7 Assert that the block digest carries a ParaUpgradeCode consensus log, read from `System::Digest`
+  const expectedLog = u8aToHex(
+    u8aConcat(
+      new Uint8Array([CONSENSUS_LOG_PARA_UPGRADE_CODE]),
+      client.api.createType('u32', paraId).toU8a(),
+      hexToU8a(newCodeHash),
+    ),
+  )
+  const consensusLogs = (await client.api.query.system.digest()).logs
+    .filter((log) => log.isConsensus && log.asConsensus[0].toHex() === POLKADOT_ENGINE_ID)
+    .map((log) => log.asConsensus[1].toHex())
+  expect(consensusLogs).toContain(expectedLog)
+}
 
 /**
  * Test `paras.force_queue_action`.
@@ -1059,7 +1397,11 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - force note new head',
         testFn: async () => await parasForceNoteNewHeadE2ETest(client),
-        flags: { skip: true },
+      },
+      {
+        kind: 'test',
+        label: 'pallet paras - force note new head with pending upgrade',
+        testFn: async () => await parasForceNoteNewHeadWithUpgradeE2ETest(client),
       },
       {
         kind: 'test',
