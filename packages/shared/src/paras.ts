@@ -275,12 +275,97 @@ export async function parasForceSetCurrentCodeE2ETest<
 }
 
 /**
- * Test `paras.force_set_current_head`.
+ * Test `paras.force_set_current_head`, which overwrites a para's head data immediately.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the para's head is unchanged
+ *
+ * 2. Root origin, on a registered para
+ *
+ *     2.1 asserting the `CurrentHeadUpdated` event
+ *
+ *     2.2 asserting that the para's head is the new head
+ *
+ *     2.3 asserting that the para's most recent context is unchanged
+ *
+ * 3. Root origin, on an unregistered para
+ *
+ *     3.1 asserting the `CurrentHeadUpdated` event
+ *
+ *     3.2 asserting that the para's head is set to the new head
  */
 export async function parasForceSetCurrentHeadE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  const newHead = u8aToHex(new Uint8Array([0x01, 0x02, 0x03]))
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  // Registering the para queues its genesis head for onboarding at the next session; `Heads` is not set yet
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+  const mostRecentContextBefore = (await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.forceSetCurrentHead(paraId, newHead).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  await checkEvents(signedEvents, 'system').toMatchSnapshot('signed force set current head fails with BadOrigin')
+
+  // 1.2 Assert that the head is unchanged
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+
+  // 2. Root origin, on a registered para
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceSetCurrentHead(paraId, newHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert the CurrentHeadUpdated event
+  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+    .redact({ number: true })
+    .toMatchSnapshot('root force set current head on registered para')
+
+  // 2.2 Assert that the head is the new head
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
+
+  // 2.3 Assert that the most recent context is unchanged; only noting a new head updates it
+  const mostRecentContextAfter = (await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>
+  expect(mostRecentContextAfter.toHex()).toBe(mostRecentContextBefore.toHex())
+
+  // 3. Root origin, on an unregistered para
+  expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).isNone).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceSetCurrentHead(unregisteredParaId, newHead).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert the CurrentHeadUpdated event
+  await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
+    .redact({ number: true })
+    .toMatchSnapshot('root force set current head on unregistered para')
+
+  // 3.2 Assert that the head is set, even though the para is not registered
+  expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
+}
 
 /**
  * Test `paras.force_schedule_code_upgrade`.
@@ -370,7 +455,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - force set current head',
         testFn: async () => await parasForceSetCurrentHeadE2ETest(client),
-        flags: { skip: true },
       },
       {
         kind: 'test',
