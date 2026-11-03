@@ -1,5 +1,157 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with known code > root force schedule known code for para A 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with known code > root force schedule known code for para B 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with rejected code > root force schedule current code is aborted 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with rejected code > root force schedule undersized code is aborted 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule same unknown code for para B 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule unknown code for para A 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule while upgrade pending for para A 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force schedule code upgrade with unknown code > signed force schedule code upgrade fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+      "dispatchInfo": {
+        "class": "Normal",
+        "paysFee": "Yes",
+        "weight": {
+          "proofSize": "(rounded 20000)",
+          "refTime": "(rounded 1000000000)",
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Paras > pallet paras - force set current code > root force set current code on registered para 1`] = `
 [
   {
