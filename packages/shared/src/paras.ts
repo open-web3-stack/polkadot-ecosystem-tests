@@ -9,6 +9,7 @@ import type {
   PolkadotPrimitivesV8UpgradeRestriction,
   PolkadotRuntimeCommonParasRegistrarParaInfo,
   PolkadotRuntimeParachainsConfigurationHostConfiguration,
+  PolkadotRuntimeParachainsParasParaLifecycle,
   PolkadotRuntimeParachainsParasParaPastCodeMeta,
   PolkadotRuntimeParachainsParasPvfCheckActiveVoteState,
 } from '@polkadot/types/lookup'
@@ -1224,12 +1225,142 @@ export async function parasForceNoteNewHeadWithUpgradeE2ETest<
 }
 
 /**
- * Test `paras.force_queue_action`.
+ * Test `paras.force_queue_action`, which adds a para to the actions queue of the next session. At that session's
+ * start, the paras pallet applies any pending lifecycle change for each queued para.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the next session's actions queue is unchanged
+ *
+ * 2. Root origin, on a registered para
+ *
+ *     2.1 asserting the `ActionQueued` event, naming the para and the next session
+ *
+ *     2.2 asserting that the para is added to the next session's actions queue, keeping existing entries
+ *
+ *     2.3 asserting that the para's lifecycle is unchanged until the session starts
+ *
+ * 3. Root origin, on the same para again
+ *
+ *     3.1 asserting the `ActionQueued` event
+ *
+ *     3.2 asserting that the para appears in the queue only once
+ *
+ * 4. Root origin, on an unregistered para
+ *
+ *     4.1 asserting the `ActionQueued` event
+ *
+ *     4.2 asserting that the para is added to the queue, which stays sorted by para ID
  */
 export async function parasForceQueueActionE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
+  const nextSession = currentSession + 1
+
+  const queueBefore = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
+  expect(queueBefore).not.toContain(paraId)
+  expect(queueBefore).not.toContain(unregisteredParaId)
+
+  const lifecycleBefore = (
+    (await client.api.query.paras.paraLifecycles(paraId)) as Option<PolkadotRuntimeParachainsParasParaLifecycle>
+  ).unwrap()
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(client.api.tx.paras.forceQueueAction(paraId).signAsync(devAccounts.alice))
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force queue action fails with BadOrigin')
+
+  // 1.2 Assert that the next session's actions queue is unchanged
+  let queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
+  expect(queue).toEqual(queueBefore)
+
+  // 2. Root origin, on a registered para
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceQueueAction(paraId).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The test must not cross a session boundary, or the queue it inspects would no longer be the next session's
+  expect(((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()).toBe(currentSession)
+
+  // 2.1 Assert the ActionQueued event, naming the para and the next session
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force queue action on registered para')
+
+  // 2.2 Assert that the para is added to the queue, keeping existing entries
+  queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
+  expect(queue).toEqual([...queueBefore, paraId].sort((a, b) => a - b))
+
+  // 2.3 Assert that the lifecycle is unchanged until the session starts
+  const lifecycleAfter = (
+    (await client.api.query.paras.paraLifecycles(paraId)) as Option<PolkadotRuntimeParachainsParasParaLifecycle>
+  ).unwrap()
+  expect(lifecycleAfter.type).toBe(lifecycleBefore.type)
+
+  // 3. Root origin, on the same para again
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceQueueAction(paraId).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert the ActionQueued event; it is emitted even though the para is already queued
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force queue action on already queued para')
+
+  // 3.2 Assert that the para appears in the queue only once
+  queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
+  expect(queue).toEqual([...queueBefore, paraId].sort((a, b) => a - b))
+
+  // 4. Root origin, on an unregistered para
+  expect(
+    (
+      (await client.api.query.paras.paraLifecycles(
+        unregisteredParaId,
+      )) as Option<PolkadotRuntimeParachainsParasParaLifecycle>
+    ).isNone,
+  ).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceQueueAction(unregisteredParaId).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert the ActionQueued event
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root force queue action on unregistered para')
+
+  // 4.2 Assert that the para is added to the queue, which stays sorted by para ID
+  queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
+  expect(queue).toEqual([...queueBefore, paraId, unregisteredParaId].sort((a, b) => a - b))
+}
 
 /**
  * Test `paras.add_trusted_validation_code` and `paras.poke_unused_validation_code`.
@@ -1325,7 +1456,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - force queue action',
         testFn: async () => await parasForceQueueActionE2ETest(client),
-        flags: { skip: true },
       },
       {
         kind: 'test',
