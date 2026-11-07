@@ -1,5 +1,65 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Kusama Paras > pallet paras - force note new head > root force note new head on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force note new head > root force note new head on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force note new head > signed force note new head fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force note new head with pending upgrade > root force note new head applies due upgrade 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - force note new head with pending upgrade > root force note new head before upgrade is due 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
 exports[`Kusama Paras > pallet paras - force schedule code upgrade with known code > root force schedule known code for para A 1`] = `
 [
   {
@@ -137,14 +197,6 @@ exports[`Kusama Paras > pallet paras - force schedule code upgrade with unknown 
   {
     "data": {
       "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
@@ -181,14 +233,6 @@ exports[`Kusama Paras > pallet paras - force set current code > signed force set
   {
     "data": {
       "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 20000)",
-          "refTime": "(rounded 1000000000)",
-        },
-      },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
@@ -225,14 +269,6 @@ exports[`Kusama Paras > pallet paras - force set current head > signed force set
   {
     "data": {
       "dispatchError": "BadOrigin",
-      "dispatchInfo": {
-        "class": "Normal",
-        "paysFee": "Yes",
-        "weight": {
-          "proofSize": "(rounded 7000)",
-          "refTime": "(rounded 600000000)",
-        },
-      },
     },
     "method": "ExtrinsicFailed",
     "section": "system",
