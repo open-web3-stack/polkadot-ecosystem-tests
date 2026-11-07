@@ -82,7 +82,10 @@ function pvfCheckStatementTx(
   signer: KeyringPair,
   statement: { accept: boolean; subject: string; sessionIndex: number; validatorIndex: number },
 ) {
-  const stmt = client.api.createType('PolkadotPrimitivesV8PvfCheckStatement', statement)
+  // The statement type's name includes the primitives version it is defined in, which changes between runtimes, so it
+  // is read from the call's metadata
+  const statementType = client.api.tx.paras.includePvfCheckStatement.meta.args[0].type.toString()
+  const stmt = client.api.createType(statementType, statement)
   const signature = signer.sign(u8aConcat(stringToU8a('VCPC'), stmt.toU8a()))
   return client.api.tx.paras.includePvfCheckStatement(stmt, signature)
 }
