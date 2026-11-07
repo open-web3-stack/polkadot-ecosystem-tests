@@ -501,20 +501,6 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule unknown code for para A')
 
-  const eventsA = await client.api.query.system.events()
-  const [pvfCheckStartedA] = eventsA.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
-  )
-  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedA.event))
-  expect(pvfCheckStartedA.event.data[0].toHex()).toBe(newCodeHash)
-  expect(pvfCheckStartedA.event.data[1].toString()).toBe(paraIdA.toString())
-  const [scheduledEventA] = eventsA.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
-  )
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventA.event))
-  expect(scheduledEventA.event.data[0].toString()).toBe(paraIdA.toString())
-  expect(eventsA.filter(({ event }) => event.section === 'paras' && event.method === 'PvfCheckAccepted').length).toBe(0)
-
   // 2.2 Assert that the new code hash is pending as future code, and the current code is unchanged
   expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
   expect(((await client.api.query.paras.currentCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
@@ -572,12 +558,6 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule while upgrade pending for para A')
 
-  const pendingEvents = await client.api.query.system.events()
-  const pendingParasEvents = pendingEvents.filter(({ event }) => event.section === 'paras')
-  expect(pendingParasEvents.length).toBe(1)
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(pendingParasEvents[0].event))
-  expect(pendingParasEvents[0].event.data[0].toString()).toBe(paraIdA.toString())
-
   // 3.2 Assert that the future code hash is unchanged
   expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
@@ -611,19 +591,6 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force schedule same unknown code for para B')
-
-  const eventsB = await client.api.query.system.events()
-  const [pvfCheckStartedB] = eventsB.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
-  )
-  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedB.event))
-  expect(pvfCheckStartedB.event.data[0].toHex()).toBe(newCodeHash)
-  expect(pvfCheckStartedB.event.data[1].toString()).toBe(paraIdB.toString())
-  const [scheduledEventB] = eventsB.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
-  )
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventB.event))
-  expect(scheduledEventB.event.data[0].toString()).toBe(paraIdB.toString())
 
   // 4.2 Assert that the new code hash is pending as para B's future code
   expect(((await client.api.query.paras.futureCodeHash(paraIdB)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
@@ -821,25 +788,6 @@ export async function parasForceScheduleCodeUpgradeFastTrackE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule known code for para B')
 
-  const eventsB = await client.api.query.system.events()
-  const [pvfCheckStartedB] = eventsB.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
-  )
-  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedB.event))
-  expect(pvfCheckStartedB.event.data[0].toHex()).toBe(newCodeHash)
-  expect(pvfCheckStartedB.event.data[1].toString()).toBe(paraIdB.toString())
-  const [pvfCheckAcceptedB] = eventsB.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckAccepted',
-  )
-  assert(client.api.events.paras.PvfCheckAccepted.is(pvfCheckAcceptedB.event))
-  expect(pvfCheckAcceptedB.event.data[0].toHex()).toBe(newCodeHash)
-  expect(pvfCheckAcceptedB.event.data[1].toString()).toBe(paraIdB.toString())
-  const [scheduledEventB] = eventsB.filter(
-    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
-  )
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventB.event))
-  expect(scheduledEventB.event.data[0].toString()).toBe(paraIdB.toString())
-
   // 3.2 Assert that the new code hash is pending as para B's future code
   expect(((await client.api.query.paras.futureCodeHash(paraIdB)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
@@ -914,12 +862,6 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule current code is aborted')
 
-  const sameCodeEvents = await client.api.query.system.events()
-  const sameCodeParasEvents = sameCodeEvents.filter(({ event }) => event.section === 'paras')
-  expect(sameCodeParasEvents.length).toBe(1)
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(sameCodeParasEvents[0].event))
-  expect(sameCodeParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
-
   // 1.2 Assert that no upgrade is pending, restricted or cooling down
   expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
   expect(
@@ -948,12 +890,6 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule undersized code is aborted')
 
-  const undersizedEvents = await client.api.query.system.events()
-  const undersizedParasEvents = undersizedEvents.filter(({ event }) => event.section === 'paras')
-  expect(undersizedParasEvents.length).toBe(1)
-  assert(client.api.events.paras.CodeUpgradeScheduled.is(undersizedParasEvents[0].event))
-  expect(undersizedParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
-
   // 2.2 Assert that no upgrade is pending, restricted or cooling down
   expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
   expect(
@@ -973,9 +909,6 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
 /**
  * Test `paras.force_note_new_head`, which notes a new head for a para as if it had been executed in the context of
  * the current block, when the para has no pending upgrade.
- *
- * Polkadot and Kusama configure the registrar as the paras pallet's `OnNewHead` hook. It locks a registered para
- * whose lock is not yet set, so that its manager can no longer act on it.
  *
  * 1. signed origin
  *
@@ -1072,12 +1005,6 @@ export async function parasForceNoteNewHeadE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force note new head on registered para')
 
-  const rootEvents = await client.api.query.system.events()
-  const rootParasEvents = rootEvents.filter(({ event }) => event.section === 'paras')
-  expect(rootParasEvents.length).toBe(1)
-  assert(client.api.events.paras.NewHeadNoted.is(rootParasEvents[0].event))
-  expect(rootParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
-
   // 2.2 Assert that the head is the new head
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
 
@@ -1118,12 +1045,6 @@ export async function parasForceNoteNewHeadE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force note new head on unregistered para')
 
-  const unregisteredEvents = await client.api.query.system.events()
-  const unregisteredParasEvents = unregisteredEvents.filter(({ event }) => event.section === 'paras')
-  expect(unregisteredParasEvents.length).toBe(1)
-  assert(client.api.events.paras.NewHeadNoted.is(unregisteredParasEvents[0].event))
-  expect(unregisteredParasEvents[0].event.data[0].toString()).toBe(unregisteredParaId.toString())
-
   // 3.2 Assert that the head and most recent context are set, even though the para is not registered
   expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
   expect(
@@ -1143,9 +1064,6 @@ export async function parasForceNoteNewHeadE2ETest<
 /**
  * Test `paras.force_note_new_head` on a para with an upgrade pending under the go-ahead signal strategy. Noting a head
  * in a context at or past the upgrade's expected block applies the upgrade.
- *
- * Only parachain candidate inclusion schedules upgrades under this strategy, so the pending upgrade is written to
- * storage directly: the future code hash, the expected block, and the `GoAhead` signal.
  *
  * 1. Root origin, noting a head before the upgrade's expected block
  *
@@ -1215,12 +1133,6 @@ export async function parasForceNoteNewHeadWithUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force note new head before upgrade is due')
 
-  const firstEvents = await client.api.query.system.events()
-  const firstParasEvents = firstEvents.filter(({ event }) => event.section === 'paras')
-  expect(firstParasEvents.length).toBe(1)
-  assert(client.api.events.paras.NewHeadNoted.is(firstParasEvents[0].event))
-  expect(firstParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
-
   // 1.2 Assert that the head and most recent context are set
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(firstHead)
   expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
@@ -1262,12 +1174,6 @@ export async function parasForceNoteNewHeadWithUpgradeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force note new head applies due upgrade')
-
-  const secondEvents = await client.api.query.system.events()
-  const secondParasEvents = secondEvents.filter(({ event }) => event.section === 'paras')
-  expect(secondParasEvents.length).toBe(1)
-  assert(client.api.events.paras.NewHeadNoted.is(secondParasEvents[0].event))
-  expect(secondParasEvents[0].event.data[0].toString()).toBe(paraId.toString())
 
   // 2.2 Assert that the head and most recent context are set
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(secondHead)
