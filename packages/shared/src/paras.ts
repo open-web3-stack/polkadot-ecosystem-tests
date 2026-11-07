@@ -1611,12 +1611,140 @@ export async function parasAddTrustedValidationCodeE2ETest<
 }
 
 /**
- * Test `paras.poke_unused_validation_code`.
+ * Test `paras.poke_unused_validation_code`, which removes stored validation code by hash if no para references it.
+ * The call emits no event of its own, and succeeds without effect on code that is in use or not stored.
+ *
+ * Code added with `add_trusted_validation_code` is stored with no references, and a registered para's code has at
+ * least one.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the unused code is still stored
+ *
+ * 2. Root origin, on code with no references
+ *
+ *     2.1 asserting that no paras event is emitted
+ *
+ *     2.2 asserting that the code is removed
+ *
+ * 3. Root origin, on code a registered para uses
+ *
+ *     3.1 asserting that no paras event is emitted
+ *
+ *     3.2 asserting that the code and its reference count are unchanged
+ *
+ * 4. Root origin, on a hash with no stored code
+ *
+ *     4.1 asserting that no paras event is emitted
+ *
+ *     4.2 asserting that nothing is stored under the hash
  */
 export async function parasPokeUnusedValidationCodeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  const usedCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const unusedCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const unknownCodeHash = blake2AsHex(SECOND_VALIDATION_CODE)
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  // Registering the para gives its code at least one reference
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  const usedCodeRefs = ((await client.api.query.paras.codeByHashRefs(usedCodeHash)) as u32).toNumber()
+  expect(usedCodeRefs).toBeGreaterThan(0)
+
+  // Add code as trusted, so that it is stored with no references
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.addTrustedValidationCode(NEW_VALIDATION_CODE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  expect(((await client.api.query.paras.codeByHash(unusedCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    NEW_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(unusedCodeHash)) as u32).toNumber()).toBe(0)
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.pokeUnusedValidationCode(unusedCodeHash).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed poke unused validation code fails with BadOrigin')
+
+  // 1.2 Assert that the unused code is still stored
+  expect(((await client.api.query.paras.codeByHash(unusedCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    NEW_VALIDATION_CODE,
+  )
+
+  // 2. Root origin, on code with no references
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.pokeUnusedValidationCode(unusedCodeHash).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke unused validation code')
+
+  // 2.2 Assert that the code is removed
+  expect(((await client.api.query.paras.codeByHash(unusedCodeHash)) as Option<Bytes>).isNone).toBe(true)
+  expect(((await client.api.query.paras.codeByHashRefs(unusedCodeHash)) as u32).toNumber()).toBe(0)
+
+  // 3. Root origin, on code a registered para uses
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.pokeUnusedValidationCode(usedCodeHash).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke validation code in use')
+
+  const usedEvents = await client.api.query.system.events()
+  expect(usedEvents.filter(({ event }) => event.section === 'paras').length).toBe(0)
+
+  // 3.2 Assert that the code and its reference count are unchanged
+  expect(((await client.api.query.paras.codeByHash(usedCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    MINIMAL_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(usedCodeHash)) as u32).toNumber()).toBe(usedCodeRefs)
+
+  // 4. Root origin, on a hash with no stored code
+  expect(((await client.api.query.paras.codeByHash(unknownCodeHash)) as Option<Bytes>).isNone).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.pokeUnusedValidationCode(unknownCodeHash).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke validation code not stored')
+
+  // 4.2 Assert that nothing is stored under the hash
+  expect(((await client.api.query.paras.codeByHash(unknownCodeHash)) as Option<Bytes>).isNone).toBe(true)
+  expect(((await client.api.query.paras.codeByHashRefs(unknownCodeHash)) as u32).toNumber()).toBe(0)
+}
 
 /**
  * Test `paras.force_set_most_recent_context`.
@@ -1714,7 +1842,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - poke unused validation code',
         testFn: async () => await parasPokeUnusedValidationCodeE2ETest(client),
-        flags: { skip: true },
       },
       {
         kind: 'test',
