@@ -1363,9 +1363,257 @@ export async function parasForceQueueActionE2ETest<
 }
 
 /**
- * Test `paras.add_trusted_validation_code` and `paras.poke_unused_validation_code`.
+ * Test `paras.add_trusted_validation_code`, which marks validation code as trusted. The call emits no event of its
+ * own. What it does depends on the code:
+ * - unknown code, with no PVF pre-checking vote, is stored with no references
+ * - code already stored, with no vote, is left as it is
+ * - code under a PVF pre-checking vote is accepted at once: the vote is closed and every para waiting on it proceeds
+ *   with its upgrade or onboarding
+ *
+ * Registering a para with code the chain has not seen opens a vote for that code, caused by the para's onboarding.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the code was not stored
+ *
+ * 2. Root origin, with unknown code and no vote
+ *
+ *     2.1 asserting that no paras event is emitted
+ *
+ *     2.2 asserting that the code is stored by hash, with no references
+ *
+ *     2.3 asserting that no vote is opened for the code
+ *
+ * 3. Root origin, with the same code again
+ *
+ *     3.1 asserting that no paras event is emitted
+ *
+ *     3.2 asserting that the stored code and its reference count are unchanged
+ *
+ * 4. Root origin, with code under a vote caused by a code upgrade
+ *
+ *     4.1 asserting the `PvfCheckAccepted` event for the upgrading para
+ *
+ *     4.2 asserting that the vote is closed
+ *
+ *     4.3 asserting that the upgrade is queued for enactment at the expected block
+ *
+ *     4.4 asserting that the code's storage, reference count and the para's future code hash are unchanged
+ *
+ * 5. Root origin, with code under a vote caused by a para's onboarding
+ *
+ *     5.1 asserting the `PvfCheckAccepted` event for the onboarding para
+ *
+ *     5.2 asserting that the vote is closed
+ *
+ *     5.3 asserting that the para is queued to onboard at the session the vote's age allows
+ *
+ *     5.4 asserting that the code's reference count is unchanged
  */
-export async function parasTrustedValidationCodeE2ETest<
+export async function parasAddTrustedValidationCodeE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const secondCodeHash = blake2AsHex(SECOND_VALIDATION_CODE)
+
+  const activeConfig =
+    (await client.api.query.configuration.activeConfig()) as PolkadotRuntimeParachainsConfigurationHostConfiguration
+  const upgradeDelay = activeConfig.validationUpgradeDelay.toNumber()
+  const minimumUpgradeDelay = activeConfig.minimumValidationUpgradeDelay.toNumber()
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
+
+  // Registering the para opened a vote for its code, caused by its onboarding
+  const onboardingVote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      oldCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(onboardingVote.causes.length).toBe(1)
+  assert(onboardingVote.causes[0].isOnboarding)
+  expect(onboardingVote.causes[0].asOnboarding.toNumber()).toBe(paraId)
+  const oldCodeRefsBefore = ((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()
+
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).isNone).toBe(true)
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.addTrustedValidationCode(NEW_VALIDATION_CODE).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed add trusted validation code fails with BadOrigin')
+
+  // 1.2 Assert that the code was not stored
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).isNone).toBe(true)
+
+  // 2. Root origin, with unknown code and no vote
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.addTrustedValidationCode(NEW_VALIDATION_CODE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root add unknown trusted validation code')
+
+  const unknownEvents = await client.api.query.system.events()
+  expect(unknownEvents.filter(({ event }) => event.section === 'paras').length).toBe(0)
+
+  // 2.2 Assert that the code is stored by hash, with no references; no para uses it yet
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    NEW_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(0)
+
+  // 2.3 Assert that no vote is opened for the code
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        newCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+
+  // 3. Root origin, with the same code again
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.addTrustedValidationCode(NEW_VALIDATION_CODE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root add already stored trusted validation code')
+
+  // 3.2 Assert that the stored code and its reference count are unchanged
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    NEW_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(0)
+
+  // 4. Root origin, with code under a vote caused by a code upgrade.
+  // Scheduling an upgrade to unknown code opens that vote.
+  const relayParent = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceScheduleCodeUpgrade(paraId, SECOND_VALIDATION_CODE, relayParent).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const upgradeVote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      secondCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(upgradeVote.causes.length).toBe(1)
+  assert(upgradeVote.causes[0].isUpgrade)
+  expect(upgradeVote.causes[0].asUpgrade.id.toNumber()).toBe(paraId)
+  const secondCodeRefsBefore = ((await client.api.query.paras.codeByHashRefs(secondCodeHash)) as u32).toNumber()
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.addTrustedValidationCode(SECOND_VALIDATION_CODE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The scheduled call runs in the block just built
+  const upgradeAcceptedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 4.1 Assert the PvfCheckAccepted event for the upgrading para
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root add trusted code under upgrade vote')
+
+  // 4.2 Assert that the vote is closed
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        secondCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+  let voteList = ((await client.api.query.paras.pvfActiveVoteList()) as Vec<H256>).map((hash) => hash.toHex())
+  expect(voteList).not.toContain(secondCodeHash)
+
+  // 4.3 Assert that the upgrade is queued for enactment at the expected block
+  const futureUpgradesAt = (await client.api.query.paras.futureCodeUpgradesAt()) as Vec<ITuple<[u32, u32]>>
+  const upgrades = futureUpgradesAt.filter(([id]) => id.toNumber() === paraId)
+  expect(upgrades.length).toBe(1)
+  expect(upgrades[0][1].toNumber()).toBe(Math.max(relayParent + upgradeDelay, upgradeAcceptedAt + minimumUpgradeDelay))
+
+  // 4.4 Assert that the code's storage, reference count and the para's future code hash are unchanged
+  expect(((await client.api.query.paras.codeByHash(secondCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    SECOND_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(secondCodeHash)) as u32).toNumber()).toBe(secondCodeRefsBefore)
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(secondCodeHash)
+
+  // 5. Root origin, with code under a vote caused by the para's onboarding
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.addTrustedValidationCode(MINIMAL_VALIDATION_CODE).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The test must not cross a session boundary, or the onboarding session computed below would be off
+  expect(((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()).toBe(currentSession)
+
+  // 5.1 Assert the PvfCheckAccepted event for the onboarding para
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root add trusted code under onboarding vote')
+
+  // 5.2 Assert that the vote is closed
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        oldCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+  voteList = ((await client.api.query.paras.pvfActiveVoteList()) as Vec<H256>).map((hash) => hash.toHex())
+  expect(voteList).not.toContain(oldCodeHash)
+
+  // 5.3 Assert that the para is queued to onboard. Onboarding waits two sessions, less the sessions the vote has
+  // already observed, but never less than one.
+  const onboardAt = currentSession + Math.max(2 - onboardingVote.age.toNumber(), 1)
+  const onboardingQueue = ((await client.api.query.paras.actionsQueue(onboardAt)) as Vec<u32>).map((id) =>
+    id.toNumber(),
+  )
+  expect(onboardingQueue).toContain(paraId)
+
+  // 5.4 Assert that the code's reference count is unchanged
+  expect(((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()).toBe(oldCodeRefsBefore)
+}
+
+/**
+ * Test `paras.poke_unused_validation_code`.
+ */
+export async function parasPokeUnusedValidationCodeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(_client: Client<TCustom, TInitStorages>) {}
@@ -1459,8 +1707,13 @@ export function parasE2ETest<
       },
       {
         kind: 'test',
-        label: 'pallet paras - add trusted / poke unused validation code',
-        testFn: async () => await parasTrustedValidationCodeE2ETest(client),
+        label: 'pallet paras - add trusted validation code',
+        testFn: async () => await parasAddTrustedValidationCodeE2ETest(client),
+      },
+      {
+        kind: 'test',
+        label: 'pallet paras - poke unused validation code',
+        testFn: async () => await parasPokeUnusedValidationCodeE2ETest(client),
         flags: { skip: true },
       },
       {
