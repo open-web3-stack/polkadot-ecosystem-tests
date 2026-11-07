@@ -1,5 +1,47 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add already stored trusted validation code 1`] = `[]`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add trusted code under onboarding vote 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add trusted code under upgrade vote 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add unknown trusted validation code 1`] = `[]`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > signed add trusted validation code fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Paras > pallet paras - force note new head > root force note new head on registered para 1`] = `
 [
   {
@@ -56,6 +98,57 @@ exports[`Polkadot Paras > pallet paras - force note new head with pending upgrad
     ],
     "method": "NewHeadNoted",
     "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on already queued para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > signed force queue action fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
   },
 ]
 `;
