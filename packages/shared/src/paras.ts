@@ -2,6 +2,7 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
+import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Bytes, Option, u32, Vec } from '@polkadot/types'
 import type { H256 } from '@polkadot/types/interfaces'
 import type {
@@ -9,12 +10,13 @@ import type {
   PolkadotPrimitivesV8UpgradeRestriction,
   PolkadotRuntimeCommonParasRegistrarParaInfo,
   PolkadotRuntimeParachainsConfigurationHostConfiguration,
+  PolkadotRuntimeParachainsParasParaGenesisArgs,
   PolkadotRuntimeParachainsParasParaLifecycle,
   PolkadotRuntimeParachainsParasParaPastCodeMeta,
   PolkadotRuntimeParachainsParasPvfCheckActiveVoteState,
 } from '@polkadot/types/lookup'
 import type { ITuple } from '@polkadot/types/types'
-import { hexToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
+import { hexToU8a, stringToU8a, u8aConcat, u8aToHex } from '@polkadot/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
 
 import { assert, expect } from 'vitest'
@@ -63,6 +65,26 @@ async function forceRegisterParaViaRoot(client: Client<any, any>, manager: strin
   const [regEvent] = events.filter(({ event }) => event.section === 'registrar' && event.method === 'Registered')
   assert(client.api.events.registrar.Registered.is(regEvent.event))
   expect(regEvent.event.data[0].toString()).toBe(paraId.toString())
+}
+
+/**
+ * Validators whose sr25519 keys the PVF pre-checking tests write into `ParasShared::ActiveValidatorKeys`, so that the
+ * tests can sign PVF check statements. A validator's index is its position in this list.
+ */
+const PVF_CHECK_VALIDATORS = [devAccounts.alice, devAccounts.bob, devAccounts.charlie, devAccounts.dave]
+
+/**
+ * Helper to build an unsigned `include_pvf_check_statement` extrinsic, with the statement signed by `signer`.
+ * The signed payload is the magic bytes `VCPC` followed by the SCALE-encoded statement.
+ */
+function pvfCheckStatementTx(
+  client: Client<any, any>,
+  signer: KeyringPair,
+  statement: { accept: boolean; subject: string; sessionIndex: number; validatorIndex: number },
+) {
+  const stmt = client.api.createType('PolkadotPrimitivesV8PvfCheckStatement', statement)
+  const signature = signer.sign(u8aConcat(stringToU8a('VCPC'), stmt.toU8a()))
+  return client.api.tx.paras.includePvfCheckStatement(stmt, signature)
 }
 
 /**
@@ -1747,6 +1769,572 @@ export async function parasPokeUnusedValidationCodeE2ETest<
 }
 
 /**
+ * Test `paras.include_pvf_check_statement` up to a vote that accepts an upgrade's code.
+ *
+ * Validators submit PVF check statements as unsigned extrinsics. The test writes four of its own keys as the active
+ * validators before any vote is opened, since each vote's ballots are sized to the validator set when it opens.
+ * With four validators, three accepting statements reach the supermajority that accepts the code.
+ *
+ * Invalid statements are rejected by the runtime's unsigned transaction validation, before they can be included in a
+ * block, so they are checked through the `TaggedTransactionQueue_validate_transaction` runtime API.
+ *
+ * 1. invalid statements
+ *
+ *     1.1 asserting that a statement for a past session is `Stale`
+ *
+ *     1.2 asserting that a statement for a future session is `Future`
+ *
+ *     1.3 asserting that a statement from a validator index outside the set is rejected with custom error 1
+ *
+ *     1.4 asserting that a statement signed by a different validator than its index names is `BadProof`
+ *
+ *     1.5 asserting that a statement about code with no open vote is rejected with custom error 2
+ *
+ * 2. the first validator accepts
+ *
+ *     2.1 asserting that no paras event is emitted
+ *
+ *     2.2 asserting that the vote stays open, with the validator's accepting ballot recorded
+ *
+ * 3. the first validator submits a second statement
+ *
+ *     3.1 asserting that a second statement, accepting or rejecting, is rejected with custom error 3
+ *
+ * 4. the second validator accepts
+ *
+ *     4.1 asserting that no paras event is emitted
+ *
+ *     4.2 asserting that the vote stays open, with both accepting ballots recorded
+ *
+ * 5. the third validator accepts, reaching the supermajority
+ *
+ *     5.1 asserting the `PvfCheckAccepted` event for the upgrading para
+ *
+ *     5.2 asserting that the vote is closed
+ *
+ *     5.3 asserting that the upgrade is queued for enactment at the expected block
+ *
+ *     5.4 asserting that the code's reference count and the para's future code hash are unchanged
+ *
+ *     5.5 asserting that a statement from the fourth validator is now rejected with custom error 2
+ */
+export async function parasIncludePvfCheckStatementAcceptE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const secondCodeHash = blake2AsHex(SECOND_VALIDATION_CODE)
+  const [alice, bob, charlie, dave] = PVF_CHECK_VALIDATORS
+
+  const activeConfig =
+    (await client.api.query.configuration.activeConfig()) as PolkadotRuntimeParachainsConfigurationHostConfiguration
+  const upgradeDelay = activeConfig.validationUpgradeDelay.toNumber()
+  const minimumUpgradeDelay = activeConfig.minimumValidationUpgradeDelay.toNumber()
+
+  // Make the test's keys the active validators before any vote is opened
+  await client.dev.setStorage({
+    ParasShared: {
+      activeValidatorKeys: PVF_CHECK_VALIDATORS.map((validator) => u8aToHex(validator.publicKey)),
+    },
+  })
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  // Scheduling an upgrade to unknown code opens a vote for it
+  const relayParent = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceScheduleCodeUpgrade(paraId, NEW_VALIDATION_CODE, relayParent).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  let vote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      newCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(vote.causes.length).toBe(1)
+  assert(vote.causes[0].isUpgrade)
+  expect(vote.causes[0].asUpgrade.id.toNumber()).toBe(paraId)
+  const newCodeRefsBefore = ((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()
+
+  const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
+  let blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
+
+  // 1. Invalid statements
+
+  // 1.1 Assert that a statement for a past session is Stale
+  const staleValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, alice, {
+      accept: true,
+      subject: newCodeHash,
+      sessionIndex: currentSession - 1,
+      validatorIndex: 0,
+    }).toHex(),
+    blockHash,
+  )
+  assert(staleValidity.isErr && staleValidity.asErr.isInvalid)
+  expect(staleValidity.asErr.asInvalid.isStale).toBe(true)
+
+  // 1.2 Assert that a statement for a future session is Future
+  const futureValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, alice, {
+      accept: true,
+      subject: newCodeHash,
+      sessionIndex: currentSession + 1,
+      validatorIndex: 0,
+    }).toHex(),
+    blockHash,
+  )
+  assert(futureValidity.isErr && futureValidity.asErr.isInvalid)
+  expect(futureValidity.asErr.asInvalid.isFuture).toBe(true)
+
+  // 1.3 Assert that a statement from a validator index outside the set is rejected with custom error 1
+  const outOfBoundsValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, alice, {
+      accept: true,
+      subject: newCodeHash,
+      sessionIndex: currentSession,
+      validatorIndex: PVF_CHECK_VALIDATORS.length,
+    }).toHex(),
+    blockHash,
+  )
+  assert(outOfBoundsValidity.isErr && outOfBoundsValidity.asErr.isInvalid)
+  assert(outOfBoundsValidity.asErr.asInvalid.isCustom)
+  expect(outOfBoundsValidity.asErr.asInvalid.asCustom.toNumber()).toBe(1)
+
+  // 1.4 Assert that a statement naming the first validator but signed by the second is BadProof
+  const badProofValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, bob, {
+      accept: true,
+      subject: newCodeHash,
+      sessionIndex: currentSession,
+      validatorIndex: 0,
+    }).toHex(),
+    blockHash,
+  )
+  assert(badProofValidity.isErr && badProofValidity.asErr.isInvalid)
+  expect(badProofValidity.asErr.asInvalid.isBadProof).toBe(true)
+
+  // 1.5 Assert that a statement about code with no open vote is rejected with custom error 2
+  const noVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, alice, {
+      accept: true,
+      subject: secondCodeHash,
+      sessionIndex: currentSession,
+      validatorIndex: 0,
+    }).toHex(),
+    blockHash,
+  )
+  assert(noVoteValidity.isErr && noVoteValidity.asErr.isInvalid)
+  assert(noVoteValidity.asErr.asInvalid.isCustom)
+  expect(noVoteValidity.asErr.asInvalid.asCustom.toNumber()).toBe(2)
+
+  // 2. The first validator accepts
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, alice, {
+        accept: true,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 0,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('first accepting pvf check statement')
+
+  // 2.2 Assert that the vote stays open with the first validator's accepting ballot recorded. Ballots are bit fields
+  // with bit `i` (least significant first) set once validator `i` has voted.
+  vote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      newCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(vote.votesAccept.toU8a(true)[0]).toBe(0b0001)
+  expect(vote.votesReject.toU8a(true)[0]).toBe(0b0000)
+
+  // 3. The first validator submits a second statement
+  blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
+
+  // 3.1 Assert that a second statement, accepting or rejecting, is rejected with custom error 3
+  for (const accept of [true, false]) {
+    const doubleVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+      'External',
+      pvfCheckStatementTx(client, alice, {
+        accept,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 0,
+      }).toHex(),
+      blockHash,
+    )
+    assert(doubleVoteValidity.isErr && doubleVoteValidity.asErr.isInvalid)
+    assert(doubleVoteValidity.asErr.asInvalid.isCustom)
+    expect(doubleVoteValidity.asErr.asInvalid.asCustom.toNumber()).toBe(3)
+  }
+
+  // 4. The second validator accepts
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, bob, {
+        accept: true,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 1,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('second accepting pvf check statement')
+
+  // 4.2 Assert that the vote stays open, with both accepting ballots recorded
+  vote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      newCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(vote.votesAccept.toU8a(true)[0]).toBe(0b0011)
+  expect(vote.votesReject.toU8a(true)[0]).toBe(0b0000)
+
+  // 5. The third validator accepts, reaching the supermajority
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, charlie, {
+        accept: true,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 2,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // The statement is included in the block just built
+  const acceptedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // The test must not cross a session boundary, or the statements' session index would be stale
+  expect(((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()).toBe(currentSession)
+
+  // 5.1 Assert the PvfCheckAccepted event for the upgrading para
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('third accepting pvf check statement accepts code')
+
+  const acceptEvents = await client.api.query.system.events()
+  const acceptParasEvents = acceptEvents.filter(({ event }) => event.section === 'paras')
+  expect(acceptParasEvents.length).toBe(1)
+  assert(client.api.events.paras.PvfCheckAccepted.is(acceptParasEvents[0].event))
+  expect(acceptParasEvents[0].event.data[0].toHex()).toBe(newCodeHash)
+  expect(acceptParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
+
+  // 5.2 Assert that the vote is closed
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        newCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+  const voteList = ((await client.api.query.paras.pvfActiveVoteList()) as Vec<H256>).map((hash) => hash.toHex())
+  expect(voteList).not.toContain(newCodeHash)
+
+  // 5.3 Assert that the upgrade is queued for enactment at the expected block
+  const futureUpgradesAt = (await client.api.query.paras.futureCodeUpgradesAt()) as Vec<ITuple<[u32, u32]>>
+  const upgrades = futureUpgradesAt.filter(([id]) => id.toNumber() === paraId)
+  expect(upgrades.length).toBe(1)
+  expect(upgrades[0][1].toNumber()).toBe(Math.max(relayParent + upgradeDelay, acceptedAt + minimumUpgradeDelay))
+
+  // 5.4 Assert that the code's reference count and the para's future code hash are unchanged
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(newCodeRefsBefore)
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
+
+  // 5.5 Assert that a statement from the fourth validator is now rejected with custom error 2, as the vote is closed
+  blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
+  const closedVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
+    'External',
+    pvfCheckStatementTx(client, dave, {
+      accept: true,
+      subject: newCodeHash,
+      sessionIndex: currentSession,
+      validatorIndex: 3,
+    }).toHex(),
+    blockHash,
+  )
+  assert(closedVoteValidity.isErr && closedVoteValidity.asErr.isInvalid)
+  assert(closedVoteValidity.asErr.asInvalid.isCustom)
+  expect(closedVoteValidity.asErr.asInvalid.asCustom.toNumber()).toBe(2)
+}
+
+/**
+ * Test `paras.include_pvf_check_statement` up to votes that reject code, for an upgrade and for an onboarding.
+ *
+ * As in the accepting test, the test's own keys are written as the four active validators before any vote is opened.
+ * With four validators, two rejecting statements make a supermajority of accepting ones impossible, which rejects the
+ * code.
+ *
+ * Registering the para opens a vote for its code, caused by its onboarding. Scheduling an upgrade to unknown code
+ * opens a second vote, caused by the upgrade.
+ *
+ * 1. the first validator rejects the upgrade's code
+ *
+ *     1.1 asserting that no paras event is emitted
+ *
+ *     1.2 asserting that the vote stays open, with the validator's rejecting ballot recorded
+ *
+ * 2. the second validator rejects the upgrade's code
+ *
+ *     2.1 asserting the `PvfCheckRejected` event for the upgrading para
+ *
+ *     2.2 asserting that the vote is closed
+ *
+ *     2.3 asserting that the upgrade is aborted: the para's future code hash is removed and its go-ahead signal is
+ *         `Abort`
+ *
+ *     2.4 asserting that the code loses its only reference and is removed
+ *
+ *     2.5 asserting that the para's current code is unchanged
+ *
+ * 3. the first two validators reject the onboarding's code
+ *
+ *     3.1 asserting that the first rejection emits no paras event
+ *
+ *     3.2 asserting the `PvfCheckRejected` event for the onboarding para on the second rejection
+ *
+ *     3.3 asserting that the vote is closed
+ *
+ *     3.4 asserting that the onboarding is undone: the para's genesis data, current code hash and lifecycle are removed
+ *
+ *     3.5 asserting that the code loses its only reference and is removed
+ *
+ *     3.6 asserting that the registrar keeps its entry for the para
+ */
+export async function parasIncludePvfCheckStatementRejectE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const [alice, bob] = PVF_CHECK_VALIDATORS
+
+  // Make the test's keys the active validators before any vote is opened
+  await client.dev.setStorage({
+    ParasShared: {
+      activeValidatorKeys: PVF_CHECK_VALIDATORS.map((validator) => u8aToHex(validator.publicKey)),
+    },
+  })
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+
+  // Registering the para opens a vote for its code, caused by its onboarding
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  const onboardingVote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      oldCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(onboardingVote.causes.length).toBe(1)
+  assert(onboardingVote.causes[0].isOnboarding)
+  expect(onboardingVote.causes[0].asOnboarding.toNumber()).toBe(paraId)
+  expect(((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()).toBe(1)
+
+  // Scheduling an upgrade to unknown code opens a vote for it, caused by the upgrade
+  const relayParent = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceScheduleCodeUpgrade(paraId, NEW_VALIDATION_CODE, relayParent).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const upgradeVote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      newCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(upgradeVote.causes.length).toBe(1)
+  assert(upgradeVote.causes[0].isUpgrade)
+  expect(upgradeVote.causes[0].asUpgrade.id.toNumber()).toBe(paraId)
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(1)
+
+  const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
+
+  // 1. The first validator rejects the upgrade's code
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, alice, {
+        accept: false,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 0,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('first rejecting pvf check statement on upgrade code')
+
+  // 1.2 Assert that the vote stays open with the first validator's rejecting ballot recorded. Ballots are bit fields
+  // with bit `i` (least significant first) set once validator `i` has voted.
+  const openUpgradeVote = (
+    (await client.api.query.paras.pvfActiveVoteMap(
+      newCodeHash,
+    )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+  ).unwrap()
+  expect(openUpgradeVote.votesReject.toU8a(true)[0]).toBe(0b0001)
+  expect(openUpgradeVote.votesAccept.toU8a(true)[0]).toBe(0b0000)
+
+  // 2. The second validator rejects the upgrade's code
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, bob, {
+        accept: false,
+        subject: newCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 1,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert the PvfCheckRejected event for the upgrading para
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('second rejecting pvf check statement rejects upgrade code')
+
+  const upgradeRejectEvents = await client.api.query.system.events()
+  const upgradeRejectParasEvents = upgradeRejectEvents.filter(({ event }) => event.section === 'paras')
+  expect(upgradeRejectParasEvents.length).toBe(1)
+  assert(client.api.events.paras.PvfCheckRejected.is(upgradeRejectParasEvents[0].event))
+  expect(upgradeRejectParasEvents[0].event.data[0].toHex()).toBe(newCodeHash)
+  expect(upgradeRejectParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
+
+  // 2.2 Assert that the vote is closed
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        newCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+  let voteList = ((await client.api.query.paras.pvfActiveVoteList()) as Vec<H256>).map((hash) => hash.toHex())
+  expect(voteList).not.toContain(newCodeHash)
+
+  // 2.3 Assert that the upgrade is aborted
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.paras.upgradeGoAheadSignal(paraId)) as Option<PolkadotPrimitivesV8UpgradeGoAhead>).unwrap()
+      .isAbort,
+  ).toBe(true)
+  const futureUpgradesAt = (await client.api.query.paras.futureCodeUpgradesAt()) as Vec<ITuple<[u32, u32]>>
+  expect(futureUpgradesAt.filter(([id]) => id.toNumber() === paraId).length).toBe(0)
+
+  // 2.4 Assert that the code loses its only reference and is removed
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(0)
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).isNone).toBe(true)
+
+  // 2.5 Assert that the current code is unchanged
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
+
+  // 3. The first two validators reject the onboarding's code
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, alice, {
+        accept: false,
+        subject: oldCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 0,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that the first rejection emits no paras event
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('first rejecting pvf check statement on onboarding code')
+
+  await sendTransaction(
+    Promise.resolve(
+      pvfCheckStatementTx(client, bob, {
+        accept: false,
+        subject: oldCodeHash,
+        sessionIndex: currentSession,
+        validatorIndex: 1,
+      }),
+    ),
+  )
+  await client.dev.newBlock()
+
+  // The test must not cross a session boundary, or the statements' session index would be stale
+  expect(((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()).toBe(currentSession)
+
+  // 3.2 Assert the PvfCheckRejected event for the onboarding para
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('second rejecting pvf check statement rejects onboarding code')
+
+  const onboardingRejectEvents = await client.api.query.system.events()
+  const onboardingRejectParasEvents = onboardingRejectEvents.filter(({ event }) => event.section === 'paras')
+  expect(onboardingRejectParasEvents.length).toBe(1)
+  assert(client.api.events.paras.PvfCheckRejected.is(onboardingRejectParasEvents[0].event))
+  expect(onboardingRejectParasEvents[0].event.data[0].toHex()).toBe(oldCodeHash)
+  expect(onboardingRejectParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
+
+  // 3.3 Assert that the vote is closed
+  expect(
+    (
+      (await client.api.query.paras.pvfActiveVoteMap(
+        oldCodeHash,
+      )) as Option<PolkadotRuntimeParachainsParasPvfCheckActiveVoteState>
+    ).isNone,
+  ).toBe(true)
+  voteList = ((await client.api.query.paras.pvfActiveVoteList()) as Vec<H256>).map((hash) => hash.toHex())
+  expect(voteList).not.toContain(oldCodeHash)
+
+  // 3.4 Assert that the onboarding is undone
+  expect(
+    (
+      (await client.api.query.paras.upcomingParasGenesis(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasParaGenesisArgs>
+    ).isNone,
+  ).toBe(true)
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.paras.paraLifecycles(paraId)) as Option<PolkadotRuntimeParachainsParasParaLifecycle>)
+      .isNone,
+  ).toBe(true)
+
+  // 3.5 Assert that the code loses its only reference and is removed
+  expect(((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()).toBe(0)
+  expect(((await client.api.query.paras.codeByHash(oldCodeHash)) as Option<Bytes>).isNone).toBe(true)
+
+  // 3.6 Assert that the registrar keeps its entry for the para; rejecting the code only undoes the paras pallet's state
+  expect(
+    ((await client.api.query.registrar.paras(paraId)) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>).isSome,
+  ).toBe(true)
+}
+
+/**
  * Test `paras.force_set_most_recent_context`.
  */
 export async function parasForceSetMostRecentContextE2ETest<
@@ -1842,6 +2430,16 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - poke unused validation code',
         testFn: async () => await parasPokeUnusedValidationCodeE2ETest(client),
+      },
+      {
+        kind: 'test',
+        label: 'pallet paras - include pvf check statement accepting code',
+        testFn: async () => await parasIncludePvfCheckStatementAcceptE2ETest(client),
+      },
+      {
+        kind: 'test',
+        label: 'pallet paras - include pvf check statement rejecting code',
+        testFn: async () => await parasIncludePvfCheckStatementRejectE2ETest(client),
       },
       {
         kind: 'test',
