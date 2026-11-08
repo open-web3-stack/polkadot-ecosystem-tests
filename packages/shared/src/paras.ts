@@ -2345,12 +2345,135 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
 }
 
 /**
- * Test `paras.force_set_most_recent_context`.
+ * Test `paras.force_set_most_recent_context`, which overwrites the relay chain block a para's most recent head is
+ * recorded as executed in. The call emits no event, and accepts any block number, past or future.
+ *
+ * Unlike `force_note_new_head`, it leaves the para's head alone, so the registrar's `OnNewHead` hook does not run.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that the para's most recent context is unchanged
+ *
+ * 2. Root origin, on a registered para, with a past block
+ *
+ *     2.1 asserting that no paras event is emitted
+ *
+ *     2.2 asserting that the para's most recent context is the given block
+ *
+ *     2.3 asserting that the para's head is unchanged and the registrar does not lock the para
+ *
+ * 3. Root origin, on the same para, with a future block
+ *
+ *     3.1 asserting that no paras event is emitted
+ *
+ *     3.2 asserting that the para's most recent context is overwritten with the given block
+ *
+ * 4. Root origin, on an unregistered para
+ *
+ *     4.1 asserting that no paras event is emitted
+ *
+ *     4.2 asserting that the para's most recent context is set
  */
 export async function parasForceSetMostRecentContextE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  // A freshly registered para has no head or context until onboarding, and its registrar lock is unset
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).isNone).toBe(true)
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.registrar.paras(paraId)) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>).unwrap()
+      .locked.isNone,
+  ).toBe(true)
+
+  const currentBlock = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const pastContext = currentBlock - 100
+  const futureContext = currentBlock + 1000
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.forceSetMostRecentContext(paraId, pastContext).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed force set most recent context fails with BadOrigin')
+
+  // 1.2 Assert that the most recent context is unchanged
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).isNone).toBe(true)
+
+  // 2. Root origin, on a registered para, with a past block
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceSetMostRecentContext(paraId, pastContext).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set past most recent context')
+
+  // 2.2 Assert that the most recent context is the given block
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
+    pastContext,
+  )
+
+  // 2.3 Assert that the head is unchanged and the registrar does not lock the para
+  expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).isNone).toBe(true)
+  expect(
+    ((await client.api.query.registrar.paras(paraId)) as Option<PolkadotRuntimeCommonParasRegistrarParaInfo>).unwrap()
+      .locked.isNone,
+  ).toBe(true)
+
+  // 3. Root origin, on the same para, with a future block
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceSetMostRecentContext(paraId, futureContext).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set future most recent context')
+
+  // 3.2 Assert that the most recent context is overwritten with the given block
+  expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
+    futureContext,
+  )
+
+  // 4. Root origin, on an unregistered para
+  expect(((await client.api.query.paras.mostRecentContext(unregisteredParaId)) as Option<u32>).isNone).toBe(true)
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.forceSetMostRecentContext(unregisteredParaId, pastContext).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert that no paras event is emitted
+  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set most recent context on unregistered para')
+
+  // 4.2 Assert that the most recent context is set, even though the para is not registered
+  expect(
+    ((await client.api.query.paras.mostRecentContext(unregisteredParaId)) as Option<u32>).unwrap().toNumber(),
+  ).toBe(pastContext)
+}
 
 /**
  * Test `paras.remove_upgrade_cooldown`.
@@ -2455,7 +2578,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - force set most recent context',
         testFn: async () => await parasForceSetMostRecentContextE2ETest(client),
-        flags: { skip: true },
       },
       {
         kind: 'test',
