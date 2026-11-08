@@ -1,3 +1,21 @@
+/**
+ * E2E tests for the relay chain's paras pallet, shared across Polkadot and Kusama.
+ *
+ * Covered extrinsics, in the pallet's call index order:
+ * - `force_set_current_code`
+ * - `force_set_current_head`
+ * - `force_schedule_code_upgrade`
+ * - `force_note_new_head`
+ * - `force_queue_action`
+ * - `add_trusted_validation_code`
+ * - `poke_unused_validation_code`
+ * - `include_pvf_check_statement`
+ * - `force_set_most_recent_context`
+ * - `remove_upgrade_cooldown`
+ * - `authorize_force_set_current_code_hash`
+ * @module
+ */
+
 import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
@@ -12,6 +30,7 @@ import type {
   PolkadotPrimitivesV8UpgradeRestriction,
   PolkadotRuntimeCommonParasRegistrarParaInfo,
   PolkadotRuntimeParachainsConfigurationHostConfiguration,
+  PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry,
   PolkadotRuntimeParachainsParasParaGenesisArgs,
   PolkadotRuntimeParachainsParasParaLifecycle,
   PolkadotRuntimeParachainsParasParaPastCodeMeta,
@@ -2877,9 +2896,252 @@ export async function parasRemoveUpgradeCooldownE2ETest<
 }
 
 /**
- * Test `paras.authorize_force_set_current_code_hash` and `paras.apply_authorized_force_set_current_code`.
+ * Test `paras.authorize_force_set_current_code_hash`, which authorizes a code hash that anyone can later apply as a
+ * para's current code, until the authorization expires `valid_period` blocks after it is made. A new authorization
+ * for a para overwrites the previous one, and the paras pallet removes expired authorizations at the start of each
+ * block.
+ *
+ * Polkadot and Kusama only accept the call from Root. The para must be valid: its lifecycle must exist and be neither
+ * onboarding nor offboarding. A freshly registered para is onboarding, so the test sets its lifecycle to `Parathread`
+ * directly to authorize code for it.
+ *
+ * 1. signed origin
+ *
+ *     1.1 asserting that a signed (non-root) caller fails with `BadOrigin`
+ *
+ *     1.2 asserting that no code hash is authorized for the para
+ *
+ * 2. Root origin, on a para still onboarding
+ *
+ *     2.1 asserting that the scheduled call fails with `NotRegistered`
+ *
+ *     2.2 asserting that no code hash is authorized for the para
+ *
+ * 3. Root origin, on an unregistered para
+ *
+ *     3.1 asserting that the scheduled call fails with `NotRegistered`
+ *
+ * 4. Root origin, on a valid para
+ *
+ *     4.1 asserting the `CodeAuthorized` event, with the expiry `valid_period` blocks from the current block
+ *
+ *     4.2 asserting that the code hash is authorized for the para until that block
+ *
+ *     4.3 asserting that the para's current and future code are unchanged
+ *
+ * 5. Root origin, on the same para, with another code hash expiring in one block
+ *
+ *     5.1 asserting the `CodeAuthorized` event for the other code hash
+ *
+ *     5.2 asserting that the other code hash overwrites the previous authorization
+ *
+ * 6. the next block
+ *
+ *     6.1 asserting that the expired authorization is removed
  */
-export async function parasAuthorizedForceSetCurrentCodeE2ETest<
+export async function parasAuthorizeForceSetCurrentCodeHashE2ETest<
+  TCustom extends Record<string, unknown> | undefined,
+  TInitStorages extends Record<string, Record<string, any>> | undefined,
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const secondCodeHash = blake2AsHex(SECOND_VALIDATION_CODE)
+  const validPeriod = 10
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  expect(
+    (
+      (await client.api.query.paras.paraLifecycles(paraId)) as Option<PolkadotRuntimeParachainsParasParaLifecycle>
+    ).unwrap().isOnboarding,
+  ).toBe(true)
+
+  // 1. Signed origin
+  const signedEvents = await sendTransaction(
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, newCodeHash, validPeriod).signAsync(devAccounts.alice),
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that a signed caller fails with BadOrigin
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(signedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed authorize force set current code hash fails with BadOrigin')
+
+  // 1.2 Assert that no code hash is authorized
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    ).isNone,
+  ).toBe(true)
+
+  // 2. Root origin, on a para still onboarding
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, newCodeHash, validPeriod).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that the scheduled call fails with NotRegistered
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root authorize code hash for onboarding para fails with NotRegistered')
+
+  // The snapshot shows the module error by index, so check which error it is here
+  const onboardingEvents = await client.api.query.system.events()
+  const [onboardingDispatched] = onboardingEvents.filter(
+    ({ event }) => event.section === 'scheduler' && event.method === 'Dispatched',
+  )
+  assert(client.api.events.scheduler.Dispatched.is(onboardingDispatched.event))
+  assert(onboardingDispatched.event.data.result.isErr)
+  const onboardingError = onboardingDispatched.event.data.result.asErr
+  assert(onboardingError.isModule)
+  expect(client.api.errors.paras.NotRegistered.is(onboardingError.asModule)).toBe(true)
+
+  // 2.2 Assert that no code hash is authorized
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    ).isNone,
+  ).toBe(true)
+
+  // 3. Root origin, on an unregistered para
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(unregisteredParaId, newCodeHash, validPeriod).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that the scheduled call fails with NotRegistered
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root authorize code hash for unregistered para fails with NotRegistered')
+
+  // The snapshot shows the module error by index, so check which error it is here
+  const unregisteredEvents = await client.api.query.system.events()
+  const [unregisteredDispatched] = unregisteredEvents.filter(
+    ({ event }) => event.section === 'scheduler' && event.method === 'Dispatched',
+  )
+  assert(client.api.events.scheduler.Dispatched.is(unregisteredDispatched.event))
+  assert(unregisteredDispatched.event.data.result.isErr)
+  const unregisteredError = unregisteredDispatched.event.data.result.asErr
+  assert(unregisteredError.isModule)
+  expect(client.api.errors.paras.NotRegistered.is(unregisteredError.asModule)).toBe(true)
+
+  // 4. Root origin, on a valid para. Onboarding only completes at a session change, so the para's lifecycle is set
+  // directly.
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [[[paraId], 'Parathread']],
+    },
+  })
+
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, newCodeHash, validPeriod).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // The scheduled call runs in the block just built, so the expiry is counted from it
+  const authorizedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const expireAt = authorizedAt + validPeriod
+
+  // 4.1 Assert the CodeAuthorized event
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root authorize code hash for valid para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const authorizedEvents = await client.api.query.system.events()
+  const [codeAuthorized] = authorizedEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeAuthorized',
+  )
+  assert(client.api.events.paras.CodeAuthorized.is(codeAuthorized.event))
+  expect(codeAuthorized.event.data[0].toString()).toBe(paraId.toString())
+  expect(codeAuthorized.event.data[1].toHex()).toBe(newCodeHash)
+  expect(codeAuthorized.event.data[2].toString()).toBe(expireAt.toString())
+
+  // 4.2 Assert that the code hash is authorized until that block
+  const authorization = (
+    (await client.api.query.paras.authorizedCodeHash(
+      paraId,
+    )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+  ).unwrap()
+  expect(authorization.codeHash.toHex()).toBe(newCodeHash)
+  expect(authorization.expireAt.toNumber()).toBe(expireAt)
+
+  // 4.3 Assert that the current and future code are unchanged; authorizing only records the hash
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
+  expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
+
+  // 5. Root origin, on the same para, with another code hash expiring in one block
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, secondCodeHash, 1).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const shortExpireAt = (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
+
+  // 5.1 Assert the CodeAuthorized event for the other code hash
+  await checkSystemEvents(client, 'paras')
+    .redact({ number: true })
+    .toMatchSnapshot('root authorize other code hash overwrites authorization')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const overwriteEvents = await client.api.query.system.events()
+  const [overwriteAuthorized] = overwriteEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeAuthorized',
+  )
+  assert(client.api.events.paras.CodeAuthorized.is(overwriteAuthorized.event))
+  expect(overwriteAuthorized.event.data[0].toString()).toBe(paraId.toString())
+  expect(overwriteAuthorized.event.data[1].toHex()).toBe(secondCodeHash)
+  expect(overwriteAuthorized.event.data[2].toString()).toBe(shortExpireAt.toString())
+
+  // 5.2 Assert that the other code hash overwrites the previous authorization
+  const overwritten = (
+    (await client.api.query.paras.authorizedCodeHash(
+      paraId,
+    )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+  ).unwrap()
+  expect(overwritten.codeHash.toHex()).toBe(secondCodeHash)
+  expect(overwritten.expireAt.toNumber()).toBe(shortExpireAt)
+
+  // 6. The next block reaches the expiry
+  await client.dev.newBlock()
+
+  // 6.1 Assert that the expired authorization is removed
+  expect((await client.api.rpc.chain.getHeader()).number.toNumber()).toBe(shortExpireAt)
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    ).isNone,
+  ).toBe(true)
+}
+
+/**
+ * Test `paras.apply_authorized_force_set_current_code`.
+ */
+export async function parasApplyAuthorizedForceSetCurrentCodeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
 >(_client: Client<TCustom, TInitStorages>) {}
@@ -2979,8 +3241,13 @@ export function parasE2ETest<
       },
       {
         kind: 'test',
-        label: 'pallet paras - authorize / apply force set current code',
-        testFn: async () => await parasAuthorizedForceSetCurrentCodeE2ETest(client),
+        label: 'pallet paras - authorize force set current code hash',
+        testFn: async () => await parasAuthorizeForceSetCurrentCodeHashE2ETest(client),
+      },
+      {
+        kind: 'test',
+        label: 'pallet paras - apply authorized force set current code',
+        testFn: async () => await parasApplyAuthorizedForceSetCurrentCodeE2ETest(client),
         flags: { skip: true },
       },
     ],
