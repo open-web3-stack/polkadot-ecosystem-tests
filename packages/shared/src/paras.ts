@@ -100,7 +100,9 @@ function pvfCheckStatementTx(
  */
 async function validateExtrinsic(client: Client<any, any>, tx: SubmittableExtrinsic<'promise'>) {
   const headHash = await client.api.rpc.chain.getBlockHash()
-  const args = u8aConcat(new Uint8Array([0x02]), tx.toU8a(), headHash.toU8a())
+  // Passed as hex: polkadot.js reads a `Uint8Array` given as `Bytes` as already length-prefixed, but a hex string as
+  // raw bytes
+  const args = u8aToHex(u8aConcat(new Uint8Array([0x02]), tx.toU8a(), headHash.toU8a()))
   const result = await client.api.rpc.state.call('TaggedTransactionQueue_validate_transaction', args)
   return client.api.createType<TransactionValidity>('TransactionValidity', result)
 }
