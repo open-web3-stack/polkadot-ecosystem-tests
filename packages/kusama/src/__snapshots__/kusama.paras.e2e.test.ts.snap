@@ -1,6 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kusama Paras > pallet paras - add trusted validation code > root add already stored trusted validation code 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - add trusted validation code > root add already stored trusted validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - add trusted validation code > root add trusted code under onboarding vote 1`] = `
 [
@@ -28,7 +40,19 @@ exports[`Kusama Paras > pallet paras - add trusted validation code > root add tr
 ]
 `;
 
-exports[`Kusama Paras > pallet paras - add trusted validation code > root add unknown trusted validation code 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - add trusted validation code > root add unknown trusted validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - add trusted validation code > signed add trusted validation code fails with BadOrigin 1`] = `
 [
@@ -369,11 +393,47 @@ exports[`Kusama Paras > pallet paras - force set current head > signed force set
 ]
 `;
 
-exports[`Kusama Paras > pallet paras - force set most recent context > root force set future most recent context 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set future most recent context 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - force set most recent context > root force set most recent context on unregistered para 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set most recent context on unregistered para 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - force set most recent context > root force set past most recent context 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set past most recent context 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - force set most recent context > signed force set most recent context fails with BadOrigin 1`] = `
 [
@@ -387,9 +447,25 @@ exports[`Kusama Paras > pallet paras - force set most recent context > signed fo
 ]
 `;
 
-exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > first accepting pvf check statement 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > first accepting pvf check statement 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > second accepting pvf check statement 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > second accepting pvf check statement 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > third accepting pvf check statement accepts code 1`] = `
 [
@@ -404,9 +480,25 @@ exports[`Kusama Paras > pallet paras - include pvf check statement accepting cod
 ]
 `;
 
-exports[`Kusama Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on onboarding code 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on onboarding code 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on upgrade code 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on upgrade code 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - include pvf check statement rejecting code > second rejecting pvf check statement rejects onboarding code 1`] = `
 [
@@ -434,11 +526,47 @@ exports[`Kusama Paras > pallet paras - include pvf check statement rejecting cod
 ]
 `;
 
-exports[`Kusama Paras > pallet paras - poke unused validation code > root poke unused validation code 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - poke unused validation code > root poke unused validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - poke unused validation code > root poke validation code in use 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - poke unused validation code > root poke validation code in use 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
-exports[`Kusama Paras > pallet paras - poke unused validation code > root poke validation code not stored 1`] = `[]`;
+exports[`Kusama Paras > pallet paras - poke unused validation code > root poke validation code not stored 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
 
 exports[`Kusama Paras > pallet paras - poke unused validation code > signed poke unused validation code fails with BadOrigin 1`] = `
 [
