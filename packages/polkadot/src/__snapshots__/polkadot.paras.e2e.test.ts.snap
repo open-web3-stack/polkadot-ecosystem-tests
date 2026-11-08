@@ -66,6 +66,83 @@ exports[`Polkadot Paras > pallet paras - add trusted validation code > signed ad
 ]
 `;
 
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {
+      "actualFee": "(number)",
+      "tip": "(number)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply of unauthorized code fails with Unauthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0e000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply with nothing authorized fails with NothingAuthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > unsigned apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for onboarding para fails with NotRegistered 1`] = `
 [
   {

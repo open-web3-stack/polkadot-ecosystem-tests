@@ -66,6 +66,83 @@ exports[`Kusama Paras > pallet paras - add trusted validation code > signed add 
 ]
 `;
 
+exports[`Kusama Paras > pallet paras - apply authorized force set current code > signed apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {
+      "actualFee": "(number)",
+      "tip": "(number)",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - apply authorized force set current code > signed apply of unauthorized code fails with Unauthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0e000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - apply authorized force set current code > signed apply with nothing authorized fails with NothingAuthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - apply authorized force set current code > unsigned apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Paras > pallet paras - authorize force set current code hash > root authorize code hash for onboarding para fails with NotRegistered 1`] = `
 [
   {
