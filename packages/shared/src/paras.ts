@@ -13,6 +13,7 @@
  * - `force_set_most_recent_context`
  * - `remove_upgrade_cooldown`
  * - `authorize_force_set_current_code_hash`
+ * - `apply_authorized_force_set_current_code`
  * @module
  */
 
@@ -3139,12 +3140,299 @@ export async function parasAuthorizeForceSetCurrentCodeHashE2ETest<
 }
 
 /**
- * Test `paras.apply_authorized_force_set_current_code`.
+ * Test `paras.apply_authorized_force_set_current_code`, which anyone can submit, signed or unsigned, to set a para's
+ * current code to code whose hash Root authorized with `authorize_force_set_current_code_hash`. Applying consumes the
+ * authorization and updates the code as `force_set_current_code` does. A successful call pays no fee.
+ *
+ * Authorizing code requires a valid para, so the test sets the registered para's lifecycle to `Parathread` directly.
+ *
+ * 1. unsigned submissions that would fail
+ *
+ *     1.1 asserting that code other than the authorized code is rejected with custom error 4
+ *
+ *     1.2 asserting that code for a para with nothing authorized is rejected with custom error 4
+ *
+ * 2. signed submissions that fail
+ *
+ *     2.1 asserting that code other than the authorized code fails with `Unauthorized`
+ *
+ *     2.2 asserting that code for a para with nothing authorized fails with `NothingAuthorized`
+ *
+ *     2.3 asserting that the authorization and the para's current code are unchanged
+ *
+ * 3. an unsigned submission of the authorized code
+ *
+ *     3.1 asserting the `CurrentCodeUpdated` event
+ *
+ *     3.2 asserting that the authorization is consumed
+ *
+ *     3.3 asserting that the para's current code hash is the new code's hash, stored with one reference
+ *
+ *     3.4 asserting that the old code hash is recorded as past code at the current block
+ *
+ *     3.5 asserting that the block digest carries a `ParaUpgradeCode` consensus log
+ *
+ *     3.6 asserting that submitting the same code again is rejected with custom error 4
+ *
+ * 4. a signed submission of newly authorized code
+ *
+ *     4.1 asserting the `CurrentCodeUpdated` event, and that the caller pays no fee
+ *
+ *     4.2 asserting that the caller's balance is unchanged
+ *
+ *     4.3 asserting that the authorization is consumed and the para's current code hash is the newly authorized one
  */
 export async function parasApplyAuthorizedForceSetCurrentCodeE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  const oldCodeHash = blake2AsHex(MINIMAL_VALIDATION_CODE)
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const secondCodeHash = blake2AsHex(SECOND_VALIDATION_CODE)
+  const validPeriod = 10
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraId = parseInt(nextFreeParaId.toString(), 10)
+  const unregisteredParaId = paraId + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraId)
+
+  // Bob submits the signed calls
+  await client.dev.setStorage({
+    Paras: {
+      paraLifecycles: [[[paraId], 'Parathread']],
+    },
+    System: {
+      // Passed as a string: the balance exceeds the largest integer a JavaScript number holds exactly
+      account: [[[devAccounts.bob.address], { providers: 1, data: { free: (10n ** 20n).toString() } }]],
+    },
+  })
+
+  // Root authorizes the new code for the para
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, newCodeHash, validPeriod).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    )
+      .unwrap()
+      .codeHash.toHex(),
+  ).toBe(newCodeHash)
+  const oldCodeRefsBefore = ((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()
+
+  // 1. Unsigned submissions that would fail
+
+  // 1.1 Assert that code other than the authorized code is rejected with custom error 4
+  const wrongCodeValidity = await validateExtrinsic(
+    client,
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(paraId, SECOND_VALIDATION_CODE),
+  )
+  assert(wrongCodeValidity.isErr && wrongCodeValidity.asErr.isInvalid)
+  assert(wrongCodeValidity.asErr.asInvalid.isCustom)
+  expect(wrongCodeValidity.asErr.asInvalid.asCustom.toNumber()).toBe(4)
+
+  // 1.2 Assert that code for a para with nothing authorized is rejected with custom error 4
+  const nothingAuthorizedValidity = await validateExtrinsic(
+    client,
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(unregisteredParaId, NEW_VALIDATION_CODE),
+  )
+  assert(nothingAuthorizedValidity.isErr && nothingAuthorizedValidity.asErr.isInvalid)
+  assert(nothingAuthorizedValidity.asErr.asInvalid.isCustom)
+  expect(nothingAuthorizedValidity.asErr.asInvalid.asCustom.toNumber()).toBe(4)
+
+  // 2. Signed submissions that fail
+  const wrongCodeEvents = await sendTransaction(
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(paraId, SECOND_VALIDATION_CODE).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // 2.1 Assert that code other than the authorized code fails with Unauthorized
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(wrongCodeEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed apply of unauthorized code fails with Unauthorized')
+
+  // The snapshot shows the module error by index, so check which error it is here
+  const wrongCodeRecords = (await wrongCodeEvents.events) as FrameSystemEventRecord[]
+  const [wrongCodeFailed] = wrongCodeRecords.filter(
+    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
+  )
+  assert(client.api.events.system.ExtrinsicFailed.is(wrongCodeFailed.event))
+  assert(wrongCodeFailed.event.data.dispatchError.isModule)
+  expect(client.api.errors.paras.Unauthorized.is(wrongCodeFailed.event.data.dispatchError.asModule)).toBe(true)
+
+  const nothingAuthorizedEvents = await sendTransaction(
+    client.api.tx.paras
+      .applyAuthorizedForceSetCurrentCode(unregisteredParaId, NEW_VALIDATION_CODE)
+      .signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // 2.2 Assert that code for a para with nothing authorized fails with NothingAuthorized
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(nothingAuthorizedEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed apply with nothing authorized fails with NothingAuthorized')
+
+  // The snapshot shows the module error by index, so check which error it is here
+  const nothingAuthorizedRecords = (await nothingAuthorizedEvents.events) as FrameSystemEventRecord[]
+  const [nothingAuthorizedFailed] = nothingAuthorizedRecords.filter(
+    ({ event }) => event.section === 'system' && event.method === 'ExtrinsicFailed',
+  )
+  assert(client.api.events.system.ExtrinsicFailed.is(nothingAuthorizedFailed.event))
+  assert(nothingAuthorizedFailed.event.data.dispatchError.isModule)
+  expect(client.api.errors.paras.NothingAuthorized.is(nothingAuthorizedFailed.event.data.dispatchError.asModule)).toBe(
+    true,
+  )
+
+  // 2.3 Assert that the authorization and the current code are unchanged
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    )
+      .unwrap()
+      .codeHash.toHex(),
+  ).toBe(newCodeHash)
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
+
+  // 3. An unsigned submission of the authorized code
+  const applyEvents = await sendTransaction(
+    Promise.resolve(client.api.tx.paras.applyAuthorizedForceSetCurrentCode(paraId, NEW_VALIDATION_CODE)),
+  )
+  await client.dev.newBlock()
+
+  // The call runs in the block just built, which is when the code is replaced
+  const appliedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+
+  // 3.1 Assert the CurrentCodeUpdated event
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(applyEvents, 'paras', { section: 'system', method: 'ExtrinsicSuccess' })
+    .redact({ number: true, removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('unsigned apply of authorized code')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const applyRecords = (await applyEvents.events) as FrameSystemEventRecord[]
+  const [applyCodeUpdated] = applyRecords.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentCodeUpdated',
+  )
+  assert(client.api.events.paras.CurrentCodeUpdated.is(applyCodeUpdated.event))
+  expect(applyCodeUpdated.event.data[0].toString()).toBe(paraId.toString())
+
+  // 3.2 Assert that the authorization is consumed
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    ).isNone,
+  ).toBe(true)
+
+  // 3.3 Assert that the current code hash is the new code's hash, stored with one reference, and the old code's
+  // reference count is unchanged
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
+  expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
+    NEW_VALIDATION_CODE,
+  )
+  expect(((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()).toBe(1)
+  expect(((await client.api.query.paras.codeByHashRefs(oldCodeHash)) as u32).toNumber()).toBe(oldCodeRefsBefore)
+
+  // 3.4 Assert that the old code hash is recorded as past code at the current block
+  const pastCodeHash = (await client.api.query.paras.pastCodeHash([paraId, appliedAt])) as Option<H256>
+  expect(pastCodeHash.unwrap().toHex()).toBe(oldCodeHash)
+  const pastCodeMeta = (await client.api.query.paras.pastCodeMeta(
+    paraId,
+  )) as PolkadotRuntimeParachainsParasParaPastCodeMeta
+  expect(pastCodeMeta.upgradeTimes.length).toBe(1)
+  expect(pastCodeMeta.upgradeTimes[0].expectedAt.toNumber()).toBe(appliedAt)
+  expect(pastCodeMeta.upgradeTimes[0].activatedAt.toNumber()).toBe(appliedAt)
+
+  // 3.5 Assert that the block digest carries a ParaUpgradeCode consensus log, read from `System::Digest`
+  const expectedLog = u8aToHex(
+    u8aConcat(
+      new Uint8Array([CONSENSUS_LOG_PARA_UPGRADE_CODE]),
+      client.api.createType('u32', paraId).toU8a(),
+      hexToU8a(newCodeHash),
+    ),
+  )
+  const consensusLogs = (await client.api.query.system.digest()).logs
+    .filter((log) => log.isConsensus && log.asConsensus[0].toHex() === POLKADOT_ENGINE_ID)
+    .map((log) => log.asConsensus[1].toHex())
+  expect(consensusLogs).toContain(expectedLog)
+
+  // 3.6 Assert that submitting the same code again is rejected with custom error 4, as the authorization is consumed
+  const repeatValidity = await validateExtrinsic(
+    client,
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(paraId, NEW_VALIDATION_CODE),
+  )
+  assert(repeatValidity.isErr && repeatValidity.asErr.isInvalid)
+  assert(repeatValidity.asErr.asInvalid.isCustom)
+  expect(repeatValidity.asErr.asInvalid.asCustom.toNumber()).toBe(4)
+
+  // 4. A signed submission of newly authorized code
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.authorizeForceSetCurrentCodeHash(paraId, secondCodeHash, validPeriod).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  const bobFreeBefore = (await client.api.query.system.account(devAccounts.bob.address)).data.free.toBigInt()
+
+  const signedApplyEvents = await sendTransaction(
+    client.api.tx.paras.applyAuthorizedForceSetCurrentCode(paraId, SECOND_VALIDATION_CODE).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert the CurrentCodeUpdated event, and that the caller pays no fee
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(
+    signedApplyEvents,
+    'paras',
+    { section: 'system', method: 'ExtrinsicSuccess' },
+    { section: 'transactionPayment', method: 'TransactionFeePaid' },
+  )
+    .redact({ number: true, removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed apply of authorized code')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const signedApplyRecords = (await signedApplyEvents.events) as FrameSystemEventRecord[]
+  const [signedCodeUpdated] = signedApplyRecords.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentCodeUpdated',
+  )
+  assert(client.api.events.paras.CurrentCodeUpdated.is(signedCodeUpdated.event))
+  expect(signedCodeUpdated.event.data[0].toString()).toBe(paraId.toString())
+  const [feePaid] = signedApplyRecords.filter(
+    ({ event }) => event.section === 'transactionPayment' && event.method === 'TransactionFeePaid',
+  )
+  assert(client.api.events.transactionPayment.TransactionFeePaid.is(feePaid.event))
+  expect(feePaid.event.data.actualFee.toBigInt()).toBe(0n)
+
+  // 4.2 Assert that the caller's balance is unchanged
+  const bobFreeAfter = (await client.api.query.system.account(devAccounts.bob.address)).data.free.toBigInt()
+  expect(bobFreeAfter).toBe(bobFreeBefore)
+
+  // 4.3 Assert that the authorization is consumed and the current code hash is the newly authorized one
+  expect(
+    (
+      (await client.api.query.paras.authorizedCodeHash(
+        paraId,
+      )) as Option<PolkadotRuntimeParachainsParasAuthorizedCodeHashAndExpiry>
+    ).isNone,
+  ).toBe(true)
+  expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(secondCodeHash)
+}
 
 export function parasE2ETest<
   TCustom extends Record<string, unknown> | undefined,
@@ -3248,7 +3536,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - apply authorized force set current code',
         testFn: async () => await parasApplyAuthorizedForceSetCurrentCodeE2ETest(client),
-        flags: { skip: true },
       },
     ],
   }
