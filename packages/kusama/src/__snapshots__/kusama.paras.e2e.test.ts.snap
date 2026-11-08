@@ -369,6 +369,24 @@ exports[`Kusama Paras > pallet paras - force set current head > signed force set
 ]
 `;
 
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set future most recent context 1`] = `[]`;
+
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set most recent context on unregistered para 1`] = `[]`;
+
+exports[`Kusama Paras > pallet paras - force set most recent context > root force set past most recent context 1`] = `[]`;
+
+exports[`Kusama Paras > pallet paras - force set most recent context > signed force set most recent context fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > first accepting pvf check statement 1`] = `[]`;
 
 exports[`Kusama Paras > pallet paras - include pvf check statement accepting code > second accepting pvf check statement 1`] = `[]`;
