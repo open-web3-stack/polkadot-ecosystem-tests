@@ -2,9 +2,10 @@ import { sendTransaction } from '@acala-network/chopsticks-testing'
 
 import { type Chain, captureSnapshot, createNetworks, testAccounts } from '@e2e-test/networks'
 
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Bytes, Option, u32, Vec } from '@polkadot/types'
-import type { H256 } from '@polkadot/types/interfaces'
+import type { H256, TransactionValidity } from '@polkadot/types/interfaces'
 import type {
   PolkadotPrimitivesV8UpgradeGoAhead,
   PolkadotPrimitivesV8UpgradeRestriction,
@@ -88,6 +89,20 @@ function pvfCheckStatementTx(
   const stmt = client.api.createType(statementType, statement)
   const signature = signer.sign(u8aConcat(stringToU8a('VCPC'), stmt.toU8a()))
   return client.api.tx.paras.includePvfCheckStatement(stmt, signature)
+}
+
+/**
+ * Helper to ask the runtime whether its transaction pool would accept `tx`, as an external transaction at the current
+ * head, without submitting it.
+ *
+ * It calls the `TaggedTransactionQueue_validate_transaction` runtime API with the same raw arguments Chopsticks uses
+ * to validate submitted extrinsics: the `External` source byte `0x02`, the encoded extrinsic, and the head's hash.
+ */
+async function validateExtrinsic(client: Client<any, any>, tx: SubmittableExtrinsic<'promise'>) {
+  const headHash = await client.api.rpc.chain.getBlockHash()
+  const args = u8aConcat(new Uint8Array([0x02]), tx.toU8a(), headHash.toU8a())
+  const result = await client.api.rpc.state.call('TaggedTransactionQueue_validate_transaction', args)
+  return client.api.createType<TransactionValidity>('TransactionValidity', result)
 }
 
 /**
@@ -1868,77 +1883,71 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   const newCodeRefsBefore = ((await client.api.query.paras.codeByHashRefs(newCodeHash)) as u32).toNumber()
 
   const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
-  let blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
 
   // 1. Invalid statements
 
   // 1.1 Assert that a statement for a past session is Stale
-  const staleValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const staleValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, alice, {
       accept: true,
       subject: newCodeHash,
       sessionIndex: currentSession - 1,
       validatorIndex: 0,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(staleValidity.isErr && staleValidity.asErr.isInvalid)
   expect(staleValidity.asErr.asInvalid.isStale).toBe(true)
 
   // 1.2 Assert that a statement for a future session is Future
-  const futureValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const futureValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, alice, {
       accept: true,
       subject: newCodeHash,
       sessionIndex: currentSession + 1,
       validatorIndex: 0,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(futureValidity.isErr && futureValidity.asErr.isInvalid)
   expect(futureValidity.asErr.asInvalid.isFuture).toBe(true)
 
   // 1.3 Assert that a statement from a validator index outside the set is rejected with custom error 1
-  const outOfBoundsValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const outOfBoundsValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, alice, {
       accept: true,
       subject: newCodeHash,
       sessionIndex: currentSession,
       validatorIndex: PVF_CHECK_VALIDATORS.length,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(outOfBoundsValidity.isErr && outOfBoundsValidity.asErr.isInvalid)
   assert(outOfBoundsValidity.asErr.asInvalid.isCustom)
   expect(outOfBoundsValidity.asErr.asInvalid.asCustom.toNumber()).toBe(1)
 
   // 1.4 Assert that a statement naming the first validator but signed by the second is BadProof
-  const badProofValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const badProofValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, bob, {
       accept: true,
       subject: newCodeHash,
       sessionIndex: currentSession,
       validatorIndex: 0,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(badProofValidity.isErr && badProofValidity.asErr.isInvalid)
   expect(badProofValidity.asErr.asInvalid.isBadProof).toBe(true)
 
   // 1.5 Assert that a statement about code with no open vote is rejected with custom error 2
-  const noVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const noVoteValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, alice, {
       accept: true,
       subject: secondCodeHash,
       sessionIndex: currentSession,
       validatorIndex: 0,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(noVoteValidity.isErr && noVoteValidity.asErr.isInvalid)
   assert(noVoteValidity.asErr.asInvalid.isCustom)
@@ -1971,19 +1980,17 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   expect(vote.votesReject.toU8a(true)[0]).toBe(0b0000)
 
   // 3. The first validator submits a second statement
-  blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
 
   // 3.1 Assert that a second statement, accepting or rejecting, is rejected with custom error 3
   for (const accept of [true, false]) {
-    const doubleVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-      'External',
+    const doubleVoteValidity = await validateExtrinsic(
+      client,
       pvfCheckStatementTx(client, alice, {
         accept,
         subject: newCodeHash,
         sessionIndex: currentSession,
         validatorIndex: 0,
-      }).toHex(),
-      blockHash,
+      }),
     )
     assert(doubleVoteValidity.isErr && doubleVoteValidity.asErr.isInvalid)
     assert(doubleVoteValidity.asErr.asInvalid.isCustom)
@@ -2068,16 +2075,14 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
   // 5.5 Assert that a statement from the fourth validator is now rejected with custom error 2, as the vote is closed
-  blockHash = (await client.api.rpc.chain.getBlockHash()).toHex()
-  const closedVoteValidity = await client.api.call.taggedTransactionQueue.validateTransaction(
-    'External',
+  const closedVoteValidity = await validateExtrinsic(
+    client,
     pvfCheckStatementTx(client, dave, {
       accept: true,
       subject: newCodeHash,
       sessionIndex: currentSession,
       validatorIndex: 3,
-    }).toHex(),
-    blockHash,
+    }),
   )
   assert(closedVoteValidity.isErr && closedVoteValidity.asErr.isInvalid)
   assert(closedVoteValidity.asErr.asInvalid.isCustom)
