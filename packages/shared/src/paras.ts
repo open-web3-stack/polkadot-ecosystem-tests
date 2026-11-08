@@ -240,6 +240,14 @@ export async function parasForceSetCurrentCodeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force set current code on registered para')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const registeredEvents = await client.api.query.system.events()
+  const [registeredCodeUpdated] = registeredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentCodeUpdated',
+  )
+  assert(client.api.events.paras.CurrentCodeUpdated.is(registeredCodeUpdated.event))
+  expect(registeredCodeUpdated.event.data[0].toString()).toBe(paraId.toString())
+
   // 2.2 Assert that the current code hash is the new code's hash
   expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
@@ -303,6 +311,14 @@ export async function parasForceSetCurrentCodeE2ETest<
   await checkSystemEvents(client, { section: 'paras', method: 'CurrentCodeUpdated' })
     .redact({ number: true })
     .toMatchSnapshot('root force set current code on unregistered para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const unregisteredEvents = await client.api.query.system.events()
+  const [unregisteredCodeUpdated] = unregisteredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentCodeUpdated',
+  )
+  assert(client.api.events.paras.CurrentCodeUpdated.is(unregisteredCodeUpdated.event))
+  expect(unregisteredCodeUpdated.event.data[0].toString()).toBe(unregisteredParaId.toString())
 
   // 3.2 Assert that the current code hash is set, even though the para is not registered
   expect(((await client.api.query.paras.currentCodeHash(unregisteredParaId)) as Option<H256>).unwrap().toHex()).toBe(
@@ -409,6 +425,14 @@ export async function parasForceSetCurrentHeadE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force set current head on registered para')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const registeredEvents = await client.api.query.system.events()
+  const [registeredHeadUpdated] = registeredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
+  )
+  assert(client.api.events.paras.CurrentHeadUpdated.is(registeredHeadUpdated.event))
+  expect(registeredHeadUpdated.event.data[0].toString()).toBe(paraId.toString())
+
   // 2.2 Assert that the head is the new head
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
 
@@ -431,6 +455,14 @@ export async function parasForceSetCurrentHeadE2ETest<
   await checkSystemEvents(client, { section: 'paras', method: 'CurrentHeadUpdated' })
     .redact({ number: true })
     .toMatchSnapshot('root force set current head on unregistered para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const unregisteredEvents = await client.api.query.system.events()
+  const [unregisteredHeadUpdated] = unregisteredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CurrentHeadUpdated',
+  )
+  assert(client.api.events.paras.CurrentHeadUpdated.is(unregisteredHeadUpdated.event))
+  expect(unregisteredHeadUpdated.event.data[0].toString()).toBe(unregisteredParaId.toString())
 
   // 3.2 Assert that the head is set, even though the para is not registered
   expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
@@ -545,6 +577,20 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule unknown code for para A')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const eventsA = await client.api.query.system.events()
+  const [pvfCheckStartedA] = eventsA.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
+  )
+  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedA.event))
+  expect(pvfCheckStartedA.event.data[0].toHex()).toBe(newCodeHash)
+  expect(pvfCheckStartedA.event.data[1].toString()).toBe(paraIdA.toString())
+  const [scheduledEventA] = eventsA.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventA.event))
+  expect(scheduledEventA.event.data[0].toString()).toBe(paraIdA.toString())
+
   // 2.2 Assert that the new code hash is pending as future code, and the current code is unchanged
   expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
   expect(((await client.api.query.paras.currentCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
@@ -602,6 +648,14 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule while upgrade pending for para A')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const pendingEvents = await client.api.query.system.events()
+  const [pendingScheduled] = pendingEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(pendingScheduled.event))
+  expect(pendingScheduled.event.data[0].toString()).toBe(paraIdA.toString())
+
   // 3.2 Assert that the future code hash is unchanged
   expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
@@ -635,6 +689,20 @@ export async function parasForceScheduleCodeUpgradeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force schedule same unknown code for para B')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const eventsB = await client.api.query.system.events()
+  const [pvfCheckStartedB] = eventsB.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
+  )
+  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedB.event))
+  expect(pvfCheckStartedB.event.data[0].toHex()).toBe(newCodeHash)
+  expect(pvfCheckStartedB.event.data[1].toString()).toBe(paraIdB.toString())
+  const [scheduledEventB] = eventsB.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventB.event))
+  expect(scheduledEventB.event.data[0].toString()).toBe(paraIdB.toString())
 
   // 4.2 Assert that the new code hash is pending as para B's future code
   expect(((await client.api.query.paras.futureCodeHash(paraIdB)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
@@ -832,6 +900,26 @@ export async function parasForceScheduleCodeUpgradeFastTrackE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule known code for para B')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const eventsB = await client.api.query.system.events()
+  const [pvfCheckStartedB] = eventsB.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckStarted',
+  )
+  assert(client.api.events.paras.PvfCheckStarted.is(pvfCheckStartedB.event))
+  expect(pvfCheckStartedB.event.data[0].toHex()).toBe(newCodeHash)
+  expect(pvfCheckStartedB.event.data[1].toString()).toBe(paraIdB.toString())
+  const [pvfCheckAcceptedB] = eventsB.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckAccepted',
+  )
+  assert(client.api.events.paras.PvfCheckAccepted.is(pvfCheckAcceptedB.event))
+  expect(pvfCheckAcceptedB.event.data[0].toHex()).toBe(newCodeHash)
+  expect(pvfCheckAcceptedB.event.data[1].toString()).toBe(paraIdB.toString())
+  const [scheduledEventB] = eventsB.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(scheduledEventB.event))
+  expect(scheduledEventB.event.data[0].toString()).toBe(paraIdB.toString())
+
   // 3.2 Assert that the new code hash is pending as para B's future code
   expect(((await client.api.query.paras.futureCodeHash(paraIdB)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
 
@@ -906,6 +994,14 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force schedule current code is aborted')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const sameCodeEvents = await client.api.query.system.events()
+  const [sameCodeScheduled] = sameCodeEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(sameCodeScheduled.event))
+  expect(sameCodeScheduled.event.data[0].toString()).toBe(paraId.toString())
+
   // 1.2 Assert that no upgrade is pending, restricted or cooling down
   expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
   expect(
@@ -933,6 +1029,14 @@ export async function parasForceScheduleCodeUpgradeAbortedE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force schedule undersized code is aborted')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const undersizedEvents = await client.api.query.system.events()
+  const [undersizedScheduled] = undersizedEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'CodeUpgradeScheduled',
+  )
+  assert(client.api.events.paras.CodeUpgradeScheduled.is(undersizedScheduled.event))
+  expect(undersizedScheduled.event.data[0].toString()).toBe(paraId.toString())
 
   // 2.2 Assert that no upgrade is pending, restricted or cooling down
   expect(((await client.api.query.paras.futureCodeHash(paraId)) as Option<H256>).isNone).toBe(true)
@@ -1049,6 +1153,14 @@ export async function parasForceNoteNewHeadE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force note new head on registered para')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const registeredEvents = await client.api.query.system.events()
+  const [registeredHeadNoted] = registeredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'NewHeadNoted',
+  )
+  assert(client.api.events.paras.NewHeadNoted.is(registeredHeadNoted.event))
+  expect(registeredHeadNoted.event.data[0].toString()).toBe(paraId.toString())
+
   // 2.2 Assert that the head is the new head
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
 
@@ -1088,6 +1200,14 @@ export async function parasForceNoteNewHeadE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force note new head on unregistered para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const unregisteredEvents = await client.api.query.system.events()
+  const [unregisteredHeadNoted] = unregisteredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'NewHeadNoted',
+  )
+  assert(client.api.events.paras.NewHeadNoted.is(unregisteredHeadNoted.event))
+  expect(unregisteredHeadNoted.event.data[0].toString()).toBe(unregisteredParaId.toString())
 
   // 3.2 Assert that the head and most recent context are set, even though the para is not registered
   expect(((await client.api.query.paras.heads(unregisteredParaId)) as Option<Bytes>).unwrap().toHex()).toBe(newHead)
@@ -1177,6 +1297,14 @@ export async function parasForceNoteNewHeadWithUpgradeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force note new head before upgrade is due')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const firstEvents = await client.api.query.system.events()
+  const [firstHeadNoted] = firstEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'NewHeadNoted',
+  )
+  assert(client.api.events.paras.NewHeadNoted.is(firstHeadNoted.event))
+  expect(firstHeadNoted.event.data[0].toString()).toBe(paraId.toString())
+
   // 1.2 Assert that the head and most recent context are set
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(firstHead)
   expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
@@ -1218,6 +1346,14 @@ export async function parasForceNoteNewHeadWithUpgradeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force note new head applies due upgrade')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const secondEvents = await client.api.query.system.events()
+  const [secondHeadNoted] = secondEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'NewHeadNoted',
+  )
+  assert(client.api.events.paras.NewHeadNoted.is(secondHeadNoted.event))
+  expect(secondHeadNoted.event.data[0].toString()).toBe(paraId.toString())
 
   // 2.2 Assert that the head and most recent context are set
   expect(((await client.api.query.paras.heads(paraId)) as Option<Bytes>).unwrap().toHex()).toBe(secondHead)
@@ -1350,6 +1486,15 @@ export async function parasForceQueueActionE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root force queue action on registered para')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const registeredEvents = await client.api.query.system.events()
+  const [registeredQueued] = registeredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'ActionQueued',
+  )
+  assert(client.api.events.paras.ActionQueued.is(registeredQueued.event))
+  expect(registeredQueued.event.data[0].toString()).toBe(paraId.toString())
+  expect(registeredQueued.event.data[1].toString()).toBe(nextSession.toString())
+
   // 2.2 Assert that the para is added to the queue, keeping existing entries
   queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
   expect(queue).toEqual([...queueBefore, paraId].sort((a, b) => a - b))
@@ -1373,6 +1518,15 @@ export async function parasForceQueueActionE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force queue action on already queued para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const repeatEvents = await client.api.query.system.events()
+  const [repeatQueued] = repeatEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'ActionQueued',
+  )
+  assert(client.api.events.paras.ActionQueued.is(repeatQueued.event))
+  expect(repeatQueued.event.data[0].toString()).toBe(paraId.toString())
+  expect(repeatQueued.event.data[1].toString()).toBe(nextSession.toString())
 
   // 3.2 Assert that the para appears in the queue only once
   queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
@@ -1399,6 +1553,15 @@ export async function parasForceQueueActionE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root force queue action on unregistered para')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const unregisteredEvents = await client.api.query.system.events()
+  const [unregisteredQueued] = unregisteredEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'ActionQueued',
+  )
+  assert(client.api.events.paras.ActionQueued.is(unregisteredQueued.event))
+  expect(unregisteredQueued.event.data[0].toString()).toBe(unregisteredParaId.toString())
+  expect(unregisteredQueued.event.data[1].toString()).toBe(nextSession.toString())
 
   // 4.2 Assert that the para is added to the queue, which stays sorted by para ID
   queue = ((await client.api.query.paras.actionsQueue(nextSession)) as Vec<u32>).map((id) => id.toNumber())
@@ -1590,6 +1753,15 @@ export async function parasAddTrustedValidationCodeE2ETest<
     .redact({ number: true })
     .toMatchSnapshot('root add trusted code under upgrade vote')
 
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const upgradeEvents = await client.api.query.system.events()
+  const [upgradeAccepted] = upgradeEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckAccepted',
+  )
+  assert(client.api.events.paras.PvfCheckAccepted.is(upgradeAccepted.event))
+  expect(upgradeAccepted.event.data[0].toHex()).toBe(secondCodeHash)
+  expect(upgradeAccepted.event.data[1].toString()).toBe(paraId.toString())
+
   // 4.2 Assert that the vote is closed
   expect(
     (
@@ -1630,6 +1802,15 @@ export async function parasAddTrustedValidationCodeE2ETest<
   await checkSystemEvents(client, 'paras')
     .redact({ number: true })
     .toMatchSnapshot('root add trusted code under onboarding vote')
+
+  // The snapshot redacts numbers and hashes, so check the event fields here
+  const onboardingEvents = await client.api.query.system.events()
+  const [onboardingAccepted] = onboardingEvents.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'PvfCheckAccepted',
+  )
+  assert(client.api.events.paras.PvfCheckAccepted.is(onboardingAccepted.event))
+  expect(onboardingAccepted.event.data[0].toHex()).toBe(oldCodeHash)
+  expect(onboardingAccepted.event.data[1].toString()).toBe(paraId.toString())
 
   // 5.2 Assert that the vote is closed
   expect(
@@ -2061,7 +2242,6 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
 
   const acceptEvents = await client.api.query.system.events()
   const acceptParasEvents = acceptEvents.filter(({ event }) => event.section === 'paras')
-  expect(acceptParasEvents.length).toBe(1)
   assert(client.api.events.paras.PvfCheckAccepted.is(acceptParasEvents[0].event))
   expect(acceptParasEvents[0].event.data[0].toHex()).toBe(newCodeHash)
   expect(acceptParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
@@ -2248,7 +2428,6 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
 
   const upgradeRejectEvents = await client.api.query.system.events()
   const upgradeRejectParasEvents = upgradeRejectEvents.filter(({ event }) => event.section === 'paras')
-  expect(upgradeRejectParasEvents.length).toBe(1)
   assert(client.api.events.paras.PvfCheckRejected.is(upgradeRejectParasEvents[0].event))
   expect(upgradeRejectParasEvents[0].event.data[0].toHex()).toBe(newCodeHash)
   expect(upgradeRejectParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
@@ -2321,7 +2500,6 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
 
   const onboardingRejectEvents = await client.api.query.system.events()
   const onboardingRejectParasEvents = onboardingRejectEvents.filter(({ event }) => event.section === 'paras')
-  expect(onboardingRejectParasEvents.length).toBe(1)
   assert(client.api.events.paras.PvfCheckRejected.is(onboardingRejectParasEvents[0].event))
   expect(onboardingRejectParasEvents[0].event.data[0].toHex()).toBe(oldCodeHash)
   expect(onboardingRejectParasEvents[0].event.data[1].toString()).toBe(paraId.toString())
@@ -2499,12 +2677,203 @@ export async function parasForceSetMostRecentContextE2ETest<
 }
 
 /**
- * Test `paras.remove_upgrade_cooldown`.
+ * Test `paras.remove_upgrade_cooldown`, which lets any signed account end a para's upgrade cooldown early by burning
+ * `(cooldown end - current block) * CooldownRemovalMultiplier` from its balance. The call succeeds without effect on a
+ * para with no cooldown.
+ *
+ * The multiplier is runtime configuration that is not exposed as a constant, so the test derives it from the first
+ * burn and checks the second para's cost against it.
+ *
+ * Scheduling an upgrade for a para records its cooldown and restricts further upgrades.
+ *
+ * 1. Root origin
+ *
+ *     1.1 asserting that the scheduled call fails with `BadOrigin`, since the call needs a signed origin to pay
+ *
+ *     1.2 asserting that para A's cooldown and upgrade restriction are unchanged
+ *
+ * 2. a signed account other than the manager, on para A
+ *
+ *     2.1 asserting the `UpgradeCooldownRemoved` event and the burn from the caller
+ *
+ *     2.2 asserting that the burned amount is the blocks left in the cooldown times a fixed multiplier
+ *
+ *     2.3 asserting that para A's cooldown and upgrade restriction are removed
+ *
+ *     2.4 asserting that para A's pending upgrade is unaffected
+ *
+ * 3. the same account, on para A again
+ *
+ *     3.1 asserting that the call succeeds with no paras event and no burn
+ *
+ * 4. an account that cannot afford the burn, on para B
+ *
+ *     4.1 asserting that the call fails with `FundsUnavailable`
+ *
+ *     4.2 asserting that para B's cooldown and upgrade restriction are unchanged
  */
 export async function parasRemoveUpgradeCooldownE2ETest<
   TCustom extends Record<string, unknown> | undefined,
   TInitStorages extends Record<string, Record<string, any>> | undefined,
->(_client: Client<TCustom, TInitStorages>) {}
+>(client: Client<TCustom, TInitStorages>) {
+  const newCodeHash = blake2AsHex(NEW_VALIDATION_CODE)
+  const existentialDeposit = client.api.consts.balances.existentialDeposit.toBigInt()
+
+  // Query the next free para ID so we don't collide with an already-registered para
+  const nextFreeParaId = await client.api.query.registrar.nextFreeParaId()
+  const paraIdA = parseInt(nextFreeParaId.toString(), 10)
+  const paraIdB = paraIdA + 1
+
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdA)
+  await forceRegisterParaViaRoot(client, devAccounts.alice.address, paraIdB)
+
+  // Bob pays for removing para A's cooldown; Alice is the manager of both paras
+  await client.dev.setStorage({
+    System: {
+      account: [[[devAccounts.bob.address], { providers: 1, data: { free: 1e20 } }]],
+    },
+  })
+
+  // Schedule an upgrade for each para, which records a cooldown for each and restricts further upgrades
+  for (const paraId of [paraIdA, paraIdB]) {
+    const relayParent = (await client.api.rpc.chain.getHeader()).number.toNumber()
+    await scheduleInlineCallWithOrigin(
+      client,
+      client.api.tx.paras.forceScheduleCodeUpgrade(paraId, NEW_VALIDATION_CODE, relayParent).method.toHex(),
+      { system: 'Root' },
+      client.config.properties.schedulerBlockProvider,
+    )
+    await client.dev.newBlock()
+  }
+
+  let upgradeCooldowns = (await client.api.query.paras.upgradeCooldowns()) as Vec<ITuple<[u32, u32]>>
+  const cooldownsA = upgradeCooldowns.filter(([id]) => id.toNumber() === paraIdA)
+  expect(cooldownsA.length).toBe(1)
+  const cooldownUntilA = cooldownsA[0][1].toNumber()
+  expect(
+    ((await client.api.query.paras.upgradeRestrictionSignal(paraIdA)) as Option<PolkadotPrimitivesV8UpgradeRestriction>)
+      .isSome,
+  ).toBe(true)
+
+  // 1. Root origin
+  await scheduleInlineCallWithOrigin(
+    client,
+    client.api.tx.paras.removeUpgradeCooldown(paraIdA).method.toHex(),
+    { system: 'Root' },
+    client.config.properties.schedulerBlockProvider,
+  )
+  await client.dev.newBlock()
+
+  // 1.1 Assert that the scheduled call fails with BadOrigin
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root remove upgrade cooldown fails with BadOrigin')
+
+  // 1.2 Assert that para A's cooldown and upgrade restriction are unchanged
+  upgradeCooldowns = (await client.api.query.paras.upgradeCooldowns()) as Vec<ITuple<[u32, u32]>>
+  expect(upgradeCooldowns.filter(([id]) => id.toNumber() === paraIdA).length).toBe(1)
+  expect(
+    ((await client.api.query.paras.upgradeRestrictionSignal(paraIdA)) as Option<PolkadotPrimitivesV8UpgradeRestriction>)
+      .isSome,
+  ).toBe(true)
+
+  // 2. A signed account other than the manager, on para A
+  const removeEvents = await sendTransaction(
+    client.api.tx.paras.removeUpgradeCooldown(paraIdA).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // The call runs in the block just built, so the cooldown has this many blocks left at that point
+  const removedAt = (await client.api.rpc.chain.getHeader()).number.toNumber()
+  const blocksLeft = BigInt(cooldownUntilA - removedAt)
+  expect(blocksLeft > 0n).toBe(true)
+
+  // 2.1 Assert the UpgradeCooldownRemoved event and the burn from the caller
+  await checkEvents(removeEvents, 'paras', { section: 'balances', method: 'Burned' })
+    .redact({ number: true })
+    .toMatchSnapshot('signed remove upgrade cooldown on para A')
+
+  const removeRecords = (await removeEvents.events) as FrameSystemEventRecord[]
+  const [removedEvent] = removeRecords.filter(
+    ({ event }) => event.section === 'paras' && event.method === 'UpgradeCooldownRemoved',
+  )
+  assert(client.api.events.paras.UpgradeCooldownRemoved.is(removedEvent.event))
+  expect(removedEvent.event.data[0].toString()).toBe(paraIdA.toString())
+
+  const burnedEvents = removeRecords.filter(({ event }) => event.section === 'balances' && event.method === 'Burned')
+  assert(client.api.events.balances.Burned.is(burnedEvents[0].event))
+  const burned = burnedEvents[0].event.data.amount.toBigInt()
+
+  // 2.2 Assert that the burned amount is the blocks left in the cooldown times a fixed multiplier
+  expect(burned > 0n).toBe(true)
+  expect(burned % blocksLeft).toBe(0n)
+  const multiplier = burned / blocksLeft
+
+  // 2.3 Assert that para A's cooldown and upgrade restriction are removed
+  upgradeCooldowns = (await client.api.query.paras.upgradeCooldowns()) as Vec<ITuple<[u32, u32]>>
+  expect(upgradeCooldowns.filter(([id]) => id.toNumber() === paraIdA).length).toBe(0)
+  expect(
+    ((await client.api.query.paras.upgradeRestrictionSignal(paraIdA)) as Option<PolkadotPrimitivesV8UpgradeRestriction>)
+      .isNone,
+  ).toBe(true)
+
+  // 2.4 Assert that para A's pending upgrade is unaffected
+  expect(((await client.api.query.paras.futureCodeHash(paraIdA)) as Option<H256>).unwrap().toHex()).toBe(newCodeHash)
+
+  // 3. The same account, on para A again
+  const repeatEvents = await sendTransaction(
+    client.api.tx.paras.removeUpgradeCooldown(paraIdA).signAsync(devAccounts.bob),
+  )
+  await client.dev.newBlock()
+
+  // 3.1 Assert that the call succeeds with no paras event and no burn
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(
+    repeatEvents,
+    'paras',
+    { section: 'balances', method: 'Burned' },
+    { section: 'system', method: 'ExtrinsicSuccess' },
+  )
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('signed remove upgrade cooldown on para without cooldown')
+
+  // 4. An account that cannot afford the burn, on para B.
+  // Charlie is funded with exactly the cost plus the existential deposit, which the call must leave in place. The
+  // transaction fee, taken first, then leaves Charlie short.
+  upgradeCooldowns = (await client.api.query.paras.upgradeCooldowns()) as Vec<ITuple<[u32, u32]>>
+  const cooldownsB = upgradeCooldowns.filter(([id]) => id.toNumber() === paraIdB)
+  expect(cooldownsB.length).toBe(1)
+  const nextBlock = (await client.api.rpc.chain.getHeader()).number.toNumber() + 1
+  const costB = BigInt(cooldownsB[0][1].toNumber() - nextBlock) * multiplier
+  expect(costB > 0n).toBe(true)
+
+  await client.dev.setStorage({
+    System: {
+      account: [
+        [[devAccounts.charlie.address], { providers: 1, data: { free: (costB + existentialDeposit).toString() } }],
+      ],
+    },
+  })
+
+  const unaffordableEvents = await sendTransaction(
+    client.api.tx.paras.removeUpgradeCooldown(paraIdB).signAsync(devAccounts.charlie),
+  )
+  await client.dev.newBlock()
+
+  // 4.1 Assert that the call fails with FundsUnavailable
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(unaffordableEvents, 'system')
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('unaffordable remove upgrade cooldown fails with FundsUnavailable')
+
+  // 4.2 Assert that para B's cooldown and upgrade restriction are unchanged
+  upgradeCooldowns = (await client.api.query.paras.upgradeCooldowns()) as Vec<ITuple<[u32, u32]>>
+  expect(upgradeCooldowns.filter(([id]) => id.toNumber() === paraIdB).length).toBe(1)
+  expect(
+    ((await client.api.query.paras.upgradeRestrictionSignal(paraIdB)) as Option<PolkadotPrimitivesV8UpgradeRestriction>)
+      .isSome,
+  ).toBe(true)
+}
 
 /**
  * Test `paras.authorize_force_set_current_code_hash` and `paras.apply_authorized_force_set_current_code`.
@@ -2606,7 +2975,6 @@ export function parasE2ETest<
         kind: 'test',
         label: 'pallet paras - remove upgrade cooldown',
         testFn: async () => await parasRemoveUpgradeCooldownE2ETest(client),
-        flags: { skip: true },
       },
       {
         kind: 'test',
