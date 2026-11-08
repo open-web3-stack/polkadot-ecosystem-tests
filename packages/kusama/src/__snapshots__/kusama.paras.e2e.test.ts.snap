@@ -579,3 +579,63 @@ exports[`Kusama Paras > pallet paras - poke unused validation code > signed poke
   },
 ]
 `;
+
+exports[`Kusama Paras > pallet paras - remove upgrade cooldown > root remove upgrade cooldown fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - remove upgrade cooldown > signed remove upgrade cooldown on para A 1`] = `
+[
+  {
+    "data": {
+      "amount": "(number)",
+      "who": "EvvS4HELEC1nxVHsjYUsPvypd2kXeu78AguyiSN7kV2pTnk",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "paraId": "(number)",
+    },
+    "method": "UpgradeCooldownRemoved",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - remove upgrade cooldown > signed remove upgrade cooldown on para without cooldown 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Kusama Paras > pallet paras - remove upgrade cooldown > unaffordable remove upgrade cooldown fails with FundsUnavailable 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Token": "FundsUnavailable",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
