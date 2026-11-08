@@ -66,6 +66,88 @@ exports[`Polkadot Paras > pallet paras - add trusted validation code > signed ad
 ]
 `;
 
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for onboarding para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 56,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for unregistered para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 56,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for valid para 1`] = `
+[
+  {
+    "data": {
+      "codeHash": "(hash)",
+      "expireAt": "(number)",
+      "paraId": "(number)",
+    },
+    "method": "CodeAuthorized",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize other code hash overwrites authorization 1`] = `
+[
+  {
+    "data": {
+      "codeHash": "(hash)",
+      "expireAt": "(number)",
+      "paraId": "(number)",
+    },
+    "method": "CodeAuthorized",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > signed authorize force set current code hash fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
 exports[`Polkadot Paras > pallet paras - force note new head > root force note new head on registered para 1`] = `
 [
   {
