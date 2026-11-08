@@ -2730,7 +2730,8 @@ export async function parasRemoveUpgradeCooldownE2ETest<
   // Bob pays for removing para A's cooldown; Alice is the manager of both paras
   await client.dev.setStorage({
     System: {
-      account: [[[devAccounts.bob.address], { providers: 1, data: { free: 1e20 } }]],
+      // Passed as a string: the balance exceeds the largest integer a JavaScript number holds exactly
+      account: [[[devAccounts.bob.address], { providers: 1, data: { free: (10n ** 20n).toString() } }]],
     },
   })
 
