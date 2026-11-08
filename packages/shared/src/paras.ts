@@ -7,6 +7,7 @@ import type { KeyringPair } from '@polkadot/keyring/types'
 import type { Bytes, Option, u32, Vec } from '@polkadot/types'
 import type { H256, TransactionValidity } from '@polkadot/types/interfaces'
 import type {
+  FrameSystemEventRecord,
   PolkadotPrimitivesV8UpgradeGoAhead,
   PolkadotPrimitivesV8UpgradeRestriction,
   PolkadotRuntimeCommonParasRegistrarParaInfo,
@@ -1422,7 +1423,7 @@ export async function parasForceQueueActionE2ETest<
  *
  * 2. Root origin, with unknown code and no vote
  *
- *     2.1 asserting that no paras event is emitted
+ *     2.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     2.2 asserting that the code is stored by hash, with no references
  *
@@ -1430,7 +1431,7 @@ export async function parasForceQueueActionE2ETest<
  *
  * 3. Root origin, with the same code again
  *
- *     3.1 asserting that no paras event is emitted
+ *     3.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     3.2 asserting that the stored code and its reference count are unchanged
  *
@@ -1512,11 +1513,10 @@ export async function parasAddTrustedValidationCodeE2ETest<
   )
   await client.dev.newBlock()
 
-  // 2.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root add unknown trusted validation code')
-
-  const unknownEvents = await client.api.query.system.events()
-  expect(unknownEvents.filter(({ event }) => event.section === 'paras').length).toBe(0)
+  // 2.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root add unknown trusted validation code')
 
   // 2.2 Assert that the code is stored by hash, with no references; no para uses it yet
   expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
@@ -1542,8 +1542,10 @@ export async function parasAddTrustedValidationCodeE2ETest<
   )
   await client.dev.newBlock()
 
-  // 3.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root add already stored trusted validation code')
+  // 3.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root add already stored trusted validation code')
 
   // 3.2 Assert that the stored code and its reference count are unchanged
   expect(((await client.api.query.paras.codeByHash(newCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
@@ -1667,19 +1669,19 @@ export async function parasAddTrustedValidationCodeE2ETest<
  *
  * 2. Root origin, on code with no references
  *
- *     2.1 asserting that no paras event is emitted
+ *     2.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     2.2 asserting that the code is removed
  *
  * 3. Root origin, on code a registered para uses
  *
- *     3.1 asserting that no paras event is emitted
+ *     3.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     3.2 asserting that the code and its reference count are unchanged
  *
  * 4. Root origin, on a hash with no stored code
  *
- *     4.1 asserting that no paras event is emitted
+ *     4.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     4.2 asserting that nothing is stored under the hash
  */
@@ -1741,8 +1743,10 @@ export async function parasPokeUnusedValidationCodeE2ETest<
   )
   await client.dev.newBlock()
 
-  // 2.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke unused validation code')
+  // 2.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root poke unused validation code')
 
   // 2.2 Assert that the code is removed
   expect(((await client.api.query.paras.codeByHash(unusedCodeHash)) as Option<Bytes>).isNone).toBe(true)
@@ -1757,11 +1761,10 @@ export async function parasPokeUnusedValidationCodeE2ETest<
   )
   await client.dev.newBlock()
 
-  // 3.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke validation code in use')
-
-  const usedEvents = await client.api.query.system.events()
-  expect(usedEvents.filter(({ event }) => event.section === 'paras').length).toBe(0)
+  // 3.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root poke validation code in use')
 
   // 3.2 Assert that the code and its reference count are unchanged
   expect(((await client.api.query.paras.codeByHash(usedCodeHash)) as Option<Bytes>).unwrap().toHex()).toBe(
@@ -1780,8 +1783,10 @@ export async function parasPokeUnusedValidationCodeE2ETest<
   )
   await client.dev.newBlock()
 
-  // 4.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root poke validation code not stored')
+  // 4.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root poke validation code not stored')
 
   // 4.2 Assert that nothing is stored under the hash
   expect(((await client.api.query.paras.codeByHash(unknownCodeHash)) as Option<Bytes>).isNone).toBe(true)
@@ -1812,7 +1817,7 @@ export async function parasPokeUnusedValidationCodeE2ETest<
  *
  * 2. the first validator accepts
  *
- *     2.1 asserting that no paras event is emitted
+ *     2.1 asserting that the statement is included successfully and no paras event is emitted
  *
  *     2.2 asserting that the vote stays open, with the validator's accepting ballot recorded
  *
@@ -1822,7 +1827,7 @@ export async function parasPokeUnusedValidationCodeE2ETest<
  *
  * 4. the second validator accepts
  *
- *     4.1 asserting that no paras event is emitted
+ *     4.1 asserting that the statement is included successfully and no paras event is emitted
  *
  *     4.2 asserting that the vote stays open, with both accepting ballots recorded
  *
@@ -1956,7 +1961,7 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   expect(noVoteValidity.asErr.asInvalid.asCustom.toNumber()).toBe(2)
 
   // 2. The first validator accepts
-  await sendTransaction(
+  const firstAcceptEvents = await sendTransaction(
     Promise.resolve(
       pvfCheckStatementTx(client, alice, {
         accept: true,
@@ -1968,8 +1973,11 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   )
   await client.dev.newBlock()
 
-  // 2.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('first accepting pvf check statement')
+  // 2.1 Assert that the statement is included successfully and no paras event is emitted.
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(firstAcceptEvents, 'paras', { section: 'system', method: 'ExtrinsicSuccess' })
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('first accepting pvf check statement')
 
   // 2.2 Assert that the vote stays open with the first validator's accepting ballot recorded. Ballots are bit fields
   // with bit `i` (least significant first) set once validator `i` has voted.
@@ -2000,7 +2008,7 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   }
 
   // 4. The second validator accepts
-  await sendTransaction(
+  const secondAcceptEvents = await sendTransaction(
     Promise.resolve(
       pvfCheckStatementTx(client, bob, {
         accept: true,
@@ -2012,8 +2020,11 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
   )
   await client.dev.newBlock()
 
-  // 4.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('second accepting pvf check statement')
+  // 4.1 Assert that the statement is included successfully and no paras event is emitted.
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(secondAcceptEvents, 'paras', { section: 'system', method: 'ExtrinsicSuccess' })
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('second accepting pvf check statement')
 
   // 4.2 Assert that the vote stays open, with both accepting ballots recorded
   vote = (
@@ -2103,7 +2114,7 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
  *
  * 1. the first validator rejects the upgrade's code
  *
- *     1.1 asserting that no paras event is emitted
+ *     1.1 asserting that the statement is included successfully and no paras event is emitted
  *
  *     1.2 asserting that the vote stays open, with the validator's rejecting ballot recorded
  *
@@ -2122,7 +2133,7 @@ export async function parasIncludePvfCheckStatementAcceptE2ETest<
  *
  * 3. the first two validators reject the onboarding's code
  *
- *     3.1 asserting that the first rejection emits no paras event
+ *     3.1 asserting that the first rejection is included successfully and emits no paras event
  *
  *     3.2 asserting the `PvfCheckRejected` event for the onboarding para on the second rejection
  *
@@ -2189,7 +2200,7 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
   const currentSession = ((await client.api.query.parasShared.currentSessionIndex()) as u32).toNumber()
 
   // 1. The first validator rejects the upgrade's code
-  await sendTransaction(
+  const firstUpgradeRejectEvents = await sendTransaction(
     Promise.resolve(
       pvfCheckStatementTx(client, alice, {
         accept: false,
@@ -2201,8 +2212,11 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
   )
   await client.dev.newBlock()
 
-  // 1.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('first rejecting pvf check statement on upgrade code')
+  // 1.1 Assert that the statement is included successfully and no paras event is emitted.
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(firstUpgradeRejectEvents, 'paras', { section: 'system', method: 'ExtrinsicSuccess' })
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('first rejecting pvf check statement on upgrade code')
 
   // 1.2 Assert that the vote stays open with the first validator's rejecting ballot recorded. Ballots are bit fields
   // with bit `i` (least significant first) set once validator `i` has voted.
@@ -2267,7 +2281,7 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
   expect(((await client.api.query.paras.currentCodeHash(paraId)) as Option<H256>).unwrap().toHex()).toBe(oldCodeHash)
 
   // 3. The first two validators reject the onboarding's code
-  await sendTransaction(
+  const firstOnboardingRejectEvents = await sendTransaction(
     Promise.resolve(
       pvfCheckStatementTx(client, alice, {
         accept: false,
@@ -2279,8 +2293,11 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
   )
   await client.dev.newBlock()
 
-  // 3.1 Assert that the first rejection emits no paras event
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('first rejecting pvf check statement on onboarding code')
+  // 3.1 Assert that the statement is included successfully and no paras event is emitted.
+  // The weight in `dispatchInfo` is left out; it comes from runtime benchmarks and changes when they are re-run
+  await checkEvents(firstOnboardingRejectEvents, 'paras', { section: 'system', method: 'ExtrinsicSuccess' })
+    .redact({ removeKeys: /dispatchInfo/ })
+    .toMatchSnapshot('first rejecting pvf check statement on onboarding code')
 
   await sendTransaction(
     Promise.resolve(
@@ -2358,7 +2375,7 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
  *
  * 2. Root origin, on a registered para, with a past block
  *
- *     2.1 asserting that no paras event is emitted
+ *     2.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     2.2 asserting that the para's most recent context is the given block
  *
@@ -2366,13 +2383,13 @@ export async function parasIncludePvfCheckStatementRejectE2ETest<
  *
  * 3. Root origin, on the same para, with a future block
  *
- *     3.1 asserting that no paras event is emitted
+ *     3.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     3.2 asserting that the para's most recent context is overwritten with the given block
  *
  * 4. Root origin, on an unregistered para
  *
- *     4.1 asserting that no paras event is emitted
+ *     4.1 asserting that the scheduled call succeeds and no paras event is emitted
  *
  *     4.2 asserting that the para's most recent context is set
  */
@@ -2423,8 +2440,10 @@ export async function parasForceSetMostRecentContextE2ETest<
   )
   await client.dev.newBlock()
 
-  // 2.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set past most recent context')
+  // 2.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root force set past most recent context')
 
   // 2.2 Assert that the most recent context is the given block
   expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
@@ -2447,8 +2466,10 @@ export async function parasForceSetMostRecentContextE2ETest<
   )
   await client.dev.newBlock()
 
-  // 3.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set future most recent context')
+  // 3.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root force set future most recent context')
 
   // 3.2 Assert that the most recent context is overwritten with the given block
   expect(((await client.api.query.paras.mostRecentContext(paraId)) as Option<u32>).unwrap().toNumber()).toBe(
@@ -2466,8 +2487,10 @@ export async function parasForceSetMostRecentContextE2ETest<
   )
   await client.dev.newBlock()
 
-  // 4.1 Assert that no paras event is emitted
-  await checkSystemEvents(client, 'paras').toMatchSnapshot('root force set most recent context on unregistered para')
+  // 4.1 Assert that the scheduled call succeeds and no paras event is emitted
+  await checkSystemEvents(client, 'paras', { section: 'scheduler', method: 'Dispatched' })
+    .redact({ redactKeys: /task/ })
+    .toMatchSnapshot('root force set most recent context on unregistered para')
 
   // 4.2 Assert that the most recent context is set, even though the para is not registered
   expect(
