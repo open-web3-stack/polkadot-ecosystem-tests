@@ -1,0 +1,800 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add already stored trusted validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add trusted code under onboarding vote 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add trusted code under upgrade vote 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > root add unknown trusted validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - add trusted validation code > signed add trusted validation code fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {
+      "actualFee": "(number)",
+      "tip": "(number)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "TransactionFeePaid",
+    "section": "transactionPayment",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply of unauthorized code fails with Unauthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0e000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > signed apply with nothing authorized fails with NothingAuthorized 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Module": {
+          "error": "0x0d000000",
+          "index": 56,
+        },
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - apply authorized force set current code > unsigned apply of authorized code 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for onboarding para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 56,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for unregistered para fails with NotRegistered 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": {
+          "Module": {
+            "error": "0x00000000",
+            "index": 56,
+          },
+        },
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize code hash for valid para 1`] = `
+[
+  {
+    "data": {
+      "codeHash": "(hash)",
+      "expireAt": "(number)",
+      "paraId": "(number)",
+    },
+    "method": "CodeAuthorized",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > root authorize other code hash overwrites authorization 1`] = `
+[
+  {
+    "data": {
+      "codeHash": "(hash)",
+      "expireAt": "(number)",
+      "paraId": "(number)",
+    },
+    "method": "CodeAuthorized",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - authorize force set current code hash > signed authorize force set current code hash fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force note new head > root force note new head on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force note new head > root force note new head on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force note new head > signed force note new head fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force note new head with pending upgrade > root force note new head applies due upgrade 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force note new head with pending upgrade > root force note new head before upgrade is due 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "NewHeadNoted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on already queued para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > root force queue action on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+      "(number)",
+    ],
+    "method": "ActionQueued",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force queue action > signed force queue action fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with known code > root force schedule known code for para A 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with known code > root force schedule known code for para B 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with rejected code > root force schedule current code is aborted 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with rejected code > root force schedule undersized code is aborted 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule same unknown code for para B 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule unknown code for para A 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckStarted",
+    "section": "paras",
+  },
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with unknown code > root force schedule while upgrade pending for para A 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CodeUpgradeScheduled",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force schedule code upgrade with unknown code > signed force schedule code upgrade fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current code > root force set current code on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current code > root force set current code on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentCodeUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current code > signed force set current code fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current head > root force set current head on registered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current head > root force set current head on unregistered para 1`] = `
+[
+  {
+    "data": [
+      "(number)",
+    ],
+    "method": "CurrentHeadUpdated",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set current head > signed force set current head fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set most recent context > root force set future most recent context 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set most recent context > root force set most recent context on unregistered para 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set most recent context > root force set past most recent context 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - force set most recent context > signed force set most recent context fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement accepting code > first accepting pvf check statement 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement accepting code > second accepting pvf check statement 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement accepting code > third accepting pvf check statement accepts code 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckAccepted",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on onboarding code 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement rejecting code > first rejecting pvf check statement on upgrade code 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement rejecting code > second rejecting pvf check statement rejects onboarding code 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckRejected",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - include pvf check statement rejecting code > second rejecting pvf check statement rejects upgrade code 1`] = `
+[
+  {
+    "data": [
+      "(hash)",
+      "(number)",
+    ],
+    "method": "PvfCheckRejected",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - poke unused validation code > root poke unused validation code 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - poke unused validation code > root poke validation code in use 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - poke unused validation code > root poke validation code not stored 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": "Ok",
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - poke unused validation code > signed poke unused validation code fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": "BadOrigin",
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - remove upgrade cooldown > root remove upgrade cooldown fails with BadOrigin 1`] = `
+[
+  {
+    "data": {
+      "id": null,
+      "result": {
+        "Err": "BadOrigin",
+      },
+      "task": "(redacted)",
+    },
+    "method": "Dispatched",
+    "section": "scheduler",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - remove upgrade cooldown > signed remove upgrade cooldown on para A 1`] = `
+[
+  {
+    "data": {
+      "amount": "(number)",
+      "who": "13Mbv5CRZeSZUqgN4fnS7bQ8XekARHe4kHaekM9mC3J4Fh7e",
+    },
+    "method": "Burned",
+    "section": "balances",
+  },
+  {
+    "data": {
+      "paraId": "(number)",
+    },
+    "method": "UpgradeCooldownRemoved",
+    "section": "paras",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - remove upgrade cooldown > signed remove upgrade cooldown on para without cooldown 1`] = `
+[
+  {
+    "data": {},
+    "method": "ExtrinsicSuccess",
+    "section": "system",
+  },
+]
+`;
+
+exports[`Polkadot Paras > pallet paras - remove upgrade cooldown > unaffordable remove upgrade cooldown fails with FundsUnavailable 1`] = `
+[
+  {
+    "data": {
+      "dispatchError": {
+        "Token": "FundsUnavailable",
+      },
+    },
+    "method": "ExtrinsicFailed",
+    "section": "system",
+  },
+]
+`;
