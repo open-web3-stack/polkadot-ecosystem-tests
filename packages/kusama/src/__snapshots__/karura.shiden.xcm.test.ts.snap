@@ -247,7 +247,7 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
     "data": [
       "ConcatenatedVersionedXcm",
       {
-        "v3": [
+        "v4": [
           {
             "withdrawAsset": [
               {
@@ -255,12 +255,10 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
                   "fungible": 1000000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
             ],
@@ -275,12 +273,10 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
                   "fungible": 500000000000,
                 },
                 "id": {
-                  "concrete": {
-                    "interior": {
-                      "here": null,
-                    },
-                    "parents": 1,
+                  "interior": {
+                    "here": null,
                   },
+                  "parents": 1,
                 },
               },
               "weightLimit": {
@@ -297,9 +293,11 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
               },
               "dest": {
                 "interior": {
-                  "x1": {
-                    "parachain": 2000,
-                  },
+                  "x1": [
+                    {
+                      "parachain": 2000,
+                    },
+                  ],
                 },
                 "parents": 1,
               },
@@ -311,12 +309,10 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
                         "fungible": 500000000000,
                       },
                       "id": {
-                        "concrete": {
-                          "interior": {
-                            "here": null,
-                          },
-                          "parents": 1,
+                        "interior": {
+                          "here": null,
                         },
+                        "parents": 1,
                       },
                     },
                     "weightLimit": {
@@ -333,12 +329,14 @@ exports[`karura & shiden > shiden transfer KSM to karura > from chain hrmp messa
                     },
                     "beneficiary": {
                       "interior": {
-                        "x1": {
-                          "accountId32": {
-                            "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-                            "network": null,
+                        "x1": [
+                          {
+                            "accountId32": {
+                              "id": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+                              "network": null,
+                            },
                           },
-                        },
+                        ],
                       },
                       "parents": 0,
                     },
